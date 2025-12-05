@@ -47,7 +47,9 @@ include(
     "modules:services:analytics-service",
     "modules:services:gateway-service",
     "modules:services:ai-assistant-service",
-    "modules:services:cdr-processor-service"
+    "modules:services:cdr-processor-service",
+    "modules:services:ehr-connector-service",
+    "modules:services:payer-workflows-service"
 )
 
 // Platform Modules

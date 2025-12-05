@@ -1,0 +1,96 @@
+# Health Score WebSocket Load Test
+# Tests WebSocket connections and real-time health score updates
+# Target: >1000 concurrent connections with <1% disconnection rate
+
+config:
+  target: 'ws://localhost:8087'
+  phases:
+    # Establish connections gradually
+    - duration: 120
+      arrivalRate: 10
+      name: "Connection ramp up"
+
+    # Maintain connections and receive updates
+    - duration: 600
+      arrivalRate: 5
+      name: "Sustained connections (10 minutes)"
+
+    # Add burst connections
+    - duration: 60
+      arrivalRate: 50
+      name: "Connection burst"
+
+  ensure:
+    maxErrorRate: 0.01  # Less than 1% connection errors
+
+  plugins:
+    ws: {}
+    expect: {}
+
+scenarios:
+  - name: "Health Score WebSocket Connection"
+    engine: ws
+    flow:
+      # Connect to WebSocket with tenant ID
+      - connect:
+          url: "/quality-measure/ws/health-scores?tenantId=tenant-{{ $randomInt(1, 10) }}"
+
+      # Wait for connection established message
+      - think: 1
+
+      # Send heartbeat every 30 seconds
+      - loop:
+          - send:
+              payload: '{"type": "HEARTBEAT"}'
+          - think: 30
+          count: 20  # 20 heartbeats = 10 minutes
+
+      # Disconnect gracefully
+      - disconnect: {}
+
+  - name: "Health Score Update Subscriber"
+    engine: ws
+    flow:
+      - connect:
+          url: "/quality-measure/ws/health-scores?tenantId=tenant-load-test"
+
+      # Subscribe to patient health score updates
+      - send:
+          payload: '{"type": "SUBSCRIBE", "patientId": "patient-{{ $randomInt(1, 100) }}"}'
+
+      # Wait for updates (passive listener)
+      - think: 300  # 5 minutes
+
+      # Validate received messages
+      - expect:
+          - messageType: "HEALTH_SCORE_UPDATE"
+          - hasProperty: "overallScore"
+          - hasProperty: "patientId"
+
+      - disconnect: {}
+
+  - name: "Significant Change Alerts"
+    engine: ws
+    flow:
+      - connect:
+          url: "/quality-measure/ws/health-scores?tenantId=tenant-load-test"
+
+      # Subscribe to significant changes only
+      - send:
+          payload: '{"type": "SUBSCRIBE", "filter": "SIGNIFICANT_CHANGE"}'
+
+      # Wait for significant change alerts
+      - think: 300
+
+      # Validate alert format
+      - expect:
+          - messageType: "SIGNIFICANT_CHANGE"
+          - hasProperty: "scoreDelta"
+          - hasProperty: "changeReason"
+
+      - disconnect: {}
+
+# Helper functions
+functions:
+  randomInt:
+    - "{{ $randomInt(1, 100) }}"

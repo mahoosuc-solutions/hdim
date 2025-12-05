@@ -1,0 +1,269 @@
+.error-banner {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  border-left: 4px solid;
+  animation: slideDown 300ms ease-out;
+}
+
+.error-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.error-banner-icon {
+  flex-shrink: 0;
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.error-banner-message {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  min-width: 0;
+  word-wrap: break-word;
+}
+
+.error-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.error-banner-retry {
+  height: 32px;
+  line-height: 32px;
+  padding: 0 12px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    margin-right: 4px;
+  }
+}
+
+.error-banner-close {
+  width: 32px;
+  height: 32px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Error variant
+.error-banner-error {
+  background-color: #ffebee;
+  border-left-color: #f44336;
+  color: #c62828;
+
+  .error-banner-icon {
+    color: #f44336;
+  }
+
+  .error-banner-retry {
+    border-color: #f44336;
+    color: #c62828;
+
+    &:hover {
+      background-color: rgba(244, 67, 54, 0.08);
+    }
+  }
+
+  .error-banner-close {
+    color: #c62828;
+
+    &:hover {
+      background-color: rgba(244, 67, 54, 0.08);
+    }
+  }
+}
+
+// Warning variant
+.error-banner-warning {
+  background-color: #fff8e1;
+  border-left-color: #ff9800;
+  color: #e65100;
+
+  .error-banner-icon {
+    color: #ff9800;
+  }
+
+  .error-banner-retry {
+    border-color: #ff9800;
+    color: #e65100;
+
+    &:hover {
+      background-color: rgba(255, 152, 0, 0.08);
+    }
+  }
+
+  .error-banner-close {
+    color: #e65100;
+
+    &:hover {
+      background-color: rgba(255, 152, 0, 0.08);
+    }
+  }
+}
+
+// Info variant
+.error-banner-info {
+  background-color: #e3f2fd;
+  border-left-color: #2196f3;
+  color: #1565c0;
+
+  .error-banner-icon {
+    color: #2196f3;
+  }
+
+  .error-banner-retry {
+    border-color: #2196f3;
+    color: #1565c0;
+
+    &:hover {
+      background-color: rgba(33, 150, 243, 0.08);
+    }
+  }
+
+  .error-banner-close {
+    color: #1565c0;
+
+    &:hover {
+      background-color: rgba(33, 150, 243, 0.08);
+    }
+  }
+}
+
+// Success variant
+.error-banner-success {
+  background-color: #e8f5e9;
+  border-left-color: #4caf50;
+  color: #2e7d32;
+
+  .error-banner-icon {
+    color: #4caf50;
+  }
+
+  .error-banner-retry {
+    border-color: #4caf50;
+    color: #2e7d32;
+
+    &:hover {
+      background-color: rgba(76, 175, 80, 0.08);
+    }
+  }
+
+  .error-banner-close {
+    color: #2e7d32;
+
+    &:hover {
+      background-color: rgba(76, 175, 80, 0.08);
+    }
+  }
+}
+
+// Animation
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive design
+@media (max-width: 600px) {
+  .error-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  .error-banner-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .error-banner-actions {
+    align-self: flex-end;
+    margin-top: 8px;
+  }
+
+  .error-banner-message {
+    margin-left: 36px;
+  }
+}
+
+// Dark theme support
+@media (prefers-color-scheme: dark) {
+  .error-banner-error {
+    background-color: rgba(244, 67, 54, 0.15);
+    color: #ef5350;
+
+    .error-banner-icon {
+      color: #ef5350;
+    }
+
+    .error-banner-retry,
+    .error-banner-close {
+      color: #ef5350;
+    }
+  }
+
+  .error-banner-warning {
+    background-color: rgba(255, 152, 0, 0.15);
+    color: #ffb74d;
+
+    .error-banner-icon {
+      color: #ffb74d;
+    }
+
+    .error-banner-retry,
+    .error-banner-close {
+      color: #ffb74d;
+    }
+  }
+
+  .error-banner-info {
+    background-color: rgba(33, 150, 243, 0.15);
+    color: #64b5f6;
+
+    .error-banner-icon {
+      color: #64b5f6;
+    }
+
+    .error-banner-retry,
+    .error-banner-close {
+      color: #64b5f6;
+    }
+  }
+
+  .error-banner-success {
+    background-color: rgba(76, 175, 80, 0.15);
+    color: #81c784;
+
+    .error-banner-icon {
+      color: #81c784;
+    }
+
+    .error-banner-retry,
+    .error-banner-close {
+      color: #81c784;
+    }
+  }
+}

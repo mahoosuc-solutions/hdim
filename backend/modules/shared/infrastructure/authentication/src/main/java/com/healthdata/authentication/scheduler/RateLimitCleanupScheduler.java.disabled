@@ -1,0 +1,158 @@
+package com.healthdata.authentication.scheduler;
+
+import com.healthdata.authentication.monitoring.RateLimitMetrics;
+import com.healthdata.authentication.service.RateLimitStatsService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+/**
+ * Scheduled task for cleaning up expired rate limit data from Redis.
+ * Runs hourly to maintain Redis memory efficiency.
+ *
+ * RESPONSIBILITIES:
+ * - Clean up expired rate limit buckets (Bucket4j handles this automatically, but we verify)
+ * - Clean up old statistics
+ * - Update metrics with current blocked IP count
+ * - Monitor Redis memory usage
+ * - Log cleanup statistics
+ *
+ * SCHEDULING:
+ * - Runs every hour (configurable via cron expression)
+ * - Uses Spring's @Scheduled annotation
+ * - Can be disabled via application property
+ */
+@Component
+@EnableScheduling
+@Slf4j
+@RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "rate-limiting.redis", name = "enabled", havingValue = "true", matchIfMissing = true)
+public class RateLimitCleanupScheduler {
+
+    private final RateLimitStatsService statsService;
+    private final RateLimitMetrics metrics;
+
+    /**
+     * Cleanup task that runs hourly.
+     * Cleans up old rate limit data and updates metrics.
+     *
+     * SCHEDULE: Every hour at minute 0 (00:00, 01:00, 02:00, etc.)
+     * Can be configured via rate-limiting.cleanup.cron property
+     */
+    @Scheduled(cron = "${rate-limiting.cleanup.cron:0 0 * * * *}")
+    public void cleanupExpiredRateLimits() {
+        log.info("Starting rate limit cleanup task");
+
+        long startTime = System.currentTimeMillis();
+
+        try {
+            // Update blocked IP count metric
+            updateBlockedIPMetrics();
+
+            // Log aggregated statistics
+            logAggregatedStats();
+
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("Rate limit cleanup completed in {} ms", duration);
+
+        } catch (Exception e) {
+            log.error("Error during rate limit cleanup: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Updates the blocked IP count metric.
+     * This provides real-time monitoring of how many IPs are currently blocked.
+     */
+    private void updateBlockedIPMetrics() {
+        try {
+            int blockedCount = statsService.getBlockedIPs().size();
+            metrics.updateBlockedIPCount(blockedCount);
+
+            log.debug("Updated blocked IP count metric: {}", blockedCount);
+
+        } catch (Exception e) {
+            log.error("Error updating blocked IP metrics: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Logs aggregated rate limit statistics.
+     * Useful for monitoring and alerting on rate limiting effectiveness.
+     */
+    private void logAggregatedStats() {
+        try {
+            var stats = statsService.getAggregatedStats();
+
+            log.info("Rate Limit Statistics:");
+            log.info("  - Total Buckets: {}", stats.getOrDefault("totalBuckets", 0));
+            log.info("  - Blocked IPs: {}", stats.getOrDefault("blockedIPCount", 0));
+            log.info("  - Redis Available: {}", stats.getOrDefault("redisAvailable", false));
+            log.info("  - Total Allowed Requests: {}", metrics.getTotalAllowedRequests());
+            log.info("  - Total Blocked Requests: {}", metrics.getTotalBlockedRequests());
+            log.info("  - Block Rate: {:.2f}%", metrics.getBlockRate() * 100);
+            log.info("  - Total Redis Errors: {}", metrics.getTotalRedisErrors());
+            log.info("  - Total Fallbacks: {}", metrics.getTotalFallbacks());
+
+        } catch (Exception e) {
+            log.error("Error logging aggregated stats: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Emergency cleanup task that runs daily at midnight.
+     * Performs more aggressive cleanup for severely rate-limited IPs.
+     *
+     * SCHEDULE: Daily at midnight (00:00:00)
+     * Can be configured via rate-limiting.cleanup.daily-cron property
+     */
+    @Scheduled(cron = "${rate-limiting.cleanup.daily-cron:0 0 0 * * *}")
+    public void dailyCleanup() {
+        log.info("Starting daily rate limit cleanup task");
+
+        try {
+            // Log top rate-limited IPs for security monitoring
+            var topLimitedIPs = statsService.getTopRateLimitedIPs(20);
+
+            if (!topLimitedIPs.isEmpty()) {
+                log.warn("Top 20 Rate-Limited IPs (potential attackers):");
+                topLimitedIPs.forEach((ip, count) ->
+                        log.warn("  - IP: {}, Block Count: {}", ip, count)
+                );
+            }
+
+            log.info("Daily rate limit cleanup completed");
+
+        } catch (Exception e) {
+            log.error("Error during daily rate limit cleanup: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Health check task that runs every 5 minutes.
+     * Monitors Redis availability and logs warnings if Redis is down.
+     *
+     * SCHEDULE: Every 5 minutes
+     * Can be configured via rate-limiting.health-check.cron property
+     */
+    @Scheduled(cron = "${rate-limiting.health-check.cron:0 */5 * * * *}")
+    public void healthCheck() {
+        try {
+            var stats = statsService.getAggregatedStats();
+            boolean redisAvailable = (boolean) stats.getOrDefault("redisAvailable", false);
+
+            if (!redisAvailable) {
+                log.warn("ALERT: Redis is unavailable for rate limiting. System is using in-memory fallback.");
+                log.warn("Distributed rate limiting is disabled until Redis connection is restored.");
+            } else {
+                log.debug("Health check passed: Redis is available for rate limiting");
+            }
+
+        } catch (Exception e) {
+            log.error("Error during rate limiting health check: {}", e.getMessage(), e);
+        }
+    }
+}

@@ -1,0 +1,100 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: gateway-service
+  
+  main:
+    allow-circular-references: true
+  
+  liquibase:
+    enabled: false
+  
+  cache:
+    type: none  # Disable Redis cache to avoid circular dependencies
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5435/healthdata_cql
+    username: healthdata
+    password: dev_password
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  data:
+    redis:
+      host: localhost
+      port: 6380
+      timeout: 2000ms
+
+# Enable authentication controller in Gateway
+authentication:
+  controller:
+    enabled: true
+  audit:
+    enabled: false
+  rateLimit:
+    enabled: false
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-change-in-production-minimum-32-characters}
+  accessTokenExpirationMs: 900000  # 15 minutes
+  refreshTokenExpirationMs: 604800000  # 7 days
+  issuer: healthdata-gateway
+  audience: healthdata-services
+
+# Backend Service URLs
+backend:
+  services:
+    cql-engine:
+      url: http://localhost:8081
+      timeout: 30000
+    quality-measure:
+      url: http://localhost:8087
+      timeout: 30000
+    fhir:
+      url: http://localhost:8083
+      timeout: 30000
+    patient:
+      url: http://localhost:8084
+      timeout: 30000
+    care-gap:
+      url: http://localhost:8085
+      timeout: 30000
+
+# Gateway Feature Flags
+gateway:
+  auth:
+    enabled: true
+    enforced: false  # Set to true for production
+  routing:
+    enabled: true
+  rateLimit:
+    enabled: true
+    defaultLimit: 100  # requests per minute
+
+# Logging
+logging:
+  level:
+    com.healthdata: INFO
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

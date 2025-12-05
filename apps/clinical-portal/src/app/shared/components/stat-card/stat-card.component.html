@@ -1,0 +1,82 @@
+<mat-card
+  class="stat-card"
+  [class.stat-card-primary]="color === 'primary'"
+  [class.stat-card-accent]="color === 'accent'"
+  [class.stat-card-warn]="color === 'warn'"
+  [class.stat-card-success]="color === 'success'"
+  [class.stat-card-with-actions]="primaryAction || secondaryAction"
+  [class.clickable]="clickable"
+  [matTooltip]="tooltip"
+  role="region"
+  [attr.aria-label]="title + ': ' + value">
+  <mat-card-content>
+    <div class="stat-card-layout">
+      <div class="stat-icon-container" *ngIf="icon">
+        <mat-icon
+          class="stat-icon"
+          [class]="iconClass"
+          [style.color]="iconColor"
+          [attr.aria-hidden]="true">
+          {{ icon }}
+        </mat-icon>
+      </div>
+
+      <div class="stat-content">
+        <div class="stat-header">
+          <span class="stat-title">{{ title }}</span>
+          <mat-icon
+            *ngIf="trend !== 'none'"
+            class="trend-icon"
+            [class]="getTrendClass()"
+            [attr.aria-label]="'Trend: ' + trend">
+            {{ getTrendIcon() }}
+          </mat-icon>
+        </div>
+
+        <div class="stat-value" [attr.aria-label]="'Value: ' + value">
+          {{ value }}
+        </div>
+
+        <div class="stat-subtitle" *ngIf="subtitle">
+          {{ subtitle }}
+        </div>
+
+        <!-- Target Information -->
+        <div class="stat-target" *ngIf="targetValue !== undefined" [class]="getTargetStatusClass()">
+          <mat-icon class="target-icon" *ngIf="meetsTarget() === true">check_circle</mat-icon>
+          <mat-icon class="target-icon" *ngIf="meetsTarget() === false">warning</mat-icon>
+          <span class="target-text">
+            Target: {{ targetValue }}{{ value.includes('%') ? '%' : '' }}
+            <span class="target-difference">{{ getTargetDifference() }}</span>
+          </span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="stat-actions" *ngIf="primaryAction || secondaryAction">
+          <button
+            *ngIf="primaryAction"
+            mat-raised-button
+            color="primary"
+            class="stat-action-button primary-action"
+            [matTooltip]="primaryAction.tooltip || ''"
+            [attr.aria-label]="primaryAction.ariaLabel || primaryAction.label"
+            (click)="primaryActionClick.emit(); $event.stopPropagation()">
+            <mat-icon *ngIf="primaryAction.icon">{{ primaryAction.icon }}</mat-icon>
+            <span>{{ primaryAction.label }}</span>
+          </button>
+
+          <button
+            *ngIf="secondaryAction"
+            mat-button
+            class="stat-action-button secondary-action"
+            [matTooltip]="secondaryAction.tooltip || ''"
+            [attr.aria-label]="secondaryAction.ariaLabel || secondaryAction.label"
+            (click)="secondaryActionClick.emit(); $event.stopPropagation()">
+            <mat-icon *ngIf="secondaryAction.icon">{{ secondaryAction.icon }}</mat-icon>
+            <span>{{ secondaryAction.label }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

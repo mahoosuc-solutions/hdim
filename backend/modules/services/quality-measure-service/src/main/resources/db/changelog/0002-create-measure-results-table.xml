@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0002-create-measure-results-table" author="healthdata-system">
+        <comment>Create measure results table for storing quality measure calculation results</comment>
+
+        <createTable tableName="measure_results">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="measure_id" type="uuid">
+                <constraints nullable="false"
+                            foreignKeyName="fk_measure_result_measure"
+                            references="quality_measures(id)"/>
+            </column>
+            <column name="patient_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Calculation Details -->
+            <column name="calculation_date" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="measurement_period_start" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="measurement_period_end" type="date">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Result -->
+            <column name="result_value" type="decimal(10,4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="result_unit" type="varchar(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="passed" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Population Membership -->
+            <column name="in_initial_population" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="in_denominator" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="in_numerator" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="in_denominator_exclusion" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="in_denominator_exception" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Sub-Measures -->
+            <column name="sub_measure_results" type="text">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Care Gaps -->
+            <column name="care_gaps" type="text">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Performance -->
+            <column name="calculation_duration_ms" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Audit -->
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_measure_results_measure" tableName="measure_results">
+            <column name="measure_id"/>
+            <column name="calculation_date" descending="true"/>
+        </createIndex>
+
+        <createIndex indexName="idx_measure_results_patient" tableName="measure_results">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_measure_results_period" tableName="measure_results">
+            <column name="measurement_period_start"/>
+            <column name="measurement_period_end"/>
+        </createIndex>
+
+        <createIndex indexName="idx_measure_results_passed" tableName="measure_results">
+            <column name="passed"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="measure_results"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

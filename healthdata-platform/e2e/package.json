@@ -1,0 +1,45 @@
+{
+  "name": "healthdata-platform-e2e-tests",
+  "version": "1.0.0",
+  "description": "Comprehensive E2E testing suite for HealthData Platform",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:chromium": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "test:mobile": "playwright test --project=mobile-chrome --project=mobile-safari",
+    "test:api": "playwright test --grep @api",
+    "test:security": "playwright test --grep @security",
+    "test:performance": "playwright test --grep @performance",
+    "test:accessibility": "playwright test --grep @accessibility",
+    "test:workflow": "playwright test --grep @workflow",
+    "test:ci": "playwright test --project=chromium --project=firefox --workers=2 --retries=2",
+    "test:report": "playwright show-report",
+    "test:codegen": "playwright codegen http://localhost:8080",
+    "test:install": "playwright install --with-deps",
+    "serve": "echo 'Starting backend at http://localhost:8080' && sleep 2"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@playwright/test": "^1.40.1",
+    "@axe-core/playwright": "^4.8.2",
+    "axe-playwright": "^1.2.3",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "e2e",
+    "playwright",
+    "healthcare",
+    "testing",
+    "automation",
+    "accessibility",
+    "performance"
+  ]
+}

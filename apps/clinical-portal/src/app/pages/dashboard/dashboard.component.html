@@ -1,0 +1,595 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <h1>Clinical Portal Dashboard</h1>
+    <div class="header-actions">
+      <span class="last-updated" *ngIf="lastUpdated">
+        Last updated: {{ lastUpdated | date: 'short' }}
+      </span>
+      <app-loading-button
+        text="Refresh"
+        loadingText="Refreshing..."
+        successText="Updated!"
+        icon="refresh"
+        color="primary"
+        variant="raised"
+        [loading]="loading"
+        [success]="refreshSuccess"
+        ariaLabel="Refresh dashboard data"
+        tooltip="Refresh all dashboard metrics"
+        (buttonClick)="refreshData()">
+      </app-loading-button>
+    </div>
+  </div>
+
+  <!-- Role Switcher -->
+  <mat-card class="role-switcher-card">
+    <mat-card-content>
+      <div class="role-switcher">
+        <label class="role-label">View Dashboard As:</label>
+        <mat-button-toggle-group
+          [value]="currentRole"
+          (change)="switchRole($event.value)"
+          aria-label="Select user role view">
+          <mat-button-toggle [value]="UserRole.MEDICAL_ASSISTANT">
+            <mat-icon>medical_services</mat-icon>
+            Medical Assistant
+          </mat-button-toggle>
+          <mat-button-toggle [value]="UserRole.REGISTERED_NURSE">
+            <mat-icon>local_hospital</mat-icon>
+            Registered Nurse
+          </mat-button-toggle>
+          <mat-button-toggle [value]="UserRole.PROVIDER">
+            <mat-icon>stethoscope</mat-icon>
+            Provider
+          </mat-button-toggle>
+          <mat-button-toggle [value]="UserRole.ADMIN">
+            <mat-icon>admin_panel_settings</mat-icon>
+            Administrator
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Role-Based Dashboard Views (Lazy Loaded) -->
+  @if (loadingRoleComponent) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading dashboard...</p>
+    </div>
+  } @else if (roleComponent) {
+    <ng-container *ngComponentOutlet="roleComponent"></ng-container>
+  } @else {
+    <!-- Admin Dashboard (Original) -->
+
+  <!-- Loading State -->
+  <app-loading-overlay
+    [isLoading]="loading"
+    message="Loading dashboard data..."
+    [spinnerSize]="64">
+  </app-loading-overlay>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !loading">
+    <mat-icon color="warn">error</mat-icon>
+    <h3>{{ error }}</h3>
+    <app-loading-button
+      text="Try Again"
+      loadingText="Loading..."
+      icon="refresh"
+      color="primary"
+      variant="raised"
+      [loading]="loading"
+      ariaLabel="Retry loading dashboard data"
+      (buttonClick)="refreshData()">
+    </app-loading-button>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="isEmpty() && !loading && !error">
+    <mat-icon>inbox</mat-icon>
+    <h3>No Data Available</h3>
+    <p>Start by creating your first evaluation to see dashboard metrics.</p>
+    <app-loading-button
+      text="New Evaluation"
+      icon="add"
+      color="primary"
+      variant="raised"
+      ariaLabel="Create your first quality measure evaluation"
+      (buttonClick)="navigateTo('/evaluations')">
+    </app-loading-button>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div class="dashboard-content" *ngIf="!loading && !error && !isEmpty()">
+    <!-- PRIORITY 1: Patients Needing Attention (Care Gaps) -->
+    <!-- Moved to top for immediate visibility of urgent clinical actions -->
+    <section class="dashboard-section care-gaps-section" aria-label="Patients Needing Attention">
+      <mat-card class="care-gaps-card"
+                *ngIf="careGapSummary && careGapSummary.totalGaps > 0"
+                [class.has-high-urgency]="careGapSummary.highUrgencyCount > 0">
+        <mat-card-header>
+          <div class="care-gaps-header">
+            <div class="header-content">
+              <mat-icon [color]="careGapSummary.highUrgencyCount > 0 ? 'warn' : 'accent'">
+                {{ careGapSummary.highUrgencyCount > 0 ? 'error' : 'warning' }}
+              </mat-icon>
+              <div>
+                <mat-card-title>
+                  <span *ngIf="careGapSummary.highUrgencyCount > 0" class="urgent-label">URGENT:</span>
+                  Patients Needing Attention
+                </mat-card-title>
+                <mat-card-subtitle>
+                  {{ careGapSummary.totalGaps }} patient{{careGapSummary.totalGaps !== 1 ? 's' : ''}} require follow-up
+                  <span *ngIf="careGapSummary.highUrgencyCount > 0" class="critical-count">
+                    ({{ careGapSummary.highUrgencyCount }} critical)
+                  </span>
+                </mat-card-subtitle>
+              </div>
+            </div>
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="viewAllCareGaps()"
+              aria-label="View all care gaps">
+              <mat-icon>arrow_forward</mat-icon>
+              View All Care Gaps
+            </button>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <!-- Summary Statistics Bar -->
+          <div class="care-gaps-stats-bar">
+            <div class="stat-item" *ngIf="careGapSummary.highUrgencyCount > 0">
+              <div class="stat-icon critical">
+                <mat-icon>priority_high</mat-icon>
+              </div>
+              <div>
+                <div class="stat-value">{{ careGapSummary.highUrgencyCount }}</div>
+                <div class="stat-label">Critical</div>
+              </div>
+            </div>
+            <div class="stat-item" *ngIf="careGapSummary.mediumUrgencyCount > 0">
+              <div class="stat-icon medium">
+                <mat-icon>warning_amber</mat-icon>
+              </div>
+              <div>
+                <div class="stat-value">{{ careGapSummary.mediumUrgencyCount }}</div>
+                <div class="stat-label">Medium</div>
+              </div>
+            </div>
+            <div class="stat-item" *ngIf="careGapSummary.lowUrgencyCount > 0">
+              <div class="stat-icon low">
+                <mat-icon>info</mat-icon>
+              </div>
+              <div>
+                <div class="stat-value">{{ careGapSummary.lowUrgencyCount }}</div>
+                <div class="stat-label">Low Priority</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="care-gaps-summary">
+            <div class="urgency-badges">
+              <mat-chip *ngIf="careGapSummary.highUrgencyCount > 0" class="urgency-chip high">
+                <mat-icon>priority_high</mat-icon>
+                {{ careGapSummary.highUrgencyCount }} High Priority
+              </mat-chip>
+              <mat-chip *ngIf="careGapSummary.mediumUrgencyCount > 0" class="urgency-chip medium">
+                <mat-icon>warning_amber</mat-icon>
+                {{ careGapSummary.mediumUrgencyCount }} Medium
+              </mat-chip>
+              <mat-chip *ngIf="careGapSummary.lowUrgencyCount > 0" class="urgency-chip low">
+                <mat-icon>info</mat-icon>
+                {{ careGapSummary.lowUrgencyCount }} Low
+              </mat-chip>
+            </div>
+          </div>
+
+        <div class="care-gaps-list" *ngIf="urgentCareGaps.length > 0">
+          <div
+            class="care-gap-item"
+            *ngFor="let gap of urgentCareGaps"
+            [class.high-urgency]="gap.urgency === 'high'"
+            [class.medium-urgency]="gap.urgency === 'medium'"
+            role="button"
+            tabindex="0"
+            (click)="viewPatientWithCareGap(gap.patientId)"
+            (keydown.enter)="viewPatientWithCareGap(gap.patientId)"
+            [attr.aria-label]="'View ' + gap.patientName + ' - ' + gap.gapDescription">
+            <div class="gap-icon">
+              <mat-icon [color]="getUrgencyColor(gap.urgency)">{{ getCareGapIcon(gap.gapType) }}</mat-icon>
+            </div>
+            <div class="gap-info">
+              <div class="patient-info">
+                <strong>{{ gap.patientName }}</strong>
+                <span class="mrn">(MRN: {{ gap.mrn }})</span>
+              </div>
+              <div class="gap-description">
+                {{ gap.gapDescription }}
+              </div>
+              <div class="gap-timing">
+                {{ formatDaysOverdue(gap.daysOverdue) }}
+              </div>
+            </div>
+            <div class="gap-action">
+              <div class="gap-quick-actions">
+                <button mat-mini-fab color="primary"
+                        matTooltip="Schedule appointment"
+                        aria-label="Schedule appointment for this patient"
+                        (click)="$event.stopPropagation(); scheduleAppointment(gap.patientId)">
+                  <mat-icon>event</mat-icon>
+                </button>
+                <button mat-mini-fab color="accent"
+                        matTooltip="Send reminder"
+                        aria-label="Send reminder to this patient"
+                        (click)="$event.stopPropagation(); sendReminder(gap.patientId)">
+                  <mat-icon>notifications</mat-icon>
+                </button>
+              </div>
+              <mat-icon>arrow_forward</mat-icon>
+            </div>
+          </div>
+        </div>
+
+        <div class="care-gaps-empty" *ngIf="urgentCareGaps.length === 0">
+          <mat-icon>check_circle</mat-icon>
+          <p>No urgent care gaps identified</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    </section>
+
+    <!-- PRIORITY 2: Performance Overview - Statistics Cards -->
+    <section class="dashboard-section statistics-section" aria-label="Performance Overview">
+      <div class="section-header">
+        <mat-icon class="section-icon primary">insights</mat-icon>
+        <div class="section-text">
+          <h2>Performance Overview</h2>
+          <p class="section-description">Key metrics and quality measure statistics</p>
+        </div>
+      </div>
+      <div class="statistics-grid">
+      <app-stat-card
+        title="Total Evaluations"
+        [value]="statistics.totalEvaluations.toString()"
+        subtitle="All time"
+        icon="assessment"
+        iconClass="total-evaluations"
+        color="primary"
+        tooltip="Total number of quality measure evaluations performed"
+        [primaryAction]="{label: 'View All', icon: 'arrow_forward', tooltip: 'View all evaluations', ariaLabel: 'View all evaluations'}"
+        (primaryActionClick)="viewAllEvaluations()">
+      </app-stat-card>
+
+      <app-stat-card
+        title="Total Patients"
+        [value]="statistics.totalPatients.toString()"
+        subtitle="Active patients"
+        icon="people"
+        iconClass="total-patients"
+        color="accent"
+        tooltip="Total number of active patients in the system"
+        [primaryAction]="{label: 'View All', icon: 'arrow_forward', tooltip: 'View all patients', ariaLabel: 'View all patients'}"
+        (primaryActionClick)="viewAllPatients()">
+      </app-stat-card>
+
+      <app-stat-card
+        title="Overall Compliance"
+        [value]="formatPercentage(statistics.overallCompliance)"
+        [subtitle]="formatPercentage(Math.abs(statistics.complianceChange)) + ' vs last period'"
+        icon="verified"
+        iconClass="compliance-rate"
+        color="success"
+        [trend]="trendDirection"
+        [targetValue]="85"
+        [higherIsBetter]="true"
+        tooltip="Overall compliance rate across all measures (CMS Star Rating target: 85%)"
+        [primaryAction]="{label: 'Compliant', icon: 'check_circle', tooltip: 'View compliant patients', ariaLabel: 'View compliant patients'}"
+        [secondaryAction]="{label: 'Non-Compliant', icon: 'warning', tooltip: 'View non-compliant patients', ariaLabel: 'View non-compliant patients'}"
+        (primaryActionClick)="viewCompliantPatients()"
+        (secondaryActionClick)="viewNonCompliantPatients()">
+      </app-stat-card>
+
+      <app-stat-card
+        title="Recent Evaluations"
+        [value]="statistics.recentEvaluations.toString()"
+        subtitle="Last 30 days"
+        icon="schedule"
+        iconClass="recent-evaluations"
+        color="warn"
+        tooltip="Number of evaluations in the last 30 days"
+        [primaryAction]="{label: 'View Recent', icon: 'arrow_forward', tooltip: 'View recent evaluations (last 30 days)', ariaLabel: 'View recent evaluations'}"
+         (primaryActionClick)="viewRecentEvaluations()">
+       </app-stat-card>
+      </div>
+      <div class="stat-card-actions-fallback" aria-label="Dashboard quick action shortcut">
+      <button
+        mat-stroked-button
+        color="primary"
+        type="button"
+        class="stat-action-button"
+        aria-label="View all evaluations"
+        (click)="viewAllEvaluations()"
+      >
+        <mat-icon>arrow_forward</mat-icon>
+        View All
+      </button>
+      <button
+        mat-stroked-button
+        color="accent"
+        type="button"
+        class="stat-action-button"
+        aria-label="View all patients"
+        (click)="viewAllPatients()"
+      >
+        <mat-icon>people</mat-icon>
+        View All Patients
+      </button>
+      <button
+        mat-stroked-button
+        color="warn"
+        type="button"
+        class="stat-action-button"
+        aria-label="View compliant patients"
+        (click)="viewCompliantPatients()"
+      >
+        <mat-icon>verified</mat-icon>
+        Compliant
+      </button>
+      <button
+        mat-stroked-button
+        color="warn"
+        type="button"
+        class="stat-action-button"
+        aria-label="View non-compliant patients"
+        (click)="viewNonCompliantPatients()"
+      >
+        <mat-icon>warning</mat-icon>
+        Non-Compliant
+      </button>
+      <button
+        mat-stroked-button
+        color="primary"
+        type="button"
+        class="stat-action-button"
+        aria-label="View recent evaluations"
+        (click)="viewRecentEvaluations()"
+      >
+        <mat-icon>schedule</mat-icon>
+        View Recent
+      </button>
+      <button
+        mat-stroked-button
+        color="success"
+        type="button"
+        class="stat-action-button"
+        aria-label="View care gaps"
+        (click)="viewAllCareGaps()"
+      >
+        <mat-icon>report_problem</mat-icon>
+        View Care Gaps
+      </button>
+      <button
+        mat-stroked-button
+        color="accent"
+        type="button"
+        class="stat-action-button"
+        aria-label="View reports"
+        (click)="navigateTo('/reports')"
+      >
+        <mat-icon>description</mat-icon>
+        View Reports
+      </button>
+    </div>
+
+    </section>
+
+    <!-- PRIORITY 3: Administrative Tools - Batch Population Calculation -->
+    <section class="dashboard-section admin-tools-section" aria-label="Administrative Tools">
+      <div class="section-header">
+        <mat-icon class="section-icon accent">build</mat-icon>
+        <div class="section-text">
+          <h2>Administrative Tools</h2>
+          <p class="section-description">Batch operations and population calculations</p>
+        </div>
+      </div>
+    <app-batch-calculation></app-batch-calculation>
+
+    <!-- Quick Actions -->
+    <mat-card class="quick-actions-card">
+      <mat-card-header>
+        <mat-card-title>Quick Actions</mat-card-title>
+        <mat-card-subtitle>Common tasks and shortcuts</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="quick-actions-grid">
+          <app-loading-button
+            *ngFor="let action of quickActions"
+            [text]="action.label"
+            [loadingText]="action.label + '...'"
+            [icon]="action.icon"
+            [color]="action.color"
+            [loading]="action.loading || false"
+            [success]="action.success || false"
+            variant="raised"
+            [ariaLabel]="action.ariaLabel"
+            [tooltip]="action.tooltip || action.ariaLabel"
+            customClass="quick-action-button"
+            (buttonClick)="onQuickAction(action)">
+          </app-loading-button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    </section>
+
+    <!-- PRIORITY 4: Activity and Analytics -->
+    <section class="dashboard-section analytics-section" aria-label="Activity and Analytics">
+      <div class="section-header">
+        <mat-icon class="section-icon warn">analytics</mat-icon>
+        <div class="section-text">
+          <h2>Activity &amp; Analytics</h2>
+          <p class="section-description">Recent evaluations and measure performance data</p>
+        </div>
+      </div>
+    <!-- Main Content Grid -->
+    <div class="main-content-grid">
+      <!-- Recent Activity -->
+      <mat-card class="recent-activity-card">
+        <mat-card-header>
+          <mat-card-title>Recent Activity</mat-card-title>
+          <mat-card-subtitle>Latest 10 evaluations</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="activity-list" *ngIf="recentActivity.length > 0">
+            <div
+              class="activity-item"
+              *ngFor="let activity of recentActivity"
+              (click)="viewResultDetails(activity.id)">
+              <div class="activity-icon">
+                <mat-icon [class]="getOutcomeBadgeClass(activity.outcome)">
+                  {{ activity.outcome === 'compliant' ? 'check_circle' :
+                     activity.outcome === 'non-compliant' ? 'warning' : 'info' }}
+                </mat-icon>
+              </div>
+              <div class="activity-details">
+                <h4>{{ activity.patientName }}</h4>
+                <p class="patient-mrn" *ngIf="activity.patientMrn">
+                  MRN: {{ activity.patientMrn }}
+                  <span *ngIf="activity.patientMrnAuthority" class="mrn-authority">
+                    ({{ formatMRNAuthority(activity.patientMrnAuthority) }})
+                  </span>
+                </p>
+                <p class="measure-name">{{ activity.measureName }}</p>
+                <span class="activity-date">{{ formatDate(activity.date) }}</span>
+              </div>
+              <div class="activity-outcome">
+                <mat-chip [class]="getOutcomeBadgeClass(activity.outcome)">
+                  {{ activity.outcome === 'compliant' ? 'Compliant' :
+                     activity.outcome === 'non-compliant' ? 'Non-Compliant' : 'Not Eligible' }}
+                </mat-chip>
+              </div>
+            </div>
+          </div>
+          <div class="empty-message" *ngIf="recentActivity.length === 0">
+            <mat-icon>inbox</mat-icon>
+            <p>No recent activity</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Measure Performance -->
+      <mat-card class="measure-performance-card">
+        <mat-card-header>
+          <mat-card-title>Measure Performance</mat-card-title>
+          <mat-card-subtitle>
+            Compliance rates by measure
+            <span *ngIf="measurePerformance.length > 0">
+              (Avg: {{ formatPercentage(calculateAverageCompliance()) }})
+            </span>
+          </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="performance-list" *ngIf="measurePerformance.length > 0">
+            <div class="performance-item" *ngFor="let measure of measurePerformance">
+              <div class="measure-info">
+                <h4>{{ measure.measureName }}</h4>
+                <div class="measure-meta">
+                  <mat-chip class="category-chip">{{ measure.category }}</mat-chip>
+                  <span class="eval-count">{{ measure.evaluationCount }} evaluations</span>
+                </div>
+              </div>
+              <div class="measure-stats">
+                <div class="compliance-bar">
+                  <div class="bar-fill" [style.width.%]="measure.complianceRate"></div>
+                </div>
+                <span class="compliance-rate">{{ formatPercentage(measure.complianceRate) }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="empty-message" *ngIf="measurePerformance.length === 0">
+            <mat-icon>bar_chart</mat-icon>
+            <p>No measure data available</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Compliance Trends -->
+    <mat-card class="compliance-trends-card" *ngIf="complianceTrendChartData.length > 0">
+      <mat-card-header>
+        <mat-card-title>Compliance Trends</mat-card-title>
+        <mat-card-subtitle>
+          <div class="trend-controls">
+            <button
+              mat-button
+              [class.active]="trendPeriod === 'daily'"
+              (click)="setTrendPeriod('daily')"
+              matTooltip="View daily compliance trends">
+              Daily
+            </button>
+            <button
+              mat-button
+              [class.active]="trendPeriod === 'weekly'"
+              (click)="setTrendPeriod('weekly')"
+              matTooltip="View weekly compliance trends">
+              Weekly
+            </button>
+            <button
+              mat-button
+              [class.active]="trendPeriod === 'monthly'"
+              (click)="setTrendPeriod('monthly')"
+              matTooltip="View monthly compliance trends">
+              Monthly
+            </button>
+          </div>
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-container">
+          <ngx-charts-line-chart
+            [view]="lineChartView"
+            [results]="complianceTrendChartData"
+            [xAxis]="lineChartShowXAxis"
+            [yAxis]="lineChartShowYAxis"
+            [legend]="lineChartShowLegend"
+            [showXAxisLabel]="lineChartShowXAxisLabel"
+            [showYAxisLabel]="lineChartShowYAxisLabel"
+            [xAxisLabel]="lineChartXAxisLabel"
+            [yAxisLabel]="lineChartYAxisLabel"
+            [scheme]="lineChartColorScheme"
+            [gradient]="lineChartGradient">
+          </ngx-charts-line-chart>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Measure Performance Bar Chart -->
+    <mat-card class="measure-performance-chart-card" *ngIf="measurePerformanceChartData.length > 0">
+      <mat-card-header>
+        <mat-card-title>Top Performing Measures</mat-card-title>
+        <mat-card-subtitle>Top 10 measures by compliance rate</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-container">
+          <ngx-charts-bar-vertical
+            [view]="barChartView"
+            [results]="measurePerformanceChartData"
+            [xAxis]="barChartShowXAxis"
+            [yAxis]="barChartShowYAxis"
+            [legend]="barChartShowLegend"
+            [showXAxisLabel]="barChartShowXAxisLabel"
+            [showYAxisLabel]="barChartShowYAxisLabel"
+            [xAxisLabel]="barChartXAxisLabel"
+            [yAxisLabel]="barChartYAxisLabel"
+            [scheme]="barChartColorScheme"
+            [gradient]="barChartGradient">
+          </ngx-charts-bar-vertical>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    </section>
+  </div>
+  }
+</div>

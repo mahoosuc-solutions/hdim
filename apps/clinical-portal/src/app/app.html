@@ -1,0 +1,127 @@
+<!-- Skip Links for Accessibility -->
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<a class="skip-link" href="#main-navigation">Skip to navigation</a>
+
+<!-- Session Timeout Warning Dialog -->
+@if (showSessionWarning) {
+  <div class="session-warning-overlay" role="alertdialog" aria-labelledby="session-warning-title" aria-describedby="session-warning-desc">
+    <div class="session-warning-dialog">
+      <mat-icon class="warning-icon">warning</mat-icon>
+      <h2 id="session-warning-title">Session Expiring</h2>
+      <p id="session-warning-desc">Your session will expire in {{ sessionTimeRemaining }} seconds due to inactivity.</p>
+      <div class="session-warning-actions">
+        <button mat-raised-button color="primary" (click)="extendSession()">Stay Logged In</button>
+        <button mat-stroked-button (click)="logout()">Logout Now</button>
+      </div>
+    </div>
+  </div>
+}
+
+<mat-sidenav-container class="sidenav-container">
+  <!-- Side Navigation -->
+  <mat-sidenav
+    #sidenav
+    mode="side"
+    [opened]="sidenavOpened"
+    class="sidenav"
+    role="navigation"
+    aria-label="Main navigation"
+  >
+    <div class="sidenav-header">
+      <mat-icon class="sidenav-icon">local_hospital</mat-icon>
+      <h2 class="sidenav-title">Clinical Portal</h2>
+    </div>
+
+    <mat-nav-list id="main-navigation" aria-label="Main navigation links">
+      @for (item of navItems; track item.path) {
+        <a
+          mat-list-item
+          [routerLink]="item.path"
+          routerLinkActive="active-link"
+          [attr.aria-current]="item.path === router?.url ? 'page' : null"
+        >
+          <mat-icon matListItemIcon aria-hidden="true">{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <!-- Main Content -->
+  <mat-sidenav-content>
+    <!-- Top Toolbar -->
+    <mat-toolbar color="primary" class="toolbar">
+      <button
+        mat-icon-button
+        (click)="toggleSidenav()"
+        aria-label="Toggle navigation menu"
+      >
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <span class="toolbar-title">{{ title }}</span>
+      <span class="spacer"></span>
+
+      <!-- Global Search Button -->
+      <button
+        mat-button
+        class="search-button"
+        (click)="openGlobalSearch()"
+        [matTooltip]="'Search (Ctrl+K)'"
+        aria-label="Open global search">
+        <mat-icon>search</mat-icon>
+        <span class="search-text">Search</span>
+        <span class="search-kbd">⌘K</span>
+      </button>
+
+      <!-- Theme Toggle Button -->
+      <button
+        mat-icon-button
+        (click)="toggleTheme()"
+        [matTooltip]="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+        aria-label="Toggle theme">
+        <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+
+      <span class="practice-name">{{ practiceName }}</span>
+
+      <!-- Notifications -->
+      <button mat-icon-button aria-label="Notifications">
+        <mat-icon [matBadge]="3" matBadgeColor="warn" aria-hidden="false">notifications</mat-icon>
+      </button>
+
+      <!-- Help -->
+      <button mat-icon-button aria-label="Help">
+        <mat-icon>help_outline</mat-icon>
+      </button>
+
+      <!-- User Menu -->
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User menu">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <button mat-menu-item>
+          <mat-icon>person</mat-icon>
+          <span>Profile</span>
+        </button>
+        <button mat-menu-item>
+          <mat-icon>settings</mat-icon>
+          <span>Settings</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </mat-menu>
+    </mat-toolbar>
+
+    <!-- Breadcrumb Navigation -->
+    <app-breadcrumb></app-breadcrumb>
+
+    <!-- Page Content -->
+    <main id="main-content" class="content" role="main" aria-label="Main content">
+      <router-outlet></router-outlet>
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

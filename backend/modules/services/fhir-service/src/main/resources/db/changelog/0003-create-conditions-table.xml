@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0003-create-conditions-table" author="codex">
+        <createTable tableName="conditions">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_json" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" type="varchar(128)"/>
+            <column name="code_system" type="varchar(128)"/>
+            <column name="code_display" type="varchar(512)"/>
+            <column name="category" type="varchar(64)"/>
+            <column name="clinical_status" type="varchar(32)"/>
+            <column name="verification_status" type="varchar(32)"/>
+            <column name="severity" type="varchar(32)"/>
+            <column name="onset_date" type="date"/>
+            <column name="abatement_date" type="date"/>
+            <column name="recorded_date" type="date"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Index for tenant + patient lookups -->
+        <createIndex indexName="idx_cond_tenant_patient" tableName="conditions">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="recorded_date" descending="true"/>
+        </createIndex>
+
+        <!-- Index for tenant + patient + code lookups -->
+        <createIndex indexName="idx_cond_tenant_patient_code" tableName="conditions">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="code"/>
+        </createIndex>
+
+        <!-- Index for tenant + patient + category lookups -->
+        <createIndex indexName="idx_cond_tenant_patient_category" tableName="conditions">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="category"/>
+        </createIndex>
+
+        <!-- Index for clinical status queries -->
+        <createIndex indexName="idx_cond_clinical_status" tableName="conditions">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="clinical_status"/>
+        </createIndex>
+
+        <!-- Index for code lookups -->
+        <createIndex indexName="idx_cond_code" tableName="conditions">
+            <column name="tenant_id"/>
+            <column name="code"/>
+        </createIndex>
+
+        <!-- Index for category lookups -->
+        <createIndex indexName="idx_cond_category" tableName="conditions">
+            <column name="tenant_id"/>
+            <column name="category"/>
+        </createIndex>
+
+        <!-- Index for chronic condition queries (onset without abatement) -->
+        <createIndex indexName="idx_cond_chronic" tableName="conditions">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="onset_date"/>
+            <column name="abatement_date"/>
+        </createIndex>
+
+        <!-- Foreign key to patients table -->
+        <addForeignKeyConstraint
+            baseTableName="conditions"
+            baseColumnNames="patient_id"
+            constraintName="fk_condition_patient"
+            referencedTableName="patients"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <!-- PostgreSQL-specific: Use JSONB for better performance -->
+    </changeSet>
+
+</databaseChangeLog>

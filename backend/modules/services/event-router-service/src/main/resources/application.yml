@@ -1,0 +1,103 @@
+server:
+  port: 8087
+
+spring:
+  application:
+    name: event-router-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/healthdata_event_router
+    username: healthdata_user
+    password: ${DB_PASSWORD:healthdata_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: event-router-consumer-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+      max-poll-records: 100
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+    listener:
+      ack-mode: manual
+      concurrency: 3
+
+# Event Router Configuration
+event-router:
+  source-topics:
+    - fhir.patient.created
+    - fhir.patient.updated
+    - fhir.observation.created
+    - fhir.encounter.created
+    - fhir.medication.created
+
+  dlq-topic: event-router.dlq
+
+  priority-queue:
+    max-size: 50000
+    batch-size: 100
+    poll-interval-ms: 100
+
+  routing:
+    default-priority: MEDIUM
+    enable-async: true
+    thread-pool-size: 10
+
+  metrics:
+    enabled: true
+    export-interval-seconds: 60
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.healthdata.eventrouter: DEBUG
+    org.springframework.kafka: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"

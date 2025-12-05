@@ -1,0 +1,110 @@
+# Prometheus Production Configuration for HealthData-in-Motion
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  external_labels:
+    cluster: 'healthdata-production'
+    environment: 'prod'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+      timeout: 10s
+
+# Load alerting rules
+rule_files:
+  - '/etc/prometheus/alerts.yml'
+
+# Scrape configurations
+scrape_configs:
+  # CQL Engine Service
+  - job_name: 'cql-engine-service'
+    metrics_path: '/cql-engine/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['cql-engine-service:8081']
+        labels:
+          service: 'cql-engine'
+          component: 'backend'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'cql-engine-service'
+
+  # Quality Measure Service
+  - job_name: 'quality-measure-service'
+    metrics_path: '/quality-measure/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['quality-measure-service:8087']
+        labels:
+          service: 'quality-measure'
+          component: 'backend'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'quality-measure-service'
+
+  # FHIR Service
+  - job_name: 'fhir-service'
+    metrics_path: '/fhir/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['fhir-service-mock:8080']
+        labels:
+          service: 'fhir'
+          component: 'backend'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'fhir-service'
+
+  # PostgreSQL (requires postgres_exporter)
+  - job_name: 'postgres'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+        labels:
+          service: 'postgresql'
+          component: 'database'
+
+  # Redis (requires redis_exporter)
+  - job_name: 'redis'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: 'redis'
+          component: 'cache'
+
+  # Kafka (requires kafka_exporter)
+  - job_name: 'kafka'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['kafka-exporter:9308']
+        labels:
+          service: 'kafka'
+          component: 'messaging'
+
+  # Node Exporter (system metrics)
+  - job_name: 'node'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'node'
+          component: 'infrastructure'
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+          component: 'monitoring'

@@ -1,0 +1,220 @@
+<div class="batch-calculation-container">
+  <!-- Header -->
+  <div class="header">
+    <h2 class="title">Quality Score Calculator</h2>
+    <p class="subtitle">Refresh quality scores and compliance metrics for all patients</p>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error" class="alert alert-error">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <span>{{ error }}</span>
+    <button (click)="error = null" class="close-btn">&times;</button>
+  </div>
+
+  <!-- Start Calculation Button -->
+  <div class="action-section" *ngIf="!isCalculating">
+    <button
+      (click)="startBatchCalculation()"
+      [disabled]="isLoading"
+      class="btn btn-primary btn-lg">
+      <svg *ngIf="!isLoading" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+      </svg>
+      <svg *ngIf="isLoading" class="icon animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span *ngIf="!isLoading">Refresh Quality Scores</span>
+      <span *ngIf="isLoading">Starting Calculation...</span>
+    </button>
+    <p class="help-text">
+      This will calculate all HEDIS quality measures for all patients currently in the FHIR server.
+      Depending on the number of patients, this may take several minutes.
+    </p>
+  </div>
+
+  <!-- Active Job Progress -->
+  <div *ngIf="activeJob && isCalculating" class="active-job-card">
+    <div class="card-header">
+      <h3 class="card-title">Active Calculation</h3>
+      <span [class]="'badge ' + getStatusClass(activeJob.status)">
+        {{ activeJob.status }}
+      </span>
+    </div>
+
+    <div class="card-body">
+      <!-- Job Info -->
+      <div class="job-info">
+        <div class="info-item">
+          <span class="label">Job ID:</span>
+          <span class="value">{{ activeJob.jobId }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Started:</span>
+          <span class="value">{{ formatTimestamp(activeJob.startedAt) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Duration:</span>
+          <span class="value">{{ formatDuration(activeJob.duration) }}</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-label">Progress</span>
+          <span class="progress-percent">{{ activeJob.progressPercent }}%</span>
+        </div>
+        <div class="progress-bar">
+          <div
+            class="progress-fill"
+            [style.width.%]="activeJob.progressPercent">
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Patients</div>
+          <div class="stat-value">{{ activeJob.totalPatients }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Measures</div>
+          <div class="stat-value">{{ activeJob.totalMeasures }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Calculations</div>
+          <div class="stat-value">{{ activeJob.totalCalculations }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Completed</div>
+          <div class="stat-value">{{ activeJob.completedCalculations }}</div>
+        </div>
+        <div class="stat-card stat-success">
+          <div class="stat-label">Successful</div>
+          <div class="stat-value">{{ activeJob.successfulCalculations }}</div>
+        </div>
+        <div class="stat-card stat-error">
+          <div class="stat-label">Failed</div>
+          <div class="stat-value">{{ activeJob.failedCalculations }}</div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="card-actions">
+        <button
+          *ngIf="activeJob.status === BatchJobStatus.CALCULATING"
+          (click)="cancelJob()"
+          class="btn btn-danger">
+          Cancel Job
+        </button>
+        <button
+          *ngIf="activeJob.failedCalculations > 0"
+          (click)="showJobErrors(activeJob)"
+          class="btn btn-secondary">
+          View Errors ({{ activeJob.failedCalculations }})
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Job History -->
+  <div class="job-history-section">
+    <div class="section-header">
+      <h3 class="section-title">Job History</h3>
+      <div class="section-actions">
+        <button (click)="refreshHistory()" class="btn btn-sm btn-secondary">
+          <svg class="icon-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Refresh
+        </button>
+        <button (click)="toggleHistory()" class="btn btn-sm btn-secondary">
+          <svg class="icon-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path *ngIf="showHistory" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+            <path *ngIf="!showHistory" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+          {{ showHistory ? 'Hide' : 'Show' }}
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="showHistory" class="history-table-container">
+      <table *ngIf="jobHistory.length > 0" class="history-table">
+        <thead>
+          <tr>
+            <th>Started</th>
+            <th>Status</th>
+            <th>Duration</th>
+            <th>Patients</th>
+            <th>Measures</th>
+            <th>Success Rate</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let job of jobHistory">
+            <td>{{ formatTimestamp(job.startedAt) }}</td>
+            <td>
+              <span [class]="'badge ' + getStatusClass(job.status)">
+                {{ job.status }}
+              </span>
+            </td>
+            <td>{{ formatDuration(job.duration) }}</td>
+            <td>{{ job.totalPatients }}</td>
+            <td>{{ job.totalMeasures }}</td>
+            <td>
+              <div class="success-rate">
+                <span class="rate-text">{{ getSuccessRate(job) }}%</span>
+                <span class="rate-fraction">({{ job.successfulCalculations }}/{{ job.totalCalculations }})</span>
+              </div>
+            </td>
+            <td>
+              <button
+                *ngIf="job.failedCalculations > 0"
+                (click)="showJobErrors(job)"
+                class="btn btn-xs btn-secondary">
+                View Errors
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div *ngIf="jobHistory.length === 0" class="empty-state">
+        <svg class="empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <p class="empty-text">No batch calculation jobs found</p>
+        <p class="empty-subtext">Start your first population calculation above</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Dialog -->
+  <div *ngIf="showErrors" class="modal-overlay" (click)="closeErrors()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Calculation Errors</h3>
+        <button (click)="closeErrors()" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="selectedJobErrors.length > 0" class="error-list">
+          <div *ngFor="let error of selectedJobErrors" class="error-item">
+            {{ error }}
+          </div>
+        </div>
+        <div *ngIf="selectedJobErrors.length === 0" class="empty-state">
+          <p>No errors to display</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button (click)="closeErrors()" class="btn btn-secondary">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

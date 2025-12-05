@@ -1,0 +1,32 @@
+# JWT Authentication Configuration
+jwt:
+  secret: ${JWT_SECRET:change_this_secret_key_in_production_must_be_at_least_256_bits_for_hs512}
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:15m}
+  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:7d}
+  issuer: ${JWT_ISSUER:healthdata-in-motion}
+  audience: ${JWT_AUDIENCE:healthdata-api}
+
+# Security Configuration
+security:
+  authentication:
+    jwt-enabled: ${JWT_ENABLED:true}
+    basic-auth-enabled: ${BASIC_AUTH_ENABLED:true}  # Keep for backward compatibility
+
+# Scheduling Configuration
+spring:
+  task:
+    scheduling:
+      enabled: true
+      pool:
+        size: 2
+      cron:
+        token-cleanup: ${TOKEN_CLEANUP_CRON:0 0 2 * * ?}  # Daily at 2 AM
+        token-stats: ${TOKEN_STATS_CRON:0 0 * * * ?}      # Hourly
+
+# Liquibase Configuration
+# DISABLED: Authentication migrations will be managed by Gateway service
+# See: Gateway-based authentication architecture decision
+  liquibase:
+    enabled: false
+    # change-log: classpath:db/changelog/db.changelog-master.xml
+    # default-schema: public

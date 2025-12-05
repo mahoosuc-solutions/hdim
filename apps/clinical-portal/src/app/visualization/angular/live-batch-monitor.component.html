@@ -1,0 +1,241 @@
+<div class="live-batch-monitor">
+  <!-- Control Panel -->
+  <mat-card class="control-panel">
+    <mat-card-header>
+      <mat-card-title>Batch Evaluation Controls</mat-card-title>
+      <mat-card-subtitle>Configure and start batch evaluation</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="control-row">
+        <!-- Library Selector -->
+        <mat-form-field appearance="outline" class="control-field">
+          <mat-label>Select Measure Library</mat-label>
+          <mat-select [(ngModel)]="selectedLibraryId" [disabled]="isMonitoring">
+            @for (library of availableLibraries; track library.id) {
+              <mat-option [value]="library.id">
+                {{ library.name }} (v{{ library.version }})
+              </mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>library_books</mat-icon>
+        </mat-form-field>
+
+        <!-- Patient Count Input -->
+        <mat-form-field appearance="outline" class="control-field">
+          <mat-label>Number of Patients</mat-label>
+          <input
+            matInput
+            type="number"
+            [(ngModel)]="patientCount"
+            [disabled]="isMonitoring"
+            min="1"
+            max="1000"
+          />
+          <mat-icon matPrefix>people</mat-icon>
+        </mat-form-field>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          @if (!isMonitoring) {
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="startBatchEvaluation()"
+              [disabled]="!selectedLibraryId"
+              matTooltip="Start real-time batch evaluation"
+            >
+              <mat-icon>play_arrow</mat-icon>
+              Start Evaluation
+            </button>
+          } @else {
+            <button
+              mat-raised-button
+              color="warn"
+              (click)="stopBatchMonitoring()"
+              matTooltip="Stop monitoring"
+            >
+              <mat-icon>stop</mat-icon>
+              Stop Monitoring
+            </button>
+          }
+
+          @if (!isMonitoring && !useSimulation) {
+            <button
+              mat-stroked-button
+              color="accent"
+              (click)="startSimulation()"
+              matTooltip="Run simulation for testing (no backend required)"
+            >
+              <mat-icon>science</mat-icon>
+              Test Simulation
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Status Indicators -->
+      <div class="status-row">
+        <!-- Connection Status -->
+        <mat-chip [color]="getStatusColor()" class="status-chip">
+          <mat-icon class="status-icon">{{ getStatusIcon() }}</mat-icon>
+          WebSocket: {{ wsStatus }}
+        </mat-chip>
+
+        <!-- Batch State -->
+        @if (batchState) {
+          <mat-chip [color]="isMonitoring ? 'primary' : ''" class="status-chip">
+            <mat-icon class="status-icon">
+              @if (batchState.status === 'MONITORING') {
+                visibility
+              } @else if (batchState.status === 'LOADING_PATIENTS') {
+                downloading
+              } @else if (batchState.status === 'SUBMITTING_BATCH') {
+                upload
+              } @else if (batchState.status === 'COMPLETED') {
+                check_circle
+              } @else if (batchState.status === 'ERROR') {
+                error
+              } @else {
+                info
+              }
+            </mat-icon>
+            Status: {{ batchState.status }}
+          </mat-chip>
+        }
+
+        <!-- Reconnect Button -->
+        @if (wsStatus === WebSocketStatus.DISCONNECTED || wsStatus === WebSocketStatus.ERROR) {
+          <button
+            mat-icon-button
+            (click)="reconnect()"
+            matTooltip="Reconnect to WebSocket"
+            color="primary"
+          >
+            <mat-icon>refresh</mat-icon>
+          </button>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Main Content -->
+  <div class="content">
+    <!-- Statistics Panel -->
+    @if (batchProgress) {
+      <mat-card class="stats-card">
+        <mat-card-header>
+          <mat-card-title>Batch Progress</mat-card-title>
+          <mat-card-subtitle>Real-time evaluation statistics</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <!-- Progress Bar -->
+          <div class="progress-section">
+            <div class="progress-label">
+              <span>{{ (batchProgress.completedCount ?? batchProgress.completedPatients) }} / {{ batchProgress.totalPatients }}</span>
+              <span class="progress-percentage">{{ (batchProgress.completionPercentage ?? ((batchProgress.completedCount || 0) / (batchProgress.totalPatients || 1) * 100)) | number:'1.1-1' }}%</span>
+            </div>
+            <mat-progress-bar
+              mode="determinate"
+              [value]="batchProgress.completionPercentage ?? ((batchProgress.completedCount || 0) / (batchProgress.totalPatients || 1) * 100)"
+              color="primary"
+            ></mat-progress-bar>
+          </div>
+
+          <!-- Statistics Grid -->
+          <div class="stats-grid">
+            <div class="stat-item">
+              <mat-icon class="stat-icon success">check_circle</mat-icon>
+              <div class="stat-content">
+                <div class="stat-value">{{ batchProgress.successCount || batchProgress.successfulEvaluations }}</div>
+                <div class="stat-label">Successful</div>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <mat-icon class="stat-icon error">error</mat-icon>
+              <div class="stat-content">
+                <div class="stat-value">{{ batchProgress.failedCount || batchProgress.failedEvaluations }}</div>
+                <div class="stat-label">Failed</div>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <mat-icon class="stat-icon">speed</mat-icon>
+              <div class="stat-content">
+                <div class="stat-value">{{ (batchProgress.currentThroughput || batchProgress.throughputPerSecond) | number:'1.1-1' }}</div>
+                <div class="stat-label">Per Second</div>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <mat-icon class="stat-icon">schedule</mat-icon>
+              <div class="stat-content">
+                <div class="stat-value">{{ (batchProgress.avgDurationMs || batchProgress.averageDurationMs) | number:'1.0-0' }}ms</div>
+                <div class="stat-label">Avg Duration</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Current Measure -->
+          @if (batchProgress.measureName || batchProgress.currentMeasure) {
+            <div class="current-measure">
+              <mat-icon>assessment</mat-icon>
+              <span>Current Measure: <strong>{{ batchProgress.measureName ?? batchProgress.currentMeasure }}</strong></span>
+            </div>
+          }
+
+          <!-- Batch Status -->
+          <div class="batch-status">
+            <mat-chip [color]="batchProgress.status === 'COMPLETED' ? 'primary' : 'accent'">
+              {{ batchProgress.status }}
+            </mat-chip>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- 3D Visualization -->
+    <mat-card class="visualization-card">
+      <mat-card-content>
+        @if (isLoading) {
+          <div class="loading-overlay">
+            <mat-icon class="loading-icon">3d_rotation</mat-icon>
+            <p>Initializing 3D visualization...</p>
+          </div>
+        }
+
+        <!-- Scene Container -->
+        <div #sceneContainer class="scene-container"></div>
+
+        <!-- Legend -->
+        <div class="legend">
+          <div class="legend-title">Legend</div>
+          <div class="legend-items">
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: #2196f3;"></div>
+              <span>Pending</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: #ffeb3b;"></div>
+              <span>Processing</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: #4caf50;"></div>
+              <span>Success</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: #f44336;"></div>
+              <span>Failed</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+          <mat-icon>info</mat-icon>
+          <span>Use mouse to rotate, zoom, and pan the visualization</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

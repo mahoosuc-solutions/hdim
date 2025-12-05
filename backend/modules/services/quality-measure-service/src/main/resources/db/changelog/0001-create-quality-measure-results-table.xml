@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0001-create-quality-measure-results-table" author="healthdata-team5">
+        <comment>Create quality measure results table for HEDIS quality tracking</comment>
+
+        <createTable tableName="quality_measure_results">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="measure_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="measure_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="measure_category" type="varchar(50)"/>
+            <column name="measure_year" type="integer"/>
+            <column name="numerator_compliant" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="denominator_elligible" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="compliance_rate" type="double precision"/>
+            <column name="score" type="double precision"/>
+            <column name="calculation_date" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cql_library" type="varchar(200)"/>
+            <column name="cql_result" type="jsonb"/>
+            <column name="created_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="integer" defaultValue="0"/>
+        </createTable>
+
+        <createIndex indexName="idx_qm_tenant_patient" tableName="quality_measure_results">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_qm_measure" tableName="quality_measure_results">
+            <column name="measure_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_qm_year" tableName="quality_measure_results">
+            <column name="tenant_id"/>
+            <column name="measure_year"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="quality_measure_results"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

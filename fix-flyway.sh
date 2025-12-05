@@ -1,0 +1,331 @@
+#!/bin/bash
+
+# Add SPRING_FLYWAY_ENABLED: "false" to each service environment section
+cat > docker-compose-fixed.yml << 'EOF'
+version: '3.8'
+
+services:
+  # Infrastructure Services
+  postgres:
+    container_name: healthdata-postgres
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: healthdata
+      POSTGRES_PASSWORD: healthdata_password
+      POSTGRES_DB: healthdata_db
+      POSTGRES_MULTIPLE_DATABASES: fhir_db,quality_db,cql_db,event_db,patient_db,caregap_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthdata"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - healthdata-network
+
+  redis:
+    container_name: healthdata-redis
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - healthdata-network
+
+  zookeeper:
+    container_name: healthdata-zookeeper
+    image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2182:2181"
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - healthdata-network
+
+  kafka:
+    container_name: healthdata-kafka
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9094
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9094:9092"
+      - "9095:9093"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+    networks:
+      - healthdata-network
+
+  # Backend Services
+  fhir-service:
+    container_name: healthdata-fhir-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/fhir-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fhir_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8081
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "false"
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  quality-measure-service:
+    container_name: healthdata-quality-measure-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/quality-measure-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/quality_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8087
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "false"
+      CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8086
+      FHIR_SERVICE_URL: http://fhir-service:8081
+    ports:
+      - "8087:8087"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  cql-engine-service:
+    container_name: healthdata-cql-engine-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/cql-engine-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cql_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8086
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "false"
+    ports:
+      - "8086:8086"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  gateway-service:
+    container_name: healthdata-gateway-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/gateway-service/Dockerfile
+    depends_on:
+      - fhir-service
+      - quality-measure-service
+      - cql-engine-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8080
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "false"
+      FHIR_SERVICE_URL: http://fhir-service:8081
+      QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087
+      CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8086
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  event-processing-service:
+    container_name: healthdata-event-processing-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/event-processing-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/event_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8084
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "false"
+    ports:
+      - "8084:8084"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  patient-service:
+    container_name: healthdata-patient-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/patient-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patient_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8082
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "false"
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  care-gap-service:
+    container_name: healthdata-care-gap-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/care-gap-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/caregap_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8083
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "false"
+    ports:
+      - "8083:8083"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Frontend Service
+  clinical-portal:
+    container_name: healthdata-clinical-portal
+    build:
+      context: ./apps/clinical-portal
+      dockerfile: Dockerfile
+    depends_on:
+      - gateway-service
+    environment:
+      API_URL: http://gateway-service:8080
+    ports:
+      - "4200:80"
+    networks:
+      - healthdata-network
+
+networks:
+  healthdata-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+EOF
+
+mv docker-compose-fixed.yml docker-compose.yml
+echo "✅ Fixed docker-compose.yml with proper Flyway disable settings"

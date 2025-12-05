@@ -1,0 +1,102 @@
+# Prometheus Configuration for HealthData-in-Motion Staging
+# Scrapes metrics from all microservices
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: 'staging'
+    cluster: 'healthdata-staging'
+
+# Alerting configuration (optional - can be added later)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # CQL Engine Service
+  - job_name: 'cql-engine-service'
+    metrics_path: '/cql-engine/actuator/prometheus'
+    static_configs:
+      - targets: ['cql-engine-service:8081']
+        labels:
+          service: 'cql-engine'
+          tier: 'backend'
+
+  # Quality Measure Service (Event Intelligence Hub)
+  - job_name: 'quality-measure-service'
+    metrics_path: '/quality-measure/actuator/prometheus'
+    static_configs:
+      - targets: ['quality-measure-service:8087']
+        labels:
+          service: 'quality-measure'
+          tier: 'backend'
+
+  # Event Router Service
+  - job_name: 'event-router-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['event-router-service:8089']
+        labels:
+          service: 'event-router'
+          tier: 'backend'
+
+  # Patient Service
+  - job_name: 'patient-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['patient-service:8084']
+        labels:
+          service: 'patient'
+          tier: 'backend'
+
+  # Care Gap Service
+  - job_name: 'care-gap-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['care-gap-service:8085']
+        labels:
+          service: 'care-gap'
+          tier: 'backend'
+
+  # Gateway Service
+  - job_name: 'gateway-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['gateway-service:9000']
+        labels:
+          service: 'gateway'
+          tier: 'api-gateway'
+
+  # PostgreSQL Exporter (optional - requires postgres_exporter)
+  # - job_name: 'postgres'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+  #       labels:
+  #         service: 'postgres'
+  #         tier: 'database'
+
+  # Redis Exporter (optional - requires redis_exporter)
+  # - job_name: 'redis'
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']
+  #       labels:
+  #         service: 'redis'
+  #         tier: 'cache'
+
+  # Kafka Exporter (optional - requires kafka_exporter)
+  # - job_name: 'kafka'
+  #   static_configs:
+  #     - targets: ['kafka-exporter:9308']
+  #       labels:
+  #         service: 'kafka'
+  #         tier: 'messaging'

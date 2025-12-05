@@ -1,0 +1,961 @@
+<div class="patient-health-overview">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    <p>Loading patient health overview...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- CRITICAL ALERT BANNER - Highest Priority -->
+  <app-critical-alert-banner
+    *ngIf="healthOverview && !loading"
+    [alerts]="criticalAlerts"
+    [dismissible]="true"
+    [showTimestamp]="true"
+    (alertAction)="onAlertAction($event)"
+    (alertDismiss)="onAlertDismiss($event)">
+  </app-critical-alert-banner>
+
+  <!-- Health Overview Content -->
+  <div *ngIf="healthOverview && !loading" class="health-content">
+
+    <!-- Overall Health Score Card -->
+    <mat-card class="score-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon [style.color]="getHealthScoreColor(healthOverview.overallHealthScore.score)">
+            {{ getHealthStatusIcon(healthOverview.overallHealthScore.status) }}
+          </mat-icon>
+          Overall Health Score
+        </mat-card-title>
+        <mat-card-subtitle>
+          Last updated: {{ formatDate(healthOverview.lastUpdated) }}
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="score-display">
+          <div class="score-number" [style.color]="getHealthScoreColor(healthOverview.overallHealthScore.score)">
+            {{ healthOverview.overallHealthScore.score }}
+          </div>
+          <div class="score-status">
+            {{ healthOverview.overallHealthScore.status | titlecase }}
+          </div>
+          <div class="score-trend">
+            <mat-icon [style.color]="getTrendColor(healthOverview.overallHealthScore.trend)">
+              {{ getTrendIcon(healthOverview.overallHealthScore.trend) }}
+            </mat-icon>
+            {{ healthOverview.overallHealthScore.trend | titlecase }}
+          </div>
+        </div>
+
+        <mat-divider class="score-divider"></mat-divider>
+
+        <!-- Component Scores -->
+        <div class="component-scores">
+          <div class="component-score">
+            <div class="component-label">
+              <mat-icon>favorite</mat-icon>
+              Physical
+            </div>
+            <mat-progress-bar
+              mode="determinate"
+              [value]="healthOverview.overallHealthScore.components.physical"
+              [color]="healthOverview.overallHealthScore.components.physical >= 70 ? 'primary' : 'warn'">
+            </mat-progress-bar>
+            <span class="component-value">{{ healthOverview.overallHealthScore.components.physical }}%</span>
+          </div>
+
+          <div class="component-score">
+            <div class="component-label">
+              <mat-icon>psychology</mat-icon>
+              Mental
+            </div>
+            <mat-progress-bar
+              mode="determinate"
+              [value]="healthOverview.overallHealthScore.components.mental"
+              [color]="healthOverview.overallHealthScore.components.mental >= 70 ? 'primary' : 'warn'">
+            </mat-progress-bar>
+            <span class="component-value">{{ healthOverview.overallHealthScore.components.mental }}%</span>
+          </div>
+
+          <div class="component-score">
+            <div class="component-label">
+              <mat-icon>people</mat-icon>
+              Social
+            </div>
+            <mat-progress-bar
+              mode="determinate"
+              [value]="healthOverview.overallHealthScore.components.social"
+              [color]="healthOverview.overallHealthScore.components.social >= 70 ? 'primary' : 'warn'">
+            </mat-progress-bar>
+            <span class="component-value">{{ healthOverview.overallHealthScore.components.social }}%</span>
+          </div>
+
+          <div class="component-score">
+            <div class="component-label">
+              <mat-icon>shield</mat-icon>
+              Preventive
+            </div>
+            <mat-progress-bar
+              mode="determinate"
+              [value]="healthOverview.overallHealthScore.components.preventive"
+              [color]="healthOverview.overallHealthScore.components.preventive >= 70 ? 'primary' : 'warn'">
+            </mat-progress-bar>
+            <span class="component-value">{{ healthOverview.overallHealthScore.components.preventive }}%</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Tabs for Different Health Aspects -->
+    <mat-tab-group class="health-tabs" mat-stretch-tabs="false">
+
+      <!-- Physical Health Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">favorite</mat-icon>
+          Physical Health
+        </ng-template>
+
+        <div class="tab-content">
+          <!-- Vitals -->
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>Recent Vitals</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="vitals-grid">
+                <div class="vital-item" *ngIf="healthOverview.physicalHealth.vitals.bloodPressure">
+                  <div class="vital-header">
+                    <span class="vital-label">Blood Pressure</span>
+                    <mat-icon [style.color]="getVitalStatus(healthOverview.physicalHealth.vitals.bloodPressure.status).color">
+                      {{ getVitalStatus(healthOverview.physicalHealth.vitals.bloodPressure.status).icon }}
+                    </mat-icon>
+                  </div>
+                  <div class="vital-value">
+                    {{ healthOverview.physicalHealth.vitals.bloodPressure.value }}
+                    <span class="vital-unit">{{ healthOverview.physicalHealth.vitals.bloodPressure.unit }}</span>
+                  </div>
+                  <div class="vital-date">{{ formatDate(healthOverview.physicalHealth.vitals.bloodPressure.date) }}</div>
+                </div>
+
+                <div class="vital-item" *ngIf="healthOverview.physicalHealth.vitals.heartRate">
+                  <div class="vital-header">
+                    <span class="vital-label">Heart Rate</span>
+                    <mat-icon [style.color]="getVitalStatus(healthOverview.physicalHealth.vitals.heartRate.status).color">
+                      {{ getVitalStatus(healthOverview.physicalHealth.vitals.heartRate.status).icon }}
+                    </mat-icon>
+                  </div>
+                  <div class="vital-value">
+                    {{ healthOverview.physicalHealth.vitals.heartRate.value }}
+                    <span class="vital-unit">{{ healthOverview.physicalHealth.vitals.heartRate.unit }}</span>
+                  </div>
+                  <div class="vital-date">{{ formatDate(healthOverview.physicalHealth.vitals.heartRate.date) }}</div>
+                </div>
+
+                <div class="vital-item" *ngIf="healthOverview.physicalHealth.vitals.weight">
+                  <div class="vital-header">
+                    <span class="vital-label">Weight</span>
+                    <mat-icon [style.color]="getVitalStatus(healthOverview.physicalHealth.vitals.weight.status).color">
+                      {{ getVitalStatus(healthOverview.physicalHealth.vitals.weight.status).icon }}
+                    </mat-icon>
+                  </div>
+                  <div class="vital-value">
+                    {{ healthOverview.physicalHealth.vitals.weight.value }}
+                    <span class="vital-unit">{{ healthOverview.physicalHealth.vitals.weight.unit }}</span>
+                  </div>
+                  <div class="vital-date">{{ formatDate(healthOverview.physicalHealth.vitals.weight.date) }}</div>
+                </div>
+
+                <div class="vital-item" *ngIf="healthOverview.physicalHealth.vitals.bmi">
+                  <div class="vital-header">
+                    <span class="vital-label">BMI</span>
+                    <mat-icon [style.color]="getVitalStatus(healthOverview.physicalHealth.vitals.bmi.status).color">
+                      {{ getVitalStatus(healthOverview.physicalHealth.vitals.bmi.status).icon }}
+                    </mat-icon>
+                  </div>
+                  <div class="vital-value">
+                    {{ healthOverview.physicalHealth.vitals.bmi.value }}
+                    <span class="vital-unit">{{ healthOverview.physicalHealth.vitals.bmi.unit }}</span>
+                  </div>
+                  <div class="vital-date">{{ formatDate(healthOverview.physicalHealth.vitals.bmi.date) }}</div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Lab Results -->
+          <mat-card class="section-card" *ngIf="healthOverview.physicalHealth.labs.length > 0">
+            <mat-card-header>
+              <mat-card-title>Recent Lab Results</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="labs-list">
+                <div class="lab-item" *ngFor="let lab of healthOverview.physicalHealth.labs">
+                  <div class="lab-header">
+                    <span class="lab-name">{{ lab.code.text }}</span>
+                    <mat-chip [style.background-color]="getVitalStatus(lab.status).color" class="lab-status">
+                      {{ lab.status | titlecase }}
+                    </mat-chip>
+                  </div>
+                  <div class="lab-value">
+                    {{ lab.value }} {{ lab.unit }}
+                    <span class="lab-reference" *ngIf="lab.referenceRange">
+                      (Normal: {{ lab.referenceRange.text || (lab.referenceRange.low + '-' + lab.referenceRange.high) }})
+                    </span>
+                  </div>
+                  <div class="lab-date">{{ formatDate(lab.date) }}</div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Chronic Conditions -->
+          <mat-card class="section-card" *ngIf="healthOverview.physicalHealth.chronicConditions.length > 0">
+            <mat-card-header>
+              <mat-card-title>Chronic Conditions</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="conditions-list">
+                <div class="condition-item" *ngFor="let condition of healthOverview.physicalHealth.chronicConditions">
+                  <div class="condition-header">
+                    <mat-icon class="condition-icon">
+                      {{ getChronicConditionIcon(condition.display) }}
+                    </mat-icon>
+                    <span class="condition-name">{{ condition.display }}</span>
+                    <mat-chip [class]="'severity-' + condition.severity">
+                      {{ condition.severity | titlecase }}
+                    </mat-chip>
+                    <mat-chip [color]="condition.controlled ? 'primary' : 'warn'" class="control-status">
+                      {{ condition.controlled ? 'Controlled' : 'Not Controlled' }}
+                    </mat-chip>
+                  </div>
+                  <div class="condition-details">
+                    <span *ngIf="condition.onsetDate">Onset: {{ formatDate(condition.onsetDate) }}</span>
+                    <span *ngIf="condition.lastReview">Last Review: {{ formatDate(condition.lastReview) }}</span>
+                  </div>
+                  <div class="condition-complications" *ngIf="condition.complications && condition.complications.length > 0">
+                    <strong>Complications:</strong> {{ condition.complications.join(', ') }}
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Medication Adherence -->
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>Medication Adherence</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="adherence-display">
+                <div class="adherence-rate">
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="healthOverview.physicalHealth.medicationAdherence.overallRate"
+                    [style.--mdc-linear-progress-active-indicator-color]="getMedicationAdherenceColor(healthOverview.physicalHealth.medicationAdherence.overallRate)">
+                  </mat-progress-bar>
+                  <span class="adherence-percentage">
+                    {{ healthOverview.physicalHealth.medicationAdherence.overallRate }}%
+                  </span>
+                </div>
+                <div class="adherence-status">
+                  Status: <strong>{{ healthOverview.physicalHealth.medicationAdherence.status | titlecase }}</strong>
+                </div>
+                <div class="problematic-meds" *ngIf="healthOverview.physicalHealth.medicationAdherence.problematicMedications.length > 0">
+                  <mat-icon color="warn">warning</mat-icon>
+                  <span>Problematic: {{ healthOverview.physicalHealth.medicationAdherence.problematicMedications.join(', ') }}</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Functional Status -->
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>Functional Status</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="functional-metrics">
+                <div class="functional-item">
+                  <span class="functional-label">Activities of Daily Living (ADL)</span>
+                  <span class="functional-value">{{ healthOverview.physicalHealth.functionalStatus.adlScore }}/6</span>
+                </div>
+                <div class="functional-item">
+                  <span class="functional-label">Instrumental ADL</span>
+                  <span class="functional-value">{{ healthOverview.physicalHealth.functionalStatus.iadlScore }}/8</span>
+                </div>
+                <div class="functional-item">
+                  <span class="functional-label">Mobility Score</span>
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="healthOverview.physicalHealth.functionalStatus.mobilityScore"
+                    color="primary">
+                  </mat-progress-bar>
+                  <span class="functional-value">{{ healthOverview.physicalHealth.functionalStatus.mobilityScore }}%</span>
+                </div>
+                <div class="functional-item">
+                  <span class="functional-label">Pain Level</span>
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="healthOverview.physicalHealth.functionalStatus.painLevel * 10"
+                    [color]="healthOverview.physicalHealth.functionalStatus.painLevel > 6 ? 'warn' : 'primary'">
+                  </mat-progress-bar>
+                  <span class="functional-value">{{ healthOverview.physicalHealth.functionalStatus.painLevel }}/10</span>
+                </div>
+                <div class="functional-item">
+                  <span class="functional-label">Fatigue Level</span>
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="healthOverview.physicalHealth.functionalStatus.fatigueLevel * 10"
+                    [color]="healthOverview.physicalHealth.functionalStatus.fatigueLevel > 6 ? 'warn' : 'primary'">
+                  </mat-progress-bar>
+                  <span class="functional-value">{{ healthOverview.physicalHealth.functionalStatus.fatigueLevel }}/10</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Mental Health Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">psychology</mat-icon>
+          Mental Health
+          <mat-chip *ngIf="healthOverview.mentalHealth.riskLevel !== 'low'"
+                    [style.background-color]="getRiskLevelColor(healthOverview.mentalHealth.riskLevel)"
+                    class="risk-badge">
+            {{ healthOverview.mentalHealth.riskLevel | titlecase }}
+          </mat-chip>
+        </ng-template>
+
+        <div class="tab-content">
+          <!-- Mental Health Assessments -->
+          <mat-card class="section-card" *ngIf="healthOverview.mentalHealth.assessments.length > 0">
+            <mat-card-header>
+              <mat-card-title>Screening Assessments</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="assessments-list">
+                <div class="assessment-item" *ngFor="let assessment of healthOverview.mentalHealth.assessments">
+                  <div class="assessment-header">
+                    <span class="assessment-name">{{ assessment.name }}</span>
+                    <mat-chip [style.background-color]="getAssessmentSeverityColor(assessment.severity)">
+                      {{ assessment.severity | titlecase }}
+                    </mat-chip>
+                    <mat-chip *ngIf="assessment.positiveScreen" color="warn">
+                      Positive Screen
+                    </mat-chip>
+                  </div>
+                  <div class="assessment-score">
+                    <strong>Score:</strong> {{ assessment.score }}/{{ assessment.maxScore }}
+                    <span class="assessment-trend" *ngIf="assessment.trend">
+                      <mat-icon [style.color]="getTrendColor(assessment.trend)">
+                        {{ getTrendIcon(assessment.trend) }}
+                      </mat-icon>
+                      {{ assessment.trend }}
+                    </span>
+                  </div>
+                  <div class="assessment-interpretation">
+                    <mat-icon>info</mat-icon>
+                    {{ assessment.interpretation }}
+                  </div>
+                  <div class="assessment-date">{{ formatDate(assessment.date) }}</div>
+                  <div class="assessment-followup" *ngIf="assessment.requiresFollowup">
+                    <mat-icon color="warn">flag</mat-icon>
+                    <strong>Follow-up Required</strong>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Mental Health Diagnoses -->
+          <mat-card class="section-card" *ngIf="healthOverview.mentalHealth.diagnoses.length > 0">
+            <mat-card-header>
+              <mat-card-title>Diagnosed Conditions</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="diagnoses-list">
+                <div class="diagnosis-item" *ngFor="let diagnosis of healthOverview.mentalHealth.diagnoses">
+                  <div class="diagnosis-header">
+                    <mat-icon>{{ getMentalHealthCategoryIcon(diagnosis.category) }}</mat-icon>
+                    <span class="diagnosis-name">{{ diagnosis.display }}</span>
+                    <mat-chip [class]="'severity-' + diagnosis.severity">{{ diagnosis.severity }}</mat-chip>
+                    <mat-chip *ngIf="diagnosis.inRemission" color="primary">In Remission</mat-chip>
+                  </div>
+                  <div class="diagnosis-details">
+                    <span>{{ diagnosis.category | titlecase }}</span>
+                    <span *ngIf="diagnosis.onsetDate">Onset: {{ formatDate(diagnosis.onsetDate) }}</span>
+                    <span *ngIf="diagnosis.lastReview">Last Review: {{ formatDate(diagnosis.lastReview) }}</span>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Substance Use -->
+          <mat-card class="section-card" *ngIf="healthOverview.mentalHealth.substanceUse.hasSubstanceUse">
+            <mat-card-header>
+              <mat-card-title>
+                Substance Use
+                <mat-chip [style.background-color]="getRiskLevelColor(healthOverview.mentalHealth.substanceUse.overallRisk)">
+                  {{ healthOverview.mentalHealth.substanceUse.overallRisk | titlecase }} Risk
+                </mat-chip>
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="substance-list">
+                <div class="substance-item" *ngFor="let substance of healthOverview.mentalHealth.substanceUse.substances">
+                  <span class="substance-name">{{ substance.substance | titlecase }}</span>
+                  <span class="substance-frequency">{{ substance.frequency | titlecase }}</span>
+                  <mat-chip [class]="'severity-' + substance.severity">{{ substance.severity }}</mat-chip>
+                  <mat-chip *ngIf="substance.inTreatment" color="primary">In Treatment</mat-chip>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Suicide Risk -->
+          <mat-card class="section-card"
+                    [class.high-risk]="healthOverview.mentalHealth.suicideRisk.level === 'high' || healthOverview.mentalHealth.suicideRisk.level === 'critical'">
+            <mat-card-header>
+              <mat-card-title>
+                Suicide Risk Assessment
+                <mat-chip [style.background-color]="getRiskLevelColor(healthOverview.mentalHealth.suicideRisk.level)">
+                  <mat-icon>{{ getRiskLevelIcon(healthOverview.mentalHealth.suicideRisk.level) }}</mat-icon>
+                  {{ healthOverview.mentalHealth.suicideRisk.level | titlecase }} Risk
+                </mat-chip>
+              </mat-card-title>
+              <mat-card-subtitle *ngIf="healthOverview.mentalHealth.suicideRisk.lastAssessed">
+                Last assessed: {{ formatDate(healthOverview.mentalHealth.suicideRisk.lastAssessed) }}
+              </mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="risk-factors" *ngIf="healthOverview.mentalHealth.suicideRisk.factors.length > 0">
+                <strong>Risk Factors:</strong>
+                <ul>
+                  <li *ngFor="let factor of healthOverview.mentalHealth.suicideRisk.factors">
+                    {{ factor.factor }}
+                    <mat-chip [class]="'severity-' + factor.severity" size="small">
+                      {{ factor.severity }}
+                    </mat-chip>
+                    <span *ngIf="factor.modifiable" class="modifiable">(Modifiable)</span>
+                  </li>
+                </ul>
+              </div>
+              <div class="protective-factors" *ngIf="healthOverview.mentalHealth.suicideRisk.protectiveFactors.length > 0">
+                <strong>Protective Factors:</strong>
+                <ul>
+                  <li *ngFor="let factor of healthOverview.mentalHealth.suicideRisk.protectiveFactors">
+                    <mat-icon color="primary">check_circle</mat-icon>
+                    {{ factor }}
+                  </li>
+                </ul>
+              </div>
+              <div class="intervention-required" *ngIf="healthOverview.mentalHealth.suicideRisk.requiresIntervention">
+                <mat-icon color="warn">priority_high</mat-icon>
+                <strong>Intervention Required</strong>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Social Support -->
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>Social Support</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="social-support-metrics">
+                <div class="support-item">
+                  <span class="support-label">Support Level:</span>
+                  <mat-chip [color]="healthOverview.mentalHealth.socialSupport.level === 'strong' ? 'primary' : 'warn'">
+                    {{ healthOverview.mentalHealth.socialSupport.level | titlecase }}
+                  </mat-chip>
+                </div>
+                <div class="support-item">
+                  <mat-icon [color]="healthOverview.mentalHealth.socialSupport.hasCaregiver ? 'primary' : ''">
+                    {{ healthOverview.mentalHealth.socialSupport.hasCaregiver ? 'check_circle' : 'cancel' }}
+                  </mat-icon>
+                  <span>Has Caregiver</span>
+                </div>
+                <div class="support-item">
+                  <mat-icon [color]="!healthOverview.mentalHealth.socialSupport.livesAlone ? 'primary' : 'warn'">
+                    {{ !healthOverview.mentalHealth.socialSupport.livesAlone ? 'check_circle' : 'warning' }}
+                  </mat-icon>
+                  <span>{{ healthOverview.mentalHealth.socialSupport.livesAlone ? 'Lives Alone' : 'Lives with Others' }}</span>
+                </div>
+                <div class="support-item" *ngIf="healthOverview.mentalHealth.socialSupport.socialIsolation">
+                  <mat-icon color="warn">warning</mat-icon>
+                  <span>Social Isolation Identified</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Treatment Engagement -->
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>Treatment Engagement</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="treatment-engagement">
+                <div class="engagement-item">
+                  <mat-icon [color]="healthOverview.mentalHealth.treatmentEngagement.inTherapy ? 'primary' : ''">
+                    {{ healthOverview.mentalHealth.treatmentEngagement.inTherapy ? 'check_circle' : 'cancel' }}
+                  </mat-icon>
+                  <span>{{ healthOverview.mentalHealth.treatmentEngagement.inTherapy ? 'Currently in Therapy' : 'Not in Therapy' }}</span>
+                </div>
+                <div class="engagement-item" *ngIf="healthOverview.mentalHealth.treatmentEngagement.therapyAdherence">
+                  <span class="engagement-label">Therapy Adherence:</span>
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="healthOverview.mentalHealth.treatmentEngagement.therapyAdherence"
+                    color="primary">
+                  </mat-progress-bar>
+                  <span class="engagement-value">{{ healthOverview.mentalHealth.treatmentEngagement.therapyAdherence }}%</span>
+                </div>
+                <div class="engagement-item" *ngIf="healthOverview.mentalHealth.treatmentEngagement.medicationCompliance">
+                  <span class="engagement-label">Medication Compliance:</span>
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="healthOverview.mentalHealth.treatmentEngagement.medicationCompliance"
+                    color="primary">
+                  </mat-progress-bar>
+                  <span class="engagement-value">{{ healthOverview.mentalHealth.treatmentEngagement.medicationCompliance }}%</span>
+                </div>
+                <div class="engagement-item" *ngIf="healthOverview.mentalHealth.treatmentEngagement.lastPsychVisit">
+                  <span class="engagement-label">Last Psychiatry Visit:</span>
+                  <span class="engagement-value">{{ formatDate(healthOverview.mentalHealth.treatmentEngagement.lastPsychVisit) }}</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Social Determinants Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">home_work</mat-icon>
+          Social Health
+          <mat-chip *ngIf="healthOverview.socialDeterminants.needs.length > 0"
+                    [matBadge]="healthOverview.socialDeterminants.needs.length"
+                    matBadgeColor="warn">
+          </mat-chip>
+        </ng-template>
+
+        <div class="tab-content">
+          <!-- SDOH Risk Overview -->
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>
+                Social Determinants of Health Risk
+                <mat-chip [style.background-color]="getRiskLevelColor(healthOverview.socialDeterminants.overallRisk)">
+                  {{ healthOverview.socialDeterminants.overallRisk | titlecase }} Risk
+                </mat-chip>
+              </mat-card-title>
+              <mat-card-subtitle *ngIf="healthOverview.socialDeterminants.screeningDate">
+                Last screening: {{ formatDate(healthOverview.socialDeterminants.screeningDate) }}
+              </mat-card-subtitle>
+            </mat-card-header>
+          </mat-card>
+
+          <!-- SDOH Needs -->
+          <mat-card class="section-card" *ngIf="healthOverview.socialDeterminants.needs.length > 0">
+            <mat-card-header>
+              <mat-card-title>Identified Needs</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="sdoh-needs-list">
+                <div class="sdoh-need-item" *ngFor="let need of healthOverview.socialDeterminants.needs">
+                  <div class="need-header">
+                    <mat-icon>{{ getSDOHCategoryIcon(need.category) }}</mat-icon>
+                    <span class="need-category">{{ formatCategory(need.category) | titlecase }}</span>
+                    <mat-chip [class]="'severity-' + need.severity">{{ need.severity }}</mat-chip>
+                    <mat-chip *ngIf="need.addressed" color="primary">Addressed</mat-chip>
+                    <mat-chip *ngIf="!need.addressed" color="warn">Not Addressed</mat-chip>
+                  </div>
+                  <div class="need-description">{{ need.description }}</div>
+                  <div class="need-identified">Identified: {{ formatDate(need.identified) }}</div>
+                  <div class="need-interventions" *ngIf="need.interventions && need.interventions.length > 0">
+                    <strong>Interventions:</strong>
+                    <ul>
+                      <li *ngFor="let intervention of need.interventions">{{ intervention }}</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Active Referrals -->
+          <mat-card class="section-card" *ngIf="healthOverview.socialDeterminants.activeReferrals.length > 0">
+            <mat-card-header>
+              <mat-card-title>Active Community Referrals</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="referrals-list">
+                <div class="referral-item" *ngFor="let referral of healthOverview.socialDeterminants.activeReferrals">
+                  <div class="referral-header">
+                    <mat-icon>{{ getSDOHCategoryIcon(referral.category) }}</mat-icon>
+                    <span class="referral-org">{{ referral.organization }}</span>
+                    <mat-chip [class]="'status-' + referral.status">{{ referral.status | titlecase }}</mat-chip>
+                  </div>
+                  <div class="referral-category">{{ formatCategory(referral.category) | titlecase }}</div>
+                  <div class="referral-dates">
+                    <span>Referred: {{ formatDate(referral.referralDate) }}</span>
+                    <span *ngIf="referral.followupDate">Follow-up: {{ formatDate(referral.followupDate) }}</span>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Z-Codes -->
+          <mat-card class="section-card" *ngIf="healthOverview.socialDeterminants.zCodes.length > 0">
+            <mat-card-header>
+              <mat-card-title>ICD-10 Z-Codes (Social Determinants)</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-chip-set>
+                <mat-chip *ngFor="let code of healthOverview.socialDeterminants.zCodes">
+                  {{ code }}
+                </mat-chip>
+              </mat-chip-set>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Risk & Predictions Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">analytics</mat-icon>
+          Risk Stratification
+        </ng-template>
+
+        <div class="tab-content">
+          <!-- Overall Risk -->
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>
+                Overall Risk Level
+                <mat-chip [style.background-color]="getRiskLevelColor(healthOverview.riskStratification.overallRisk)">
+                  <mat-icon>{{ getRiskLevelIcon(healthOverview.riskStratification.overallRisk) }}</mat-icon>
+                  {{ healthOverview.riskStratification.overallRisk | titlecase }}
+                </mat-chip>
+              </mat-card-title>
+            </mat-card-header>
+          </mat-card>
+
+          <!-- Risk Scores -->
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>Risk Scores</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="risk-scores">
+                <div class="risk-score-item">
+                  <span class="risk-score-label">Clinical Complexity</span>
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="healthOverview.riskStratification.scores.clinicalComplexity"
+                    [color]="healthOverview.riskStratification.scores.clinicalComplexity > 50 ? 'warn' : 'primary'">
+                  </mat-progress-bar>
+                  <span class="risk-score-value">{{ healthOverview.riskStratification.scores.clinicalComplexity }}</span>
+                </div>
+                <div class="risk-score-item">
+                  <span class="risk-score-label">Social Complexity</span>
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="healthOverview.riskStratification.scores.socialComplexity"
+                    [color]="healthOverview.riskStratification.scores.socialComplexity > 50 ? 'warn' : 'primary'">
+                  </mat-progress-bar>
+                  <span class="risk-score-value">{{ healthOverview.riskStratification.scores.socialComplexity }}</span>
+                </div>
+                <div class="risk-score-item">
+                  <span class="risk-score-label">Mental Health Risk</span>
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="healthOverview.riskStratification.scores.mentalHealthRisk"
+                    [color]="healthOverview.riskStratification.scores.mentalHealthRisk > 50 ? 'warn' : 'primary'">
+                  </mat-progress-bar>
+                  <span class="risk-score-value">{{ healthOverview.riskStratification.scores.mentalHealthRisk }}</span>
+                </div>
+                <div class="risk-score-item">
+                  <span class="risk-score-label">Utilization Risk</span>
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="healthOverview.riskStratification.scores.utilizationRisk"
+                    [color]="healthOverview.riskStratification.scores.utilizationRisk > 50 ? 'warn' : 'primary'">
+                  </mat-progress-bar>
+                  <span class="risk-score-value">{{ healthOverview.riskStratification.scores.utilizationRisk }}</span>
+                </div>
+                <div class="risk-score-item">
+                  <span class="risk-score-label">Cost Risk</span>
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="healthOverview.riskStratification.scores.costRisk"
+                    [color]="healthOverview.riskStratification.scores.costRisk > 50 ? 'warn' : 'primary'">
+                  </mat-progress-bar>
+                  <span class="risk-score-value">{{ healthOverview.riskStratification.scores.costRisk }}</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Predictive Analytics -->
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>Predictive Analytics</mat-card-title>
+              <mat-card-subtitle>AI-powered risk predictions</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="predictions-grid">
+                <div class="prediction-item">
+                  <mat-icon>local_hospital</mat-icon>
+                  <div class="prediction-content">
+                    <span class="prediction-label">30-Day Hospitalization Risk</span>
+                    <div class="prediction-value" [style.color]="healthOverview.riskStratification.predictions.hospitalizationRisk30Day > 20 ? '#f44336' : '#4caf50'">
+                      {{ healthOverview.riskStratification.predictions.hospitalizationRisk30Day }}%
+                    </div>
+                  </div>
+                </div>
+                <div class="prediction-item">
+                  <mat-icon>event</mat-icon>
+                  <div class="prediction-content">
+                    <span class="prediction-label">90-Day Hospitalization Risk</span>
+                    <div class="prediction-value" [style.color]="healthOverview.riskStratification.predictions.hospitalizationRisk90Day > 30 ? '#f44336' : '#4caf50'">
+                      {{ healthOverview.riskStratification.predictions.hospitalizationRisk90Day }}%
+                    </div>
+                  </div>
+                </div>
+                <div class="prediction-item">
+                  <mat-icon>emergency</mat-icon>
+                  <div class="prediction-content">
+                    <span class="prediction-label">30-Day ED Visit Risk</span>
+                    <div class="prediction-value" [style.color]="healthOverview.riskStratification.predictions.edVisitRisk30Day > 20 ? '#f44336' : '#4caf50'">
+                      {{ healthOverview.riskStratification.predictions.edVisitRisk30Day }}%
+                    </div>
+                  </div>
+                </div>
+                <div class="prediction-item">
+                  <mat-icon>refresh</mat-icon>
+                  <div class="prediction-content">
+                    <span class="prediction-label">Readmission Risk</span>
+                    <div class="prediction-value" [style.color]="healthOverview.riskStratification.predictions.readmissionRisk > 20 ? '#f44336' : '#4caf50'">
+                      {{ healthOverview.riskStratification.predictions.readmissionRisk }}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Category-Specific Risks -->
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>Condition-Specific Risks</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="category-risks">
+                <div class="category-risk-item">
+                  <span class="category-risk-label">Diabetes Complications</span>
+                  <mat-chip [style.background-color]="getRiskLevelColor(healthOverview.riskStratification.categories.diabetes)">
+                    {{ healthOverview.riskStratification.categories.diabetes | titlecase }}
+                  </mat-chip>
+                </div>
+                <div class="category-risk-item">
+                  <span class="category-risk-label">Cardiovascular Events</span>
+                  <mat-chip [style.background-color]="getRiskLevelColor(healthOverview.riskStratification.categories.cardiovascular)">
+                    {{ healthOverview.riskStratification.categories.cardiovascular | titlecase }}
+                  </mat-chip>
+                </div>
+                <div class="category-risk-item">
+                  <span class="category-risk-label">Respiratory Complications</span>
+                  <mat-chip [style.background-color]="getRiskLevelColor(healthOverview.riskStratification.categories.respiratory)">
+                    {{ healthOverview.riskStratification.categories.respiratory | titlecase }}
+                  </mat-chip>
+                </div>
+                <div class="category-risk-item">
+                  <span class="category-risk-label">Mental Health Crisis</span>
+                  <mat-chip [style.background-color]="getRiskLevelColor(healthOverview.riskStratification.categories.mentalHealth)">
+                    {{ healthOverview.riskStratification.categories.mentalHealth | titlecase }}
+                  </mat-chip>
+                </div>
+                <div class="category-risk-item">
+                  <span class="category-risk-label">Fall Risk</span>
+                  <mat-chip [style.background-color]="getRiskLevelColor(healthOverview.riskStratification.categories.fallRisk)">
+                    {{ healthOverview.riskStratification.categories.fallRisk | titlecase }}
+                  </mat-chip>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Care Gaps & Recommendations Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">assignment_late</mat-icon>
+          Care Gaps
+          <mat-chip [matBadge]="getUrgentCareGapsCount()"
+                    matBadgeColor="warn"
+                    *ngIf="getUrgentCareGapsCount() > 0">
+          </mat-chip>
+        </ng-template>
+
+        <div class="tab-content">
+          <!-- Care Gaps -->
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>
+                Care Gaps
+                <mat-chip [matBadge]="healthOverview.careGaps.length" matBadgeColor="warn"></mat-chip>
+              </mat-card-title>
+              <mat-card-subtitle>Identified opportunities to improve care quality</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-accordion>
+                <mat-expansion-panel *ngFor="let gap of getCareGapsByPriority()">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      <mat-icon [style.color]="getPriorityColor(gap.priority)">
+                        {{ getPriorityIcon(gap.priority) }}
+                      </mat-icon>
+                      {{ gap.title }}
+                      <mat-chip [style.background-color]="getPriorityColor(gap.priority)" class="priority-chip">
+                        {{ gap.priority | titlecase }}
+                      </mat-chip>
+                    </mat-panel-title>
+                    <mat-panel-description>
+                      {{ formatCategory(gap.category) | titlecase }}
+                      <span *ngIf="gap.overdueDays" class="overdue-indicator">
+                        Overdue {{ gap.overdueDays }} days
+                      </span>
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+
+                  <div class="gap-details">
+                    <p class="gap-description">{{ gap.description }}</p>
+
+                    <div class="gap-measure" *ngIf="gap.measureId">
+                      <strong>Quality Measure:</strong> {{ gap.measureName }} ({{ gap.measureId }})
+                    </div>
+
+                    <div class="gap-actions" *ngIf="gap.recommendedActions && gap.recommendedActions.length > 0">
+                      <strong>Recommended Actions:</strong>
+                      <ul>
+                        <li *ngFor="let action of gap.recommendedActions">{{ action }}</li>
+                      </ul>
+                    </div>
+
+                    <div class="gap-barriers" *ngIf="gap.barriers && gap.barriers.length > 0">
+                      <strong>Potential Barriers:</strong>
+                      <mat-chip-set>
+                        <mat-chip *ngFor="let barrier of gap.barriers" color="warn">
+                          <mat-icon>block</mat-icon>
+                          {{ barrier }}
+                        </mat-chip>
+                      </mat-chip-set>
+                    </div>
+
+                    <div class="gap-due-date" *ngIf="gap.dueDate">
+                      <mat-icon>event</mat-icon>
+                      <strong>Due Date:</strong> {{ formatDate(gap.dueDate) }}
+                    </div>
+                  </div>
+
+                  <mat-action-row>
+                    <button mat-button color="primary">Schedule</button>
+                    <button mat-button>Mark as Addressed</button>
+                    <button mat-button>Document Barrier</button>
+                  </mat-action-row>
+                </mat-expansion-panel>
+              </mat-accordion>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Care Recommendations -->
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>
+                Clinical Recommendations
+                <mat-chip [matBadge]="healthOverview.recommendations.length" matBadgeColor="primary"></mat-chip>
+              </mat-card-title>
+              <mat-card-subtitle>Evidence-based recommendations for this patient</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-accordion>
+                <mat-expansion-panel *ngFor="let rec of getRecommendationsByPriority()">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      <mat-icon [color]="rec.priority === 'high' ? 'warn' : 'primary'">
+                        lightbulb
+                      </mat-icon>
+                      {{ rec.title }}
+                      <mat-chip [class]="'priority-' + rec.priority">
+                        {{ rec.priority | titlecase }} Priority
+                      </mat-chip>
+                    </mat-panel-title>
+                    <mat-panel-description>
+                      {{ formatCategory(rec.category) | titlecase }}
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+
+                  <div class="recommendation-details">
+                    <p class="recommendation-description">{{ rec.description }}</p>
+
+                    <div class="recommendation-rationale">
+                      <strong>Rationale:</strong>
+                      <p>{{ rec.rationale }}</p>
+                    </div>
+
+                    <div class="recommendation-evidence">
+                      <strong>Evidence:</strong> {{ rec.evidence }}
+                      <span *ngIf="rec.guidelineSource" class="guideline-source">
+                        ({{ rec.guidelineSource }})
+                      </span>
+                    </div>
+
+                    <div class="recommendation-benefit" *ngIf="rec.expectedBenefit">
+                      <mat-icon color="primary">trending_up</mat-icon>
+                      <strong>Expected Benefit:</strong> {{ rec.expectedBenefit }}
+                    </div>
+
+                    <div class="recommendation-resources" *ngIf="rec.resources && rec.resources.length > 0">
+                      <strong>Resources:</strong>
+                      <ul>
+                        <li *ngFor="let resource of rec.resources">
+                          <a *ngIf="resource.url" [href]="resource.url" target="_blank">{{ resource.title }}</a>
+                          <span *ngIf="!resource.url">{{ resource.title }}</span>
+                          <span *ngIf="resource.description" class="resource-description">
+                            - {{ resource.description }}
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <mat-action-row>
+                    <button mat-button color="primary">Implement</button>
+                    <button mat-button>Share with Patient</button>
+                    <button mat-button>Dismiss</button>
+                  </mat-action-row>
+                </mat-expansion-panel>
+              </mat-accordion>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

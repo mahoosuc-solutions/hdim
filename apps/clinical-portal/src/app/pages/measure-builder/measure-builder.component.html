@@ -1,0 +1,316 @@
+<div class="page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="title">
+      <mat-icon color="primary">build_circle</mat-icon>
+      <div>
+        <h1>Measure Builder</h1>
+        <p>Create and manage custom quality measures using FHIR data and CQL.</p>
+      </div>
+    </div>
+    <app-loading-button
+      text="New Measure"
+      icon="add"
+      color="primary"
+      variant="raised"
+      ariaLabel="Create new measure"
+      (buttonClick)="openNewMeasureDialog()">
+    </app-loading-button>
+  </div>
+
+  <!-- Loading Overlay -->
+  <app-loading-overlay [isLoading]="loading" message="Loading measures..."></app-loading-overlay>
+
+  <!-- Measures Table Card -->
+  <mat-card class="measures-table-card">
+    <mat-card-header>
+      <mat-card-title>Quality Measures</mat-card-title>
+      <mat-card-subtitle>
+        Manage your custom quality measures, edit CQL logic, and publish to production.
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Search Filter -->
+      <div class="filter-container">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search Measures</mat-label>
+          <input matInput (keyup)="applyFilter($event)" placeholder="Search by name, category, or status">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Bulk Actions Toolbar -->
+      <div class="bulk-actions-toolbar" *ngIf="selection.hasValue()">
+        <div class="selection-info">
+          <mat-icon>check_circle</mat-icon>
+          <span>{{ getSelectionCount() }} measure(s) selected</span>
+        </div>
+        <div class="bulk-actions">
+          <app-loading-button
+            text="Publish Selected"
+            icon="cloud_upload"
+            variant="raised"
+            color="primary"
+            ariaLabel="Publish selected measures"
+            [loading]="publishSelectedLoading"
+            [success]="publishSelectedSuccess"
+            (buttonClick)="publishSelected()">
+          </app-loading-button>
+          <app-loading-button
+            text="Export Selected"
+            icon="download"
+            variant="raised"
+            color="primary"
+            ariaLabel="Export selected measures"
+            [loading]="exportSelectedLoading"
+            [success]="exportSelectedSuccess"
+            (buttonClick)="exportSelectedToCSV()">
+          </app-loading-button>
+          <app-loading-button
+            text="Delete Selected"
+            icon="delete"
+            variant="raised"
+            color="warn"
+            ariaLabel="Delete selected measures"
+            [loading]="deleteSelectedLoading"
+            [success]="deleteSelectedSuccess"
+            (buttonClick)="deleteSelected()">
+          </app-loading-button>
+          <app-loading-button
+            text="Clear Selection"
+            icon="clear"
+            variant="raised"
+            ariaLabel="Clear selection"
+            (buttonClick)="clearSelection()">
+          </app-loading-button>
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div class="table-container">
+        @if (dataSource.data.length === 0 && !loading) {
+          <div class="no-data">
+            <mat-icon>info</mat-icon>
+            <p>No measures found. Create your first custom measure to get started.</p>
+          </div>
+        } @else {
+          <table mat-table [dataSource]="dataSource" matSort class="measures-table">
+
+            <!-- Checkbox Column -->
+            <ng-container matColumnDef="select">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-checkbox
+                  (change)="$event ? masterToggle() : null"
+                  [checked]="selection.hasValue() && isAllSelected()"
+                  [indeterminate]="selection.hasValue() && !isAllSelected()"
+                  [aria-label]="checkboxLabel()">
+                </mat-checkbox>
+              </th>
+              <td mat-cell *matCellDef="let measure">
+                <mat-checkbox
+                  (click)="$event.stopPropagation()"
+                  (change)="$event ? selection.toggle(measure) : null"
+                  [checked]="selection.isSelected(measure)"
+                  [aria-label]="checkboxLabel(measure)">
+                </mat-checkbox>
+              </td>
+            </ng-container>
+
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+              <td mat-cell *matCellDef="let measure">
+                <div class="measure-name">
+                  <mat-icon class="measure-icon" color="primary">description</mat-icon>
+                  <span>{{ measure.name }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Category Column -->
+            <ng-container matColumnDef="category">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
+              <td mat-cell *matCellDef="let measure">
+                <span class="category-badge">{{ measure.category || 'CUSTOM' }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+              <td mat-cell *matCellDef="let measure">
+                <mat-chip [color]="getStatusColor(measure.status)" selected>
+                  {{ measure.status || 'DRAFT' }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Version Column -->
+            <ng-container matColumnDef="version">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Version</th>
+              <td mat-cell *matCellDef="let measure">{{ measure.version || '1.0.0' }}</td>
+            </ng-container>
+
+            <!-- Last Modified Column -->
+            <ng-container matColumnDef="updatedAt">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Modified</th>
+              <td mat-cell *matCellDef="let measure">
+                {{ measure.updatedAt || measure.createdAt | date: 'short' }}
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let measure">
+                <div class="action-buttons">
+                  <button
+                    mat-icon-button
+                    [matTooltip]="'Edit CQL'"
+                    color="primary"
+                    (click)="editCql(measure)">
+                    <mat-icon>code</mat-icon>
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    [matTooltip]="'Manage Value Sets'"
+                    color="primary"
+                    (click)="openValueSetPicker(measure)">
+                    <mat-icon>category</mat-icon>
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    [matTooltip]="'Test Measure'"
+                    color="accent"
+                    (click)="testMeasure(measure)">
+                    <mat-icon>science</mat-icon>
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    [matTooltip]="'Publish Measure'"
+                    color="primary"
+                    [disabled]="measure.status === 'PUBLISHED'"
+                    (click)="publishMeasure(measure)">
+                    <mat-icon>cloud_upload</mat-icon>
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    [matMenuTriggerFor]="moreMenu"
+                    [matTooltip]="'More options'">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+
+                  <mat-menu #moreMenu="matMenu">
+                    <button mat-menu-item (click)="deleteMeasure(measure)">
+                      <mat-icon color="warn">delete</mat-icon>
+                      <span>Delete</span>
+                    </button>
+                  </mat-menu>
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        }
+      </div>
+
+      <!-- Paginator -->
+      @if (dataSource.data.length > 0) {
+        <mat-paginator
+          [pageSizeOptions]="[10, 20, 50]"
+          [pageSize]="20"
+          showFirstLastButtons
+          aria-label="Select page of measures">
+        </mat-paginator>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Info Cards -->
+  <div class="info-grid">
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>CQL Editor</mat-card-title>
+        <mat-card-subtitle>Write clinical quality logic</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="icon-row">
+          <div class="icon-chip">
+            <mat-icon>code</mat-icon>
+            Syntax Highlighting
+          </div>
+          <div class="icon-chip">
+            <mat-icon>auto_awesome</mat-icon>
+            Auto-completion
+          </div>
+          <div class="icon-chip">
+            <mat-icon>fullscreen</mat-icon>
+            Full Screen
+          </div>
+        </div>
+        <p class="hint">
+          Powerful Monaco-based editor with CQL syntax highlighting, line numbers, and auto-completion support.
+        </p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>Value Sets</mat-card-title>
+        <mat-card-subtitle>FHIR terminology binding</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="icon-row">
+          <div class="icon-chip">
+            <mat-icon>category</mat-icon>
+            Browse
+          </div>
+          <div class="icon-chip">
+            <mat-icon>search</mat-icon>
+            Search
+          </div>
+          <div class="icon-chip">
+            <mat-icon>link</mat-icon>
+            Bind
+          </div>
+        </div>
+        <p class="hint">
+          Search and attach value sets to your measures for clinical code matching and filtering.
+        </p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>Test & Publish</mat-card-title>
+        <mat-card-subtitle>Validate before production</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="icon-row">
+          <div class="icon-chip">
+            <mat-icon>science</mat-icon>
+            Test
+          </div>
+          <div class="icon-chip">
+            <mat-icon>verified</mat-icon>
+            Validate
+          </div>
+          <div class="icon-chip">
+            <mat-icon>cloud_upload</mat-icon>
+            Publish
+          </div>
+        </div>
+        <p class="hint">
+          Run measures against sample patients, review results, and publish to make available for evaluations.
+        </p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

@@ -1,0 +1,246 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTableModule } from '@angular/material/table';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { PatientService } from '../../services/patient.service';
+import { FhirClinicalService, PatientClinicalData, Observation, Condition, Procedure } from '../../services/fhir-clinical.service';
+import { EvaluationService } from '../../services/evaluation.service';
+import { Patient } from '../../models/patient.model';
+import { QualityMeasureResult } from '../../models/quality-result.model';
+import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
+import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
+import { PatientHealthOverviewComponent } from '../patient-health-overview/patient-health-overview.component';
+
+@Component({
+  selector: 'app-patient-detail',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTabsModule,
+    MatChipsModule,
+    MatProgressSpinnerModule,
+    MatTableModule,
+    MatDividerModule,
+    MatTooltipModule,
+    LoadingButtonComponent,
+    LoadingOverlayComponent,
+    PatientHealthOverviewComponent,
+  ],
+  templateUrl: './patient-detail.component.html',
+  styleUrls: ['./patient-detail.component.scss'],
+})
+export class PatientDetailComponent implements OnInit {
+  patientId: string | null = null;
+  patient: Patient | null = null;
+  clinicalData: PatientClinicalData | null = null;
+  qualityResults: QualityMeasureResult[] = [];
+
+  loading = true;
+  error: string | null = null;
+
+  // Button loading states
+  backButtonLoading = false;
+  viewResultsLoading = false;
+
+  // Display columns for tables
+  observationsColumns: string[] = ['date', 'code', 'value'];
+  conditionsColumns: string[] = ['status', 'code', 'onset'];
+  proceduresColumns: string[] = ['status', 'code', 'performed'];
+  resultsColumns: string[] = ['measure', 'compliant', 'date'];
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private patientService: PatientService,
+    private fhirClinicalService: FhirClinicalService,
+    private evaluationService: EvaluationService
+  ) {}
+
+  ngOnInit(): void {
+    this.patientId = this.route.snapshot.paramMap.get('id');
+
+    if (!this.patientId) {
+      this.error = 'No patient ID provided';
+      this.loading = false;
+      return;
+    }
+
+    this.loadPatientData();
+  }
+
+  private loadPatientData(): void {
+    if (!this.patientId) return;
+
+    this.loading = true;
+    this.error = null;
+
+    // Load patient demographics
+    this.patientService.getPatient(this.patientId).subscribe({
+      next: (patient: Patient) => {
+        this.patient = patient;
+        this.loadClinicalData();
+        this.loadQualityResults();
+      },
+      error: (err: any) => {
+        console.error('Error loading patient:', err);
+        this.error = 'Failed to load patient information';
+        this.loading = false;
+      },
+    });
+  }
+
+  private loadClinicalData(): void {
+    if (!this.patientId) return;
+
+    this.fhirClinicalService.getPatientClinicalData(this.patientId).subscribe({
+      next: (data: PatientClinicalData) => {
+        this.clinicalData = data;
+        this.loading = false;
+      },
+      error: (err: any) => {
+        console.error('Error loading clinical data:', err);
+        this.loading = false;
+      },
+    });
+  }
+
+  private loadQualityResults(): void {
+    if (!this.patientId) return;
+
+    this.evaluationService.getPatientResults(this.patientId).subscribe({
+      next: (results: QualityMeasureResult[]) => {
+        this.qualityResults = results;
+      },
+      error: (err: any) => {
+        console.error('Error loading quality results:', err);
+      },
+    });
+  }
+
+  // Helper methods for displaying data
+
+  getPatientName(): string {
+    if (!this.patient) return 'Unknown';
+    return this.patientService.formatPatientName(this.patient);
+  }
+
+  getPatientAge(): number | undefined {
+    if (!this.patient?.birthDate) return undefined;
+    const today = new Date();
+    const birth = new Date(this.patient.birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  }
+
+  getPatientMRN(): string | undefined {
+    if (!this.patient) return undefined;
+    return this.patient.identifier?.find(
+      (id) => id.type?.text === 'Medical Record Number'
+    )?.value;
+  }
+
+  getPatientMRNAuthority(): string | undefined {
+    if (!this.patient) return undefined;
+    return this.patient.identifier?.find(
+      (id) => id.type?.text === 'Medical Record Number'
+    )?.system;
+  }
+
+  formatMRNAuthority(authority?: string): string {
+    if (!authority) return '';
+    // Extract domain from URL (e.g., "http://hospital.example.org/patients" -> "hospital.example.org")
+    try {
+      const url = new URL(authority);
+      return url.hostname;
+    } catch {
+      // If not a valid URL, return as-is
+      return authority;
+    }
+  }
+
+  formatObservationValue(obs: Observation): string {
+    return this.fhirClinicalService.formatObservationValue(obs);
+  }
+
+  getObservationCode(obs: Observation): string {
+    return this.fhirClinicalService.getObservationCodeDisplay(obs);
+  }
+
+  getConditionCode(condition: Condition): string {
+    return this.fhirClinicalService.getConditionCodeDisplay(condition);
+  }
+
+  getConditionStatus(condition: Condition): string {
+    return this.fhirClinicalService.getConditionStatus(condition);
+  }
+
+  getProcedureCode(procedure: Procedure): string {
+    return this.fhirClinicalService.getProcedureCodeDisplay(procedure);
+  }
+
+  formatDate(dateString?: string): string {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  }
+
+  getComplianceLabel(compliant: boolean): string {
+    return compliant ? 'Compliant' : 'Non-Compliant';
+  }
+
+  getComplianceChipColor(compliant: boolean): string {
+    return compliant ? 'success' : 'warn';
+  }
+
+  goBack(): void {
+    this.backButtonLoading = true;
+    this.router.navigate(['/patients']).then(() => {
+      this.backButtonLoading = false;
+    }).catch(() => {
+      this.backButtonLoading = false;
+    });
+  }
+
+  navigateToResults(): void {
+    this.viewResultsLoading = true;
+    this.router.navigate(['/results'], {
+      queryParams: { patient: this.patientId },
+    }).then(() => {
+      this.viewResultsLoading = false;
+    }).catch(() => {
+      this.viewResultsLoading = false;
+    });
+  }
+
+  // Care gap identification (placeholder for future implementation)
+  getCareGaps(): Array<{ measure: string; reason: string }> {
+    const allMeasures = ['HEDIS_CDC', 'HEDIS_CBP', 'HEDIS_COL', 'HEDIS_BCS', 'HEDIS_CIS'];
+    const completedMeasures = this.qualityResults.map((r) => r.measureId);
+
+    return allMeasures
+      .filter((m) => !completedMeasures.includes(m))
+      .map((m) => ({
+        measure: m,
+        reason: 'Not yet evaluated',
+      }));
+  }
+
+  hasCareGaps(): boolean {
+    return this.getCareGaps().length > 0;
+  }
+}

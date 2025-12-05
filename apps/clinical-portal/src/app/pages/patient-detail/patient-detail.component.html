@@ -1,0 +1,285 @@
+<div class="patient-detail-container">
+  <!-- Header -->
+  <div class="header">
+    <app-loading-button
+      icon="arrow_back"
+      variant="icon"
+      ariaLabel="Go back to patients list"
+      tooltip="Back to Patients"
+      [loading]="backButtonLoading"
+      customClass="back-button"
+      (buttonClick)="goBack()">
+    </app-loading-button>
+    <h1 class="page-title">Patient Detail</h1>
+  </div>
+
+  <!-- Loading Overlay -->
+  <app-loading-overlay
+    [isLoading]="loading"
+    message="Loading patient information..."
+    [spinnerSize]="64">
+  </app-loading-overlay>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error }}</p>
+    <app-loading-button
+      text="Back to Patients"
+      icon="arrow_back"
+      color="primary"
+      variant="raised"
+      [loading]="backButtonLoading"
+      ariaLabel="Return to patients list"
+      (buttonClick)="goBack()">
+    </app-loading-button>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading && !error && patient" class="content">
+    <!-- Patient Demographics Card -->
+    <mat-card class="demographics-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>person</mat-icon>
+        <mat-card-title>{{ getPatientName() }}</mat-card-title>
+        <mat-card-subtitle>Patient ID: {{ patient.id }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="demographics-grid">
+          <div class="demo-item">
+            <span class="label">MRN:</span>
+            <span class="value">
+              {{ getPatientMRN() || 'N/A' }}
+              <span *ngIf="getPatientMRN() && getPatientMRNAuthority()" class="mrn-authority">
+                ({{ formatMRNAuthority(getPatientMRNAuthority()) }})
+              </span>
+            </span>
+          </div>
+          <div class="demo-item">
+            <span class="label">Date of Birth:</span>
+            <span class="value">{{ formatDate(patient.birthDate) }}</span>
+          </div>
+          <div class="demo-item">
+            <span class="label">Age:</span>
+            <span class="value">{{ getPatientAge() || 'N/A' }} years</span>
+          </div>
+          <div class="demo-item">
+            <span class="label">Gender:</span>
+            <span class="value">{{ patient.gender || 'N/A' }}</span>
+          </div>
+          <div class="demo-item">
+            <span class="label">Status:</span>
+            <mat-chip [color]="patient.active !== false ? 'primary' : 'warn'" selected>
+              {{ patient.active !== false ? 'Active' : 'Inactive' }}
+            </mat-chip>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <app-loading-button
+          text="View Quality Results"
+          icon="assessment"
+          color="primary"
+          variant="raised"
+          [loading]="viewResultsLoading"
+          ariaLabel="View quality measure results for this patient"
+          (buttonClick)="navigateToResults()">
+        </app-loading-button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- Care Gaps Alert (if any) -->
+    <mat-card *ngIf="hasCareGaps()" class="care-gaps-alert">
+      <mat-card-header>
+        <mat-icon mat-card-avatar color="warn">warning</mat-icon>
+        <mat-card-title>Care Gaps Identified</mat-card-title>
+        <mat-card-subtitle>{{ getCareGaps().length }} quality measure(s) not yet evaluated</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="care-gaps-list">
+          <mat-chip-listbox>
+            <mat-chip *ngFor="let gap of getCareGaps()" color="warn" selected>
+              {{ gap.measure }}: {{ gap.reason }}
+            </mat-chip>
+          </mat-chip-listbox>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Tabbed Clinical Data -->
+    <mat-card class="clinical-data-card">
+      <mat-tab-group>
+        <!-- Health Overview Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">health_and_safety</mat-icon>
+            Health Overview
+          </ng-template>
+          <div class="tab-content">
+            <app-patient-health-overview [patientId]="patientId!"></app-patient-health-overview>
+          </div>
+        </mat-tab>
+
+        <!-- Quality Measures Tab -->
+        <mat-tab label="Quality Measures">
+          <div class="tab-content">
+            <h3>Quality Measure Results ({{ qualityResults.length }})</h3>
+
+            <div *ngIf="qualityResults.length === 0" class="empty-state">
+              <mat-icon>info</mat-icon>
+              <p>No quality measure results available for this patient.</p>
+            </div>
+
+            <table *ngIf="qualityResults.length > 0" mat-table [dataSource]="qualityResults" class="results-table">
+              <!-- Measure Column -->
+              <ng-container matColumnDef="measure">
+                <th mat-header-cell *matHeaderCellDef>Measure</th>
+                <td mat-cell *matCellDef="let result">
+                  <div class="measure-cell">
+                    <strong>{{ result.measureName }}</strong>
+                    <span class="measure-id">{{ result.measureId }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Compliant Column -->
+              <ng-container matColumnDef="compliant">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let result">
+                  <mat-chip [color]="getComplianceChipColor(result.numeratorCompliant)" selected>
+                    {{ getComplianceLabel(result.numeratorCompliant) }}
+                  </mat-chip>
+                </td>
+              </ng-container>
+
+              <!-- Date Column -->
+              <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef>Calculation Date</th>
+                <td mat-cell *matCellDef="let result">{{ formatDate(result.calculationDate) }}</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="resultsColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: resultsColumns"></tr>
+            </table>
+          </div>
+        </mat-tab>
+
+        <!-- Observations Tab -->
+        <mat-tab label="Observations">
+          <div class="tab-content">
+            <h3>Clinical Observations ({{ clinicalData?.observations?.length || 0 }})</h3>
+
+            <div *ngIf="(clinicalData?.observations?.length ?? 0) === 0" class="empty-state">
+              <mat-icon>info</mat-icon>
+              <p>No observations recorded for this patient.</p>
+            </div>
+
+            <table *ngIf="(clinicalData?.observations?.length ?? 0) > 0"
+                   mat-table [dataSource]="clinicalData!.observations" class="observations-table">
+              <!-- Date Column -->
+              <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef>Date</th>
+                <td mat-cell *matCellDef="let obs">{{ formatDate(obs.effectiveDateTime) }}</td>
+              </ng-container>
+
+              <!-- Code Column -->
+              <ng-container matColumnDef="code">
+                <th mat-header-cell *matHeaderCellDef>Type</th>
+                <td mat-cell *matCellDef="let obs">{{ getObservationCode(obs) }}</td>
+              </ng-container>
+
+              <!-- Value Column -->
+              <ng-container matColumnDef="value">
+                <th mat-header-cell *matHeaderCellDef>Value</th>
+                <td mat-cell *matCellDef="let obs">
+                  <strong>{{ formatObservationValue(obs) }}</strong>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="observationsColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: observationsColumns"></tr>
+            </table>
+          </div>
+        </mat-tab>
+
+        <!-- Conditions Tab -->
+        <mat-tab label="Conditions">
+          <div class="tab-content">
+            <h3>Active Conditions ({{ clinicalData?.conditions?.length || 0 }})</h3>
+
+            <div *ngIf="(clinicalData?.conditions?.length ?? 0) === 0" class="empty-state">
+              <mat-icon>info</mat-icon>
+              <p>No conditions recorded for this patient.</p>
+            </div>
+
+            <table *ngIf="(clinicalData?.conditions?.length ?? 0) > 0"
+                   mat-table [dataSource]="clinicalData!.conditions" class="conditions-table">
+              <!-- Status Column -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let condition">
+                  <mat-chip color="primary" selected>{{ getConditionStatus(condition) }}</mat-chip>
+                </td>
+              </ng-container>
+
+              <!-- Code Column -->
+              <ng-container matColumnDef="code">
+                <th mat-header-cell *matHeaderCellDef>Condition</th>
+                <td mat-cell *matCellDef="let condition">{{ getConditionCode(condition) }}</td>
+              </ng-container>
+
+              <!-- Onset Column -->
+              <ng-container matColumnDef="onset">
+                <th mat-header-cell *matHeaderCellDef>Onset Date</th>
+                <td mat-cell *matCellDef="let condition">{{ formatDate(condition.onsetDateTime) }}</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="conditionsColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: conditionsColumns"></tr>
+            </table>
+          </div>
+        </mat-tab>
+
+        <!-- Procedures Tab -->
+        <mat-tab label="Procedures">
+          <div class="tab-content">
+            <h3>Medical Procedures ({{ clinicalData?.procedures?.length || 0 }})</h3>
+
+            <div *ngIf="(clinicalData?.procedures?.length ?? 0) === 0" class="empty-state">
+              <mat-icon>info</mat-icon>
+              <p>No procedures recorded for this patient.</p>
+            </div>
+
+            <table *ngIf="(clinicalData?.procedures?.length ?? 0) > 0"
+                   mat-table [dataSource]="clinicalData!.procedures" class="procedures-table">
+              <!-- Status Column -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let procedure">
+                  <mat-chip color="accent" selected>{{ procedure.status }}</mat-chip>
+                </td>
+              </ng-container>
+
+              <!-- Code Column -->
+              <ng-container matColumnDef="code">
+                <th mat-header-cell *matHeaderCellDef>Procedure</th>
+                <td mat-cell *matCellDef="let procedure">{{ getProcedureCode(procedure) }}</td>
+              </ng-container>
+
+              <!-- Performed Column -->
+              <ng-container matColumnDef="performed">
+                <th mat-header-cell *matHeaderCellDef>Performed Date</th>
+                <td mat-cell *matCellDef="let procedure">{{ formatDate(procedure.performedDateTime) }}</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="proceduresColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: proceduresColumns"></tr>
+            </table>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card>
+  </div>
+</div>

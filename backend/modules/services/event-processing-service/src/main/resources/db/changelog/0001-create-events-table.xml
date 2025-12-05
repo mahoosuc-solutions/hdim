@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0001-create-events-table" author="healthdata-system">
+        <comment>Create events table for event sourcing and audit trail</comment>
+
+        <createTable tableName="events">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_type" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="aggregate_type" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="aggregate_id" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_data" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metadata" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="user_id" type="varchar(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="correlation_id" type="varchar(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="causation_id" type="varchar(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="timestamp" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="bigint" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="processed" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="processed_at" type="timestamp with time zone">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_events_aggregate" tableName="events">
+            <column name="aggregate_type"/>
+            <column name="aggregate_id"/>
+            <column name="version"/>
+        </createIndex>
+
+        <createIndex indexName="idx_events_type" tableName="events">
+            <column name="event_type"/>
+            <column name="timestamp" descending="true"/>
+        </createIndex>
+
+        <createIndex indexName="idx_events_tenant" tableName="events">
+            <column name="tenant_id"/>
+            <column name="timestamp" descending="true"/>
+        </createIndex>
+
+        <createIndex indexName="idx_events_correlation" tableName="events">
+            <column name="correlation_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_events_processed" tableName="events">
+            <column name="processed"/>
+            <column name="timestamp"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="events"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

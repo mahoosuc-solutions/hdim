@@ -1,0 +1,430 @@
+{
+  "dashboard": {
+    "title": "HealthData Platform - Application Metrics",
+    "uid": "healthdata-app-metrics",
+    "tags": ["healthdata", "application", "production"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Service Health Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "up{job=~\".*-service\"}",
+            "legendFormat": "{{job}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "fields": "",
+            "calcs": ["lastNotNull"]
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"type": "value", "value": "0", "text": "DOWN", "color": "red"},
+              {"type": "value", "value": "1", "text": "UP", "color": "green"}
+            ],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 1, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Request Rate (req/s)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_seconds_count{job=~\".*-service\"}[5m])) by (job)",
+            "legendFormat": "{{job}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Requests/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "P95 Response Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=~\".*-service\"}[5m])) by (le, job))",
+            "legendFormat": "{{job}} P95",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{job=~\".*-service\"}[5m])) by (le, job))",
+            "legendFormat": "{{job}} P99",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Response Time"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [1], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "name": "High P95 Response Time",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 4,
+        "title": "Error Rate (%)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "(sum(rate(http_server_requests_seconds_count{status=~\"5..\",job=~\".*-service\"}[5m])) by (job) / sum(rate(http_server_requests_seconds_count{job=~\".*-service\"}[5m])) by (job)) * 100",
+            "legendFormat": "{{job}} 5xx errors",
+            "refId": "A"
+          },
+          {
+            "expr": "(sum(rate(http_server_requests_seconds_count{status=~\"4..\",job=~\".*-service\"}[5m])) by (job) / sum(rate(http_server_requests_seconds_count{job=~\".*-service\"}[5m])) by (job)) * 100",
+            "legendFormat": "{{job}} 4xx errors",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Error Rate"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "JVM Heap Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "(jvm_memory_used_bytes{area=\"heap\",job=~\".*-service\"} / jvm_memory_max_bytes{area=\"heap\",job=~\".*-service\"}) * 100",
+            "legendFormat": "{{job}} Heap %",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Heap Usage %", "max": 100},
+          {"format": "short"}
+        ],
+        "thresholds": [
+          {"value": 85, "colorMode": "critical", "op": "gt", "fill": true, "line": true}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "GC Pause Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "rate(jvm_gc_pause_seconds_sum{job=~\".*-service\"}[5m])",
+            "legendFormat": "{{job}} - {{action}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "GC Pause Time"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Thread Count",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "jvm_threads_live_threads{job=~\".*-service\"}",
+            "legendFormat": "{{job}} Live Threads",
+            "refId": "A"
+          },
+          {
+            "expr": "jvm_threads_daemon_threads{job=~\".*-service\"}",
+            "legendFormat": "{{job}} Daemon Threads",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Threads"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Database Connection Pool",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28},
+        "targets": [
+          {
+            "expr": "hikaricp_connections_active{job=~\".*-service\"}",
+            "legendFormat": "{{job}} Active",
+            "refId": "A"
+          },
+          {
+            "expr": "hikaricp_connections_idle{job=~\".*-service\"}",
+            "legendFormat": "{{job}} Idle",
+            "refId": "B"
+          },
+          {
+            "expr": "hikaricp_connections_max{job=~\".*-service\"}",
+            "legendFormat": "{{job}} Max",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Connections"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Cache Hit Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28},
+        "targets": [
+          {
+            "expr": "(sum(rate(cache_gets{result=\"hit\",job=~\".*-service\"}[5m])) by (job, cache) / sum(rate(cache_gets{job=~\".*-service\"}[5m])) by (job, cache)) * 100",
+            "legendFormat": "{{job}} - {{cache}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Hit Rate %", "max": 100},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Top Endpoints by Request Count",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 36},
+        "targets": [
+          {
+            "expr": "topk(10, sum(rate(http_server_requests_seconds_count{job=~\".*-service\"}[5m])) by (job, uri))",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"Time": true},
+              "indexByName": {"job": 0, "uri": 1, "Value": 2},
+              "renameByName": {"job": "Service", "uri": "Endpoint", "Value": "Req/s"}
+            }
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Quality Measure Calculations",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 36},
+        "targets": [
+          {
+            "expr": "sum(rate(measure_calculations_total[5m]))",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "fields": "",
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 1, "color": "yellow"},
+                {"value": 10, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 12,
+        "title": "Care Gaps Detected",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 36},
+        "targets": [
+          {
+            "expr": "sum(rate(care_gaps_detected_total[5m]))",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "fields": "",
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 0.5, "color": "yellow"},
+                {"value": 1, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 13,
+        "title": "HTTP Status Codes Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 40},
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_seconds_count{job=~\".*-service\"}[5m])) by (status)",
+            "legendFormat": "{{status}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "pieType": "pie",
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["value", "percent"]
+          }
+        }
+      },
+      {
+        "id": 14,
+        "title": "Active HTTP Requests",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 44},
+        "targets": [
+          {
+            "expr": "http_server_requests_active_count{job=~\".*-service\"}",
+            "legendFormat": "{{job}} - {{uri}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Active Requests"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 15,
+        "title": "Logback Events Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 44},
+        "targets": [
+          {
+            "expr": "sum(rate(logback_events_total{job=~\".*-service\"}[5m])) by (job, level)",
+            "legendFormat": "{{job}} - {{level}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "ops", "label": "Log Events/s"},
+          {"format": "short"}
+        ]
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "datasource": "Prometheus",
+          "enable": true,
+          "expr": "ALERTS{alertstate=\"firing\",job=~\".*-service\"}",
+          "iconColor": "red",
+          "name": "Active Alerts",
+          "step": "60s",
+          "tagKeys": "alertname,severity",
+          "textFormat": "{{alertname}}: {{description}}",
+          "titleFormat": "Alert"
+        }
+      ]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "service",
+          "type": "query",
+          "query": "label_values(up{job=~\".*-service\"}, job)",
+          "current": {"text": "All", "value": "$__all"},
+          "datasource": "Prometheus",
+          "includeAll": true,
+          "multi": true,
+          "refresh": 1
+        },
+        {
+          "name": "interval",
+          "type": "interval",
+          "query": "1m,5m,10m,30m,1h,6h,12h,1d",
+          "current": {"text": "5m", "value": "5m"},
+          "auto": true,
+          "auto_count": 30,
+          "auto_min": "10s"
+        }
+      ]
+    }
+  },
+  "overwrite": true
+}

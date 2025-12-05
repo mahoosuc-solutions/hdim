@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd">
+
+    <property name="uuid_type" value="UUID"/>
+    <property name="now" value="now()"/>
+    <property name="json_type" value="JSONB"/>
+
+    <!-- Import all individual changelog files in order -->
+    <include file="db/changelog/001-create-schemas.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/002-create-patient-tables.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/003-create-fhir-tables.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/004-create-quality-tables.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/005-create-caregap-tables.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/006-create-notification-tables.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/007-create-audit-tables.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/008-create-indexes.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/009-insert-initial-data.xml" relativeToChangelogFile="false"/>
+
+</databaseChangeLog>

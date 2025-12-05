@@ -1,0 +1,136 @@
+@if (article$ | async; as article) {
+  <div class="article-container">
+    <!-- Header -->
+    <div class="article-header">
+      <button mat-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+        Back to Knowledge Base
+      </button>
+
+      <div class="article-title-section">
+        <h1>{{ article.title }}</h1>
+        <p class="summary">{{ article.summary }}</p>
+
+        <div class="article-meta">
+          <span class="category-badge">
+            <mat-icon>label</mat-icon>
+            {{ article.category }}
+          </span>
+          <span class="updated-date">
+            <mat-icon>update</mat-icon>
+            Updated {{ article.lastUpdated | date:'mediumDate' }}
+          </span>
+          @if (article.estimatedReadTime) {
+            <span class="read-time">
+              <mat-icon>schedule</mat-icon>
+              {{ article.estimatedReadTime }} min read
+            </span>
+          }
+          @if (article.views) {
+            <span class="views">
+              <mat-icon>visibility</mat-icon>
+              {{ article.views }} views
+            </span>
+          }
+        </div>
+
+        <div class="article-tags">
+          @for (tag of article.tags; track tag) {
+            <mat-chip>{{ tag }}</mat-chip>
+          }
+        </div>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Content -->
+    <div class="article-content">
+      <div class="content-body">
+        <!-- Note: In production, use ngx-markdown or similar library for proper markdown rendering -->
+        <div [innerHTML]="convertMarkdownToHtml(article.content)" class="markdown-content"></div>
+
+        @if (article.codeExamples && article.codeExamples.length > 0) {
+          <div class="code-examples">
+            <h2>Code Examples</h2>
+            @for (example of article.codeExamples; track example.title) {
+              <div class="code-example-card">
+                <h3>{{ example.title }}</h3>
+                @if (example.description) {
+                  <p>{{ example.description }}</p>
+                }
+                <pre><code class="language-{{example.language}}">{{ example.code }}</code></pre>
+              </div>
+            }
+          </div>
+        }
+
+        @if (article.videoUrl) {
+          <div class="video-section">
+            <h2>Video Tutorial</h2>
+            <a [href]="article.videoUrl" target="_blank" class="video-link">
+              <mat-icon>play_circle</mat-icon>
+              Watch Video Tutorial
+            </a>
+          </div>
+        }
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="article-sidebar">
+        <!-- Was this helpful? -->
+        <mat-card class="helpful-card">
+          <mat-card-content>
+            <h3>Was this helpful?</h3>
+            <div class="helpful-buttons">
+              <button mat-raised-button (click)="markHelpful()">
+                <mat-icon>thumb_up</mat-icon>
+                Yes
+              </button>
+              <button mat-raised-button (click)="markNotHelpful()">
+                <mat-icon>thumb_down</mat-icon>
+                No
+              </button>
+            </div>
+            @if (article.helpful || article.notHelpful) {
+              <p class="feedback-stats">
+                {{ article.helpful || 0 }} found this helpful
+              </p>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Related Articles -->
+        @if ((relatedArticles$ | async)?.length) {
+          <mat-card class="related-articles-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>link</mat-icon>
+                Related Articles
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="related-articles-list">
+                @for (related of relatedArticles$ | async; track related.id) {
+                  <div class="related-article-item" (click)="viewRelatedArticle(related.id)">
+                    <mat-icon>article</mat-icon>
+                    <span>{{ related.title }}</span>
+                  </div>
+                }
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+      </aside>
+    </div>
+  </div>
+} @else {
+  <div class="loading-state">
+    <mat-icon>article</mat-icon>
+    <p>Article not found</p>
+    <button mat-raised-button color="primary" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Knowledge Base
+    </button>
+  </div>
+}

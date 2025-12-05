@@ -1,0 +1,74 @@
+<div
+  class="critical-alert-banner"
+  *ngIf="alerts && alerts.length > 0"
+  role="alert"
+  [attr.aria-live]="getAriaLive(alerts[0].severity)"
+  aria-atomic="true">
+
+  <div
+    *ngFor="let alert of alerts"
+    class="alert-item"
+    [class]="getSeverityClass(alert.severity)"
+    [attr.data-alert-id]="alert.id">
+
+    <!-- Alert Icon Section -->
+    <div class="alert-icon-section">
+      <mat-icon class="severity-icon" [attr.aria-label]="alert.severity + ' severity'">
+        {{ getSeverityIcon(alert.severity) }}
+      </mat-icon>
+      <mat-icon class="type-icon" [attr.aria-label]="alert.type + ' alert type'">
+        {{ getTypeIcon(alert.type) }}
+      </mat-icon>
+    </div>
+
+    <!-- Alert Content Section -->
+    <div class="alert-content">
+      <div class="alert-header">
+        <h3 class="alert-title">
+          <span class="severity-label">{{ alert.severity.toUpperCase() }}</span>
+          {{ alert.title }}
+        </h3>
+        <span class="alert-timestamp" *ngIf="showTimestamp && alert.timestamp">
+          {{ formatTimestamp(alert.timestamp) }}
+        </span>
+      </div>
+
+      <p class="alert-description">
+        {{ alert.description }}
+      </p>
+
+      <!-- Metadata (optional additional info) -->
+      <div class="alert-metadata" *ngIf="alert.metadata">
+        <div *ngFor="let item of alert.metadata | keyvalue" class="metadata-item">
+          <span class="metadata-label">{{ item.key }}:</span>
+          <span class="metadata-value">{{ item.value }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alert Actions Section -->
+    <div class="alert-actions">
+      <button
+        *ngIf="alert.actionLabel"
+        mat-raised-button
+        color="warn"
+        class="action-button"
+        [matTooltip]="'Take action: ' + alert.actionLabel"
+        [attr.aria-label]="'Take action: ' + alert.actionLabel + ' for ' + alert.title"
+        (click)="onAction(alert)">
+        <mat-icon *ngIf="alert.actionIcon">{{ alert.actionIcon }}</mat-icon>
+        <span>{{ alert.actionLabel }}</span>
+      </button>
+
+      <button
+        *ngIf="dismissible"
+        mat-icon-button
+        class="dismiss-button"
+        matTooltip="Dismiss alert (with documentation)"
+        [attr.aria-label]="'Dismiss alert: ' + alert.title"
+        (click)="onDismiss(alert)">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

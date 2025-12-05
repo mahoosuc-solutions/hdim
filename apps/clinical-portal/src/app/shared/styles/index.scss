@@ -1,0 +1,130 @@
+/**
+ * Shared Styles Index
+ *
+ * Main entry point for all shared styles.
+ * Import this file in your global styles.
+ */
+
+// Base Styles
+@import './variables.scss';
+@import './mixins.scss';
+
+// Theme Styles
+@import './light-theme.scss';
+@import './dark-theme.scss';
+
+// Utility Styles
+@import './responsive.scss';
+@import './animations.scss';
+
+// Global Resets and Base Styles
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: $font-family-primary;
+  font-size: $font-size-base;
+  line-height: $line-height-normal;
+  color: $text-primary;
+  background-color: $bg-primary;
+}
+
+// Typography
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  margin-bottom: $spacing-md;
+  font-weight: $font-weight-medium;
+  line-height: $line-height-tight;
+}
+
+h1 { font-size: $font-size-xxxl; }
+h2 { font-size: $font-size-xxl; }
+h3 { font-size: $font-size-xl; }
+h4 { font-size: $font-size-lg; }
+h5 { font-size: $font-size-md; }
+h6 { font-size: $font-size-base; }
+
+p {
+  margin-top: 0;
+  margin-bottom: $spacing-md;
+}
+
+// Links
+a {
+  color: $primary;
+  text-decoration: none;
+  transition: color $transition-base $transition-ease;
+
+  &:hover {
+    color: darken($primary, 10%);
+  }
+}
+
+// Lists
+ul, ol {
+  margin-top: 0;
+  margin-bottom: $spacing-md;
+  padding-left: $spacing-lg;
+}
+
+// Images
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+// Buttons
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+// Forms
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+// Accessibility
+.sr-only {
+  @include visually-hidden;
+}
+
+// Print Styles
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  a {
+    text-decoration: underline;
+  }
+
+  pre,
+  blockquote {
+    page-break-inside: avoid;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+}

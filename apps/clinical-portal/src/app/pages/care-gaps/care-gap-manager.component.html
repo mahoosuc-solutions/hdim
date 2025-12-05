@@ -1,0 +1,525 @@
+<div class="care-gap-manager-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1 class="page-title">
+      <mat-icon>warning</mat-icon>
+      Care Gap Management
+    </h1>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-row">
+    <mat-card class="summary-card total-card">
+      <mat-card-content>
+        <div class="summary-value">{{ summary.totalGaps || 0 }}</div>
+        <div class="summary-label">Total Care Gaps</div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card high-urgency-card">
+      <mat-card-content>
+        <div class="summary-value">{{ summary.highUrgencyCount || 0 }}</div>
+        <div class="summary-label">
+          <mat-icon class="urgency-icon-high">error</mat-icon>
+          High Urgency
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card medium-urgency-card">
+      <mat-card-content>
+        <div class="summary-value">{{ summary.mediumUrgencyCount || 0 }}</div>
+        <div class="summary-label">
+          <mat-icon class="urgency-icon-medium">warning</mat-icon>
+          Medium Urgency
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card low-urgency-card">
+      <mat-card-content>
+        <div class="summary-value">{{ summary.lowUrgencyCount || 0 }}</div>
+        <div class="summary-label">
+          <mat-icon class="urgency-icon-low">info</mat-icon>
+          Low Urgency
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Gap Type Distribution -->
+  <mat-card class="distribution-card">
+    <mat-card-header>
+      <mat-card-title>Care Gaps by Type</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="gap-type-chips">
+        <mat-chip class="gap-type-chip">
+          <mat-icon>health_and_safety</mat-icon>
+          Screening: {{ summary.byType.screening || 0 }}
+        </mat-chip>
+        <mat-chip class="gap-type-chip">
+          <mat-icon>medication</mat-icon>
+          Medication: {{ summary.byType.medication || 0 }}
+        </mat-chip>
+        <mat-chip class="gap-type-chip">
+          <mat-icon>event_repeat</mat-icon>
+          Follow-up: {{ summary.byType.followup || 0 }}
+        </mat-chip>
+        <mat-chip class="gap-type-chip">
+          <mat-icon>biotech</mat-icon>
+          Lab: {{ summary.byType.lab || 0 }}
+        </mat-chip>
+        <mat-chip class="gap-type-chip">
+          <mat-icon>psychology</mat-icon>
+          Assessment: {{ summary.byType.assessment || 0 }}
+        </mat-chip>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Search and Filters -->
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <div class="filter-row">
+        <!-- Search Input -->
+        <mat-form-field class="search-field" appearance="outline">
+          <mat-label>Search by patient name, MRN, or description</mat-label>
+          <input
+            matInput
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="onSearchChange()"
+            placeholder="Search care gaps..."
+          />
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <!-- Filter Form -->
+        <form [formGroup]="filterForm" class="filter-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Urgency</mat-label>
+            <mat-select formControlName="urgency" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let option of urgencyOptions" [value]="option.value">
+                {{ option.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Gap Type</mat-label>
+            <mat-select formControlName="gapType" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let option of gapTypeOptions" [value]="option.value">
+                <mat-icon>{{ option.icon }}</mat-icon>
+                {{ option.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="days-field">
+            <mat-label>Days Overdue (Min)</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="daysOverdueMin"
+              (input)="applyFilters()"
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="days-field">
+            <mat-label>Days Overdue (Max)</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="daysOverdueMax"
+              (input)="applyFilters()"
+            />
+          </mat-form-field>
+
+          <app-loading-button
+            text="Reset"
+            icon="clear"
+            color="warn"
+            variant="raised"
+            type="button"
+            ariaLabel="Reset all filters"
+            tooltip="Clear all filters"
+            (buttonClick)="resetFilters()">
+          </app-loading-button>
+        </form>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading Overlay -->
+  <app-loading-overlay
+    [isLoading]="loading"
+    message="Loading care gaps..."
+    [spinnerSize]="64">
+  </app-loading-overlay>
+
+  <!-- Error Message -->
+  @if (error) {
+    <mat-card class="error-card">
+      <mat-card-content>
+        <div class="error-message">
+          <mat-icon color="warn">error</mat-icon>
+          <span>{{ error }}</span>
+          <app-loading-button
+            text="Retry"
+            icon="refresh"
+            color="primary"
+            variant="raised"
+            ariaLabel="Retry loading care gaps"
+            (buttonClick)="loadCareGaps()">
+          </app-loading-button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Care Gaps Table -->
+  @if (!loading && !error) {
+    <mat-card class="table-card">
+      <mat-card-content>
+        <!-- Bulk Actions Toolbar -->
+        <div class="bulk-actions-toolbar" *ngIf="selection.hasValue()">
+          <div class="selection-info">
+            <mat-icon>check_circle</mat-icon>
+            <span>{{ getSelectionCount() }} care gap(s) selected</span>
+          </div>
+          <div class="bulk-actions">
+            <app-loading-button
+              text="Close Selected"
+              icon="check_circle"
+              variant="raised"
+              color="primary"
+              ariaLabel="Close selected care gaps"
+              (buttonClick)="bulkCloseGaps()">
+            </app-loading-button>
+            <app-loading-button
+              text="Clear Selection"
+              icon="clear"
+              variant="raised"
+              ariaLabel="Clear selection"
+              (buttonClick)="clearSelection()">
+            </app-loading-button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table mat-table [dataSource]="dataSource" matSort class="care-gaps-table">
+            <!-- Checkbox Column -->
+            <ng-container matColumnDef="select">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-checkbox
+                  (change)="$event ? masterToggle() : null"
+                  [checked]="selection.hasValue() && isAllSelected()"
+                  [indeterminate]="selection.hasValue() && !isAllSelected()"
+                  [aria-label]="checkboxLabel()">
+                </mat-checkbox>
+              </th>
+              <td mat-cell *matCellDef="let gap">
+                <mat-checkbox
+                  (click)="$event.stopPropagation()"
+                  (change)="$event ? selection.toggle(gap) : null"
+                  [checked]="selection.isSelected(gap)"
+                  [aria-label]="checkboxLabel(gap)">
+                </mat-checkbox>
+              </td>
+            </ng-container>
+
+            <!-- Urgency Column -->
+            <ng-container matColumnDef="urgency">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                <mat-icon>priority_high</mat-icon>
+                Urgency
+              </th>
+              <td mat-cell *matCellDef="let gap">
+                <span [class]="getUrgencyBadgeClass(gap.urgency)">
+                  <mat-icon>{{ gap.urgency === 'high' ? 'error' : gap.urgency === 'medium' ? 'warning' : 'info' }}</mat-icon>
+                  {{ gap.urgency | titlecase }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Patient Name Column -->
+            <ng-container matColumnDef="patientName">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Patient Name</th>
+              <td mat-cell *matCellDef="let gap">
+                <strong>{{ gap.patientName }}</strong>
+              </td>
+            </ng-container>
+
+            <!-- MRN Column -->
+            <ng-container matColumnDef="mrn">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>MRN</th>
+              <td mat-cell *matCellDef="let gap">{{ gap.mrn }}</td>
+            </ng-container>
+
+            <!-- Gap Type Column -->
+            <ng-container matColumnDef="gapType">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Gap Type</th>
+              <td mat-cell *matCellDef="let gap">
+                <span class="gap-type-badge">
+                  <mat-icon>{{ getGapIcon(gap.gapType) }}</mat-icon>
+                  {{ gap.gapType | titlecase }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Gap Description Column -->
+            <ng-container matColumnDef="gapDescription">
+              <th mat-header-cell *matHeaderCellDef>Description</th>
+              <td mat-cell *matCellDef="let gap">
+                {{ gap.gapDescription }}
+              </td>
+            </ng-container>
+
+            <!-- Days Overdue Column -->
+            <ng-container matColumnDef="daysOverdue">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Days Overdue</th>
+              <td mat-cell *matCellDef="let gap">
+                <span class="days-overdue-badge" [class.critical]="gap.daysOverdue > 60">
+                  {{ formatDaysOverdue(gap.daysOverdue) }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Measure Name Column -->
+            <ng-container matColumnDef="measureName">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Measure</th>
+              <td mat-cell *matCellDef="let gap">{{ gap.measureName }}</td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let gap">
+                <button
+                  mat-icon-button
+                  [matMenuTriggerFor]="actionsMenu"
+                  [matMenuTriggerData]="{gap: gap}"
+                  aria-label="More actions"
+                  matTooltip="More actions">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: displayedColumns"
+              class="care-gap-row"
+              [class.high-urgency-row]="row.urgency === 'high'"
+              [class.medium-urgency-row]="row.urgency === 'medium'"
+              [class.low-urgency-row]="row.urgency === 'low'"
+            ></tr>
+          </table>
+        </div>
+
+        <!-- Material Paginator -->
+        <mat-paginator
+          [length]="dataSource.filteredData.length"
+          [pageSize]="20"
+          [pageSizeOptions]="[10, 20, 50, 100]"
+          showFirstLastButtons
+          aria-label="Select page of care gaps">
+        </mat-paginator>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>
+
+<!-- Actions Menu Template -->
+<mat-menu #actionsMenu="matMenu">
+  <ng-template matMenuContent let-gap="gap">
+    <button mat-menu-item (click)="viewPatientDetail(gap)">
+      <mat-icon>person</mat-icon>
+      <span>View Patient</span>
+    </button>
+    <button mat-menu-item (click)="openInterventionForm(gap)">
+      <mat-icon>add_task</mat-icon>
+      <span>Add Intervention</span>
+    </button>
+    <button mat-menu-item (click)="openClosureForm(gap)">
+      <mat-icon>check_circle</mat-icon>
+      <span>Close Gap</span>
+    </button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item>
+      <mat-icon>email</mat-icon>
+      <span>Send Reminder</span>
+    </button>
+    <button mat-menu-item>
+      <mat-icon>event</mat-icon>
+      <span>Schedule Appointment</span>
+    </button>
+  </ng-template>
+</mat-menu>
+
+<!-- Intervention Form Dialog -->
+@if (showInterventionForm && selectedGap) {
+  <div class="dialog-overlay" (click)="closeInterventionForm()"></div>
+  <div class="dialog-panel intervention-dialog">
+    <div class="dialog-header">
+      <h2>Add Intervention</h2>
+      <button mat-icon-button (click)="closeInterventionForm()" aria-label="Close">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="dialog-content">
+      <div class="patient-info">
+        <strong>{{ selectedGap.patientName }}</strong> - {{ selectedGap.mrn }}
+        <br>
+        <span class="gap-description">{{ selectedGap.gapDescription }}</span>
+      </div>
+
+      <form [formGroup]="interventionForm" class="intervention-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Intervention Type</mat-label>
+          <mat-select formControlName="interventionType" required>
+            <mat-option *ngFor="let type of interventionTypeOptions" [value]="type.value">
+              <mat-icon>{{ type.icon }}</mat-icon>
+              {{ type.label }}
+            </mat-option>
+          </mat-select>
+          <mat-error>Please select an intervention type</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Description</mat-label>
+          <textarea
+            matInput
+            formControlName="description"
+            rows="3"
+            required
+            placeholder="Describe the intervention...">
+          </textarea>
+          <mat-error>Please enter a description</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Scheduled Date (Optional)</mat-label>
+          <input matInput type="date" formControlName="scheduledDate">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Assigned To (Optional)</mat-label>
+          <input matInput formControlName="assignedTo" placeholder="Name or ID">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Notes (Optional)</mat-label>
+          <textarea
+            matInput
+            formControlName="notes"
+            rows="2"
+            placeholder="Additional notes...">
+          </textarea>
+        </mat-form-field>
+      </form>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="dialog-actions">
+      <app-loading-button
+        text="Cancel"
+        variant="raised"
+        ariaLabel="Cancel intervention"
+        (buttonClick)="closeInterventionForm()">
+      </app-loading-button>
+      <app-loading-button
+        text="Save Intervention"
+        icon="save"
+        color="primary"
+        variant="raised"
+        [disabled]="interventionForm.invalid"
+        ariaLabel="Save intervention"
+        (buttonClick)="submitIntervention()">
+      </app-loading-button>
+    </div>
+  </div>
+}
+
+<!-- Closure Form Dialog -->
+@if (showClosureForm && selectedGap) {
+  <div class="dialog-overlay" (click)="closeClosureForm()"></div>
+  <div class="dialog-panel closure-dialog">
+    <div class="dialog-header">
+      <h2>Close Care Gap</h2>
+      <button mat-icon-button (click)="closeClosureForm()" aria-label="Close">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="dialog-content">
+      <div class="patient-info">
+        <strong>{{ selectedGap.patientName }}</strong> - {{ selectedGap.mrn }}
+        <br>
+        <span class="gap-description">{{ selectedGap.gapDescription }}</span>
+      </div>
+
+      <form [formGroup]="closureForm" class="closure-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Closure Reason</mat-label>
+          <mat-select formControlName="closureReason" required>
+            <mat-option *ngFor="let reason of closureReasonOptions" [value]="reason.value">
+              {{ reason.label }}
+            </mat-option>
+          </mat-select>
+          <mat-error>Please select a closure reason</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Closure Date</mat-label>
+          <input matInput type="date" formControlName="closureDate" required>
+          <mat-error>Please enter a closure date</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Notes (Optional)</mat-label>
+          <textarea
+            matInput
+            formControlName="notes"
+            rows="3"
+            placeholder="Additional notes about gap closure...">
+          </textarea>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Document Reference (Optional)</mat-label>
+          <input matInput formControlName="documentReference" placeholder="Document ID or reference">
+        </mat-form-field>
+      </form>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="dialog-actions">
+      <app-loading-button
+        text="Cancel"
+        variant="raised"
+        ariaLabel="Cancel closure"
+        (buttonClick)="closeClosureForm()">
+      </app-loading-button>
+      <app-loading-button
+        text="Close Gap"
+        icon="check_circle"
+        color="primary"
+        variant="raised"
+        [disabled]="closureForm.invalid"
+        ariaLabel="Close care gap"
+        (buttonClick)="submitClosure()">
+      </app-loading-button>
+    </div>
+  </div>
+}

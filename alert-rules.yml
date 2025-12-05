@@ -1,0 +1,286 @@
+# Alert Rules for HealthData Platform
+# Define alert conditions and thresholds for production monitoring
+
+groups:
+  - name: service_alerts
+    interval: 30s
+    rules:
+      # Service Availability Alerts
+      - alert: ServiceDown
+        expr: up{job=~".*-service"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "{{ $labels.job }} is down"
+          description: "{{ $labels.job }} has been unreachable for 2 minutes"
+          runbook_url: "https://docs.example.com/runbooks/service-down"
+
+      - alert: ServiceHighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High error rate on {{ $labels.job }}"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      - alert: ServiceSlowResponse
+        expr: histogram_quantile(0.95, http_request_duration_seconds) > 1
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Slow response time on {{ $labels.job }}"
+          description: "P95 response time is {{ $value }}s (threshold: 1s)"
+
+  - name: database_alerts
+    interval: 30s
+    rules:
+      - alert: DatabaseDown
+        expr: up{job="postgresql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "PostgreSQL has been unreachable for 1 minute"
+
+      - alert: LowDatabaseConnections
+        expr: pg_stat_activity_count < 5
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Low database connection availability"
+          description: "Only {{ $value }} connections available (threshold: 5)"
+
+      - alert: HighDatabaseConnections
+        expr: pg_stat_activity_count > 18
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High database connection usage"
+          description: "{{ $value }} of 20 connections in use (threshold: 18)"
+
+      - alert: DatabaseSlowQueries
+        expr: pg_slow_queries_total > 100
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High number of slow queries"
+          description: "{{ $value }} slow queries detected"
+
+      - alert: DatabaseSizeLarge
+        expr: pg_database_size_bytes > 50000000000  # 50GB
+        for: 1h
+        labels:
+          severity: info
+          team: backend
+        annotations:
+          summary: "Database size increasing"
+          description: "Database is {{ $value | humanize }}B"
+
+  - name: cache_alerts
+    interval: 30s
+    rules:
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis has been unreachable for 2 minutes"
+
+      - alert: HighRedisMemoryUsage
+        expr: (redis_memory_used_bytes / redis_memory_max_bytes) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "High Redis memory usage"
+          description: "Redis memory usage is {{ $value | humanizePercentage }}"
+
+      - alert: HighRedisKeyEviction
+        expr: rate(redis_evicted_keys_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "High rate of Redis key evictions"
+          description: "{{ $value }} keys evicted per second"
+
+  - name: kafka_alerts
+    interval: 30s
+    rules:
+      - alert: KafkaBrokerDown
+        expr: up{job="kafka"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "Kafka broker is down"
+          description: "Kafka broker has been unreachable for 2 minutes"
+
+      - alert: HighConsumerLag
+        expr: kafka_consumer_lag > 10000
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High Kafka consumer lag"
+          description: "Consumer lag is {{ $value }} messages (threshold: 10000)"
+
+      - alert: KafkaTopicUnderReplicated
+        expr: kafka_topic_partitions_under_replicated_count > 0
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "Kafka topic under-replicated"
+          description: "Topic {{ $labels.topic }} has under-replicated partitions"
+
+  - name: system_alerts
+    interval: 30s
+    rules:
+      - alert: HighCPUUsage
+        expr: (1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m]))) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value | humanizePercentage }}"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "{{ $value | humanizePercentage }} of disk space available"
+
+      - alert: HighDiskUsage
+        expr: (node_disk_io_time_seconds_total / node_disk_io_time_weighted_seconds_total) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "High disk I/O usage"
+          description: "Disk I/O utilization is {{ $value | humanizePercentage }}"
+
+      - alert: HighNetworkTraffic
+        expr: rate(node_network_transmit_bytes_total[5m]) > 1000000000  # 1 Gbps
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "High network traffic"
+          description: "Network traffic is {{ $value | humanize }}B/s"
+
+  - name: application_business_alerts
+    interval: 30s
+    rules:
+      - alert: CareGapCreationFailure
+        expr: rate(care_gap_creation_failures_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Care gap creation failures detected"
+          description: "Failure rate is {{ $value | humanizePercentage }}"
+
+      - alert: HealthScoreCalculationLag
+        expr: (time() - health_score_last_calculation_timestamp) > 300
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Health score calculation lag detected"
+          description: "Last calculation was {{ $value }}s ago (threshold: 300s)"
+
+      - alert: NotificationDeliveryFailure
+        expr: rate(notification_delivery_failures_total[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Notification delivery failures"
+          description: "Failure rate is {{ $value | humanizePercentage }}"
+
+      - alert: HighAlertVolume
+        expr: rate(clinical_alerts_triggered_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: info
+          team: backend
+        annotations:
+          summary: "High volume of clinical alerts"
+          description: "Alert rate is {{ $value }} per second"
+
+  - name: jvm_alerts
+    interval: 30s
+    rules:
+      - alert: JVMHighMemoryUsage
+        expr: (jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High JVM heap memory usage on {{ $labels.job }}"
+          description: "Heap usage is {{ $value | humanizePercentage }}"
+
+      - alert: JVMGarbageCollectionTime
+        expr: rate(jvm_gc_collection_seconds_sum[5m]) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High GC time on {{ $labels.job }}"
+          description: "GC time ratio is {{ $value }}"
+
+      - alert: JVMHighThreadCount
+        expr: jvm_threads_live > 200
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High thread count on {{ $labels.job }}"
+          description: "Thread count is {{ $value }} (threshold: 200)"

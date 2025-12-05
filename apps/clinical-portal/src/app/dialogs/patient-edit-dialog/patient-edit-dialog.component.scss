@@ -1,0 +1,143 @@
+.patient-edit-dialog {
+  min-width: 600px;
+  max-width: 800px;
+
+  h2[mat-dialog-title] {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    padding: 24px 24px 16px;
+    font-size: 24px;
+    font-weight: 500;
+    color: #1a1a1a;
+
+    mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      color: #1976d2;
+    }
+  }
+
+  mat-dialog-content {
+    padding: 0 24px 24px;
+    overflow: visible;
+  }
+
+  mat-dialog-actions {
+    padding: 16px 24px;
+    border-top: 1px solid #e0e0e0;
+
+    button mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
+// Stepper styling
+::ng-deep .mat-stepper-horizontal {
+  margin-bottom: 24px;
+}
+
+.step-form {
+  padding: 24px 0;
+}
+
+.step-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin: 0 0 16px 0;
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: #1976d2;
+  }
+}
+
+.step-description {
+  color: #666;
+  font-size: 14px;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.subsection-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+  margin: 24px 0 12px 0;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+// Form layout
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+
+  .full-width {
+    flex: 1;
+  }
+
+  .form-field-medium {
+    flex: 2;
+  }
+
+  .form-field-small {
+    flex: 1;
+  }
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+// Step actions
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .patient-edit-dialog {
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 8px;
+
+    .form-field-medium,
+    .form-field-small {
+      flex: 1;
+      width: 100%;
+    }
+  }
+
+  h2[mat-dialog-title] {
+    font-size: 20px;
+  }
+
+  .step-title {
+    font-size: 16px;
+  }
+}

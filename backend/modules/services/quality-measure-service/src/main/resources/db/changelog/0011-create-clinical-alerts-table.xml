@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0011-create-clinical-alerts-table" author="healthdata">
+        <comment>
+            Create clinical_alerts table for mental health crisis detection,
+            risk escalation alerts, and health score decline tracking.
+
+            Alert Types:
+            - MENTAL_HEALTH_CRISIS: PHQ-9 >=20, GAD-7 >=15, suicide risk
+            - RISK_ESCALATION: Patient risk level changed to VERY_HIGH
+            - HEALTH_DECLINE: Health score dropped >=15 points
+            - CHRONIC_DETERIORATION: Chronic disease metrics worsening
+
+            Severity Levels:
+            - CRITICAL: Immediate action (suicide risk)
+            - HIGH: Urgent attention (risk escalation, severe symptoms)
+            - MEDIUM: Attention required (health decline)
+            - LOW: Monitoring recommended
+        </comment>
+
+        <createTable tableName="clinical_alerts">
+            <!-- Primary Key -->
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Patient and Tenant -->
+            <column name="patient_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Alert Classification -->
+            <column name="alert_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="severity" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Alert Content -->
+            <column name="title" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="message" type="VARCHAR(2000)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Source Event Tracking -->
+            <column name="source_event_type" type="VARCHAR(100)"/>
+
+            <column name="source_event_id" type="VARCHAR(100)"/>
+
+            <!-- Alert Lifecycle -->
+            <column name="triggered_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="acknowledged_at" type="TIMESTAMP"/>
+
+            <column name="acknowledged_by" type="VARCHAR(100)"/>
+
+            <!-- Escalation -->
+            <column name="escalated" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="escalated_at" type="TIMESTAMP"/>
+
+            <!-- Status -->
+            <column name="status" type="VARCHAR(20)" defaultValue="ACTIVE">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Audit Fields -->
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Index for finding active alerts by patient (primary use case) -->
+        <createIndex indexName="idx_alerts_patient_status"
+                     tableName="clinical_alerts">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Index for recent alerts (time-based queries) -->
+        <createIndex indexName="idx_alerts_triggered_at"
+                     tableName="clinical_alerts">
+            <column name="triggered_at" descending="true"/>
+        </createIndex>
+
+        <!-- Index for severity-based queries -->
+        <createIndex indexName="idx_alerts_severity"
+                     tableName="clinical_alerts">
+            <column name="severity"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Index for alert type filtering -->
+        <createIndex indexName="idx_alerts_type"
+                     tableName="clinical_alerts">
+            <column name="alert_type"/>
+            <column name="triggered_at" descending="true"/>
+        </createIndex>
+
+        <!-- Composite index for deduplication queries (24-hour window) -->
+        <createIndex indexName="idx_alerts_dedup"
+                     tableName="clinical_alerts">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="alert_type"/>
+            <column name="triggered_at" descending="true"/>
+        </createIndex>
+
+        <!-- Add check constraints for enum values -->
+        <sql>
+            ALTER TABLE clinical_alerts
+            ADD CONSTRAINT chk_alert_type
+            CHECK (alert_type IN ('MENTAL_HEALTH_CRISIS', 'RISK_ESCALATION', 'HEALTH_DECLINE', 'CHRONIC_DETERIORATION'));
+
+            ALTER TABLE clinical_alerts
+            ADD CONSTRAINT chk_severity
+            CHECK (severity IN ('CRITICAL', 'HIGH', 'MEDIUM', 'LOW'));
+
+            ALTER TABLE clinical_alerts
+            ADD CONSTRAINT chk_status
+            CHECK (status IN ('ACTIVE', 'ACKNOWLEDGED', 'RESOLVED'));
+        </sql>
+
+        <rollback>
+            <dropTable tableName="clinical_alerts"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0011-add-alert-comments" author="healthdata">
+        <comment>Add table and column comments for documentation</comment>
+
+        <sql>
+            COMMENT ON TABLE clinical_alerts IS 'Clinical alerts for mental health crises, risk escalations, and health score declines';
+            COMMENT ON COLUMN clinical_alerts.alert_type IS 'Type of alert: MENTAL_HEALTH_CRISIS, RISK_ESCALATION, HEALTH_DECLINE, CHRONIC_DETERIORATION';
+            COMMENT ON COLUMN clinical_alerts.severity IS 'Severity level: CRITICAL (immediate), HIGH (urgent), MEDIUM (attention), LOW (monitor)';
+            COMMENT ON COLUMN clinical_alerts.escalated IS 'Whether alert has been escalated to higher level of care';
+            COMMENT ON COLUMN clinical_alerts.source_event_type IS 'Type of event that triggered alert (e.g., mental-health-assessment)';
+            COMMENT ON COLUMN clinical_alerts.source_event_id IS 'ID of source event (assessment ID, score change event ID, etc.)';
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,40 @@
+<div
+  *ngIf="visible"
+  class="error-banner"
+  [class.error-banner-error]="type === 'error'"
+  [class.error-banner-warning]="type === 'warning'"
+  [class.error-banner-info]="type === 'info'"
+  [class.error-banner-success]="type === 'success'"
+  [attr.role]="getAriaRole()"
+  [attr.aria-live]="type === 'error' ? 'assertive' : 'polite'">
+  <div class="error-banner-content">
+    <mat-icon
+      class="error-banner-icon"
+      [attr.aria-hidden]="true">
+      {{ getIcon() }}
+    </mat-icon>
+
+    <span class="error-banner-message">{{ message }}</span>
+
+    <div class="error-banner-actions">
+      <button
+        *ngIf="retryButton"
+        mat-stroked-button
+        class="error-banner-retry"
+        (click)="onRetry()"
+        aria-label="Retry action">
+        <mat-icon>refresh</mat-icon>
+        Retry
+      </button>
+
+      <button
+        *ngIf="dismissible"
+        mat-icon-button
+        class="error-banner-close"
+        (click)="onDismiss()"
+        aria-label="Dismiss message">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

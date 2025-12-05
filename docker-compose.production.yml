@@ -1,0 +1,518 @@
+version: '3.9'
+
+# =============================================================================
+# HealthData-in-Motion - Production Deployment
+# =============================================================================
+# Complete stack with security hardening, monitoring, and high availability
+# Version: 1.0.0
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # PostgreSQL Database - Primary
+  # ===========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: healthdata-postgres-prod
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DB_ADMIN_USER}
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+      PGDATA: /var/lib/postgresql/data/pgdata
+      # Enable SSL
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+      - ./docker/postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./backups:/backups
+    command: >
+      postgres
+      -c ssl=on
+      -c ssl_cert_file=/etc/ssl/certs/server.crt
+      -c ssl_key_file=/etc/ssl/certs/server.key
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=128MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=4MB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+      -c max_worker_processes=4
+      -c max_parallel_workers_per_gather=2
+      -c max_parallel_workers=4
+      -c max_parallel_maintenance_workers=2
+      -c log_min_duration_statement=1000
+      -c log_connections=on
+      -c log_disconnections=on
+      -c log_line_prefix='%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_ADMIN_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - healthdata-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+  # ===========================================================================
+  # Redis Cache - Secured
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: healthdata-redis-prod
+    restart: always
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --appendonly yes
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --tcp-keepalive 300
+      --timeout 0
+      --tcp-backlog 511
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - healthdata-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # ===========================================================================
+  # CQL Engine Service
+  # ===========================================================================
+  cql-engine-service:
+    image: ${DOCKER_REGISTRY}/healthdata/cql-engine-service:${VERSION:-1.0.0}
+    container_name: healthdata-cql-engine-prod
+    restart: always
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Spring Boot
+      SPRING_PROFILES_ACTIVE: production
+      SERVER_PORT: 8081
+
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${CQL_DB_NAME}?ssl=true&sslmode=require
+      SPRING_DATASOURCE_USERNAME: ${CQL_DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${CQL_DB_PASSWORD}
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: ${DB_POOL_SIZE:-20}
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: ${DB_MIN_IDLE:-5}
+      SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: ${DB_CONNECTION_TIMEOUT:-30000}
+      SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT: ${DB_IDLE_TIMEOUT:-600000}
+      SPRING_DATASOURCE_HIKARI_MAX_LIFETIME: ${DB_MAX_LIFETIME:-1800000}
+
+      # Redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SPRING_CACHE_TYPE: redis
+      SPRING_CACHE_REDIS_TIME_TO_LIVE: ${REDIS_TTL:-3600000}
+
+      # FHIR Server
+      FHIR_SERVICE_URL: ${FHIR_SERVICE_URL:-http://fhir-service:8083/fhir}
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
+
+      # Thread Pool
+      MEASURE_EVALUATION_CORE_POOL_SIZE: 20
+      MEASURE_EVALUATION_MAX_POOL_SIZE: 100
+      MEASURE_EVALUATION_QUEUE_CAPACITY: 1000
+
+      # Actuator
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: when_authorized
+      MANAGEMENT_METRICS_EXPORT_DATADOG_ENABLED: ${DATADOG_ENABLED:-false}
+      MANAGEMENT_METRICS_EXPORT_DATADOG_API_KEY: ${DATADOG_API_KEY}
+
+      # Logging
+      LOGGING_LEVEL_ROOT: ${LOG_LEVEL:-INFO}
+      LOGGING_LEVEL_COM_HEALTHDATA: ${LOG_LEVEL_APP:-INFO}
+      LOGGING_PATTERN_CONSOLE: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+      # JVM
+      JAVA_OPTS: >
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -XX:InitialRAMPercentage=50.0
+        -XX:+UseG1GC
+        -XX:+ExitOnOutOfMemoryError
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/app/logs/heapdump.hprof
+        -Duser.timezone=UTC
+    volumes:
+      - ./logs/cql-engine:/app/logs
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "--spider", "http://localhost:8081/cql-engine/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    networks:
+      - healthdata-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '3.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+  # ===========================================================================
+  # Quality Measure Service
+  # ===========================================================================
+  quality-measure-service:
+    image: ${DOCKER_REGISTRY}/healthdata/quality-measure-service:${VERSION:-1.0.0}
+    container_name: healthdata-quality-measure-prod
+    restart: always
+    ports:
+      - "8087:8087"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      cql-engine-service:
+        condition: service_healthy
+    environment:
+      # Spring Boot
+      SPRING_PROFILES_ACTIVE: production
+      SERVER_PORT: 8087
+
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${QUALITY_DB_NAME}?ssl=true&sslmode=require
+      SPRING_DATASOURCE_USERNAME: ${QUALITY_DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${QUALITY_DB_PASSWORD}
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: ${DB_POOL_SIZE:-20}
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: ${DB_MIN_IDLE:-5}
+
+      # Redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SPRING_CACHE_TYPE: redis
+
+      # Service URLs
+      CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
+      FHIR_SERVER_URL: ${FHIR_SERVICE_URL:-http://fhir-service:8083/fhir}
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
+
+      # HIPAA
+      HIPAA_AUDIT_ENABLED: ${HIPAA_AUDIT_ENABLED:-true}
+      HIPAA_PHI_ENCRYPTION_ENABLED: ${HIPAA_PHI_ENCRYPTION_ENABLED:-true}
+      HIPAA_AUTO_LOGOUT_TIMEOUT: ${HIPAA_AUTO_LOGOUT_TIMEOUT:-900000}
+
+      # Rate Limiting
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+      RATE_LIMIT_REQUESTS_PER_MINUTE: ${RATE_LIMIT_REQUESTS_PER_MINUTE:-60}
+
+      # Actuator
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: when_authorized
+      MANAGEMENT_METRICS_EXPORT_DATADOG_ENABLED: ${DATADOG_ENABLED:-false}
+      MANAGEMENT_METRICS_EXPORT_DATADOG_API_KEY: ${DATADOG_API_KEY}
+
+      # Logging
+      LOGGING_LEVEL_ROOT: ${LOG_LEVEL:-INFO}
+      LOGGING_LEVEL_COM_HEALTHDATA: ${LOG_LEVEL_APP:-INFO}
+
+      # JVM
+      JAVA_OPTS: >
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -XX:InitialRAMPercentage=50.0
+        -XX:+UseG1GC
+        -XX:+ExitOnOutOfMemoryError
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/app/logs/heapdump.hprof
+        -Duser.timezone=UTC
+    volumes:
+      - ./logs/quality-measure:/app/logs
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "--spider", "http://localhost:8087/quality-measure/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    networks:
+      - healthdata-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 3G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+      replicas: 2  # High availability
+
+  # ===========================================================================
+  # FHIR Service (HAPI FHIR)
+  # ===========================================================================
+  fhir-service:
+    image: hapiproject/hapi:latest
+    container_name: healthdata-fhir-prod
+    restart: always
+    ports:
+      - "8083:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${FHIR_DB_NAME}?ssl=true&sslmode=require
+      SPRING_DATASOURCE_USERNAME: ${FHIR_DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${FHIR_DB_PASSWORD}
+      SPRING_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgres94Dialect
+      HAPI_FHIR_FHIR_VERSION: R4
+      HAPI_FHIR_SUBSCRIPTION_RESTHOOK_ENABLED: "true"
+      HAPI_FHIR_ALLOW_MULTIPLE_DELETE: "false"  # Security - disable in production
+      HAPI_FHIR_ALLOW_EXTERNAL_REFERENCES: "false"  # Security
+      HAPI_FHIR_CORS_ENABLED: "true"
+      HAPI_FHIR_CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGINS}
+      HAPI_FHIR_CORS_ALLOW_CREDENTIALS: "true"
+      # Performance
+      HAPI_FHIR_MAX_PAGE_SIZE: "200"
+      HAPI_FHIR_DEFAULT_PAGE_SIZE: "20"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/fhir/metadata || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+    networks:
+      - healthdata-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 3G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # ===========================================================================
+  # Clinical Portal (Frontend)
+  # ===========================================================================
+  clinical-portal:
+    image: ${DOCKER_REGISTRY}/healthdata/clinical-portal:${VERSION:-1.0.0}
+    container_name: healthdata-portal-prod
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      API_BASE_URL: ${API_GATEWAY_URL}
+    volumes:
+      - ./nginx/nginx-prod.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - healthdata-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      replicas: 2  # High availability
+
+  # ===========================================================================
+  # Prometheus Monitoring
+  # ===========================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: healthdata-prometheus-prod
+    restart: always
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docker/prometheus/alerts:/etc/prometheus/alerts:ro
+      - prometheus_data:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - healthdata-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # ===========================================================================
+  # Grafana Dashboards
+  # ===========================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: healthdata-grafana-prod
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-piechart-panel
+      GF_SERVER_ROOT_URL: https://grafana.healthdata.example.com
+      GF_SMTP_ENABLED: "true"
+      GF_SMTP_HOST: ${SMTP_HOST}
+      GF_SMTP_USER: ${SMTP_USERNAME}
+      GF_SMTP_PASSWORD: ${SMTP_PASSWORD}
+      GF_SMTP_FROM_ADDRESS: ${SMTP_FROM}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - healthdata-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ===========================================================================
+  # NGINX API Gateway (Optional - or use Kong)
+  # ===========================================================================
+  api-gateway:
+    image: nginx:alpine
+    container_name: healthdata-api-gateway-prod
+    restart: always
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./nginx/api-gateway.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - quality-measure-service
+      - cql-engine-service
+      - fhir-service
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - healthdata-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  healthdata-prod-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.30.0.0/16
+          gateway: 172.30.0.1
+
+# =============================================================================
+# Volumes - Persistent Storage
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/data/postgres
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/data/redis
+  prometheus_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/data/prometheus
+  grafana_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/data/grafana

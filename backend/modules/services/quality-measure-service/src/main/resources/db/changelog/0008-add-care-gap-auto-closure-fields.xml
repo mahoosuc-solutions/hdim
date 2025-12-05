@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0008-add-care-gap-auto-closure-fields" author="healthdata-team">
+        <comment>Add fields for automated care gap closure tracking</comment>
+
+        <!-- Add auto-closed flag -->
+        <addColumn tableName="care_gaps">
+            <column name="auto_closed" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <!-- Add evidence resource tracking -->
+        <addColumn tableName="care_gaps">
+            <column name="evidence_resource_id" type="varchar(100)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="care_gaps">
+            <column name="evidence_resource_type" type="varchar(50)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add closed tracking -->
+        <addColumn tableName="care_gaps">
+            <column name="closed_at" type="timestamp with time zone">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="care_gaps">
+            <column name="closed_by" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add matching codes for efficient care gap matching -->
+        <addColumn tableName="care_gaps">
+            <column name="matching_codes" type="text">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add index for efficient auto-closure queries -->
+        <createIndex indexName="idx_cg_auto_closed" tableName="care_gaps">
+            <column name="auto_closed"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Add index for evidence tracking -->
+        <createIndex indexName="idx_cg_evidence" tableName="care_gaps">
+            <column name="evidence_resource_type"/>
+            <column name="evidence_resource_id"/>
+        </createIndex>
+
+        <!-- Add composite index for efficient matching -->
+        <createIndex indexName="idx_cg_tenant_patient_status" tableName="care_gaps">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="care_gaps" indexName="idx_cg_tenant_patient_status"/>
+            <dropIndex tableName="care_gaps" indexName="idx_cg_evidence"/>
+            <dropIndex tableName="care_gaps" indexName="idx_cg_auto_closed"/>
+            <dropColumn tableName="care_gaps" columnName="matching_codes"/>
+            <dropColumn tableName="care_gaps" columnName="closed_by"/>
+            <dropColumn tableName="care_gaps" columnName="closed_at"/>
+            <dropColumn tableName="care_gaps" columnName="evidence_resource_type"/>
+            <dropColumn tableName="care_gaps" columnName="evidence_resource_id"/>
+            <dropColumn tableName="care_gaps" columnName="auto_closed"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,346 @@
+<div class="patient-edit-dialog">
+  <h2 mat-dialog-title>
+    <mat-icon>{{ isEditMode ? 'edit' : 'person_add' }}</mat-icon>
+    {{ isEditMode ? 'Edit Patient' : 'Add New Patient' }}
+  </h2>
+
+  <mat-dialog-content>
+    <mat-stepper #stepper linear>
+      <!-- Step 1: Demographics -->
+      <mat-step [stepControl]="demographicsForm" label="Demographics">
+        <form [formGroup]="demographicsForm" class="step-form">
+          <h3 class="step-title">
+            <mat-icon>badge</mat-icon>
+            Patient Demographics
+          </h3>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>First Name</mat-label>
+              <input
+                matInput
+                formControlName="firstName"
+                placeholder="John"
+                autocomplete="given-name"
+              />
+              <mat-icon matPrefix>person</mat-icon>
+              @if (demographicsForm.get('firstName')?.invalid && demographicsForm.get('firstName')?.touched) {
+                <mat-error>
+                  {{ getErrorMessage(demographicsForm, 'firstName') }}
+                </mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Last Name</mat-label>
+              <input
+                matInput
+                formControlName="lastName"
+                placeholder="Doe"
+                autocomplete="family-name"
+              />
+              <mat-icon matPrefix>person</mat-icon>
+              @if (demographicsForm.get('lastName')?.invalid && demographicsForm.get('lastName')?.touched) {
+                <mat-error>
+                  {{ getErrorMessage(demographicsForm, 'lastName') }}
+                </mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Date of Birth</mat-label>
+              <input
+                matInput
+                [matDatepicker]="dobPicker"
+                formControlName="dateOfBirth"
+                placeholder="MM/DD/YYYY"
+                autocomplete="bday"
+              />
+              <mat-icon matPrefix>cake</mat-icon>
+              <mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle>
+              <mat-datepicker #dobPicker></mat-datepicker>
+              @if (demographicsForm.get('dateOfBirth')?.invalid && demographicsForm.get('dateOfBirth')?.touched) {
+                <mat-error>
+                  {{ getErrorMessage(demographicsForm, 'dateOfBirth') }}
+                </mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Gender</mat-label>
+              <mat-select formControlName="gender">
+                @for (option of genderOptions; track option.value) {
+                  <mat-option [value]="option.value">
+                    {{ option.label }}
+                  </mat-option>
+                }
+              </mat-select>
+              <mat-icon matPrefix>wc</mat-icon>
+              @if (demographicsForm.get('gender')?.invalid && demographicsForm.get('gender')?.touched) {
+                <mat-error>
+                  {{ getErrorMessage(demographicsForm, 'gender') }}
+                </mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Medical Record Number (MRN)</mat-label>
+              <input
+                matInput
+                formControlName="mrn"
+                placeholder="MRN-12345"
+                autocomplete="off"
+              />
+              <mat-icon matPrefix>fingerprint</mat-icon>
+              @if (demographicsForm.get('mrn')?.invalid && demographicsForm.get('mrn')?.touched) {
+                <mat-error>
+                  {{ getErrorMessage(demographicsForm, 'mrn') }}
+                </mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperNext type="button" [disabled]="!demographicsForm.valid">
+              Next
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </form>
+      </mat-step>
+
+      <!-- Step 2: Contact Information -->
+      <mat-step [stepControl]="contactForm" label="Contact">
+        <form [formGroup]="contactForm" class="step-form">
+          <h3 class="step-title">
+            <mat-icon>contact_phone</mat-icon>
+            Contact Information
+          </h3>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Phone Number</mat-label>
+              <input
+                matInput
+                formControlName="phoneNumber"
+                placeholder="(123) 456-7890"
+                autocomplete="tel"
+              />
+              <mat-icon matPrefix>phone</mat-icon>
+              @if (contactForm.get('phoneNumber')?.invalid && contactForm.get('phoneNumber')?.touched) {
+                <mat-error>
+                  {{ getErrorMessage(contactForm, 'phoneNumber') }}
+                </mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Phone Type</mat-label>
+              <mat-select formControlName="phoneType">
+                @for (option of phoneTypeOptions; track option.value) {
+                  <mat-option [value]="option.value">
+                    {{ option.label }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Email Address</mat-label>
+              <input
+                matInput
+                formControlName="email"
+                placeholder="john.doe@example.com"
+                autocomplete="email"
+              />
+              <mat-icon matPrefix>email</mat-icon>
+              @if (contactForm.get('email')?.invalid && contactForm.get('email')?.touched) {
+                <mat-error>
+                  {{ getErrorMessage(contactForm, 'email') }}
+                </mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <h4 class="subsection-title">Address</h4>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Address Line 1</mat-label>
+              <input
+                matInput
+                formControlName="addressLine1"
+                placeholder="123 Main Street"
+                autocomplete="address-line1"
+              />
+              <mat-icon matPrefix>home</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Address Line 2</mat-label>
+              <input
+                matInput
+                formControlName="addressLine2"
+                placeholder="Apt 4B"
+                autocomplete="address-line2"
+              />
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>City</mat-label>
+              <input
+                matInput
+                formControlName="city"
+                placeholder="New York"
+                autocomplete="address-level2"
+              />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-small">
+              <mat-label>State</mat-label>
+              <input
+                matInput
+                formControlName="state"
+                placeholder="NY"
+                maxlength="2"
+                autocomplete="address-level1"
+              />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-small">
+              <mat-label>ZIP Code</mat-label>
+              <input
+                matInput
+                formControlName="postalCode"
+                placeholder="10001"
+                autocomplete="postal-code"
+              />
+              @if (contactForm.get('postalCode')?.invalid && contactForm.get('postalCode')?.touched) {
+                <mat-error>
+                  {{ getErrorMessage(contactForm, 'postalCode') }}
+                </mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Address Type</mat-label>
+              <mat-select formControlName="addressType">
+                @for (option of addressTypeOptions; track option.value) {
+                  <mat-option [value]="option.value">
+                    {{ option.label }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious type="button">
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>
+            <button mat-button matStepperNext type="button" [disabled]="!contactForm.valid">
+              Next
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </form>
+      </mat-step>
+
+      <!-- Step 3: Insurance -->
+      <mat-step [stepControl]="insuranceForm" label="Insurance">
+        <form [formGroup]="insuranceForm" class="step-form">
+          <h3 class="step-title">
+            <mat-icon>health_and_safety</mat-icon>
+            Insurance Information
+          </h3>
+
+          <p class="step-description">
+            Insurance information is optional. You can add or update it later.
+          </p>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Insurance Provider</mat-label>
+              <input
+                matInput
+                formControlName="insuranceProvider"
+                placeholder="Blue Cross Blue Shield"
+              />
+              <mat-icon matPrefix>business</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Policy Number</mat-label>
+              <input
+                matInput
+                formControlName="policyNumber"
+                placeholder="POL-123456789"
+              />
+              <mat-icon matPrefix>badge</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Group Number</mat-label>
+              <input
+                matInput
+                formControlName="groupNumber"
+                placeholder="GRP-456"
+              />
+              <mat-icon matPrefix>group</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Subscriber ID</mat-label>
+              <input
+                matInput
+                formControlName="subscriberId"
+                placeholder="SUB-987654321"
+              />
+              <mat-icon matPrefix>card_membership</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious type="button">
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>
+          </div>
+        </form>
+      </mat-step>
+    </mat-stepper>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="isSaving()">
+      <mat-icon>close</mat-icon>
+      Cancel
+    </button>
+    <app-loading-button
+      [loading]="isSaving()"
+      [disabled]="!demographicsForm.valid || !contactForm.valid || !insuranceForm.valid"
+      (click)="onSave()"
+      color="primary"
+      icon="save"
+    >
+      {{ isEditMode ? 'Update Patient' : 'Create Patient' }}
+    </app-loading-button>
+  </mat-dialog-actions>
+</div>

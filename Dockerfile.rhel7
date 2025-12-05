@@ -1,0 +1,137 @@
+#
+# RHEL 7 Test Environment for HealthData In Motion Platform
+#
+# This Dockerfile creates a RHEL 7-like environment for testing the complete
+# platform deployment including Kong API Gateway and all microservices.
+#
+# Build: docker build -f Dockerfile.rhel7 -t healthdata-rhel7 .
+# Run:   docker run -d -p 4200:4200 -p 8000:8000 -p 8001:8001 healthdata-rhel7
+#
+
+FROM centos:7
+
+LABEL maintainer="HealthData In Motion"
+LABEL description="RHEL 7 test environment for HIE platform deployment"
+
+# Set environment variables
+ENV LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
+    JAVA_HOME=/usr/lib/jvm/java-21-openjdk \
+    NODE_VERSION=20.x \
+    DOCKER_COMPOSE_VERSION=2.24.0
+
+#
+# Install base packages
+#
+RUN yum update -y && \
+    yum install -y \
+    wget \
+    curl \
+    git \
+    unzip \
+    tar \
+    which \
+    sudo \
+    vim \
+    net-tools \
+    epel-release && \
+    yum clean all
+
+#
+# Install Docker CE (for running containers inside RHEL 7)
+#
+RUN yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
+    yum install -y docker-ce docker-ce-cli containerd.io && \
+    yum clean all
+
+#
+# Install Docker Compose
+#
+RUN curl -L "https://github.com/docker/compose/releases/download/v${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" \
+    -o /usr/local/bin/docker-compose && \
+    chmod +x /usr/local/bin/docker-compose
+
+#
+# Install Java 21 (OpenJDK)
+#
+# Note: Java 21 not available in RHEL 7 repos, use adoptium or build from source
+# For testing, we'll use Java 11 which is available
+RUN yum install -y java-11-openjdk java-11-openjdk-devel && \
+    yum clean all
+
+#
+# Install Node.js 20.x
+#
+RUN curl -fsSL https://rpm.nodesource.com/setup_${NODE_VERSION} | bash - && \
+    yum install -y nodejs && \
+    npm install -g npm@latest && \
+    yum clean all
+
+#
+# Install PostgreSQL client
+#
+RUN yum install -y postgresql postgresql-contrib && \
+    yum clean all
+
+#
+# Install Python 3 (for tooling)
+#
+RUN yum install -y python3 python3-pip && \
+    pip3 install --upgrade pip && \
+    yum clean all
+
+#
+# Create healthdata user
+#
+RUN useradd -m -s /bin/bash healthdata && \
+    echo "healthdata ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Switch to healthdata user
+USER healthdata
+WORKDIR /home/healthdata
+
+#
+# Copy application files
+#
+COPY --chown=healthdata:healthdata . /home/healthdata/healthdata-in-motion
+
+WORKDIR /home/healthdata/healthdata-in-motion
+
+#
+# Install Node.js dependencies
+#
+RUN npm install
+
+#
+# Build Angular application
+#
+RUN npm run build -- clinical-portal --configuration production || true
+
+#
+# Expose ports
+#
+# 4200 - Angular Clinical Portal
+# 8000 - Kong API Gateway (HTTP)
+# 8001 - Kong Admin API
+# 8443 - Kong API Gateway (HTTPS)
+# 8081 - CQL Engine Service
+# 8087 - Quality Measure Service
+# 8083 - FHIR Server
+# 5432 - PostgreSQL
+# 6379 - Redis
+# 9092 - Kafka
+EXPOSE 4200 8000 8001 8443 8081 8087 8083 5432 6379 9092
+
+#
+# Health check
+#
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8000/ || exit 1
+
+#
+# Startup script
+#
+COPY --chown=healthdata:healthdata docker/rhel7-startup.sh /home/healthdata/startup.sh
+RUN chmod +x /home/healthdata/startup.sh
+
+CMD ["/home/healthdata/startup.sh"]

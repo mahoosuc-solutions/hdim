@@ -1,0 +1,51 @@
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 360px;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #607d8b;
+  font-size: 0.95rem;
+}
+
+.timestamp {
+  color: #607d8b;
+}
+
+.description {
+  margin: 0;
+  color: #455a64;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.half-width {
+  flex: 1;
+  min-width: 200px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  align-items: center;
+}

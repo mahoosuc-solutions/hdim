@@ -1,0 +1,46 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /consent
+
+spring:
+  application:
+    name: consent-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5435/healthdata_consent
+    username: healthdata
+    password: ${DB_PASSWORD:dev_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+# HIPAA Audit Configuration
+audit:
+  enabled: true
+  retention-days: 2555  # 7 years for HIPAA
+  include-phi: false
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

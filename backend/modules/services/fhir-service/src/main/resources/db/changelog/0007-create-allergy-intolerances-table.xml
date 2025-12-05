@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="007-create-allergy-intolerances-table" author="claude-code">
+        <createTable tableName="allergy_intolerances">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Multi-tenancy -->
+            <column name="tenant_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Patient reference -->
+            <column name="patient_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Clinical status -->
+            <column name="clinical_status" type="varchar(50)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="verification_status" type="varchar(50)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Type and category -->
+            <column name="type" type="varchar(50)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="category" type="varchar(50)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Criticality -->
+            <column name="criticality" type="varchar(50)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Allergen code -->
+            <column name="code" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="code_system" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="code_display" type="varchar(500)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Onset -->
+            <column name="onset_date" type="date">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="onset_age" type="integer">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Recorded date -->
+            <column name="recorded_date" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Recorder -->
+            <column name="recorder_id" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="recorder_display" type="varchar(500)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Asserter -->
+            <column name="asserter_id" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="asserter_display" type="varchar(500)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Last occurrence -->
+            <column name="last_occurrence" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Note -->
+            <column name="note" type="text">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Reactions -->
+            <column name="has_reactions" type="boolean">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="reaction_substance" type="varchar(500)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="reaction_manifestation" type="varchar(500)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="reaction_severity" type="varchar(50)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="reaction_exposure_route" type="varchar(100)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Encounter reference -->
+            <column name="encounter_id" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- FHIR resource stored as JSONB -->
+            <column name="fhir_resource" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Audit fields -->
+            <column name="created_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="last_modified_at" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="created_by" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="last_modified_by" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Optimistic locking -->
+            <column name="version" type="integer" defaultValueNumeric="0">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <!-- Index 1: Primary lookup by tenant + patient + recorded date (DESC for most recent first) -->
+        <createIndex indexName="idx_allergy_tenant_patient_date"
+                     tableName="allergy_intolerances">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="recorded_date" descending="true"/>
+        </createIndex>
+
+        <!-- Index 2: Critical allergy lookup (for patient safety checks during prescribing) -->
+        <createIndex indexName="idx_allergy_critical"
+                     tableName="allergy_intolerances">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="criticality"/>
+            <column name="clinical_status"/>
+        </createIndex>
+
+        <!-- Index 3: Category-based lookup (medication, food, environment, biologic) -->
+        <createIndex indexName="idx_allergy_category"
+                     tableName="allergy_intolerances">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="category"/>
+            <column name="clinical_status"/>
+        </createIndex>
+
+        <!-- Index 4: Allergen code lookup (to check if patient has specific allergy) -->
+        <createIndex indexName="idx_allergy_code"
+                     tableName="allergy_intolerances">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="code"/>
+        </createIndex>
+
+        <!-- Index 5: Clinical + verification status (for confirmed active allergies) -->
+        <createIndex indexName="idx_allergy_status"
+                     tableName="allergy_intolerances">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="clinical_status"/>
+            <column name="verification_status"/>
+        </createIndex>
+
+        <!-- Foreign key constraints -->
+        <addForeignKeyConstraint
+                constraintName="fk_allergy_patient"
+                baseTableName="allergy_intolerances"
+                baseColumnNames="patient_id"
+                referencedTableName="patients"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+</databaseChangeLog>

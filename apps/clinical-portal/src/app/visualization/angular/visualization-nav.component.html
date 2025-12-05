@@ -1,0 +1,234 @@
+<div class="visualization-nav" [@slideIn]="isExpanded ? 'expanded' : 'collapsed'">
+  <!-- Toggle Button -->
+  <button
+    mat-icon-button
+    class="nav-toggle"
+    (click)="toggleExpansion()"
+    [matTooltip]="isExpanded ? 'Collapse Navigation' : 'Expand Navigation'"
+    matTooltipPosition="right"
+  >
+    <mat-icon>{{ isExpanded ? 'chevron_left' : 'chevron_right' }}</mat-icon>
+  </button>
+
+  <!-- Navigation Content -->
+  <div class="nav-content" *ngIf="isExpanded">
+    <!-- Header -->
+    <div class="nav-header">
+      <mat-icon class="nav-header-icon">3d_rotation</mat-icon>
+      <div class="nav-header-text">
+        <h2>Visualization Hub</h2>
+        <p>3D Quality Analytics</p>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Mode Selection -->
+    <div class="nav-section">
+      <div class="section-title">
+        <mat-icon>view_module</mat-icon>
+        <span>Visualization Modes</span>
+      </div>
+
+      <div class="mode-list">
+        @for (mode of visualizationModes; track mode.id) {
+          <button
+            class="mode-button"
+            [class.active]="isModeActive(mode.id)"
+            [class.disabled]="!mode.enabled"
+            [class.coming-soon]="mode.comingSoon"
+            (click)="switchMode(mode)"
+            [matTooltip]="mode.description"
+            matTooltipPosition="right"
+            [disabled]="!mode.enabled"
+          >
+            <div class="mode-icon-wrapper" [style.background-color]="mode.color + '20'">
+              <mat-icon [style.color]="mode.color">{{ mode.icon }}</mat-icon>
+            </div>
+            <div class="mode-info">
+              <span class="mode-label">{{ mode.label }}</span>
+              @if (mode.comingSoon) {
+                <span class="coming-soon-badge">Coming Soon</span>
+              }
+              @if (isModeActive(mode.id)) {
+                <mat-icon class="active-indicator">check_circle</mat-icon>
+              }
+            </div>
+          </button>
+        }
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Transition Controls -->
+    <div class="nav-section">
+      <div class="section-title">
+        <mat-icon>tune</mat-icon>
+        <span>Scene Transition</span>
+      </div>
+
+      <div class="transition-controls">
+        <div class="control-item">
+          <div class="control-label">
+            <mat-icon class="control-icon">videocam</mat-icon>
+            <span>Preserve Camera</span>
+          </div>
+          <mat-slide-toggle
+            [(ngModel)]="cameraTransition.preservePosition"
+            color="primary"
+            (change)="togglePreservePosition()"
+          ></mat-slide-toggle>
+        </div>
+
+        @if (isTransitioning) {
+          <div class="transition-indicator" [@fadeIn]>
+            <mat-icon class="spinning">sync</mat-icon>
+            <span>Transitioning scene...</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Toolbar -->
+    <div class="nav-section">
+      <div class="section-title">
+        <mat-icon>build</mat-icon>
+        <span>Controls</span>
+      </div>
+
+      <div class="toolbar-grid">
+        <!-- Reset Camera -->
+        <button
+          mat-stroked-button
+          class="toolbar-button"
+          (click)="onResetCamera()"
+          matTooltip="Reset Camera Position"
+          matTooltipPosition="right"
+        >
+          <mat-icon>refresh</mat-icon>
+          <span>Reset</span>
+        </button>
+
+        <!-- Fullscreen Toggle -->
+        <button
+          mat-stroked-button
+          class="toolbar-button"
+          (click)="onToggleFullscreen()"
+          [matTooltip]="getFullscreenTooltip()"
+          matTooltipPosition="right"
+        >
+          <mat-icon>{{ getFullscreenIcon() }}</mat-icon>
+          <span>{{ isFullscreen ? 'Exit' : 'Full' }}</span>
+        </button>
+
+        <!-- Screenshot -->
+        <button
+          mat-stroked-button
+          class="toolbar-button"
+          (click)="onCaptureScreenshot()"
+          matTooltip="Capture Screenshot"
+          matTooltipPosition="right"
+        >
+          <mat-icon>camera_alt</mat-icon>
+          <span>Capture</span>
+        </button>
+
+        <!-- FPS Toggle -->
+        <button
+          mat-stroked-button
+          class="toolbar-button"
+          [class.active]="showFPS"
+          (click)="onToggleFPS(!showFPS)"
+          matTooltip="Toggle FPS Display"
+          matTooltipPosition="right"
+        >
+          <mat-icon>speed</mat-icon>
+          <span>FPS</span>
+        </button>
+
+        <!-- VR Mode (Future) -->
+        <button
+          mat-stroked-button
+          class="toolbar-button"
+          (click)="onToggleVR()"
+          matTooltip="VR Mode (Coming Soon)"
+          matTooltipPosition="right"
+          disabled
+        >
+          <mat-icon>vrpano</mat-icon>
+          <span>VR</span>
+        </button>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Back to Portal -->
+    <div class="nav-footer">
+      <a
+        mat-button
+        routerLink="/dashboard"
+        class="back-button"
+        matTooltip="Return to Clinical Portal"
+        matTooltipPosition="right"
+      >
+        <mat-icon>arrow_back</mat-icon>
+        <span>Back to Portal</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Collapsed Mini Navigation -->
+  <div class="mini-nav" *ngIf="!isExpanded">
+    @for (mode of visualizationModes; track mode.id) {
+      @if (mode.enabled) {
+        <button
+          mat-icon-button
+          class="mini-mode-button"
+          [class.active]="isModeActive(mode.id)"
+          (click)="switchMode(mode)"
+          [matTooltip]="mode.label"
+          matTooltipPosition="right"
+        >
+          <mat-icon [style.color]="isModeActive(mode.id) ? mode.color : ''">{{ mode.icon }}</mat-icon>
+        </button>
+      }
+    }
+
+    <mat-divider class="mini-divider"></mat-divider>
+
+    <!-- Mini Toolbar -->
+    <button
+      mat-icon-button
+      class="mini-toolbar-button"
+      (click)="onResetCamera()"
+      matTooltip="Reset Camera"
+      matTooltipPosition="right"
+    >
+      <mat-icon>refresh</mat-icon>
+    </button>
+
+    <button
+      mat-icon-button
+      class="mini-toolbar-button"
+      (click)="onToggleFullscreen()"
+      [matTooltip]="getFullscreenTooltip()"
+      matTooltipPosition="right"
+    >
+      <mat-icon>{{ getFullscreenIcon() }}</mat-icon>
+    </button>
+
+    <button
+      mat-icon-button
+      class="mini-toolbar-button"
+      (click)="onCaptureScreenshot()"
+      matTooltip="Capture Screenshot"
+      matTooltipPosition="right"
+    >
+      <mat-icon>camera_alt</mat-icon>
+    </button>
+  </div>
+</div>

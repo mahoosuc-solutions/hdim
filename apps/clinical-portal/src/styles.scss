@@ -1,0 +1,81 @@
+// Import prebuilt Angular Material theme
+@use './styles/patient-health-overview-utilities';
+@import '@angular/material/prebuilt-themes/azure-blue.css';
+
+// Import custom theme system
+@import './styles/themes.scss';
+
+// Global styles
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+body {
+  margin: 0;
+  // Background color now controlled by theme system
+  // background-color is set via CSS custom properties in themes.scss
+}
+
+// Utility classes
+.full-width {
+  width: 100%;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.mb-3 { margin-bottom: 24px; }
+.p-2 { padding: 16px; }
+.p-3 { padding: 24px; }
+
+// Status colors
+.status-success { color: #4caf50; }
+.status-warning { color: #ff9800; }
+.status-error { color: #f44336; }
+.status-info { color: #2196f3; }
+
+// Toast notification styles
+.toast-success {
+  background-color: #4caf50 !important;
+  color: white !important;
+  .mat-mdc-snack-bar-label { color: white; }
+  .mat-mdc-button { color: white; }
+}
+
+.toast-error {
+  background-color: #f44336 !important;
+  color: white !important;
+  .mat-mdc-snack-bar-label { color: white; }
+  .mat-mdc-button { color: white; }
+}
+
+.toast-warning {
+  background-color: #ff9800 !important;
+  color: white !important;
+  .mat-mdc-snack-bar-label { color: white; }
+  .mat-mdc-button { color: white; }
+}
+
+.toast-info {
+  background-color: #2196f3 !important;
+  color: white !important;
+  .mat-mdc-snack-bar-label { color: white; }
+  .mat-mdc-button { color: white; }
+}

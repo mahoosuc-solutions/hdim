@@ -1,0 +1,119 @@
+.advanced-filter-dialog {
+  min-width: 700px;
+  max-width: 900px;
+}
+
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 24px 24px 16px;
+
+  mat-icon {
+    color: #1976d2;
+  }
+}
+
+mat-dialog-content {
+  padding: 0 24px 24px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.logic-selector {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+
+  label {
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+.filters-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+
+  .logic-indicator {
+    padding: 4px 12px;
+    background-color: #1976d2;
+    color: white;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .field-select {
+    flex: 2;
+  }
+
+  .operator-select {
+    flex: 1.5;
+  }
+
+  .value-input {
+    flex: 2;
+  }
+
+  .between-label {
+    color: #666;
+    font-size: 14px;
+  }
+}
+
+.add-filter-btn {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.preview-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: #e3f2fd;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  color: #1976d2;
+}
+
+.saved-filters-section {
+  margin-bottom: 24px;
+
+  h4 {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    color: #333;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+mat-dialog-actions {
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+
+  button mat-icon {
+    margin-right: 8px;
+  }
+}

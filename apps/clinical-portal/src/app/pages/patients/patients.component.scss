@@ -1,0 +1,822 @@
+.patients-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+// Page Header
+.page-header {
+  margin-bottom: 24px;
+
+  .page-title {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+// Statistics Cards
+.statistics-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+
+  .stat-card {
+    text-align: center;
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: 600;
+      color: #1976d2;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+// Filter Card
+.filter-card {
+  margin-bottom: 24px;
+
+  .filter-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+
+    .search-field {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .filter-form {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+
+      mat-form-field {
+        min-width: 120px;
+
+        &.age-field {
+          max-width: 100px;
+        }
+      }
+
+      button {
+        margin-top: 8px;
+      }
+    }
+  }
+}
+
+// Loading State
+.loading-container {
+  text-align: center;
+  padding: 48px;
+
+  p {
+    margin-top: 16px;
+    color: #666;
+  }
+}
+
+// Progress Card
+.progress-card {
+  margin-bottom: 24px;
+  background-color: #e3f2fd;
+  border-left: 4px solid #1976d2;
+
+  .progress-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .progress-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
+
+    .progress-info {
+      flex: 1;
+
+      .progress-message {
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 4px;
+      }
+
+      .progress-stats {
+        font-size: 14px;
+        color: #666;
+      }
+    }
+  }
+}
+
+// Error Card
+.error-card {
+  margin-bottom: 24px;
+  background-color: #fff3e0;
+
+  .error-message {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+
+    .error-content {
+      flex: 1;
+
+      span {
+        color: #e65100;
+        font-weight: 500;
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .error-code {
+        font-size: 12px;
+        color: #666;
+        font-family: monospace;
+        background-color: #f5f5f5;
+        padding: 4px 8px;
+        border-radius: 4px;
+        display: inline-block;
+      }
+    }
+  }
+}
+
+// Empty State
+.empty-state-card {
+  text-align: center;
+  padding: 48px;
+
+  .empty-icon {
+    font-size: 72px;
+    width: 72px;
+    height: 72px;
+    color: #bdbdbd;
+    margin: 0 auto 16px;
+  }
+
+  h2 {
+    color: #666;
+    font-weight: 400;
+  }
+}
+
+// Table Card
+.table-card {
+  .table-container {
+    overflow-x: auto;
+  }
+
+  .patients-table {
+    width: 100%;
+
+    th {
+      font-weight: 600;
+      color: #424242;
+      background-color: #f5f5f5;
+      cursor: pointer;
+      user-select: none;
+
+      &:hover {
+        background-color: #eeeeee;
+      }
+
+      .header-cell {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+    }
+
+    .patient-row {
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: #e3f2fd;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+      }
+
+      &:focus {
+        outline: 2px solid #1976d2;
+        outline-offset: -2px;
+        background-color: #e3f2fd;
+      }
+
+      &:active {
+        background-color: #bbdefb;
+        transform: translateY(0);
+      }
+
+      // Clickable row indication
+      &.clickable-row {
+        position: relative;
+
+        // Add subtle visual indicator on hover
+        &:hover::after {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 4px;
+          background-color: #1976d2;
+          animation: slideIn 0.2s ease;
+        }
+      }
+    }
+
+    // Animation for hover indicator
+    @keyframes slideIn {
+      from {
+        width: 0;
+      }
+      to {
+        width: 4px;
+      }
+    }
+
+    td {
+      padding: 12px 16px;
+    }
+
+    .mrn-cell {
+      .mrn-authority {
+        display: block;
+        font-size: 11px;
+        color: #999;
+        margin-top: 2px;
+      }
+    }
+  }
+
+  // Pagination Controls
+  .pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding: 16px 0;
+    border-top: 1px solid #e0e0e0;
+
+    .pagination-info {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .pagination-buttons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .page-number {
+        font-size: 14px;
+        color: #666;
+        min-width: 100px;
+        text-align: center;
+      }
+    }
+
+    .page-size-select {
+      width: 100px;
+
+      ::ng-deep .mat-mdc-form-field-infix {
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+    }
+  }
+}
+
+// Badge Styles
+.badge-success {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background-color: #4caf50;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-secondary {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background-color: #9e9e9e;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-warning {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background-color: #ff9800;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-info {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background-color: #2196f3;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+// Details Panel (Side Drawer)
+.details-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.details-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 500px;
+  max-width: 90vw;
+  background-color: white;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+  overflow-y: auto;
+  animation: slideInRight 0.3s ease-in-out;
+
+  .details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    background-color: #1976d2;
+    color: white;
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+    }
+
+    button {
+      color: white;
+    }
+  }
+
+  .details-content {
+    padding: 24px;
+
+    .details-section {
+      margin-bottom: 24px;
+
+      h3 {
+        margin: 0 0 16px 0;
+        font-size: 18px;
+        font-weight: 500;
+        color: #424242;
+      }
+
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f0f0;
+
+        .detail-label {
+          font-weight: 500;
+          color: #666;
+        }
+
+        .detail-value {
+          color: #333;
+          text-align: right;
+
+          .mrn-authority-text {
+            font-size: 11px;
+            color: #999;
+            margin-left: 4px;
+          }
+        }
+      }
+    }
+
+    // Compliance Summary
+    .compliance-summary {
+      background-color: #e3f2fd;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .compliance-label {
+        font-weight: 500;
+        color: #1976d2;
+      }
+
+      .compliance-value {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1976d2;
+      }
+    }
+
+    // Evaluations List
+    .evaluations-list {
+      .evaluation-item {
+        padding: 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+          background-color: #f5f5f5;
+          border-color: #1976d2;
+          transform: translateX(4px);
+        }
+
+        .evaluation-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+
+          .evaluation-measure {
+            font-weight: 500;
+            color: #333;
+          }
+        }
+
+        .evaluation-date {
+          font-size: 12px;
+          color: #666;
+        }
+      }
+    }
+
+    .no-evaluations {
+      text-align: center;
+      padding: 32px;
+      color: #666;
+
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 16px;
+        opacity: 0.5;
+      }
+
+      p {
+        margin: 0;
+      }
+    }
+
+    // Actions
+    .details-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+
+      button {
+        flex: 1;
+        min-width: 200px;
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .patients-container {
+    padding: 16px;
+  }
+
+  .statistics-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filter-row {
+    flex-direction: column;
+
+    .search-field,
+    .filter-form {
+      width: 100%;
+    }
+  }
+
+  .pagination-controls {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start !important;
+
+    .pagination-info,
+    .pagination-buttons {
+      width: 100%;
+    }
+  }
+
+  .details-panel {
+    width: 100%;
+  }
+}
+
+// ============================================================
+// Master Patient Index (MPI) Styles
+// ============================================================
+
+// MPI Statistics Cards
+.mpi-stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+
+  .stat-value {
+    color: white;
+  }
+
+  .stat-label {
+    color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .master-icon {
+    color: #ffd700;
+  }
+
+  .duplicate-icon {
+    color: #ff9800;
+  }
+}
+
+// MPI Toggle Section
+.mpi-toggle-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+  padding-left: 16px;
+  flex-wrap: wrap;
+
+  mat-divider {
+    height: 40px;
+    width: 1px;
+  }
+
+  .detect-duplicates-btn {
+    font-weight: 500;
+
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+
+  .clear-links-btn {
+    font-weight: 500;
+
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+
+  .detection-result-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    animation: slideIn 0.3s ease-out;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .mpi-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+
+    .toggle-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: #667eea;
+    }
+  }
+
+  .mpi-info-text {
+    display: flex;
+    align-items: center;
+    cursor: help;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #999;
+    }
+  }
+}
+
+// MPI Badges in MRN Column
+.mrn-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  .mpi-badge {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    margin-right: 4px;
+  }
+
+  .master-badge {
+    color: #4caf50;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .duplicate-badge {
+    color: #ff9800;
+    opacity: 0.8;
+  }
+
+  .duplicate-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #667eea;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 20px;
+    height: 18px;
+    margin-left: 4px;
+  }
+}
+
+// Table Row Styles for Master/Duplicate Records
+.master-record-row {
+  background-color: rgba(76, 175, 80, 0.05) !important;
+  border-left: 4px solid #4caf50 !important;
+
+  &:hover {
+    background-color: rgba(76, 175, 80, 0.12) !important;
+  }
+}
+
+.duplicate-record-row {
+  background-color: rgba(255, 152, 0, 0.03) !important;
+  border-left: 4px solid #ff9800 !important;
+  opacity: 0.85;
+
+  &:hover {
+    background-color: rgba(255, 152, 0, 0.08) !important;
+    opacity: 1;
+  }
+}
+
+.unlinked-record-row {
+  border-left: 4px solid transparent !important;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+  }
+}
+
+// Pulse animation for master records
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+// Mobile responsive adjustments
+@media (max-width: 768px) {
+  .mpi-toggle-section {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: 0;
+    padding-left: 0;
+    width: 100%;
+
+    mat-divider {
+      display: none;
+    }
+  }
+
+  .statistics-row {
+    grid-template-columns: 1fr !important;
+
+    .mpi-stat-card {
+      order: -1; // Show MPI stats first on mobile
+    }
+  }
+}

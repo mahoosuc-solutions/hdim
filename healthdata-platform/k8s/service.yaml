@@ -1,0 +1,120 @@
+---
+# HealthData Platform Main Service
+# ClusterIP service for internal communication
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: healthdata-platform
+  namespace: healthdata
+  labels:
+    app: healthdata-platform
+    app.kubernetes.io/name: healthdata-platform
+    app.kubernetes.io/component: application
+    app.kubernetes.io/version: "2.0.0"
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/actuator/prometheus"
+spec:
+  type: ClusterIP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # 3 hours
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+    protocol: TCP
+  selector:
+    app: healthdata-platform
+    app.kubernetes.io/name: healthdata-platform
+    app.kubernetes.io/component: application
+
+---
+# Headless Service for StatefulSet-like behavior (optional)
+apiVersion: v1
+kind: Service
+metadata:
+  name: healthdata-platform-headless
+  namespace: healthdata
+  labels:
+    app: healthdata-platform
+    app.kubernetes.io/name: healthdata-platform
+    app.kubernetes.io/component: application
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+    protocol: TCP
+  selector:
+    app: healthdata-platform
+    app.kubernetes.io/name: healthdata-platform
+
+---
+# PostgreSQL Database Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: healthdata-postgres
+  namespace: healthdata
+  labels:
+    app: healthdata-postgres
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+spec:
+  type: ClusterIP
+  ports:
+  - name: postgres
+    port: 5432
+    targetPort: 5432
+    protocol: TCP
+  selector:
+    app: healthdata-postgres
+
+---
+# Redis Cache Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: healthdata-redis
+  namespace: healthdata
+  labels:
+    app: healthdata-redis
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: cache
+spec:
+  type: ClusterIP
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: 6379
+    protocol: TCP
+  selector:
+    app: healthdata-redis
+
+---
+# Kafka Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: healthdata-kafka
+  namespace: healthdata
+  labels:
+    app: healthdata-kafka
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/component: messaging
+spec:
+  type: ClusterIP
+  ports:
+  - name: kafka
+    port: 9092
+    targetPort: 9092
+    protocol: TCP
+  selector:
+    app: healthdata-kafka

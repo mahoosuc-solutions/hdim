@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk Stratification - HDIM Sales Collateral</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; background: white; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #1e40af; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+        .print-button { background: #1e40af; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 20px 0; }
+        .print-button:hover { background: #1e3a8a; }
+        
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #1e40af;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #1e40af;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+            font-style: italic;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #1e40af;
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            border-left: 4px solid #1e40af;
+            padding-left: 12px;
+        }
+
+        .section h3 {
+            color: #1e3a8a;
+            font-size: 1.1em;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        table th {
+            background: #1e40af;
+            color: white;
+            font-weight: bold;
+        }
+
+        table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        .problem-box {
+            background: #fee2e2;
+            border-left: 4px solid #dc2626;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .solution-box {
+            background: #dcfce7;
+            border-left: 4px solid #16a34a;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .roi-box {
+            background: #dbeafe;
+            border-left: 4px solid #0284c7;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .case-study {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .case-study h4 {
+            color: #d97706;
+            margin-bottom: 10px;
+        }
+
+        .metric-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+
+        .metric-label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .metric-value {
+            color: #16a34a;
+            font-weight: bold;
+        }
+
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 2px;
+        }
+
+        .cta-button {
+            background: #16a34a;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1em;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            margin: 20px 0;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .cta-button:hover {
+            background: #15803d;
+        }
+
+        .contact-info {
+            background: #f0f9ff;
+            border: 1px solid #0284c7;
+            padding: 15px;
+            margin-top: 30px;
+            border-radius: 4px;
+        }
+
+        .contact-info h4 {
+            color: #0284c7;
+            margin-bottom: 10px;
+        }
+
+        .contact-info p {
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+
+        .principle {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #16a34a;
+            padding: 15px;
+            background: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            margin: 15px 0;
+        }
+
+        @media print {
+            body { background: white; }
+            .container { max-width: 100%; }
+            .print-button { display: none; }
+            .back-link { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Sales Content Hub</a>
+        <button class="print-button" onclick="window.print()">🖨️ Print or Save as PDF</button>
+
+        <div class="header">
+            <h1>Risk Stratification: Automated Patient Prioritization</h1>
+            <p>The 80/20 Principle Applied to Care Coordination</p>
+        </div>
+
+        <div class="section">
+            <h2>The Problem You're Facing</h2>
+            
+            <div class="principle">
+                80% of Costs Come From 20% of Patients
+            </div>
+
+            <p>In your patient population:</p>
+            <ul>
+                <li><strong>20% of patients drive 80% of healthcare costs</strong></li>
+                <li>These high-risk patients have multiple chronic diseases, mental health issues, and poor medication adherence</li>
+                <li>Your care coordination team spends time on ALL patients equally</li>
+                <li>Result: Limited resources spread too thin; high-risk patients don't get sufficient focus</li>
+            </ul>
+
+            <h3>Current Risk Identification is Manual & Incomplete</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Challenge</th>
+                        <th>Current State</th>
+                        <th>Impact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>No automated risk tiers</td>
+                        <td>Manual review (when it happens)</td>
+                        <td>Inconsistent; many high-risk patients missed</td>
+                    </tr>
+                    <tr>
+                        <td>No visibility into true complexity</td>
+                        <td>Only see diagnosed conditions</td>
+                        <td>Mental health, social factors invisible</td>
+                    </tr>
+                    <tr>
+                        <td>Reactive interventions</td>
+                        <td>Wait for ED visit or hospital admission</td>
+                        <td>Too late; damage already done</td>
+                    </tr>
+                    <tr>
+                        <td>Time wasted on low-risk patients</td>
+                        <td>Same effort for all patients</td>
+                        <td>High-risk patients under-served</td>
+                    </tr>
+                    <tr>
+                        <td>No predictive capability</td>
+                        <td>Can't forecast who's likely to decompensate</td>
+                        <td>No prevention, only reaction</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Result: Inefficient Spending</h3>
+            <div class="problem-box">
+                <ul>
+                    <li>High-risk patients get care only after crisis (ED visit, hospitalization)</li>
+                    <li>Low-risk patients receive unnecessary interventions</li>
+                    <li>Care coordination resources aren't optimized</li>
+                    <li>ED/hospital costs skyrocket while care coordination costs stay static</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>The Solution: Automated Risk Stratification</h2>
+            
+            <h3>How It Works</h3>
+
+            <h4>Step 1: Automatic Risk Assessment</h4>
+            <div class="solution-box">
+                <p><strong>HDIM continuously analyzes patient data (claims, EHR, pharmacy, lab)</strong></p>
+                <p><strong>Risk algorithm considers:</strong></p>
+                <ul>
+                    <li><strong>Clinical factors:</strong> Number of chronic diseases, lab values (HbA1c, ejection fraction), comorbidities</li>
+                    <li><strong>Mental health factors:</strong> Depression, anxiety, substance use disorders</li>
+                    <li><strong>Social determinants:</strong> Housing, food security, transportation, social support</li>
+                    <li><strong>Utilization patterns:</strong> ED visits, hospitalizations, hospital readmissions</li>
+                </ul>
+                <p style="margin-top: 10px;"><strong>Each patient assigned to risk tier: Low / Medium / High</strong></p>
+            </div>
+
+            <h4>Step 2: Automated Prioritization</h4>
+            <div class="solution-box">
+                <ul>
+                    <li>Care coordinator dashboard automatically shows patients by risk tier</li>
+                    <li>Top priorities: High-risk patients (immediate attention)</li>
+                    <li>Secondary focus: Medium-risk patients (structured intervals)</li>
+                    <li>Maintenance: Low-risk patients (annual check-in)</li>
+                </ul>
+            </div>
+
+            <h4>Step 3: Tier-Specific Interventions</h4>
+            <div class="solution-box">
+                <p><strong>High-risk patients:</strong></p>
+                <ul>
+                    <li>Weekly outreach (vs. monthly for low-risk)</li>
+                    <li>More intensive case management</li>
+                    <li>Behavioral health integration</li>
+                    <li>Home monitoring if applicable</li>
+                    <li>Early ED/hospitalization prevention</li>
+                </ul>
+
+                <p style="margin-top: 10px;"><strong>Medium-risk patients:</strong></p>
+                <ul>
+                    <li>Bi-weekly outreach</li>
+                    <li>Care coordination for specific measures (diabetes, HTN)</li>
+                    <li>Self-management support</li>
+                </ul>
+
+                <p style="margin-top: 10px;"><strong>Low-risk patients:</strong></p>
+                <ul>
+                    <li>Quarterly/annual outreach</li>
+                    <li>Preventive care reminders</li>
+                    <li>Self-directed resources</li>
+                </ul>
+            </div>
+
+            <h4>Step 4: Dynamic Reassessment</h4>
+            <div class="solution-box">
+                <ul>
+                    <li>Risk tiers updated weekly as new data arrives</li>
+                    <li>Patient improves → moves to lower tier</li>
+                    <li>Patient decompensates → escalates to higher tier</li>
+                    <li>Real-time care model adaptation</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>The Financial Impact</h2>
+            
+            <h3>Cost Savings by Prevention</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Risk Tier</th>
+                        <th>Patients</th>
+                        <th>Avg Cost/Year</th>
+                        <th>With HDIM</th>
+                        <th>Savings/Patient</th>
+                        <th>Total Savings</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>High-risk</strong></td>
+                        <td>600 (4%)</td>
+                        <td>$35K</td>
+                        <td>$25K</td>
+                        <td>$10K</td>
+                        <td style="color: #16a34a; font-weight: bold;">$6M</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Medium-risk</strong></td>
+                        <td>2,400 (16%)</td>
+                        <td>$8K</td>
+                        <td>$7K</td>
+                        <td>$1K</td>
+                        <td style="color: #16a34a; font-weight: bold;">$2.4M</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Low-risk</strong></td>
+                        <td>11,000 (80%)</td>
+                        <td>$2K</td>
+                        <td>$2K</td>
+                        <td>$0</td>
+                        <td style="color: #999;">$0</td>
+                    </tr>
+                    <tr style="background: #fef3c7; font-weight: bold;">
+                        <td colspan="5"><strong>TOTAL (15K patients)</strong></td>
+                        <td style="color: #16a34a;">$8.4M</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>How Savings Are Achieved</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Savings Category</th>
+                        <th>Impact</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Prevented ED visits</td>
+                        <td>$1,200-$2,000 per prevented visit</td>
+                        <td>High-risk patient with CHF: Weekly monitoring → Prevented 3 ED visits/year = $6K saved</td>
+                    </tr>
+                    <tr>
+                        <td>Prevented hospitalizations</td>
+                        <td>$8K-$15K per prevented admission</td>
+                        <td>COPD patient: Early intervention → Prevented 1 hospitalization = $12K saved</td>
+                    </tr>
+                    <tr>
+                        <td>Prevented readmissions</td>
+                        <td>$3K-$5K per prevented readmit</td>
+                        <td>Post-hospital: Intensive outreach → Prevented readmission within 30 days</td>
+                    </tr>
+                    <tr>
+                        <td>Better medication adherence</td>
+                        <td>$500-$2K per patient</td>
+                        <td>High-risk diabetic: Close follow-up → Takes meds reliably → Fewer complications</td>
+                    </tr>
+                    <tr>
+                        <td>Fewer complications</td>
+                        <td>$2K-$5K per patient</td>
+                        <td>Early HTN management → Prevented stroke/MI costs</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="roi-box">
+                <h4>Net Year 1 Savings (Conservative)</h4>
+                <p style="font-size: 1.1em; font-weight: bold; color: #0284c7;">$200K-$400K per 15,000-patient population</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Customer Story: Robert Johnson</h2>
+            
+            <div class="case-study">
+                <h3>Patient Profile</h3>
+                <ul>
+                    <li><strong>Age:</strong> 75</li>
+                    <li><strong>Conditions:</strong> CHF (ejection fraction 35%), diabetes, hypertension, COPD, depression</li>
+                    <li><strong>History:</strong> 2 ED visits in past 6 months, 1 hospitalization last year</li>
+                    <li><strong>Social:</strong> Lives alone, limited social support, transportation challenges</li>
+                </ul>
+
+                <h3>Without Risk Stratification</h3>
+                <ul>
+                    <li>Treated like any other patient</li>
+                    <li>Monthly check-ins (same as low-risk patients)</li>
+                    <li>No systematic monitoring</li>
+                    <li>Crisis happens → ED visit → reactive treatment</li>
+                    <li style="font-weight: bold; color: #dc2626;"><strong>Cost impact:</strong> Frequent ED visits ($2K each) + hospitalization ($15K) = $20K+/year</li>
+                </ul>
+
+                <h3>With HDIM Risk Stratification</h3>
+                <ul>
+                    <li><strong>Automatically flagged as HIGH-RISK</strong> (multiple chronic diseases + recent ED visits + CHF + depression)</li>
+                    <li><strong>Assigned to intensive case management:</strong>
+                        <ul>
+                            <li>Weekly outreach (vs. monthly)</li>
+                            <li>Home BP monitor (linked to HDIM system)</li>
+                            <li>Medication adherence support</li>
+                            <li>Behavioral health referral (for depression management)</li>
+                            <li>Care coordination flag: "CHF exacerbation risk—watch for: shortness of breath, weight gain, swelling"</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h3>Outcomes (6 Months)</h3>
+                <ul>
+                    <li>0 ED visits (vs. 1 typical for this profile)</li>
+                    <li>0 hospitalizations (vs. 1-2 typical)</li>
+                    <li>Depression treatment started; compliance improving</li>
+                    <li>Medication adherence: 85% (vs. prior ~40%)</li>
+                    <li>CHF stable; patient reports better quality of life</li>
+                </ul>
+
+                <h3>Financial Impact (6 Months)</h3>
+                <ul>
+                    <li><strong>Prevented 1 ED visit:</strong> $2,000 saved</li>
+                    <li><strong>Prevented 1 hospitalization:</strong> $12,000 saved</li>
+                    <li><strong>Fewer complications → Lower medication/lab costs:</strong> $1,000 saved</li>
+                    <li style="font-weight: bold; color: #16a34a; margin-top: 10px;"><strong>Total: $15,000 saved in 6 months</strong> (patient likely generates $8-10K ROI)</li>
+                </ul>
+
+                <p style="margin-top: 15px; font-size: 0.95em;"><span class="highlight">Multiply by 4% of patients at high risk: 600 high-risk patients × $10K savings = $6M organization-wide annual benefit</span></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Why HDIM Risk Stratification is Different</h2>
+            
+            <h3>vs. Manual Risk Assessment</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dimension</th>
+                        <th>Manual</th>
+                        <th>HDIM</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Frequency</td>
+                        <td>Quarterly or annually</td>
+                        <td>Weekly (automatic)</td>
+                    </tr>
+                    <tr>
+                        <td>Completeness</td>
+                        <td>Misses mental health, social factors</td>
+                        <td>Comprehensive (clinical + social + mental health)</td>
+                    </tr>
+                    <tr>
+                        <td>Accuracy</td>
+                        <td>Subject to clinician bias</td>
+                        <td>Objective algorithm</td>
+                    </tr>
+                    <tr>
+                        <td>Scalability</td>
+                        <td>Doesn't scale beyond small populations</td>
+                        <td>Scales to 100K+ patients</td>
+                    </tr>
+                    <tr>
+                        <td>Time per patient</td>
+                        <td>10-15 min to assess</td>
+                        <td>Seconds (automated)</td>
+                    </tr>
+                    <tr>
+                        <td>Cost</td>
+                        <td>Requires dedicated staff time</td>
+                        <td>Included in platform</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>vs. EHR Risk Scoring</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dimension</th>
+                        <th>EHR Risk Tools</th>
+                        <th>HDIM</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Data Sources</td>
+                        <td>EHR only (incomplete picture)</td>
+                        <td>EHR + claims + pharmacy + behavioral health</td>
+                    </tr>
+                    <tr>
+                        <td>Mental health included</td>
+                        <td>No</td>
+                        <td>Yes (critical for complex patients)</td>
+                    </tr>
+                    <tr>
+                        <td>Actionability</td>
+                        <td>Risk score, but no action template</td>
+                        <td>Tier → intervention protocol → outcome tracking</td>
+                    </tr>
+                    <tr>
+                        <td>Real-time updates</td>
+                        <td>Batch, daily or weekly</td>
+                        <td>Continuous (as data arrives)</td>
+                    </tr>
+                    <tr>
+                        <td>Integration with measures</td>
+                        <td>Separate from quality measures</td>
+                        <td>Linked (high-risk affects measure management)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>vs. Third-Party Risk Tool (Optum, Humana, etc.)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dimension</th>
+                        <th>Third Party</th>
+                        <th>HDIM</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Data latency</td>
+                        <td>1-4 weeks old</td>
+                        <td>Real-time</td>
+                    </tr>
+                    <tr>
+                        <td>Your data control</td>
+                        <td>Locked in vendor platform</td>
+                        <td>Your data, open FHIR</td>
+                    </tr>
+                    <tr>
+                        <td>Customization</td>
+                        <td>Limited</td>
+                        <td>Fully configurable</td>
+                    </tr>
+                    <tr>
+                        <td>Integration</td>
+                        <td>Separate system</td>
+                        <td>Native to quality measure platform</td>
+                    </tr>
+                    <tr>
+                        <td>Cost</td>
+                        <td>$3-5 PMPM ($450-750K/15K patients)</td>
+                        <td>Included in HDIM</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Implementation: Activated on Day 1</h2>
+            
+            <p>Risk stratification is <strong>automatic and built-in to HDIM</strong>.</p>
+
+            <p>Once your data is loaded and live, risk tiers are calculated immediately:</p>
+            <ul>
+                <li>No additional configuration required</li>
+                <li>No separate workflow to implement</li>
+                <li>Algorithms are continuously updated by HDIM team</li>
+            </ul>
+
+            <h3>First 30 Days</h3>
+            <ul>
+                <li>Risk tiers displayed on care coordinator dashboard</li>
+                <li>Staff sees: "This patient is HIGH-RISK. Here's why."</li>
+                <li>Interventions adapted by tier</li>
+                <li>Outreach patterns shift: More attention to high-risk, less busy-work on low-risk</li>
+            </ul>
+
+            <h3>Integration with Quality Measures</h3>
+            <ul>
+                <li>High-risk patients automatically prioritized for gap closure efforts</li>
+                <li>Resources focused where impact is highest</li>
+                <li>Measure closure rates improve (high-risk patients get better care)</li>
+                <li>Staff time optimization: 80/20 rule in action</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Key Metrics to Track</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Baseline</th>
+                        <th>Month 3</th>
+                        <th>Business Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>% patients in high-risk tier</td>
+                        <td>N/A</td>
+                        <td>3-5%</td>
+                        <td>Critical patient identification</td>
+                    </tr>
+                    <tr>
+                        <td>High-risk care coordination contact rate</td>
+                        <td>&lt;30%</td>
+                        <td>80%+</td>
+                        <td>Engagement with highest-impact patients</td>
+                    </tr>
+                    <tr>
+                        <td>ED visit reduction (high-risk)</td>
+                        <td>Baseline</td>
+                        <td>-20-40%</td>
+                        <td>Direct cost savings</td>
+                    </tr>
+                    <tr>
+                        <td>Hospital admission reduction (high-risk)</td>
+                        <td>Baseline</td>
+                        <td>-15-30%</td>
+                        <td>Largest savings category</td>
+                    </tr>
+                    <tr>
+                        <td>Patient satisfaction (high-risk)</td>
+                        <td>Low</td>
+                        <td>+2-3 points</td>
+                        <td>Intensive support = higher satisfaction</td>
+                    </tr>
+                    <tr>
+                        <td>Care coordinator efficiency</td>
+                        <td>50% low-risk</td>
+                        <td>50% high-risk</td>
+                        <td>Resources optimized</td>
+                    </tr>
+                    <tr>
+                        <td>Quality measure improvement</td>
+                        <td>Baseline</td>
+                        <td>+10-15%</td>
+                        <td>Better outcomes from focused intervention</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>The Competitive Advantage</h2>
+            
+            <p style="font-size: 1.1em; color: #16a34a; font-weight: bold;">Risk stratification + quality measures in one platform = unmatched care coordination efficiency.</p>
+
+            <p>Your competitors either:</p>
+            <ul>
+                <li>Use manual risk assessment (incomplete, time-consuming)</li>
+                <li>Buy third-party risk tools (expensive, separate systems, data lag)</li>
+                <li>Use EHR-only risk scoring (missing mental health, social factors, lacks actionability)</li>
+            </ul>
+
+            <p style="margin-top: 15px;">HDIM integrates risk stratification directly into quality measure management and care coordination. Your care team doesn't have to switch systems; they see risk tiers and intervention templates right where they work.</p>
+        </div>
+
+        <div class="section">
+            <h2>Investment & Timeline</h2>
+            <div class="roi-box">
+                <ul style="list-style: none;">
+                    <li><strong>Cost:</strong> Included in HDIM platform (no separate module fee)</li>
+                    <li><strong>Time to Deploy:</strong> Automatic (activated on go-live date)</li>
+                    <li><strong>ROI:</strong> $200K-$400K annually (higher for organizations with larger high-risk populations)</li>
+                    <li><strong>Payback Period:</strong> 3-6 months (typically front-loaded toward high-risk prevention)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Next Step: Model Your Savings</h2>
+            <p>We'll analyze your population data to estimate:</p>
+            <ol>
+                <li><strong>How many high-risk patients you have</strong> (and current cost)</li>
+                <li><strong>ED/hospitalization prevention potential</strong> (biggest savings source)</li>
+                <li><strong>Quality measure improvement</strong> (secondary benefit)</li>
+                <li><strong>Your specific Year 1 ROI</strong></li>
+            </ol>
+            <button class="cta-button" onclick="alert('Contact: sales@hdim.health or population-health@hdim.health')">Schedule Risk Stratification Analysis</button>
+        </div>
+
+        <div class="contact-info">
+            <h4>Contact Information</h4>
+            <p><strong>Clinical Questions:</strong> clinicians@hdim.health</p>
+            <p><strong>Financial/ROI:</strong> sales@hdim.health</p>
+            <p><strong>Population Health:</strong> population-health@hdim.health</p>
+        </div>
+    </div>
+</body>
+</html>

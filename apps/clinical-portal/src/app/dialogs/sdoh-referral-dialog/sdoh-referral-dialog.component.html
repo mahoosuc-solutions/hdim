@@ -1,0 +1,442 @@
+<h2 mat-dialog-title>
+  <mat-icon>send</mat-icon>
+  SDOH Referral for {{ data.patientName }}
+</h2>
+
+<mat-dialog-content>
+  <mat-stepper [linear]="isLinear" [selectedIndex]="currentStep" (selectionChange)="currentStep = $event.selectedIndex">
+    <!-- Step 1: Select SDOH Needs -->
+    <mat-step [completed]="step1Valid" label="Select Needs">
+      <div class="step-content">
+        <h3 class="step-title">
+          <mat-icon>checklist</mat-icon>
+          Select SDOH Needs for Referral
+        </h3>
+
+        <div class="selection-actions">
+          <button mat-button (click)="selectAllNeeds()">Select All</button>
+          <button mat-button (click)="clearNeedSelection()">Clear</button>
+          <span class="selection-count">{{ selectedNeeds.length }} selected</span>
+        </div>
+
+        <div class="needs-grid">
+          @if (data.screeningResult?.needs?.length) {
+            @for (need of data.screeningResult!.needs!; track need.zCode) {
+              <mat-card
+                class="need-card"
+                [class.selected]="isNeedSelected(need)"
+                (click)="toggleNeedSelection(need)">
+                <mat-checkbox [checked]="isNeedSelected(need)" (click)="$event.stopPropagation()"></mat-checkbox>
+                <mat-icon class="category-icon">{{ getSDOHCategoryIcon(need.category) }}</mat-icon>
+                <div class="need-content">
+                  <h4>{{ formatCategory(need.category) | titlecase }}</h4>
+                  <p>{{ need.questionText }}</p>
+                  <div class="need-meta">
+                    <app-status-badge [status]="need.severity" type="info"></app-status-badge>
+                    <span class="z-code">{{ need.zCode }}</span>
+                  </div>
+                </div>
+              </mat-card>
+            }
+          } @else {
+            <div class="no-needs-message">
+              <mat-icon>info</mat-icon>
+              <p>No SDOH screening results available for this patient.</p>
+            </div>
+          }
+        </div>
+
+        <div class="step-actions">
+          <button mat-button matStepperNext [disabled]="!step1Valid">
+            Next
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </div>
+    </mat-step>
+
+    <!-- Step 2: Choose Destination -->
+    <mat-step [completed]="step2Valid" label="Destination">
+      <div class="step-content">
+        <h3 class="step-title">
+          <mat-icon>place</mat-icon>
+          Choose Referral Destination
+        </h3>
+
+        <mat-tab-group (selectedIndexChange)="onReferralTypeChange($event === 0 ? 'internal' : 'external')">
+          <!-- Internal Tab -->
+          <mat-tab label="Internal Referral">
+            <div class="tab-content">
+              <p class="tab-description">Refer to staff within your organization</p>
+
+              <mat-radio-group
+                class="internal-options"
+                [value]="selectedInternalType"
+                (change)="onInternalTypeChange($event.value)">
+                @for (type of internalTypes; track type) {
+                  <mat-radio-button [value]="type" class="internal-option">
+                    <mat-icon>{{ INTERNAL_DESTINATION_ICONS[type] }}</mat-icon>
+                    <span>{{ INTERNAL_DESTINATION_NAMES[type] }}</span>
+                  </mat-radio-button>
+                }
+              </mat-radio-group>
+
+              @if (selectedInternalType && availableStaff.length > 0) {
+                <div class="staff-selection">
+                  <h4>Assign to Staff Member (Optional)</h4>
+                  <mat-selection-list [multiple]="false">
+                    @for (staff of availableStaff; track staff.id) {
+                      <mat-list-option
+                        [value]="staff"
+                        [selected]="selectedStaff?.id === staff.id"
+                        (click)="onStaffSelect(staff)">
+                        <div class="staff-item">
+                          <span class="staff-name">{{ staff.name }}</span>
+                          <span class="staff-department">{{ staff.department }}</span>
+                          @if (staff.availableCapacity !== undefined) {
+                            <span class="staff-capacity" [class.low]="staff.availableCapacity < 50">
+                              {{ staff.availableCapacity }}% capacity
+                            </span>
+                          }
+                        </div>
+                      </mat-list-option>
+                    }
+                  </mat-selection-list>
+                </div>
+              }
+            </div>
+          </mat-tab>
+
+          <!-- External Tab -->
+          <mat-tab label="External Referral">
+            <div class="tab-content">
+              <p class="tab-description">Refer to community organizations and resources</p>
+
+              <div class="search-controls">
+                <mat-form-field appearance="outline" class="search-field">
+                  <mat-label>Search Resources</mat-label>
+                  <input
+                    matInput
+                    [value]="searchQuery"
+                    (input)="onSearchQueryChange($any($event.target).value)"
+                    placeholder="Enter ZIP code or organization name">
+                  <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+
+                <mat-button-toggle-group [(value)]="searchSource" class="source-toggle">
+                  <mat-button-toggle value="community">Community</mat-button-toggle>
+                  <mat-button-toggle value="211">211</mat-button-toggle>
+                  <mat-button-toggle value="findhelp">FindHelp</mat-button-toggle>
+                </mat-button-toggle-group>
+              </div>
+
+              @if (searchLoading) {
+                <div class="search-loading">
+                  <mat-spinner diameter="24"></mat-spinner>
+                  <span>Searching...</span>
+                </div>
+              }
+
+              @if (searchResults.length > 0) {
+                <mat-selection-list [multiple]="false" class="resource-list">
+                  @for (resource of searchResults; track resource.id) {
+                    <mat-list-option
+                      [value]="resource"
+                      [selected]="selectedCommunityResource?.id === resource.id"
+                      (click)="onResourceSelect(resource)">
+                      <div class="resource-item">
+                        <mat-icon matListItemIcon>{{ getSDOHCategoryIcon(resource.category) }}</mat-icon>
+                        <div class="resource-details">
+                          <span class="resource-name">{{ resource.name }}</span>
+                          <span class="resource-description">{{ resource.description }}</span>
+                          @if (resource.phone || resource.website) {
+                            <span class="resource-contact">
+                              @if (resource.phone) {
+                                <mat-icon>phone</mat-icon> {{ resource.phone }}
+                              }
+                            </span>
+                          }
+                        </div>
+                      </div>
+                    </mat-list-option>
+                  }
+                </mat-selection-list>
+              }
+
+              @if (!searchLoading && searchQuery.length >= 2 && searchResults.length === 0) {
+                <div class="no-results">
+                  <mat-icon>search_off</mat-icon>
+                  <p>No resources found. Try a different search term.</p>
+                </div>
+              }
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+
+        <div class="step-actions">
+          <button mat-button matStepperPrevious>
+            <mat-icon>arrow_back</mat-icon>
+            Back
+          </button>
+          <button mat-button matStepperNext [disabled]="!step2Valid">
+            Next
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </div>
+    </mat-step>
+
+    <!-- Step 3: Referral Details -->
+    <mat-step [completed]="step3Valid" label="Details">
+      <div class="step-content">
+        <h3 class="step-title">
+          <mat-icon>description</mat-icon>
+          Referral Details
+        </h3>
+
+        <form [formGroup]="detailsForm" class="details-form">
+          <!-- Urgency Section -->
+          <section class="form-section">
+            <h4>Priority Level</h4>
+            <mat-radio-group formControlName="urgency" class="urgency-options">
+              @for (option of urgencyOptions; track option.value) {
+                <mat-radio-button [value]="option.value" class="urgency-option">
+                  <div class="urgency-content">
+                    <mat-icon [style.color]="option.color">{{ option.icon }}</mat-icon>
+                    <span class="urgency-label">{{ option.label }}</span>
+                    <span class="urgency-description">{{ option.description }}</span>
+                  </div>
+                </mat-radio-button>
+              }
+            </mat-radio-group>
+          </section>
+
+          <!-- Consent Section -->
+          <section class="form-section">
+            <h4>Patient Consent</h4>
+            <div class="consent-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Consent Status</mat-label>
+                <mat-select formControlName="consentStatus">
+                  @for (option of consentOptions; track option.value) {
+                    <mat-option [value]="option.value">
+                      <mat-icon>{{ option.icon }}</mat-icon>
+                      {{ option.label }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              @if (requiresConsentDate) {
+                <mat-form-field appearance="outline">
+                  <mat-label>Consent Date</mat-label>
+                  <input matInput [matDatepicker]="consentPicker" formControlName="consentDate">
+                  <mat-datepicker-toggle matSuffix [for]="consentPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #consentPicker></mat-datepicker>
+                </mat-form-field>
+              }
+            </div>
+          </section>
+
+          <!-- Clinical Notes -->
+          <section class="form-section">
+            <h4>Clinical Context</h4>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Clinical Notes</mat-label>
+              <textarea
+                matInput
+                formControlName="clinicalNotes"
+                rows="4"
+                placeholder="Relevant clinical information for the referral recipient..."></textarea>
+              <mat-hint>{{ clinicalNotesLength }}/500 characters (min 10 required)</mat-hint>
+              @if (detailsForm.get('clinicalNotes')?.hasError('minlength')) {
+                <mat-error>Clinical notes must be at least 10 characters</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Relevant History (Optional)</mat-label>
+              <textarea
+                matInput
+                formControlName="relevantHistory"
+                rows="2"
+                placeholder="Previous interventions, barriers encountered..."></textarea>
+            </mat-form-field>
+          </section>
+
+          <!-- Communication Preferences -->
+          <section class="form-section">
+            <h4>Communication</h4>
+            <div class="communication-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Preferred Contact Method</mat-label>
+                <mat-select formControlName="preferredContactMethod">
+                  <mat-option value="phone">Phone</mat-option>
+                  <mat-option value="email">Email</mat-option>
+                  <mat-option value="fax">Fax</mat-option>
+                  <mat-option value="portal">Patient Portal</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-checkbox formControlName="interpreterNeeded">
+                Interpreter needed
+              </mat-checkbox>
+            </div>
+          </section>
+
+          <!-- Follow-up -->
+          <section class="form-section">
+            <h4>Follow-up</h4>
+            <div class="followup-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Follow-up in (days)</mat-label>
+                <input matInput type="number" formControlName="followUpDays" min="1" max="90">
+              </mat-form-field>
+
+              <mat-checkbox formControlName="notifyOnStatusChange">
+                Notify me when referral status changes
+              </mat-checkbox>
+            </div>
+          </section>
+        </form>
+
+        <div class="step-actions">
+          <button mat-button matStepperPrevious>
+            <mat-icon>arrow_back</mat-icon>
+            Back
+          </button>
+          <button mat-button matStepperNext [disabled]="!step3Valid">
+            Next
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </div>
+    </mat-step>
+
+    <!-- Step 4: Review & Confirm -->
+    <mat-step label="Review">
+      <div class="step-content">
+        <h3 class="step-title">
+          <mat-icon>preview</mat-icon>
+          Review Referral
+        </h3>
+
+        <div class="review-grid">
+          <!-- Patient Info -->
+          <mat-card class="summary-card">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>person</mat-icon>
+              <mat-card-title>Patient</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p><strong>{{ data.patientName }}</strong></p>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Selected Needs -->
+          <mat-card class="summary-card">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>checklist</mat-icon>
+              <mat-card-title>Selected Needs ({{ selectedNeeds.length }})</mat-card-title>
+              <button mat-icon-button (click)="goToStep(0)" matTooltip="Edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-chip-set>
+                @for (need of selectedNeeds; track need.zCode) {
+                  <mat-chip>
+                    <mat-icon>{{ getSDOHCategoryIcon(need.category) }}</mat-icon>
+                    {{ formatCategory(need.category) | titlecase }}
+                  </mat-chip>
+                }
+              </mat-chip-set>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Destination -->
+          <mat-card class="summary-card">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>{{ referralType === 'internal' ? 'supervisor_account' : 'business' }}</mat-icon>
+              <mat-card-title>{{ referralType === 'internal' ? 'Internal Referral' : 'External Referral' }}</mat-card-title>
+              <button mat-icon-button (click)="goToStep(1)" matTooltip="Edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </mat-card-header>
+            <mat-card-content>
+              <p><strong>{{ destinationSummary }}</strong></p>
+              @if (selectedStaff) {
+                <p class="secondary-text">{{ selectedStaff.department }}</p>
+              }
+              @if (selectedCommunityResource?.phone) {
+                <p class="secondary-text">{{ selectedCommunityResource!.phone }}</p>
+              }
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Details Summary -->
+          <mat-card class="summary-card">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>description</mat-icon>
+              <mat-card-title>Details</mat-card-title>
+              <button mat-icon-button (click)="goToStep(2)" matTooltip="Edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="detail-row">
+                <span class="label">Urgency:</span>
+                <app-status-badge
+                  [status]="detailsForm.get('urgency')?.value"
+                  [type]="detailsForm.get('urgency')?.value === 'emergent' ? 'error' : 'info'">
+                </app-status-badge>
+              </div>
+              <div class="detail-row">
+                <span class="label">Consent:</span>
+                <span>{{ getConsentStatusLabel(detailsForm.get('consentStatus')?.value) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Follow-up:</span>
+                <span>{{ detailsForm.get('followUpDays')?.value }} days</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <!-- Warnings -->
+        @if (hasWarnings) {
+          <mat-card class="warning-card">
+            <mat-icon color="warn">warning</mat-icon>
+            <span>{{ warningMessage }}</span>
+          </mat-card>
+        }
+
+        <div class="step-actions">
+          <button mat-button matStepperPrevious>
+            <mat-icon>arrow_back</mat-icon>
+            Back
+          </button>
+          <button mat-button (click)="saveDraft()" [disabled]="submitting">
+            Save Draft
+          </button>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="submit()"
+            [disabled]="submitting || !step1Valid || !step2Valid || !step3Valid">
+            @if (submitting) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              <mat-icon>send</mat-icon>
+              Submit Referral
+            }
+          </button>
+        </div>
+      </div>
+    </mat-step>
+  </mat-stepper>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()" [disabled]="submitting">Cancel</button>
+</mat-dialog-actions>

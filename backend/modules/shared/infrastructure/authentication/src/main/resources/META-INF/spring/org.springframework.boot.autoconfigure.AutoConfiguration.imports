@@ -1,0 +1,2 @@
+com.healthdata.authentication.config.AuthenticationJwtAutoConfiguration
+com.healthdata.authentication.config.AuthenticationControllerAutoConfiguration

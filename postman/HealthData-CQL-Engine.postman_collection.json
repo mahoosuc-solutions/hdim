@@ -1,0 +1,821 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "HealthData CQL Engine API",
+		"description": "Complete API collection for HealthData-in-Motion CQL Quality Measure Evaluation System",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "Health & Status",
+			"item": [
+				{
+					"name": "CQL Engine Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cql-engine/actuator/health",
+							"host": ["{{base_url}}"],
+							"path": ["cql-engine", "actuator", "health"]
+						},
+						"description": "Check the health status of the CQL Engine service"
+					},
+					"response": []
+				},
+				{
+					"name": "CQL Engine Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cql-engine/actuator/info",
+							"host": ["{{base_url}}"],
+							"path": ["cql-engine", "actuator", "info"]
+						},
+						"description": "Get service information"
+					},
+					"response": []
+				},
+				{
+					"name": "CQL Engine Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cql-engine/actuator/metrics",
+							"host": ["{{base_url}}"],
+							"path": ["cql-engine", "actuator", "metrics"]
+						},
+						"description": "Get service metrics"
+					},
+					"response": []
+				},
+				{
+					"name": "Quality Measure Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{quality_measure_url}}/quality-measure/actuator/health",
+							"host": ["{{quality_measure_url}}"],
+							"path": ["quality-measure", "actuator", "health"]
+						},
+						"description": "Check the health status of the Quality Measure service"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "CQL Library Management",
+			"item": [
+				{
+					"name": "Get All CQL Libraries",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenant_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cql-engine/api/v1/cql/libraries",
+							"host": ["{{base_url}}"],
+							"path": ["cql-engine", "api", "v1", "cql", "libraries"]
+						},
+						"description": "Retrieve all CQL libraries for the tenant"
+					},
+					"response": []
+				},
+				{
+					"name": "Get CDC Library",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenant_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cql-engine/api/v1/cql/libraries/{{cdc_library_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["cql-engine", "api", "v1", "cql", "libraries", "{{cdc_library_id}}"]
+						},
+						"description": "Get CDC (Diabetes Care) library details"
+					},
+					"response": []
+				},
+				{
+					"name": "Get CBP Library",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenant_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cql-engine/api/v1/cql/libraries/{{cbp_library_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["cql-engine", "api", "v1", "cql", "libraries", "{{cbp_library_id}}"]
+						},
+						"description": "Get CBP (Blood Pressure) library details"
+					},
+					"response": []
+				},
+				{
+					"name": "Get COL Library",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenant_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cql-engine/api/v1/cql/libraries/{{col_library_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["cql-engine", "api", "v1", "cql", "libraries", "{{col_library_id}}"]
+						},
+						"description": "Get COL (Colorectal Screening) library details"
+					},
+					"response": []
+				},
+				{
+					"name": "Get BCS Library (NEW)",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenant_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cql-engine/api/v1/cql/libraries/{{bcs_library_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["cql-engine", "api", "v1", "cql", "libraries", "{{bcs_library_id}}"]
+						},
+						"description": "Get BCS (Breast Cancer Screening) library details - NEW in Phase 5"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Measure Evaluations",
+			"item": [
+				{
+					"name": "Evaluate CDC - Patient 55 (Positive)",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenant_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cql-engine/api/v1/cql/evaluations?libraryId={{cdc_library_id}}&patientId=55",
+							"host": ["{{base_url}}"],
+							"path": ["cql-engine", "api", "v1", "cql", "evaluations"],
+							"query": [
+								{
+									"key": "libraryId",
+									"value": "{{cdc_library_id}}"
+								},
+								{
+									"key": "patientId",
+									"value": "55"
+								}
+							]
+						},
+						"description": "Evaluate CDC measure for Patient 55 (should be in numerator - has diabetes and HbA1c < 8%)"
+					},
+					"response": []
+				},
+				{
+					"name": "Evaluate CBP - Patient 56 (Positive)",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenant_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cql-engine/api/v1/cql/evaluations?libraryId={{cbp_library_id}}&patientId=56",
+							"host": ["{{base_url}}"],
+							"path": ["cql-engine", "api", "v1", "cql", "evaluations"],
+							"query": [
+								{
+									"key": "libraryId",
+									"value": "{{cbp_library_id}}"
+								},
+								{
+									"key": "patientId",
+									"value": "56"
+								}
+							]
+						},
+						"description": "Evaluate CBP measure for Patient 56 (should be in numerator - has hypertension and BP < 140/90)"
+					},
+					"response": []
+				},
+				{
+					"name": "Evaluate COL - Patient 113 (Positive)",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenant_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cql-engine/api/v1/cql/evaluations?libraryId={{col_library_id}}&patientId=113",
+							"host": ["{{base_url}}"],
+							"path": ["cql-engine", "api", "v1", "cql", "evaluations"],
+							"query": [
+								{
+									"key": "libraryId",
+									"value": "{{col_library_id}}"
+								},
+								{
+									"key": "patientId",
+									"value": "113"
+								}
+							]
+						},
+						"description": "Evaluate COL measure for Patient 113 (should be in numerator - age 60, recent colonoscopy)"
+					},
+					"response": []
+				},
+				{
+					"name": "Evaluate BCS - Patient 200 (Positive) - NEW",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenant_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cql-engine/api/v1/cql/evaluations?libraryId={{bcs_library_id}}&patientId=200",
+							"host": ["{{base_url}}"],
+							"path": ["cql-engine", "api", "v1", "cql", "evaluations"],
+							"query": [
+								{
+									"key": "libraryId",
+									"value": "{{bcs_library_id}}"
+								},
+								{
+									"key": "patientId",
+									"value": "200"
+								}
+							]
+						},
+						"description": "Evaluate BCS measure for Patient 200 (should be in numerator - female, age 55, recent mammogram) - NEW in Phase 5"
+					},
+					"response": []
+				},
+				{
+					"name": "Evaluate CDC - Patient 57 (Care Gap)",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenant_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cql-engine/api/v1/cql/evaluations?libraryId={{cdc_library_id}}&patientId=57",
+							"host": ["{{base_url}}"],
+							"path": ["cql-engine", "api", "v1", "cql", "evaluations"],
+							"query": [
+								{
+									"key": "libraryId",
+									"value": "{{cdc_library_id}}"
+								},
+								{
+									"key": "patientId",
+									"value": "57"
+								}
+							]
+						},
+						"description": "Evaluate CDC measure for Patient 57 (should NOT be in denominator - no diabetes)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "FHIR Server",
+			"item": [
+				{
+					"name": "Get FHIR Metadata",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{fhir_url}}/fhir/metadata",
+							"host": ["{{fhir_url}}"],
+							"path": ["fhir", "metadata"]
+						},
+						"description": "Get FHIR server capability statement"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Patient 55",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{fhir_url}}/fhir/Patient/55",
+							"host": ["{{fhir_url}}"],
+							"path": ["fhir", "Patient", "55"]
+						},
+						"description": "Get Patient 55 details"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Patient 200 (BCS Test)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{fhir_url}}/fhir/Patient/200",
+							"host": ["{{fhir_url}}"],
+							"path": ["fhir", "Patient", "200"]
+						},
+						"description": "Get Patient 200 details (BCS test patient)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Patients",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{fhir_url}}/fhir/Patient?_count=50",
+							"host": ["{{fhir_url}}"],
+							"path": ["fhir", "Patient"],
+							"query": [
+								{
+									"key": "_count",
+									"value": "50"
+								}
+							]
+						},
+						"description": "Get all patients (limited to 50)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Patient Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{fhir_url}}/fhir/Patient?_summary=count",
+							"host": ["{{fhir_url}}"],
+							"path": ["fhir", "Patient"],
+							"query": [
+								{
+									"key": "_summary",
+									"value": "count"
+								}
+							]
+						},
+						"description": "Get total patient count"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Conditions for Patient 55",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{fhir_url}}/fhir/Condition?subject=Patient/55",
+							"host": ["{{fhir_url}}"],
+							"path": ["fhir", "Condition"],
+							"query": [
+								{
+									"key": "subject",
+									"value": "Patient/55"
+								}
+							]
+						},
+						"description": "Get all conditions for Patient 55"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Observations for Patient 55",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{fhir_url}}/fhir/Observation?subject=Patient/55",
+							"host": ["{{fhir_url}}"],
+							"path": ["fhir", "Observation"],
+							"query": [
+								{
+									"key": "subject",
+									"value": "Patient/55"
+								}
+							]
+						},
+						"description": "Get all observations for Patient 55"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Procedures for Patient 200",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{fhir_url}}/fhir/Procedure?subject=Patient/200",
+							"host": ["{{fhir_url}}"],
+							"path": ["fhir", "Procedure"],
+							"query": [
+								{
+									"key": "subject",
+									"value": "Patient/200"
+								}
+							]
+						},
+						"description": "Get all procedures for Patient 200 (should include mammogram)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Performance Testing",
+			"item": [
+				{
+					"name": "Quick Evaluation - CDC",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenant_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cql-engine/api/v1/cql/evaluations?libraryId={{cdc_library_id}}&patientId=55",
+							"host": ["{{base_url}}"],
+							"path": ["cql-engine", "api", "v1", "cql", "evaluations"],
+							"query": [
+								{
+									"key": "libraryId",
+									"value": "{{cdc_library_id}}"
+								},
+								{
+									"key": "patientId",
+									"value": "55"
+								}
+							]
+						},
+						"description": "Quick evaluation to test performance (check response time in Postman)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Quality Measure Service",
+			"item": [
+				{
+					"name": "Get All Quality Measures",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenant_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{quality_measure_url}}/quality-measure/api/v1/quality-measures",
+							"host": ["{{quality_measure_url}}"],
+							"path": ["quality-measure", "api", "v1", "quality-measures"]
+						},
+						"description": "Get all available quality measures"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8081",
+			"type": "string"
+		},
+		{
+			"key": "quality_measure_url",
+			"value": "http://localhost:8087",
+			"type": "string"
+		},
+		{
+			"key": "fhir_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "tenant_id",
+			"value": "healthdata-demo",
+			"type": "string"
+		},
+		{
+			"key": "username",
+			"value": "cql-service-user",
+			"type": "string"
+		},
+		{
+			"key": "password",
+			"value": "cql-service-dev-password-change-in-prod",
+			"type": "string"
+		},
+		{
+			"key": "cdc_library_id",
+			"value": "09845958-78de-4f38-b98f-4e300c891a4d",
+			"type": "string"
+		},
+		{
+			"key": "cbp_library_id",
+			"value": "544dd4be-d5c4-4ce3-8896-70a2cb3b4014",
+			"type": "string"
+		},
+		{
+			"key": "col_library_id",
+			"value": "65e379ac-faeb-4c40-a9f5-4bc29af7aea7",
+			"type": "string"
+		},
+		{
+			"key": "bcs_library_id",
+			"value": "ff23799a-b45c-42dc-bc27-3f8bb7933dbe",
+			"type": "string"
+		}
+	]
+}

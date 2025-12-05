@@ -1,0 +1,22 @@
+package com.healthdata.authentication.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.scheduling.annotation.EnableAsync;
+
+/**
+ * Configuration for audit logging system.
+ *
+ * Enables:
+ * - JPA Auditing for automatic @CreatedDate and @LastModifiedDate
+ * - Async support for non-blocking audit logging
+ * - AspectJ for @Audited annotation processing
+ */
+@Configuration
+@EnableJpaAuditing
+@EnableAsync
+@EnableAspectJAutoProxy
+public class AuditConfig {
+    // Configuration is provided by annotations
+}

@@ -1,0 +1,13 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cql-engine-pdb
+  labels:
+    app: cql-engine-service
+    component: backend
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: cql-engine-service
+  unhealthyPodEvictionPolicy: AlwaysAllow

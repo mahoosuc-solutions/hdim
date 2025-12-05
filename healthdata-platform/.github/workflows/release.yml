@@ -1,0 +1,274 @@
+name: Release Management
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  validate-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Validate version format
+      run: |
+        if [[ "${{ github.ref }}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]] || \
+           [[ "${{ github.event.inputs.version }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "✅ Version format is valid"
+        else
+          echo "❌ Invalid version format. Must be v*.*.* (e.g., v1.0.0)"
+          exit 1
+        fi
+
+    - name: Check for changelog
+      run: |
+        if [ -f "CHANGELOG.md" ]; then
+          echo "✅ CHANGELOG.md exists"
+        else
+          echo "⚠️ CHANGELOG.md not found"
+        fi
+
+  build-release-artifacts:
+    runs-on: ubuntu-latest
+    needs: validate-release
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v3
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      working-directory: ./backend
+      run: chmod +x gradlew
+
+    - name: Build backend services
+      working-directory: ./backend
+      run: ./gradlew clean build -x test --no-daemon
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Build frontend applications
+      run: |
+        cd apps/clinical-portal
+        npm ci
+        npm run build
+        cd ../../frontend
+        npm ci
+        npm run build
+
+    - name: Create release artifacts
+      run: |
+        mkdir -p release-artifacts
+
+        # Copy backend JARs
+        find backend/modules/services -name "*.jar" -exec cp {} release-artifacts/ \;
+
+        # Archive frontend builds
+        tar -czf release-artifacts/clinical-portal.tar.gz -C apps/clinical-portal/dist .
+        tar -czf release-artifacts/frontend.tar.gz -C frontend/dist .
+
+    - name: Upload release artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-artifacts
+        path: release-artifacts/
+
+  create-docker-images:
+    runs-on: ubuntu-latest
+    needs: validate-release
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        service:
+          - fhir-service
+          - quality-measure-service
+          - cql-engine-service
+          - patient-service
+          - care-gap-service
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract version
+      id: version
+      run: |
+        if [ -n "${{ github.event.inputs.version }}" ]; then
+          VERSION=${{ github.event.inputs.version }}
+        else
+          VERSION=${GITHUB_REF#refs/tags/}
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: backend/modules/services/${{ matrix.service }}
+        file: backend/modules/services/${{ matrix.service }}/Dockerfile
+        push: true
+        tags: |
+          ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ steps.version.outputs.version }}
+          ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+      continue-on-error: true
+
+  generate-release-notes:
+    runs-on: ubuntu-latest
+    needs: validate-release
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Generate release notes
+      id: release-notes
+      run: |
+        # Get the previous tag
+        PREVIOUS_TAG=$(git tag --sort=-v:refname | sed -n '2p')
+
+        if [ -z "$PREVIOUS_TAG" ]; then
+          PREVIOUS_TAG=$(git rev-list --max-parents=0 HEAD)
+        fi
+
+        # Generate changelog
+        echo "# Release Notes" > release-notes.md
+        echo "" >> release-notes.md
+        echo "## What's Changed" >> release-notes.md
+        echo "" >> release-notes.md
+
+        git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" >> release-notes.md
+
+    - name: Upload release notes
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-notes
+        path: release-notes.md
+
+  create-github-release:
+    runs-on: ubuntu-latest
+    needs: [build-release-artifacts, create-docker-images, generate-release-notes]
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Download release artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: release-artifacts
+        path: release-artifacts/
+
+    - name: Download release notes
+      uses: actions/download-artifact@v3
+      with:
+        name: release-notes
+
+    - name: Extract version
+      id: version
+      run: |
+        if [ -n "${{ github.event.inputs.version }}" ]; then
+          VERSION=${{ github.event.inputs.version }}
+        else
+          VERSION=${GITHUB_REF#refs/tags/}
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        name: Release ${{ steps.version.outputs.version }}
+        body_path: release-notes.md
+        draft: false
+        prerelease: false
+        files: |
+          release-artifacts/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify-release:
+    runs-on: ubuntu-latest
+    needs: create-github-release
+    if: success()
+
+    steps:
+    - name: Extract version
+      id: version
+      run: |
+        if [ -n "${{ github.event.inputs.version }}" ]; then
+          VERSION=${{ github.event.inputs.version }}
+        else
+          VERSION=${GITHUB_REF#refs/tags/}
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Slack notification
+      uses: slackapi/slack-github-action@v1.24.0
+      with:
+        webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+        payload: |
+          {
+            "text": "🎉 New release published: ${{ steps.version.outputs.version }}",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*New Release Published*\n*Version:* ${{ steps.version.outputs.version }}\n*Repository:* ${{ github.repository }}\n*Release URL:* ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.version.outputs.version }}"
+                }
+              }
+            ]
+          }
+      continue-on-error: true
+
+    - name: Release summary
+      run: |
+        echo "# Release Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Released at:** $(date)" >> $GITHUB_STEP_SUMMARY
+        echo "**Release URL:** ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Release completed successfully!" >> $GITHUB_STEP_SUMMARY

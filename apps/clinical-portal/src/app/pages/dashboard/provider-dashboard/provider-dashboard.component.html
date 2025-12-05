@@ -1,0 +1,396 @@
+<app-page-header
+  title="Provider Dashboard"
+  subtitle="Clinical Decision Support & Quality Performance"
+  icon="stethoscope">
+  <button mat-raised-button color="primary" (click)="refreshData()">
+    <mat-icon>refresh</mat-icon>
+    Refresh
+  </button>
+</app-page-header>
+
+<!-- Dashboard Metrics -->
+<div class="metrics-grid">
+  <app-stat-card
+    title="Patients Today"
+    [value]="patientsScheduledToday.toString()"
+    icon="event"
+    color="primary"
+    [clickable]="true"
+    (click)="viewTodaySchedule()">
+  </app-stat-card>
+
+  <app-stat-card
+    title="Results to Review"
+    [value]="resultsToReview.toString()"
+    icon="science"
+    color="warn"
+    [clickable]="true"
+    (click)="viewAllResults()">
+  </app-stat-card>
+
+  <app-stat-card
+    title="High Priority Gaps"
+    [value]="careGapsHighPriority.toString()"
+    icon="warning"
+    color="accent">
+  </app-stat-card>
+
+  <app-stat-card
+    title="Quality Score"
+    [value]="qualityScore.toString() + '%'"
+    icon="analytics"
+    color="success">
+  </app-stat-card>
+</div>
+
+  <div class="stat-card-actions-fallback" aria-label="Provider dashboard quick actions">
+    <button
+      mat-stroked-button
+      color="primary"
+      type="button"
+      class="stat-action-button"
+      aria-label="View today schedule"
+      (click)="viewTodaySchedule()"
+    >
+      <mat-icon>event</mat-icon>
+      View Today
+    </button>
+    <button
+      mat-stroked-button
+      color="accent"
+      type="button"
+      class="stat-action-button"
+      aria-label="View all results"
+      (click)="viewAllResults()"
+    >
+      <mat-icon>analytics</mat-icon>
+      View Results
+    </button>
+    <button
+      mat-stroked-button
+      color="primary"
+      type="button"
+      class="stat-action-button"
+      aria-label="View all evaluations"
+      (click)="viewAllEvaluations()"
+    >
+      <mat-icon>list</mat-icon>
+      View Evaluations
+    </button>
+    <button
+      mat-stroked-button
+      color="accent"
+      type="button"
+      class="stat-action-button"
+      aria-label="View all patients"
+      (click)="viewAllPatients()"
+    >
+      <mat-icon>people</mat-icon>
+      View Patients
+    </button>
+    <button
+      mat-stroked-button
+      color="warn"
+      type="button"
+      class="stat-action-button"
+      aria-label="View care gaps"
+      (click)="viewAllCareGaps()"
+    >
+      <mat-icon>report_problem</mat-icon>
+      View Care Gaps
+    </button>
+    <button
+      mat-stroked-button
+      color="success"
+      type="button"
+      class="stat-action-button"
+      aria-label="View reports"
+      (click)="viewReports()"
+    >
+      <mat-icon>description</mat-icon>
+      View Reports
+    </button>
+  </div>
+
+<!-- Quick Clinical Actions -->
+<mat-card class="quick-actions-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>bolt</mat-icon>
+      Quick Clinical Actions
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="quick-actions">
+      <button mat-raised-button color="primary" class="action-btn">
+        <mat-icon>analytics</mat-icon>
+        Review Results
+      </button>
+      <button mat-raised-button color="accent" class="action-btn">
+        <mat-icon>medication</mat-icon>
+        E-Prescribe
+      </button>
+      <button mat-raised-button class="action-btn">
+        <mat-icon>science</mat-icon>
+        Order Tests
+      </button>
+      <button mat-raised-button class="action-btn">
+        <mat-icon>send</mat-icon>
+        Create Referral
+      </button>
+      <button mat-raised-button class="action-btn">
+        <mat-icon>note_add</mat-icon>
+        Clinical Note
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<!-- Quality Measures Performance -->
+<mat-card class="quality-measures-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>insights</mat-icon>
+      Quality Measures Performance
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="measures-grid">
+      @for (measure of qualityMeasures; track measure.id) {
+        <div class="measure-card" (click)="viewMeasureDetails(measure)">
+          <div class="measure-header">
+            <h3>{{ measure.name }}</h3>
+            <mat-icon
+              class="trend-icon"
+              [style.color]="getTrendColor(measure.trend)">
+              {{ getTrendIcon(measure.trend) }}
+            </mat-icon>
+          </div>
+          <div class="measure-performance">
+            <span
+              class="performance-value"
+              [style.color]="getPerformanceColor(measure.performance, measure.target)">
+              {{ measure.performance | number:'1.1-1' }}%
+            </span>
+            <span class="target-value">Target: {{ measure.target }}%</span>
+          </div>
+          <mat-progress-bar
+            mode="determinate"
+            [value]="measure.performance"
+            [color]="measure.performance >= measure.target ? 'primary' : 'warn'">
+          </mat-progress-bar>
+          <div class="measure-counts">
+            <span>{{ measure.numerator }} / {{ measure.denominator }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<!-- High Priority Care Gaps -->
+<mat-card class="care-gaps-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>error</mat-icon>
+      High Priority Care Gaps
+      <span class="gap-badge">{{ highPriorityCareGaps.length }}</span>
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    @if (loading) {
+      <div class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading care gaps...</p>
+      </div>
+    } @else if (highPriorityCareGaps.length === 0) {
+      <app-empty-state
+        icon="check_circle"
+        title="No high priority care gaps"
+        message="All critical care gaps have been addressed.">
+      </app-empty-state>
+    } @else {
+      <table mat-table [dataSource]="highPriorityCareGaps" class="care-gaps-table">
+        <!-- Patient Column -->
+        <ng-container matColumnDef="patient">
+          <th mat-header-cell *matHeaderCellDef>Patient</th>
+          <td mat-cell *matCellDef="let gap">
+            <div class="patient-cell">
+              <strong>{{ gap.patientName }}</strong>
+              <span class="mrn-text">{{ gap.patientMRN }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Gap Column -->
+        <ng-container matColumnDef="gap">
+          <th mat-header-cell *matHeaderCellDef>Care Gap</th>
+          <td mat-cell *matCellDef="let gap">
+            <div class="gap-cell">
+              <strong>{{ gap.gapType }}</strong>
+              <span class="action-text">{{ gap.requiresAction }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Clinical Context Column -->
+        <ng-container matColumnDef="context">
+          <th mat-header-cell *matHeaderCellDef>Clinical Context</th>
+          <td mat-cell *matCellDef="let gap">
+            <span class="context-text">{{ gap.clinicalContext }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Risk Column -->
+        <ng-container matColumnDef="risk">
+          <th mat-header-cell *matHeaderCellDef>Risk</th>
+          <td mat-cell *matCellDef="let gap">
+            <div class="risk-badge" [style.background-color]="getRiskColor(gap.risk)">
+              <mat-icon>{{ getRiskIcon(gap.risk) }}</mat-icon>
+              {{ gap.risk | titlecase }}
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Due Date Column -->
+        <ng-container matColumnDef="dueDate">
+          <th mat-header-cell *matHeaderCellDef>Due Date</th>
+          <td mat-cell *matCellDef="let gap">
+            <div class="date-cell">
+              <mat-icon>event</mat-icon>
+              {{ gap.dueDate }}
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let gap">
+            <div class="action-buttons">
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="addressCareGap(gap)">
+                <mat-icon>medical_services</mat-icon>
+                Address
+              </button>
+              <button
+                mat-icon-button
+                (click)="viewPatient(gap.id)"
+                matTooltip="View Patient">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="careGapColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: careGapColumns" class="gap-row"></tr>
+      </table>
+    }
+  </mat-card-content>
+</mat-card>
+
+<!-- Pending Results to Review -->
+<mat-card class="results-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>science</mat-icon>
+      Pending Results to Review
+      <span class="results-badge">{{ pendingResults.length }}</span>
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    @if (loading) {
+      <div class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading results...</p>
+      </div>
+    } @else if (pendingResults.length === 0) {
+      <app-empty-state
+        icon="check_circle"
+        title="No pending results"
+        message="All results have been reviewed.">
+      </app-empty-state>
+    } @else {
+      <table mat-table [dataSource]="pendingResults" class="results-table">
+        <!-- Patient Column -->
+        <ng-container matColumnDef="patient">
+          <th mat-header-cell *matHeaderCellDef>Patient</th>
+          <td mat-cell *matCellDef="let result">
+            <div class="patient-cell">
+              <strong>{{ result.patientName }}</strong>
+              <span class="mrn-text">{{ result.patientMRN }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Result Type Column -->
+        <ng-container matColumnDef="resultType">
+          <th mat-header-cell *matHeaderCellDef>Result Type</th>
+          <td mat-cell *matCellDef="let result">
+            <div class="result-type-cell">
+              <mat-icon>science</mat-icon>
+              {{ result.resultType }}
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Date Column -->
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef>Date</th>
+          <td mat-cell *matCellDef="let result">
+            <div class="date-cell">
+              <mat-icon>event</mat-icon>
+              {{ result.date }}
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let result">
+            @if (result.abnormal) {
+              <mat-chip color="warn">
+                <mat-icon>warning</mat-icon>
+                Abnormal
+              </mat-chip>
+            } @else {
+              <mat-chip color="primary">
+                <mat-icon>check_circle</mat-icon>
+                Normal
+              </mat-chip>
+            }
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let result">
+            <div class="action-buttons">
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="reviewResult(result)">
+                <mat-icon>visibility</mat-icon>
+                Review
+              </button>
+              <button
+                mat-raised-button
+                (click)="signResult(result)">
+                <mat-icon>check</mat-icon>
+                Sign
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="resultsColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: resultsColumns" class="result-row"></tr>
+      </table>
+    }
+  </mat-card-content>
+</mat-card>

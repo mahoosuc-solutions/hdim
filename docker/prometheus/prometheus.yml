@@ -1,0 +1,96 @@
+# Prometheus Configuration for HealthData-in-Motion
+# Scrapes metrics from CQL Engine Service and other services
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'healthdata-in-motion'
+    environment: 'docker'
+
+# Alertmanager configuration (optional)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # - 'alertmanager:9093'
+
+# Load rules once and periodically evaluate them
+rule_files:
+  # - "alerts/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # CQL Engine Service
+  - job_name: 'cql-engine-service'
+    metrics_path: '/cql-engine/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['cql-engine-service:8081']
+        labels:
+          service: 'cql-engine'
+          application: 'cql-engine-service'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__address__]
+        regex: '([^:]+)(?::\d+)?'
+        target_label: hostname
+
+  # Quality Measure Service
+  - job_name: 'quality-measure-service'
+    metrics_path: '/quality-measure/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['quality-measure-service:8087']
+        labels:
+          service: 'quality-measure'
+          application: 'quality-measure-service'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__address__]
+        regex: '([^:]+)(?::\d+)?'
+        target_label: hostname
+
+  # FHIR Service (HAPI FHIR)
+  - job_name: 'fhir-service'
+    metrics_path: '/fhir/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['fhir-service-mock:8080']
+        labels:
+          service: 'fhir'
+          application: 'hapi-fhir'
+
+  # PostgreSQL Exporter (if deployed)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: []
+        # - 'postgres-exporter:9187'
+        labels:
+          service: 'database'
+          database: 'postgresql'
+
+  # Redis Exporter (if deployed)
+  - job_name: 'redis'
+    static_configs:
+      - targets: []
+        # - 'redis-exporter:9121'
+        labels:
+          service: 'cache'
+          cache: 'redis'
+
+  # Kafka Exporter (if deployed)
+  - job_name: 'kafka'
+    static_configs:
+      - targets: []
+        # - 'kafka-exporter:9308'
+        labels:
+          service: 'messaging'
+          messaging: 'kafka'

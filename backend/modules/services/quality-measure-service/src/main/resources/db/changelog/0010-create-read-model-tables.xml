@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!--
+        CQRS Read Model Tables
+
+        Purpose: Denormalized tables for fast read queries
+        Pattern: Event-driven materialized views
+
+        Benefits:
+        - Fast queries (no joins needed)
+        - Optimized for dashboard/reporting use cases
+        - Scalable read performance
+
+        Tables:
+        1. patient_health_summary - Per-patient health snapshot
+        2. population_metrics - Aggregated population metrics
+    -->
+
+    <changeSet id="0010-1-create-patient-health-summary-table" author="system">
+        <comment>
+            Create patient_health_summary read model table
+
+            This table is a denormalized view of patient health status,
+            materialized from events across multiple write model tables.
+
+            Replaces complex joins with single-table queries for:
+            - Patient detail view
+            - Dashboard patient list
+            - Population health reports
+        </comment>
+
+        <createTable tableName="patient_health_summary">
+            <!-- Primary Key -->
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Identifiers -->
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Health Score Data -->
+            <column name="latest_health_score" type="DOUBLE PRECISION">
+                <constraints nullable="true"/>
+            </column>
+            <column name="health_trend" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="health_score_updated_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Care Gap Data -->
+            <column name="open_care_gaps_count" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="urgent_gaps_count" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="care_gaps_updated_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Risk Assessment Data -->
+            <column name="risk_level" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="risk_score" type="DOUBLE PRECISION">
+                <constraints nullable="true"/>
+            </column>
+            <column name="risk_updated_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Clinical Alert Data -->
+            <column name="active_alerts_count" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="critical_alerts_count" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="alerts_updated_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Mental Health Data -->
+            <column name="latest_mental_health_score" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+            <column name="mental_health_severity" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="mental_health_updated_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Audit -->
+            <column name="last_updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="projection_version" type="BIGINT" defaultValue="1">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes for fast queries -->
+        <createIndex indexName="idx_phs_tenant_patient" tableName="patient_health_summary" unique="true">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_phs_tenant_risk" tableName="patient_health_summary">
+            <column name="tenant_id"/>
+            <column name="risk_level"/>
+        </createIndex>
+
+        <createIndex indexName="idx_phs_tenant_health_score" tableName="patient_health_summary">
+            <column name="tenant_id"/>
+            <column name="latest_health_score"/>
+        </createIndex>
+
+        <createIndex indexName="idx_phs_tenant_urgent_gaps" tableName="patient_health_summary">
+            <column name="tenant_id"/>
+            <column name="urgent_gaps_count"/>
+        </createIndex>
+
+        <createIndex indexName="idx_phs_last_updated" tableName="patient_health_summary">
+            <column name="last_updated_at"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="0010-2-create-population-metrics-table" author="system">
+        <comment>
+            Create population_metrics read model table
+
+            Aggregated metrics for population-level dashboards and reports.
+            Updated daily or on-demand via scheduled job.
+        </comment>
+
+        <createTable tableName="population_metrics">
+            <!-- Primary Key -->
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Identifiers -->
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metric_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Population Counts -->
+            <column name="total_patients" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="high_risk_count" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="medium_risk_count" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="low_risk_count" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Health Score Metrics -->
+            <column name="average_health_score" type="DOUBLE PRECISION">
+                <constraints nullable="true"/>
+            </column>
+            <column name="median_health_score" type="DOUBLE PRECISION">
+                <constraints nullable="true"/>
+            </column>
+            <column name="health_score_stddev" type="DOUBLE PRECISION">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Care Gap Metrics -->
+            <column name="total_care_gaps" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="urgent_care_gaps" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="care_gaps_closed_today" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="gap_closure_rate" type="DOUBLE PRECISION">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Alert Metrics -->
+            <column name="total_active_alerts" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="critical_alerts" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Mental Health Metrics -->
+            <column name="positive_mental_health_screens" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mental_health_assessments_completed" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Quality Measure Metrics -->
+            <column name="average_quality_score" type="DOUBLE PRECISION">
+                <constraints nullable="true"/>
+            </column>
+            <column name="measures_calculated" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Audit -->
+            <column name="calculated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes -->
+        <createIndex indexName="idx_pm_tenant_date" tableName="population_metrics" unique="true">
+            <column name="tenant_id"/>
+            <column name="metric_date"/>
+        </createIndex>
+
+        <createIndex indexName="idx_pm_calculated_at" tableName="population_metrics">
+            <column name="calculated_at"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="0010-3-create-materialized-view-patient-summary" author="system">
+        <comment>
+            Optional: Create materialized view for complex aggregations
+
+            This view combines data from patient_health_summary with additional
+            computed fields. Refresh daily via scheduled job.
+
+            Note: PostgreSQL only. For other databases, use regular views or skip.
+        </comment>
+
+        <sql dbms="postgresql">
+            CREATE MATERIALIZED VIEW mv_patient_health_dashboard AS
+            SELECT
+                phs.tenant_id,
+                phs.patient_id,
+                phs.latest_health_score,
+                phs.health_trend,
+                phs.risk_level,
+                phs.risk_score,
+                phs.open_care_gaps_count,
+                phs.urgent_gaps_count,
+                phs.active_alerts_count,
+                phs.critical_alerts_count,
+                -- Computed risk category
+                CASE
+                    WHEN phs.risk_level = 'high' THEN 3
+                    WHEN phs.risk_level = 'medium' THEN 2
+                    WHEN phs.risk_level = 'low' THEN 1
+                    ELSE 0
+                END AS risk_category_order,
+                -- Computed priority score (for sorting)
+                (
+                    COALESCE(phs.urgent_gaps_count * 10, 0) +
+                    COALESCE(phs.critical_alerts_count * 5, 0) +
+                    CASE
+                        WHEN phs.risk_level = 'high' THEN 3
+                        WHEN phs.risk_level = 'medium' THEN 1
+                        ELSE 0
+                    END
+                ) AS priority_score,
+                phs.last_updated_at
+            FROM patient_health_summary phs
+            WHERE phs.latest_health_score IS NOT NULL;
+
+            -- Index on materialized view
+            CREATE INDEX idx_mv_phd_tenant_priority
+                ON mv_patient_health_dashboard(tenant_id, priority_score DESC);
+
+            CREATE INDEX idx_mv_phd_tenant_risk
+                ON mv_patient_health_dashboard(tenant_id, risk_category_order DESC);
+        </sql>
+
+        <rollback>
+            <sql dbms="postgresql">
+                DROP MATERIALIZED VIEW IF EXISTS mv_patient_health_dashboard CASCADE;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0010-4-create-refresh-function" author="system">
+        <comment>
+            Create function to refresh materialized view
+
+            This can be called from scheduled job to refresh the view.
+        </comment>
+
+        <sql dbms="postgresql" splitStatements="false">
+            CREATE OR REPLACE FUNCTION refresh_patient_health_dashboard()
+            RETURNS void
+            LANGUAGE plpgsql
+            AS $function$
+            BEGIN
+                REFRESH MATERIALIZED VIEW CONCURRENTLY mv_patient_health_dashboard;
+            END;
+            $function$;
+        </sql>
+
+        <rollback>
+            <sql dbms="postgresql">
+                DROP FUNCTION IF EXISTS refresh_patient_health_dashboard();
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

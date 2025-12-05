@@ -1,0 +1,252 @@
+<div class="evaluation-details-dialog">
+  <h2 mat-dialog-title>
+    <mat-icon>assessment</mat-icon>
+    Evaluation Details
+  </h2>
+
+  <mat-dialog-content>
+    @if (isLoading()) {
+      <div class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading evaluation details...</p>
+      </div>
+    } @else if (error()) {
+      <div class="error-container">
+        <mat-icon class="error-icon">error</mat-icon>
+        <h3>Error Loading Details</h3>
+        <p>{{ error() }}</p>
+        <button mat-raised-button color="primary" (click)="loadEvaluationDetails()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </div>
+    } @else if (evaluationDetails()) {
+      <div class="details-header">
+        <div class="header-info">
+          <h3>{{ evaluationDetails()!.measureName }}</h3>
+          <p class="patient-name">
+            <mat-icon>person</mat-icon>
+            {{ evaluationDetails()!.patientName }}
+          </p>
+        </div>
+        <div class="result-badge" [style.background-color]="getResultColor(evaluationDetails()!.result)">
+          <mat-icon>{{ getResultIcon(evaluationDetails()!.result) }}</mat-icon>
+          <span>{{ evaluationDetails()!.result }}</span>
+        </div>
+      </div>
+
+      <mat-tab-group class="details-tabs" animationDuration="300ms">
+        <!-- Summary Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">summarize</mat-icon>
+            Summary
+          </ng-template>
+          <div class="tab-content">
+            <div class="summary-grid">
+              <mat-card class="metric-card">
+                <mat-card-header>
+                  <mat-icon class="metric-icon">calendar_today</mat-icon>
+                  <mat-card-title>Evaluation Date</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <p class="metric-value">{{ formatDate(evaluationDetails()!.evaluationDate) }}</p>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="metric-card">
+                <mat-card-header>
+                  <mat-icon class="metric-icon">score</mat-icon>
+                  <mat-card-title>Quality Score</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <p class="metric-value score">{{ evaluationDetails()!.score * 100 }}%</p>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="metric-card">
+                <mat-card-header>
+                  <mat-icon class="metric-icon">medical_services</mat-icon>
+                  <mat-card-title>Measure ID</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <p class="metric-value">{{ evaluationDetails()!.measureId }}</p>
+                </mat-card-content>
+              </mat-card>
+            </div>
+
+            <h4 class="section-title">Population Criteria</h4>
+            <div class="criteria-list">
+              <div class="criteria-item" [class.met]="evaluationDetails()!.denominator">
+                <mat-icon>{{ evaluationDetails()!.denominator ? 'check_circle' : 'cancel' }}</mat-icon>
+                <span>Denominator</span>
+              </div>
+              <div class="criteria-item" [class.met]="evaluationDetails()!.numerator">
+                <mat-icon>{{ evaluationDetails()!.numerator ? 'check_circle' : 'cancel' }}</mat-icon>
+                <span>Numerator</span>
+              </div>
+              <div class="criteria-item" [class.excluded]="evaluationDetails()!.exclusion">
+                <mat-icon>{{ evaluationDetails()!.exclusion ? 'cancel' : 'check_circle' }}</mat-icon>
+                <span>{{ evaluationDetails()!.exclusion ? 'Excluded' : 'Not Excluded' }}</span>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- CQL Details Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">code</mat-icon>
+            CQL Details
+          </ng-template>
+          <div class="tab-content">
+            <div class="cql-library-info">
+              <h4>
+                <mat-icon>library_books</mat-icon>
+                CQL Library
+              </h4>
+              <p class="library-name">{{ evaluationDetails()!.cqlLibrary }}</p>
+            </div>
+
+            <h4 class="section-title">Expression Results</h4>
+            @if (evaluationDetails()!.expressions && evaluationDetails()!.expressions!.length > 0) {
+              <mat-accordion class="expressions-accordion">
+                @for (expr of evaluationDetails()!.expressions; track expr.name) {
+                  <mat-expansion-panel>
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        <mat-icon class="expr-icon">
+                          {{ typeof expr.result === 'boolean' ? (expr.result ? 'check' : 'close') : 'data_object' }}
+                        </mat-icon>
+                        {{ expr.name }}
+                      </mat-panel-title>
+                      <mat-panel-description>
+                        {{ expr.type }}
+                      </mat-panel-description>
+                    </mat-expansion-panel-header>
+                    <div class="expression-content">
+                      <div class="expression-details">
+                        <div class="detail-row">
+                          <span class="label">Expression Name:</span>
+                          <span class="value">{{ expr.name }}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="label">Return Type:</span>
+                          <span class="value">{{ expr.type }}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="label">Result:</span>
+                          <span class="value">
+                            @if (typeof expr.result === 'boolean') {
+                              <span [class]="expr.result ? 'result-true' : 'result-false'">
+                                {{ expr.result ? 'True' : 'False' }}
+                              </span>
+                            } @else {
+                              <pre class="json-result">{{ formatJson(expr.result) }}</pre>
+                            }
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </mat-expansion-panel>
+                }
+              </mat-accordion>
+            } @else {
+              <p class="no-data">No expression results available</p>
+            }
+          </div>
+        </mat-tab>
+
+        <!-- Patient Data Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">person</mat-icon>
+            Patient Data
+          </ng-template>
+          <div class="tab-content">
+            <h4 class="section-title">FHIR Resources Used in Evaluation</h4>
+            @if (evaluationDetails()!.fhirResources && evaluationDetails()!.fhirResources!.length > 0) {
+              <mat-accordion class="resources-accordion">
+                @for (resource of evaluationDetails()!.fhirResources; track resource.id) {
+                  <mat-expansion-panel>
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        <mat-icon class="resource-icon">{{ getResourceIcon(resource.resourceType) }}</mat-icon>
+                        {{ resource.resourceType }}
+                      </mat-panel-title>
+                      <mat-panel-description>
+                        {{ resource.id }}
+                      </mat-panel-description>
+                    </mat-expansion-panel-header>
+                    <div class="resource-content">
+                      <div class="resource-relevance">
+                        <mat-icon>info</mat-icon>
+                        <span>{{ resource.relevance }}</span>
+                      </div>
+                      <div class="resource-data">
+                        <h5>Resource Data:</h5>
+                        <pre>{{ formatJson(resource.data) }}</pre>
+                      </div>
+                    </div>
+                  </mat-expansion-panel>
+                }
+              </mat-accordion>
+            } @else {
+              <p class="no-data">No FHIR resources available</p>
+            }
+          </div>
+        </mat-tab>
+
+        <!-- History Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">history</mat-icon>
+            History
+          </ng-template>
+          <div class="tab-content">
+            <h4 class="section-title">Previous Evaluations</h4>
+            @if (evaluationDetails()!.history && evaluationDetails()!.history!.length > 0) {
+              <div class="history-timeline">
+                @for (item of evaluationDetails()!.history; track item.date) {
+                  <div class="timeline-item">
+                    <div class="timeline-marker" [style.background-color]="getResultColor(item.result)">
+                      <mat-icon>{{ getResultIcon(item.result) }}</mat-icon>
+                    </div>
+                    <div class="timeline-content">
+                      <div class="timeline-header">
+                        <span class="timeline-date">{{ formatDate(item.date) }}</span>
+                        <span class="timeline-result" [style.color]="getResultColor(item.result)">
+                          {{ item.result }}
+                        </span>
+                      </div>
+                      <div class="timeline-score">
+                        Score: {{ item.score * 100 }}%
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="no-data">No previous evaluations found</p>
+            }
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onPrint()">
+      <mat-icon>print</mat-icon>
+      Print
+    </button>
+    <button mat-button (click)="onExportPdf()">
+      <mat-icon>picture_as_pdf</mat-icon>
+      Export PDF
+    </button>
+    <button mat-raised-button color="primary" (click)="onClose()">
+      <mat-icon>close</mat-icon>
+      Close
+    </button>
+  </mat-dialog-actions>
+</div>

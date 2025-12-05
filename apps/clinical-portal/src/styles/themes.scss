@@ -1,0 +1,239 @@
+// Theme Definitions for Light and Dark Modes
+// Uses CSS custom properties for easy theme switching
+
+// Light Theme (Default)
+body.light-theme,
+body[data-theme='light'] {
+  // Primary Colors
+  --primary-color: #1976d2;
+  --primary-light: #42a5f5;
+  --primary-dark: #1565c0;
+  --accent-color: #ff4081;
+
+  // Background Colors
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #fafafa;
+  --bg-hover: #f0f0f0;
+  --bg-selected: #e3f2fd;
+
+  // Text Colors
+  --text-primary: rgba(0, 0, 0, 0.87);
+  --text-secondary: rgba(0, 0, 0, 0.6);
+  --text-disabled: rgba(0, 0, 0, 0.38);
+  --text-hint: rgba(0, 0, 0, 0.38);
+
+  // Border Colors
+  --border-color: rgba(0, 0, 0, 0.12);
+  --divider-color: rgba(0, 0, 0, 0.12);
+
+  // Status Colors
+  --status-success: #4caf50;
+  --status-warning: #ff9800;
+  --status-error: #f44336;
+  --status-info: #2196f3;
+
+  // Card/Surface Colors
+  --card-background: #ffffff;
+  --card-shadow: rgba(0, 0, 0, 0.1);
+
+  // Toolbar/Header Colors
+  --toolbar-background: #1976d2;
+  --toolbar-text: #ffffff;
+
+  // Input Colors
+  --input-background: #ffffff;
+  --input-border: rgba(0, 0, 0, 0.42);
+  --input-focused-border: #1976d2;
+
+  // Sidebar Colors
+  --sidebar-background: #ffffff;
+  --sidebar-hover: #f5f5f5;
+  --sidebar-selected: #e3f2fd;
+}
+
+// Dark Theme
+body.dark-theme,
+body[data-theme='dark'] {
+  // Primary Colors (slightly adjusted for dark mode)
+  --primary-color: #90caf9;
+  --primary-light: #bbdefb;
+  --primary-dark: #42a5f5;
+  --accent-color: #ff80ab;
+
+  // Background Colors
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --bg-tertiary: #2c2c2c;
+  --bg-hover: #323232;
+  --bg-selected: #1e3a5f;
+
+  // Text Colors
+  --text-primary: rgba(255, 255, 255, 0.87);
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-disabled: rgba(255, 255, 255, 0.38);
+  --text-hint: rgba(255, 255, 255, 0.38);
+
+  // Border Colors
+  --border-color: rgba(255, 255, 255, 0.12);
+  --divider-color: rgba(255, 255, 255, 0.12);
+
+  // Status Colors (adjusted for better dark mode visibility)
+  --status-success: #66bb6a;
+  --status-warning: #ffa726;
+  --status-error: #ef5350;
+  --status-info: #42a5f5;
+
+  // Card/Surface Colors
+  --card-background: #1e1e1e;
+  --card-shadow: rgba(0, 0, 0, 0.3);
+
+  // Toolbar/Header Colors
+  --toolbar-background: #1e1e1e;
+  --toolbar-text: rgba(255, 255, 255, 0.87);
+
+  // Input Colors
+  --input-background: #2c2c2c;
+  --input-border: rgba(255, 255, 255, 0.42);
+  --input-focused-border: #90caf9;
+
+  // Sidebar Colors
+  --sidebar-background: #1e1e1e;
+  --sidebar-hover: #2c2c2c;
+  --sidebar-selected: #1e3a5f;
+}
+
+// Apply theme colors to common elements
+body {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+// Material overrides for theming
+.mat-toolbar {
+  background-color: var(--toolbar-background) !important;
+  color: var(--toolbar-text) !important;
+}
+
+.mat-drawer {
+  background-color: var(--sidebar-background) !important;
+  color: var(--text-primary) !important;
+}
+
+.mat-drawer-container {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.mat-card,
+.mat-mdc-card {
+  background-color: var(--card-background) !important;
+  color: var(--text-primary) !important;
+}
+
+.mat-list-item:hover,
+.mat-mdc-list-item:hover {
+  background-color: var(--sidebar-hover) !important;
+}
+
+.mat-list-item.active,
+.mat-mdc-list-item.active {
+  background-color: var(--sidebar-selected) !important;
+}
+
+.mat-form-field {
+  .mat-mdc-text-field-wrapper {
+    background-color: var(--input-background) !important;
+  }
+}
+
+.mat-divider {
+  border-top-color: var(--divider-color) !important;
+}
+
+// Table theming
+.mat-table,
+.mat-mdc-table {
+  background-color: var(--card-background) !important;
+
+  .mat-header-cell,
+  .mat-mdc-header-cell {
+    color: var(--text-primary) !important;
+    background-color: var(--bg-tertiary) !important;
+  }
+
+  .mat-cell,
+  .mat-mdc-cell {
+    color: var(--text-primary) !important;
+  }
+
+  .mat-row:hover,
+  .mat-mdc-row:hover {
+    background-color: var(--bg-hover) !important;
+  }
+}
+
+// Button theming
+.mat-button,
+.mat-raised-button,
+.mat-icon-button,
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-icon-button {
+  &.mat-primary {
+    --mdc-text-button-label-text-color: var(--primary-color);
+    --mdc-filled-button-container-color: var(--primary-color);
+  }
+}
+
+// Dialog theming
+.mat-dialog-container,
+.mat-mdc-dialog-container {
+  background-color: var(--card-background) !important;
+  color: var(--text-primary) !important;
+}
+
+// Menu theming
+.mat-menu-panel {
+  background-color: var(--card-background) !important;
+
+  .mat-menu-item {
+    color: var(--text-primary) !important;
+
+    &:hover {
+      background-color: var(--bg-hover) !important;
+    }
+  }
+}
+
+// Snackbar/Toast theming
+.mat-snack-bar-container,
+.mat-mdc-snack-bar-container {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+// Status color classes that work in both modes
+.status-success {
+  color: var(--status-success) !important;
+}
+
+.status-warning {
+  color: var(--status-warning) !important;
+}
+
+.status-error {
+  color: var(--status-error) !important;
+}
+
+.status-info {
+  color: var(--status-info) !important;
+}
+
+// Badge colors
+.mat-badge-content {
+  &.mat-badge-accent {
+    background-color: var(--accent-color) !important;
+  }
+}

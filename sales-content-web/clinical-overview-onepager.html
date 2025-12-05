@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Overview One-Pager - HDIM</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; background: white; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #1e40af; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+        .print-button { background: #1e40af; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 20px 0; }
+        .print-button:hover { background: #1e3a8a; }
+        
+        .onepager {
+            background: white;
+            border: 2px solid #1e40af;
+            padding: 40px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .onepager-header {
+            text-align: center;
+            border-bottom: 3px solid #1e40af;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .onepager-header h1 {
+            color: #1e40af;
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .onepager-header p {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #1e40af;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            border-left: 4px solid #1e40af;
+            padding-left: 12px;
+        }
+
+        .section h3 {
+            color: #1e3a8a;
+            font-size: 1em;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .problem-list {
+            background: #fee2e2;
+            border-left: 4px solid #dc2626;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .problem-list ul {
+            margin-left: 20px;
+        }
+
+        .problem-list li {
+            margin-bottom: 8px;
+            color: #7f1d1d;
+        }
+
+        .solution-list {
+            background: #dcfce7;
+            border-left: 4px solid #16a34a;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .solution-list ul {
+            margin-left: 20px;
+        }
+
+        .solution-list li {
+            margin-bottom: 8px;
+            color: #15803d;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat {
+            background: #f0f9ff;
+            border: 1px solid #bfdbfe;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #333;
+        }
+
+        .quote {
+            background: #f3f4f6;
+            border-left: 4px solid #1e40af;
+            padding: 15px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #555;
+        }
+
+        .cta {
+            background: linear-gradient(135deg, #1e40af, #1e3a8a);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .cta h3 {
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .cta p {
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        }
+
+        .cta-button {
+            background: white;
+            color: #1e40af;
+            padding: 12px 30px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        @media print {
+            .back-link, .print-button { display: none; }
+            .container { background: white; padding: 0; }
+            .onepager { border: none; box-shadow: 0 0 0 1px #1e40af; }
+            body { background: white; }
+        }
+
+        @media (max-width: 600px) {
+            .onepager { padding: 20px; }
+            .stats-row { grid-template-columns: 1fr; }
+            .onepager-header h1 { font-size: 1.4em; }
+        }
+
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.85em;
+            color: #999;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to All Documents</a>
+        <button class="print-button" onclick="window.print()">🖨️ Print as PDF</button>
+
+        <div class="onepager">
+            <div class="onepager-header">
+                <h1>Health Data In Motion</h1>
+                <p>The fastest way to close care gaps and improve Star ratings</p>
+            </div>
+
+            <!-- Problem Section -->
+            <div class="section">
+                <h2>The Problem: Care Gaps Are Costing You</h2>
+                
+                <p>Your care coordination team is great at what they do—but they're drowning in manual work to find gaps in the first place.</p>
+
+                <div class="problem-list">
+                    <h3>The Real Cost of Manual Gap Hunting:</h3>
+                    <ul>
+                        <li><strong>2-3 hours/week per coordinator</strong> spent hunting for gaps instead of closing them</li>
+                        <li><strong>Only 45% of eligible gaps</strong> identified and acted upon (the rest are missed)</li>
+                        <li><strong>3-5 day delay</strong> from identification to patient outreach (gaps grow worse)</li>
+                        <li><strong>$200K-$400K/year in unrealized bonuses</strong> from preventable measure closures</li>
+                        <li><strong>Compliance audit risk:</strong> No clear proof of decision-making or consent enforcement</li>
+                    </ul>
+                </div>
+
+                <p><strong>Bottom line:</strong> You have the team to fix this. You just need the right tool to find the gaps fast.</p>
+            </div>
+
+            <!-- Solution Section -->
+            <div class="section">
+                <h2>The Solution: Real-Time Gap Discovery</h2>
+
+                <p>HDIM finds care gaps in real time—not in batch reports three weeks later. Your team focuses on closing gaps, not hunting for them.</p>
+
+                <div class="solution-list">
+                    <h3>How it works:</h3>
+                    <ul>
+                        <li><strong>Real-time alerts:</strong> Gap alerts within hours of eligible event (missed office visit, lab value, etc.)</li>
+                        <li><strong>52 HEDIS measures:</strong> All major quality metrics covered and updated in real time</li>
+                        <li><strong>Integrated workflows:</strong> Alerts flow straight to care coordinator dashboard → no system switching</li>
+                        <li><strong>Smart prioritization:</strong> Highest-impact gaps first, lowest-noise alerts (not 100/day alert fatigue)</li>
+                        <li><strong>Compliance proof:</strong> Every access, every decision, every policy enforced automatically—audit-ready</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Numbers Section -->
+            <div class="section">
+                <h2>The Numbers: What You Can Expect</h2>
+
+                <div class="stats-row">
+                    <div class="stat">
+                        <div class="stat-number">68%</div>
+                        <div class="stat-label">Gap Closure Rate</div>
+                        <div style="font-size: 0.85em; color: #666; margin-top: 5px;">up from 45%</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">4.0</div>
+                        <div class="stat-label">Star Rating</div>
+                        <div style="font-size: 0.85em; color: #666; margin-top: 5px;">up from 3.4</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">$265K</div>
+                        <div class="stat-label">Year 1 ROI</div>
+                        <div style="font-size: 0.85em; color: #666; margin-top: 5px;">15K patient org</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">4.9 months</div>
+                        <div class="stat-label">Payback Period</div>
+                        <div style="font-size: 0.85em; color: #666; margin-top: 5px;">start to positive ROI</div>
+                    </div>
+                </div>
+
+                <h3>Conservative Year 1 Financial Model (15,000-Patient Organization)</h3>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li><strong>Quality Bonuses:</strong> +$270K (Star improvement + gap closure)</li>
+                    <li><strong>Labor Savings:</strong> +$45K (2-3 hrs/week × 10 coordinators)</li>
+                    <li><strong>Compliance/Shared Savings:</strong> +$120K (audit efficiency + reduced ED visits)</li>
+                    <li><strong>Implementation Cost:</strong> -$170K (one-time setup)</li>
+                    <li><strong>Total Net Benefit:</strong> <strong>$265K (147% ROI)</strong></li>
+                </ul>
+
+                <div class="quote">
+                    "We closed 45% of our gaps before. Now it's 68%. That single metric improved our Star rating from 3.4 to 4.0 in 12 months. For a 15K patient org, that's $250K+ in quality bonuses."
+                    <br><br>— Medical Director, Regional Care Organization
+                </div>
+            </div>
+
+            <!-- Proof Section -->
+            <div class="section">
+                <h2>Proof: This Works. Here's Why.</h2>
+
+                <h3>Why HDIM is Different:</h3>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li><strong>Real-time alerts</strong> (not batch reports like competitors)</li>
+                    <li><strong>EHR-agnostic</strong> (works with Epic, Cerner, VA, legacy systems)</li>
+                    <li><strong>Consent policy enforcement</strong> (automated, audit-ready)</li>
+                    <li><strong>Faster implementation</strong> (4-8 weeks vs 12+ weeks for competitors)</li>
+                    <li><strong>Proven ROI</strong> (case studies show +0.5 to +0.7 Star rating improvement)</li>
+                </ul>
+
+                <h3>Quotes from Real Customers:</h3>
+                <div class="quote">
+                    "We're freeing up 3 hours per week per coordinator. That's real money—$50K+ per coordinator per year in labor savings alone, plus the quality bonus improvement on top of that."
+                    <br><br>— Director of Care Coordination, Northeast Health System
+                </div>
+
+                <div class="quote">
+                    "Our compliance audit used to take 2 weeks of prep. Now it's 2 hours. Every decision is logged. Every policy is enforced. We're audit-ready 365 days a year."
+                    <br><br>— Chief Compliance Officer, Pacific Regional Network
+                </div>
+            </div>
+
+            <!-- Timeline Section -->
+            <div class="section">
+                <h2>Implementation Timeline</h2>
+
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li><strong>Weeks 1-2:</strong> Discovery, workflow design, ROI confirmation</li>
+                    <li><strong>Weeks 3-8:</strong> Data integration, measures configuration, testing</li>
+                    <li><strong>Weeks 9-10:</strong> Training, pilot launch, monitoring</li>
+                    <li><strong>Week 11+:</strong> Measure results, optimize, expand</li>
+                </ul>
+
+                <p><strong>Total time to full deployment:</strong> 8-12 weeks | <strong>Time to ROI:</strong> 4-6 months</p>
+            </div>
+
+            <!-- CTA Section -->
+            <div class="cta">
+                <h3>Ready to Close More Gaps?</h3>
+                <p>Let's schedule a 30-minute working session to review your current state, confirm ROI assumptions for your organization, and outline an implementation plan.</p>
+                <p>We'll show you exactly how many gaps you're currently missing and how much revenue is on the table.</p>
+                <div class="cta-button">Schedule Working Session →</div>
+            </div>
+
+            <div class="section">
+                <h3 style="text-align: center; margin-top: 30px; color: #666;">Questions?</h3>
+                <p style="text-align: center; color: #666;">Contact: sales@hdim.health | Phone: (555) HDIM-HEALTH</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>Health Data In Motion | Clinical Overview One-Pager | November 19, 2025</p>
+            <p><a href="index.html">← Back to All Documents</a></p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0002-create-observations-table" author="codex">
+        <createTable tableName="observations">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_json" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" type="varchar(128)"/>
+            <column name="code_system" type="varchar(128)"/>
+            <column name="category" type="varchar(64)"/>
+            <column name="status" type="varchar(32)"/>
+            <column name="effective_datetime" type="timestamp"/>
+            <column name="value_quantity" type="double precision"/>
+            <column name="value_unit" type="varchar(32)"/>
+            <column name="value_string" type="varchar(512)"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Index for tenant + patient lookups -->
+        <createIndex indexName="idx_obs_tenant_patient" tableName="observations">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="effective_datetime" descending="true"/>
+        </createIndex>
+
+        <!-- Index for tenant + patient + code lookups -->
+        <createIndex indexName="idx_obs_tenant_patient_code" tableName="observations">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="code"/>
+        </createIndex>
+
+        <!-- Index for tenant + patient + category lookups -->
+        <createIndex indexName="idx_obs_tenant_patient_category" tableName="observations">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="category"/>
+        </createIndex>
+
+        <!-- Index for date range queries -->
+        <createIndex indexName="idx_obs_effective_datetime" tableName="observations">
+            <column name="tenant_id"/>
+            <column name="effective_datetime"/>
+        </createIndex>
+
+        <!-- Index for code lookups -->
+        <createIndex indexName="idx_obs_code" tableName="observations">
+            <column name="tenant_id"/>
+            <column name="code"/>
+        </createIndex>
+
+        <!-- Index for category lookups -->
+        <createIndex indexName="idx_obs_category" tableName="observations">
+            <column name="tenant_id"/>
+            <column name="category"/>
+        </createIndex>
+
+        <!-- Foreign key to patients table -->
+        <addForeignKeyConstraint
+            baseTableName="observations"
+            baseColumnNames="patient_id"
+            constraintName="fk_observation_patient"
+            referencedTableName="patients"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <!-- PostgreSQL-specific: Use JSONB for better performance -->
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,350 @@
+package com.healthdata.quality.integration;
+
+import com.healthdata.quality.persistence.*;
+import com.healthdata.quality.service.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+import static org.assertj.core.api.Assertions.*;
+
+/**
+ * Integration Test for Phase 6: Performance Optimization
+ *
+ * Validates end-to-end functionality of:
+ * 1. Parallel population calculation
+ * 2. CQRS read/write model
+ * 3. Event-driven projections
+ * 4. Query performance
+ */
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
+class PerformanceOptimizationIntegrationTest {
+
+    @Autowired
+    private PopulationCalculationService populationService;
+
+    @Autowired
+    private PatientHealthSummaryProjection projection;
+
+    @Autowired
+    private PatientHealthSummaryRepository readRepository;
+
+    @Autowired
+    private PopulationMetricsRepository metricsRepository;
+
+    @Autowired
+    private CareGapRepository careGapRepository;
+
+    @Autowired
+    private RiskAssessmentRepository riskRepository;
+
+    private static final String TEST_TENANT = "test-tenant";
+    private static final String TEST_PATIENT = "test-patient-001";
+
+    @BeforeEach
+    void setUp() {
+        // Clean up test data
+        readRepository.deleteAll();
+        metricsRepository.deleteAll();
+    }
+
+    /**
+     * TEST 1: End-to-End Parallel Population Calculation
+     *
+     * Verify population calculation with parallel processing completes successfully
+     */
+    @Test
+    void shouldCompletePopulationCalculationInParallel() throws Exception {
+        // Given: Population calculation request
+        String fhirServerUrl = "http://fhir-test:8080/fhir";
+        String createdBy = "test-user";
+
+        // When: Execute parallel calculation
+        Instant start = Instant.now();
+        CompletableFuture<String> future = populationService.calculateAllMeasuresForPopulation(
+            TEST_TENANT,
+            fhirServerUrl,
+            createdBy
+        );
+
+        String jobId = future.get(60, TimeUnit.SECONDS);
+        long durationMs = Instant.now().toEpochMilli() - start.toEpochMilli();
+
+        // Then: Job should complete
+        assertThat(jobId).isNotNull();
+
+        var job = populationService.getJobStatus(jobId);
+        assertThat(job).isNotNull();
+        assertThat(job.getStatus())
+            .isIn(PopulationCalculationService.JobStatus.COMPLETED,
+                  PopulationCalculationService.JobStatus.FAILED);
+
+        // Performance: Should use parallel processing
+        System.out.println("Population calculation completed in " + durationMs + "ms");
+        assertThat(durationMs).isLessThan(30000); // Should complete in <30s
+    }
+
+    /**
+     * TEST 2: Event-Driven Read Model Update
+     *
+     * Verify events trigger read model updates
+     */
+    @Test
+    void shouldUpdateReadModelViaEvents() {
+        // Given: Health score update event
+        String patientId = TEST_PATIENT;
+        Double healthScore = 85.0;
+        String trend = "improving";
+
+        // When: Event is processed
+        projection.onHealthScoreUpdated(TEST_TENANT, patientId, healthScore, trend);
+
+        // Then: Read model should be updated
+        Optional<PatientHealthSummaryEntity> summary =
+            readRepository.findByTenantIdAndPatientId(TEST_TENANT, patientId);
+
+        assertThat(summary).isPresent();
+        assertThat(summary.get().getLatestHealthScore()).isEqualTo(healthScore);
+        assertThat(summary.get().getHealthTrend()).isEqualTo(trend);
+        assertThat(summary.get().getHealthScoreUpdatedAt()).isNotNull();
+    }
+
+    /**
+     * TEST 3: Multiple Event Aggregation
+     *
+     * Verify multiple events aggregate correctly in read model
+     */
+    @Test
+    void shouldAggregateMultipleEventsInReadModel() {
+        // Given: Multiple events for same patient
+        String patientId = TEST_PATIENT;
+
+        // When: Process multiple events
+        projection.onHealthScoreUpdated(TEST_TENANT, patientId, 75.0, "stable");
+        projection.onRiskAssessmentUpdated(TEST_TENANT, patientId, "medium", 0.45);
+        projection.onClinicalAlertTriggered(TEST_TENANT, patientId, "warning", "BP elevated");
+        projection.onClinicalAlertTriggered(TEST_TENANT, patientId, "critical", "HbA1c high");
+
+        // Then: Read model should have all updates
+        Optional<PatientHealthSummaryEntity> summary =
+            readRepository.findByTenantIdAndPatientId(TEST_TENANT, patientId);
+
+        assertThat(summary).isPresent();
+        assertThat(summary.get().getLatestHealthScore()).isEqualTo(75.0);
+        assertThat(summary.get().getRiskLevel()).isEqualTo("medium");
+        assertThat(summary.get().getRiskScore()).isEqualTo(0.45);
+        assertThat(summary.get().getActiveAlertsCount()).isEqualTo(2);
+        assertThat(summary.get().getCriticalAlertsCount()).isEqualTo(1);
+    }
+
+    /**
+     * TEST 4: Read Model Query Performance
+     *
+     * Verify read model queries are fast (single table, no joins)
+     */
+    @Test
+    void shouldQueryReadModelFast() {
+        // Given: Pre-populated read model
+        PatientHealthSummaryEntity summary = new PatientHealthSummaryEntity();
+        summary.setTenantId(TEST_TENANT);
+        summary.setPatientId(TEST_PATIENT);
+        summary.setLatestHealthScore(90.0);
+        summary.setRiskLevel("low");
+        summary.setOpenCareGapsCount(2);
+        readRepository.save(summary);
+
+        // When: Query read model
+        Instant start = Instant.now();
+        Optional<PatientHealthSummaryEntity> result =
+            readRepository.findByTenantIdAndPatientId(TEST_TENANT, TEST_PATIENT);
+        long queryTimeMs = Instant.now().toEpochMilli() - start.toEpochMilli();
+
+        // Then: Should be fast and correct
+        assertThat(result).isPresent();
+        assertThat(result.get().getLatestHealthScore()).isEqualTo(90.0);
+
+        // Performance: Should be <50ms (typically <10ms)
+        System.out.println("Read model query time: " + queryTimeMs + "ms");
+        assertThat(queryTimeMs).isLessThan(100); // Very generous for test environment
+    }
+
+    /**
+     * TEST 5: Population Metrics Aggregation
+     *
+     * Verify population-level metrics are calculated correctly
+     */
+    @Test
+    void shouldCalculatePopulationMetrics() {
+        // Given: Multiple patient summaries
+        createPatientSummary("patient-001", 90.0, "low", 1, 0);
+        createPatientSummary("patient-002", 75.0, "medium", 3, 1);
+        createPatientSummary("patient-003", 50.0, "high", 5, 2);
+
+        // When: Get population metrics
+        var metrics = projection.getPopulationMetrics(TEST_TENANT);
+
+        // Then: Should aggregate correctly
+        assertThat(metrics.getTotalPatients()).isEqualTo(3);
+        assertThat(metrics.getAverageHealthScore()).isCloseTo(71.67, within(0.1));
+        assertThat(metrics.getHighRiskCount()).isEqualTo(1);
+        assertThat(metrics.getMediumRiskCount()).isEqualTo(1);
+        assertThat(metrics.getTotalCareGaps()).isEqualTo(9); // 1+3+5
+    }
+
+    /**
+     * TEST 6: Projection Rebuild
+     *
+     * Verify read model can be rebuilt from write model
+     */
+    @Test
+    void shouldRebuildProjectionFromWriteModel() {
+        // Given: Data in write model
+        String patientId = TEST_PATIENT;
+
+        // Create care gaps in write model
+        createCareGap(patientId, CareGapEntity.Status.OPEN, CareGapEntity.Priority.NORMAL);
+        createCareGap(patientId, CareGapEntity.Status.OPEN, CareGapEntity.Priority.URGENT);
+        createCareGap(patientId, CareGapEntity.Status.CLOSED, CareGapEntity.Priority.NORMAL);
+
+        // Create risk assessment in write model
+        createRiskAssessment(patientId, RiskAssessmentEntity.RiskLevel.MEDIUM, 0.55f);
+
+        // When: Rebuild projection
+        projection.rebuildProjectionForPatient(TEST_TENANT, patientId);
+
+        // Then: Read model should match write model
+        Optional<PatientHealthSummaryEntity> summary =
+            readRepository.findByTenantIdAndPatientId(TEST_TENANT, patientId);
+
+        assertThat(summary).isPresent();
+        assertThat(summary.get().getOpenCareGapsCount()).isEqualTo(2);
+        assertThat(summary.get().getUrgentGapsCount()).isEqualTo(1);
+        assertThat(summary.get().getRiskLevel()).isEqualTo("medium");
+        assertThat(summary.get().getRiskScore()).isEqualTo(0.55);
+    }
+
+    /**
+     * TEST 7: Eventual Consistency - Out of Order Events
+     *
+     * Verify system handles out-of-order events correctly
+     */
+    @Test
+    void shouldHandleOutOfOrderEvents() {
+        // Given: Initial state
+        String patientId = TEST_PATIENT;
+        Instant now = Instant.now();
+
+        projection.onHealthScoreUpdatedWithTimestamp(
+            TEST_TENANT, patientId, 80.0, "stable", now
+        );
+
+        // When: Older event arrives
+        Instant olderTime = now.minusSeconds(3600);
+        projection.onHealthScoreUpdatedWithTimestamp(
+            TEST_TENANT, patientId, 70.0, "declining", olderTime
+        );
+
+        // Then: Should keep newer data
+        Optional<PatientHealthSummaryEntity> summary =
+            readRepository.findByTenantIdAndPatientId(TEST_TENANT, patientId);
+
+        assertThat(summary).isPresent();
+        assertThat(summary.get().getLatestHealthScore()).isEqualTo(80.0);
+        assertThat(summary.get().getHealthTrend()).isEqualTo("stable");
+    }
+
+    /**
+     * TEST 8: High-Risk Patient Query
+     *
+     * Verify fast querying of high-risk patients
+     */
+    @Test
+    void shouldQueryHighRiskPatientsFast() {
+        // Given: Multiple patients with different risk levels
+        createPatientSummary("patient-high-1", 60.0, "high", 5, 2);
+        createPatientSummary("patient-high-2", 55.0, "high", 7, 3);
+        createPatientSummary("patient-medium-1", 75.0, "medium", 2, 0);
+        createPatientSummary("patient-low-1", 90.0, "low", 0, 0);
+
+        // When: Query high-risk patients
+        Instant start = Instant.now();
+        var highRiskPatients = readRepository.findByTenantIdAndRiskLevelOrderByRiskScoreDesc(
+            TEST_TENANT, "high"
+        );
+        long queryTimeMs = Instant.now().toEpochMilli() - start.toEpochMilli();
+
+        // Then: Should return correct patients fast
+        assertThat(highRiskPatients).hasSize(2);
+        assertThat(highRiskPatients)
+            .extracting(PatientHealthSummaryEntity::getPatientId)
+            .containsExactlyInAnyOrder("patient-high-1", "patient-high-2");
+
+        System.out.println("High-risk patient query time: " + queryTimeMs + "ms");
+        assertThat(queryTimeMs).isLessThan(100);
+    }
+
+    // Helper methods
+
+    private void createPatientSummary(
+        String patientId,
+        Double healthScore,
+        String riskLevel,
+        Integer openGaps,
+        Integer urgentGaps
+    ) {
+        PatientHealthSummaryEntity summary = new PatientHealthSummaryEntity();
+        summary.setTenantId(TEST_TENANT);
+        summary.setPatientId(patientId);
+        summary.setLatestHealthScore(healthScore);
+        summary.setRiskLevel(riskLevel);
+        summary.setRiskScore(riskLevel.equals("high") ? 0.8 : riskLevel.equals("medium") ? 0.5 : 0.2);
+        summary.setOpenCareGapsCount(openGaps);
+        summary.setUrgentGapsCount(urgentGaps);
+        readRepository.save(summary);
+    }
+
+    private void createCareGap(
+        String patientId,
+        CareGapEntity.Status status,
+        CareGapEntity.Priority priority
+    ) {
+        CareGapEntity gap = new CareGapEntity();
+        gap.setTenantId(TEST_TENANT);
+        gap.setPatientId(patientId);
+        gap.setStatus(status);
+        gap.setPriority(priority);
+        gap.setGapType("test-gap");
+        gap.setCategory(CareGapEntity.GapCategory.PREVENTIVE_CARE);
+        gap.setTitle("Test Gap");
+        gap.setDescription("Test gap description");
+        gap.setRecommendedAction("Test action");
+        gap.setDueDate(Instant.now().plusSeconds(86400));
+        gap.setIdentifiedDate(Instant.now());
+        careGapRepository.save(gap);
+    }
+
+    private void createRiskAssessment(
+        String patientId,
+        RiskAssessmentEntity.RiskLevel level,
+        Float score
+    ) {
+        RiskAssessmentEntity risk = new RiskAssessmentEntity();
+        risk.setTenantId(TEST_TENANT);
+        risk.setPatientId(patientId);
+        risk.setRiskLevel(level);
+        risk.setRiskScore(score);
+        risk.setAssessmentDate(Instant.now());
+        risk.setAssessmentMethod("test");
+        riskRepository.save(risk);
+    }
+}

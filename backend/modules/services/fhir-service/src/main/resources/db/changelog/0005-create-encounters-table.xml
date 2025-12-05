@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0005-create-encounters-table" author="codex">
+        <createTable tableName="encounters">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_json" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="encounter_class" type="varchar(64)"/>
+            <column name="encounter_type_code" type="varchar(128)"/>
+            <column name="encounter_type_system" type="varchar(128)"/>
+            <column name="encounter_type_display" type="varchar(512)"/>
+            <column name="status" type="varchar(32)"/>
+            <column name="service_type_code" type="varchar(128)"/>
+            <column name="service_type_display" type="varchar(256)"/>
+            <column name="priority" type="varchar(32)"/>
+            <column name="period_start" type="timestamp"/>
+            <column name="period_end" type="timestamp"/>
+            <column name="duration_minutes" type="integer"/>
+            <column name="reason_code" type="varchar(128)"/>
+            <column name="reason_system" type="varchar(128)"/>
+            <column name="reason_display" type="varchar(512)"/>
+            <column name="location_id" type="varchar(255)"/>
+            <column name="location_display" type="varchar(512)"/>
+            <column name="participant_id" type="varchar(255)"/>
+            <column name="participant_display" type="varchar(512)"/>
+            <column name="service_provider_id" type="varchar(255)"/>
+            <column name="service_provider_display" type="varchar(512)"/>
+            <column name="admission_source" type="varchar(128)"/>
+            <column name="discharge_disposition" type="varchar(128)"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Index for tenant + patient lookups with period_start for sorting -->
+        <createIndex indexName="idx_encounter_tenant_patient" tableName="encounters">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="period_start" descending="true"/>
+        </createIndex>
+
+        <!-- Index for tenant + patient + encounter class (inpatient, ambulatory, etc) -->
+        <createIndex indexName="idx_encounter_class" tableName="encounters">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="encounter_class"/>
+            <column name="period_start" descending="true"/>
+        </createIndex>
+
+        <!-- Index for tenant + patient + status (active, finished, etc) -->
+        <createIndex indexName="idx_encounter_status" tableName="encounters">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="status"/>
+            <column name="period_start" descending="true"/>
+        </createIndex>
+
+        <!-- Index for date range queries (utilization measures) -->
+        <createIndex indexName="idx_encounter_date_range" tableName="encounters">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="period_start"/>
+            <column name="period_end"/>
+        </createIndex>
+
+        <!-- Index for inpatient encounters (utilization tracking) -->
+        <createIndex indexName="idx_encounter_inpatient" tableName="encounters">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="encounter_class"/>
+            <column name="status"/>
+            <column name="period_start" descending="true"/>
+        </createIndex>
+
+        <!-- Index for encounter type queries -->
+        <createIndex indexName="idx_encounter_type" tableName="encounters">
+            <column name="tenant_id"/>
+            <column name="encounter_type_code"/>
+        </createIndex>
+
+        <!-- Index for provider/participant queries -->
+        <createIndex indexName="idx_encounter_participant" tableName="encounters">
+            <column name="tenant_id"/>
+            <column name="participant_id"/>
+            <column name="period_start" descending="true"/>
+        </createIndex>
+
+        <!-- Index for location queries -->
+        <createIndex indexName="idx_encounter_location" tableName="encounters">
+            <column name="tenant_id"/>
+            <column name="location_id"/>
+            <column name="period_start" descending="true"/>
+        </createIndex>
+
+        <!-- Index for service provider queries -->
+        <createIndex indexName="idx_encounter_service_provider" tableName="encounters">
+            <column name="tenant_id"/>
+            <column name="service_provider_id"/>
+            <column name="period_start" descending="true"/>
+        </createIndex>
+
+        <!-- Index for reason code queries -->
+        <createIndex indexName="idx_encounter_reason" tableName="encounters">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="reason_code"/>
+        </createIndex>
+
+        <!-- Foreign key to patients table -->
+        <addForeignKeyConstraint
+            baseTableName="encounters"
+            baseColumnNames="patient_id"
+            constraintName="fk_encounter_patient"
+            referencedTableName="patients"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <!-- PostgreSQL-specific: Use JSONB for better performance -->
+    </changeSet>
+
+</databaseChangeLog>

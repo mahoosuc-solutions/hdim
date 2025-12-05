@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0004-create-medication-requests-table" author="codex">
+        <createTable tableName="medication_requests">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_json" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="medication_code" type="varchar(128)"/>
+            <column name="medication_system" type="varchar(128)"/>
+            <column name="medication_display" type="varchar(512)"/>
+            <column name="status" type="varchar(32)"/>
+            <column name="intent" type="varchar(32)"/>
+            <column name="category" type="varchar(64)"/>
+            <column name="priority" type="varchar(32)"/>
+            <column name="authored_on" type="timestamp"/>
+            <column name="requester_id" type="varchar(255)"/>
+            <column name="dosage_instruction" type="text"/>
+            <column name="dispense_quantity" type="double precision"/>
+            <column name="dispense_unit" type="varchar(64)"/>
+            <column name="number_of_repeats_allowed" type="integer"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Index for tenant + patient lookups -->
+        <createIndex indexName="idx_medrx_tenant_patient" tableName="medication_requests">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="authored_on" descending="true"/>
+        </createIndex>
+
+        <!-- Index for tenant + patient + medication code lookups -->
+        <createIndex indexName="idx_medrx_tenant_patient_code" tableName="medication_requests">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="medication_code"/>
+        </createIndex>
+
+        <!-- Index for status queries -->
+        <createIndex indexName="idx_medrx_status" tableName="medication_requests">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Index for medication code lookups -->
+        <createIndex indexName="idx_medrx_medication_code" tableName="medication_requests">
+            <column name="tenant_id"/>
+            <column name="medication_code"/>
+        </createIndex>
+
+        <!-- Index for intent queries (prescriptions) -->
+        <createIndex indexName="idx_medrx_intent" tableName="medication_requests">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="intent"/>
+        </createIndex>
+
+        <!-- Index for requester queries -->
+        <createIndex indexName="idx_medrx_requester" tableName="medication_requests">
+            <column name="tenant_id"/>
+            <column name="requester_id"/>
+        </createIndex>
+
+        <!-- Index for refills queries -->
+        <createIndex indexName="idx_medrx_refills" tableName="medication_requests">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="number_of_repeats_allowed"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Foreign key to patients table -->
+        <addForeignKeyConstraint
+            baseTableName="medication_requests"
+            baseColumnNames="patient_id"
+            constraintName="fk_medication_request_patient"
+            referencedTableName="patients"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <!-- PostgreSQL-specific: Use JSONB for better performance -->
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,462 @@
+# Prometheus Configuration for HealthData Platform
+# Production-grade metrics collection and monitoring
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  external_labels:
+    cluster: healthdata-production
+    environment: prod
+    region: us-east-1
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+      timeout: 10s
+      api_version: v2
+
+# Load alert rules
+rule_files:
+  - '/etc/prometheus/rules/*.yml'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: prometheus
+          component: monitoring
+
+  # Spring Boot Application Metrics - FHIR Service
+  - job_name: 'fhir-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    static_configs:
+      - targets: ['fhir-service:8080']
+        labels:
+          service: fhir-service
+          component: backend
+          layer: api
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__scheme__]
+        target_label: scheme
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'jvm_.*|http_.*|process_.*|spring_.*'
+        action: keep
+
+  # Quality Measure Service
+  - job_name: 'quality-measure-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    static_configs:
+      - targets: ['quality-measure-service:8081']
+        labels:
+          service: quality-measure-service
+          component: backend
+          layer: business-logic
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'jvm_.*|http_.*|measure_.*|care_gap_.*|business_.*'
+        action: keep
+
+  # CQL Engine Service
+  - job_name: 'cql-engine-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['cql-engine-service:8082']
+        labels:
+          service: cql-engine-service
+          component: backend
+          layer: engine
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'jvm_.*|http_.*|cql_.*|evaluation_.*'
+        action: keep
+
+  # Patient Service
+  - job_name: 'patient-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['patient-service:8083']
+        labels:
+          service: patient-service
+          component: backend
+          layer: data
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # Care Gap Service
+  - job_name: 'care-gap-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['care-gap-service:8084']
+        labels:
+          service: care-gap-service
+          component: backend
+          layer: business-logic
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # Event Processing Service
+  - job_name: 'event-processing-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['event-processing-service:8085']
+        labels:
+          service: event-processing-service
+          component: backend
+          layer: events
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'jvm_.*|http_.*|kafka_.*|event_.*'
+        action: keep
+
+  # Gateway Service
+  - job_name: 'gateway-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['gateway-service:8080']
+        labels:
+          service: gateway-service
+          component: backend
+          layer: gateway
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # PostgreSQL Database - FHIR DB
+  - job_name: 'postgres-fhir'
+    static_configs:
+      - targets: ['postgres-exporter-fhir:9187']
+        labels:
+          database: fhir
+          component: database
+          layer: persistence
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'postgres-fhir'
+
+  # PostgreSQL Database - Quality Measure DB
+  - job_name: 'postgres-quality'
+    static_configs:
+      - targets: ['postgres-exporter-quality:9187']
+        labels:
+          database: quality-measure
+          component: database
+          layer: persistence
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'postgres-quality'
+
+  # PostgreSQL Database - Patient DB
+  - job_name: 'postgres-patient'
+    static_configs:
+      - targets: ['postgres-exporter-patient:9187']
+        labels:
+          database: patient
+          component: database
+          layer: persistence
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'postgres-patient'
+
+  # Redis Cache
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: redis
+          component: cache
+          layer: cache
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'healthdata-redis'
+
+  # Kafka Broker
+  - job_name: 'kafka-exporter'
+    static_configs:
+      - targets: ['kafka-exporter:9308']
+        labels:
+          service: kafka
+          component: messaging
+          layer: events
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'healthdata-kafka'
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'kafka_.*'
+        action: keep
+
+  # Node Exporter - System Metrics (App Server 1)
+  - job_name: 'node-exporter-app1'
+    static_configs:
+      - targets: ['node-exporter-app1:9100']
+        labels:
+          node: app-server-1
+          component: system
+          layer: infrastructure
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # Node Exporter - System Metrics (App Server 2)
+  - job_name: 'node-exporter-app2'
+    static_configs:
+      - targets: ['node-exporter-app2:9100']
+        labels:
+          node: app-server-2
+          component: system
+          layer: infrastructure
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # Node Exporter - Database Server
+  - job_name: 'node-exporter-db'
+    static_configs:
+      - targets: ['node-exporter-db:9100']
+        labels:
+          node: db-server
+          component: system
+          layer: infrastructure
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # Kubernetes API Server (if using K8s)
+  - job_name: 'kubernetes-apiservers'
+    kubernetes_sd_configs:
+      - role: endpoints
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+        action: keep
+        regex: default;kubernetes;https
+
+  # Kubernetes Nodes (if using K8s)
+  - job_name: 'kubernetes-nodes'
+    kubernetes_sd_configs:
+      - role: node
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/${1}/proxy/metrics
+
+  # Kubernetes Pods (if using K8s)
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: kubernetes_pod_name
+
+  # Kubernetes Services (if using K8s)
+  - job_name: 'kubernetes-services'
+    kubernetes_sd_configs:
+      - role: service
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_probe]
+        action: keep
+        regex: true
+      - source_labels: [__address__]
+        target_label: __param_target
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+      - source_labels: [__param_target]
+        target_label: instance
+      - action: labelmap
+        regex: __meta_kubernetes_service_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: kubernetes_name
+
+  # Blackbox Exporter for Endpoint Monitoring
+  - job_name: 'blackbox-http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - https://healthdata-platform.io
+          - https://healthdata-platform.io/api/health
+          - https://healthdata-platform.io/api/fhir/Patient
+        labels:
+          probe_type: http
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Blackbox Exporter for TCP Endpoint Monitoring
+  - job_name: 'blackbox-tcp'
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      - targets:
+          - postgres:5432
+          - redis:6379
+          - kafka:9092
+        labels:
+          probe_type: tcp
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Custom Business Metrics Exporter
+  - job_name: 'business-metrics'
+    metrics_path: '/metrics/business'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['quality-measure-service:8081']
+        labels:
+          metric_type: business
+          component: quality
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # FHIR Resource Metrics
+  - job_name: 'fhir-resource-metrics'
+    metrics_path: '/metrics/fhir'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['fhir-service:8080']
+        labels:
+          metric_type: fhir-resources
+          component: fhir
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # JVM Metrics Deep Dive
+  - job_name: 'jvm-metrics'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - fhir-service:8080
+          - quality-measure-service:8081
+          - cql-engine-service:8082
+          - patient-service:8083
+          - care-gap-service:8084
+        labels:
+          metric_type: jvm
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'jvm_.*'
+        action: keep
+
+  # Database Query Performance
+  - job_name: 'db-query-metrics'
+    metrics_path: '/metrics/db'
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+          - fhir-service:8080
+          - quality-measure-service:8081
+          - patient-service:8083
+        labels:
+          metric_type: database-queries
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+# Remote write configuration for long-term storage
+remote_write:
+  - url: "http://cortex:9009/api/v1/push"
+    queue_config:
+      capacity: 10000
+      max_shards: 50
+      min_shards: 1
+      max_samples_per_send: 5000
+      batch_send_deadline: 5s
+      min_backoff: 30ms
+      max_backoff: 100ms
+
+# Remote read configuration
+remote_read:
+  - url: "http://cortex:9009/api/v1/read"
+    read_recent: true
+
+# Storage configuration
+storage:
+  tsdb:
+    path: /prometheus
+    retention:
+      time: 30d
+      size: 50GB

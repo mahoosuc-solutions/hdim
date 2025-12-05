@@ -1,0 +1,266 @@
+package com.healthdata.fhir.service;
+
+import java.time.Instant;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.hl7.fhir.r4.model.Patient;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.healthdata.fhir.persistence.PatientEntity;
+import com.healthdata.fhir.persistence.PatientRepository;
+import com.healthdata.fhir.validation.PatientValidator;
+
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
+
+@Service
+public class PatientService {
+
+    private static final String CACHE_NAME = "fhir-patients";
+    private static final FhirContext FHIR_CONTEXT = FhirContext.forR4();
+    private static final IParser JSON_PARSER = FHIR_CONTEXT.newJsonParser().setPrettyPrint(false);
+
+    private final PatientRepository patientRepository;
+    private final PatientValidator patientValidator;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final Cache cache;
+
+    public PatientService(
+            PatientRepository patientRepository,
+            PatientValidator patientValidator,
+            KafkaTemplate<String, Object> kafkaTemplate,
+            CacheManager cacheManager) {
+        this.patientRepository = patientRepository;
+        this.patientValidator = patientValidator;
+        this.kafkaTemplate = kafkaTemplate;
+        this.cache = cacheManager.getCache(CACHE_NAME);
+    }
+
+    @Transactional
+    public Patient createPatient(String tenantId, Patient patient, String createdBy) {
+        PatientValidator.ValidationResult validation = patientValidator.validate(patient);
+        if (!validation.isValid()) {
+            throw new PatientValidationException(validation.message());
+        }
+
+        UUID patientId = ensurePatientId(patient);
+        patient.setId(patientId.toString());
+
+        PatientEntity entity = toEntity(tenantId, patientId, patient);
+        PatientEntity saved = patientRepository.save(entity);
+        Patient savedPatient = fromEntity(saved);
+        applyMeta(savedPatient, saved);
+
+        cachePut(tenantId, patientId.toString(), savedPatient);
+        kafkaTemplate.send("fhir.patients.created", patientId.toString(),
+                new PatientEvent(patientId.toString(), tenantId, "CREATED", Instant.now(), createdBy));
+
+        return savedPatient;
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Patient> getPatient(String tenantId, String patientId) {
+        UUID uuid = parsePatientUuid(patientId);
+        Patient cached = cacheGet(tenantId, patientId);
+        if (cached != null) {
+            return Optional.of(cached);
+        }
+
+        // Use findActiveByTenantIdAndId to exclude soft-deleted patients
+        return patientRepository.findActiveByTenantIdAndId(tenantId, uuid)
+                .map(entity -> {
+                    Patient parsed = fromEntity(entity);
+                    cachePut(tenantId, patientId, parsed);
+                    return parsed;
+                });
+    }
+
+    @Transactional
+    public Patient updatePatient(String tenantId, String patientId, Patient patient, String updatedBy) {
+        UUID uuid = parsePatientUuid(patientId);
+
+        Patient entityPatient = patient;
+        entityPatient.setId(patientId);
+
+        PatientValidator.ValidationResult validation = patientValidator.validate(entityPatient);
+        if (!validation.isValid()) {
+            throw new PatientValidationException(validation.message());
+        }
+
+        PatientEntity entity = patientRepository.findByTenantIdAndId(tenantId, uuid)
+                .orElseThrow(() -> new PatientNotFoundException(patientId));
+
+        PatientEntity updated = entity.toBuilder()
+                .resourceJson(JSON_PARSER.encodeResourceToString(entityPatient))
+                .firstName(extractFirstName(entityPatient))
+                .lastName(extractLastName(entityPatient))
+                .gender(entityPatient.getGender() != null ? entityPatient.getGender().toCode() : null)
+                .birthDate(entityPatient.getBirthDate() != null
+                        ? entityPatient.getBirthDate().toInstant().atZone(ZoneId.of("UTC")).toLocalDate()
+                        : null)
+                .lastModifiedAt(Instant.now())
+                .build();
+
+        PatientEntity persisted = patientRepository.save(updated);
+        Patient savedPatient = fromEntity(persisted);
+        applyMeta(savedPatient, persisted);
+
+        cachePut(tenantId, patientId, savedPatient);
+        kafkaTemplate.send("fhir.patients.updated", patientId,
+                new PatientEvent(patientId, tenantId, "UPDATED", Instant.now(), updatedBy));
+
+        return savedPatient;
+    }
+
+    @Transactional
+    public void deletePatient(String tenantId, String patientId, String deletedBy) {
+        UUID uuid = parsePatientUuid(patientId);
+        PatientEntity entity = patientRepository.findByTenantIdAndId(tenantId, uuid)
+                .orElseThrow(() -> new PatientNotFoundException(patientId));
+
+        // Soft delete for HIPAA compliance
+        PatientEntity softDeleted = entity.toBuilder()
+                .deletedAt(Instant.now())
+                .deletedBy(deletedBy)
+                .lastModifiedAt(Instant.now())
+                .build();
+
+        patientRepository.save(softDeleted);
+        cacheEvict(tenantId, patientId);
+        kafkaTemplate.send("fhir.patients.deleted", patientId,
+                new PatientEvent(patientId, tenantId, "DELETED", Instant.now(), deletedBy));
+    }
+
+    @Transactional(readOnly = true)
+    public org.hl7.fhir.r4.model.Bundle searchPatients(String tenantId, String nameFilter, int count) {
+        String effectiveFilter = nameFilter != null ? nameFilter : "";
+        List<PatientEntity> entities = patientRepository
+                .findByTenantIdAndLastNameContainingIgnoreCaseOrderByLastNameAsc(tenantId, effectiveFilter);
+
+        org.hl7.fhir.r4.model.Bundle bundle = new org.hl7.fhir.r4.model.Bundle();
+        bundle.setType(org.hl7.fhir.r4.model.Bundle.BundleType.SEARCHSET);
+        bundle.setTotal(entities.size());
+
+        entities.stream()
+                .limit(Math.max(count, 1))
+                .map(entity -> {
+                    Patient patient = fromEntity(entity);
+                    applyMeta(patient, entity);
+                    org.hl7.fhir.r4.model.Bundle.BundleEntryComponent entry = new org.hl7.fhir.r4.model.Bundle.BundleEntryComponent();
+                    entry.setResource(patient);
+                    entry.setFullUrl("Patient/" + patient.getId());
+                    return entry;
+                })
+                .forEach(bundle.getEntry()::add);
+
+        return bundle;
+    }
+
+    private PatientEntity toEntity(String tenantId, UUID patientId, Patient patient) {
+        return PatientEntity.builder()
+                .id(patientId)
+                .tenantId(tenantId)
+                .resourceType(patient.fhirType() != null ? patient.fhirType() : "Patient")
+                .resourceJson(JSON_PARSER.encodeResourceToString(patient))
+                .firstName(extractFirstName(patient))
+                .lastName(extractLastName(patient))
+                .gender(patient.getGender() != null ? patient.getGender().toCode() : null)
+                .birthDate(patient.getBirthDate() != null
+                        ? patient.getBirthDate().toInstant().atZone(ZoneId.of("UTC")).toLocalDate()
+                        : null)
+                .createdAt(Instant.now())
+                .lastModifiedAt(Instant.now())
+                .version(0)
+                .build();
+    }
+
+    private Patient fromEntity(PatientEntity entity) {
+        Patient patient = (Patient) JSON_PARSER.parseResource(entity.getResourceJson());
+        patient.setId(entity.getId().toString());
+        return patient;
+    }
+
+    private void applyMeta(Patient patient, PatientEntity entity) {
+        patient.getMeta().setVersionId(String.valueOf(entity.getVersion()));
+        if (entity.getLastModifiedAt() != null) {
+            patient.getMeta().setLastUpdated(Date.from(entity.getLastModifiedAt()));
+        }
+    }
+
+    private UUID ensurePatientId(Patient patient) {
+        if (patient.hasIdElement() && patient.getIdElement().getIdPart() != null) {
+            return parsePatientUuid(patient.getIdElement().getIdPart());
+        }
+        UUID generated = UUID.randomUUID();
+        patient.setId(generated.toString());
+        return generated;
+    }
+
+    private UUID parsePatientUuid(String patientId) {
+        try {
+            return UUID.fromString(patientId);
+        } catch (IllegalArgumentException ex) {
+            throw new PatientValidationException("Patient id must be a valid UUID");
+        }
+    }
+
+    private void cachePut(String tenantId, String patientId, Patient patient) {
+        if (cache != null) {
+            cache.put(cacheKey(tenantId, patientId), patient);
+        }
+    }
+
+    private Patient cacheGet(String tenantId, String patientId) {
+        if (cache == null) {
+            return null;
+        }
+        return cache.get(cacheKey(tenantId, patientId), Patient.class);
+    }
+
+    private void cacheEvict(String tenantId, String patientId) {
+        if (cache != null) {
+            cache.evict(cacheKey(tenantId, patientId));
+        }
+    }
+
+    private String cacheKey(String tenantId, String patientId) {
+        return tenantId + ":" + patientId;
+    }
+
+    private String extractFirstName(Patient patient) {
+        if (!patient.hasName() || patient.getNameFirstRep().getGiven().isEmpty()) {
+            return null;
+        }
+        return patient.getNameFirstRep().getGiven().get(0).getValue();
+    }
+
+    private String extractLastName(Patient patient) {
+        if (!patient.hasName() || patient.getNameFirstRep().getFamily() == null) {
+            return null;
+        }
+        return patient.getNameFirstRep().getFamily();
+    }
+
+    public record PatientEvent(String id, String tenantId, String type, Instant occurredAt, String actor) {
+    }
+
+    public static class PatientValidationException extends RuntimeException {
+        public PatientValidationException(String message) {
+            super(message);
+        }
+    }
+
+    public static class PatientNotFoundException extends RuntimeException {
+        public PatientNotFoundException(String id) {
+            super("Patient not found: " + id);
+        }
+    }
+}

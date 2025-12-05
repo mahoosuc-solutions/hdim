@@ -1,0 +1,23 @@
+FROM kong:3.7.1
+
+USER root
+
+# Install curl, unzip, git for rock download/build (Debian-based image)
+RUN apt-get update && apt-get install -y --no-install-recommends curl unzip git && rm -rf /var/lib/apt/lists/*
+
+# Pin lua-resty-kafka to 0.12 and build from source
+ENV KAFKA_ROCK_VERSION=0.23
+RUN git clone --branch v${KAFKA_ROCK_VERSION} --depth 1 https://github.com/doujiang24/lua-resty-kafka /tmp/lua-resty-kafka \
+ && cd /tmp/lua-resty-kafka \
+ && ROCKSPEC=$(ls lua-resty-kafka-*.rockspec | head -n1) \
+ && luarocks make ${ROCKSPEC} \
+ && rm -rf /tmp/lua-resty-kafka
+
+# Copy the custom plugin
+COPY kong/plugins/user-patient-kafka /usr/local/share/lua/5.1/kong/plugins/user-patient-kafka
+
+# Configure Kong to load the plugin
+ENV KONG_PLUGINS=bundled,user-patient-kafka \
+    KONG_LUA_PACKAGE_PATH="/usr/local/share/lua/5.1/?.lua;;/opt/kong/plugins/?.lua;;"
+
+USER kong

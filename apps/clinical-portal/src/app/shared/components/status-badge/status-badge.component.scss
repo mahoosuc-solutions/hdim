@@ -1,0 +1,133 @@
+.status-badge {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  font-size: 13px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  cursor: default;
+
+  &.status-badge-compact {
+    height: 24px;
+    font-size: 12px;
+    padding: 0 8px;
+
+    .status-badge-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+.status-badge-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  margin: 0 !important;
+}
+
+.status-badge-text {
+  line-height: 1;
+  white-space: nowrap;
+}
+
+// Success variant
+.status-badge-success {
+  background-color: #e8f5e9 !important;
+  color: #2e7d32 !important;
+
+  .status-badge-icon {
+    color: #4caf50 !important;
+  }
+}
+
+// Warning variant
+.status-badge-warning {
+  background-color: #fff8e1 !important;
+  color: #e65100 !important;
+
+  .status-badge-icon {
+    color: #ff9800 !important;
+  }
+}
+
+// Error variant
+.status-badge-error {
+  background-color: #ffebee !important;
+  color: #c62828 !important;
+
+  .status-badge-icon {
+    color: #f44336 !important;
+  }
+}
+
+// Info variant
+.status-badge-info {
+  background-color: #e3f2fd !important;
+  color: #1565c0 !important;
+
+  .status-badge-icon {
+    color: #2196f3 !important;
+  }
+}
+
+// Neutral variant
+.status-badge-neutral {
+  background-color: #f5f5f5 !important;
+  color: rgba(0, 0, 0, 0.87) !important;
+
+  .status-badge-icon {
+    color: rgba(0, 0, 0, 0.54) !important;
+  }
+}
+
+// Dark theme support
+@media (prefers-color-scheme: dark) {
+  .status-badge-success {
+    background-color: rgba(76, 175, 80, 0.2) !important;
+    color: #81c784 !important;
+
+    .status-badge-icon {
+      color: #81c784 !important;
+    }
+  }
+
+  .status-badge-warning {
+    background-color: rgba(255, 152, 0, 0.2) !important;
+    color: #ffb74d !important;
+
+    .status-badge-icon {
+      color: #ffb74d !important;
+    }
+  }
+
+  .status-badge-error {
+    background-color: rgba(244, 67, 54, 0.2) !important;
+    color: #ef5350 !important;
+
+    .status-badge-icon {
+      color: #ef5350 !important;
+    }
+  }
+
+  .status-badge-info {
+    background-color: rgba(33, 150, 243, 0.2) !important;
+    color: #64b5f6 !important;
+
+    .status-badge-icon {
+      color: #64b5f6 !important;
+    }
+  }
+
+  .status-badge-neutral {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.87) !important;
+
+    .status-badge-icon {
+      color: rgba(255, 255, 255, 0.7) !important;
+    }
+  }
+}

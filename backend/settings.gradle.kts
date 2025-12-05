@@ -13,7 +13,8 @@ include(
     "modules:shared:domain:fhir-models",
     "modules:shared:domain:hedis-models",
     "modules:shared:domain:cql-models",
-    "modules:shared:domain:common"
+    "modules:shared:domain:common",
+    "modules:shared:domain:risk-models"
 )
 
 // Shared Infrastructure Modules
@@ -49,7 +50,10 @@ include(
     "modules:services:ai-assistant-service",
     "modules:services:cdr-processor-service",
     "modules:services:ehr-connector-service",
-    "modules:services:payer-workflows-service"
+    "modules:services:payer-workflows-service",
+    "modules:services:data-enrichment-service",
+    "modules:services:predictive-analytics-service",
+    "modules:services:sdoh-service"
 )
 
 // Platform Modules

@@ -1,0 +1,17 @@
+cerner:
+  fhir:
+    base-url: https://fhir-ehr-code.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d
+    token-url: https://authorization.cerner.com/oauth2/token
+    client-id: test-client-id
+    client-secret: test-client-secret
+    tenant-id: ec2458f2-1e24-41c8-b71b-0e701af7583d
+    scope: system/*.read
+    sandbox-mode: true
+    connection-timeout: 10000
+    read-timeout: 10000
+    max-retries: 1
+    token-cache-duration: 300
+
+logging:
+  level:
+    com.healthdata.ehr.connector: DEBUG

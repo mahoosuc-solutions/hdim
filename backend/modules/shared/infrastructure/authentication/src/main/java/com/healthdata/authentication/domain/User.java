@@ -95,6 +95,20 @@ public class User {
     @Column(length = 500)
     private String notes;
 
+    /**
+     * OAuth2 provider name (e.g., "okta", "azure", "auth0").
+     * Null for users using local authentication.
+     */
+    @Column(length = 50)
+    private String oauthProvider;
+
+    /**
+     * OAuth2 provider's unique user ID.
+     * Used to link local user to external identity.
+     */
+    @Column(length = 255)
+    private String oauthProviderId;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdAt;

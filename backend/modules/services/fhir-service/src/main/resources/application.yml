@@ -83,6 +83,16 @@ fhir:
   narrative:
     enabled: true
 
+  # Bulk Data Export Configuration
+  bulk-export:
+    export-directory: /tmp/fhir-exports
+    max-concurrent-exports: 5
+    chunk-size: 1000
+    retention-days: 7
+    base-url: http://localhost:8085/fhir
+    require-access-token: true
+    async-executor-pool-size: 3
+
 # HIPAA Audit Configuration
 audit:
   enabled: true

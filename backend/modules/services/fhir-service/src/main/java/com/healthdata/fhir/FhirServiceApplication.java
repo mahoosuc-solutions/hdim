@@ -27,10 +27,12 @@ import org.springframework.kafka.annotation.EnableKafka;
 })
 @EnableJpaRepositories(basePackages = {
     "com.healthdata.fhir.persistence",
+    "com.healthdata.fhir.bulk",  // Include bulk export repository
     "com.healthdata.authentication.repository"
 })
 @EntityScan(basePackages = {
     "com.healthdata.fhir.persistence",
+    "com.healthdata.fhir.bulk",  // Include BulkExportJob entity
     "com.healthdata.authentication.domain",
     "com.healthdata.authentication.entity"  // Include RefreshToken entity
 })

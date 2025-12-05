@@ -90,6 +90,13 @@ public class FhirSecurityConfig {
                     "/webjars/**",
                     "/fhir/metadata"  // FHIR metadata endpoint
                 ).permitAll()
+                .requestMatchers(
+                    "/fhir/api/v1/$export",
+                    "/fhir/api/v1/Patient/$export",
+                    "/fhir/api/v1/Group/*/$export",
+                    "/fhir/api/v1/$export-poll-status/*",
+                    "/fhir/api/v1/download/*/*"
+                ).authenticated()  // Bulk export endpoints require authentication
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

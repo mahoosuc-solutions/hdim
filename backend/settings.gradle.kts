@@ -46,7 +46,8 @@ include(
     "modules:services:care-gap-service",
     "modules:services:analytics-service",
     "modules:services:gateway-service",
-    "modules:services:ai-assistant-service"
+    "modules:services:ai-assistant-service",
+    "modules:services:cdr-processor-service"
 )
 
 // Platform Modules

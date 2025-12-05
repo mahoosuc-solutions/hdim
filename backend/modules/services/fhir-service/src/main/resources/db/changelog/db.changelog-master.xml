@@ -15,5 +15,6 @@
     <include file="db/changelog/0008-create-immunizations-table.xml"/>
     <include file="db/changelog/0009-add-fhir-resource-gin-indexes.xml"/>
     <include file="db/changelog/0010-create-users-table.xml"/>
+    <include file="db/changelog/0011-create-bulk-export-jobs-table.xml"/>
 
 </databaseChangeLog>

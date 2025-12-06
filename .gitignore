@@ -78,3 +78,28 @@ Thumbs.db
 **/*.swp
 **/*.swo
 **/*~
+
+# Environment files with secrets - NEVER commit these
+.env
+.env.local
+.env.*.local
+.env.dev
+.env.staging
+.env.production
+*.env
+
+# Keep example files for reference
+!.env.example
+!.env.*.example
+
+# Secrets and credentials
+**/secrets/
+**/credentials/
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+
+# Vault tokens
+.vault-token
+vault-token

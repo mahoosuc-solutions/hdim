@@ -2,10 +2,11 @@ spring:
   application:
     name: predictive-analytics-service
 
+  # ⚠️ SECURITY: Database credentials MUST be provided via environment variables
   datasource:
-    url: jdbc:postgresql://localhost:5432/hdim_predictive
-    username: ${DB_USERNAME:hdim}
-    password: ${DB_PASSWORD:hdim}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/hdim_predictive}
+    username: ${SPRING_DATASOURCE_USERNAME:hdim}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -40,3 +41,40 @@ management:
     export:
       prometheus:
         enabled: true
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      predictiveAnalyticsDefault:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+
+  retry:
+    instances:
+      predictiveAnalyticsDefault:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+
+  timelimiter:
+    instances:
+      predictiveAnalyticsDefault:
+        timeoutDuration: 30s
+        cancelRunningFuture: true
+
+  ratelimiter:
+    instances:
+      predictiveAnalyticsDefault:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1s
+        timeoutDuration: 5s

@@ -2,10 +2,11 @@ spring:
   application:
     name: payer-workflows-service
 
+  # ⚠️ SECURITY: Database credentials MUST be provided via environment variables
   datasource:
-    url: jdbc:postgresql://localhost:5432/healthdata
-    username: ${DB_USERNAME:healthdata_user}
-    password: ${DB_PASSWORD:healthdata_pass}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/healthdata}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -74,10 +75,11 @@ springdoc:
     tagsSorter: alpha
 
 # JWT Configuration (from shared authentication module)
+# ⚠️ SECURITY: JWT secret MUST be provided via environment variable
 jwt:
-  secret: ${JWT_SECRET:your-secret-key-change-in-production}
-  expiration: 86400000  # 24 hours
-  refresh-expiration: 604800000  # 7 days
+  secret: ${JWT_SECRET:}
+  expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:86400000}  # 24 hours
+  refresh-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}  # 7 days
 
 # Payer-Specific Configuration
 payer:

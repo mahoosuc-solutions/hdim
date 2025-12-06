@@ -69,9 +69,11 @@ public class CqlSecurityCustomizer {
     /**
      * Production security filter chain for docker/dev/prod profiles.
      * Uses JWT-based authentication with stateless sessions.
-     * 
+     *
      * Public endpoints: WebSocket, health checks, API documentation
      * Protected endpoints: All CQL Engine API endpoints require valid JWT token
+     *
+     * SECURITY: Authentication re-enabled - critical for HIPAA compliance
      */
     @Bean
     @Profile("!test")
@@ -81,14 +83,20 @@ public class CqlSecurityCustomizer {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                // TEMPORARY DEBUG: Permit ALL requests
-                .anyRequest().permitAll()
+                .requestMatchers(
+                    "/actuator/**",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/swagger-resources/**",
+                    "/webjars/**",
+                    "/ws/**"  // WebSocket endpoints - authenticated via interceptors
+                ).permitAll()
+                .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            );
-            // TEMPORARILY DISABLED FOR DEBUGGING
-            //.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

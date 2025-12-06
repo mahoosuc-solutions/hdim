@@ -16,16 +16,18 @@ spring:
   application:
     name: quality-measure-service
 
-  # Security Configuration - Static credentials for API access
+  # Security Configuration
+  # ⚠️ SECURITY: Credentials MUST be provided via environment variables
+  # Never hardcode credentials in configuration files
   security:
     user:
-      name: qm-service-user
-      password: qm-service-dev-password-change-in-prod
+      name: ${SERVICE_AUTH_USERNAME:}
+      password: ${SERVICE_AUTH_PASSWORD:}
 
   datasource:
-    url: jdbc:postgresql://postgres:5432/healthdata_quality_measure
-    username: healthdata
-    password: dev_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/healthdata_quality_measure}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -88,10 +90,12 @@ care-gap:
 # CQL Engine Configuration
 cql:
   engine:
-    url: http://cql-engine-service:8081/cql-engine
+    url: ${CQL_ENGINE_SERVICE_URL:http://cql-engine-service:8081/cql-engine}
+    # ⚠️ SECURITY: Service-to-service auth handled by JWT tokens or mTLS
+    # Credentials configured via environment variables when needed
     auth:
-      username: cql-service-user
-      password: cql-service-dev-password-change-in-prod
+      username: ${CQL_ENGINE_AUTH_USERNAME:}
+      password: ${CQL_ENGINE_AUTH_PASSWORD:}
 
 # Feign Client Configuration
 feign:

@@ -5,10 +5,11 @@ spring:
     name: healthdata-platform
 
   # Single Database Configuration
+  # ⚠️ SECURITY: Database credentials MUST be provided via environment variables
   datasource:
-    url: jdbc:postgresql://localhost:5432/healthdata
-    username: healthdata
-    password: healthdata_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/healthdata}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 30
@@ -53,9 +54,11 @@ spring:
       - fhir-resources
 
   # Security Configuration
+  # ⚠️ SECURITY: JWT secret MUST be provided via environment variable in production
+  # Generate with: openssl rand -base64 32
   security:
     jwt:
-      secret: ${JWT_SECRET:mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456}
+      secret: ${JWT_SECRET:}
       expiration: 900000 # 15 minutes
       refresh-expiration: 604800000 # 7 days
 

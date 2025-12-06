@@ -1,6 +1,8 @@
 package com.healthdata.quality.config;
 
 import com.healthdata.authentication.filter.JwtAuthenticationFilter;
+import com.healthdata.authentication.security.TenantAccessFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -22,9 +24,15 @@ import java.util.Arrays;
  * Provides security configuration for different profiles:
  * - Test: Permits all requests without authentication
  * - Docker/Dev/Prod: JWT-based authentication via JwtAuthenticationFilter
+ *
+ * SECURITY: TenantAccessFilter is enabled to enforce multi-tenant isolation.
+ * This prevents CVE-INTERNAL-2025-001 (Complete Bypass of Tenant Isolation)
  */
 @Configuration
 public class QualityMeasureSecurityConfig {
+
+    @Autowired(required = false)
+    private TenantAccessFilter tenantAccessFilter;
 
     /**
      * CORS configuration for frontend applications.
@@ -113,6 +121,12 @@ public class QualityMeasureSecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // CRITICAL SECURITY: Add tenant access filter AFTER JWT authentication
+        // This ensures tenant isolation is enforced for all authenticated requests
+        if (tenantAccessFilter != null) {
+            http.addFilterAfter(tenantAccessFilter, JwtAuthenticationFilter.class);
+        }
 
         return http.build();
     }

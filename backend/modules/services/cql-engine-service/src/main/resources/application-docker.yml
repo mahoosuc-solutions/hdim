@@ -5,11 +5,13 @@ spring:
   application:
     name: cql-engine-service
 
-  # Security Configuration - Static credentials for service-to-service auth
+  # Security Configuration
+  # ⚠️ SECURITY: Credentials MUST be provided via environment variables
+  # Never hardcode credentials in configuration files
   security:
     user:
-      name: cql-service-user
-      password: cql-service-dev-password-change-in-prod
+      name: ${SERVICE_AUTH_USERNAME:}
+      password: ${SERVICE_AUTH_PASSWORD:}
 
   # Database Configuration (environment variables from docker-compose)
   datasource:

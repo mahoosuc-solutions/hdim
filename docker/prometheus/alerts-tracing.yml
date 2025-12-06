@@ -1,0 +1,113 @@
+# Alerting Rules for Distributed Tracing and Service Health
+
+groups:
+  - name: tracing_alerts
+    rules:
+      # High error rate in traces
+      - alert: HighTraceErrorRate
+        expr: |
+          sum(rate(jaeger_collector_spans_received_total{status="error"}[5m]))
+          / sum(rate(jaeger_collector_spans_received_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High trace error rate detected"
+          description: "Error rate in traces is {{ $value | humanizePercentage }} over the last 5 minutes"
+
+      # Jaeger collector down
+      - alert: JaegerCollectorDown
+        expr: up{job="jaeger"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Jaeger collector is down"
+          description: "Jaeger collector has been down for more than 2 minutes"
+
+      # High span drop rate
+      - alert: HighSpanDropRate
+        expr: |
+          sum(rate(jaeger_collector_spans_dropped_total[5m]))
+          / sum(rate(jaeger_collector_spans_received_total[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High span drop rate in Jaeger"
+          description: "{{ $value | humanizePercentage }} of spans are being dropped"
+
+  - name: service_latency_alerts
+    rules:
+      # High P99 latency
+      - alert: HighServiceLatency
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_server_requests_seconds_bucket[5m])) by (le, service)
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High P99 latency for {{ $labels.service }}"
+          description: "P99 latency is {{ $value | humanizeDuration }} for service {{ $labels.service }}"
+
+      # Service request errors
+      - alert: HighServiceErrorRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (service)
+          / sum(rate(http_server_requests_seconds_count[5m])) by (service) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate for {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanizePercentage }} for service {{ $labels.service }}"
+
+  - name: otel_collector_alerts
+    rules:
+      # OTel collector down
+      - alert: OTelCollectorDown
+        expr: up{job="otel-collector"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "OpenTelemetry Collector is down"
+          description: "OTel Collector has been down for more than 2 minutes"
+
+      # High memory usage in OTel collector
+      - alert: OTelCollectorHighMemory
+        expr: |
+          process_resident_memory_bytes{job="otel-collector"}
+          / 1024 / 1024 > 800
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "OTel Collector high memory usage"
+          description: "OTel Collector is using {{ $value | humanize }}MB of memory"
+
+  - name: circuit_breaker_alerts
+    rules:
+      # Circuit breaker open
+      - alert: CircuitBreakerOpen
+        expr: resilience4j_circuitbreaker_state{state="open"} == 1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Circuit breaker {{ $labels.name }} is open"
+          description: "Circuit breaker {{ $labels.name }} on {{ $labels.service }} has been open for more than 1 minute"
+
+      # High circuit breaker failure rate
+      - alert: HighCircuitBreakerFailureRate
+        expr: |
+          sum(rate(resilience4j_circuitbreaker_calls_total{kind="failed"}[5m])) by (name, service)
+          / sum(rate(resilience4j_circuitbreaker_calls_total[5m])) by (name, service) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High failure rate for circuit breaker {{ $labels.name }}"
+          description: "Failure rate is {{ $value | humanizePercentage }} for {{ $labels.name }} on {{ $labels.service }}"

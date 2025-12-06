@@ -37,6 +37,12 @@ dependencies {
     // Monitoring
     implementation(libs.bundles.monitoring)
 
+    // Resilience4j for circuit breaker, retry, and rate limiting
+    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-retry:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-ratelimiter:2.1.0")
+
     // Utilities
     implementation(libs.bundles.utilities)
     annotationProcessor(libs.mapstruct.processor)

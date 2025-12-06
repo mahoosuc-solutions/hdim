@@ -8,9 +8,10 @@ spring:
     name: analytics-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5435/healthdata_analytics
-    username: healthdata
-    password: ${DB_PASSWORD:dev_password}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_analytics}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    # ⚠️ SECURITY: Password MUST be provided via environment variable
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -36,6 +37,43 @@ spring:
       host: localhost
       port: 6381
       timeout: 2000ms
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      analyticsDefault:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+
+  retry:
+    instances:
+      analyticsDefault:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+
+  timelimiter:
+    instances:
+      analyticsDefault:
+        timeoutDuration: 30s
+        cancelRunningFuture: true
+
+  ratelimiter:
+    instances:
+      analyticsDefault:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1s
+        timeoutDuration: 5s
 
 # Logging
 logging:

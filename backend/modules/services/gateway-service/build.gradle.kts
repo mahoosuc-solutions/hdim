@@ -17,6 +17,24 @@ dependencies {
     implementation(libs.bundles.spring.boot.web)
     implementation(libs.bundles.spring.boot.data)
 
+    // Redis for rate limiting and caching
+    implementation(libs.spring.boot.starter.data.redis)
+
+    // Resilience4j for circuit breaker, retry, and rate limiting
+    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-retry:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-ratelimiter:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-timelimiter:2.1.0")
+    implementation("org.springframework.boot:spring-boot-starter-aop")
+
+    // Bucket4j for distributed rate limiting
+    implementation("com.bucket4j:bucket4j-core:8.7.0")
+    implementation("com.bucket4j:bucket4j-redis:8.7.0")
+
+    // OpenAPI/Swagger for API documentation
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+
     // Testing
     testImplementation(libs.bundles.testing)
 }

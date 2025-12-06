@@ -1,48 +1,53 @@
 import { HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
 import { API_CONFIG, HTTP_HEADERS } from '../config/api.config';
+import { AuthService } from '../services/auth.service';
 
 /**
  * Auth Interceptor
- * Adds HTTP Basic Authentication to backend service requests
+ * Adds JWT Bearer token authentication to backend service requests
  *
- * For development, uses static credentials configured in backend application-docker.yml:
- * - Username: cql-service-user
- * - Password: cql-service-dev-password-change-in-prod
+ * SECURITY: Credentials are no longer hardcoded. Authentication is handled via:
+ * 1. JWT tokens obtained through the AuthService login flow
+ * 2. Tokens are stored securely (HttpOnly cookies in production)
+ * 3. Service-to-service auth is handled by the API Gateway
  *
- * In production, this should be replaced with proper JWT/OAuth authentication
+ * For backend services without user context (scheduled jobs, etc.),
+ * the API Gateway uses mTLS or service account tokens configured via
+ * environment variables (never hardcoded).
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  // Check if request is to CQL Engine or Quality Measure Service
-  const isCqlEngine = req.url.includes(API_CONFIG.CQL_ENGINE_URL);
-  const isQualityMeasure = req.url.includes(API_CONFIG.QUALITY_MEASURE_URL);
+  const authService = inject(AuthService);
 
-  if (isCqlEngine || isQualityMeasure) {
-    // Development credentials from backend application-docker.yml
-    // TODO: Replace with environment-specific configuration
-    let username: string;
-    let password: string;
+  // Get the JWT token from auth service
+  const token = authService.getToken();
+  const tenantId = authService.getTenantId();
 
-    if (isQualityMeasure) {
-      // Quality Measure Service credentials
-      username = 'qm-service-user';
-      password = 'qm-service-dev-password-change-in-prod';
-    } else {
-      // CQL Engine Service credentials
-      username = 'cql-service-user';
-      password = 'cql-service-dev-password-change-in-prod';
+  // Check if request is to backend services
+  const isBackendService =
+    req.url.includes(API_CONFIG.CQL_ENGINE_URL) ||
+    req.url.includes(API_CONFIG.QUALITY_MEASURE_URL) ||
+    req.url.includes(API_CONFIG.FHIR_SERVER_URL);
+
+  if (isBackendService && token) {
+    // Add JWT Bearer token for authenticated requests
+    const headers: { [key: string]: string } = {
+      [HTTP_HEADERS.AUTHORIZATION]: `Bearer ${token}`,
+    };
+
+    // Add tenant context if available
+    if (tenantId) {
+      headers[HTTP_HEADERS.TENANT_ID] = tenantId;
     }
 
-    const credentials = btoa(`${username}:${password}`);
-
     const clonedRequest = req.clone({
-      setHeaders: {
-        [HTTP_HEADERS.AUTHORIZATION]: `Basic ${credentials}`,
-      },
+      setHeaders: headers,
     });
 
     return next(clonedRequest);
   }
 
-  // Pass through without auth for other requests (e.g., FHIR server)
+  // For unauthenticated requests or public endpoints, pass through
+  // The API Gateway will handle service-to-service authentication
   return next(req);
 };

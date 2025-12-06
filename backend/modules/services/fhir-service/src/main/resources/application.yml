@@ -10,9 +10,10 @@ spring:
     lazy-initialization: true  # Enable lazy initialization to avoid circular dependencies
 
   datasource:
-    url: jdbc:postgresql://localhost:5435/healthdata_fhir
-    username: healthdata
-    password: ${DB_PASSWORD:dev_password}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_fhir}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    # ⚠️ SECURITY: Password MUST be provided via environment variable
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -100,10 +101,11 @@ audit:
   include-phi: false  # Don't log PHI in audit logs
 
 # Security Configuration
+# ⚠️ SECURITY: JWT secret MUST be provided via environment variable in production
 security:
   jwt:
-    secret: ${JWT_SECRET:changeme_in_production}
-    expiration: 3600000  # 1 hour
+    secret: ${JWT_SECRET:}
+    expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:3600000}  # 1 hour
 
 # Rate Limiting Configuration
 rate-limiting:

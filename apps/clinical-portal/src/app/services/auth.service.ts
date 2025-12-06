@@ -16,6 +16,16 @@ import { ApiService } from './api.service';
  * - Permission checking
  * - Auto-logout on token expiration
  * - Authentication state management
+ *
+ * SECURITY NOTE: Current implementation stores JWT in localStorage which is
+ * vulnerable to XSS attacks. Production deployments should migrate to HttpOnly
+ * cookies with the following changes:
+ * 1. Backend login endpoint sets HttpOnly, Secure, SameSite=Strict cookies
+ * 2. Backend JWT filter reads token from cookies instead of Authorization header
+ * 3. Frontend uses withCredentials: true for all authenticated requests
+ * 4. Frontend removes direct token access - authentication state only
+ *
+ * TODO: Implement HttpOnly cookie-based JWT storage (HIGH PRIORITY for HIPAA)
  */
 @Injectable({
   providedIn: 'root',

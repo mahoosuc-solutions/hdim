@@ -15,9 +15,9 @@ spring:
     type: none  # Disable Redis cache to avoid circular dependencies
   
   datasource:
-    url: jdbc:postgresql://localhost:5435/healthdata_cql
-    username: healthdata
-    password: dev_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_cql}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
   
   jpa:
@@ -45,12 +45,14 @@ authentication:
     enabled: false
 
 # JWT Configuration
+# ⚠️ SECURITY: JWT secret MUST be provided via environment variable in production
+# Generate with: openssl rand -base64 32
 jwt:
-  secret: ${JWT_SECRET:your-256-bit-secret-key-change-in-production-minimum-32-characters}
-  accessTokenExpirationMs: 900000  # 15 minutes
-  refreshTokenExpirationMs: 604800000  # 7 days
-  issuer: healthdata-gateway
-  audience: healthdata-services
+  secret: ${JWT_SECRET:}
+  accessTokenExpirationMs: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}  # 15 minutes
+  refreshTokenExpirationMs: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}  # 7 days
+  issuer: ${JWT_ISSUER:healthdata-gateway}
+  audience: ${JWT_AUDIENCE:healthdata-services}
 
 # Backend Service URLs
 backend:
@@ -78,9 +80,100 @@ gateway:
     enforced: false  # Set to true for production
   routing:
     enabled: true
-  rateLimit:
+  rate-limit:
     enabled: true
-    defaultLimit: 100  # requests per minute
+    requests-per-second: 100
+    burst-capacity: 150
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      cqlEngine:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+      qualityMeasure:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+      fhirService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+      patientService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+      careGapService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+  retry:
+    instances:
+      cqlEngine:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+      qualityMeasure:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+      fhirService:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+      patientService:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+      careGapService:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+  timelimiter:
+    instances:
+      cqlEngine:
+        timeoutDuration: 30s
+        cancelRunningFuture: true
+      qualityMeasure:
+        timeoutDuration: 30s
+        cancelRunningFuture: true
+      fhirService:
+        timeoutDuration: 30s
+        cancelRunningFuture: true
+      patientService:
+        timeoutDuration: 15s
+        cancelRunningFuture: true
+      careGapService:
+        timeoutDuration: 15s
+        cancelRunningFuture: true
+  ratelimiter:
+    instances:
+      default:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1s
+        timeoutDuration: 5s
 
 # Logging
 logging:

@@ -43,6 +43,12 @@ dependencies {
     // Kafka for care gap events
     implementation(libs.bundles.kafka)
 
+    // Resilience4j for circuit breaker, retry, and rate limiting
+    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-retry:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-ratelimiter:2.1.0")
+
     // Lombok for reducing boilerplate
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)

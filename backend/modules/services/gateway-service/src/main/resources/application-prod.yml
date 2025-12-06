@@ -14,10 +14,11 @@ spring:
   cache:
     type: none
   
+  # ⚠️ SECURITY: Database password MUST be provided via DB_PASSWORD environment variable
   datasource:
     url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:healthdata_cql}
     username: ${DB_USERNAME:healthdata}
-    password: ${DB_PASSWORD:dev_password}
+    password: ${DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -55,8 +56,10 @@ authentication:
     enabled: false
 
 # JWT Configuration
+# ⚠️ SECURITY: JWT secret MUST be provided via JWT_SECRET environment variable
+# Generate with: openssl rand -base64 32
 jwt:
-  secret: ${JWT_SECRET:your-256-bit-secret-key-change-in-production-minimum-32-characters-healthdata-gateway-2025}
+  secret: ${JWT_SECRET:}
   accessTokenExpirationMs: ${JWT_ACCESS_EXPIRATION:900000}  # 15 minutes
   refreshTokenExpirationMs: ${JWT_REFRESH_EXPIRATION:604800000}  # 7 days
   issuer: ${JWT_ISSUER:healthdata-gateway}

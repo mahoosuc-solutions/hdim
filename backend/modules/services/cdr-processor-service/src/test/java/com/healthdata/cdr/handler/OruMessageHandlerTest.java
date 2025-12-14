@@ -5,7 +5,7 @@ import ca.uhn.hl7v2.model.v25.message.ORU_R01;
 import ca.uhn.hl7v2.model.v25.segment.OBX;
 import ca.uhn.hl7v2.model.v25.segment.OBR;
 import ca.uhn.hl7v2.model.v25.segment.PID;
-import com.healthdata.cdr.parser.Hl7v2ParserService;
+import com.healthdata.cdr.service.Hl7v2ParserService;
 import com.healthdata.cdr.converter.Hl7ToFhirConverter;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.DiagnosticReport;

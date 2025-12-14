@@ -96,8 +96,8 @@ class HccApiIntegrationTest {
                     .hccCodeV24("HCC19")
                     .hccCodeV28("HCC37")
                     .hccNameV24("Diabetes without Complication")
-                    .coefficientV24(new BigDecimal("0.105"))
-                    .coefficientV28(new BigDecimal("0.118"))
+                    .coefficientV24(0.105)
+                    .coefficientV28(0.118)
                     .requiresSpecificity(false)
                     .build(),
                 DiagnosisHccMapEntity.builder()
@@ -114,8 +114,8 @@ class HccApiIntegrationTest {
                     .hccCodeV24("HCC111")
                     .hccCodeV28("HCC280")
                     .hccNameV24("Chronic Obstructive Pulmonary Disease")
-                    .coefficientV24(new BigDecimal("0.335"))
-                    .coefficientV28(new BigDecimal("0.312"))
+                    .coefficientV24(0.335)
+                    .coefficientV28(0.312)
                     .requiresSpecificity(false)
                     .build(),
                 DiagnosisHccMapEntity.builder()
@@ -123,8 +123,8 @@ class HccApiIntegrationTest {
                     .hccCodeV24("HCC96")
                     .hccCodeV28("HCC223")
                     .hccNameV24("Atrial Fibrillation")
-                    .coefficientV24(new BigDecimal("0.288"))
-                    .coefficientV28(new BigDecimal("0.256"))
+                    .coefficientV24(0.288)
+                    .coefficientV28(0.256)
                     .requiresSpecificity(false)
                     .build()
             );
@@ -320,7 +320,7 @@ class HccApiIntegrationTest {
                 .currentIcd10("E11.9")
                 .recommendedIcd10("E11.65")
                 .gapType(DocumentationGapEntity.GapType.UNSPECIFIED)
-                .rafImpact(new BigDecimal("0.325"))
+                .rafImpactBlended(new BigDecimal("0.325"))
                 .status(DocumentationGapEntity.GapStatus.OPEN)
                 .build();
             gapRepository.save(gap);

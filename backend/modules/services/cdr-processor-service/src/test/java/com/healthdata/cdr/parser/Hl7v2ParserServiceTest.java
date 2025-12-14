@@ -1,5 +1,6 @@
 package com.healthdata.cdr.parser;
 
+import com.healthdata.cdr.service.Hl7v2ParserService;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v25.message.ADT_A01;

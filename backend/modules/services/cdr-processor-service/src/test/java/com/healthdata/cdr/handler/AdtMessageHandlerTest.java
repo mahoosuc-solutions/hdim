@@ -5,7 +5,7 @@ import ca.uhn.hl7v2.model.v25.message.ADT_A01;
 import ca.uhn.hl7v2.model.v25.segment.PID;
 import ca.uhn.hl7v2.model.v25.segment.PV1;
 import ca.uhn.hl7v2.model.v25.segment.IN1;
-import com.healthdata.cdr.parser.Hl7v2ParserService;
+import com.healthdata.cdr.service.Hl7v2ParserService;
 import com.healthdata.cdr.converter.Hl7ToFhirConverter;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Encounter;

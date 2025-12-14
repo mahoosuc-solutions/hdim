@@ -143,7 +143,7 @@ public class MdmMessageHandler {
         }
 
         if (evn.getEventReasonCode() != null) {
-            eventData.put("eventReasonCode", evn.getEventReasonCode().getIdentifier().getValue());
+            eventData.put("eventReasonCode", evn.getEventReasonCode().getValue());
         }
 
         if (evn.getOperatorID(0) != null) {

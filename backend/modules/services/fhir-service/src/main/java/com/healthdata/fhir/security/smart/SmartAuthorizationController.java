@@ -1,0 +1,355 @@
+package com.healthdata.fhir.security.smart;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * Controller for SMART on FHIR OAuth 2.0 endpoints.
+ *
+ * Implements:
+ * - GET /oauth/authorize - Authorization endpoint
+ * - POST /oauth/token - Token endpoint
+ * - POST /oauth/revoke - Token revocation
+ * - GET /oauth/userinfo - User info (OpenID Connect)
+ */
+@Slf4j
+@RestController
+@RequestMapping("/oauth")
+@RequiredArgsConstructor
+public class SmartAuthorizationController {
+
+    private final SmartAuthorizationService authorizationService;
+    private final SmartClientRepository clientRepository;
+
+    /**
+     * OAuth 2.0 Authorization Endpoint.
+     *
+     * Initiates the authorization code flow.
+     * For simplicity, this auto-approves requests. In production,
+     * this should redirect to a consent screen.
+     */
+    @GetMapping("/authorize")
+    public RedirectView authorize(
+            @RequestParam("response_type") String responseType,
+            @RequestParam("client_id") String clientId,
+            @RequestParam("redirect_uri") String redirectUri,
+            @RequestParam(value = "scope", required = false) String scope,
+            @RequestParam(value = "state", required = false) String state,
+            @RequestParam(value = "aud", required = false) String audience,
+            @RequestParam(value = "launch", required = false) String launch,
+            @RequestParam(value = "code_challenge", required = false) String codeChallenge,
+            @RequestParam(value = "code_challenge_method", required = false, defaultValue = "S256") String codeChallengeMethod) {
+
+        log.info("Authorization request: client_id={}, scope={}", clientId, scope);
+
+        try {
+            // Validate client
+            SmartClient client = clientRepository.findByClientIdAndActiveTrue(clientId)
+                .orElseThrow(() -> new SmartAuthorizationException("invalid_client", "Unknown client"));
+
+            // Validate redirect URI
+            if (!client.isValidRedirectUri(redirectUri)) {
+                throw new SmartAuthorizationException("invalid_request", "Invalid redirect URI");
+            }
+
+            // Validate response type
+            if (!"code".equals(responseType)) {
+                return errorRedirect(redirectUri, "unsupported_response_type",
+                    "Only 'code' response type is supported", state);
+            }
+
+            // Parse and validate scopes
+            Set<String> requestedScopes = parseScopes(scope);
+            for (String s : requestedScopes) {
+                if (!client.isAllowedScope(s)) {
+                    return errorRedirect(redirectUri, "invalid_scope",
+                        "Scope not allowed: " + s, state);
+                }
+            }
+
+            // Build launch context
+            SmartLaunchContext launchContext = buildLaunchContext(launch, requestedScopes, audience);
+
+            // Generate authorization code
+            String code = authorizationService.generateAuthorizationCode(
+                clientId, redirectUri, requestedScopes, state,
+                codeChallenge, codeChallengeMethod, launchContext);
+
+            // Build redirect URL with code
+            String redirectUrl = buildRedirectUrl(redirectUri, code, state);
+            log.info("Authorization successful for client: {}", clientId);
+
+            return new RedirectView(redirectUrl);
+
+        } catch (SmartAuthorizationException e) {
+            log.warn("Authorization failed: {}", e.getMessage());
+            return errorRedirect(redirectUri, e.getErrorCode(), e.getErrorDescription(), state);
+        } catch (Exception e) {
+            log.error("Authorization error", e);
+            return errorRedirect(redirectUri, "server_error", "Internal server error", state);
+        }
+    }
+
+    /**
+     * OAuth 2.0 Token Endpoint.
+     *
+     * Supports:
+     * - authorization_code grant
+     * - refresh_token grant
+     * - client_credentials grant (for backend services)
+     */
+    @PostMapping(
+        path = "/token",
+        consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<?> token(
+            @RequestParam("grant_type") String grantType,
+            @RequestParam(value = "code", required = false) String code,
+            @RequestParam(value = "redirect_uri", required = false) String redirectUri,
+            @RequestParam(value = "client_id", required = false) String clientId,
+            @RequestParam(value = "client_secret", required = false) String clientSecret,
+            @RequestParam(value = "code_verifier", required = false) String codeVerifier,
+            @RequestParam(value = "refresh_token", required = false) String refreshToken,
+            @RequestParam(value = "scope", required = false) String scope,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        log.info("Token request: grant_type={}, client_id={}", grantType, clientId);
+
+        try {
+            // Extract client credentials from header if not in body
+            if (clientId == null && authHeader != null && authHeader.startsWith("Basic ")) {
+                String[] credentials = extractBasicCredentials(authHeader);
+                clientId = credentials[0];
+                clientSecret = credentials[1];
+            }
+
+            TokenResponse tokenResponse;
+
+            switch (grantType) {
+                case "authorization_code":
+                    if (code == null || redirectUri == null || clientId == null) {
+                        return errorResponse("invalid_request", "Missing required parameters");
+                    }
+                    tokenResponse = authorizationService.exchangeAuthorizationCode(
+                        code, clientId, redirectUri, codeVerifier);
+                    break;
+
+                case "refresh_token":
+                    if (refreshToken == null || clientId == null) {
+                        return errorResponse("invalid_request", "Missing refresh_token or client_id");
+                    }
+                    tokenResponse = authorizationService.refreshAccessToken(refreshToken, clientId);
+                    break;
+
+                case "client_credentials":
+                    if (clientId == null || clientSecret == null) {
+                        return errorResponse("invalid_request", "Missing client credentials");
+                    }
+                    Set<String> scopes = parseScopes(scope);
+                    tokenResponse = authorizationService.clientCredentialsGrant(
+                        clientId, clientSecret, scopes);
+                    break;
+
+                default:
+                    return errorResponse("unsupported_grant_type",
+                        "Grant type not supported: " + grantType);
+            }
+
+            log.info("Token issued for client: {}", clientId);
+            return ResponseEntity.ok(tokenResponse);
+
+        } catch (SmartAuthorizationException e) {
+            log.warn("Token request failed: {}", e.getMessage());
+            return errorResponse(e.getErrorCode(), e.getErrorDescription());
+        } catch (Exception e) {
+            log.error("Token error", e);
+            return errorResponse("server_error", "Internal server error");
+        }
+    }
+
+    /**
+     * Token Revocation Endpoint.
+     */
+    @PostMapping(
+        path = "/revoke",
+        consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE
+    )
+    public ResponseEntity<Void> revoke(
+            @RequestParam("token") String token,
+            @RequestParam(value = "token_type_hint", required = false) String tokenTypeHint) {
+
+        log.info("Token revocation request");
+        authorizationService.revokeToken(token, tokenTypeHint);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * User Info Endpoint (OpenID Connect).
+     */
+    @GetMapping(path = "/userinfo", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> userinfo(
+            @RequestHeader("Authorization") String authHeader) {
+
+        try {
+            if (!authHeader.startsWith("Bearer ")) {
+                return errorResponse("invalid_token", "Bearer token required");
+            }
+
+            String token = authHeader.substring(7);
+            var claims = authorizationService.validateAccessToken(token);
+
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("sub", claims.getSubject());
+
+            if (claims.containsKey("fhirUser")) {
+                userInfo.put("fhirUser", claims.get("fhirUser"));
+            }
+            if (claims.containsKey("patient")) {
+                userInfo.put("patient", claims.get("patient"));
+            }
+
+            return ResponseEntity.ok(userInfo);
+
+        } catch (Exception e) {
+            log.warn("User info request failed: {}", e.getMessage());
+            return errorResponse("invalid_token", "Token validation failed");
+        }
+    }
+
+    /**
+     * Token Introspection Endpoint.
+     */
+    @PostMapping(
+        path = "/introspect",
+        consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<?> introspect(
+            @RequestParam("token") String token,
+            @RequestParam(value = "token_type_hint", required = false) String tokenTypeHint) {
+
+        try {
+            var claims = authorizationService.validateAccessToken(token);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("active", true);
+            response.put("sub", claims.getSubject());
+            response.put("client_id", claims.get("client_id"));
+            response.put("scope", claims.get("scope"));
+            response.put("exp", claims.getExpiration().getTime() / 1000);
+            response.put("iat", claims.getIssuedAt().getTime() / 1000);
+            response.put("iss", claims.getIssuer());
+            response.put("aud", claims.getAudience());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            // Invalid token - return inactive
+            Map<String, Object> response = new HashMap<>();
+            response.put("active", false);
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    /**
+     * Parse scope string to set.
+     */
+    private Set<String> parseScopes(String scope) {
+        if (!StringUtils.hasText(scope)) {
+            return new HashSet<>();
+        }
+        return Arrays.stream(scope.split("\\s+"))
+            .filter(StringUtils::hasText)
+            .collect(Collectors.toSet());
+    }
+
+    /**
+     * Build launch context from parameters.
+     */
+    private SmartLaunchContext buildLaunchContext(String launch, Set<String> scopes, String audience) {
+        SmartLaunchContext.SmartLaunchContextBuilder builder = SmartLaunchContext.builder();
+        builder.audience(audience);
+
+        if (StringUtils.hasText(launch)) {
+            // EHR launch - decode launch parameter
+            builder.launch(launch);
+            builder.standalone(false);
+            // In a real implementation, decode the launch context from EHR
+        } else {
+            // Standalone launch
+            builder.standalone(true);
+        }
+
+        // For demo purposes, set some context if requested
+        if (scopes.contains("launch/patient") || scopes.contains("patient/*.read")) {
+            // In production, this would come from user selection or EHR context
+            builder.patient("demo-patient-001");
+        }
+
+        if (scopes.contains("launch/encounter")) {
+            builder.encounter("demo-encounter-001");
+        }
+
+        if (scopes.contains("fhirUser")) {
+            builder.fhirUser("Practitioner/demo-practitioner-001");
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * Build redirect URL with authorization code.
+     */
+    private String buildRedirectUrl(String redirectUri, String code, String state) {
+        StringBuilder url = new StringBuilder(redirectUri);
+        url.append(redirectUri.contains("?") ? "&" : "?");
+        url.append("code=").append(code);
+        if (StringUtils.hasText(state)) {
+            url.append("&state=").append(state);
+        }
+        return url.toString();
+    }
+
+    /**
+     * Build error redirect.
+     */
+    private RedirectView errorRedirect(String redirectUri, String error, String description, String state) {
+        StringBuilder url = new StringBuilder(redirectUri);
+        url.append(redirectUri.contains("?") ? "&" : "?");
+        url.append("error=").append(error);
+        url.append("&error_description=").append(description.replace(" ", "+"));
+        if (StringUtils.hasText(state)) {
+            url.append("&state=").append(state);
+        }
+        return new RedirectView(url.toString());
+    }
+
+    /**
+     * Build error response.
+     */
+    private ResponseEntity<Map<String, String>> errorResponse(String error, String description) {
+        Map<String, String> body = new HashMap<>();
+        body.put("error", error);
+        body.put("error_description", description);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    /**
+     * Extract credentials from Basic auth header.
+     */
+    private String[] extractBasicCredentials(String authHeader) {
+        String base64Credentials = authHeader.substring(6);
+        String credentials = new String(Base64.getDecoder().decode(base64Credentials));
+        return credentials.split(":", 2);
+    }
+}

@@ -4,6 +4,16 @@ import java.net.URI;
 
 import com.healthdata.audit.annotations.Audited;
 import com.healthdata.audit.models.AuditAction;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Patient;
 import org.springframework.http.HttpHeaders;
@@ -28,8 +38,15 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import com.healthdata.auth.context.ScopedTenant;
 
+/**
+ * FHIR R4 Patient Resource Controller.
+ *
+ * Provides CRUD operations for Patient resources following HL7 FHIR R4 specification.
+ */
 @RestController
 @RequestMapping(value = "/fhir", produces = "application/fhir+json")
+@Tag(name = "Patient", description = "Patient demographics and administrative information")
+@SecurityRequirement(name = "smart-oauth2")
 public class PatientController {
 
     private static final String DEFAULT_TENANT = "tenant-1";
@@ -43,6 +60,22 @@ public class PatientController {
         this.parser = FhirContext.forR4().newJsonParser().setPrettyPrint(false);
     }
 
+    @Operation(
+        summary = "Create a new Patient",
+        description = "Creates a new Patient resource. The server will assign an ID and return the created resource with version.",
+        operationId = "createPatient"
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "201",
+            description = "Patient created successfully",
+            headers = @Header(name = "Location", description = "URL of the created Patient resource"),
+            content = @Content(mediaType = "application/fhir+json", schema = @Schema(implementation = String.class))
+        ),
+        @ApiResponse(responseCode = "400", description = "Invalid Patient resource"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - missing or invalid authentication"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - insufficient permissions")
+    })
     @PostMapping(value = "/Patient", consumes = "application/fhir+json")
     @Audited(
             action = AuditAction.CREATE,
@@ -51,7 +84,13 @@ public class PatientController {
             description = "Create new patient record"
     )
     public ResponseEntity<String> createPatient(
+            @Parameter(description = "Tenant ID for multi-tenant isolation", example = "tenant-1")
             @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                description = "FHIR Patient resource in JSON format",
+                required = true,
+                content = @Content(mediaType = "application/fhir+json")
+            )
             @RequestBody String body) {
 
         Patient patient = parser.parseResource(Patient.class, body);
@@ -65,6 +104,21 @@ public class PatientController {
                 .body(payload);
     }
 
+    @Operation(
+        summary = "Read a Patient by ID",
+        description = "Retrieves a specific Patient resource by its logical ID.",
+        operationId = "readPatient"
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Patient found",
+            content = @Content(mediaType = "application/fhir+json")
+        ),
+        @ApiResponse(responseCode = "404", description = "Patient not found"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     @GetMapping("/Patient/{id}")
     @Audited(
             action = AuditAction.READ,
@@ -73,7 +127,9 @@ public class PatientController {
             description = "Read patient record"
     )
     public ResponseEntity<String> getPatient(
+            @Parameter(description = "Tenant ID for multi-tenant isolation")
             @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+            @Parameter(description = "Logical ID of the Patient resource", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable("id") String id) {
 
         return patientService.getPatient(resolveTenant(tenantId), id)
@@ -83,6 +139,21 @@ public class PatientController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
+    @Operation(
+        summary = "Search for Patients",
+        description = "Searches for Patient resources matching the specified criteria. Returns a FHIR Bundle containing matching patients.",
+        operationId = "searchPatients"
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Search completed successfully",
+            content = @Content(mediaType = "application/fhir+json", schema = @Schema(implementation = String.class))
+        ),
+        @ApiResponse(responseCode = "400", description = "Invalid search parameters"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     @GetMapping("/Patient")
     @Audited(
             action = AuditAction.SEARCH,
@@ -91,9 +162,13 @@ public class PatientController {
             description = "Search patient records"
     )
     public ResponseEntity<String> searchPatients(
+            @Parameter(description = "Tenant ID for multi-tenant isolation")
             @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+            @Parameter(description = "Patient family name (last name)", example = "Smith")
             @RequestParam(value = "family", required = false) String family,
+            @Parameter(description = "Patient name (searches given and family)", example = "John")
             @RequestParam(value = "name", required = false) String name,
+            @Parameter(description = "Maximum number of results to return", example = "20")
             @RequestParam(value = "_count", required = false, defaultValue = "20") int count) {
 
         String filter = family != null ? family : name;
@@ -103,6 +178,23 @@ public class PatientController {
                 .body(parser.encodeResourceToString(bundle));
     }
 
+    @Operation(
+        summary = "Update a Patient",
+        description = "Updates an existing Patient resource. The resource ID in the URL must match the resource ID in the body.",
+        operationId = "updatePatient"
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Patient updated successfully",
+            content = @Content(mediaType = "application/fhir+json", schema = @Schema(implementation = String.class))
+        ),
+        @ApiResponse(responseCode = "400", description = "Invalid Patient resource or ID mismatch"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "404", description = "Patient not found"),
+        @ApiResponse(responseCode = "409", description = "Version conflict")
+    })
     @PutMapping(value = "/Patient/{id}", consumes = "application/fhir+json")
     @Audited(
             action = AuditAction.UPDATE,
@@ -111,8 +203,15 @@ public class PatientController {
             description = "Update patient record"
     )
     public ResponseEntity<String> updatePatient(
+            @Parameter(description = "Tenant ID for multi-tenant isolation")
             @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+            @Parameter(description = "Logical ID of the Patient resource to update", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable("id") String id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                description = "Updated FHIR Patient resource in JSON format",
+                required = true,
+                content = @Content(mediaType = "application/fhir+json")
+            )
             @RequestBody String body) {
 
         Patient patient = parser.parseResource(Patient.class, body);
@@ -122,6 +221,17 @@ public class PatientController {
                 .body(parser.encodeResourceToString(updated));
     }
 
+    @Operation(
+        summary = "Delete a Patient",
+        description = "Deletes a Patient resource by its logical ID. This performs a soft delete for HIPAA compliance - the record is marked as deleted but retained for audit purposes.",
+        operationId = "deletePatient"
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Patient deleted successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "404", description = "Patient not found")
+    })
     @DeleteMapping("/Patient/{id}")
     @Audited(
             action = AuditAction.DELETE,
@@ -130,7 +240,9 @@ public class PatientController {
             description = "Delete patient record (soft delete for HIPAA compliance)"
     )
     public ResponseEntity<Void> deletePatient(
+            @Parameter(description = "Tenant ID for multi-tenant isolation")
             @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+            @Parameter(description = "Logical ID of the Patient resource to delete", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable("id") String id) {
 
         patientService.deletePatient(resolveTenant(tenantId), id, DEFAULT_ACTOR);

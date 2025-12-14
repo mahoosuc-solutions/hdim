@@ -24,9 +24,9 @@ export class ThemeService {
    * Initialize theme system - call this in app component
    */
   public initialize(): void {
-    // Load saved preference or default to 'auto'
+    // Load saved preference or default to 'light' for better readability
     const saved = localStorage.getItem(this.THEME_KEY) as ThemeMode | null;
-    const mode = saved || 'auto';
+    const mode = saved || 'light';
     this.themeMode.set(mode);
 
     // Apply theme based on preference

@@ -1,6 +1,7 @@
 package com.healthdata.quality.integration;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -53,8 +54,9 @@ import static org.awaitility.Awaitility.await;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-@ActiveProfiles("integration-test")
+@ActiveProfiles("test")
 @DisplayName("End-to-End Integration Tests")
+@Disabled("Requires full platform deployment - run manually with artillery or after docker compose up")
 public class EndToEndIntegrationTest {
 
     @Container
@@ -86,6 +88,8 @@ public class EndToEndIntegrationTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+        registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
         registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
     }
 

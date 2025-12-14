@@ -3,6 +3,8 @@ package com.healthdata.hcc.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.audit.repository.AuditEventRepository;
 import com.healthdata.audit.service.AuditService;
+import com.healthdata.authentication.filter.JwtAuthenticationFilter;
+import com.healthdata.authentication.repository.UserRepository;
 import com.healthdata.hcc.controller.HccController;
 import com.healthdata.hcc.persistence.*;
 import org.junit.jupiter.api.*;
@@ -13,7 +15,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -34,13 +39,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
         "spring.kafka.bootstrap-servers=",
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration",
-        "healthdata.persistence.primary.url=jdbc:h2:mem:hcctestdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;INIT=CREATE SCHEMA IF NOT EXISTS hcc",
-        "healthdata.persistence.primary.username=sa",
-        "healthdata.persistence.primary.password=",
-        "healthdata.persistence.primary.driver-class-name=org.h2.Driver",
-        "healthdata.persistence.primary.pool-name=h2-test-pool",
-        "healthdata.persistence.rls-enabled=false",
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration",
+        "spring.cache.type=simple",
+        "spring.jpa.hibernate.ddl-auto=create-drop",
         "healthdata.security.jwt.secret=test-secret-key-for-unit-testing-only-minimum-32-chars",
         "healthdata.security.jwt.accessTokenExpirationMs=900000",
         "healthdata.security.jwt.refreshTokenExpirationMs=604800000",
@@ -53,6 +54,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class HccApiIntegrationTest {
 
+    static PostgreSQLContainer<?> postgres;
+
+    static {
+        postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+            .withDatabaseName("hcctest")
+            .withUsername("test")
+            .withPassword("test")
+            .withInitScript("init-schema.sql");
+        postgres.start();
+    }
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
+
     @MockBean
     private KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -61,6 +80,12 @@ class HccApiIntegrationTest {
 
     @MockBean
     private AuditEventRepository auditEventRepository;
+
+    @MockBean
+    private UserRepository userRepository;
+
+    @MockBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Autowired
     private MockMvc mockMvc;
@@ -260,11 +285,11 @@ class HccApiIntegrationTest {
             mockMvc.perform(get("/api/v1/hcc/crosswalk")
                     .param("icd10Codes", "E11.9", "J44.1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.E11\\.9").exists())
-                .andExpect(jsonPath("$.E11\\.9.hccCodeV24").value("HCC19"))
-                .andExpect(jsonPath("$.E11\\.9.hccCodeV28").value("HCC37"))
-                .andExpect(jsonPath("$.J44\\.1").exists())
-                .andExpect(jsonPath("$.J44\\.1.hccCodeV24").value("HCC111"));
+                .andExpect(jsonPath("$['E11.9']").exists())
+                .andExpect(jsonPath("$['E11.9'].hccCodeV24").value("HCC19"))
+                .andExpect(jsonPath("$['E11.9'].hccCodeV28").value("HCC37"))
+                .andExpect(jsonPath("$['J44.1']").exists())
+                .andExpect(jsonPath("$['J44.1'].hccCodeV24").value("HCC111"));
         }
 
         @Test
@@ -279,13 +304,16 @@ class HccApiIntegrationTest {
 
         @Test
         @Order(22)
-        @DisplayName("Should filter out non-HCC mappings")
-        void getCrosswalk_withNonHccCode_shouldNotIncludeInResult() throws Exception {
+        @DisplayName("Should return non-HCC codes with null HCC values")
+        void getCrosswalk_withNonHccCode_shouldHaveNullHccCodes() throws Exception {
             mockMvc.perform(get("/api/v1/hcc/crosswalk")
                     .param("icd10Codes", "I10", "E11.9"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.I10").doesNotExist())  // I10 has no HCC mapping
-                .andExpect(jsonPath("$.E11\\.9").exists());
+                .andExpect(jsonPath("$.I10").exists())
+                .andExpect(jsonPath("$.I10.hccCodeV24").doesNotExist())  // I10 has no HCC mapping
+                .andExpect(jsonPath("$.I10.hccCodeV28").doesNotExist())
+                .andExpect(jsonPath("$['E11.9']").exists())
+                .andExpect(jsonPath("$['E11.9'].hccCodeV24").value("HCC19"));
         }
     }
 

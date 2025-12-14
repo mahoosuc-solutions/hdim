@@ -37,7 +37,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @SpringBootApplication(scanBasePackages = {
     "com.healthdata.ecr",
-    "com.healthdata.authentication",
     "com.healthdata.audit"
 })
 @Import({JwtAuthenticationFilter.class, JwtTokenService.class, JwtConfig.class})

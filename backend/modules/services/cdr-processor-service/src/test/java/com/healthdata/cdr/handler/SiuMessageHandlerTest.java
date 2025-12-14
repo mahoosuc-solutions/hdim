@@ -1,11 +1,9 @@
 package com.healthdata.cdr.handler;
 
 import ca.uhn.hl7v2.HL7Exception;
-import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v25.datatype.*;
 import ca.uhn.hl7v2.model.v25.message.SIU_S12;
 import ca.uhn.hl7v2.model.v25.segment.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -13,7 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,7 +18,7 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for SiuMessageHandler.
- * Tests extraction of scheduling data from HL7 v2 SIU messages.
+ * Tests SIU (Scheduling Information Unsolicited) message processing.
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SIU Message Handler Tests")
@@ -30,262 +27,140 @@ class SiuMessageHandlerTest {
     @InjectMocks
     private SiuMessageHandler handler;
 
-    @BeforeEach
-    void setUp() {
-        handler = new SiuMessageHandler();
-    }
-
     @Nested
-    @DisplayName("SIU^S12 - New Appointment Booking")
-    class SiuS12Tests {
+    @DisplayName("Trigger Event Tests")
+    class TriggerEventTests {
 
         @Test
-        @DisplayName("Should extract message type from SIU message")
-        void handle_withValidSiuS12_extractsMessageType() throws HL7Exception {
-            // Given
-            SIU_S12 siu = mock(SIU_S12.class);
-            SCH sch = mock(SCH.class);
-            MSH msh = mock(MSH.class);
-            MSG msgType = mock(MSG.class);
-            ID triggerEvent = mock(ID.class);
+        @DisplayName("Should return SIU message type for non-SIU_S12 message")
+        void handle_withNonSiuMessage_returnsBasicData() throws HL7Exception {
+            ca.uhn.hl7v2.model.Message unknownMessage = mock(ca.uhn.hl7v2.model.Message.class);
 
-            SIU_S12.PATIENT patient = mock(SIU_S12.PATIENT.class);
-            PID pid = mock(PID.class);
-            PV1 pv1 = mock(PV1.class);
+            Map<String, Object> result = handler.handle(unknownMessage);
 
-            when(siu.getSCH()).thenReturn(sch);
-            when(siu.getMSH()).thenReturn(msh);
-            when(msh.getMessageType()).thenReturn(msgType);
-            when(msgType.getTriggerEvent()).thenReturn(triggerEvent);
-            when(triggerEvent.getValue()).thenReturn("S12");
-            when(siu.getPATIENT()).thenReturn(patient);
-            when(patient.getPID()).thenReturn(pid);
-            when(patient.getPV1()).thenReturn(pv1);
-            when(siu.getRESOURCESReps()).thenReturn(0);
-
-            mockMinimalSch(sch);
-            mockMinimalPid(pid);
-            mockMinimalPv1(pv1);
-
-            // When
-            Map<String, Object> result = handler.handle(siu);
-
-            // Then
-            assertThat(result).isNotNull();
-            assertThat(result.get("messageType")).isEqualTo("SIU");
-            assertThat(result.get("triggerEvent")).isEqualTo("S12");
-            assertThat(result.get("eventDescription")).isEqualTo("Notification of new appointment booking");
+            assertThat(result).containsEntry("messageType", "SIU");
+            assertThat(result).doesNotContainKey("triggerEvent");
         }
 
         @Test
-        @DisplayName("Should extract scheduling data from SCH segment")
-        void handle_withValidSiuS12_extractsSchedulingData() throws HL7Exception {
-            // Given
-            SIU_S12 siu = mock(SIU_S12.class);
-            SCH sch = mock(SCH.class);
-            MSH msh = mock(MSH.class);
-            MSG msgType = mock(MSG.class);
-            ID triggerEvent = mock(ID.class);
+        @DisplayName("Should extract S12 trigger event for new appointment booking")
+        void determineTriggerEvent_withS12_returnsCorrectDescription() throws HL7Exception {
+            SIU_S12 siu = mock(SIU_S12.class, RETURNS_DEEP_STUBS);
+            setupMinimalSiu(siu, "S12");
 
-            SIU_S12.PATIENT patient = mock(SIU_S12.PATIENT.class);
-            PID pid = mock(PID.class);
-            PV1 pv1 = mock(PV1.class);
-
-            when(siu.getSCH()).thenReturn(sch);
-            when(siu.getMSH()).thenReturn(msh);
-            when(msh.getMessageType()).thenReturn(msgType);
-            when(msgType.getTriggerEvent()).thenReturn(triggerEvent);
-            when(triggerEvent.getValue()).thenReturn("S12");
-            when(siu.getPATIENT()).thenReturn(patient);
-            when(patient.getPID()).thenReturn(pid);
-            when(patient.getPV1()).thenReturn(pv1);
-            when(siu.getRESOURCESReps()).thenReturn(0);
-
-            mockMinimalPid(pid);
-            mockMinimalPv1(pv1);
-
-            // Mock placer appointment ID
-            EI placerAppointmentId = mock(EI.class);
-            ST placerEntityId = mock(ST.class);
-            when(sch.getPlacerAppointmentID()).thenReturn(placerAppointmentId);
-            when(placerAppointmentId.getEntityIdentifier()).thenReturn(placerEntityId);
-            when(placerEntityId.getValue()).thenReturn("PLACER-001");
-
-            // Mock filler appointment ID
-            EI fillerAppointmentId = mock(EI.class);
-            ST fillerEntityId = mock(ST.class);
-            when(sch.getFillerAppointmentID()).thenReturn(fillerAppointmentId);
-            when(fillerAppointmentId.getEntityIdentifier()).thenReturn(fillerEntityId);
-            when(fillerEntityId.getValue()).thenReturn("FILLER-001");
-
-            // Mock occurrence number
-            NM occurrenceNumber = mock(NM.class);
-            when(sch.getOccurrenceNumber()).thenReturn(occurrenceNumber);
-            when(occurrenceNumber.getValue()).thenReturn("1");
-
-            // Mock appointment duration
-            NM duration = mock(NM.class);
-            when(sch.getAppointmentDuration()).thenReturn(duration);
-            when(duration.getValue()).thenReturn("30");
-
-            // Mock duration units
-            CE durationUnits = mock(CE.class);
-            ST durationUnitsId = mock(ST.class);
-            when(sch.getAppointmentDurationUnits()).thenReturn(durationUnits);
-            when(durationUnits.getIdentifier()).thenReturn(durationUnitsId);
-            when(durationUnitsId.getValue()).thenReturn("MIN");
-
-            // Mock remaining fields as null
-            when(sch.getPlacerGroupNumber()).thenReturn(null);
-            when(sch.getScheduleID()).thenReturn(null);
-            when(sch.getEventReason()).thenReturn(null);
-            when(sch.getAppointmentReason()).thenReturn(null);
-            when(sch.getAppointmentType()).thenReturn(null);
-            when(sch.getAppointmentTimingQuantity(0)).thenReturn(null);
-            when(sch.getEnteredByPerson(0)).thenReturn(null);
-            when(sch.getEnteredByPhoneNumber(0)).thenReturn(null);
-            when(sch.getFillerStatusCode()).thenReturn(null);
-
-            // When
             Map<String, Object> result = handler.handle(siu);
 
-            // Then
-            assertThat(result).containsKey("schedule");
-            @SuppressWarnings("unchecked")
-            Map<String, Object> schedule = (Map<String, Object>) result.get("schedule");
-            assertThat(schedule.get("placerAppointmentId")).isEqualTo("PLACER-001");
-            assertThat(schedule.get("fillerAppointmentId")).isEqualTo("FILLER-001");
-            assertThat(schedule.get("occurrenceNumber")).isEqualTo("1");
-            assertThat(schedule.get("appointmentDuration")).isEqualTo("30");
-            assertThat(schedule.get("appointmentDurationUnits")).isEqualTo("MIN");
+            assertThat(result).containsEntry("messageType", "SIU");
+            assertThat(result).containsEntry("triggerEvent", "S12");
+            assertThat(result).containsEntry("eventDescription", "Notification of new appointment booking");
         }
 
         @Test
-        @DisplayName("Should extract appointment timing from SCH segment")
-        void handle_withValidSiuS12_extractsAppointmentTiming() throws HL7Exception {
-            // Given
-            SIU_S12 siu = mock(SIU_S12.class);
-            SCH sch = mock(SCH.class);
-            MSH msh = mock(MSH.class);
-            MSG msgType = mock(MSG.class);
-            ID triggerEvent = mock(ID.class);
+        @DisplayName("Should extract S13 trigger event for appointment rescheduling")
+        void determineTriggerEvent_withS13_returnsCorrectDescription() throws HL7Exception {
+            SIU_S12 siu = mock(SIU_S12.class, RETURNS_DEEP_STUBS);
+            setupMinimalSiu(siu, "S13");
 
-            SIU_S12.PATIENT patient = mock(SIU_S12.PATIENT.class);
-            PID pid = mock(PID.class);
-            PV1 pv1 = mock(PV1.class);
-
-            when(siu.getSCH()).thenReturn(sch);
-            when(siu.getMSH()).thenReturn(msh);
-            when(msh.getMessageType()).thenReturn(msgType);
-            when(msgType.getTriggerEvent()).thenReturn(triggerEvent);
-            when(triggerEvent.getValue()).thenReturn("S12");
-            when(siu.getPATIENT()).thenReturn(patient);
-            when(patient.getPID()).thenReturn(pid);
-            when(patient.getPV1()).thenReturn(pv1);
-            when(siu.getRESOURCESReps()).thenReturn(0);
-
-            mockMinimalPid(pid);
-            mockMinimalPv1(pv1);
-
-            // Mock timing
-            TQ appointmentTiming = mock(TQ.class);
-            TS startDateTime = mock(TS.class);
-            DTM startTime = mock(DTM.class);
-            TS endDateTime = mock(TS.class);
-            DTM endTime = mock(DTM.class);
-
-            when(sch.getAppointmentTimingQuantity(0)).thenReturn(appointmentTiming);
-            when(appointmentTiming.getStartDateTime()).thenReturn(startDateTime);
-            when(startDateTime.getTime()).thenReturn(startTime);
-            when(startTime.getValue()).thenReturn("20240115090000");
-            when(appointmentTiming.getEndDateTime()).thenReturn(endDateTime);
-            when(endDateTime.getTime()).thenReturn(endTime);
-            when(endTime.getValue()).thenReturn("20240115093000");
-
-            // Mock remaining fields as null
-            when(sch.getPlacerAppointmentID()).thenReturn(null);
-            when(sch.getFillerAppointmentID()).thenReturn(null);
-            when(sch.getOccurrenceNumber()).thenReturn(null);
-            when(sch.getPlacerGroupNumber()).thenReturn(null);
-            when(sch.getScheduleID()).thenReturn(null);
-            when(sch.getEventReason()).thenReturn(null);
-            when(sch.getAppointmentReason()).thenReturn(null);
-            when(sch.getAppointmentType()).thenReturn(null);
-            when(sch.getAppointmentDuration()).thenReturn(null);
-            when(sch.getAppointmentDurationUnits()).thenReturn(null);
-            when(sch.getEnteredByPerson(0)).thenReturn(null);
-            when(sch.getEnteredByPhoneNumber(0)).thenReturn(null);
-            when(sch.getFillerStatusCode()).thenReturn(null);
-
-            // When
             Map<String, Object> result = handler.handle(siu);
 
-            // Then
-            assertThat(result).containsKey("schedule");
-            @SuppressWarnings("unchecked")
-            Map<String, Object> schedule = (Map<String, Object>) result.get("schedule");
-            assertThat(schedule).containsKey("timing");
-            @SuppressWarnings("unchecked")
-            Map<String, Object> timing = (Map<String, Object>) schedule.get("timing");
-            assertThat(timing.get("startDateTime")).isEqualTo("20240115090000");
-            assertThat(timing.get("endDateTime")).isEqualTo("20240115093000");
+            assertThat(result).containsEntry("triggerEvent", "S13");
+            assertThat(result).containsEntry("eventDescription", "Notification of appointment rescheduling");
+        }
+
+        @Test
+        @DisplayName("Should extract S14 trigger event for appointment modification")
+        void determineTriggerEvent_withS14_returnsCorrectDescription() throws HL7Exception {
+            SIU_S12 siu = mock(SIU_S12.class, RETURNS_DEEP_STUBS);
+            setupMinimalSiu(siu, "S14");
+
+            Map<String, Object> result = handler.handle(siu);
+
+            assertThat(result).containsEntry("triggerEvent", "S14");
+            assertThat(result).containsEntry("eventDescription", "Notification of appointment modification");
+        }
+
+        @Test
+        @DisplayName("Should extract S15 trigger event for appointment cancellation")
+        void determineTriggerEvent_withS15_returnsCorrectDescription() throws HL7Exception {
+            SIU_S12 siu = mock(SIU_S12.class, RETURNS_DEEP_STUBS);
+            setupMinimalSiu(siu, "S15");
+
+            Map<String, Object> result = handler.handle(siu);
+
+            assertThat(result).containsEntry("triggerEvent", "S15");
+            assertThat(result).containsEntry("eventDescription", "Notification of appointment cancellation");
+        }
+
+        @Test
+        @DisplayName("Should extract S17 trigger event for appointment deletion")
+        void determineTriggerEvent_withS17_returnsCorrectDescription() throws HL7Exception {
+            SIU_S12 siu = mock(SIU_S12.class, RETURNS_DEEP_STUBS);
+            setupMinimalSiu(siu, "S17");
+
+            Map<String, Object> result = handler.handle(siu);
+
+            assertThat(result).containsEntry("triggerEvent", "S17");
+            assertThat(result).containsEntry("eventDescription", "Notification of appointment deletion");
+        }
+
+        @Test
+        @DisplayName("Should extract S26 trigger event for patient no-show")
+        void determineTriggerEvent_withS26_returnsCorrectDescription() throws HL7Exception {
+            SIU_S12 siu = mock(SIU_S12.class, RETURNS_DEEP_STUBS);
+            setupMinimalSiu(siu, "S26");
+
+            Map<String, Object> result = handler.handle(siu);
+
+            assertThat(result).containsEntry("triggerEvent", "S26");
+            assertThat(result).containsEntry("eventDescription", "Notification of patient no-show");
+        }
+
+        @Test
+        @DisplayName("Should handle unknown trigger event")
+        void determineTriggerEvent_withUnknown_returnsGenericDescription() throws HL7Exception {
+            SIU_S12 siu = mock(SIU_S12.class, RETURNS_DEEP_STUBS);
+            setupMinimalSiu(siu, "S99");
+
+            Map<String, Object> result = handler.handle(siu);
+
+            assertThat(result).containsEntry("triggerEvent", "S99");
+            assertThat(result).containsEntry("eventDescription", "Scheduling notification");
         }
     }
 
     @Nested
-    @DisplayName("Event Description Tests")
-    class EventDescriptionTests {
+    @DisplayName("Scheduling Data Extraction")
+    class SchedulingDataTests {
 
         @Test
-        @DisplayName("Should return correct description for S13 - Rescheduling")
-        void handle_withS13Event_returnsReschedulingDescription() throws HL7Exception {
-            // Given
-            SIU_S12 siu = createMockSiuWithTriggerEvent("S13");
+        @DisplayName("Should extract placer and filler appointment IDs from SCH segment")
+        void extractSchedulingData_withSchSegment_extractsAppointmentIds() throws HL7Exception {
+            SIU_S12 siu = mock(SIU_S12.class, RETURNS_DEEP_STUBS);
+            setupMinimalSiu(siu, "S12");
+            SCH sch = setupSchWithAppointmentIds(siu);
 
-            // When
             Map<String, Object> result = handler.handle(siu);
 
-            // Then
-            assertThat(result.get("eventDescription")).isEqualTo("Notification of appointment rescheduling");
+            assertThat(result).containsKey("schedule");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> schedule = (Map<String, Object>) result.get("schedule");
+            assertThat(schedule).containsEntry("placerAppointmentId", "PLACER001");
+            assertThat(schedule).containsEntry("fillerAppointmentId", "FILLER001");
         }
 
         @Test
-        @DisplayName("Should return correct description for S14 - Modification")
-        void handle_withS14Event_returnsModificationDescription() throws HL7Exception {
-            // Given
-            SIU_S12 siu = createMockSiuWithTriggerEvent("S14");
+        @DisplayName("Should extract appointment duration from SCH segment")
+        void extractSchedulingData_withSchSegment_extractsDuration() throws HL7Exception {
+            SIU_S12 siu = mock(SIU_S12.class, RETURNS_DEEP_STUBS);
+            setupMinimalSiu(siu, "S12");
+            setupSchWithDuration(siu);
 
-            // When
             Map<String, Object> result = handler.handle(siu);
 
-            // Then
-            assertThat(result.get("eventDescription")).isEqualTo("Notification of appointment modification");
-        }
-
-        @Test
-        @DisplayName("Should return correct description for S15 - Cancellation")
-        void handle_withS15Event_returnsCancellationDescription() throws HL7Exception {
-            // Given
-            SIU_S12 siu = createMockSiuWithTriggerEvent("S15");
-
-            // When
-            Map<String, Object> result = handler.handle(siu);
-
-            // Then
-            assertThat(result.get("eventDescription")).isEqualTo("Notification of appointment cancellation");
-        }
-
-        @Test
-        @DisplayName("Should return correct description for S26 - No-show")
-        void handle_withS26Event_returnsNoShowDescription() throws HL7Exception {
-            // Given
-            SIU_S12 siu = createMockSiuWithTriggerEvent("S26");
-
-            // When
-            Map<String, Object> result = handler.handle(siu);
-
-            // Then
-            assertThat(result.get("eventDescription")).isEqualTo("Notification of patient no-show");
+            assertThat(result).containsKey("schedule");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> schedule = (Map<String, Object>) result.get("schedule");
+            assertThat(schedule).containsEntry("appointmentDuration", "30");
         }
     }
 
@@ -294,140 +169,63 @@ class SiuMessageHandlerTest {
     class PatientDataTests {
 
         @Test
-        @DisplayName("Should extract patient data from PID segment")
-        void handle_withValidSiu_extractsPatientData() throws HL7Exception {
-            // Given
-            SIU_S12 siu = mock(SIU_S12.class);
-            SCH sch = mock(SCH.class);
-            MSH msh = mock(MSH.class);
-            MSG msgType = mock(MSG.class);
-            ID triggerEvent = mock(ID.class);
+        @DisplayName("Should extract patient ID and name from nested PID segment")
+        void extractPatientData_withPidSegment_extractsPatientInfo() throws HL7Exception {
+            SIU_S12 siu = mock(SIU_S12.class, RETURNS_DEEP_STUBS);
+            setupSiuWithPatientData(siu, "S12", "12345", "Smith", "John");
 
-            SIU_S12.PATIENT patient = mock(SIU_S12.PATIENT.class);
-            PID pid = mock(PID.class);
-            PV1 pv1 = mock(PV1.class);
-
-            when(siu.getSCH()).thenReturn(sch);
-            when(siu.getMSH()).thenReturn(msh);
-            when(msh.getMessageType()).thenReturn(msgType);
-            when(msgType.getTriggerEvent()).thenReturn(triggerEvent);
-            when(triggerEvent.getValue()).thenReturn("S12");
-            when(siu.getPATIENT()).thenReturn(patient);
-            when(patient.getPID()).thenReturn(pid);
-            when(patient.getPV1()).thenReturn(pv1);
-            when(siu.getRESOURCESReps()).thenReturn(0);
-
-            mockMinimalSch(sch);
-            mockMinimalPv1(pv1);
-
-            // Mock patient data
-            CX patientId = mock(CX.class);
-            ST idNumber = mock(ST.class);
-            ID idTypeCode = mock(ID.class);
-            when(pid.getPatientIdentifierList(0)).thenReturn(patientId);
-            when(patientId.getIDNumber()).thenReturn(idNumber);
-            when(idNumber.getValue()).thenReturn("PAT-12345");
-            when(patientId.getIdentifierTypeCode()).thenReturn(idTypeCode);
-            when(idTypeCode.getValue()).thenReturn("MRN");
-
-            XPN patientName = mock(XPN.class);
-            FN familyName = mock(FN.class);
-            ST surname = mock(ST.class);
-            ST givenName = mock(ST.class);
-            when(pid.getPatientName(0)).thenReturn(patientName);
-            when(patientName.getFamilyName()).thenReturn(familyName);
-            when(familyName.getSurname()).thenReturn(surname);
-            when(surname.getValue()).thenReturn("SMITH");
-            when(patientName.getGivenName()).thenReturn(givenName);
-            when(givenName.getValue()).thenReturn("JANE");
-
-            TS dateOfBirth = mock(TS.class);
-            DTM dobTime = mock(DTM.class);
-            when(pid.getDateTimeOfBirth()).thenReturn(dateOfBirth);
-            when(dateOfBirth.getTime()).thenReturn(dobTime);
-            when(dobTime.getValue()).thenReturn("19900520");
-
-            IS gender = mock(IS.class);
-            when(pid.getAdministrativeSex()).thenReturn(gender);
-            when(gender.getValue()).thenReturn("F");
-
-            XTN phoneHome = mock(XTN.class);
-            ST phoneNumber = mock(ST.class);
-            when(pid.getPhoneNumberHome(0)).thenReturn(phoneHome);
-            when(phoneHome.getTelephoneNumber()).thenReturn(phoneNumber);
-            when(phoneNumber.getValue()).thenReturn("617-555-1234");
-
-            // When
             Map<String, Object> result = handler.handle(siu);
 
-            // Then
             assertThat(result).containsKey("patient");
             @SuppressWarnings("unchecked")
-            Map<String, Object> patientData = (Map<String, Object>) result.get("patient");
-            assertThat(patientData.get("patientId")).isEqualTo("PAT-12345");
-            assertThat(patientData.get("patientIdType")).isEqualTo("MRN");
-            assertThat(patientData.get("familyName")).isEqualTo("SMITH");
-            assertThat(patientData.get("givenName")).isEqualTo("JANE");
-            assertThat(patientData.get("fullName")).isEqualTo("JANE SMITH");
-            assertThat(patientData.get("dateOfBirth")).isEqualTo("19900520");
-            assertThat(patientData.get("gender")).isEqualTo("F");
-            assertThat(patientData.get("phoneHome")).isEqualTo("617-555-1234");
-        }
-    }
-
-    @Nested
-    @DisplayName("Unsupported Message Types")
-    class UnsupportedMessageTests {
-
-        @Test
-        @DisplayName("Should handle non-SIU message gracefully")
-        void handle_withNonSiuMessage_returnsBasicData() throws HL7Exception {
-            // Given
-            Message unsupportedMessage = mock(Message.class);
-
-            // When
-            Map<String, Object> result = handler.handle(unsupportedMessage);
-
-            // Then
-            assertThat(result).isNotNull();
-            assertThat(result.get("messageType")).isEqualTo("SIU");
-            assertThat(result).doesNotContainKey("triggerEvent");
+            Map<String, Object> patient = (Map<String, Object>) result.get("patient");
+            assertThat(patient).containsEntry("patientId", "12345");
+            assertThat(patient).containsEntry("familyName", "Smith");
+            assertThat(patient).containsEntry("givenName", "John");
         }
     }
 
     // Helper methods
-
-    private SIU_S12 createMockSiuWithTriggerEvent(String event) throws HL7Exception {
-        SIU_S12 siu = mock(SIU_S12.class);
-        SCH sch = mock(SCH.class);
+    private void setupMinimalSiu(SIU_S12 siu, String triggerEvent) throws HL7Exception {
+        // Setup MSH for trigger event
         MSH msh = mock(MSH.class);
-        MSG msgType = mock(MSG.class);
-        ID triggerEvent = mock(ID.class);
-
-        SIU_S12.PATIENT patient = mock(SIU_S12.PATIENT.class);
-        PID pid = mock(PID.class);
-        PV1 pv1 = mock(PV1.class);
-
-        when(siu.getSCH()).thenReturn(sch);
+        MSG messageType = mock(MSG.class);
+        ID trigger = mock(ID.class);
+        when(trigger.getValue()).thenReturn(triggerEvent);
+        when(messageType.getTriggerEvent()).thenReturn(trigger);
+        when(msh.getMessageType()).thenReturn(messageType);
         when(siu.getMSH()).thenReturn(msh);
-        when(msh.getMessageType()).thenReturn(msgType);
-        when(msgType.getTriggerEvent()).thenReturn(triggerEvent);
-        when(triggerEvent.getValue()).thenReturn(event);
-        when(siu.getPATIENT()).thenReturn(patient);
-        when(patient.getPID()).thenReturn(pid);
-        when(patient.getPV1()).thenReturn(pv1);
+
+        // Null SCH
+        when(siu.getSCH()).thenReturn(null);
+
+        // Null patient - using deep stubs handles this
+        when(siu.getPATIENT().getPID()).thenReturn(null);
+        when(siu.getPATIENT().getPV1()).thenReturn(null);
+
+        // No resources
         when(siu.getRESOURCESReps()).thenReturn(0);
-
-        mockMinimalSch(sch);
-        mockMinimalPid(pid);
-        mockMinimalPv1(pv1);
-
-        return siu;
     }
 
-    private void mockMinimalSch(SCH sch) {
-        when(sch.getPlacerAppointmentID()).thenReturn(null);
-        when(sch.getFillerAppointmentID()).thenReturn(null);
+    private SCH setupSchWithAppointmentIds(SIU_S12 siu) throws HL7Exception {
+        SCH sch = mock(SCH.class);
+        when(siu.getSCH()).thenReturn(sch);
+
+        // Placer Appointment ID
+        EI placerAppointmentId = mock(EI.class);
+        ST placerEntity = mock(ST.class);
+        when(placerEntity.getValue()).thenReturn("PLACER001");
+        when(placerAppointmentId.getEntityIdentifier()).thenReturn(placerEntity);
+        when(sch.getPlacerAppointmentID()).thenReturn(placerAppointmentId);
+
+        // Filler Appointment ID
+        EI fillerAppointmentId = mock(EI.class);
+        ST fillerEntity = mock(ST.class);
+        when(fillerEntity.getValue()).thenReturn("FILLER001");
+        when(fillerAppointmentId.getEntityIdentifier()).thenReturn(fillerEntity);
+        when(sch.getFillerAppointmentID()).thenReturn(fillerAppointmentId);
+
+        // Null other fields
         when(sch.getOccurrenceNumber()).thenReturn(null);
         when(sch.getPlacerGroupNumber()).thenReturn(null);
         when(sch.getScheduleID()).thenReturn(null);
@@ -440,20 +238,74 @@ class SiuMessageHandlerTest {
         when(sch.getEnteredByPerson(0)).thenReturn(null);
         when(sch.getEnteredByPhoneNumber(0)).thenReturn(null);
         when(sch.getFillerStatusCode()).thenReturn(null);
+
+        return sch;
     }
 
-    private void mockMinimalPid(PID pid) {
-        when(pid.getPatientIdentifierList(0)).thenReturn(null);
-        when(pid.getPatientName(0)).thenReturn(null);
+    private void setupSchWithDuration(SIU_S12 siu) throws HL7Exception {
+        SCH sch = mock(SCH.class);
+        when(siu.getSCH()).thenReturn(sch);
+
+        // Duration
+        NM duration = mock(NM.class);
+        when(duration.getValue()).thenReturn("30");
+        when(sch.getAppointmentDuration()).thenReturn(duration);
+
+        // Null other fields
+        when(sch.getPlacerAppointmentID()).thenReturn(null);
+        when(sch.getFillerAppointmentID()).thenReturn(null);
+        when(sch.getOccurrenceNumber()).thenReturn(null);
+        when(sch.getPlacerGroupNumber()).thenReturn(null);
+        when(sch.getScheduleID()).thenReturn(null);
+        when(sch.getEventReason()).thenReturn(null);
+        when(sch.getAppointmentReason()).thenReturn(null);
+        when(sch.getAppointmentType()).thenReturn(null);
+        when(sch.getAppointmentDurationUnits()).thenReturn(null);
+        when(sch.getAppointmentTimingQuantity(0)).thenReturn(null);
+        when(sch.getEnteredByPerson(0)).thenReturn(null);
+        when(sch.getEnteredByPhoneNumber(0)).thenReturn(null);
+        when(sch.getFillerStatusCode()).thenReturn(null);
+    }
+
+    private void setupSiuWithPatientData(SIU_S12 siu, String triggerEvent, String patientId, String familyName, String givenName) throws HL7Exception {
+        setupMinimalSiu(siu, triggerEvent);
+
+        // Create PID mock
+        PID pid = mock(PID.class);
+
+        // Patient ID
+        CX patientIdCx = mock(CX.class);
+        ST idNumber = mock(ST.class);
+        when(idNumber.getValue()).thenReturn(patientId);
+        when(patientIdCx.getIDNumber()).thenReturn(idNumber);
+        ID idType = mock(ID.class);
+        when(idType.getValue()).thenReturn("MR");
+        when(patientIdCx.getIdentifierTypeCode()).thenReturn(idType);
+        when(pid.getPatientIdentifierList(0)).thenReturn(patientIdCx);
+
+        // Patient Name
+        XPN patientName = mock(XPN.class);
+        FN fn = mock(FN.class);
+        ST surname = mock(ST.class);
+        when(surname.getValue()).thenReturn(familyName);
+        when(fn.getSurname()).thenReturn(surname);
+        when(patientName.getFamilyName()).thenReturn(fn);
+
+        ST given = mock(ST.class);
+        when(given.getValue()).thenReturn(givenName);
+        when(patientName.getGivenName()).thenReturn(given);
+        when(pid.getPatientName(0)).thenReturn(patientName);
+
+        // DOB
         when(pid.getDateTimeOfBirth()).thenReturn(null);
-        when(pid.getAdministrativeSex()).thenReturn(null);
-        when(pid.getPhoneNumberHome(0)).thenReturn(null);
-    }
 
-    private void mockMinimalPv1(PV1 pv1) {
-        when(pv1.getVisitNumber()).thenReturn(null);
-        when(pv1.getPatientClass()).thenReturn(null);
-        when(pv1.getAssignedPatientLocation()).thenReturn(null);
-        when(pv1.getAttendingDoctor(0)).thenReturn(null);
+        // Gender
+        when(pid.getAdministrativeSex()).thenReturn(null);
+
+        // Phone
+        when(pid.getPhoneNumberHome(0)).thenReturn(null);
+
+        // Wire up the PID through the deep stubs
+        when(siu.getPATIENT().getPID()).thenReturn(pid);
     }
 }

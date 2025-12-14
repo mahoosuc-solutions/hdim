@@ -151,7 +151,8 @@ public class RctcRulesEngine {
      */
     @Cacheable(value = "rctcTriggerCheck", key = "#code + ':' + #codeSystem")
     public boolean isReportableTrigger(String code, String codeSystem) {
-        return triggerCodeRepository.isReportableTrigger(code, codeSystem);
+        String normalizedCode = normalizeCode(code, codeSystem);
+        return triggerCodeRepository.isReportableTrigger(normalizedCode, codeSystem);
     }
 
     /**

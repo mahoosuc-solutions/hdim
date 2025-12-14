@@ -3,6 +3,8 @@ package com.healthdata.ecr.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.audit.repository.AuditEventRepository;
 import com.healthdata.audit.service.AuditService;
+import com.healthdata.authentication.filter.JwtAuthenticationFilter;
+import com.healthdata.authentication.repository.UserRepository;
 import com.healthdata.ecr.controller.EcrController;
 import com.healthdata.ecr.persistence.*;
 import com.healthdata.ecr.persistence.ElectronicCaseReportEntity.*;
@@ -34,13 +36,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
         "spring.kafka.bootstrap-servers=",
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration",
-        "healthdata.persistence.primary.url=jdbc:h2:mem:ecrtestdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;INIT=CREATE SCHEMA IF NOT EXISTS ecr",
-        "healthdata.persistence.primary.username=sa",
-        "healthdata.persistence.primary.password=",
-        "healthdata.persistence.primary.driver-class-name=org.h2.Driver",
-        "healthdata.persistence.primary.pool-name=h2-test-pool",
-        "healthdata.persistence.rls-enabled=false",
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration",
+        "spring.kafka.listener.auto-startup=false",
+        "spring.cache.type=simple",
+        "spring.datasource.url=jdbc:h2:mem:ecrtestdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;INIT=CREATE SCHEMA IF NOT EXISTS ecr",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=",
+        "spring.datasource.driver-class-name=org.h2.Driver",
+        "spring.jpa.hibernate.ddl-auto=create-drop",
         "healthdata.security.jwt.secret=test-secret-key-for-unit-testing-only-minimum-32-chars",
         "healthdata.security.jwt.accessTokenExpirationMs=900000",
         "healthdata.security.jwt.refreshTokenExpirationMs=604800000"
@@ -59,6 +62,12 @@ class EcrApiIntegrationTest {
 
     @MockBean
     private AuditEventRepository auditEventRepository;
+
+    @MockBean
+    private UserRepository userRepository;
+
+    @MockBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Autowired
     private MockMvc mockMvc;
@@ -83,31 +92,35 @@ class EcrApiIntegrationTest {
 
     private void seedRctcTriggerCodes() {
         // Seed RCTC trigger codes if not present
+        // Note: ICD-10 codes are stored normalized (without dots) to match RctcRulesEngine lookup
         if (triggerCodeRepository.count() == 0) {
             List<RctcTriggerCodeEntity> codes = Arrays.asList(
                 RctcTriggerCodeEntity.builder()
-                    .code("U07.1")
+                    .code("U071")
                     .codeSystem("2.16.840.1.113883.6.90")
                     .display("COVID-19")
                     .triggerType(RctcTriggerCodeEntity.TriggerType.DIAGNOSIS)
                     .conditionName("COVID-19")
                     .urgency(RctcTriggerCodeEntity.Urgency.WITHIN_24_HOURS)
+                    .isActive(true)
                     .build(),
                 RctcTriggerCodeEntity.builder()
-                    .code("B05.9")
+                    .code("B059")
                     .codeSystem("2.16.840.1.113883.6.90")
                     .display("Measles")
                     .triggerType(RctcTriggerCodeEntity.TriggerType.DIAGNOSIS)
                     .conditionName("Measles")
                     .urgency(RctcTriggerCodeEntity.Urgency.IMMEDIATE)
+                    .isActive(true)
                     .build(),
                 RctcTriggerCodeEntity.builder()
-                    .code("A22.9")
+                    .code("A229")
                     .codeSystem("2.16.840.1.113883.6.90")
                     .display("Anthrax")
                     .triggerType(RctcTriggerCodeEntity.TriggerType.DIAGNOSIS)
                     .conditionName("Anthrax")
                     .urgency(RctcTriggerCodeEntity.Urgency.IMMEDIATE)
+                    .isActive(true)
                     .build(),
                 RctcTriggerCodeEntity.builder()
                     .code("94500-6")
@@ -116,6 +129,7 @@ class EcrApiIntegrationTest {
                     .triggerType(RctcTriggerCodeEntity.TriggerType.LAB_RESULT)
                     .conditionName("COVID-19")
                     .urgency(RctcTriggerCodeEntity.Urgency.WITHIN_24_HOURS)
+                    .isActive(true)
                     .build()
             );
             triggerCodeRepository.saveAll(codes);
@@ -406,21 +420,21 @@ class EcrApiIntegrationTest {
                     .param("codeSystem", "2.16.840.1.113883.6.90"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("U07.1"))
-                .andExpect(jsonPath("$.isReportable").value(true))
+                .andExpect(jsonPath("$.reportable").value(true))
                 .andExpect(jsonPath("$.conditionName").value("COVID-19"))
                 .andExpect(jsonPath("$.urgency").value("WITHIN_24_HOURS"));
         }
 
         @Test
         @Order(81)
-        @DisplayName("Should return isReportable=false for non-reportable code")
+        @DisplayName("Should return reportable=false for non-reportable code")
         void checkTrigger_nonReportable_shouldReturnFalse() throws Exception {
             mockMvc.perform(get("/api/ecr/check-trigger")
                     .param("code", "J06.9")
                     .param("codeSystem", "2.16.840.1.113883.6.90"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("J06.9"))
-                .andExpect(jsonPath("$.isReportable").value(false))
+                .andExpect(jsonPath("$.reportable").value(false))
                 .andExpect(jsonPath("$.conditionName").doesNotExist());
         }
     }

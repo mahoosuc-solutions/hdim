@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.*;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
+import org.hl7.fhir.instance.model.api.IBaseBundle;
 import com.healthdata.ehr.connector.core.EhrConnectionException;
 import org.hl7.fhir.r4.model.*;
 import org.junit.jupiter.api.BeforeEach;

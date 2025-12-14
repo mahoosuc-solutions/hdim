@@ -1,33 +1,30 @@
 package com.healthdata.cdr.parser;
 
-import com.healthdata.cdr.service.Hl7v2ParserService;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Message;
-import ca.uhn.hl7v2.model.v25.message.ADT_A01;
-import ca.uhn.hl7v2.model.v25.message.ORU_R01;
-import ca.uhn.hl7v2.model.v25.message.ORM_O01;
-import ca.uhn.hl7v2.model.v25.segment.PID;
-import ca.uhn.hl7v2.model.v25.segment.PV1;
-import ca.uhn.hl7v2.model.v25.segment.OBX;
+import ca.uhn.hl7v2.model.v25.segment.MSH;
 import ca.uhn.hl7v2.parser.Parser;
-import ca.uhn.hl7v2.parser.PipeParser;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import com.healthdata.cdr.dto.Hl7v2Message;
+import com.healthdata.cdr.handler.*;
+import com.healthdata.cdr.service.Hl7v2ParserService;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
- * Comprehensive TDD tests for HL7 v2 Parser Service
- * Tests parsing of various HL7 v2 message types (ADT, ORU, ORM)
+ * Unit tests for Hl7v2ParserService.
+ * Tests HL7 v2 message parsing and routing to handlers.
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("HL7 v2 Parser Service Tests")
@@ -37,384 +34,409 @@ class Hl7v2ParserServiceTest {
     private Hl7v2ParserService parserService;
 
     @Mock
-    private Parser hl7Parser;
+    private Parser hl7v2Parser;
 
-    private static final String ADT_A01_MESSAGE =
-        "MSH|^~\\&|SENDING_APP|SENDING_FAC|RECEIVING_APP|RECEIVING_FAC|20240115120000||ADT^A01|123456|P|2.5\r" +
-        "EVN|A01|20240115120000\r" +
-        "PID|1||12345^^^MRN||DOE^JOHN^A||19800115|M|||123 MAIN ST^^BOSTON^MA^02101\r" +
-        "PV1|1|I|ICU^101^A|E|||1234^SMITH^JAMES|||||||||||||V123456";
+    @Mock
+    private AdtMessageHandler adtMessageHandler;
 
-    private static final String ADT_A02_MESSAGE =
-        "MSH|^~\\&|SENDING_APP|SENDING_FAC|RECEIVING_APP|RECEIVING_FAC|20240115120000||ADT^A02|123457|P|2.5\r" +
-        "EVN|A02|20240115120000\r" +
-        "PID|1||12345^^^MRN||DOE^JOHN^A||19800115|M\r" +
-        "PV1|1|I|WARD_B^202^A|E|||1234^SMITH^JAMES";
+    @Mock
+    private OruMessageHandler oruMessageHandler;
 
-    private static final String ADT_A03_MESSAGE =
-        "MSH|^~\\&|SENDING_APP|SENDING_FAC|RECEIVING_APP|RECEIVING_FAC|20240115180000||ADT^A03|123458|P|2.5\r" +
-        "EVN|A03|20240115180000\r" +
-        "PID|1||12345^^^MRN||DOE^JOHN^A||19800115|M\r" +
-        "PV1|1|I|ICU^101^A|E|||1234^SMITH^JAMES||||||||||||20240115180000";
+    @Mock
+    private OrmMessageHandler ormMessageHandler;
 
-    private static final String ADT_A08_MESSAGE =
-        "MSH|^~\\&|SENDING_APP|SENDING_FAC|RECEIVING_APP|RECEIVING_FAC|20240115120000||ADT^A08|123459|P|2.5\r" +
-        "EVN|A08|20240115120000\r" +
-        "PID|1||12345^^^MRN||DOE^JOHN^ANTHONY||19800115|M|||456 OAK AVE^^CAMBRIDGE^MA^02139||(617)555-1234";
+    @Mock
+    private RdeMessageHandler rdeMessageHandler;
 
-    private static final String ORU_R01_MESSAGE =
-        "MSH|^~\\&|LAB|FACILITY|EMR|FACILITY|20240115120000||ORU^R01|789012|P|2.5\r" +
-        "PID|1||12345^^^MRN||DOE^JOHN\r" +
-        "OBR|1|ORD123|RES123|80048^BMP|||20240115080000\r" +
-        "OBX|1|NM|2345-7^Glucose||95|mg/dL|70-100|N|||F\r" +
-        "OBX|2|NM|2160-0^Creatinine||1.1|mg/dL|0.7-1.3|N|||F";
+    @Mock
+    private RasMessageHandler rasMessageHandler;
 
-    private static final String ORM_O01_MESSAGE =
-        "MSH|^~\\&|ORDERING_APP|FACILITY|LAB|FACILITY|20240115120000||ORM^O01|456789|P|2.5\r" +
-        "PID|1||12345^^^MRN||DOE^JOHN\r" +
-        "ORC|NW|ORD456|||||^^^20240115120000\r" +
-        "OBR|1|ORD456||80048^BMP^L|||20240115120000";
+    @Mock
+    private VxuMessageHandler vxuMessageHandler;
 
-    private static final String MALFORMED_MESSAGE =
-        "MSH|^~\\&|INCOMPLETE";
+    @Mock
+    private MdmMessageHandler mdmMessageHandler;
 
-    private static final String MISSING_PID_MESSAGE =
-        "MSH|^~\\&|SENDING_APP|SENDING_FAC|RECEIVING_APP|RECEIVING_FAC|20240115120000||ADT^A01|123460|P|2.5\r" +
-        "EVN|A01|20240115120000";
+    @Mock
+    private SiuMessageHandler siuMessageHandler;
 
-    @BeforeEach
-    void setUp() {
-        parserService = new Hl7v2ParserService();
+    @Mock
+    private BarMessageHandler barMessageHandler;
+
+    @Mock
+    private DftMessageHandler dftMessageHandler;
+
+    @Mock
+    private PprMessageHandler pprMessageHandler;
+
+    private static final String TENANT_ID = "test-tenant";
+
+    @Nested
+    @DisplayName("ADT Message Parsing")
+    class AdtMessageParsingTests {
+
+        @Test
+        @DisplayName("Should parse ADT^A01 and route to ADT handler")
+        void parseMessage_withAdtA01_routesToAdtHandler() throws HL7Exception {
+            String rawMessage = "MSH|^~\\&|SENDING|FAC|RECV|FAC|20240115120000||ADT^A01|123|P|2.5\rPID|1||12345||DOE^JOHN";
+            Message mockMessage = createMockMessage("ADT", "A01", "123", "2.5");
+            Map<String, Object> handlerResult = new HashMap<>();
+            handlerResult.put("patient", Map.of("patientId", "12345"));
+
+            when(hl7v2Parser.parse(rawMessage)).thenReturn(mockMessage);
+            when(adtMessageHandler.handle(mockMessage)).thenReturn(handlerResult);
+
+            Hl7v2Message result = parserService.parseMessage(rawMessage, TENANT_ID);
+
+            assertThat(result.getStatus()).isEqualTo("PARSED");
+            assertThat(result.getMessageType()).isEqualTo("ADT");
+            assertThat(result.getTriggerEvent()).isEqualTo("A01");
+            assertThat(result.getMessageControlId()).isEqualTo("123");
+            assertThat(result.getVersion()).isEqualTo("2.5");
+            assertThat(result.getTenantId()).isEqualTo(TENANT_ID);
+            verify(adtMessageHandler).handle(mockMessage);
+        }
+
+        @Test
+        @DisplayName("Should extract message code from ADT message")
+        void parseMessage_withAdtA01_extractsMessageCode() throws HL7Exception {
+            String rawMessage = "MSH|^~\\&|SENDING|FAC|RECV|FAC|20240115120000||ADT^A01|456|P|2.5";
+            Message mockMessage = createMockMessage("ADT", "A01", "456", "2.5");
+            when(hl7v2Parser.parse(rawMessage)).thenReturn(mockMessage);
+            when(adtMessageHandler.handle(mockMessage)).thenReturn(new HashMap<>());
+
+            Hl7v2Message result = parserService.parseMessage(rawMessage, TENANT_ID);
+
+            assertThat(result.getMessageCode()).isEqualTo("ADT^A01");
+        }
     }
 
-    @Test
-    @DisplayName("Should parse ADT^A01 admit message successfully")
-    void testParseAdtA01AdmitMessage() {
-        // When
-        Message message = parserService.parse(ADT_A01_MESSAGE);
+    @Nested
+    @DisplayName("ORU Message Parsing")
+    class OruMessageParsingTests {
 
-        // Then
-        assertNotNull(message);
-        assertTrue(message instanceof ADT_A01);
+        @Test
+        @DisplayName("Should parse ORU^R01 and route to ORU handler")
+        void parseMessage_withOruR01_routesToOruHandler() throws HL7Exception {
+            String rawMessage = "MSH|^~\\&|LAB|FAC|EMR|FAC|20240115120000||ORU^R01|789|P|2.5";
+            Message mockMessage = createMockMessage("ORU", "R01", "789", "2.5");
+            Map<String, Object> handlerResult = new HashMap<>();
+            handlerResult.put("observations", java.util.List.of());
 
-        ADT_A01 adtMessage = (ADT_A01) message;
-        assertEquals("ADT", adtMessage.getMSH().getMessageType().getMessageCode().getValue());
-        assertEquals("A01", adtMessage.getMSH().getMessageType().getTriggerEvent().getValue());
+            when(hl7v2Parser.parse(rawMessage)).thenReturn(mockMessage);
+            when(oruMessageHandler.handle(mockMessage)).thenReturn(handlerResult);
+
+            Hl7v2Message result = parserService.parseMessage(rawMessage, TENANT_ID);
+
+            assertThat(result.getMessageType()).isEqualTo("ORU");
+            assertThat(result.getTriggerEvent()).isEqualTo("R01");
+            verify(oruMessageHandler).handle(mockMessage);
+        }
     }
 
-    @Test
-    @DisplayName("Should parse ADT^A02 transfer message successfully")
-    void testParseAdtA02TransferMessage() {
-        // When
-        Message message = parserService.parse(ADT_A02_MESSAGE);
+    @Nested
+    @DisplayName("ORM Message Parsing")
+    class OrmMessageParsingTests {
 
-        // Then
-        assertNotNull(message);
-        assertTrue(message instanceof ADT_A01); // ADT_A02 uses same structure as A01
+        @Test
+        @DisplayName("Should parse ORM^O01 and route to ORM handler")
+        void parseMessage_withOrmO01_routesToOrmHandler() throws HL7Exception {
+            String rawMessage = "MSH|^~\\&|APP|FAC|LAB|FAC|20240115120000||ORM^O01|111|P|2.5";
+            Message mockMessage = createMockMessage("ORM", "O01", "111", "2.5");
 
-        ADT_A01 adtMessage = (ADT_A01) message;
-        assertEquals("A02", adtMessage.getMSH().getMessageType().getTriggerEvent().getValue());
+            when(hl7v2Parser.parse(rawMessage)).thenReturn(mockMessage);
+            when(ormMessageHandler.handle(mockMessage)).thenReturn(new HashMap<>());
+
+            Hl7v2Message result = parserService.parseMessage(rawMessage, TENANT_ID);
+
+            assertThat(result.getMessageType()).isEqualTo("ORM");
+            verify(ormMessageHandler).handle(mockMessage);
+        }
     }
 
-    @Test
-    @DisplayName("Should parse ADT^A03 discharge message successfully")
-    void testParseAdtA03DischargeMessage() {
-        // When
-        Message message = parserService.parse(ADT_A03_MESSAGE);
+    @Nested
+    @DisplayName("RDE Message Parsing")
+    class RdeMessageParsingTests {
 
-        // Then
-        assertNotNull(message);
-        assertTrue(message instanceof ADT_A01);
+        @Test
+        @DisplayName("Should parse RDE^O11 and route to RDE handler")
+        void parseMessage_withRdeO11_routesToRdeHandler() throws HL7Exception {
+            String rawMessage = "MSH|^~\\&|RX|FAC|EMR|FAC|20240115120000||RDE^O11|222|P|2.5";
+            Message mockMessage = createMockMessage("RDE", "O11", "222", "2.5");
 
-        ADT_A01 adtMessage = (ADT_A01) message;
-        assertEquals("A03", adtMessage.getMSH().getMessageType().getTriggerEvent().getValue());
+            when(hl7v2Parser.parse(rawMessage)).thenReturn(mockMessage);
+            when(rdeMessageHandler.handle(mockMessage)).thenReturn(new HashMap<>());
+
+            Hl7v2Message result = parserService.parseMessage(rawMessage, TENANT_ID);
+
+            assertThat(result.getMessageType()).isEqualTo("RDE");
+            verify(rdeMessageHandler).handle(mockMessage);
+        }
     }
 
-    @Test
-    @DisplayName("Should parse ADT^A08 update patient message successfully")
-    void testParseAdtA08UpdateMessage() {
-        // When
-        Message message = parserService.parse(ADT_A08_MESSAGE);
+    @Nested
+    @DisplayName("RAS Message Parsing")
+    class RasMessageParsingTests {
 
-        // Then
-        assertNotNull(message);
-        assertTrue(message instanceof ADT_A01);
+        @Test
+        @DisplayName("Should parse RAS^O17 and route to RAS handler")
+        void parseMessage_withRasO17_routesToRasHandler() throws HL7Exception {
+            String rawMessage = "MSH|^~\\&|RX|FAC|EMR|FAC|20240115120000||RAS^O17|333|P|2.5";
+            Message mockMessage = createMockMessage("RAS", "O17", "333", "2.5");
 
-        ADT_A01 adtMessage = (ADT_A01) message;
-        assertEquals("A08", adtMessage.getMSH().getMessageType().getTriggerEvent().getValue());
+            when(hl7v2Parser.parse(rawMessage)).thenReturn(mockMessage);
+            when(rasMessageHandler.handle(mockMessage)).thenReturn(new HashMap<>());
+
+            Hl7v2Message result = parserService.parseMessage(rawMessage, TENANT_ID);
+
+            assertThat(result.getMessageType()).isEqualTo("RAS");
+            verify(rasMessageHandler).handle(mockMessage);
+        }
     }
 
-    @Test
-    @DisplayName("Should parse ORU^R01 lab result message successfully")
-    void testParseOruR01LabResultMessage() {
-        // When
-        Message message = parserService.parse(ORU_R01_MESSAGE);
+    @Nested
+    @DisplayName("VXU Message Parsing")
+    class VxuMessageParsingTests {
 
-        // Then
-        assertNotNull(message);
-        assertTrue(message instanceof ORU_R01);
+        @Test
+        @DisplayName("Should parse VXU^V04 and route to VXU handler")
+        void parseMessage_withVxuV04_routesToVxuHandler() throws HL7Exception {
+            String rawMessage = "MSH|^~\\&|IMM|FAC|EMR|FAC|20240115120000||VXU^V04|444|P|2.5";
+            Message mockMessage = createMockMessage("VXU", "V04", "444", "2.5");
 
-        ORU_R01 oruMessage = (ORU_R01) message;
-        assertEquals("ORU", oruMessage.getMSH().getMessageType().getMessageCode().getValue());
-        assertEquals("R01", oruMessage.getMSH().getMessageType().getTriggerEvent().getValue());
+            when(hl7v2Parser.parse(rawMessage)).thenReturn(mockMessage);
+            when(vxuMessageHandler.handle(mockMessage)).thenReturn(new HashMap<>());
+
+            Hl7v2Message result = parserService.parseMessage(rawMessage, TENANT_ID);
+
+            assertThat(result.getMessageType()).isEqualTo("VXU");
+            verify(vxuMessageHandler).handle(mockMessage);
+        }
     }
 
-    @Test
-    @DisplayName("Should parse ORM^O01 order message successfully")
-    void testParseOrmO01OrderMessage() {
-        // When
-        Message message = parserService.parse(ORM_O01_MESSAGE);
+    @Nested
+    @DisplayName("MDM Message Parsing")
+    class MdmMessageParsingTests {
 
-        // Then
-        assertNotNull(message);
-        assertTrue(message instanceof ORM_O01);
+        @Test
+        @DisplayName("Should parse MDM^T01 and route to MDM handler")
+        void parseMessage_withMdmT01_routesToMdmHandler() throws HL7Exception {
+            String rawMessage = "MSH|^~\\&|DOC|FAC|EMR|FAC|20240115120000||MDM^T01|555|P|2.5";
+            Message mockMessage = createMockMessage("MDM", "T01", "555", "2.5");
 
-        ORM_O01 ormMessage = (ORM_O01) message;
-        assertEquals("ORM", ormMessage.getMSH().getMessageType().getMessageCode().getValue());
-        assertEquals("O01", ormMessage.getMSH().getMessageType().getTriggerEvent().getValue());
+            when(hl7v2Parser.parse(rawMessage)).thenReturn(mockMessage);
+            when(mdmMessageHandler.handle(mockMessage)).thenReturn(new HashMap<>());
+
+            Hl7v2Message result = parserService.parseMessage(rawMessage, TENANT_ID);
+
+            assertThat(result.getMessageType()).isEqualTo("MDM");
+            verify(mdmMessageHandler).handle(mockMessage);
+        }
     }
 
-    @Test
-    @DisplayName("Should handle malformed message gracefully")
-    void testHandleMalformedMessage() {
-        // When/Then
-        assertThrows(Hl7ParsingException.class, () -> {
-            parserService.parse(MALFORMED_MESSAGE);
-        });
+    @Nested
+    @DisplayName("SIU Message Parsing")
+    class SiuMessageParsingTests {
+
+        @Test
+        @DisplayName("Should parse SIU^S12 and route to SIU handler")
+        void parseMessage_withSiuS12_routesToSiuHandler() throws HL7Exception {
+            String rawMessage = "MSH|^~\\&|SCH|FAC|EMR|FAC|20240115120000||SIU^S12|666|P|2.5";
+            Message mockMessage = createMockMessage("SIU", "S12", "666", "2.5");
+
+            when(hl7v2Parser.parse(rawMessage)).thenReturn(mockMessage);
+            when(siuMessageHandler.handle(mockMessage)).thenReturn(new HashMap<>());
+
+            Hl7v2Message result = parserService.parseMessage(rawMessage, TENANT_ID);
+
+            assertThat(result.getMessageType()).isEqualTo("SIU");
+            verify(siuMessageHandler).handle(mockMessage);
+        }
     }
 
-    @Test
-    @DisplayName("Should handle null message input")
-    void testHandleNullMessage() {
-        // When/Then
-        assertThrows(IllegalArgumentException.class, () -> {
-            parserService.parse(null);
-        });
+    @Nested
+    @DisplayName("BAR Message Parsing")
+    class BarMessageParsingTests {
+
+        @Test
+        @DisplayName("Should parse BAR^P01 and route to BAR handler")
+        void parseMessage_withBarP01_routesToBarHandler() throws HL7Exception {
+            String rawMessage = "MSH|^~\\&|FIN|FAC|EMR|FAC|20240115120000||BAR^P01|777|P|2.5";
+            Message mockMessage = createMockMessage("BAR", "P01", "777", "2.5");
+
+            when(hl7v2Parser.parse(rawMessage)).thenReturn(mockMessage);
+            when(barMessageHandler.handle(mockMessage)).thenReturn(new HashMap<>());
+
+            Hl7v2Message result = parserService.parseMessage(rawMessage, TENANT_ID);
+
+            assertThat(result.getMessageType()).isEqualTo("BAR");
+            verify(barMessageHandler).handle(mockMessage);
+        }
     }
 
-    @Test
-    @DisplayName("Should handle empty message input")
-    void testHandleEmptyMessage() {
-        // When/Then
-        assertThrows(IllegalArgumentException.class, () -> {
-            parserService.parse("");
-        });
+    @Nested
+    @DisplayName("DFT Message Parsing")
+    class DftMessageParsingTests {
+
+        @Test
+        @DisplayName("Should parse DFT^P03 and route to DFT handler")
+        void parseMessage_withDftP03_routesToDftHandler() throws HL7Exception {
+            String rawMessage = "MSH|^~\\&|FIN|FAC|EMR|FAC|20240115120000||DFT^P03|888|P|2.5";
+            Message mockMessage = createMockMessage("DFT", "P03", "888", "2.5");
+
+            when(hl7v2Parser.parse(rawMessage)).thenReturn(mockMessage);
+            when(dftMessageHandler.handle(mockMessage)).thenReturn(new HashMap<>());
+
+            Hl7v2Message result = parserService.parseMessage(rawMessage, TENANT_ID);
+
+            assertThat(result.getMessageType()).isEqualTo("DFT");
+            verify(dftMessageHandler).handle(mockMessage);
+        }
     }
 
-    @Test
-    @DisplayName("Should extract patient demographics from PID segment")
-    void testExtractPatientDemographicsFromPid() {
-        // Given
-        Message message = parserService.parse(ADT_A01_MESSAGE);
+    @Nested
+    @DisplayName("PPR Message Parsing")
+    class PprMessageParsingTests {
 
-        // When
-        PID pid = parserService.extractPidSegment(message);
+        @Test
+        @DisplayName("Should parse PPR^PC1 and route to PPR handler")
+        void parseMessage_withPprPc1_routesToPprHandler() throws HL7Exception {
+            String rawMessage = "MSH|^~\\&|APP|FAC|EMR|FAC|20240115120000||PPR^PC1|999|P|2.5";
+            Message mockMessage = createMockMessage("PPR", "PC1", "999", "2.5");
 
-        // Then
-        assertNotNull(pid);
-        assertEquals("12345", pid.getPatientIdentifierList(0).getIDNumber().getValue());
-        assertEquals("DOE", pid.getPatientName(0).getFamilyName().getSurname().getValue());
-        assertEquals("JOHN", pid.getPatientName(0).getGivenName().getValue());
-        assertEquals("M", pid.getAdministrativeSex().getValue());
-        assertEquals("19800115", pid.getDateTimeOfBirth().getTime().getValue());
+            when(hl7v2Parser.parse(rawMessage)).thenReturn(mockMessage);
+            when(pprMessageHandler.handle(mockMessage)).thenReturn(new HashMap<>());
+
+            Hl7v2Message result = parserService.parseMessage(rawMessage, TENANT_ID);
+
+            assertThat(result.getMessageType()).isEqualTo("PPR");
+            verify(pprMessageHandler).handle(mockMessage);
+        }
     }
 
-    @Test
-    @DisplayName("Should extract visit information from PV1 segment")
-    void testExtractVisitInformationFromPv1() {
-        // Given
-        Message message = parserService.parse(ADT_A01_MESSAGE);
+    @Nested
+    @DisplayName("Error Handling")
+    class ErrorHandlingTests {
 
-        // When
-        PV1 pv1 = parserService.extractPv1Segment(message);
+        @Test
+        @DisplayName("Should return error status when parsing fails")
+        void parseMessage_withInvalidMessage_returnsErrorStatus() throws HL7Exception {
+            String rawMessage = "INVALID MESSAGE";
+            when(hl7v2Parser.parse(rawMessage)).thenThrow(new HL7Exception("Parse error"));
 
-        // Then
-        assertNotNull(pv1);
-        assertEquals("I", pv1.getPatientClass().getValue());
-        assertEquals("ICU", pv1.getAssignedPatientLocation().getPointOfCare().getValue());
-        assertEquals("101", pv1.getAssignedPatientLocation().getRoom().getValue());
-        assertEquals("A", pv1.getAssignedPatientLocation().getBed().getValue());
-        assertEquals("E", pv1.getAdmissionType().getValue());
+            Hl7v2Message result = parserService.parseMessage(rawMessage, TENANT_ID);
+
+            assertThat(result.getStatus()).isEqualTo("ERROR");
+            assertThat(result.getErrorMessage()).contains("Parse error");
+            assertThat(result.getTenantId()).isEqualTo(TENANT_ID);
+        }
+
+        @Test
+        @DisplayName("Should handle unsupported message type")
+        void parseMessage_withUnsupportedType_logsWarning() throws HL7Exception {
+            String rawMessage = "MSH|^~\\&|APP|FAC|EMR|FAC|20240115120000||XXX^Y01|000|P|2.5";
+            Message mockMessage = createMockMessage("XXX", "Y01", "000", "2.5");
+            when(hl7v2Parser.parse(rawMessage)).thenReturn(mockMessage);
+
+            Hl7v2Message result = parserService.parseMessage(rawMessage, TENANT_ID);
+
+            assertThat(result.getStatus()).isEqualTo("PARSED");
+            assertThat(result.getMessageType()).isEqualTo("XXX");
+            assertThat(result.getParsedData()).containsKey("warning");
+        }
     }
 
-    @Test
-    @DisplayName("Should handle missing optional PV1 segment")
-    void testHandleMissingPv1Segment() {
-        // Given
-        Message message = parserService.parse(MISSING_PID_MESSAGE);
+    @Nested
+    @DisplayName("Message Validation")
+    class MessageValidationTests {
 
-        // When
-        PV1 pv1 = parserService.extractPv1Segment(message);
+        @Test
+        @DisplayName("Should validate null message")
+        void validateMessage_withNull_returnsFalse() {
+            assertThat(parserService.validateMessage(null)).isFalse();
+        }
 
-        // Then
-        // Should return null or empty PV1 for missing segment
-        // Implementation should handle this gracefully
-        assertTrue(pv1 == null || pv1.isEmpty());
+        @Test
+        @DisplayName("Should validate empty message")
+        void validateMessage_withEmpty_returnsFalse() {
+            assertThat(parserService.validateMessage("")).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should validate message without MSH")
+        void validateMessage_withoutMsh_returnsFalse() {
+            assertThat(parserService.validateMessage("PID|1||12345")).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should validate valid message")
+        void validateMessage_withValidMessage_returnsTrue() {
+            String validMessage = "MSH|^~\\&|APP|FAC|EMR|FAC|20240115120000||ADT^A01|123|P|2.5";
+            assertThat(parserService.validateMessage(validMessage)).isTrue();
+        }
     }
 
-    @Test
-    @DisplayName("Should extract multiple OBX segments from ORU message")
-    void testExtractMultipleObxSegments() {
-        // Given
-        Message message = parserService.parse(ORU_R01_MESSAGE);
+    // Helper method to create mock HL7 message
+    private Message createMockMessage(String messageType, String triggerEvent, String controlId, String version) throws HL7Exception {
+        Message message = mock(Message.class);
+        MSH msh = mock(MSH.class);
 
-        // When
-        List<OBX> obxSegments = parserService.extractObxSegments(message);
+        // Message type
+        ca.uhn.hl7v2.model.v25.datatype.MSG msgType = mock(ca.uhn.hl7v2.model.v25.datatype.MSG.class);
+        ca.uhn.hl7v2.model.v25.datatype.ID msgCode = mock(ca.uhn.hl7v2.model.v25.datatype.ID.class);
+        ca.uhn.hl7v2.model.v25.datatype.ID trigger = mock(ca.uhn.hl7v2.model.v25.datatype.ID.class);
+        when(msgCode.getValue()).thenReturn(messageType);
+        when(trigger.getValue()).thenReturn(triggerEvent);
+        when(msgType.getMessageCode()).thenReturn(msgCode);
+        when(msgType.getTriggerEvent()).thenReturn(trigger);
+        when(msh.getMessageType()).thenReturn(msgType);
 
-        // Then
-        assertNotNull(obxSegments);
-        assertEquals(2, obxSegments.size());
+        // Control ID
+        ca.uhn.hl7v2.model.v25.datatype.ST controlIdSt = mock(ca.uhn.hl7v2.model.v25.datatype.ST.class);
+        when(controlIdSt.getValue()).thenReturn(controlId);
+        when(msh.getMessageControlID()).thenReturn(controlIdSt);
 
-        // First OBX
-        assertEquals("NM", obxSegments.get(0).getValueType().getValue());
-        assertEquals("2345-7", obxSegments.get(0).getObservationIdentifier().getIdentifier().getValue());
-        assertEquals("Glucose", obxSegments.get(0).getObservationIdentifier().getText().getValue());
-        assertEquals("95", obxSegments.get(0).getObservationValue(0).getData().toString());
+        // Sending/Receiving apps
+        ca.uhn.hl7v2.model.v25.datatype.HD sendingApp = mock(ca.uhn.hl7v2.model.v25.datatype.HD.class);
+        ca.uhn.hl7v2.model.v25.datatype.IS sendingAppName = mock(ca.uhn.hl7v2.model.v25.datatype.IS.class);
+        when(sendingAppName.getValue()).thenReturn("SENDING_APP");
+        when(sendingApp.getNamespaceID()).thenReturn(sendingAppName);
+        when(msh.getSendingApplication()).thenReturn(sendingApp);
 
-        // Second OBX
-        assertEquals("2160-0", obxSegments.get(1).getObservationIdentifier().getIdentifier().getValue());
-        assertEquals("Creatinine", obxSegments.get(1).getObservationIdentifier().getText().getValue());
-    }
+        ca.uhn.hl7v2.model.v25.datatype.HD sendingFac = mock(ca.uhn.hl7v2.model.v25.datatype.HD.class);
+        ca.uhn.hl7v2.model.v25.datatype.IS sendingFacName = mock(ca.uhn.hl7v2.model.v25.datatype.IS.class);
+        when(sendingFacName.getValue()).thenReturn("SENDING_FAC");
+        when(sendingFac.getNamespaceID()).thenReturn(sendingFacName);
+        when(msh.getSendingFacility()).thenReturn(sendingFac);
 
-    @Test
-    @DisplayName("Should validate message structure")
-    void testValidateMessageStructure() {
-        // Given
-        Message message = parserService.parse(ADT_A01_MESSAGE);
+        ca.uhn.hl7v2.model.v25.datatype.HD recvApp = mock(ca.uhn.hl7v2.model.v25.datatype.HD.class);
+        ca.uhn.hl7v2.model.v25.datatype.IS recvAppName = mock(ca.uhn.hl7v2.model.v25.datatype.IS.class);
+        when(recvAppName.getValue()).thenReturn("RECV_APP");
+        when(recvApp.getNamespaceID()).thenReturn(recvAppName);
+        when(msh.getReceivingApplication()).thenReturn(recvApp);
 
-        // When
-        boolean isValid = parserService.validateMessage(message);
+        ca.uhn.hl7v2.model.v25.datatype.HD recvFac = mock(ca.uhn.hl7v2.model.v25.datatype.HD.class);
+        ca.uhn.hl7v2.model.v25.datatype.IS recvFacName = mock(ca.uhn.hl7v2.model.v25.datatype.IS.class);
+        when(recvFacName.getValue()).thenReturn("RECV_FAC");
+        when(recvFac.getNamespaceID()).thenReturn(recvFacName);
+        when(msh.getReceivingFacility()).thenReturn(recvFac);
 
-        // Then
-        assertTrue(isValid);
-    }
+        // Version
+        ca.uhn.hl7v2.model.v25.datatype.VID versionId = mock(ca.uhn.hl7v2.model.v25.datatype.VID.class);
+        ca.uhn.hl7v2.model.v25.datatype.ID versionIdVal = mock(ca.uhn.hl7v2.model.v25.datatype.ID.class);
+        when(versionIdVal.getValue()).thenReturn(version);
+        when(versionId.getVersionID()).thenReturn(versionIdVal);
+        when(msh.getVersionID()).thenReturn(versionId);
 
-    @Test
-    @DisplayName("Should get message type from MSH segment")
-    void testGetMessageType() {
-        // Given
-        Message message = parserService.parse(ADT_A01_MESSAGE);
+        // Date/Time
+        ca.uhn.hl7v2.model.v25.datatype.TS dateTime = mock(ca.uhn.hl7v2.model.v25.datatype.TS.class);
+        ca.uhn.hl7v2.model.v25.datatype.DTM time = mock(ca.uhn.hl7v2.model.v25.datatype.DTM.class);
+        when(time.getValue()).thenReturn("20240115120000");
+        when(dateTime.getTime()).thenReturn(time);
+        when(msh.getDateTimeOfMessage()).thenReturn(dateTime);
 
-        // When
-        String messageType = parserService.getMessageType(message);
+        when(message.get("MSH")).thenReturn(msh);
 
-        // Then
-        assertEquals("ADT^A01", messageType);
-    }
-
-    @Test
-    @DisplayName("Should get trigger event from message")
-    void testGetTriggerEvent() {
-        // Given
-        Message message = parserService.parse(ADT_A03_MESSAGE);
-
-        // When
-        String triggerEvent = parserService.getTriggerEvent(message);
-
-        // Then
-        assertEquals("A03", triggerEvent);
-    }
-
-    @Test
-    @DisplayName("Should parse message with extended patient name")
-    void testParseExtendedPatientName() {
-        // Given
-        Message message = parserService.parse(ADT_A08_MESSAGE);
-
-        // When
-        PID pid = parserService.extractPidSegment(message);
-
-        // Then
-        assertNotNull(pid);
-        assertEquals("DOE", pid.getPatientName(0).getFamilyName().getSurname().getValue());
-        assertEquals("JOHN", pid.getPatientName(0).getGivenName().getValue());
-        assertEquals("ANTHONY", pid.getPatientName(0).getSecondAndFurtherGivenNamesOrInitialsThereof().getValue());
-    }
-
-    @Test
-    @DisplayName("Should parse message with patient address")
-    void testParsePatientAddress() {
-        // Given
-        Message message = parserService.parse(ADT_A01_MESSAGE);
-
-        // When
-        PID pid = parserService.extractPidSegment(message);
-
-        // Then
-        assertNotNull(pid);
-        assertEquals("123 MAIN ST", pid.getPatientAddress(0).getStreetAddress().getStreetOrMailingAddress().getValue());
-        assertEquals("BOSTON", pid.getPatientAddress(0).getCity().getValue());
-        assertEquals("MA", pid.getPatientAddress(0).getStateOrProvince().getValue());
-        assertEquals("02101", pid.getPatientAddress(0).getZipOrPostalCode().getValue());
-    }
-
-    @Test
-    @DisplayName("Should parse message with patient phone number")
-    void testParsePatientPhoneNumber() {
-        // Given
-        Message message = parserService.parse(ADT_A08_MESSAGE);
-
-        // When
-        PID pid = parserService.extractPidSegment(message);
-
-        // Then
-        assertNotNull(pid);
-        assertEquals("(617)555-1234", pid.getPhoneNumberHome(0).getTelephoneNumber().getValue());
-    }
-
-    @Test
-    @DisplayName("Should handle message with missing optional segments")
-    void testHandleMissingOptionalSegments() {
-        // Given
-        String minimalMessage =
-            "MSH|^~\\&|APP|FAC|APP2|FAC2|20240115120000||ADT^A01|123|P|2.5\r" +
-            "EVN|A01|20240115120000\r" +
-            "PID|1||12345^^^MRN||DOE^JOHN";
-
-        // When
-        Message message = parserService.parse(minimalMessage);
-
-        // Then
-        assertNotNull(message);
-        assertTrue(message instanceof ADT_A01);
-    }
-
-    @Test
-    @DisplayName("Should parse HL7 v2.5 version correctly")
-    void testParseHl7Version() {
-        // Given
-        Message message = parserService.parse(ADT_A01_MESSAGE);
-
-        // When
-        String version = parserService.getVersion(message);
-
-        // Then
-        assertEquals("2.5", version);
-    }
-
-    @Test
-    @DisplayName("Should extract message control ID")
-    void testExtractMessageControlId() {
-        // Given
-        Message message = parserService.parse(ADT_A01_MESSAGE);
-
-        // When
-        String controlId = parserService.getMessageControlId(message);
-
-        // Then
-        assertEquals("123456", controlId);
-    }
-
-    @Test
-    @DisplayName("Should parse message timestamp")
-    void testParseMessageTimestamp() {
-        // Given
-        Message message = parserService.parse(ADT_A01_MESSAGE);
-
-        // When
-        String timestamp = parserService.getMessageTimestamp(message);
-
-        // Then
-        assertEquals("20240115120000", timestamp);
+        return message;
     }
 }

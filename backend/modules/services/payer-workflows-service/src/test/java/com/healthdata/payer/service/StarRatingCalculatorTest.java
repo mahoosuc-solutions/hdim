@@ -1,6 +1,7 @@
 package com.healthdata.payer.service;
 
 import com.healthdata.payer.domain.*;
+import com.healthdata.payer.service.StarRatingCalculator.MeasureData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -613,18 +614,5 @@ class StarRatingCalculatorTest {
         data.put(StarRatingMeasure.CONTROLLING_BLOOD_PRESSURE, 0.75);
         data.put(StarRatingMeasure.DIABETES_CARE_HBA1C_POOR_CONTROL, 0.75);
         return data;
-    }
-
-    /**
-     * Helper class to hold measure numerator and denominator
-     */
-    public static class MeasureData {
-        public final int numerator;
-        public final int denominator;
-
-        public MeasureData(int numerator, int denominator) {
-            this.numerator = numerator;
-            this.denominator = denominator;
-        }
     }
 }

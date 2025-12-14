@@ -26,6 +26,11 @@ dependencies {
     implementation("ca.uhn.hapi:hapi-structures-v25:2.5.1")
     implementation("ca.uhn.hapi:hapi-structures-v26:2.5.1")
 
+    // XML Parsing for CDA documents
+    implementation("xerces:xercesImpl:2.12.2")
+    implementation("xml-apis:xml-apis:1.4.01")
+    implementation("javax.xml.bind:jaxb-api:2.3.1")
+
     // Shared modules
     implementation(project(":modules:shared:domain:common"))
     implementation(project(":modules:shared:domain:fhir-models"))

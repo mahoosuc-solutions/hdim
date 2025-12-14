@@ -8,6 +8,9 @@ import com.healthdata.cdr.dto.Hl7v2Message;
 import com.healthdata.cdr.handler.AdtMessageHandler;
 import com.healthdata.cdr.handler.OrmMessageHandler;
 import com.healthdata.cdr.handler.OruMessageHandler;
+import com.healthdata.cdr.handler.RdeMessageHandler;
+import com.healthdata.cdr.handler.RasMessageHandler;
+import com.healthdata.cdr.handler.VxuMessageHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +27,9 @@ import java.util.Map;
  * - ADT messages (Admit/Discharge/Transfer)
  * - ORU messages (Lab Results)
  * - ORM messages (Lab Orders)
+ * - RDE messages (Pharmacy/Treatment Encoded Order)
+ * - RAS messages (Pharmacy/Treatment Administration)
+ * - VXU messages (Vaccination Updates)
  */
 @Slf4j
 @Service
@@ -34,6 +40,9 @@ public class Hl7v2ParserService {
     private final AdtMessageHandler adtMessageHandler;
     private final OruMessageHandler oruMessageHandler;
     private final OrmMessageHandler ormMessageHandler;
+    private final RdeMessageHandler rdeMessageHandler;
+    private final RasMessageHandler rasMessageHandler;
+    private final VxuMessageHandler vxuMessageHandler;
 
     private static final DateTimeFormatter HL7_DATE_FORMAT =
         DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -108,6 +117,9 @@ public class Hl7v2ParserService {
             case "ADT" -> adtMessageHandler.handle(message);
             case "ORU" -> oruMessageHandler.handle(message);
             case "ORM" -> ormMessageHandler.handle(message);
+            case "RDE" -> rdeMessageHandler.handle(message);
+            case "RAS" -> rasMessageHandler.handle(message);
+            case "VXU" -> vxuMessageHandler.handle(message);
             default -> {
                 log.warn("Unsupported message type: {}", messageType);
                 Map<String, Object> data = new HashMap<>();

@@ -20,7 +20,11 @@ import java.util.Map;
  * - ADT^A02: Transfer
  * - ADT^A03: Discharge
  * - ADT^A04: Register patient
+ * - ADT^A05: Pre-admit a patient
+ * - ADT^A06: Change outpatient to inpatient
+ * - ADT^A07: Change inpatient to outpatient
  * - ADT^A08: Update patient information
+ * - ADT^A11: Cancel admit/visit notification
  */
 @Slf4j
 @Component
@@ -53,6 +57,19 @@ public class AdtMessageHandler {
 
         if (evn != null) {
             extractEventData(evn, data);
+
+            // Add FHIR-specific encounter status based on event type
+            String eventTypeCode = evn.getEventTypeCode() != null ? evn.getEventTypeCode().getValue() : null;
+            if (eventTypeCode != null) {
+                data.put("fhirEncounterStatus", mapEventToEncounterStatus(eventTypeCode));
+                data.put("isPatientClassChange", isPatientClassChangeEvent(eventTypeCode));
+                data.put("isCancellation", isCancellationEvent(eventTypeCode));
+
+                // For A06/A07 events, include the target patient class
+                if (isPatientClassChangeEvent(eventTypeCode)) {
+                    data.put("targetPatientClass", getTargetPatientClass(eventTypeCode));
+                }
+            }
         }
 
         return data;
@@ -61,6 +78,9 @@ public class AdtMessageHandler {
     /**
      * Get PID segment from message.
      * Note: ADT_A04 and ADT_A08 use ADT_A01 structure in HAPI HL7 library
+     * ADT_A05 for A05, A14, A28, A31
+     * ADT_A06 for A06, A07
+     * ADT_A09 for A09, A10, A11
      */
     private PID getPidSegment(Message message) throws HL7Exception {
         if (message instanceof ADT_A01) {
@@ -69,6 +89,12 @@ public class AdtMessageHandler {
             return ((ADT_A02) message).getPID();
         } else if (message instanceof ADT_A03) {
             return ((ADT_A03) message).getPID();
+        } else if (message instanceof ADT_A05) {
+            return ((ADT_A05) message).getPID();
+        } else if (message instanceof ADT_A06) {
+            return ((ADT_A06) message).getPID();
+        } else if (message instanceof ADT_A09) {
+            return ((ADT_A09) message).getPID();
         }
         return null;
     }
@@ -83,6 +109,12 @@ public class AdtMessageHandler {
             return ((ADT_A02) message).getPV1();
         } else if (message instanceof ADT_A03) {
             return ((ADT_A03) message).getPV1();
+        } else if (message instanceof ADT_A05) {
+            return ((ADT_A05) message).getPV1();
+        } else if (message instanceof ADT_A06) {
+            return ((ADT_A06) message).getPV1();
+        } else if (message instanceof ADT_A09) {
+            return ((ADT_A09) message).getPV1();
         }
         return null;
     }
@@ -97,8 +129,73 @@ public class AdtMessageHandler {
             return ((ADT_A02) message).getEVN();
         } else if (message instanceof ADT_A03) {
             return ((ADT_A03) message).getEVN();
+        } else if (message instanceof ADT_A05) {
+            return ((ADT_A05) message).getEVN();
+        } else if (message instanceof ADT_A06) {
+            return ((ADT_A06) message).getEVN();
+        } else if (message instanceof ADT_A09) {
+            return ((ADT_A09) message).getEVN();
         }
         return null;
+    }
+
+    /**
+     * Map ADT event type to FHIR Encounter status.
+     *
+     * @param eventTypeCode The HL7 event type code (A01, A02, etc.)
+     * @return FHIR Encounter status string
+     */
+    public String mapEventToEncounterStatus(String eventTypeCode) {
+        if (eventTypeCode == null) {
+            return "unknown";
+        }
+
+        return switch (eventTypeCode) {
+            case "A01" -> "in-progress";      // Admit - patient is admitted
+            case "A02" -> "in-progress";      // Transfer - still in progress
+            case "A03" -> "finished";         // Discharge - encounter finished
+            case "A04" -> "in-progress";      // Register - outpatient in progress
+            case "A05" -> "planned";          // Pre-admit - planned encounter
+            case "A06" -> "in-progress";      // Outpatient → Inpatient - still in progress
+            case "A07" -> "in-progress";      // Inpatient → Outpatient - still in progress
+            case "A08" -> "in-progress";      // Update - no status change
+            case "A11" -> "cancelled";        // Cancel admit - cancelled
+            default -> "unknown";
+        };
+    }
+
+    /**
+     * Determine if the event represents a class change (outpatient/inpatient).
+     *
+     * @param eventTypeCode The HL7 event type code
+     * @return true if this is a patient class change event
+     */
+    public boolean isPatientClassChangeEvent(String eventTypeCode) {
+        return "A06".equals(eventTypeCode) || "A07".equals(eventTypeCode);
+    }
+
+    /**
+     * Determine if the event is a cancellation event.
+     *
+     * @param eventTypeCode The HL7 event type code
+     * @return true if this is a cancellation event
+     */
+    public boolean isCancellationEvent(String eventTypeCode) {
+        return "A11".equals(eventTypeCode);
+    }
+
+    /**
+     * Get the target patient class for A06/A07 events.
+     *
+     * @param eventTypeCode The HL7 event type code
+     * @return Target patient class (I for inpatient, O for outpatient)
+     */
+    public String getTargetPatientClass(String eventTypeCode) {
+        return switch (eventTypeCode) {
+            case "A06" -> "I";  // Outpatient → Inpatient
+            case "A07" -> "O";  // Inpatient → Outpatient
+            default -> null;
+        };
     }
 
     /**

@@ -17,6 +17,9 @@ import java.util.*;
  * - ADT messages to Patient and Encounter resources
  * - ORU messages to Observation resources
  * - ORM messages to ServiceRequest resources
+ * - RDE messages to MedicationRequest resources
+ * - RAS messages to MedicationAdministration resources
+ * - VXU messages to Immunization resources
  */
 @Slf4j
 @Component
@@ -43,6 +46,9 @@ public class Hl7ToFhirConverter {
                 case "ADT" -> convertAdtToFhir(hl7Message, bundle);
                 case "ORU" -> convertOruToFhir(hl7Message, bundle);
                 case "ORM" -> convertOrmToFhir(hl7Message, bundle);
+                case "RDE" -> convertRdeToFhir(hl7Message, bundle);
+                case "RAS" -> convertRasToFhir(hl7Message, bundle);
+                case "VXU" -> convertVxuToFhir(hl7Message, bundle);
                 default -> log.warn("Unsupported message type for FHIR conversion: {}",
                     hl7Message.getMessageType());
             }
@@ -130,6 +136,450 @@ public class Hl7ToFhirConverter {
                 convertToServiceRequest(observationRequest, patientData);
             addResourceToBundle(bundle, serviceRequest, "ServiceRequest");
         }
+    }
+
+    /**
+     * Convert RDE (Pharmacy/Treatment Encoded Order) message to FHIR MedicationRequest resource.
+     */
+    @SuppressWarnings("unchecked")
+    private void convertRdeToFhir(Hl7v2Message hl7Message, Bundle bundle) {
+        Map<String, Object> parsedData = hl7Message.getParsedData();
+        if (parsedData == null) {
+            return;
+        }
+
+        Map<String, Object> patientData = (Map<String, Object>) parsedData.get("patient");
+        List<Map<String, Object>> orders = (List<Map<String, Object>>) parsedData.get("orders");
+
+        if (orders != null) {
+            for (Map<String, Object> order : orders) {
+                MedicationRequest medicationRequest = convertToMedicationRequest(order, patientData);
+                addResourceToBundle(bundle, medicationRequest, "MedicationRequest");
+            }
+        }
+    }
+
+    /**
+     * Convert RAS (Pharmacy/Treatment Administration) message to FHIR MedicationAdministration resource.
+     */
+    @SuppressWarnings("unchecked")
+    private void convertRasToFhir(Hl7v2Message hl7Message, Bundle bundle) {
+        Map<String, Object> parsedData = hl7Message.getParsedData();
+        if (parsedData == null) {
+            return;
+        }
+
+        Map<String, Object> patientData = (Map<String, Object>) parsedData.get("patient");
+        List<Map<String, Object>> medAdmins =
+            (List<Map<String, Object>>) parsedData.get("medicationAdministrations");
+
+        if (medAdmins != null) {
+            for (Map<String, Object> adminData : medAdmins) {
+                List<Map<String, Object>> administrations =
+                    (List<Map<String, Object>>) adminData.get("administrations");
+
+                if (administrations != null) {
+                    for (Map<String, Object> admin : administrations) {
+                        MedicationAdministration medicationAdministration =
+                            convertToMedicationAdministration(admin, patientData);
+                        addResourceToBundle(bundle, medicationAdministration, "MedicationAdministration");
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Convert VXU (Vaccination Update) message to FHIR Immunization resource.
+     */
+    @SuppressWarnings("unchecked")
+    private void convertVxuToFhir(Hl7v2Message hl7Message, Bundle bundle) {
+        Map<String, Object> parsedData = hl7Message.getParsedData();
+        if (parsedData == null) {
+            return;
+        }
+
+        Map<String, Object> patientData = (Map<String, Object>) parsedData.get("patient");
+        List<Map<String, Object>> immunizations =
+            (List<Map<String, Object>>) parsedData.get("immunizations");
+
+        if (immunizations != null) {
+            for (Map<String, Object> immunization : immunizations) {
+                Immunization fhirImmunization = convertToImmunization(immunization, patientData);
+                addResourceToBundle(bundle, fhirImmunization, "Immunization");
+            }
+        }
+    }
+
+    /**
+     * Convert order data to FHIR MedicationRequest resource.
+     */
+    @SuppressWarnings("unchecked")
+    private MedicationRequest convertToMedicationRequest(Map<String, Object> orderData,
+                                                          Map<String, Object> patientData) {
+        MedicationRequest medicationRequest = new MedicationRequest();
+
+        // Status
+        medicationRequest.setStatus(MedicationRequest.MedicationRequestStatus.ACTIVE);
+
+        // Intent
+        medicationRequest.setIntent(MedicationRequest.MedicationRequestIntent.ORDER);
+
+        // Subject (Patient reference)
+        if (patientData != null && patientData.containsKey("patientId")) {
+            Reference patientRef = new Reference();
+            patientRef.setReference("Patient/" + patientData.get("patientId"));
+            medicationRequest.setSubject(patientRef);
+        }
+
+        // Identifier (Placer Order Number)
+        if (orderData.containsKey("placerOrderNumber")) {
+            Identifier identifier = new Identifier();
+            identifier.setValue((String) orderData.get("placerOrderNumber"));
+            identifier.setSystem("http://hospital.example.org/placer-orders");
+            medicationRequest.addIdentifier(identifier);
+        }
+
+        // Medication from RXE segment
+        Map<String, Object> medication = (Map<String, Object>) orderData.get("medication");
+        if (medication != null) {
+            Map<String, String> drugCode = (Map<String, String>) medication.get("drugCode");
+            if (drugCode != null) {
+                CodeableConcept medicationCode = new CodeableConcept();
+                Coding coding = new Coding();
+                coding.setCode(drugCode.get("code"));
+                coding.setDisplay(drugCode.get("display"));
+                coding.setSystem(mapCodingSystem(drugCode.get("system")));
+                medicationCode.addCoding(coding);
+                medicationRequest.setMedication(medicationCode);
+            }
+
+            // Dosage
+            Dosage dosage = new Dosage();
+            if (medication.containsKey("administrationInstructions")) {
+                dosage.setText((String) medication.get("administrationInstructions"));
+            }
+
+            // Dose Quantity
+            if (medication.containsKey("giveAmountMin")) {
+                Dosage.DosageDoseAndRateComponent doseAndRate = new Dosage.DosageDoseAndRateComponent();
+                SimpleQuantity doseQuantity = new SimpleQuantity();
+                try {
+                    doseQuantity.setValue(Double.parseDouble((String) medication.get("giveAmountMin")));
+                } catch (Exception e) {
+                    log.debug("Could not parse dose amount");
+                }
+                if (medication.containsKey("giveUnitsDisplay")) {
+                    doseQuantity.setUnit((String) medication.get("giveUnitsDisplay"));
+                }
+                doseAndRate.setDose(doseQuantity);
+                dosage.addDoseAndRate(doseAndRate);
+            }
+
+            medicationRequest.addDosageInstruction(dosage);
+
+            // Dispense Request
+            MedicationRequest.MedicationRequestDispenseRequestComponent dispenseRequest =
+                new MedicationRequest.MedicationRequestDispenseRequestComponent();
+
+            if (medication.containsKey("dispenseAmount")) {
+                SimpleQuantity quantity = new SimpleQuantity();
+                try {
+                    quantity.setValue(Double.parseDouble((String) medication.get("dispenseAmount")));
+                } catch (Exception e) {
+                    log.debug("Could not parse dispense amount");
+                }
+                if (medication.containsKey("dispenseUnits")) {
+                    quantity.setUnit((String) medication.get("dispenseUnits"));
+                }
+                dispenseRequest.setQuantity(quantity);
+            }
+
+            if (medication.containsKey("numberOfRefills")) {
+                try {
+                    int refills = Integer.parseInt((String) medication.get("numberOfRefills"));
+                    dispenseRequest.setNumberOfRepeatsAllowed(refills);
+                } catch (Exception e) {
+                    log.debug("Could not parse refills");
+                }
+            }
+
+            medicationRequest.setDispenseRequest(dispenseRequest);
+        }
+
+        // Routes
+        List<Map<String, String>> routes = (List<Map<String, String>>) orderData.get("routes");
+        if (routes != null && !routes.isEmpty()) {
+            Map<String, String> route = routes.get(0);
+            if (medicationRequest.hasDosageInstruction()) {
+                CodeableConcept routeCode = new CodeableConcept();
+                Coding routeCoding = new Coding();
+                routeCoding.setCode(route.get("code"));
+                routeCoding.setDisplay(route.get("display"));
+                routeCoding.setSystem(mapCodingSystem(route.get("system")));
+                routeCode.addCoding(routeCoding);
+                medicationRequest.getDosageInstructionFirstRep().setRoute(routeCode);
+            }
+        }
+
+        // Requester from ORC
+        if (orderData.containsKey("orderingProvider")) {
+            Map<String, String> provider = (Map<String, String>) orderData.get("orderingProvider");
+            Reference requesterRef = new Reference();
+            requesterRef.setReference("Practitioner/" + provider.get("id"));
+            requesterRef.setDisplay(provider.get("givenName") + " " + provider.get("familyName"));
+            medicationRequest.setRequester(requesterRef);
+        }
+
+        return medicationRequest;
+    }
+
+    /**
+     * Convert administration data to FHIR MedicationAdministration resource.
+     */
+    @SuppressWarnings("unchecked")
+    private MedicationAdministration convertToMedicationAdministration(Map<String, Object> adminData,
+                                                                        Map<String, Object> patientData) {
+        MedicationAdministration medicationAdministration = new MedicationAdministration();
+
+        // Status
+        if (adminData.containsKey("fhirStatus")) {
+            String status = (String) adminData.get("fhirStatus");
+            medicationAdministration.setStatus(mapMedicationAdministrationStatus(status));
+        } else {
+            medicationAdministration.setStatus(MedicationAdministration.MedicationAdministrationStatus.COMPLETED);
+        }
+
+        // Subject (Patient reference)
+        if (patientData != null && patientData.containsKey("patientId")) {
+            Reference patientRef = new Reference();
+            patientRef.setReference("Patient/" + patientData.get("patientId"));
+            medicationAdministration.setSubject(patientRef);
+        }
+
+        // Medication
+        Map<String, String> administeredCode = (Map<String, String>) adminData.get("administeredCode");
+        if (administeredCode != null) {
+            CodeableConcept medicationCode = new CodeableConcept();
+            Coding coding = new Coding();
+            coding.setCode(administeredCode.get("code"));
+            coding.setDisplay(administeredCode.get("display"));
+            coding.setSystem(mapCodingSystem(administeredCode.get("system")));
+            medicationCode.addCoding(coding);
+            medicationAdministration.setMedication(medicationCode);
+        }
+
+        // Effective DateTime
+        if (adminData.containsKey("startDateTime")) {
+            try {
+                Date effectiveDate = parseHl7Date((String) adminData.get("startDateTime"));
+                medicationAdministration.setEffective(new DateTimeType(effectiveDate));
+            } catch (Exception e) {
+                log.warn("Failed to parse administration start date: {}", e.getMessage());
+            }
+        }
+
+        // Dosage
+        MedicationAdministration.MedicationAdministrationDosageComponent dosage =
+            new MedicationAdministration.MedicationAdministrationDosageComponent();
+
+        if (adminData.containsKey("administeredAmount")) {
+            SimpleQuantity doseQuantity = new SimpleQuantity();
+            try {
+                doseQuantity.setValue(Double.parseDouble((String) adminData.get("administeredAmount")));
+            } catch (Exception e) {
+                log.debug("Could not parse administered amount");
+            }
+            if (adminData.containsKey("administeredUnitsDisplay")) {
+                doseQuantity.setUnit((String) adminData.get("administeredUnitsDisplay"));
+            }
+            dosage.setDose(doseQuantity);
+        }
+
+        // Route
+        Map<String, String> route = (Map<String, String>) adminData.get("route");
+        if (route != null) {
+            CodeableConcept routeCode = new CodeableConcept();
+            Coding routeCoding = new Coding();
+            routeCoding.setCode(route.get("code"));
+            routeCoding.setDisplay(route.get("display"));
+            routeCoding.setSystem(mapCodingSystem(route.get("system")));
+            routeCode.addCoding(routeCoding);
+            dosage.setRoute(routeCode);
+
+            // Site
+            if (route.containsKey("siteCode")) {
+                CodeableConcept siteCode = new CodeableConcept();
+                Coding siteCoding = new Coding();
+                siteCoding.setCode(route.get("siteCode"));
+                siteCoding.setDisplay(route.get("siteDisplay"));
+                siteCode.addCoding(siteCoding);
+                dosage.setSite(siteCode);
+            }
+        }
+
+        medicationAdministration.setDosage(dosage);
+
+        // Performer
+        if (adminData.containsKey("administeringProvider")) {
+            Map<String, String> provider = (Map<String, String>) adminData.get("administeringProvider");
+            MedicationAdministration.MedicationAdministrationPerformerComponent performer =
+                new MedicationAdministration.MedicationAdministrationPerformerComponent();
+            Reference actorRef = new Reference();
+            actorRef.setReference("Practitioner/" + provider.get("id"));
+            actorRef.setDisplay(provider.get("givenName") + " " + provider.get("familyName"));
+            performer.setActor(actorRef);
+            medicationAdministration.addPerformer(performer);
+        }
+
+        return medicationAdministration;
+    }
+
+    /**
+     * Convert immunization data to FHIR Immunization resource.
+     */
+    @SuppressWarnings("unchecked")
+    private Immunization convertToImmunization(Map<String, Object> immunizationData,
+                                                Map<String, Object> patientData) {
+        Immunization immunization = new Immunization();
+
+        // Status
+        if (immunizationData.containsKey("fhirStatus")) {
+            String status = (String) immunizationData.get("fhirStatus");
+            immunization.setStatus(mapImmunizationStatus(status));
+        } else {
+            immunization.setStatus(Immunization.ImmunizationStatus.COMPLETED);
+        }
+
+        // Subject (Patient reference)
+        if (patientData != null && patientData.containsKey("patientId")) {
+            Reference patientRef = new Reference();
+            patientRef.setReference("Patient/" + patientData.get("patientId"));
+            immunization.setPatient(patientRef);
+        }
+
+        // Vaccine Code
+        Map<String, String> vaccineCode = (Map<String, String>) immunizationData.get("vaccineCode");
+        if (vaccineCode != null) {
+            CodeableConcept vaccine = new CodeableConcept();
+            Coding coding = new Coding();
+            coding.setCode(vaccineCode.get("code"));
+            coding.setDisplay(vaccineCode.get("display"));
+            coding.setSystem(mapCodingSystem(vaccineCode.get("system")));
+            vaccine.addCoding(coding);
+            immunization.setVaccineCode(vaccine);
+        }
+
+        // Occurrence DateTime
+        if (immunizationData.containsKey("administrationDateTime")) {
+            try {
+                Date occurrenceDate = parseHl7Date((String) immunizationData.get("administrationDateTime"));
+                immunization.setOccurrence(new DateTimeType(occurrenceDate));
+            } catch (Exception e) {
+                log.warn("Failed to parse immunization date: {}", e.getMessage());
+            }
+        }
+
+        // Dose Quantity
+        if (immunizationData.containsKey("administeredAmount")) {
+            SimpleQuantity doseQuantity = new SimpleQuantity();
+            try {
+                doseQuantity.setValue(Double.parseDouble((String) immunizationData.get("administeredAmount")));
+            } catch (Exception e) {
+                log.debug("Could not parse dose amount");
+            }
+            if (immunizationData.containsKey("administeredUnitsDisplay")) {
+                doseQuantity.setUnit((String) immunizationData.get("administeredUnitsDisplay"));
+            }
+            immunization.setDoseQuantity(doseQuantity);
+        }
+
+        // Lot Number
+        if (immunizationData.containsKey("lotNumber")) {
+            immunization.setLotNumber((String) immunizationData.get("lotNumber"));
+        }
+
+        // Expiration Date
+        if (immunizationData.containsKey("expirationDate")) {
+            try {
+                Date expirationDate = parseHl7Date((String) immunizationData.get("expirationDate"));
+                immunization.setExpirationDate(expirationDate);
+            } catch (Exception e) {
+                log.warn("Failed to parse expiration date: {}", e.getMessage());
+            }
+        }
+
+        // Manufacturer
+        if (immunizationData.containsKey("manufacturer")) {
+            Reference manufacturerRef = new Reference();
+            manufacturerRef.setDisplay((String) immunizationData.get("manufacturer"));
+            immunization.setManufacturer(manufacturerRef);
+        }
+
+        // Route
+        Map<String, String> route = (Map<String, String>) immunizationData.get("route");
+        if (route != null) {
+            CodeableConcept routeCode = new CodeableConcept();
+            Coding routeCoding = new Coding();
+            routeCoding.setCode(route.get("code"));
+            routeCoding.setDisplay(route.get("display"));
+            routeCoding.setSystem(mapCodingSystem(route.get("system")));
+            routeCode.addCoding(routeCoding);
+            immunization.setRoute(routeCode);
+
+            // Site
+            if (route.containsKey("siteCode")) {
+                CodeableConcept siteCode = new CodeableConcept();
+                Coding siteCoding = new Coding();
+                siteCoding.setCode(route.get("siteCode"));
+                siteCoding.setDisplay(route.get("siteDisplay"));
+                siteCode.addCoding(siteCoding);
+                immunization.setSite(siteCode);
+            }
+        }
+
+        // Performer
+        if (immunizationData.containsKey("administeringProvider")) {
+            Map<String, String> provider = (Map<String, String>) immunizationData.get("administeringProvider");
+            Immunization.ImmunizationPerformerComponent performer =
+                new Immunization.ImmunizationPerformerComponent();
+            Reference actorRef = new Reference();
+            actorRef.setReference("Practitioner/" + provider.get("id"));
+            actorRef.setDisplay(provider.get("givenName") + " " + provider.get("familyName"));
+            performer.setActor(actorRef);
+            immunization.addPerformer(performer);
+        }
+
+        // Primary Source - default to true if from healthcare provider
+        immunization.setPrimarySource(true);
+
+        return immunization;
+    }
+
+    /**
+     * Map status to FHIR MedicationAdministrationStatus.
+     */
+    private MedicationAdministration.MedicationAdministrationStatus mapMedicationAdministrationStatus(String status) {
+        return switch (status) {
+            case "completed" -> MedicationAdministration.MedicationAdministrationStatus.COMPLETED;
+            case "in-progress" -> MedicationAdministration.MedicationAdministrationStatus.INPROGRESS;
+            case "not-done" -> MedicationAdministration.MedicationAdministrationStatus.NOTDONE;
+            case "stopped" -> MedicationAdministration.MedicationAdministrationStatus.STOPPED;
+            case "on-hold" -> MedicationAdministration.MedicationAdministrationStatus.ONHOLD;
+            default -> MedicationAdministration.MedicationAdministrationStatus.COMPLETED;
+        };
+    }
+
+    /**
+     * Map status to FHIR ImmunizationStatus.
+     */
+    private Immunization.ImmunizationStatus mapImmunizationStatus(String status) {
+        return switch (status) {
+            case "completed" -> Immunization.ImmunizationStatus.COMPLETED;
+            case "not-done" -> Immunization.ImmunizationStatus.NOTDONE;
+            case "entered-in-error" -> Immunization.ImmunizationStatus.ENTEREDINERROR;
+            default -> Immunization.ImmunizationStatus.COMPLETED;
+        };
     }
 
     /**

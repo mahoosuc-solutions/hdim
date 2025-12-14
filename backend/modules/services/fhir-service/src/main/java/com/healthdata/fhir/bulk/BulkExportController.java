@@ -38,7 +38,8 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1")
-@Tag(name = "Bulk Data Export", description = "FHIR Bulk Data Export API")
+@Tag(name = "Bulk Export", description = "Async bulk data export operations following FHIR Bulk Data Access specification")
+@SecurityRequirement(name = "smart-oauth2")
 @Slf4j
 public class BulkExportController {
 

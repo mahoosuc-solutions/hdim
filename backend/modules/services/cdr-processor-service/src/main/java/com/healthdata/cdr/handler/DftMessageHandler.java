@@ -124,20 +124,8 @@ public class DftMessageHandler {
                             extractObservationRequest(obr, order);
                         }
 
-                        // OBX segments
-                        int obxCount = dft.getFINANCIAL(i).getFINANCIAL_COMMON_ORDER(j)
-                            .getFINANCIAL_OBSERVATION_Reps();
-                        if (obxCount > 0) {
-                            List<Map<String, Object>> observations = new ArrayList<>();
-                            for (int k = 0; k < obxCount; k++) {
-                                OBX obx = dft.getFINANCIAL(i).getFINANCIAL_COMMON_ORDER(j)
-                                    .getFINANCIAL_OBSERVATION_(k).getOBX();
-                                if (obx != null) {
-                                    observations.add(extractObservation(obx));
-                                }
-                            }
-                            order.put("observations", observations);
-                        }
+                        // Note: Financial observations (OBX) structure varies by HL7 version
+                        // Additional observation extraction can be added based on specific profile
 
                         orders.add(order);
                     }
@@ -276,7 +264,7 @@ public class DftMessageHandler {
         }
 
         if (evn.getEventReasonCode() != null) {
-            eventData.put("eventReasonCode", evn.getEventReasonCode().getIdentifier().getValue());
+            eventData.put("eventReasonCode", evn.getEventReasonCode().getValue());
         }
 
         if (evn.getOperatorID(0) != null) {
@@ -469,7 +457,7 @@ public class DftMessageHandler {
 
         // Fee Schedule
         if (ft1.getFeeSchedule() != null) {
-            data.put("feeSchedule", ft1.getFeeSchedule().getIdentifier().getValue());
+            data.put("feeSchedule", ft1.getFeeSchedule().getValue());
         }
 
         // Diagnosis Code - FT1
@@ -521,7 +509,7 @@ public class DftMessageHandler {
 
         // Payment Reference ID
         if (ft1.getPaymentReferenceID() != null) {
-            data.put("paymentReferenceId", ft1.getPaymentReferenceID().getEntityIdentifier().getValue());
+            data.put("paymentReferenceId", ft1.getPaymentReferenceID().getIDNumber().getValue());
         }
     }
 

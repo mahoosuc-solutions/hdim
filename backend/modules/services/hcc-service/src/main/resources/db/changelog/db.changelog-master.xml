@@ -208,4 +208,17 @@
         </sql>
     </changeSet>
 
+    <!-- HCC V24/V28 Crosswalk Seed Data -->
+    <changeSet id="007-load-hcc-crosswalk-seed-data" author="hdim">
+        <comment>Load representative HCC V24/V28 crosswalk mapping data for development/testing.
+            Includes high-impact conditions: Diabetes, CHF, COPD, CKD, Cancer, Depression, Stroke, RA, HIV, Vascular Disease.
+            Production systems should use official CMS data files.</comment>
+        <sqlFile path="classpath:data/hcc-crosswalk/V1_hcc_crosswalk_seed_data.sql"
+                 splitStatements="true"
+                 stripComments="true"/>
+        <rollback>
+            <sql>DELETE FROM hcc.diagnosis_hcc_map;</sql>
+        </rollback>
+    </changeSet>
+
 </databaseChangeLog>

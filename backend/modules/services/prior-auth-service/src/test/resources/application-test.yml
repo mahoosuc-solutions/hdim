@@ -1,0 +1,76 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+    allow-circular-references: true
+
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+    defer-datasource-initialization: true
+
+  liquibase:
+    enabled: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  cache:
+    type: none
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      auto-offset-reset: earliest
+      group-id: prior-auth-test
+
+# Disable security for tests
+authentication:
+  controller:
+    enabled: false
+  audit:
+    enabled: false
+  rateLimit:
+    enabled: false
+
+# JWT test configuration
+jwt:
+  secret: test-secret-key-for-unit-testing-only-minimum-32-chars
+  accessTokenExpirationMs: 900000
+  refreshTokenExpirationMs: 604800000
+
+# Disable Feign client connections for tests
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 1000
+        readTimeout: 1000
+
+# Resilience4j disabled for tests
+resilience4j:
+  circuitbreaker:
+    instances:
+      payerApi:
+        registerHealthIndicator: false
+  retry:
+    instances:
+      payerApi:
+        maxAttempts: 1
+
+logging:
+  level:
+    com.healthdata: DEBUG
+    org.springframework.security: DEBUG

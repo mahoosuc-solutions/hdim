@@ -322,7 +322,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
       'Sign Result',
       'Cancel',
       result.abnormal ? 'warn' : 'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         result.requiresReview = false;
         this.resultsToReview = Math.max(0, this.resultsToReview - 1);
@@ -513,7 +513,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
       'Sign All',
       'Cancel',
       abnormalCount > 0 ? 'warn' : 'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         unsignedResults.forEach(result => {
           result.requiresReview = false;
@@ -664,7 +664,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
       'Block',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         // In production, this would call a service to block the time
         this.notificationService.success('Time slot blocked successfully');
@@ -683,7 +683,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
       'Cancel Block',
       'Keep Block',
       'warn'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         // In production, this would call a service to remove the block
         this.notificationService.success('Blocked time slot cancelled');

@@ -238,7 +238,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       'Complete Education',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         gap.status = 'completed';
         this.patientEducationDue = Math.max(0, this.patientEducationDue - 1);
@@ -262,7 +262,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       'Start Reconciliation',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         gap.status = 'in-progress';
         this.notificationService.info(`Starting medication reconciliation for ${gap.patientName}`);
@@ -286,7 +286,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       'Start Call Documentation',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         this.notificationService.info(`Opening call documentation for ${outreach.patientName}`);
         // Navigate to patient detail with call documentation
@@ -310,7 +310,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       `Compose ${communicationType === 'email' ? 'Email' : 'Letter'}`,
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         this.notificationService.info(`Opening ${communicationType} composer for ${outreach.patientName}`);
         // Navigate to patient detail with communication action
@@ -439,7 +439,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       'Schedule Session',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         const scheduledDate = new Date();
         scheduledDate.setDate(scheduledDate.getDate() + 7); // Schedule for next week
@@ -477,7 +477,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       'Document Session',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         this.careGapService.closeGap(gap.id, {
           reason: 'Education session completed',
@@ -544,7 +544,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       'Send Materials',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         // In a real implementation, this would trigger email/portal notification
         this.toastService.success(`Education materials sent to ${gap.patientName}`);
@@ -602,7 +602,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       'Schedule Referral',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         const scheduledDate = new Date();
         scheduledDate.setDate(scheduledDate.getDate() + 14); // Schedule for 2 weeks out
@@ -669,7 +669,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       'Send Summary',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         // In a real implementation, this would trigger email to care team
         this.toastService.success('Coordination summary sent to care team');
@@ -694,7 +694,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       'Schedule Appointment',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         const scheduledDate = new Date();
         scheduledDate.setDate(scheduledDate.getDate() + 30); // Schedule for 30 days out
@@ -733,7 +733,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       'Send Reminder',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         // In a real implementation, this would trigger reminder
         this.toastService.success(`Reminder sent to ${outreach.patientName}`);
@@ -755,7 +755,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       'Reschedule',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         // In a real implementation, this would create new follow-up
         outreach.status = 'scheduled';
@@ -811,7 +811,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       'Cancel Follow-up',
       'Keep Follow-up',
       'warn'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         // In a real implementation, this would cancel the follow-up
         this.toastService.success(`Follow-up cancelled for ${outreach.patientName}`);
@@ -836,7 +836,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       'Start Session',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         this.router.navigate(['/patients', gap.id], {
           queryParams: { action: 'start-coaching', gapType: gap.gapType }
@@ -913,7 +913,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       'Send Report',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         // In a real implementation, this would generate and send report
         this.toastService.success('Progress report sent successfully');

@@ -10,6 +10,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { takeUntil } from 'rxjs';
+import { injectDestroy } from '../../shared/utils';
 import { PatientService } from '../../services/patient.service';
 import { FhirClinicalService, PatientClinicalData, Observation, Condition, Procedure } from '../../services/fhir-clinical.service';
 import { EvaluationService } from '../../services/evaluation.service';
@@ -41,6 +43,8 @@ import { PatientHealthOverviewComponent } from '../patient-health-overview/patie
   styleUrls: ['./patient-detail.component.scss'],
 })
 export class PatientDetailComponent implements OnInit {
+  private destroy$ = injectDestroy();
+
   patientId: string | null = null;
   patient: Patient | null = null;
   clinicalData: PatientClinicalData | null = null;
@@ -86,7 +90,7 @@ export class PatientDetailComponent implements OnInit {
     this.error = null;
 
     // Load patient demographics
-    this.patientService.getPatient(this.patientId).subscribe({
+    this.patientService.getPatient(this.patientId).pipe(takeUntil(this.destroy$)).subscribe({
       next: (patient: Patient) => {
         this.patient = patient;
         this.loadClinicalData();
@@ -103,7 +107,7 @@ export class PatientDetailComponent implements OnInit {
   private loadClinicalData(): void {
     if (!this.patientId) return;
 
-    this.fhirClinicalService.getPatientClinicalData(this.patientId).subscribe({
+    this.fhirClinicalService.getPatientClinicalData(this.patientId).pipe(takeUntil(this.destroy$)).subscribe({
       next: (data: PatientClinicalData) => {
         this.clinicalData = data;
         this.loading = false;
@@ -118,7 +122,7 @@ export class PatientDetailComponent implements OnInit {
   private loadQualityResults(): void {
     if (!this.patientId) return;
 
-    this.evaluationService.getPatientResults(this.patientId).subscribe({
+    this.evaluationService.getPatientResults(this.patientId).pipe(takeUntil(this.destroy$)).subscribe({
       next: (results: QualityMeasureResult[]) => {
         this.qualityResults = results;
       },

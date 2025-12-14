@@ -17,7 +17,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SelectionModel } from '@angular/cdk/collections';
 import { Observable, of } from 'rxjs';
-import { map, startWith, catchError } from 'rxjs/operators';
+import { map, startWith, catchError, takeUntil } from 'rxjs/operators';
+import { injectDestroy } from '../../shared/utils';
 
 import { MeasureService } from '../../services/measure.service';
 import { EvaluationService } from '../../services/evaluation.service';
@@ -63,6 +64,8 @@ import { TrackInteraction } from '../../utils/ai-tracking.decorator';
   styleUrl: './evaluations.component.scss',
 })
 export class EvaluationsComponent implements OnInit, AfterViewInit {
+  private destroy$ = injectDestroy();
+
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
   evaluationForm: FormGroup;
@@ -146,6 +149,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     this.measuresErrorDetails = null;
 
     this.measureService.getActiveMeasuresInfo().pipe(
+      takeUntil(this.destroy$),
       catchError((error) => {
         this.measuresErrorDetails = ErrorFactory.createCqlEngineError('load measures', error);
         this.measuresError = this.measuresErrorDetails.userMessage;
@@ -168,6 +172,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     this.patientsErrorDetails = null;
 
     this.patientService.getPatientsSummary().pipe(
+      takeUntil(this.destroy$),
       catchError((error) => {
         this.patientsErrorDetails = ErrorFactory.createFhirServiceError('load patients', error);
         this.patientsError = this.patientsErrorDetails.userMessage;
@@ -245,6 +250,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
 
     // Use Quality Measure Service to calculate measure
     this.evaluationService.calculateQualityMeasure(patientId, measureId).pipe(
+      takeUntil(this.destroy$),
       catchError((error: any) => {
         this.evaluationErrorDetails = ErrorFactory.createEvaluationError(patientId, measureId, error);
         this.evaluationError = this.evaluationErrorDetails.userMessage;
@@ -317,6 +323,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
   @TrackInteraction('evaluations', 'load-evaluations')
   loadEvaluations(): void {
     this.evaluationService.getAllResults(0, 1000).pipe(
+      takeUntil(this.destroy$),
       catchError((error) => {
         console.error('Error loading evaluations:', error);
         return of([]);
@@ -454,7 +461,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
       'Delete',
       'Cancel',
       'warn'
-    ).subscribe((confirmed) => {
+    ).pipe(takeUntil(this.destroy$)).subscribe((confirmed) => {
       if (confirmed) {
         this.performDeleteSelected();
       }

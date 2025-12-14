@@ -5,7 +5,7 @@
  * including physical, mental, and social health metrics
  */
 
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,6 +18,8 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTableModule } from '@angular/material/table';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatBadgeModule } from '@angular/material/badge';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PatientHealthService } from '../../services/patient-health.service';
 import {
   PatientHealthOverview,
@@ -53,8 +55,10 @@ import {
   templateUrl: './patient-health-overview.component.html',
   styleUrls: ['./patient-health-overview.component.scss'],
 })
-export class PatientHealthOverviewComponent implements OnInit {
+export class PatientHealthOverviewComponent implements OnInit, OnDestroy {
   @Input() patientId!: string;
+
+  private destroy$ = new Subject<void>();
 
   healthOverview: PatientHealthOverview | null = null;
   loading = true;
@@ -77,11 +81,16 @@ export class PatientHealthOverviewComponent implements OnInit {
     this.loadHealthOverview();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   private loadHealthOverview(): void {
     this.loading = true;
     this.error = null;
 
-    this.healthService.getPatientHealthOverview(this.patientId).subscribe({
+    this.healthService.getPatientHealthOverview(this.patientId).pipe(takeUntil(this.destroy$)).subscribe({
       next: (overview) => {
         this.healthOverview = overview;
         this.generateCriticalAlerts(overview);

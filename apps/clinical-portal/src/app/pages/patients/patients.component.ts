@@ -930,6 +930,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
         'Cancel',
         'warn'
       )
+      .pipe(takeUntil(this.destroy$))
       .subscribe((confirmed) => {
         if (confirmed) {
           this.performDeleteSelected();
@@ -1061,14 +1062,16 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
    * Update deduplication statistics
    */
   private updateDeduplicationStatistics(): void {
-    this.deduplicationService.getStatistics(this.patientsWithLinks).subscribe({
-      next: (stats) => {
-        this.deduplicationStats = stats;
-      },
-      error: (err) => {
-        console.error('Error calculating deduplication statistics:', err);
-      }
-    });
+    this.deduplicationService.getStatistics(this.patientsWithLinks)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (stats) => {
+          this.deduplicationStats = stats;
+        },
+        error: (err) => {
+          console.error('Error calculating deduplication statistics:', err);
+        }
+      });
   }
 
   /**
@@ -1080,8 +1083,10 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
 
     console.log(`Starting duplicate detection for ${this.patients.length} patients...`);
 
-    this.deduplicationService.autoDetectAndLinkDuplicates(this.patients).subscribe({
-      next: (result) => {
+    this.deduplicationService.autoDetectAndLinkDuplicates(this.patients)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
         this.detectingDuplicates = false;
 
         console.log('Detection result:', result);

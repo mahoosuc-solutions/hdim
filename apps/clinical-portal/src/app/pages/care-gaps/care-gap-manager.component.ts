@@ -556,6 +556,7 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
         'Cancel',
         'primary'
       )
+      .pipe(takeUntil(this.destroy$))
       .subscribe((confirmed) => {
         if (confirmed) {
           this.performBulkClose();

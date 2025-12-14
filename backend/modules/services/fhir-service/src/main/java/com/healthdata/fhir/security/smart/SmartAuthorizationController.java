@@ -1,5 +1,12 @@
 package com.healthdata.fhir.security.smart;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,18 +32,21 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/oauth")
 @RequiredArgsConstructor
+@Tag(name = "SMART", description = "SMART on FHIR OAuth 2.0 endpoints")
 public class SmartAuthorizationController {
 
     private final SmartAuthorizationService authorizationService;
     private final SmartClientRepository clientRepository;
 
-    /**
-     * OAuth 2.0 Authorization Endpoint.
-     *
-     * Initiates the authorization code flow.
-     * For simplicity, this auto-approves requests. In production,
-     * this should redirect to a consent screen.
-     */
+    @Operation(
+        summary = "OAuth 2.0 Authorization",
+        description = "Initiates the authorization code flow. Redirects to the client with an authorization code.",
+        operationId = "authorize"
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "302", description = "Redirect to client with authorization code or error"),
+        @ApiResponse(responseCode = "400", description = "Invalid request parameters")
+    })
     @GetMapping("/authorize")
     public RedirectView authorize(
             @RequestParam("response_type") String responseType,
@@ -99,14 +109,20 @@ public class SmartAuthorizationController {
         }
     }
 
-    /**
-     * OAuth 2.0 Token Endpoint.
-     *
-     * Supports:
-     * - authorization_code grant
-     * - refresh_token grant
-     * - client_credentials grant (for backend services)
-     */
+    @Operation(
+        summary = "OAuth 2.0 Token Exchange",
+        description = "Exchanges authorization code, refresh token, or client credentials for an access token.",
+        operationId = "token"
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Token issued successfully",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = TokenResponse.class))
+        ),
+        @ApiResponse(responseCode = "400", description = "Invalid request or grant"),
+        @ApiResponse(responseCode = "401", description = "Invalid client credentials")
+    })
     @PostMapping(
         path = "/token",
         consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
@@ -177,9 +193,14 @@ public class SmartAuthorizationController {
         }
     }
 
-    /**
-     * Token Revocation Endpoint.
-     */
+    @Operation(
+        summary = "Revoke Token",
+        description = "Revokes an access token or refresh token.",
+        operationId = "revoke"
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Token revoked successfully")
+    })
     @PostMapping(
         path = "/revoke",
         consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE
@@ -193,9 +214,15 @@ public class SmartAuthorizationController {
         return ResponseEntity.ok().build();
     }
 
-    /**
-     * User Info Endpoint (OpenID Connect).
-     */
+    @Operation(
+        summary = "OpenID Connect User Info",
+        description = "Returns user information based on the access token. Part of OpenID Connect protocol.",
+        operationId = "userinfo"
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "User info returned successfully"),
+        @ApiResponse(responseCode = "401", description = "Invalid or expired token")
+    })
     @GetMapping(path = "/userinfo", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> userinfo(
             @RequestHeader("Authorization") String authHeader) {
@@ -226,9 +253,14 @@ public class SmartAuthorizationController {
         }
     }
 
-    /**
-     * Token Introspection Endpoint.
-     */
+    @Operation(
+        summary = "Token Introspection",
+        description = "Validates a token and returns its metadata. Used by resource servers to verify tokens.",
+        operationId = "introspect"
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Token introspection result (active true/false)")
+    })
     @PostMapping(
         path = "/introspect",
         consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,

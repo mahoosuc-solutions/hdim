@@ -52,7 +52,7 @@ class AllergyIntoleranceRepositoryIT {
         registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.H2Dialect");
         // Enable auto-creation of database schema in tests
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
-        registry.add("spring.liquibase.driver-class-name", () -> "org.h2.Driver");
+        registry.add("spring.liquibase.enabled", () -> "false");
         registry.add("spring.flyway.enabled", () -> "false");
     }
 

@@ -43,6 +43,14 @@ dependencies {
     implementation("io.github.resilience4j:resilience4j-retry:2.1.0")
     implementation("io.github.resilience4j:resilience4j-ratelimiter:2.1.0")
 
+    // JWT for SMART on FHIR OAuth
+    implementation("io.jsonwebtoken:jjwt-api:0.12.3")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.3")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.3")
+
+    // WebSocket for real-time subscriptions
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
+
     // Utilities
     implementation(libs.bundles.utilities)
     annotationProcessor(libs.mapstruct.processor)

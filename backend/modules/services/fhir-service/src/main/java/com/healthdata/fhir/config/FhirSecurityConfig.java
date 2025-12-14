@@ -94,7 +94,14 @@ public class FhirSecurityConfig {
                     "/v3/api-docs/**",
                     "/swagger-resources/**",
                     "/webjars/**",
-                    "/fhir/metadata"  // FHIR metadata endpoint
+                    "/fhir/metadata",  // FHIR metadata endpoint
+                    // SMART on FHIR OAuth endpoints
+                    "/.well-known/smart-configuration",
+                    "/oauth/authorize",
+                    "/oauth/token",
+                    "/oauth/revoke",
+                    "/oauth/introspect",
+                    "/.well-known/jwks.json"
                 ).permitAll()
                 // DEMO MODE: Permit all FHIR API access (remove in production)
                 // Note: Context path is /fhir, so internal paths are relative

@@ -4,7 +4,7 @@
 
 **Company name:** HDIM (HealthData-in-Motion)
 
-**Company URL:** [hdim.health - to be registered]
+**Company URL:** healthdatainmotion.com
 
 **One-liner (max 70 chars):**
 Real-time quality measurement infrastructure for healthcare
@@ -60,13 +60,13 @@ We saw an opportunity to build what Stripe did for payments: take something that
 ## What do you understand that others don't?
 
 **Insight 1: Quality measurement should be real-time, not batch.**
-Everyone assumes quality measures are calculated weekly/monthly because that's how legacy systems work. But CQL (the standard for quality logic) can evaluate in milliseconds. The batch paradigm exists because of 1990s database architecture, not clinical necessity.
+Everyone assumes quality measures are calculated weekly/monthly because that's how legacy systems work. But CQL can evaluate in milliseconds - the batch paradigm exists because of 1990s database architecture, not clinical necessity. When only 8% of patients receive all recommended preventive care (AHRQ), the timing of insights matters. A care gap identified 24 hours after the patient leaves is a missed opportunity.
 
 **Insight 2: Small organizations will pay for simplicity, not just savings.**
-FQHCs and rural clinics aren't just priced out of Epic - they're complexity-averse. A platform that "just works" without 6-month implementations is worth paying for even if the sticker price isn't dramatically lower.
+As David Nash, MD notes, "most third-party software is designed and priced for large organizations." But FQHCs and rural clinics aren't just priced out - they're complexity-averse. When the industry standard is 6-8 months to implementation, a platform that deploys in days is worth paying for even at similar price points.
 
 **Insight 3: The real lock-in isn't data, it's measure logic.**
-Health systems are terrified of switching quality platforms because their custom measure definitions are trapped. HDIM uses standard CQL, which means measures are portable. This removes the biggest barrier to adoption.
+Health systems are terrified of switching quality platforms because their custom measure definitions are trapped in proprietary formats. HDIM uses standard CQL - measures are portable, testable, and shareable. This removes the biggest barrier to adoption while building an ecosystem of reusable clinical logic.
 
 ---
 
@@ -88,13 +88,19 @@ Health systems are terrified of switching quality platforms because their custom
 
 ## How do you know people want this?
 
-1. **Regulatory tailwind:** CMS is requiring quality reporting for an increasing share of payments. Organizations MUST solve this problem.
+1. **Only 8% of patients get all recommended preventive care** (AHRQ). Care gaps slip through because quality data arrives too late - batch processing means insights come 24-72 hours after the patient leaves.
 
-2. **Pricing frustration:** In conversations with ACO quality directors, the #1 complaint is cost. "We pay $X for [Epic/Cerner] and it still doesn't do what we need."
+2. **"Most third-party software is designed and priced for large organizations"** - David Nash, MD, Dean of Population Health at Thomas Jefferson University. Small practices and FQHCs are priced out of quality infrastructure entirely.
 
-3. **DIY attempts:** Many organizations are building homegrown quality systems because commercial options are too expensive. This signals demand for a mid-market solution.
+3. **6-8 month implementations are standard.** ACO Health Solutions confirms this timeline before organizations "see any meaningful data." We deploy in days.
 
-4. **FQHC pain:** Federally Qualified Health Centers serve 30M patients and are required to report quality measures. Most can't afford enterprise solutions.
+4. **Epic Healthy Planet user complaints:** KLAS Research shows users saying it was "overpromoted as the solution that was going to make population health work" and "not my favorite Epic module."
+
+5. **The "crowded desktop" problem:** Physicians juggle 6-20 clinical tools outside their EHR. 74% say external tools change their decisions, but most avoid using them because they disrupt workflow. Real-time, EHR-integrated alerts improve prescribing by 41% (PROMPT-HF trial).
+
+6. **FQHCs serve 30M patients** on thin margins with mandatory quality reporting. They need affordable, simple solutions - not 6-month enterprise implementations.
+
+7. **NCQA is going all-digital by 2030.** They're moving measures to electronic-only and adopting CQL as the standard. Legacy batch systems are technical debt.
 
 ---
 
@@ -140,13 +146,15 @@ Long-term, we expand beyond quality measurement into:
 
 ## Why will you win?
 
-1. **Technical moat:** Our CQL engine is template-driven, meaning we can add new measures in hours, not weeks. Competitors require code deployments.
+1. **Technical moat:** NCQA reports that CQL "reduced the time to specify, implement and test new quality measures by as much as 90%." Our template-driven CQL engine means we add measures in hours while competitors require weeks of code deployments.
 
-2. **Pricing disruption:** We can profitably serve customers that Epic/Cerner can't touch. This gives us volume that funds R&D.
+2. **Pricing disruption:** We can profitably serve the 30M+ patients at FQHCs and small practices that Epic/Cerner can't touch. This gives us volume that funds R&D while incumbents focus on shrinking enterprise deals.
 
-3. **Standards bet:** We're 100% FHIR-native. As EHRs are forced to support FHIR (21st Century Cures Act), our integration gets easier while competitors' proprietary integrations become liabilities.
+3. **Standards bet:** We're 100% FHIR-native. The 21st Century Cures Act mandates FHIR support - our integration gets easier every year while competitors' proprietary data models become liabilities. NCQA's 2030 all-digital roadmap validates this direction.
 
-4. **Founder-market fit:** Years of public health IT experience building solutions for resource-constrained organizations. I've lived this problem—bridging clinical needs with technical reality on minimal budgets.
+4. **Point-of-care timing:** The PROMPT-HF trial showed EHR-integrated alerts improve prescribing by 41%. We deliver quality insights in <200ms when the chart opens - when it matters - not in overnight batch reports.
+
+5. **Founder-market fit:** Years of public health IT experience building solutions for resource-constrained organizations. I've lived this problem—told "Epic costs $500K" when entire IT budgets are $200K.
 
 ---
 

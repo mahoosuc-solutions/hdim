@@ -25,6 +25,7 @@ import { LoadingButtonComponent } from '../../shared/components/loading-button/l
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { StatCardComponent, StatCardAction } from '../../shared/components/stat-card/stat-card.component';
 import { BatchCalculationComponent } from '../../shared/components/batch-calculation/batch-calculation.component';
+import { SystemActivitySectionComponent } from '../../shared/components/system-activity-section/system-activity-section.component';
 import { TrackInteraction } from '../../utils/ai-tracking.decorator';
 import { UserRoleService, UserRole } from '../../shared/services/user-role.service';
 
@@ -110,6 +111,7 @@ export interface ComplianceTrendPoint {
     LoadingOverlayComponent,
     StatCardComponent,
     BatchCalculationComponent,
+    SystemActivitySectionComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',

@@ -103,6 +103,9 @@
 
   <!-- Dashboard Content -->
   <div class="dashboard-content" *ngIf="!loading && !error && !isEmpty()">
+    <!-- PRIORITY 0: Real-Time System Activity - Shows data flow and processing -->
+    <app-system-activity-section [collapsed]="false"></app-system-activity-section>
+
     <!-- PRIORITY 1: Patients Needing Attention (Care Gaps) -->
     <!-- Moved to top for immediate visibility of urgent clinical actions -->
     <section class="dashboard-section care-gaps-section" aria-label="Patients Needing Attention">

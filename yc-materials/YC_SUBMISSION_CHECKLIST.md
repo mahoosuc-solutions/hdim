@@ -12,7 +12,7 @@
 
 | Document | Status | Location | Notes |
 |----------|--------|----------|-------|
-| Application Draft | 70% complete | `YC_APPLICATION_DRAFT.md` | Needs personal sections |
+| Application Draft | 95% complete | `YC_APPLICATION_DRAFT.md` | Personal sections complete, needs final polish |
 | Demo Video Script | Ready | `DEMO_VIDEO_SCRIPT.md` | 1-min + 2-min versions |
 | Architecture One-Pager | Complete | `ARCHITECTURE_ONEPAGER.md` | Technical summary |
 | Demo Test Scenarios | Complete | `DEMO_TEST_SCENARIOS.md` | Value proposition proofs |
@@ -27,7 +27,7 @@
 | Backend (13 microservices) | Builds | All services compile |
 | Frontend (Angular Clinical Portal) | Builds | Agent Builder UI integrated |
 | Docker Deployment | Works | agent-builder-service tested |
-| Demo Environment | Needs setup | Requires seed data |
+| Demo Environment | Running | Local environment ready |
 | 52 HEDIS Measures | Implemented | CQL templates ready |
 | AI Agents | Code complete | Needs runtime testing |
 
@@ -193,9 +193,9 @@ Sample Patients to Create:
 ## PHASE 3: ADMINISTRATIVE SETUP
 
 ### Task 3.1: Domain Registration
-- [ ] Register `hdim.health` or use existing domain
+- [x] Domain: `healthdatainmotion.com` ✓
 - [ ] Set up basic landing page (optional but helpful)
-- [ ] Configure email (yourname@hdim.health looks professional)
+- [ ] Configure email (yourname@healthdatainmotion.com looks professional)
 
 ### Task 3.2: GitHub Access
 - [ ] Ensure repo is ready for YC reviewer access

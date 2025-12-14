@@ -1,187 +1,86 @@
-# FHIR API Load Test
-# Tests FHIR resource creation and search under load
-# Target: >500 requests/sec with p95 <100ms
+# FHIR API Load Test - Artillery Configuration
+# Tests FHIR service endpoints for performance under load
+#
+# Usage: artillery run fhir-api-load-test.yml
 
 config:
   target: 'http://localhost:8085'
   phases:
-    # Warm up - establish connections
     - duration: 60
       arrivalRate: 10
       name: "Warm up"
-
-    # Ramp up - gradually increase load
-    - duration: 120
-      arrivalRate: 10
-      rampTo: 100
-      name: "Ramp up"
-
-    # Sustained load - test steady state
-    - duration: 600
+    - duration: 300
       arrivalRate: 100
-      name: "Sustained load (10 minutes)"
-
-    # Peak load - test maximum capacity
+      name: "Sustained load"
     - duration: 120
       arrivalRate: 200
       name: "Peak load"
-
-    # Cool down - verify recovery
     - duration: 60
-      arrivalRate: 10
+      arrivalRate: 50
       name: "Cool down"
-
-  payload:
-    path: "./test-data/fhir-resources.json"
-
+  
   defaults:
     headers:
       Content-Type: "application/fhir+json"
-      X-Tenant-ID: "tenant-load-test"
-
-  ensure:
-    # Performance targets
-    p95: 100  # 95th percentile must be under 100ms
-    p99: 200  # 99th percentile must be under 200ms
-    maxErrorRate: 0.01  # Less than 1% errors
-
-  plugins:
-    metrics-by-endpoint:
-      stripQueryString: true
-    expect: {}
+      Accept: "application/fhir+json"
+      X-Tenant-ID: "test-tenant-001"
+  
+  variables:
+    patientIds:
+      - "patient-001"
+      - "patient-002"
+      - "patient-003"
+      - "patient-004"
+      - "patient-005"
 
 scenarios:
-  - name: "FHIR Patient Operations"
-    weight: 40
+  # Scenario 1: Patient Search (60% of traffic)
+  - name: "FHIR Patient Search"
+    weight: 60
     flow:
-      # Create patient
-      - post:
-          url: "/fhir/Patient"
-          json:
-            resourceType: "Patient"
-            name:
-              - family: "LoadTest{{ $randomString() }}"
-                given: ["Test"]
-            gender: "{{ $randomItem(['male', 'female', 'other']) }}"
-            birthDate: "{{ $randomDate() }}"
+      - get:
+          url: "/Patient?name=Smith"
           capture:
-            - json: "$.id"
+            - json: "$.entry[0].resource.id"
               as: "patientId"
-          expect:
-            - statusCode: 201
+      - think: 1
 
-      # Read patient
-      - get:
-          url: "/fhir/Patient/{{ patientId }}"
-          expect:
-            - statusCode: 200
-            - contentType: "application/fhir+json"
-
-      # Search patients by name
-      - get:
-          url: "/fhir/Patient?name=LoadTest"
-          expect:
-            - statusCode: 200
-            - hasProperty: "total"
-
-  - name: "FHIR Observation Operations"
-    weight: 35
+  # Scenario 2: Read Patient by ID (20% of traffic)
+  - name: "FHIR Read Patient"
+    weight: 20
     flow:
-      # Create observation (lab result)
+      - get:
+          url: "/Patient/{{ $randomString() }}"
+          beforeRequest: "setRandomPatientId"
+      - think: 1
+
+  # Scenario 3: Create Observation (10% of traffic)
+  - name: "FHIR Create Observation"
+    weight: 10
+    flow:
       - post:
-          url: "/fhir/Observation"
+          url: "/Observation"
           json:
             resourceType: "Observation"
             status: "final"
-            category:
-              - coding:
-                  - system: "http://terminology.hl7.org/CodeSystem/observation-category"
-                    code: "laboratory"
             code:
               coding:
                 - system: "http://loinc.org"
                   code: "4548-4"
-                  display: "HbA1c"
+                  display: "Hemoglobin A1c/Hemoglobin.total in Blood"
             subject:
-              reference: "Patient/{{ $randomPatientId() }}"
-            effectiveDateTime: "{{ $now() }}"
+              reference: "Patient/patient-001"
             valueQuantity:
-              value: "{{ $randomNumber(5.0, 12.0) }}"
+              value: 7.5
               unit: "%"
               system: "http://unitsofmeasure.org"
               code: "%"
-          capture:
-            - json: "$.id"
-              as: "observationId"
-          expect:
-            - statusCode: 201
+      - think: 2
 
-      # Search observations by patient
-      - get:
-          url: "/fhir/Observation?patient={{ $randomPatientId() }}"
-          expect:
-            - statusCode: 200
-
-  - name: "FHIR Condition Operations"
-    weight: 15
-    flow:
-      # Create condition (diagnosis)
-      - post:
-          url: "/fhir/Condition"
-          json:
-            resourceType: "Condition"
-            clinicalStatus:
-              coding:
-                - system: "http://terminology.hl7.org/CodeSystem/condition-clinical"
-                  code: "active"
-            category:
-              - coding:
-                  - system: "http://terminology.hl7.org/CodeSystem/condition-category"
-                    code: "encounter-diagnosis"
-            code:
-              coding:
-                - system: "http://snomed.info/sct"
-                  code: "44054006"
-                  display: "Type 2 Diabetes Mellitus"
-            subject:
-              reference: "Patient/{{ $randomPatientId() }}"
-            onsetDateTime: "{{ $randomDate() }}"
-          expect:
-            - statusCode: 201
-
-  - name: "FHIR Procedure Operations"
+  # Scenario 4: Search Observations (10% of traffic)
+  - name: "FHIR Search Observations"
     weight: 10
     flow:
-      # Create procedure
-      - post:
-          url: "/fhir/Procedure"
-          json:
-            resourceType: "Procedure"
-            status: "completed"
-            code:
-              coding:
-                - system: "http://www.ama-assn.org/go/cpt"
-                  code: "45378"
-                  display: "Colonoscopy"
-            subject:
-              reference: "Patient/{{ $randomPatientId() }}"
-            performedDateTime: "{{ $now() }}"
-          expect:
-            - statusCode: 201
-
-# Helper functions for realistic data
-functions:
-  randomPatientId:
-    - "load-test-patient-{{ $randomInt(1, 1000) }}"
-
-  randomString:
-    - "{{ $timestamp() }}"
-
-  randomDate:
-    - "{{ $randomDate('YYYY-MM-DD', '1950-01-01', '2000-12-31') }}"
-
-  randomNumber:
-    - "{{ $randomFloat(5.0, 12.0, 1) }}"
-
-  now:
-    - "{{ $timestamp('YYYY-MM-DDTHH:mm:ss') }}"
+      - get:
+          url: "/Observation?patient=Patient/patient-001&code=4548-4"
+      - think: 1

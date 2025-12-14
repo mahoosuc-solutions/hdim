@@ -67,6 +67,12 @@ export class NavigationComponent {
       route: '/visualization',
       description: '3D quality analytics visualizations',
     },
+    {
+      label: 'Agent Builder',
+      icon: 'smart_toy',
+      route: '/agent-builder',
+      description: 'Configure AI agents',
+    },
   ];
 
   sidenavOpened = true;

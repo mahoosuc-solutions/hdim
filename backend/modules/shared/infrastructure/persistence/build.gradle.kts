@@ -12,6 +12,8 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-autoconfigure")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-web")  // For servlet classes and filters
+    implementation("org.springframework.boot:spring-boot-starter-aop")  // For AOP aspects
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     // Database

@@ -26,7 +26,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
     "com.healthdata.cdr",
     "com.healthdata.common",
     "com.healthdata.authentication",
-    "com.healthdata.security",
     "com.healthdata.audit",
     "com.healthdata.messaging",
     "com.healthdata.persistence"

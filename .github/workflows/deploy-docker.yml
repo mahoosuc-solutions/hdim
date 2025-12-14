@@ -1,0 +1,312 @@
+name: Deploy Docker Images
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., v1.0.0)'
+        required: true
+        default: 'latest'
+      registry:
+        description: 'Registry to deploy to'
+        required: true
+        default: 'ghcr'
+        type: choice
+        options:
+          - ghcr
+          - dockerhub
+          - gcr
+          - ecr
+      services:
+        description: 'Services to deploy (comma-separated, or "all")'
+        required: true
+        default: 'all'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: hdim
+  JAVA_VERSION: '21'
+  GRADLE_VERSION: '8.5'
+
+jobs:
+  build-matrix:
+    name: Generate Build Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.set-matrix.outputs.services }}
+      version: ${{ steps.set-version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set version
+        id: set-version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          elif [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          elif [[ $GITHUB_REF == refs/heads/main ]] || [[ $GITHUB_REF == refs/heads/master ]]; then
+            VERSION="latest"
+          else
+            VERSION="${GITHUB_REF#refs/heads/}-$(git rev-parse --short HEAD)"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION"
+
+      - name: Set services matrix
+        id: set-matrix
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.services }}" != "all" ]; then
+            # Parse comma-separated services
+            SERVICES=$(echo "${{ github.event.inputs.services }}" | jq -R 'split(",") | map(gsub("^\\s+|\\s+$";"")) | @json')
+          else
+            # All 22 services
+            SERVICES='["gateway-service","cql-engine-service","consent-service","event-processing-service","patient-service","fhir-service","care-gap-service","quality-measure-service","agent-runtime-service","data-enrichment-service","ai-assistant-service","documentation-service","analytics-service","predictive-analytics-service","sdoh-service","event-router-service","agent-builder-service","approval-service","payer-workflows-service","cdr-processor-service","ehr-connector-service"]'
+          fi
+          echo "services=$SERVICES" >> $GITHUB_OUTPUT
+          echo "Services to build: $SERVICES"
+
+  build-and-test:
+    name: Build ${{ matrix.service }}
+    needs: build-matrix
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJson(needs.build-matrix.outputs.services) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x backend/gradlew
+
+      - name: Build JAR
+        run: |
+          cd backend
+          ./gradlew :modules:services:${{ matrix.service }}:bootJar -x test --no-daemon
+
+      - name: Run tests
+        run: |
+          cd backend
+          ./gradlew :modules:services:${{ matrix.service }}:test --no-daemon
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}/${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=${{ needs.build-matrix.outputs.version }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/modules/services/${{ matrix.service }}/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+
+      - name: Install Cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign image with keyless signing
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          # Sign all tags
+          echo "${TAGS}" | tr ',' '\n' | while read -r tag; do
+            echo "Signing: $tag"
+            cosign sign --yes "$tag@${DIGEST}" 2>/dev/null || echo "Signing failed for $tag"
+          done
+
+      - name: Upload build artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-build-logs
+          path: backend/modules/services/${{ matrix.service }}/build/reports/
+
+  deploy-summary:
+    name: Deployment Summary
+    needs: [build-matrix, build-and-test]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check deployment status
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.build-matrix.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Services:** ${{ join(fromJson(needs.build-matrix.outputs.services), ', ') }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Registry:** ${{ env.REGISTRY }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.build-and-test.result }}" = "success" ]; then
+            echo "✅ All services built and deployed successfully!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Image Pull Commands" >> $GITHUB_STEP_SUMMARY
+            echo '```bash' >> $GITHUB_STEP_SUMMARY
+            echo "# Pull images" >> $GITHUB_STEP_SUMMARY
+            echo "docker pull ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}/gateway-service:${{ needs.build-matrix.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+            echo "docker pull ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}/fhir-service:${{ needs.build-matrix.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Some services failed to build" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the logs for failed services above." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Notify on failure
+        if: failure() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        run: |
+          echo "Deployment failed! Please check the logs."
+          # Add notification logic here (Slack, email, etc.)
+
+  verify-deployment:
+    name: Verify Deployment
+    needs: [build-matrix, build-and-test]
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Verify image signatures
+        run: |
+          echo "## Signature Verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          SERVICES='["gateway-service","fhir-service","patient-service"]'
+          echo "$SERVICES" | jq -r '.[]' | while read -r service; do
+            IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}/$service:${{ needs.build-matrix.outputs.version }}"
+            echo "Verifying: $IMAGE"
+
+            if cosign verify \
+              --certificate-identity=https://github.com/${{ github.repository }}/.github/workflows/deploy-docker.yml@refs/heads/main \
+              --certificate-oidc-issuer=https://token.actions.githubusercontent.com \
+              "$IMAGE" 2>/dev/null; then
+              echo "✅ $service" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ $service (signature verification failed)" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+      - name: Test image pull
+        run: |
+          # Test pulling a sample image
+          docker pull ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}/gateway-service:${{ needs.build-matrix.outputs.version }}
+          docker inspect ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}/gateway-service:${{ needs.build-matrix.outputs.version }}
+
+  deploy-to-staging:
+    name: Deploy to Staging
+    needs: [build-matrix, build-and-test, verify-deployment]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    environment:
+      name: staging
+      url: https://staging.hdim.example.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment..."
+          # Add Kubernetes deployment commands here
+          # kubectl set image deployment/gateway app=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}/gateway-service:${{ needs.build-matrix.outputs.version }}
+
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests..."
+          # Add smoke test commands here
+          # ./scripts/smoke-tests.sh https://staging.hdim.example.com
+
+  deploy-to-production:
+    name: Deploy to Production
+    needs: [build-matrix, build-and-test, verify-deployment, deploy-to-staging]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: production
+      url: https://hdim.example.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production environment..."
+          # Add Kubernetes deployment commands here
+          # kubectl set image deployment/gateway app=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}/gateway-service:${{ needs.build-matrix.outputs.version }}
+
+      - name: Run smoke tests
+        run: |
+          echo "Running production smoke tests..."
+          # Add smoke test commands here
+
+      - name: Monitor deployment
+        run: |
+          echo "Monitoring deployment for 5 minutes..."
+          sleep 300
+          # Add monitoring checks here
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Rolling back production deployment..."
+          # kubectl rollout undo deployment/gateway

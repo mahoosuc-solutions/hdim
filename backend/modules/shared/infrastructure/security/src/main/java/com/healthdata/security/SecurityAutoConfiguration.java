@@ -28,9 +28,9 @@ public class SecurityAutoConfiguration {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    @ConditionalOnMissingBean
-    public JwtTokenService jwtTokenService(SecurityProperties properties, Clock securityClock) {
+    @Bean("securityJwtTokenService")
+    @ConditionalOnMissingBean(name = "securityJwtTokenService")
+    public JwtTokenService securityJwtTokenService(SecurityProperties properties, Clock securityClock) {
         return new JwtTokenService(properties, securityClock);
     }
 }

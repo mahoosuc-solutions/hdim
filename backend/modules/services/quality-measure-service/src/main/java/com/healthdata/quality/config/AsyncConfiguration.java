@@ -40,10 +40,14 @@ public class AsyncConfiguration implements AsyncConfigurer {
     public Executor getAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 
-        // Configure thread pool size based on CPU cores
+        // Configure thread pool size based on CPU cores with safe defaults
         int availableCores = Runtime.getRuntime().availableProcessors();
-        int corePoolSize = Math.max(10, availableCores * 2);
-        int maxPoolSize = availableCores * 4;
+        // Ensure minimum values to prevent invalid ThreadPoolExecutor configuration
+        int corePoolSize = Math.max(4, availableCores > 0 ? availableCores * 2 : 4);
+        int maxPoolSize = Math.max(8, availableCores > 0 ? availableCores * 4 : 8);
+
+        log.info("Configuring async executor: availableCores={}, corePoolSize={}, maxPoolSize={}",
+            availableCores, corePoolSize, maxPoolSize);
 
         executor.setCorePoolSize(corePoolSize);
         executor.setMaxPoolSize(maxPoolSize);
@@ -129,8 +133,12 @@ public class AsyncConfiguration implements AsyncConfigurer {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 
         int availableCores = Runtime.getRuntime().availableProcessors();
-        int corePoolSize = Math.max(5, availableCores);
-        int maxPoolSize = availableCores * 2;
+        // Ensure minimum values to prevent invalid ThreadPoolExecutor configuration
+        int corePoolSize = Math.max(2, availableCores > 0 ? availableCores : 2);
+        int maxPoolSize = Math.max(4, availableCores > 0 ? availableCores * 2 : 4);
+
+        log.info("Configuring batch executor: availableCores={}, corePoolSize={}, maxPoolSize={}",
+            availableCores, corePoolSize, maxPoolSize);
 
         executor.setCorePoolSize(corePoolSize);
         executor.setMaxPoolSize(maxPoolSize);

@@ -53,7 +53,10 @@ include(
     "modules:services:payer-workflows-service",
     "modules:services:data-enrichment-service",
     "modules:services:predictive-analytics-service",
-    "modules:services:sdoh-service"
+    "modules:services:sdoh-service",
+    "modules:services:agent-runtime-service",
+    "modules:services:agent-builder-service",
+    "modules:services:approval-service"
 )
 
 // Platform Modules

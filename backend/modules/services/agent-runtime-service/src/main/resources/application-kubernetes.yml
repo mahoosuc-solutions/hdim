@@ -1,0 +1,57 @@
+# Kubernetes profile configuration for agent-runtime-service
+server:
+  port: 8088
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/healthdata_db}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:healthdata_dev_password}
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+
+# Service URLs in K8s
+hdim:
+  services:
+    fhir:
+      url: http://fhir-service:8085
+    cql-engine:
+      url: http://cql-engine-service:8081
+    care-gap:
+      url: http://care-gap-service:8086
+    quality-measure:
+      url: http://quality-measure-service:8087
+    predictive-analytics:
+      url: http://predictive-analytics-service:8093
+
+# JWT Configuration
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+
+# Actuator endpoints for K8s probes
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true

@@ -1,0 +1,7 @@
+# Test configuration for security module
+healthdata:
+  security:
+    jwt:
+      secret: test-secret-key-for-unit-testing-only-must-be-at-least-256-bits-long-for-hs256
+      expiration: 1h
+      issuer: test-issuer

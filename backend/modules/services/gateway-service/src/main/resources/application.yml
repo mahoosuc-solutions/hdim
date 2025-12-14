@@ -1,5 +1,5 @@
 server:
-  port: 9000
+  port: ${SERVER_PORT:8080}
 
 spring:
   application:
@@ -72,6 +72,12 @@ backend:
     care-gap:
       url: http://localhost:8085
       timeout: 30000
+    agent-runtime:
+      url: ${AGENT_RUNTIME_SERVICE_URL:http://localhost:8095}
+      timeout: 120000  # Higher timeout for AI operations
+    agent-builder:
+      url: ${AGENT_BUILDER_SERVICE_URL:http://localhost:8096}
+      timeout: 30000
 
 # Gateway Feature Flags
 gateway:
@@ -121,6 +127,20 @@ resilience4j:
         failureRateThreshold: 50
         waitDurationInOpenState: 30s
         permittedNumberOfCallsInHalfOpenState: 3
+      agentRuntime:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 60s  # Longer wait for AI services
+        permittedNumberOfCallsInHalfOpenState: 2
+        slowCallDurationThreshold: 30s
+        slowCallRateThreshold: 80
+      agentBuilder:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
   retry:
     instances:
       cqlEngine:
@@ -151,6 +171,22 @@ resilience4j:
         waitDuration: 1s
         enableExponentialBackoff: true
         exponentialBackoffMultiplier: 2
+      agentRuntime:
+        maxAttempts: 2  # Fewer retries for AI - expensive operations
+        waitDuration: 2s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+      agentBuilder:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
   timelimiter:
     instances:
       cqlEngine:
@@ -167,6 +203,12 @@ resilience4j:
         cancelRunningFuture: true
       careGapService:
         timeoutDuration: 15s
+        cancelRunningFuture: true
+      agentRuntime:
+        timeoutDuration: 120s  # AI operations can take longer
+        cancelRunningFuture: true
+      agentBuilder:
+        timeoutDuration: 30s
         cancelRunningFuture: true
   ratelimiter:
     instances:

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approval Request Expiring Soon</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <!-- Urgent Banner (conditional) -->
+                    <tr th:if="${isUrgent}">
+                        <td style="padding: 16px 40px; background-color: #dc2626; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                            <p style="margin: 0; font-size: 14px; font-weight: 600; color: #ffffff; text-align: center;">
+                                URGENT: This approval request requires immediate attention
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 32px 40px; border-bottom: 1px solid #e5e7eb;">
+                            <table role="presentation" style="width: 100%;">
+                                <tr>
+                                    <td>
+                                        <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #111827;">Expiring Soon</h1>
+                                    </td>
+                                    <td align="right">
+                                        <span th:style="'display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; color: #ffffff; background-color: ' + ${riskLevelColor}"
+                                              th:text="${riskLevel}">HIGH</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 32px 40px;">
+                            <p style="margin: 0 0 24px; font-size: 16px; color: #374151;">
+                                Hi <span th:text="${recipientName}">Reviewer</span>,
+                            </p>
+                            <p style="margin: 0 0 24px; font-size: 16px; color: #374151;">
+                                An approval request assigned to you will expire soon and requires your decision.
+                            </p>
+
+                            <!-- Time Remaining Box -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #fef2f2; border: 2px solid #fecaca; border-radius: 8px; margin-bottom: 24px;">
+                                <tr>
+                                    <td style="padding: 24px; text-align: center;">
+                                        <span style="font-size: 14px; color: #991b1b; text-transform: uppercase; font-weight: 600;">Time Remaining</span><br>
+                                        <span style="font-size: 32px; font-weight: 700; color: #dc2626;" th:text="${timeRemaining}">2 hours, 30 minutes</span><br>
+                                        <span style="font-size: 14px; color: #991b1b;">Expires: <span th:text="${expiresAt}">Jan 2, 2025 at 10:00 AM EST</span></span>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Request Details Box -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f9fafb; border-radius: 8px; margin-bottom: 24px;">
+                                <tr>
+                                    <td style="padding: 24px;">
+                                        <table role="presentation" style="width: 100%;">
+                                            <tr>
+                                                <td style="padding-bottom: 12px;">
+                                                    <span style="font-size: 12px; color: #6b7280; text-transform: uppercase;">Entity Type</span><br>
+                                                    <span style="font-size: 16px; font-weight: 600; color: #111827;" th:text="${entityType}">MedicationTool</span>
+                                                </td>
+                                                <td style="padding-bottom: 12px;">
+                                                    <span style="font-size: 12px; color: #6b7280; text-transform: uppercase;">Action Requested</span><br>
+                                                    <span style="font-size: 16px; font-weight: 600; color: #111827;" th:text="${actionRequested}">EXECUTE</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- CTA Button -->
+                            <table role="presentation" style="width: 100%;">
+                                <tr>
+                                    <td align="center">
+                                        <a th:href="${approvalUrl}"
+                                           style="display: inline-block; padding: 14px 32px; background-color: #dc2626; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">
+                                            Review Now
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 24px 0 0; font-size: 14px; color: #6b7280; text-align: center;">
+                                If no action is taken, this request will automatically expire.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 24px 40px; background-color: #f9fafb; border-top: 1px solid #e5e7eb; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+                            <p style="margin: 0; font-size: 12px; color: #6b7280; text-align: center;">
+                                This is an automated notification from HDIM Healthcare Data Platform.<br>
+                                Request ID: <span th:text="${requestId}">abc-123</span>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

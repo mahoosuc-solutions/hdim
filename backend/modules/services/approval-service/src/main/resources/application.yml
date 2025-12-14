@@ -1,0 +1,187 @@
+server:
+  port: 8097
+
+spring:
+  application:
+    name: approval-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/hdim_approval
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+# Mail Configuration
+  mail:
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    check-template-location: true
+
+# HDIM Approval Configuration
+hdim:
+  approval:
+    enabled: true
+    default-timeout-hours: 24
+    auto-escalation-hours: 4
+    expiration-check-interval-ms: 60000
+
+    # Webhook configuration for n8n and other integrations
+    webhook:
+      secret: ${WEBHOOK_SECRET:}
+      timeout-seconds: 30
+      max-retries: 3
+
+    # Routing configuration
+    routing:
+      enabled: ${APPROVAL_ROUTING_ENABLED:true}
+
+    # Escalation check interval (5 minutes)
+    escalation-check-interval-ms: 300000
+
+    # Expiration reminder configuration
+    reminder:
+      enabled: ${APPROVAL_REMINDERS_ENABLED:true}
+      hours-before: 4  # Send reminders for requests expiring within 4 hours
+      check-interval-ms: 3600000  # Check every hour
+
+    # Email notifications
+    email:
+      enabled: ${EMAIL_NOTIFICATIONS_ENABLED:true}
+      from: ${EMAIL_FROM:noreply@hdim.health}
+      reply-to: ${EMAIL_REPLY_TO:support@hdim.health}
+      dashboard-url: ${DASHBOARD_URL:http://localhost:5173/approvals}
+
+    # Risk level configurations
+    risk-levels:
+      LOW:
+        auto-approve-delay-minutes: 30
+        requires-multiple-approvers: false
+      MEDIUM:
+        auto-approve-delay-minutes: 0
+        requires-multiple-approvers: false
+      HIGH:
+        auto-approve-delay-minutes: 0
+        requires-multiple-approvers: false
+        required-role: CLINICAL_SUPERVISOR
+      CRITICAL:
+        auto-approve-delay-minutes: 0
+        requires-multiple-approvers: true
+        min-approvers: 2
+        required-role: CLINICAL_DIRECTOR
+
+    # Type-specific rules
+    rules:
+      AGENT_ACTION:
+        default-risk: MEDIUM
+        clinical-role-required: true
+      DATA_MUTATION:
+        default-risk: HIGH
+        audit-required: true
+      EXPORT:
+        default-risk: HIGH
+        compliance-review: true
+      WORKFLOW_DEPLOY:
+        default-risk: MEDIUM
+        sandbox-required: true
+      DLQ_REPROCESS:
+        default-risk: LOW
+        technical-role-required: true
+      GUARDRAIL_REVIEW:
+        default-risk: HIGH
+        clinical-role-required: true
+      CONSENT_CHANGE:
+        default-risk: HIGH
+        audit-required: true
+      EMERGENCY_ACCESS:
+        default-risk: CRITICAL
+        requires-multiple-approvers: true
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# OpenAPI
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+# Logging
+logging:
+  level:
+    com.healthdata.approval: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/hdim_approval
+
+logging:
+  level:
+    com.healthdata.approval: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${DATABASE_URL}
+
+logging:
+  level:
+    com.healthdata.approval: INFO
+    org.hibernate.SQL: WARN

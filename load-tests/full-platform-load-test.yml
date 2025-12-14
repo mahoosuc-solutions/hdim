@@ -1,0 +1,153 @@
+# Full Platform Load Test - Artillery Configuration
+# Comprehensive test covering all 22 microservices
+#
+# Usage: artillery run full-platform-load-test.yml
+
+config:
+  target: 'http://localhost:8080'  # Gateway
+  phases:
+    - duration: 60
+      arrivalRate: 20
+      name: "Warm up"
+    - duration: 600
+      arrivalRate: 100
+      name: "Sustained load"
+    - duration: 180
+      arrivalRate: 250
+      name: "Peak load"
+    - duration: 60
+      arrivalRate: 50
+      name: "Cool down"
+  
+  defaults:
+    headers:
+      Content-Type: "application/json"
+      Accept: "application/json"
+      X-Tenant-ID: "test-tenant-001"
+  
+  plugins:
+    expect: {}
+
+scenarios:
+  # Core Clinical Workflow (40%)
+  - name: "Core Clinical Workflow"
+    weight: 40
+    flow:
+      # Patient lookup via FHIR
+      - get:
+          url: "/fhir/Patient?name=Smith"
+          expect:
+            - statusCode: 200
+      - think: 1
+      
+      # Get patient health score
+      - get:
+          url: "/api/quality/health-scores/patient/patient-001"
+          expect:
+            - statusCode: 200
+      - think: 1
+      
+      # Get care gaps
+      - get:
+          url: "/api/care-gaps?patient=patient-001"
+          expect:
+            - statusCode: 200
+      - think: 2
+
+  # AI Services (15%)
+  - name: "AI Services"
+    weight: 15
+    flow:
+      # Query AI Assistant
+      - post:
+          url: "/api/ai/assistant/query"
+          json:
+            query: "What are the care gaps for patient-001?"
+            context:
+              patientId: "patient-001"
+          expect:
+            - statusCode: 200
+      - think: 3
+      
+      # Get agent status
+      - get:
+          url: "/api/agents/status"
+          expect:
+            - statusCode: 200
+      - think: 1
+
+  # Analytics (15%)
+  - name: "Analytics Queries"
+    weight: 15
+    flow:
+      # Population analytics
+      - get:
+          url: "/api/analytics/population/summary"
+          expect:
+            - statusCode: 200
+      - think: 2
+      
+      # Predictive analytics
+      - get:
+          url: "/api/predictive/risk-scores?riskLevel=high"
+          expect:
+            - statusCode: 200
+      - think: 2
+
+  # Event Processing (10%)
+  - name: "Event Processing"
+    weight: 10
+    flow:
+      # Submit clinical event
+      - post:
+          url: "/api/events"
+          json:
+            eventType: "OBSERVATION_CREATED"
+            patientId: "patient-001"
+            resourceType: "Observation"
+            data:
+              code: "4548-4"
+              value: 7.8
+          expect:
+            - statusCode: 202
+      - think: 3
+
+  # Consent Management (5%)
+  - name: "Consent Management"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/consent/patient/patient-001"
+          expect:
+            - statusCode: 200
+      - think: 1
+
+  # Payer Workflows (5%)
+  - name: "Payer Workflows"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/payer/prior-auth/patient/patient-001"
+          expect:
+            - statusCode: 200
+      - think: 2
+
+  # Documentation (5%)
+  - name: "Documentation"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/docs/patient/patient-001/summary"
+          expect:
+            - statusCode: 200
+      - think: 2
+
+  # EHR Integration (5%)
+  - name: "EHR Connector"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/ehr/connectors/status"
+          expect:
+            - statusCode: 200
+      - think: 1

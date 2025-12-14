@@ -138,6 +138,20 @@ export const appRoutes: Route[] = [
       ),
   },
   {
+    path: 'agent-builder',
+    loadComponent: () =>
+      import('./pages/agent-builder/agent-builder.component').then(
+        (m) => m.AgentBuilderComponent
+      ),
+  },
+  {
+    path: 'agent-builder/:id',
+    loadComponent: () =>
+      import('./pages/agent-builder/agent-builder.component').then(
+        (m) => m.AgentBuilderComponent
+      ),
+  },
+  {
     path: '**',
     redirectTo: '/dashboard',
   },

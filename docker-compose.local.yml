@@ -1,19 +1,20 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
+  # PostgreSQL Database with all required databases
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: healthdata-postgres-local
     environment:
-      POSTGRES_DB: healthdata
+      POSTGRES_DB: healthdata_db
       POSTGRES_USER: healthdata
-      POSTGRES_PASSWORD: healthdata_dev
+      POSTGRES_PASSWORD: healthdata_password
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "5432:5432"
+      - "5435:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U healthdata"]
       interval: 10s

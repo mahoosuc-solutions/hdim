@@ -47,7 +47,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 server:
-  port: ${SERVER_PORT:8089}
+  port: ${SERVER_PORT:8098}
   servlet:
     context-path: /
 

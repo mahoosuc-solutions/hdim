@@ -11,7 +11,7 @@ RUN apk add --no-cache wget
 WORKDIR /app
 
 # Copy the pre-built JAR
-COPY build/libs/event-router-service-1.0.0.jar app.jar
+COPY modules/services/event-router-service/build/libs/event-router-service-1.0.0.jar app.jar
 
 # Create non-root user
 RUN addgroup -S spring && adduser -S spring -G spring
@@ -19,11 +19,11 @@ RUN chown -R spring:spring /app
 USER spring:spring
 
 # Expose service port
-EXPOSE 8089
+EXPOSE 8095
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8089/actuator/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8095/actuator/health || exit 1
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

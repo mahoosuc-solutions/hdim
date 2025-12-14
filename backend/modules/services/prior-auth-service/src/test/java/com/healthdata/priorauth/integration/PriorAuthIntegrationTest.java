@@ -31,10 +31,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * Tests the complete PA workflow including create, submit, status check, and cancel.
  */
-@SpringBootTest(properties = {
-    "spring.kafka.bootstrap-servers=",
-    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration"
-})
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = {
+        "spring.kafka.bootstrap-servers=",
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration",
+        "healthdata.persistence.primary.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL",
+        "healthdata.persistence.primary.username=sa",
+        "healthdata.persistence.primary.password=",
+        "healthdata.persistence.primary.driver-class-name=org.h2.Driver",
+        "healthdata.persistence.primary.pool-name=h2-test-pool",
+        "healthdata.persistence.rls-enabled=false"
+    }
+)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

@@ -3,6 +3,7 @@ spring:
     allow-bean-definition-overriding: true
     allow-circular-references: true
 
+  # Standard Spring datasource (fallback)
   datasource:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
     username: sa
@@ -21,6 +22,26 @@ spring:
 
   liquibase:
     enabled: false
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+
+# HDIM shared persistence module configuration - uses healthdata.persistence.*
+healthdata:
+  persistence:
+    primary:
+      url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+      username: sa
+      password: ""
+      driver-class-name: org.h2.Driver
+      pool-name: h2-test-pool
+      maximum-pool-size: 5
+      minimum-idle: 1
+    rls-enabled: false
+    jpa:
+      auditing-enabled: true
 
   data:
     redis:

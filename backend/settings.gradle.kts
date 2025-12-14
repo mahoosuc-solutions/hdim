@@ -56,7 +56,11 @@ include(
     "modules:services:sdoh-service",
     "modules:services:agent-runtime-service",
     "modules:services:agent-builder-service",
-    "modules:services:approval-service"
+    "modules:services:approval-service",
+    "modules:services:qrda-export-service",
+    "modules:services:hcc-service",
+    "modules:services:ecr-service",
+    "modules:services:prior-auth-service"
 )
 
 // Platform Modules

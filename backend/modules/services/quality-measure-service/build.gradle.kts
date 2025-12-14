@@ -84,6 +84,9 @@ dependencies {
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.testcontainers.redis)
 
+    // Kafka test support for EmbeddedKafka
+    testImplementation("org.springframework.kafka:spring-kafka-test")
+
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
 }

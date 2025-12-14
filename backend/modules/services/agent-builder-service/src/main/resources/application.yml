@@ -1,0 +1,173 @@
+server:
+  port: 8096
+  # Enable response compression
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+    min-response-size: 1024
+
+spring:
+  application:
+    name: agent-builder-service
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_db}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:healthdata_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      # Performance-tuned connection pool
+      maximum-pool-size: 30
+      minimum-idle: 10
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+      pool-name: agent-builder-pool
+      # Prepared statement caching
+      data-source-properties:
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        cachePrepStmts: true
+        useServerPrepStmts: true
+
+  # Redis configuration for caching
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 4
+          max-wait: 2000ms
+
+  # Enable caching
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000
+      cache-null-values: false
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        default_schema: public
+        # Hibernate performance tuning
+        jdbc:
+          batch_size: 25
+          fetch_size: 100
+        order_inserts: true
+        order_updates: true
+        batch_versioned_data: true
+        generate_statistics: false
+        # Second-level cache (for entities, not queries)
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  liquibase:
+    enabled: false
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+# JWT Configuration - Not used, gateway handles authentication
+# jwt:
+#   secret: ${JWT_SECRET:}
+
+# Feign Client Configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 60000
+        loggerLevel: basic
+      agent-runtime-service:
+        connectTimeout: 5000
+        readTimeout: 120000
+        loggerLevel: full
+  circuitbreaker:
+    enabled: true
+
+# Agent Runtime Service
+hdim:
+  agent-runtime:
+    url: ${HDIM_AGENT_RUNTIME_URL:http://localhost:8095}
+    timeout: 120000
+
+  services:
+    agent-runtime:
+      url: ${HDIM_AGENT_RUNTIME_URL:http://localhost:8095}
+
+  agent-builder:
+    # Maximum agents per tenant
+    max-agents-per-tenant: 50
+    # Maximum versions per agent
+    max-versions-per-agent: 100
+    # Default test timeout
+    test-timeout-seconds: 60
+    # Allowed model providers
+    allowed-providers:
+      - claude
+      - azure-openai
+      - bedrock
+    # Allowed tools for custom agents
+    allowed-tools:
+      - fhir_query
+      - cql_execute
+      - publish_event
+      - send_notification
+
+# Resilience4j
+resilience4j:
+  circuitbreaker:
+    instances:
+      agentRuntime:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+  retry:
+    instances:
+      agentRuntime:
+        maxAttempts: 2
+        waitDuration: 1s
+        enableExponentialBackoff: true
+
+# Logging
+logging:
+  level:
+    com.healthdata: INFO
+    org.springframework.security: WARN
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized

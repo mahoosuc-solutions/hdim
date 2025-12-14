@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(grep:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(./gradlew :modules:services:agent-builder-service:compileJava:*)",
+      "Bash(docker logs:*)",
+      "Bash(curl:*)",
+      "Bash(./gradlew:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker ps:*)"
     ],
     "deny": [],
     "ask": []

@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -14,16 +15,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.healthdata.events.model.DLQExhaustionAlert;
 
-import lombok.RequiredArgsConstructor;
-
 /**
  * DLQ Alerting Service
  *
  * Handles alerting and notifications when DLQ events exhaust all retry attempts.
  * Provides email notifications, dashboard entries, and critical event escalation.
+ * Note: Email sending is optional - if JavaMailSender is not configured, alerts are logged only.
  */
 @Service
-@RequiredArgsConstructor
 public class DLQAlertingService {
 
     private static final Logger log = LoggerFactory.getLogger(DLQAlertingService.class);
@@ -39,6 +38,14 @@ public class DLQAlertingService {
 
     private final JavaMailSender mailSender;
 
+    @Autowired
+    public DLQAlertingService(@Autowired(required = false) JavaMailSender mailSender) {
+        this.mailSender = mailSender;
+        if (mailSender == null) {
+            log.warn("JavaMailSender not configured - DLQ alerts will be logged only, not emailed");
+        }
+    }
+
     /**
      * Send exhaustion alert to operations team
      *
@@ -48,6 +55,12 @@ public class DLQAlertingService {
         try {
             log.info("Sending DLQ exhaustion alert for event: eventId={}, eventType={}, tenantId={}",
                 alert.getEventId(), alert.getEventType(), alert.getTenantId());
+
+            if (mailSender == null) {
+                log.warn("DLQ ALERT (email disabled): {} - Event: {}, Tenant: {}",
+                    buildSubject(alert, false), alert.getEventId(), alert.getTenantId());
+                return;
+            }
 
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(FROM_EMAIL);
@@ -74,6 +87,12 @@ public class DLQAlertingService {
         try {
             log.warn("ESCALATING critical DLQ failure: eventId={}, eventType={}, patientId={}",
                 alert.getEventId(), alert.getEventType(), alert.getAffectedPatientId());
+
+            if (mailSender == null) {
+                log.error("CRITICAL DLQ ALERT (email disabled): {} - Event: {}, Patient: {}",
+                    buildSubject(alert, true), alert.getEventId(), alert.getAffectedPatientId());
+                return;
+            }
 
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(FROM_EMAIL);

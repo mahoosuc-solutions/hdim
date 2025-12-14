@@ -24,7 +24,7 @@ spring:
       time-to-live: 3600000 # 1 hour
 
 server:
-  port: 8089
+  port: ${SERVER_PORT:8093}
 
 logging:
   level:

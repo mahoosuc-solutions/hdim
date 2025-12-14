@@ -23,7 +23,7 @@ spring:
     type: redis
 
 server:
-  port: ${SERVER_PORT:8089}
+  port: ${SERVER_PORT:8094}
 
 # API Documentation
 springdoc:

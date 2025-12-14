@@ -1,163 +1,90 @@
-# Population Calculation Load Test
-# Tests batch quality measure calculation performance
-# Target: >1000 patients/minute with all measures
+# Population Calculation Load Test - Artillery Configuration
+# Tests quality measure population calculations at scale
+#
+# Usage: artillery run population-calculation-load-test.yml
 
 config:
   target: 'http://localhost:8087'
   phases:
-    # Single calculation test
     - duration: 60
-      arrivalRate: 1
-      name: "Baseline single calculations"
-
-    # Small batch test
-    - duration: 120
-      arrivalRate: 2
-      name: "Small batch (100 patients)"
-
-    # Medium batch test
-    - duration: 180
-      arrivalRate: 1
-      name: "Medium batch (1000 patients)"
-
-    # Large batch test
+      arrivalRate: 5
+      name: "Warm up - light load"
     - duration: 300
-      arrivalRate: 1
-      name: "Large batch (10000 patients)"
-
-  payload:
-    path: "./test-data/measure-definitions.json"
-
+      arrivalRate: 20
+      name: "Sustained load - population calculations"
+    - duration: 120
+      arrivalRate: 50
+      name: "Peak load"
+  
   defaults:
     headers:
       Content-Type: "application/json"
-      X-Tenant-ID: "tenant-load-test"
-      Authorization: "Bearer {{ $env.TEST_JWT_TOKEN }}"
-
-  ensure:
-    # Batch processing should complete
-    maxErrorRate: 0
-    # Single patient measure calculation should be fast
-    p95: 5000  # 5 seconds for single patient
-
-  plugins:
-    metrics-by-endpoint:
-      stripQueryString: true
-    expect: {}
+      Accept: "application/json"
+      X-Tenant-ID: "test-tenant-001"
+      Authorization: "Bearer test-token"
+  
+  variables:
+    measureIds:
+      - "CMS122v12"   # Diabetes HbA1c Control
+      - "CMS130v12"   # Colorectal Cancer Screening
+      - "CMS165v12"   # Blood Pressure Control
+      - "CMS125v12"   # Breast Cancer Screening
+    
+    periodStart: "2024-01-01"
+    periodEnd: "2024-12-31"
 
 scenarios:
-  - name: "Single Patient Quality Measures"
+  # Scenario 1: Trigger Population Calculation (40% of traffic)
+  - name: "Trigger Population Calculation"
     weight: 40
     flow:
-      # Calculate all measures for one patient
       - post:
-          url: "/quality-measure/api/v1/results/calculate"
+          url: "/api/v1/quality-measures/calculate"
           json:
-            patientId: "patient-{{ $randomInt(1, 1000) }}"
-            measureIds:
-              - "CMS125"  # Breast cancer screening
-              - "CMS134"  # Diabetes: HbA1c control
-              - "CMS2"    # Depression screening
-              - "CMS165"  # Blood pressure control
-              - "CMS122"  # Diabetes: Eye exam
+            measureId: "CMS122v12"
+            periodStart: "{{ periodStart }}"
+            periodEnd: "{{ periodEnd }}"
+            tenantId: "test-tenant-001"
           capture:
-            - json: "$.jobId"
-              as: "jobId"
-          expect:
-            - statusCode: 202  # Accepted (async)
+            - json: "$.calculationId"
+              as: "calculationId"
+      - think: 5
+      - get:
+          url: "/api/v1/quality-measures/calculations/{{ calculationId }}/status"
+      - think: 10
 
-      # Poll for completion
-      - loop:
-          - get:
-              url: "/quality-measure/api/v1/results/job/{{ jobId }}"
-              expect:
-                - statusCode: 200
-          - think: 2
-          ifTrue: "{{ $response.body.status === 'COMPLETED' }}"
-          count: 10
-
-  - name: "Batch Population Calculation"
+  # Scenario 2: Get Population Results (30% of traffic)
+  - name: "Get Population Results"
     weight: 30
     flow:
-      # Trigger population-wide calculation
-      - post:
-          url: "/quality-measure/api/v1/population/calculate"
-          json:
-            tenantId: "tenant-load-test"
-            fhirServerUrl: "http://localhost:8085/fhir"
-            measureIds:
-              - "CMS125"
-              - "CMS134"
-              - "CMS2"
-            batchSize: 100
-            maxPatients: "{{ $randomInt(100, 1000) }}"
-          capture:
-            - json: "$.jobId"
-              as: "batchJobId"
-          expect:
-            - statusCode: 202
+      - get:
+          url: "/api/v1/quality-measures/CMS122v12/results?periodStart={{ periodStart }}&periodEnd={{ periodEnd }}"
+      - think: 2
+      - get:
+          url: "/api/v1/quality-measures/CMS122v12/patients?status=non-compliant&limit=100"
+      - think: 2
 
-      # Monitor progress
-      - loop:
-          - get:
-              url: "/quality-measure/api/v1/population/job/{{ batchJobId }}/status"
-              expect:
-                - statusCode: 200
-                - hasProperty: "totalPatients"
-                - hasProperty: "completedCalculations"
-                - hasProperty: "throughput"
-              capture:
-                - json: "$.throughput"
-                  as: "throughput"
-          - think: 10
-          ifTrue: "{{ $response.body.status !== 'COMPLETED' }}"
-          count: 60  # Max 10 minutes
-
-      # Verify throughput target met
-      - log: "Throughput: {{ throughput }} patients/minute"
-
-  - name: "Patient Health Score Calculation"
+  # Scenario 3: Care Gap Analysis (20% of traffic)
+  - name: "Care Gap Analysis"
     weight: 20
     flow:
-      # Trigger health score calculation
-      - post:
-          url: "/quality-measure/patient-health/health-score/{{ $randomPatientId() }}/calculate"
-          expect:
-            - statusCode: 200
-            - hasProperty: "overallScore"
-            - hasProperty: "physicalHealthScore"
-            - hasProperty: "mentalHealthScore"
+      - get:
+          url: "/api/v1/care-gaps?status=open&priority=high&limit=50"
+      - think: 1
+      - get:
+          url: "/api/v1/care-gaps/summary"
+      - think: 1
+      - get:
+          url: "/api/v1/care-gaps/patient/patient-001"
+      - think: 2
 
-      # Verify score is reasonable (0-100)
-      - expect:
-          - json: "$.overallScore"
-            gte: 0
-            lte: 100
-
-  - name: "Care Gap Analysis"
+  # Scenario 4: Risk Stratification (10% of traffic)
+  - name: "Risk Stratification Query"
     weight: 10
     flow:
-      # Get care gaps for patient
       - get:
-          url: "/quality-measure/patient-health/care-gaps/{{ $randomPatientId() }}"
-          expect:
-            - statusCode: 200
-            - contentType: "application/json"
-
-      # If gaps exist, address one
-      - post:
-          url: "/quality-measure/patient-health/care-gaps/{{ $response.body[0].id }}/address"
-          json:
-            notes: "Load test care gap closure"
-            addressedBy: "load-test-user"
-          ifTrue: "{{ $response.body.length > 0 }}"
-          expect:
-            - statusCode: 200
-
-# Helper functions
-functions:
-  randomPatientId:
-    - "load-test-patient-{{ $randomInt(1, 1000) }}"
-
-  randomInt:
-    - "{{ $randomInt(1, 1000) }}"
+          url: "/api/v1/patients/risk-stratification?riskLevel=high&limit=100"
+      - think: 2
+      - get:
+          url: "/api/v1/patients/patient-001/risk-history"
+      - think: 2

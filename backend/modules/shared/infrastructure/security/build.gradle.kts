@@ -25,6 +25,9 @@ dependencies {
     // Encryption
     api(libs.bouncycastle.bcprov)
 
+    // JPA for attribute converters (optional - only for encryption annotations)
+    compileOnly("jakarta.persistence:jakarta.persistence-api")
+
     // Common domain models
     api(project(":modules:shared:domain:common"))
 

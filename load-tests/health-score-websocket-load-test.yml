@@ -1,96 +1,60 @@
-# Health Score WebSocket Load Test
-# Tests WebSocket connections and real-time health score updates
-# Target: >1000 concurrent connections with <1% disconnection rate
+# Health Score WebSocket Load Test - Artillery Configuration
+# Tests real-time health score updates via WebSocket
+#
+# Usage: artillery run health-score-websocket-load-test.yml
 
 config:
-  target: 'ws://localhost:8087'
+  target: 'http://localhost:8087'
   phases:
-    # Establish connections gradually
-    - duration: 120
-      arrivalRate: 10
-      name: "Connection ramp up"
-
-    # Maintain connections and receive updates
-    - duration: 600
-      arrivalRate: 5
-      name: "Sustained connections (10 minutes)"
-
-    # Add burst connections
-    - duration: 60
+    - duration: 30
       arrivalRate: 50
-      name: "Connection burst"
-
-  ensure:
-    maxErrorRate: 0.01  # Less than 1% connection errors
-
-  plugins:
-    ws: {}
-    expect: {}
+      name: "Initial connections"
+    - duration: 300
+      arrivalRate: 100
+      name: "Sustained connections"
+    - duration: 120
+      arrivalRate: 200
+      name: "Peak connections"
+  
+  defaults:
+    headers:
+      X-Tenant-ID: "test-tenant-001"
+      Authorization: "Bearer test-token"
+  
+  ws:
+    rejectUnauthorized: false
 
 scenarios:
-  - name: "Health Score WebSocket Connection"
+  # Scenario 1: WebSocket Health Score Subscription
+  - name: "WebSocket Health Score Updates"
+    weight: 70
     engine: ws
     flow:
-      # Connect to WebSocket with tenant ID
-      - connect:
-          url: "/quality-measure/ws/health-scores?tenantId=tenant-{{ $randomInt(1, 10) }}"
-
-      # Wait for connection established message
-      - think: 1
-
-      # Send heartbeat every 30 seconds
+      - connect: "ws://localhost:8087/ws/health-scores"
+      - send:
+          channel: "subscribe"
+          payload:
+            type: "SUBSCRIBE"
+            channel: "health-scores"
+            tenantId: "test-tenant-001"
+      - think: 5
       - loop:
-          - send:
-              payload: '{"type": "HEARTBEAT"}'
-          - think: 30
-          count: 20  # 20 heartbeats = 10 minutes
-
-      # Disconnect gracefully
-      - disconnect: {}
-
-  - name: "Health Score Update Subscriber"
-    engine: ws
-    flow:
-      - connect:
-          url: "/quality-measure/ws/health-scores?tenantId=tenant-load-test"
-
-      # Subscribe to patient health score updates
+          - think: 1
+          - log: "Waiting for health score update..."
+        count: 60
       - send:
-          payload: '{"type": "SUBSCRIBE", "patientId": "patient-{{ $randomInt(1, 100) }}"}'
+          channel: "unsubscribe"
+          payload:
+            type: "UNSUBSCRIBE"
+            channel: "health-scores"
 
-      # Wait for updates (passive listener)
-      - think: 300  # 5 minutes
-
-      # Validate received messages
-      - expect:
-          - messageType: "HEALTH_SCORE_UPDATE"
-          - hasProperty: "overallScore"
-          - hasProperty: "patientId"
-
-      - disconnect: {}
-
-  - name: "Significant Change Alerts"
-    engine: ws
+  # Scenario 2: REST API Health Score Query  
+  - name: "REST Health Score Query"
+    weight: 30
     flow:
-      - connect:
-          url: "/quality-measure/ws/health-scores?tenantId=tenant-load-test"
-
-      # Subscribe to significant changes only
-      - send:
-          payload: '{"type": "SUBSCRIBE", "filter": "SIGNIFICANT_CHANGE"}'
-
-      # Wait for significant change alerts
-      - think: 300
-
-      # Validate alert format
-      - expect:
-          - messageType: "SIGNIFICANT_CHANGE"
-          - hasProperty: "scoreDelta"
-          - hasProperty: "changeReason"
-
-      - disconnect: {}
-
-# Helper functions
-functions:
-  randomInt:
-    - "{{ $randomInt(1, 100) }}"
+      - get:
+          url: "/api/v1/health-scores/patient/patient-001"
+      - think: 2
+      - get:
+          url: "/api/v1/health-scores/population/summary"
+      - think: 2

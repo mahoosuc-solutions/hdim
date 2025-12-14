@@ -52,7 +52,7 @@ spring:
 
 # Server Configuration
 server:
-  port: ${SERVER_PORT:8087}
+  port: ${SERVER_PORT:8099}
   servlet:
     context-path: /
 

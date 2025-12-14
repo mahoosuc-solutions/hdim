@@ -43,7 +43,13 @@ HDIM calculates all 52 HEDIS quality measures in real-time (<200ms) when a patie
 
 ## Why did you pick this idea to work on?
 
-[Personal story about healthcare quality measurement frustration - customize with your experience]
+I lost my mother to breast cancer at 54. Her cousins shared the same fate. I believe with better data and earlier intervention, she and many others could have lived longer, more productive lives.
+
+For years, I worked in public health IT bridging the gap between clinical providers and the data solutions they needed—always on minimal budgets. Every platform we wanted was either too expensive, too hard to implement, or would take too long to build ourselves. I started using AI-assisted coding years ago with a specific goal: leverage publicly available tools to build solutions that were previously impossible for resource-constrained organizations.
+
+This platform is the result—a way to modernize healthcare data processing so doctors can work with real-time patient insights without needing a team to pull aggregate data. HDIM enables clinical users to create custom measures that answer unique questions about patients, guiding them to healthier outcomes.
+
+This is my contribution to helping humanity live longer and better, every day.
 
 The value-based care market is $1.5T and growing. CMS is pushing everyone toward quality-based payments, but the infrastructure is 20 years old. Epic and Cerner have near-monopolies on EHRs, but their quality modules are bolted-on afterthoughts that cost more than some organizations' entire IT budget.
 
@@ -111,7 +117,7 @@ Health systems are terrified of switching quality platforms because their custom
 
 ## How much have you raised?
 
-[Customize - bootstrapped / angels / etc.]
+Self-funded. I've invested my own time and resources to build a production-ready platform—13 microservices, 52 HEDIS measures, full Angular frontend, AI agent framework. Now seeking funding to bring HDIM to every healthcare system that needs it: reducing costs, improving outcomes, and helping people live longer, healthier lives.
 
 ---
 
@@ -140,28 +146,30 @@ Long-term, we expand beyond quality measurement into:
 
 3. **Standards bet:** We're 100% FHIR-native. As EHRs are forced to support FHIR (21st Century Cures Act), our integration gets easier while competitors' proprietary integrations become liabilities.
 
-4. **Founder-market fit:** [Your healthcare/technical background]
+4. **Founder-market fit:** Years of public health IT experience building solutions for resource-constrained organizations. I've lived this problem—bridging clinical needs with technical reality on minimal budgets.
 
 ---
 
 ## What's your unfair advantage?
 
-[Customize based on your background - examples:]
-- Worked at [healthcare company] and saw this problem firsthand
-- Built quality measurement systems for [X] organizations
-- Technical depth in FHIR/CQL that few teams have
-- Connections to [ACO network / health system / payer]
+1. **I've lived this problem for years.** Public health IT taught me what clinicians actually need vs. what enterprise vendors sell them. I know the pain of being told "Epic costs $500K" when your entire IT budget is $200K.
+
+2. **AI-augmented solo founder.** I built this entire platform using AI-assisted development—proving the thesis that one motivated founder with modern tools can build what previously required a team of 20. This same efficiency continues in operations.
+
+3. **Deep domain expertise in healthcare data.** Years of operationalizing clinical data, understanding FHIR/CQL standards, and knowing how quality measures actually work in practice (not just theory).
+
+4. **Personal mission.** This isn't a business opportunity I identified—it's a problem I've been trying to solve for years. My mother's death from breast cancer drives me to ensure others have access to the early detection and care coordination that might have saved her.
 
 ---
 
 ## Founders
 
-**[Your Name]**
-- Role: CEO
-- Background: [Your background]
-- Why you: [What makes you uniquely suited]
-
-**[Co-founder if applicable]**
+**Aaron Bentley**
+- Role: Founder & CEO
+- Background: Years of public health IT experience bridging clinical providers with data solutions. Built quality measurement and analytics systems for healthcare organizations operating on minimal budgets.
+- Technical: Self-taught developer who leveraged AI-assisted coding to build a production-grade healthcare platform. Deep expertise in FHIR R4, CQL, and healthcare interoperability standards.
+- Why me: I've spent my career trying to democratize healthcare technology for organizations that can't afford enterprise solutions. HDIM is the culmination of that mission—now with AI tools that make it possible for one person to build what would have taken a team.
+- Personal: Lost my mother to breast cancer at 54. This work honors her memory and aims to prevent similar outcomes through better data and earlier intervention.
 
 ---
 

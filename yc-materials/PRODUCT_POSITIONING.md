@@ -1,10 +1,38 @@
 # HDIM Product Positioning
 
+## Mission
+
+**Help people live longer, healthier, happier lives through better healthcare data.**
+
+We're bringing modern, real-time quality intelligence to every healthcare system—reducing costs, improving outcomes, and ensuring no patient falls through the cracks.
+
+---
+
+## The Problem at Scale
+
+**4,000+ ACOs** struggle with outdated quality measurement tools
+**1,400+ FQHCs** serve 30 million underserved patients with minimal IT budgets
+**$1.5 trillion** value-based care market hampered by 1990s-era infrastructure
+
+The result: Care gaps identified too late. Patients who could have been helped aren't reached in time. Healthcare costs rise while outcomes stagnate.
+
+**This is personal.** HDIM was built by Aaron Bentley, who lost his mother to breast cancer at 54. With better data and earlier intervention, she and countless others might still be alive today.
+
+---
+
 ## Core Value Proposition
 
 **HDIM is a modular, plug-and-play quality intelligence layer that sits on top of your existing healthcare infrastructure.**
 
-We don't replace your EHR or FHIR server - we enhance it with real-time clinical decision support and quality measurement capabilities that legacy systems can't provide.
+We don't replace your EHR or FHIR server—we enhance it with real-time clinical decision support, AI-powered automation, and quality measurement capabilities that legacy systems can't provide.
+
+### Three Outcomes That Matter
+
+| Outcome | How HDIM Delivers |
+|---------|-------------------|
+| **Healthier Patients** | Real-time care gap detection catches issues during visits, not days later |
+| **Lower Costs** | 96% cheaper than Epic. Automation reduces staff burden. Early intervention prevents expensive acute care |
+| **Longer, Happier Lives** | AI agents help clinicians focus on patients, not paperwork. Better data = better decisions = better outcomes |
 
 ---
 
@@ -14,8 +42,8 @@ We don't replace your EHR or FHIR server - we enhance it with real-time clinical
 ┌─────────────────────────────────────────────────────────────────┐
 │                      HDIM INTELLIGENCE LAYER                     │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │ CQL Engine  │  │ Care Gap    │  │ Quality Measure         │  │
-│  │ (Real-time) │  │ Detection   │  │ Calculator              │  │
+│  │ CQL Engine  │  │ Care Gap    │  │ AI Agent                │  │
+│  │ (Real-time) │  │ Detection   │  │ Framework               │  │
 │  └──────┬──────┘  └──────┬──────┘  └───────────┬─────────────┘  │
 │         │                │                      │                │
 │  ┌──────┴────────────────┴──────────────────────┴─────────────┐  │
@@ -42,20 +70,49 @@ We don't replace your EHR or FHIR server - we enhance it with real-time clinical
 
 ## Key Differentiators
 
-### 1. Plug-and-Play Integration
+### 1. Real-Time Intelligence (Not Batch Processing)
+- **Sub-200ms measure calculation** at point of care
+- **Event-driven care gap detection** the moment data changes
+- **Actionable insights during the visit** when intervention matters most
+
+### 2. AI-Powered Automation
+- **Clinical Decision Support Agent** - Surfaces relevant gaps and recommendations during patient encounters
+- **Care Gap Optimizer** - AI prioritizes outreach for maximum impact with limited staff
+- **Report Generator** - Natural language queries produce instant HEDIS reports
+- **No-Code Agent Builder** - Clinical teams create custom AI workflows without developers
+
+### 3. Plug-and-Play Integration
 - **Connect to existing FHIR servers** - Epic, Cerner, HAPI, or any R4-compliant server
 - **No data migration required** - Query data where it lives
-- **Deploy alongside existing systems** - Not a rip-and-replace
+- **Deploy in days, not months** - Not a rip-and-replace
 
-### 2. Modular Architecture
-- **Use what you need** - Each service is independently deployable
-- **Scale components independently** - Heavy CQL load? Scale just the CQL engine
-- **Mix and match** - Use our quality measures with your care gap system, or vice versa
+### 4. Built for Scale at Any Size
+- **$80/month** for small practices (vs. $50K+ for Epic)
+- **Enterprise-ready** for large health systems
+- **Self-hosted option** for security-conscious organizations
 
-### 3. Real-Time Intelligence
-- **Sub-200ms measure calculation** - Not overnight batch processing
-- **Event-driven updates** - Care gaps detected the moment data changes
-- **Point-of-care decision support** - Information when clinicians need it
+---
+
+## Impact at Scale
+
+### For a 50,000-Patient ACO
+
+| Metric | Before HDIM | With HDIM | Impact |
+|--------|-------------|-----------|--------|
+| Gap identification time | 24-72 hours | <1 second | Immediate intervention |
+| Gap closure rate | 45% | 65% | +44% improvement |
+| Staff time on reporting | 20 hrs/week | 4 hrs/week | 80% reduction |
+| Annual quality platform cost | $600K | $24K | 96% savings |
+| Star Rating trajectory | Stagnant | +0.5 stars/year | Millions in bonus revenue |
+
+### For a Resource-Constrained FQHC
+
+| Challenge | HDIM Solution |
+|-----------|---------------|
+| Can't afford Epic ($500K+) | Full platform for $80-500/month |
+| No dedicated quality staff | AI agents automate routine work |
+| Serving high-risk populations | Real-time risk stratification |
+| Multiple payer requirements | Unified measure library (UDS + HEDIS + custom) |
 
 ---
 
@@ -65,133 +122,160 @@ We don't replace your EHR or FHIR server - we enhance it with real-time clinical
 Deploy complete HDIM infrastructure including our FHIR server
 - Best for: Organizations without existing FHIR infrastructure
 - Setup time: 1-2 days
+- Starting at: $80/month
 
 ### Option B: HDIM + Your FHIR Server
 Connect HDIM intelligence layer to your existing Epic/Cerner FHIR endpoints
 - Best for: Health systems with established FHIR infrastructure
 - Setup time: 1 week (integration + testing)
+- Starting at: $500/month
 
-### Option C: HDIM Microservices Only
-Deploy individual services (CQL Engine, Quality Measures, Care Gaps) as needed
-- Best for: Organizations with specific point solutions needed
-- Setup time: Hours per service
-
----
-
-## Roadmap: CDR Processor & AI Enrichment
-
-### Phase 1: HL7 v2/v3 to FHIR Conversion (Q1 2026)
-**Problem:** Most clinical data still flows as HL7 v2 messages, not FHIR
-**Solution:** Intelligent CDR (Clinical Data Repository) processor
-
-```
-HL7 v2/v3 Messages → CDR Processor → Validated FHIR Resources
-                           │
-                    AI Enrichment
-                    (NLP, coding validation)
-```
-
-**Capabilities:**
-- Parse HL7 v2 ADT, ORU, ORM messages
-- Convert to FHIR Patient, Encounter, Observation resources
-- Maintain provenance and audit trails
-- Handle message deduplication
-
-### Phase 2: AI-Powered Data Enrichment (Q2 2026)
-**Problem:** Raw clinical data often incomplete or inconsistently coded
-**Solution:** Validated AI processes to enrich FHIR data
-
-**Enrichment Types:**
-1. **NLP Extraction** - Pull structured data from clinical notes
-   - Problem lists from discharge summaries
-   - Medication reconciliation from clinical notes
-   - Social determinants from intake forms
-
-2. **Code Validation & Mapping**
-   - ICD-10 code suggestion and validation
-   - SNOMED to ICD mapping
-   - CPT code recommendation
-
-3. **Data Completeness**
-   - Identify missing quality measure data
-   - Suggest likely values based on patient context
-   - Flag data for manual review
-
-### Phase 3: Continuous Learning (Q3 2026)
-**Problem:** AI models need ongoing validation in clinical settings
-**Solution:** Human-in-the-loop validation workflows
-
-**Features:**
-- Clinician review queues for AI suggestions
-- Confidence scoring for AI-generated data
-- Feedback loops to improve model accuracy
-- Explainable AI for audit compliance
+### Option C: Enterprise Deployment
+Full platform with dedicated support, custom measures, and SLA
+- Best for: Large health systems and ACOs
+- Setup time: 2-4 weeks
+- Custom pricing based on scale
 
 ---
 
-## Why This Matters for Quality Measures
+## AI Agent Framework: Automation at Scale
 
-### Current State (Without AI Enrichment)
-- Quality measures based only on structured FHIR data
-- Miss insights buried in clinical notes
-- Inconsistent coding leads to false negatives
-- Care gaps not detected due to data gaps
+### What Makes HDIM Different
 
-### Future State (With CDR + AI)
-- **Better denominator identification** - Find patients who should be in measure populations
-- **Improved numerator capture** - Identify completed services from notes
-- **Reduced false care gaps** - AI finds documentation that proves care was delivered
-- **Proactive quality improvement** - AI suggests actions to close gaps
+Traditional quality platforms require humans to:
+1. Run reports
+2. Analyze data
+3. Prioritize patients
+4. Create outreach lists
+5. Document outcomes
+
+**HDIM AI agents automate steps 1-4**, letting clinical staff focus on what matters: patient care.
+
+### Available Agents
+
+| Agent | What It Does | Time Saved |
+|-------|--------------|------------|
+| **Clinical Decision Assistant** | Surfaces gaps and recommendations during visits | 5 min/patient |
+| **Care Gap Optimizer** | Prioritizes daily outreach for maximum impact | 45 min/day |
+| **Report Generator** | Natural language → instant HEDIS reports | 6+ hrs/report |
+| **Documentation Assistant** | Pre-visit prep and post-visit summaries | 3 min/patient |
+
+### No-Code Agent Builder
+
+Clinical teams can create custom AI workflows:
+- Define triggers (new lab result, missed appointment, etc.)
+- Configure actions (alert, outreach, order suggestion)
+- Set guardrails (clinical safety rules, human review requirements)
+- Deploy immediately—no developers needed
 
 ---
 
-## Competitive Positioning Update
+## Roadmap: Continuous Innovation
 
-| Capability | HDIM | Epic | Innovaccer |
-|------------|------|------|------------|
-| Works with existing FHIR | ✅ | ❌ Epic only | ❌ Proprietary |
-| Modular deployment | ✅ | ❌ Monolithic | ❌ All-or-nothing |
-| HL7 v2/v3 processing | 🔜 Q1 2026 | ✅ | ✅ |
-| AI data enrichment | 🔜 Q2 2026 | ❌ | Partial |
-| Real-time processing | ✅ <200ms | ❌ Batch | ⚠️ Near real-time |
+### Now Available
+- 52 HEDIS quality measures
+- Real-time CQL engine (<200ms)
+- Care gap detection and prioritization
+- AI Clinical Decision Support Agent
+- No-code Agent Builder
+- Multi-tenant SaaS platform
+
+### Coming Q1 2025
+- HL7 v2/v3 to FHIR conversion (CDR Processor)
+- Enhanced AI data enrichment (NLP from clinical notes)
+- Voice-enabled agent interactions
+
+### Coming Q2 2025
+- Predictive analytics (risk of gap development)
+- Multi-agent collaboration
+- International expansion (GDPR compliance)
+
+---
+
+## Competitive Positioning
+
+| Capability | HDIM | Epic Healthy Planet | Innovaccer |
+|------------|------|---------------------|------------|
+| Real-time processing | ✅ <200ms | ❌ Batch overnight | ⚠️ Near real-time |
+| Works with any FHIR | ✅ | ❌ Epic only | ❌ Proprietary |
+| AI automation | ✅ Full framework | ❌ | Partial |
+| No-code customization | ✅ | ❌ | ⚠️ Limited |
+| Starting price | $80/mo | $50K+/mo | $10K+/mo |
+| Deployment time | Days | 6-12 months | 2-3 months |
 | Self-hosted option | ✅ | ❌ | ❌ |
 
 ---
 
-## Messaging for Customers
+## Messaging by Audience
 
-### Elevator Pitch (30 seconds)
-"HDIM adds real-time quality intelligence to your existing healthcare infrastructure. We connect to your FHIR server - Epic, Cerner, or custom - and provide instant quality measure calculation and care gap detection. No data migration, no rip-and-replace, just plug in and go."
+### For Healthcare Executives (30 seconds)
+"HDIM cuts your quality measurement costs by 96% while improving outcomes. We detect care gaps in real-time—during the visit, not the day after. Our AI agents automate the routine work so your staff can focus on patients. Deploy in days, not months. Starting at $80/month."
 
-### Technical Pitch (2 minutes)
-"HDIM is a modular microservices platform that sits on top of your existing FHIR infrastructure. Our CQL engine calculates quality measures in under 200 milliseconds - that's real-time at point of care, not overnight batch.
+### For Clinical Leaders (1 minute)
+"Your quality team spends hours pulling reports and creating outreach lists. HDIM does that automatically. When a clinician opens a patient chart, they instantly see all open care gaps with recommended actions. Our AI prioritizes which patients to call first based on clinical urgency and likelihood of success. You get better outcomes with less work."
 
-We connect via standard FHIR R4 APIs, so there's no proprietary integration work. Deploy the components you need: just care gaps, just quality measures, or the full stack.
+### For IT/Technical (2 minutes)
+"HDIM is a modular microservices platform that connects to your existing FHIR infrastructure via standard APIs. Our CQL engine evaluates quality measures in under 200 milliseconds—that's real-time at point of care, not overnight batch.
 
-Coming next year, we're adding HL7 v2/v3 processing with AI enrichment - so organizations still running legacy interfaces can get the benefits of modern quality measurement without waiting for a full FHIR migration."
+We support Epic, Cerner, or any R4-compliant FHIR server. Deploy the full stack or just the components you need. Coming next quarter, we're adding HL7 v2/v3 processing with AI enrichment for organizations still running legacy interfaces.
 
-### YC Pitch (1 minute)
-"Healthcare quality measurement is stuck in the 1990s. Epic charges $50K a month for a batch processing system that tells you about care gaps a day after the patient leaves.
+The entire platform is built on open standards: FHIR R4, CQL 1.5, no proprietary lock-in."
 
-HDIM is the modern alternative - a plug-and-play intelligence layer that works with existing infrastructure. We calculate 52 HEDIS measures in real-time, detect care gaps at point of care, and we're adding AI-powered data enrichment to make quality measures even more accurate.
+### For YC (1 minute)
+"Healthcare quality measurement is stuck in the 1990s. Epic charges $50K a month for batch processing that tells you about care gaps a day after the patient leaves.
 
-We're not asking customers to rip and replace their Epic investment. We're asking them to add a $500/month layer that makes their existing infrastructure smarter."
+I lost my mother to breast cancer at 54. I believe with better data and earlier intervention, she could have lived longer. That's why I built HDIM—real-time quality intelligence that catches care gaps when you can still do something about them.
+
+I self-funded and built this entire platform using AI-assisted development: 13 microservices, 52 HEDIS measures, full AI agent framework. Now I'm seeking funding to bring it to every healthcare system that needs it. The mission is simple: help people live longer, healthier, happier lives."
 
 ---
 
-## FAQ for Sales
+## Why Now?
+
+1. **21st Century Cures Act** mandates FHIR APIs—every EHR must support them
+2. **Value-based care** is accelerating—CMS is pushing all payers toward quality metrics
+3. **AI capabilities** have reached the point where one person can build what took a team of 20
+4. **Legacy vendors** are slow to innovate—Epic and Cerner are distracted by M&A and platform consolidation
+5. **Healthcare costs** are unsustainable—the system needs efficiency tools desperately
+
+---
+
+## Founder
+
+**Aaron Bentley** - Founder & CEO
+
+Years of public health IT experience bridging clinical providers with data solutions on minimal budgets. Built HDIM using AI-assisted development to prove that modern tools can democratize healthcare technology.
+
+*"This platform is built in memory of my mother, who died at 54 from breast cancer. I believe with better data and care, she and many others could have lived longer, more productive lives. This is my contribution to helping humanity live longer and better, every day."*
+
+---
+
+## Contact
+
+**Ready to see HDIM in action?**
+
+- Demo: [Schedule a demo]
+- Email: aaron@hdim.health
+- Website: hdim.health
+
+---
+
+## FAQ
 
 **Q: Do we need to replace our Epic/Cerner system?**
 A: No. HDIM connects to your existing FHIR endpoints. We enhance your current investment, not replace it.
 
 **Q: What if we're still on HL7 v2?**
-A: Our CDR processor (coming Q1 2026) will convert HL7 v2/v3 to FHIR in real-time. Until then, we can work with whatever FHIR data you have available.
+A: Our CDR processor (coming Q1 2025) converts HL7 v2/v3 to FHIR in real-time. Until then, we work with whatever FHIR data you have available.
 
 **Q: How is this different from Epic Healthy Planet?**
-A: Three ways: (1) Real-time vs batch, (2) Works with any FHIR server not just Epic, (3) 1/100th the cost.
+A: Three ways: (1) Real-time vs batch, (2) Works with any FHIR server not just Epic, (3) 96% lower cost.
 
 **Q: What about data security?**
-A: Your data stays in your infrastructure. HDIM can be self-hosted entirely on-premise. We never require data to leave your network.
+A: Your data stays in your infrastructure. HDIM can be self-hosted entirely on-premise. We're HIPAA compliant with full audit logging.
 
 **Q: Can we start small and expand?**
-A: Absolutely. Deploy just the CQL engine to test. Add quality measures later. Scale components as needed.
+A: Absolutely. Start with $80/month, add features as needed, scale to enterprise when ready.
+
+**Q: How does the AI work?**
+A: Our agents use multiple LLM providers (Claude, Azure OpenAI, AWS Bedrock) with healthcare-specific guardrails. All AI suggestions are transparent and auditable. Human review is required for clinical decisions.

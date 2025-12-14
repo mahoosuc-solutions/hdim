@@ -41,6 +41,12 @@ public class ApiGatewayController {
     @Value("${backend.services.care-gap.url}")
     private String careGapUrl;
 
+    @Value("${backend.services.agent-builder.url}")
+    private String agentBuilderUrl;
+
+    @Value("${backend.services.agent-runtime.url}")
+    private String agentRuntimeUrl;
+
     /**
      * Route to CQL Engine Service
      */
@@ -97,6 +103,51 @@ public class ApiGatewayController {
     }
 
     /**
+     * Route to Agent Builder Service - All endpoints
+     * Base path: /api/v1/agent-builder (agents, templates, test sessions)
+     */
+    @RequestMapping(value = "/api/v1/agent-builder/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToAgentBuilder(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, agentBuilderUrl, "/api/v1/agent-builder");
+    }
+
+    /**
+     * Route to Agent Runtime Service - Tools metadata
+     */
+    @RequestMapping(value = "/api/v1/tools/**", method = {RequestMethod.GET})
+    public ResponseEntity<?> routeToAgentRuntimeTools(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, agentRuntimeUrl, "/api/v1/tools");
+    }
+
+    /**
+     * Route to Agent Runtime Service - Providers metadata
+     */
+    @RequestMapping(value = "/api/v1/providers/**", method = {RequestMethod.GET})
+    public ResponseEntity<?> routeToAgentRuntimeProviders(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, agentRuntimeUrl, "/api/v1/providers");
+    }
+
+    /**
+     * Route to Agent Runtime Service - Runtime health
+     */
+    @RequestMapping(value = "/api/v1/runtime/**", method = {RequestMethod.GET})
+    public ResponseEntity<?> routeToAgentRuntimeHealth(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, agentRuntimeUrl, "/api/v1/runtime");
+    }
+
+    /**
      * Forward request to backend service
      */
     private ResponseEntity<?> forwardRequest(
@@ -121,9 +172,10 @@ public class ApiGatewayController {
             Enumeration<String> headerNames = request.getHeaderNames();
             while (headerNames.hasMoreElements()) {
                 String headerName = headerNames.nextElement();
-                // Forward important headers
+                // Forward important headers including user identity for Pattern 3 services
                 if (headerName.equalsIgnoreCase("Authorization") ||
                     headerName.equalsIgnoreCase("X-Tenant-ID") ||
+                    headerName.equalsIgnoreCase("X-User-ID") ||
                     headerName.equalsIgnoreCase("Content-Type") ||
                     headerName.equalsIgnoreCase("Accept")) {
                     headers.put(headerName, Collections.list(request.getHeaders(headerName)));

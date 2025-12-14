@@ -12,6 +12,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Set;
 
 /**
  * API Gateway Controller
@@ -44,8 +45,36 @@ public class ApiGatewayController {
     @Value("${backend.services.agent-builder.url}")
     private String agentBuilderUrl;
 
+    @Value("${backend.services.consent.url}")
+    private String consentUrl;
+
+    @Value("${backend.services.events.url}")
+    private String eventsUrl;
+
     @Value("${backend.services.agent-runtime.url}")
     private String agentRuntimeUrl;
+
+    @Value("${backend.services.qrda-export.url}")
+    private String qrdaExportUrl;
+
+    @Value("${backend.services.hcc.url}")
+    private String hccUrl;
+
+    @Value("${backend.services.ecr.url}")
+    private String ecrUrl;
+
+    @Value("${backend.services.prior-auth.url}")
+    private String priorAuthUrl;
+
+    /**
+     * HTTP hop-by-hop headers that should not be forwarded by proxies.
+     * RFC 2616 Section 13.5.1 defines these as connection-specific headers.
+     */
+    private static final Set<String> HOP_BY_HOP_HEADERS = Set.of(
+        "transfer-encoding", "connection", "keep-alive",
+        "proxy-authenticate", "proxy-authorization",
+        "te", "trailers", "upgrade"
+    );
 
     /**
      * Route to CQL Engine Service
@@ -56,6 +85,17 @@ public class ApiGatewayController {
         @RequestBody(required = false) String body
     ) {
         return forwardRequest(request, body, cqlEngineUrl, "/api/cql");
+    }
+
+    /**
+     * Route to CQL Engine Service (direct /cql-engine path)
+     */
+    @RequestMapping(value = "/cql-engine/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToCqlEngineDirect(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, cqlEngineUrl, "/cql-engine");
     }
 
     /**
@@ -70,7 +110,18 @@ public class ApiGatewayController {
     }
 
     /**
-     * Route to FHIR Service
+     * Route to Quality Measure Service (direct /quality-measure path)
+     */
+    @RequestMapping(value = "/quality-measure/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToQualityMeasureDirect(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, qualityMeasureUrl, "/quality-measure");
+    }
+
+    /**
+     * Route to FHIR Service (via /api/fhir)
      */
     @RequestMapping(value = "/api/fhir/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
     public ResponseEntity<?> routeToFhir(
@@ -78,6 +129,17 @@ public class ApiGatewayController {
         @RequestBody(required = false) String body
     ) {
         return forwardRequest(request, body, fhirUrl, "/api/fhir");
+    }
+
+    /**
+     * Route to FHIR Service (direct /fhir path)
+     */
+    @RequestMapping(value = "/fhir/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToFhirDirect(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, fhirUrl, "/fhir");
     }
 
     /**
@@ -92,6 +154,17 @@ public class ApiGatewayController {
     }
 
     /**
+     * Route to Patient Service (direct /patient path)
+     */
+    @RequestMapping(value = "/patient/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToPatientDirect(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, patientUrl, "/patient");
+    }
+
+    /**
      * Route to Care Gap Service
      */
     @RequestMapping(value = "/api/care-gaps/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
@@ -100,6 +173,61 @@ public class ApiGatewayController {
         @RequestBody(required = false) String body
     ) {
         return forwardRequest(request, body, careGapUrl, "/api/care-gaps");
+    }
+
+    /**
+     * Route to Care Gap Service (direct /care-gap path)
+     */
+    @RequestMapping(value = "/care-gap/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToCareGapDirect(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, careGapUrl, "/care-gap");
+    }
+
+    /**
+     * Route to Consent Service (via /api/consent)
+     */
+    @RequestMapping(value = "/api/consent/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToConsent(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, consentUrl, "/api/consent");
+    }
+
+    /**
+     * Route to Consent Service (direct /consent path)
+     */
+    @RequestMapping(value = "/consent/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToConsentDirect(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, consentUrl, "/consent");
+    }
+
+    /**
+     * Route to Events Service (via /api/events)
+     */
+    @RequestMapping(value = "/api/events/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToEvents(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, eventsUrl, "/api/events");
+    }
+
+    /**
+     * Route to Events Service (direct /events path)
+     */
+    @RequestMapping(value = "/events/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToEventsDirect(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, eventsUrl, "/events");
     }
 
     /**
@@ -145,6 +273,63 @@ public class ApiGatewayController {
         @RequestBody(required = false) String body
     ) {
         return forwardRequest(request, body, agentRuntimeUrl, "/api/v1/runtime");
+    }
+
+    // ==================== NEW REGULATORY COMPLIANCE SERVICES ====================
+
+    /**
+     * Route to QRDA Export Service - Quality reporting exports
+     */
+    @RequestMapping(value = "/api/v1/qrda/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToQrdaExport(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, qrdaExportUrl, "/api/v1/qrda");
+    }
+
+    /**
+     * Route to HCC Service - Risk adjustment calculations
+     */
+    @RequestMapping(value = "/api/v1/hcc/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToHcc(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, hccUrl, "/api/v1/hcc");
+    }
+
+    /**
+     * Route to eCR Service - Electronic Case Reporting
+     */
+    @RequestMapping(value = "/api/ecr/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToEcr(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, ecrUrl, "/api/ecr");
+    }
+
+    /**
+     * Route to Prior Auth Service - Prior Authorization management
+     */
+    @RequestMapping(value = "/api/v1/prior-auth/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToPriorAuth(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, priorAuthUrl, "/api/v1/prior-auth");
+    }
+
+    /**
+     * Route to Prior Auth Service - Provider Access API
+     */
+    @RequestMapping(value = "/api/v1/provider-access/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToProviderAccess(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, priorAuthUrl, "/api/v1/provider-access");
     }
 
     /**
@@ -196,9 +381,17 @@ public class ApiGatewayController {
                 String.class
             );
 
+            // Filter out hop-by-hop headers to prevent duplicates when nginx proxies
+            HttpHeaders filteredHeaders = new HttpHeaders();
+            response.getHeaders().forEach((name, values) -> {
+                if (!HOP_BY_HOP_HEADERS.contains(name.toLowerCase())) {
+                    filteredHeaders.put(name, values);
+                }
+            });
+
             return ResponseEntity
                 .status(response.getStatusCode())
-                .headers(response.getHeaders())
+                .headers(filteredHeaders)
                 .body(response.getBody());
 
         } catch (Exception e) {

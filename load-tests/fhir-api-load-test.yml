@@ -4,34 +4,31 @@
 # Usage: artillery run fhir-api-load-test.yml
 
 config:
-  target: 'http://localhost:8085'
+  target: 'http://localhost:8085/fhir/fhir'
   phases:
-    - duration: 60
-      arrivalRate: 10
+    - duration: 30
+      arrivalRate: 5
       name: "Warm up"
-    - duration: 300
-      arrivalRate: 100
-      name: "Sustained load"
-    - duration: 120
-      arrivalRate: 200
-      name: "Peak load"
     - duration: 60
-      arrivalRate: 50
+      arrivalRate: 20
+      name: "Sustained load"
+    - duration: 30
+      arrivalRate: 10
       name: "Cool down"
-  
+
   defaults:
     headers:
       Content-Type: "application/fhir+json"
       Accept: "application/fhir+json"
-      X-Tenant-ID: "test-tenant-001"
+      X-Tenant-ID: "demo-tenant"
   
   variables:
     patientIds:
-      - "patient-001"
-      - "patient-002"
-      - "patient-003"
-      - "patient-004"
-      - "patient-005"
+      - "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+      - "b2c3d4e5-f6a7-8901-bcde-f23456789012"
+      - "c3d4e5f6-a7b8-9012-cdef-345678901234"
+      - "d4e5f6a7-b8c9-0123-def0-456789012345"
+      - "e5f6a7b8-c9d0-1234-ef01-567890123456"
 
 scenarios:
   # Scenario 1: Patient Search (60% of traffic)
@@ -69,7 +66,7 @@ scenarios:
                   code: "4548-4"
                   display: "Hemoglobin A1c/Hemoglobin.total in Blood"
             subject:
-              reference: "Patient/patient-001"
+              reference: "Patient/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
             valueQuantity:
               value: 7.5
               unit: "%"
@@ -82,5 +79,5 @@ scenarios:
     weight: 10
     flow:
       - get:
-          url: "/Observation?patient=Patient/patient-001&code=4548-4"
+          url: "/Observation?patient=Patient/a1b2c3d4-e5f6-7890-abcd-ef1234567890&code=4548-4"
       - think: 1

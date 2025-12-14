@@ -198,7 +198,9 @@ public class CdaDocumentBuilder {
     }
 
     private String buildEffectiveTime(LocalDateTime dateTime) {
-        String formatted = dateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssZ"));
+        // CDA effective time format: yyyyMMddHHmmss (without timezone for LocalDateTime)
+        // For UTC timezone indicator, append +0000
+        String formatted = dateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")) + "+0000";
         return String.format("<effectiveTime value=\"%s\"/>\n", formatted);
     }
 

@@ -562,8 +562,9 @@ public class BarMessageHandler {
         }
 
         if (gt1.getGuarantorEmployerName(0) != null) {
+            // XPN type - extract family name as employer name
             guarantor.put("employerName",
-                gt1.getGuarantorEmployerName(0).getOrganizationName().getValue());
+                gt1.getGuarantorEmployerName(0).getFamilyName().getSurname().getValue());
         }
 
         return guarantor;

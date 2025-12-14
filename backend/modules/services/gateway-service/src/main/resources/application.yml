@@ -159,6 +159,34 @@ resilience4j:
         failureRateThreshold: 50
         waitDurationInOpenState: 30s
         permittedNumberOfCallsInHalfOpenState: 3
+      qrdaExport:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slowCallDurationThreshold: 30s
+        slowCallRateThreshold: 80
+      hccService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+      ecrService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+      priorAuth:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 60s  # Longer wait for payer API failures
+        permittedNumberOfCallsInHalfOpenState: 2
+        slowCallDurationThreshold: 30s
+        slowCallRateThreshold: 80
   retry:
     instances:
       cqlEngine:
@@ -205,6 +233,38 @@ resilience4j:
         retryExceptions:
           - java.io.IOException
           - java.net.SocketTimeoutException
+      qrdaExport:
+        maxAttempts: 2  # Fewer retries - document generation is expensive
+        waitDuration: 2s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+      hccService:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+      ecrService:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+      priorAuth:
+        maxAttempts: 2  # Fewer retries - payer APIs may have rate limits
+        waitDuration: 3s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
   timelimiter:
     instances:
       cqlEngine:
@@ -227,6 +287,18 @@ resilience4j:
         cancelRunningFuture: true
       agentBuilder:
         timeoutDuration: 30s
+        cancelRunningFuture: true
+      qrdaExport:
+        timeoutDuration: 60s  # QRDA generation can take longer
+        cancelRunningFuture: true
+      hccService:
+        timeoutDuration: 30s
+        cancelRunningFuture: true
+      ecrService:
+        timeoutDuration: 30s
+        cancelRunningFuture: true
+      priorAuth:
+        timeoutDuration: 60s  # Payer API calls may be slow
         cancelRunningFuture: true
   ratelimiter:
     instances:

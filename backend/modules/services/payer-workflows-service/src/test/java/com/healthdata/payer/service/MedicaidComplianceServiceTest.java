@@ -2,6 +2,7 @@ package com.healthdata.payer.service;
 
 import com.healthdata.payer.domain.MedicaidComplianceReport;
 import com.healthdata.payer.domain.MedicaidStateConfig;
+import com.healthdata.payer.service.MedicaidComplianceService.MeasurePerformance;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -512,16 +513,4 @@ class MedicaidComplianceServiceTest {
         return data;
     }
 
-    /**
-     * Helper class for measure performance data
-     */
-    public static class MeasurePerformance {
-        public final int numerator;
-        public final int denominator;
-
-        public MeasurePerformance(int numerator, int denominator) {
-            this.numerator = numerator;
-            this.denominator = denominator;
-        }
-    }
 }

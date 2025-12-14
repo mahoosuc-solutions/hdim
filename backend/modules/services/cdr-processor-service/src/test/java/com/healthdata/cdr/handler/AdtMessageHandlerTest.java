@@ -1,395 +1,437 @@
 package com.healthdata.cdr.handler;
 
-import ca.uhn.hl7v2.model.Message;
+import ca.uhn.hl7v2.HL7Exception;
+import ca.uhn.hl7v2.model.v25.datatype.*;
 import ca.uhn.hl7v2.model.v25.message.ADT_A01;
-import ca.uhn.hl7v2.model.v25.segment.PID;
-import ca.uhn.hl7v2.model.v25.segment.PV1;
-import ca.uhn.hl7v2.model.v25.segment.IN1;
-import com.healthdata.cdr.service.Hl7v2ParserService;
-import com.healthdata.cdr.converter.Hl7ToFhirConverter;
-import org.hl7.fhir.r4.model.Patient;
-import org.hl7.fhir.r4.model.Encounter;
-import org.hl7.fhir.r4.model.Coverage;
-import org.hl7.fhir.r4.model.Enumerations.AdministrativeGender;
-import org.hl7.fhir.r4.model.Identifier;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import ca.uhn.hl7v2.model.v25.message.ADT_A02;
+import ca.uhn.hl7v2.model.v25.message.ADT_A03;
+import ca.uhn.hl7v2.model.v25.segment.*;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Date;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 /**
- * Comprehensive TDD tests for ADT Message Handler
- * Tests handling of ADT messages and conversion to FHIR resources
+ * Unit tests for AdtMessageHandler.
+ * Tests ADT (Admit/Discharge/Transfer) message processing.
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ADT Message Handler Tests")
 class AdtMessageHandlerTest {
 
     @InjectMocks
-    private AdtMessageHandler adtMessageHandler;
+    private AdtMessageHandler handler;
 
-    @Mock
-    private Hl7v2ParserService parserService;
+    @Nested
+    @DisplayName("Message Type Tests")
+    class MessageTypeTests {
 
-    @Mock
-    private Hl7ToFhirConverter fhirConverter;
+        @Test
+        @DisplayName("Should return empty data for non-ADT message")
+        void handle_withNonAdtMessage_returnsEmptyData() throws HL7Exception {
+            ca.uhn.hl7v2.model.Message unknownMessage = mock(ca.uhn.hl7v2.model.Message.class);
 
-    private static final String ADT_A01_ADMIT =
-        "MSH|^~\\&|SENDING_APP|SENDING_FAC|RECEIVING_APP|RECEIVING_FAC|20240115120000||ADT^A01|123456|P|2.5\r" +
-        "EVN|A01|20240115120000\r" +
-        "PID|1||12345^^^MRN||DOE^JOHN^A||19800115|M|||123 MAIN ST^^BOSTON^MA^02101\r" +
-        "PV1|1|I|ICU^101^A|E|||1234^SMITH^JAMES|||||||||||||V123456\r" +
-        "IN1|1|PPO|INS001|BLUE_CROSS|123 INS ST^^NYC^NY^10001||||GRP123";
+            Map<String, Object> result = handler.handle(unknownMessage);
 
-    private static final String ADT_A02_TRANSFER =
-        "MSH|^~\\&|SENDING_APP|SENDING_FAC|RECEIVING_APP|RECEIVING_FAC|20240115150000||ADT^A02|123457|P|2.5\r" +
-        "EVN|A02|20240115150000\r" +
-        "PID|1||12345^^^MRN||DOE^JOHN^A||19800115|M\r" +
-        "PV1|1|I|WARD_B^202^A|E|||1234^SMITH^JAMES";
+            // Should not throw, just return empty patient/visit data
+            assertThat(result).doesNotContainKey("patient");
+            assertThat(result).doesNotContainKey("visit");
+        }
 
-    private static final String ADT_A03_DISCHARGE =
-        "MSH|^~\\&|SENDING_APP|SENDING_FAC|RECEIVING_APP|RECEIVING_FAC|20240116100000||ADT^A03|123458|P|2.5\r" +
-        "EVN|A03|20240116100000\r" +
-        "PID|1||12345^^^MRN||DOE^JOHN^A||19800115|M\r" +
-        "PV1|1|I|ICU^101^A|E|||1234^SMITH^JAMES||||||||||||20240116100000";
+        @Test
+        @DisplayName("Should process ADT_A01 message successfully")
+        void handle_withAdtA01Message_processesMessage() throws HL7Exception {
+            ADT_A01 adt = mock(ADT_A01.class, RETURNS_DEEP_STUBS);
+            setupMinimalAdt(adt);
 
-    private static final String ADT_A08_UPDATE =
-        "MSH|^~\\&|SENDING_APP|SENDING_FAC|RECEIVING_APP|RECEIVING_FAC|20240115130000||ADT^A08|123459|P|2.5\r" +
-        "EVN|A08|20240115130000\r" +
-        "PID|1||12345^^^MRN||DOE^JOHN^ANTHONY||19800115|M|||456 OAK AVE^^CAMBRIDGE^MA^02139||(617)555-1234";
+            Map<String, Object> result = handler.handle(adt);
 
-    private static final String ADT_A01_EMERGENCY =
-        "MSH|^~\\&|ER_APP|SENDING_FAC|RECEIVING_APP|RECEIVING_FAC|20240115030000||ADT^A01|123460|P|2.5\r" +
-        "EVN|A01|20240115030000\r" +
-        "PID|1||12346^^^MRN||SMITH^JANE||19900520|F\r" +
-        "PV1|1|E|ER^TRAUMA_1^A|E|||5678^JONES^ROBERT";
-
-    @BeforeEach
-    void setUp() {
-        adtMessageHandler = new AdtMessageHandler(parserService, fhirConverter);
+            assertThat(result).containsKey("patient");
+        }
     }
 
-    @Test
-    @DisplayName("Should create Patient resource from ADT^A01")
-    void testCreatePatientFromAdtA01() {
-        // Given
-        Message message = mock(ADT_A01.class);
+    @Nested
+    @DisplayName("Patient Data Tests")
+    class PatientDataTests {
+
+        @Test
+        @DisplayName("Should extract patient identifier from PID segment")
+        void extractPatient_withPidSegment_extractsPatientId() throws HL7Exception {
+            ADT_A01 adt = mock(ADT_A01.class, RETURNS_DEEP_STUBS);
+            setupAdtWithPatient(adt, "12345", "Smith", "John");
+
+            Map<String, Object> result = handler.handle(adt);
+
+            assertThat(result).containsKey("patient");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> patient = (Map<String, Object>) result.get("patient");
+            assertThat(patient).containsEntry("patientIdentifier", "12345");
+        }
+
+        @Test
+        @DisplayName("Should extract patient name from PID segment")
+        void extractPatient_withPidSegment_extractsPatientName() throws HL7Exception {
+            ADT_A01 adt = mock(ADT_A01.class, RETURNS_DEEP_STUBS);
+            setupAdtWithPatient(adt, "12345", "Smith", "John");
+
+            Map<String, Object> result = handler.handle(adt);
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> patient = (Map<String, Object>) result.get("patient");
+            assertThat(patient).containsEntry("familyName", "Smith");
+            assertThat(patient).containsEntry("givenName", "John");
+        }
+
+        @Test
+        @DisplayName("Should extract date of birth from PID segment")
+        void extractPatient_withPidSegment_extractsDateOfBirth() throws HL7Exception {
+            ADT_A01 adt = mock(ADT_A01.class, RETURNS_DEEP_STUBS);
+            setupAdtWithDateOfBirth(adt, "19800115");
+
+            Map<String, Object> result = handler.handle(adt);
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> patient = (Map<String, Object>) result.get("patient");
+            assertThat(patient).containsEntry("dateOfBirth", "19800115");
+        }
+
+        @Test
+        @DisplayName("Should extract gender from PID segment")
+        void extractPatient_withPidSegment_extractsGender() throws HL7Exception {
+            ADT_A01 adt = mock(ADT_A01.class, RETURNS_DEEP_STUBS);
+            setupAdtWithGender(adt, "M");
+
+            Map<String, Object> result = handler.handle(adt);
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> patient = (Map<String, Object>) result.get("patient");
+            assertThat(patient).containsEntry("gender", "M");
+        }
+    }
+
+    @Nested
+    @DisplayName("Visit Data Tests")
+    class VisitDataTests {
+
+        @Test
+        @DisplayName("Should extract patient class from PV1 segment")
+        void extractVisit_withPv1Segment_extractsPatientClass() throws HL7Exception {
+            ADT_A01 adt = mock(ADT_A01.class, RETURNS_DEEP_STUBS);
+            setupAdtWithVisit(adt, "I", "V123456");
+
+            Map<String, Object> result = handler.handle(adt);
+
+            assertThat(result).containsKey("visit");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> visit = (Map<String, Object>) result.get("visit");
+            assertThat(visit).containsEntry("patientClass", "I");
+        }
+
+        @Test
+        @DisplayName("Should extract visit number from PV1 segment")
+        void extractVisit_withPv1Segment_extractsVisitNumber() throws HL7Exception {
+            ADT_A01 adt = mock(ADT_A01.class, RETURNS_DEEP_STUBS);
+            setupAdtWithVisit(adt, "I", "V123456");
+
+            Map<String, Object> result = handler.handle(adt);
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> visit = (Map<String, Object>) result.get("visit");
+            assertThat(visit).containsEntry("visitNumber", "V123456");
+        }
+
+        @Test
+        @DisplayName("Should extract admit date/time from PV1 segment")
+        void extractVisit_withPv1Segment_extractsAdmitDateTime() throws HL7Exception {
+            ADT_A01 adt = mock(ADT_A01.class, RETURNS_DEEP_STUBS);
+            setupAdtWithAdmitDateTime(adt, "20240115120000");
+
+            Map<String, Object> result = handler.handle(adt);
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> visit = (Map<String, Object>) result.get("visit");
+            assertThat(visit).containsEntry("admitDateTime", "20240115120000");
+        }
+    }
+
+    @Nested
+    @DisplayName("Event Data Tests")
+    class EventDataTests {
+
+        @Test
+        @DisplayName("Should extract event type code from EVN segment")
+        void extractEvent_withEvnSegment_extractsEventTypeCode() throws HL7Exception {
+            ADT_A01 adt = mock(ADT_A01.class, RETURNS_DEEP_STUBS);
+            setupAdtWithEvent(adt, "A01");
+
+            Map<String, Object> result = handler.handle(adt);
+
+            assertThat(result).containsKey("event");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> event = (Map<String, Object>) result.get("event");
+            assertThat(event).containsEntry("eventTypeCode", "A01");
+        }
+
+        @Test
+        @DisplayName("Should map A01 event to in-progress FHIR status")
+        void extractEvent_withA01Event_mapsToInProgress() throws HL7Exception {
+            ADT_A01 adt = mock(ADT_A01.class, RETURNS_DEEP_STUBS);
+            setupAdtWithEvent(adt, "A01");
+
+            Map<String, Object> result = handler.handle(adt);
+
+            assertThat(result).containsEntry("fhirEncounterStatus", "in-progress");
+        }
+
+        @Test
+        @DisplayName("Should map A03 event to finished FHIR status")
+        void extractEvent_withA03Event_mapsToFinished() throws HL7Exception {
+            ADT_A03 adt = mock(ADT_A03.class, RETURNS_DEEP_STUBS);
+            setupAdtA03WithEvent(adt, "A03");
+
+            Map<String, Object> result = handler.handle(adt);
+
+            assertThat(result).containsEntry("fhirEncounterStatus", "finished");
+        }
+    }
+
+    @Nested
+    @DisplayName("Event Type Mapping Tests")
+    class EventTypeMappingTests {
+
+        @Test
+        @DisplayName("Should map A01 to in-progress status")
+        void mapEventToEncounterStatus_withA01_returnsInProgress() {
+            String status = handler.mapEventToEncounterStatus("A01");
+            assertThat(status).isEqualTo("in-progress");
+        }
+
+        @Test
+        @DisplayName("Should map A03 to finished status")
+        void mapEventToEncounterStatus_withA03_returnsFinished() {
+            String status = handler.mapEventToEncounterStatus("A03");
+            assertThat(status).isEqualTo("finished");
+        }
+
+        @Test
+        @DisplayName("Should map A05 to planned status")
+        void mapEventToEncounterStatus_withA05_returnsPlanned() {
+            String status = handler.mapEventToEncounterStatus("A05");
+            assertThat(status).isEqualTo("planned");
+        }
+
+        @Test
+        @DisplayName("Should map A11 to cancelled status")
+        void mapEventToEncounterStatus_withA11_returnsCancelled() {
+            String status = handler.mapEventToEncounterStatus("A11");
+            assertThat(status).isEqualTo("cancelled");
+        }
+
+        @Test
+        @DisplayName("Should identify A06 as patient class change event")
+        void isPatientClassChangeEvent_withA06_returnsTrue() {
+            boolean isChange = handler.isPatientClassChangeEvent("A06");
+            assertThat(isChange).isTrue();
+        }
+
+        @Test
+        @DisplayName("Should identify A07 as patient class change event")
+        void isPatientClassChangeEvent_withA07_returnsTrue() {
+            boolean isChange = handler.isPatientClassChangeEvent("A07");
+            assertThat(isChange).isTrue();
+        }
+
+        @Test
+        @DisplayName("Should not identify A01 as patient class change event")
+        void isPatientClassChangeEvent_withA01_returnsFalse() {
+            boolean isChange = handler.isPatientClassChangeEvent("A01");
+            assertThat(isChange).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should identify A11 as cancellation event")
+        void isCancellationEvent_withA11_returnsTrue() {
+            boolean isCancellation = handler.isCancellationEvent("A11");
+            assertThat(isCancellation).isTrue();
+        }
+
+        @Test
+        @DisplayName("Should return I for A06 target patient class")
+        void getTargetPatientClass_withA06_returnsI() {
+            String targetClass = handler.getTargetPatientClass("A06");
+            assertThat(targetClass).isEqualTo("I");
+        }
+
+        @Test
+        @DisplayName("Should return O for A07 target patient class")
+        void getTargetPatientClass_withA07_returnsO() {
+            String targetClass = handler.getTargetPatientClass("A07");
+            assertThat(targetClass).isEqualTo("O");
+        }
+    }
+
+    // Helper methods
+    private void setupMinimalAdt(ADT_A01 adt) throws HL7Exception {
+        // PID segment
         PID pid = mock(PID.class);
-        Patient expectedPatient = new Patient();
-        expectedPatient.setId("12345");
+        when(adt.getPID()).thenReturn(pid);
+        when(pid.getPatientID()).thenReturn(null);
+        when(pid.getPatientIdentifierList(0)).thenReturn(null);
+        when(pid.getPatientName(0)).thenReturn(null);
+        when(pid.getDateTimeOfBirth()).thenReturn(null);
+        when(pid.getAdministrativeSex()).thenReturn(null);
+        when(pid.getPatientAddress(0)).thenReturn(null);
+        when(pid.getPhoneNumberHome(0)).thenReturn(null);
+        when(pid.getSSNNumberPatient()).thenReturn(null);
 
-        when(parserService.parse(ADT_A01_ADMIT)).thenReturn(message);
-        when(parserService.extractPidSegment(message)).thenReturn(pid);
-        when(fhirConverter.convertPidToPatient(pid)).thenReturn(expectedPatient);
+        // PV1 segment
+        when(adt.getPV1()).thenReturn(null);
 
-        // When
-        Patient patient = adtMessageHandler.handleAdmit(ADT_A01_ADMIT);
-
-        // Then
-        assertNotNull(patient);
-        assertEquals("12345", patient.getId());
-        verify(parserService).parse(ADT_A01_ADMIT);
-        verify(parserService).extractPidSegment(message);
-        verify(fhirConverter).convertPidToPatient(pid);
+        // EVN segment
+        when(adt.getEVN()).thenReturn(null);
     }
 
-    @Test
-    @DisplayName("Should create Encounter resource from ADT^A01")
-    void testCreateEncounterFromAdtA01() {
-        // Given
-        Message message = mock(ADT_A01.class);
-        PV1 pv1 = mock(PV1.class);
-        Encounter expectedEncounter = new Encounter();
-        expectedEncounter.setId("V123456");
-
-        when(parserService.parse(ADT_A01_ADMIT)).thenReturn(message);
-        when(parserService.extractPv1Segment(message)).thenReturn(pv1);
-        when(fhirConverter.convertPv1ToEncounter(pv1)).thenReturn(expectedEncounter);
-
-        // When
-        Encounter encounter = adtMessageHandler.createEncounter(ADT_A01_ADMIT);
-
-        // Then
-        assertNotNull(encounter);
-        assertEquals("V123456", encounter.getId());
-        verify(fhirConverter).convertPv1ToEncounter(pv1);
-    }
-
-    @Test
-    @DisplayName("Should update Patient from ADT^A08")
-    void testUpdatePatientFromAdtA08() {
-        // Given
-        Message message = mock(ADT_A01.class);
+    private void setupAdtWithPatient(ADT_A01 adt, String patientId, String familyName, String givenName) throws HL7Exception {
+        // PID segment
         PID pid = mock(PID.class);
-        Patient existingPatient = new Patient();
-        existingPatient.setId("12345");
-        Patient updatedPatient = new Patient();
-        updatedPatient.setId("12345");
+        when(adt.getPID()).thenReturn(pid);
 
-        when(parserService.parse(ADT_A08_UPDATE)).thenReturn(message);
-        when(parserService.extractPidSegment(message)).thenReturn(pid);
-        when(fhirConverter.updatePatientFromPid(existingPatient, pid)).thenReturn(updatedPatient);
+        // Patient ID
+        when(pid.getPatientID()).thenReturn(null);
 
-        // When
-        Patient result = adtMessageHandler.handleUpdate(ADT_A08_UPDATE, existingPatient);
+        CX patientIdCx = mock(CX.class);
+        ST idNumber = mock(ST.class);
+        when(idNumber.getValue()).thenReturn(patientId);
+        when(patientIdCx.getIDNumber()).thenReturn(idNumber);
+        when(pid.getPatientIdentifierList(0)).thenReturn(patientIdCx);
 
-        // Then
-        assertNotNull(result);
-        assertEquals("12345", result.getId());
-        verify(fhirConverter).updatePatientFromPid(existingPatient, pid);
+        // Patient Name
+        XPN patientName = mock(XPN.class);
+        FN fn = mock(FN.class);
+        ST surname = mock(ST.class);
+        when(surname.getValue()).thenReturn(familyName);
+        when(fn.getSurname()).thenReturn(surname);
+        when(patientName.getFamilyName()).thenReturn(fn);
+
+        ST given = mock(ST.class);
+        when(given.getValue()).thenReturn(givenName);
+        when(patientName.getGivenName()).thenReturn(given);
+
+        ST middle = mock(ST.class);
+        when(middle.getValue()).thenReturn(null);
+        when(patientName.getSecondAndFurtherGivenNamesOrInitialsThereof()).thenReturn(middle);
+
+        when(pid.getPatientName(0)).thenReturn(patientName);
+
+        // Null other fields
+        when(pid.getDateTimeOfBirth()).thenReturn(null);
+        when(pid.getAdministrativeSex()).thenReturn(null);
+        when(pid.getPatientAddress(0)).thenReturn(null);
+        when(pid.getPhoneNumberHome(0)).thenReturn(null);
+        when(pid.getSSNNumberPatient()).thenReturn(null);
+
+        // No PV1 or EVN
+        when(adt.getPV1()).thenReturn(null);
+        when(adt.getEVN()).thenReturn(null);
     }
 
-    @Test
-    @DisplayName("Should handle admit event")
-    void testHandleAdmitEvent() {
-        // Given
-        Message message = mock(ADT_A01.class);
-        when(parserService.parse(ADT_A01_ADMIT)).thenReturn(message);
-        when(parserService.getTriggerEvent(message)).thenReturn("A01");
+    private void setupAdtWithDateOfBirth(ADT_A01 adt, String dob) throws HL7Exception {
+        setupAdtWithPatient(adt, "12345", "Smith", "John");
 
-        // When
-        String eventType = adtMessageHandler.getEventType(ADT_A01_ADMIT);
+        PID pid = adt.getPID();
 
-        // Then
-        assertEquals("ADMIT", eventType);
-        verify(parserService).getTriggerEvent(message);
+        TS dateOfBirth = mock(TS.class);
+        DTM dtm = mock(DTM.class);
+        when(dtm.getValue()).thenReturn(dob);
+        when(dateOfBirth.getTime()).thenReturn(dtm);
+        when(pid.getDateTimeOfBirth()).thenReturn(dateOfBirth);
     }
 
-    @Test
-    @DisplayName("Should handle transfer event")
-    void testHandleTransferEvent() {
-        // Given
-        Message message = mock(ADT_A01.class);
+    private void setupAdtWithGender(ADT_A01 adt, String gender) throws HL7Exception {
+        setupAdtWithPatient(adt, "12345", "Smith", "John");
+
+        PID pid = adt.getPID();
+
+        IS adminSex = mock(IS.class);
+        when(adminSex.getValue()).thenReturn(gender);
+        when(pid.getAdministrativeSex()).thenReturn(adminSex);
+    }
+
+    private void setupAdtWithVisit(ADT_A01 adt, String patientClass, String visitNumber) throws HL7Exception {
+        setupMinimalAdt(adt);
+
         PV1 pv1 = mock(PV1.class);
-        Encounter encounter = new Encounter();
+        when(adt.getPV1()).thenReturn(pv1);
 
-        when(parserService.parse(ADT_A02_TRANSFER)).thenReturn(message);
-        when(parserService.getTriggerEvent(message)).thenReturn("A02");
-        when(parserService.extractPv1Segment(message)).thenReturn(pv1);
-        when(fhirConverter.updateEncounterLocation(any(Encounter.class), eq(pv1))).thenReturn(encounter);
+        // Patient class
+        IS patientClassIs = mock(IS.class);
+        when(patientClassIs.getValue()).thenReturn(patientClass);
+        when(pv1.getPatientClass()).thenReturn(patientClassIs);
 
-        // When
-        Encounter result = adtMessageHandler.handleTransfer(ADT_A02_TRANSFER, new Encounter());
+        // Visit number
+        CX visitNum = mock(CX.class);
+        ST visitId = mock(ST.class);
+        when(visitId.getValue()).thenReturn(visitNumber);
+        when(visitNum.getIDNumber()).thenReturn(visitId);
+        when(pv1.getVisitNumber()).thenReturn(visitNum);
 
-        // Then
-        assertNotNull(result);
-        verify(fhirConverter).updateEncounterLocation(any(Encounter.class), eq(pv1));
+        // Null other fields
+        when(pv1.getAssignedPatientLocation()).thenReturn(null);
+        when(pv1.getAttendingDoctor(0)).thenReturn(null);
+        when(pv1.getAdmissionType()).thenReturn(null);
+        when(pv1.getAdmitDateTime()).thenReturn(null);
+        when(pv1.getDischargeDateTime(0)).thenReturn(null);
     }
 
-    @Test
-    @DisplayName("Should handle discharge event")
-    void testHandleDischargeEvent() {
-        // Given
-        Message message = mock(ADT_A01.class);
-        PV1 pv1 = mock(PV1.class);
-        Encounter encounter = new Encounter();
-        encounter.setId("V123456");
+    private void setupAdtWithAdmitDateTime(ADT_A01 adt, String admitDateTime) throws HL7Exception {
+        setupAdtWithVisit(adt, "I", "V123456");
 
-        when(parserService.parse(ADT_A03_DISCHARGE)).thenReturn(message);
-        when(parserService.getTriggerEvent(message)).thenReturn("A03");
-        when(parserService.extractPv1Segment(message)).thenReturn(pv1);
-        when(fhirConverter.closeEncounter(any(Encounter.class), eq(pv1))).thenReturn(encounter);
+        PV1 pv1 = adt.getPV1();
 
-        // When
-        Encounter result = adtMessageHandler.handleDischarge(ADT_A03_DISCHARGE, new Encounter());
-
-        // Then
-        assertNotNull(result);
-        verify(fhirConverter).closeEncounter(any(Encounter.class), eq(pv1));
+        TS admitTs = mock(TS.class);
+        DTM admitDtm = mock(DTM.class);
+        when(admitDtm.getValue()).thenReturn(admitDateTime);
+        when(admitTs.getTime()).thenReturn(admitDtm);
+        when(pv1.getAdmitDateTime()).thenReturn(admitTs);
     }
 
-    @Test
-    @DisplayName("Should extract insurance from IN1 segment")
-    void testExtractInsuranceFromIn1() {
-        // Given
-        Message message = mock(ADT_A01.class);
-        IN1 in1 = mock(IN1.class);
-        Coverage coverage = new Coverage();
-        coverage.setId("INS001");
+    private void setupAdtWithEvent(ADT_A01 adt, String eventTypeCode) throws HL7Exception {
+        setupMinimalAdt(adt);
 
-        when(parserService.parse(ADT_A01_ADMIT)).thenReturn(message);
-        when(parserService.extractIn1Segment(message)).thenReturn(in1);
-        when(fhirConverter.convertIn1ToCoverage(in1)).thenReturn(coverage);
+        EVN evn = mock(EVN.class);
+        when(adt.getEVN()).thenReturn(evn);
 
-        // When
-        Coverage result = adtMessageHandler.extractInsurance(ADT_A01_ADMIT);
+        ID eventType = mock(ID.class);
+        when(eventType.getValue()).thenReturn(eventTypeCode);
+        when(evn.getEventTypeCode()).thenReturn(eventType);
 
-        // Then
-        assertNotNull(result);
-        assertEquals("INS001", result.getId());
-        verify(fhirConverter).convertIn1ToCoverage(in1);
+        when(evn.getRecordedDateTime()).thenReturn(null);
+        when(evn.getEventOccurred()).thenReturn(null);
     }
 
-    @Test
-    @DisplayName("Should handle emergency admit")
-    void testHandleEmergencyAdmit() {
-        // Given
-        Message message = mock(ADT_A01.class);
-        PV1 pv1 = mock(PV1.class);
-        Encounter encounter = new Encounter();
+    private void setupAdtA03WithEvent(ADT_A03 adt, String eventTypeCode) throws HL7Exception {
+        // PID segment
+        when(adt.getPID()).thenReturn(null);
 
-        when(parserService.parse(ADT_A01_EMERGENCY)).thenReturn(message);
-        when(parserService.extractPv1Segment(message)).thenReturn(pv1);
-        when(fhirConverter.convertPv1ToEncounter(pv1)).thenReturn(encounter);
-        when(fhirConverter.isEmergencyAdmit(pv1)).thenReturn(true);
+        // PV1 segment
+        when(adt.getPV1()).thenReturn(null);
 
-        // When
-        boolean isEmergency = adtMessageHandler.isEmergencyAdmit(ADT_A01_EMERGENCY);
+        // EVN segment
+        EVN evn = mock(EVN.class);
+        when(adt.getEVN()).thenReturn(evn);
 
-        // Then
-        assertTrue(isEmergency);
-        verify(fhirConverter).isEmergencyAdmit(pv1);
-    }
+        ID eventType = mock(ID.class);
+        when(eventType.getValue()).thenReturn(eventTypeCode);
+        when(evn.getEventTypeCode()).thenReturn(eventType);
 
-    @Test
-    @DisplayName("Should extract patient identifier from ADT message")
-    void testExtractPatientIdentifier() {
-        // Given
-        Message message = mock(ADT_A01.class);
-        PID pid = mock(PID.class);
-
-        when(parserService.parse(ADT_A01_ADMIT)).thenReturn(message);
-        when(parserService.extractPidSegment(message)).thenReturn(pid);
-        when(fhirConverter.extractPatientIdentifier(pid)).thenReturn("12345");
-
-        // When
-        String patientId = adtMessageHandler.extractPatientId(ADT_A01_ADMIT);
-
-        // Then
-        assertEquals("12345", patientId);
-        verify(fhirConverter).extractPatientIdentifier(pid);
-    }
-
-    @Test
-    @DisplayName("Should extract visit number from ADT message")
-    void testExtractVisitNumber() {
-        // Given
-        Message message = mock(ADT_A01.class);
-        PV1 pv1 = mock(PV1.class);
-
-        when(parserService.parse(ADT_A01_ADMIT)).thenReturn(message);
-        when(parserService.extractPv1Segment(message)).thenReturn(pv1);
-        when(fhirConverter.extractVisitNumber(pv1)).thenReturn("V123456");
-
-        // When
-        String visitNumber = adtMessageHandler.extractVisitNumber(ADT_A01_ADMIT);
-
-        // Then
-        assertEquals("V123456", visitNumber);
-        verify(fhirConverter).extractVisitNumber(pv1);
-    }
-
-    @Test
-    @DisplayName("Should handle null PV1 segment gracefully")
-    void testHandleNullPv1Segment() {
-        // Given
-        Message message = mock(ADT_A01.class);
-
-        when(parserService.parse(ADT_A01_ADMIT)).thenReturn(message);
-        when(parserService.extractPv1Segment(message)).thenReturn(null);
-
-        // When
-        Encounter encounter = adtMessageHandler.createEncounter(ADT_A01_ADMIT);
-
-        // Then
-        assertNull(encounter);
-    }
-
-    @Test
-    @DisplayName("Should handle null IN1 segment gracefully")
-    void testHandleNullIn1Segment() {
-        // Given
-        Message message = mock(ADT_A01.class);
-
-        when(parserService.parse(ADT_A01_ADMIT)).thenReturn(message);
-        when(parserService.extractIn1Segment(message)).thenReturn(null);
-
-        // When
-        Coverage coverage = adtMessageHandler.extractInsurance(ADT_A01_ADMIT);
-
-        // Then
-        assertNull(coverage);
-    }
-
-    @Test
-    @DisplayName("Should validate ADT message type")
-    void testValidateAdtMessageType() {
-        // Given
-        Message message = mock(ADT_A01.class);
-
-        when(parserService.parse(ADT_A01_ADMIT)).thenReturn(message);
-        when(parserService.getMessageType(message)).thenReturn("ADT^A01");
-
-        // When
-        boolean isValid = adtMessageHandler.isValidAdtMessage(ADT_A01_ADMIT);
-
-        // Then
-        assertTrue(isValid);
-    }
-
-    @Test
-    @DisplayName("Should reject non-ADT message")
-    void testRejectNonAdtMessage() {
-        // Given
-        String oruMessage = "MSH|^~\\&|LAB|FAC|EMR|FAC|20240115120000||ORU^R01|789|P|2.5";
-        Message message = mock(Message.class);
-
-        when(parserService.parse(oruMessage)).thenReturn(message);
-        when(parserService.getMessageType(message)).thenReturn("ORU^R01");
-
-        // When
-        boolean isValid = adtMessageHandler.isValidAdtMessage(oruMessage);
-
-        // Then
-        assertFalse(isValid);
-    }
-
-    @Test
-    @DisplayName("Should extract admission timestamp")
-    void testExtractAdmissionTimestamp() {
-        // Given
-        Message message = mock(ADT_A01.class);
-        PV1 pv1 = mock(PV1.class);
-        Date expectedDate = new Date();
-
-        when(parserService.parse(ADT_A01_ADMIT)).thenReturn(message);
-        when(parserService.extractPv1Segment(message)).thenReturn(pv1);
-        when(fhirConverter.extractAdmitDateTime(pv1)).thenReturn(expectedDate);
-
-        // When
-        Date admitDate = adtMessageHandler.extractAdmitDateTime(ADT_A01_ADMIT);
-
-        // Then
-        assertNotNull(admitDate);
-        assertEquals(expectedDate, admitDate);
-    }
-
-    @Test
-    @DisplayName("Should extract discharge timestamp")
-    void testExtractDischargeTimestamp() {
-        // Given
-        Message message = mock(ADT_A01.class);
-        PV1 pv1 = mock(PV1.class);
-        Date expectedDate = new Date();
-
-        when(parserService.parse(ADT_A03_DISCHARGE)).thenReturn(message);
-        when(parserService.extractPv1Segment(message)).thenReturn(pv1);
-        when(fhirConverter.extractDischargeDateTime(pv1)).thenReturn(expectedDate);
-
-        // When
-        Date dischargeDate = adtMessageHandler.extractDischargeDateTime(ADT_A03_DISCHARGE);
-
-        // Then
-        assertNotNull(dischargeDate);
-        assertEquals(expectedDate, dischargeDate);
+        when(evn.getRecordedDateTime()).thenReturn(null);
+        when(evn.getEventOccurred()).thenReturn(null);
     }
 }

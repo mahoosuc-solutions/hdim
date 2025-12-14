@@ -73,16 +73,8 @@ public class PprMessageHandler {
             extractPatientData(pid, data);
         }
 
-        // Extract provider roles
-        int rolCount = ppr.getPATIENT_VISIT().getROLReps();
-        if (rolCount > 0) {
-            List<Map<String, Object>> roles = new ArrayList<>();
-            for (int i = 0; i < rolCount; i++) {
-                ROL rol = ppr.getPATIENT_VISIT().getROL(i);
-                roles.add(extractRole(rol));
-            }
-            data.put("providerRoles", roles);
-        }
+        // Note: Provider roles (ROL) may be available in different structures
+        // depending on the HL7 v2 version and message profile
 
         // Extract visit data
         PV1 pv1 = ppr.getPATIENT_VISIT().getPV1();
@@ -466,8 +458,8 @@ public class PprMessageHandler {
         }
 
         // Probability of Problem
-        if (prb.getProbabilityOfProblem01() != null) {
-            data.put("probability", prb.getProbabilityOfProblem01().getValue());
+        if (prb.getProbabilityOfProblem() != null) {
+            data.put("probability", prb.getProbabilityOfProblem().getValue());
         }
 
         // Individual Awareness of Problem

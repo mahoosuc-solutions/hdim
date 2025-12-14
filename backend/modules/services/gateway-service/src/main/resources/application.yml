@@ -58,26 +58,44 @@ jwt:
 backend:
   services:
     cql-engine:
-      url: http://localhost:8081
+      url: ${BACKEND_SERVICES_CQL_ENGINE_URL:http://localhost:8081}
       timeout: 30000
     quality-measure:
-      url: http://localhost:8087
+      url: ${BACKEND_SERVICES_QUALITY_MEASURE_URL:http://localhost:8087}
       timeout: 30000
     fhir:
-      url: http://localhost:8083
+      url: ${BACKEND_SERVICES_FHIR_URL:http://localhost:8085}
       timeout: 30000
     patient:
-      url: http://localhost:8084
+      url: ${BACKEND_SERVICES_PATIENT_URL:http://localhost:8084}
       timeout: 30000
     care-gap:
-      url: http://localhost:8085
+      url: ${BACKEND_SERVICES_CARE_GAP_URL:http://localhost:8086}
+      timeout: 30000
+    consent:
+      url: ${BACKEND_SERVICES_CONSENT_URL:http://localhost:8082}
+      timeout: 30000
+    events:
+      url: ${BACKEND_SERVICES_EVENTS_URL:http://localhost:8083}
       timeout: 30000
     agent-runtime:
-      url: ${AGENT_RUNTIME_SERVICE_URL:http://localhost:8095}
+      url: ${BACKEND_SERVICES_AGENT_RUNTIME_URL:http://localhost:8095}
       timeout: 120000  # Higher timeout for AI operations
     agent-builder:
-      url: ${AGENT_BUILDER_SERVICE_URL:http://localhost:8096}
+      url: ${BACKEND_SERVICES_AGENT_BUILDER_URL:http://localhost:8096}
       timeout: 30000
+    qrda-export:
+      url: ${BACKEND_SERVICES_QRDA_EXPORT_URL:http://localhost:8104}
+      timeout: 60000  # Longer timeout for QRDA generation
+    hcc:
+      url: ${BACKEND_SERVICES_HCC_URL:http://localhost:8105}
+      timeout: 30000
+    ecr:
+      url: ${BACKEND_SERVICES_ECR_URL:http://localhost:8101}
+      timeout: 30000
+    prior-auth:
+      url: ${BACKEND_SERVICES_PRIOR_AUTH_URL:http://localhost:8102}
+      timeout: 60000  # Longer timeout for payer API calls
 
 # Gateway Feature Flags
 gateway:

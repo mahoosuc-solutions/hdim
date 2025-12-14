@@ -1,5 +1,5 @@
 # HDIM Healthcare Platform - Complete Docker Compose
-# All 22 Backend Services with Profiles
+# All 25 Backend Services with Profiles (including 3 new regulatory compliance services)
 #
 # Usage:
 #   docker compose --profile core up -d      # Infrastructure + 10 core clinical services
@@ -118,14 +118,19 @@ services:
       SPRING_REDIS_PORT: 6379
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
-      # Backend service URLs
-      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085
-      BACKEND_SERVICES_CQL_ENGINE_URL: http://cql-engine-service:8081
-      BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087
-      BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084
-      BACKEND_SERVICES_CARE_GAP_URL: http://care-gap-service:8086
+      # Backend service URLs (include context-path + internal controller path)
+      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir/fhir
+      BACKEND_SERVICES_CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
+      BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087/quality-measure
+      BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084/patient
+      BACKEND_SERVICES_CARE_GAP_URL: http://care-gap-service:8086/care-gap
+      BACKEND_SERVICES_CONSENT_URL: http://consent-service:8082/consent
+      BACKEND_SERVICES_EVENTS_URL: http://event-processing-service:8083/events
       BACKEND_SERVICES_AGENT_BUILDER_URL: http://agent-builder-service:8096
       BACKEND_SERVICES_AGENT_RUNTIME_URL: http://agent-runtime-service:8088
+      BACKEND_SERVICES_QRDA_EXPORT_URL: http://qrda-export-service:8104
+      BACKEND_SERVICES_HCC_URL: http://hcc-service:8105
+      BACKEND_SERVICES_ECR_URL: http://ecr-service:8101
     ports:
       - "8080:8080"
     healthcheck:
@@ -834,6 +839,126 @@ services:
       - "8100:8100"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8100/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================
+  # REGULATORY COMPLIANCE SERVICES (8101, 8104, 8105)
+  # ============================================
+
+  # Port 8101 - Electronic Case Reporting Service
+  ecr-service:
+    container_name: healthdata-ecr-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/ecr-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ecr_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8101
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      ECR_AIMS_ENABLED: "false"
+    ports:
+      - "8101:8101"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8101/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8104 - QRDA Export Service
+  qrda-export-service:
+    container_name: healthdata-qrda-export-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/qrda-export-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      quality-measure-service:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/qrda_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8104
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087
+      FHIR_SERVICE_URL: http://fhir-service:8085
+    ports:
+      - "8104:8104"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8104/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8105 - HCC Risk Adjustment Service
+  hcc-service:
+    container_name: healthdata-hcc-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/hcc-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hcc_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8105
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      HCC_MODEL_V24_WEIGHT: "0.33"
+      HCC_MODEL_V28_WEIGHT: "0.67"
+      FHIR_SERVICE_URL: http://fhir-service:8085
+    ports:
+      - "8105:8105"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8105/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5

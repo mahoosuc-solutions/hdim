@@ -1,0 +1,6 @@
+FROM eclipse-temurin:21-jdk-alpine
+WORKDIR /app
+RUN apk add --no-cache curl
+COPY modules/services/hcc-service/build/libs/*.jar app.jar
+ENV JAVA_OPTS="-Xmx512m -Xms256m"
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

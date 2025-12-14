@@ -1,0 +1,722 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "panels": [],
+      "title": "Overview",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) as total FROM prior_auth.prior_auth_requests WHERE tenant_id = '$tenant_id'",
+          "refId": "A"
+        }
+      ],
+      "title": "Total PA Requests",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 50 }
+            ]
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) as pending FROM prior_auth.prior_auth_requests WHERE tenant_id = '$tenant_id' AND status IN ('PENDING_SUBMISSION', 'SUBMITTED', 'PENDING_REVIEW', 'INFO_REQUESTED')",
+          "refId": "A"
+        }
+      ],
+      "title": "Pending Requests",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 10 }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "id": 4,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+          "format": "table",
+          "rawSql": "SELECT COALESCE(ROUND(100.0 * COUNT(*) FILTER (WHERE decision_at > sla_deadline) / NULLIF(COUNT(*) FILTER (WHERE decision_at IS NOT NULL), 0), 2), 0) as breach_rate FROM prior_auth.prior_auth_requests WHERE tenant_id = '$tenant_id'",
+          "refId": "A"
+        }
+      ],
+      "title": "SLA Breach Rate",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "green", "value": 80 }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "id": 5,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+          "format": "table",
+          "rawSql": "SELECT COALESCE(ROUND(100.0 * COUNT(*) FILTER (WHERE status IN ('APPROVED', 'PARTIALLY_APPROVED')) / NULLIF(COUNT(*) FILTER (WHERE status IN ('APPROVED', 'PARTIALLY_APPROVED', 'DENIED')), 0), 2), 0) as approval_rate FROM prior_auth.prior_auth_requests WHERE tenant_id = '$tenant_id'",
+          "refId": "A"
+        }
+      ],
+      "title": "Approval Rate",
+      "type": "gauge"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 6,
+      "panels": [],
+      "title": "SLA Tracking",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "hideFrom": { "legend": false, "tooltip": false, "viz": false } },
+          "mappings": []
+        }
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 6 },
+      "id": 7,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "pieType": "pie",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+          "format": "table",
+          "rawSql": "SELECT urgency, COUNT(*) as count FROM prior_auth.prior_auth_requests WHERE tenant_id = '$tenant_id' AND status NOT IN ('CANCELLED', 'EXPIRED') GROUP BY urgency",
+          "refId": "A"
+        }
+      ],
+      "title": "Requests by Urgency",
+      "type": "piechart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "hideFrom": { "legend": false, "tooltip": false, "viz": false } },
+          "mappings": []
+        }
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 6 },
+      "id": 8,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "pieType": "pie",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+          "format": "table",
+          "rawSql": "SELECT CASE WHEN sla_deadline IS NULL THEN 'No SLA' WHEN NOW() > sla_deadline THEN 'Breached' WHEN NOW() > sla_deadline - INTERVAL '24 hours' THEN 'At Risk' ELSE 'On Track' END as sla_status, COUNT(*) as count FROM prior_auth.prior_auth_requests WHERE tenant_id = '$tenant_id' AND status IN ('PENDING_SUBMISSION', 'SUBMITTED', 'PENDING_REVIEW', 'INFO_REQUESTED') GROUP BY sla_status",
+          "refId": "A"
+        }
+      ],
+      "title": "SLA Status",
+      "type": "piechart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "hours_to_deadline" },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": null },
+                    { "color": "yellow", "value": 12 },
+                    { "color": "green", "value": 48 }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+          "format": "table",
+          "rawSql": "SELECT pa_request_id, patient_id, urgency, status, service_description, ROUND(EXTRACT(EPOCH FROM (sla_deadline - NOW()))/3600, 1) as hours_to_deadline, sla_deadline FROM prior_auth.prior_auth_requests WHERE tenant_id = '$tenant_id' AND status IN ('PENDING_SUBMISSION', 'SUBMITTED', 'PENDING_REVIEW', 'INFO_REQUESTED') AND sla_deadline IS NOT NULL ORDER BY sla_deadline ASC LIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "Time to SLA Deadline",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 10,
+      "panels": [],
+      "title": "Processing Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineWidth": 1,
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "h"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+      "id": 11,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.6,
+        "groupWidth": 0.7,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+          "format": "table",
+          "rawSql": "SELECT urgency, ROUND(AVG(EXTRACT(EPOCH FROM (decision_at - submitted_at))/3600), 2) as avg_hours FROM prior_auth.prior_auth_requests WHERE tenant_id = '$tenant_id' AND decision_at IS NOT NULL AND submitted_at IS NOT NULL GROUP BY urgency",
+          "refId": "A"
+        }
+      ],
+      "title": "Average Processing Time by Urgency",
+      "type": "barchart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineWidth": 1,
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+      "id": 12,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.6,
+        "groupWidth": 0.7,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+          "format": "table",
+          "rawSql": "SELECT status, COUNT(*) as count FROM prior_auth.prior_auth_requests WHERE tenant_id = '$tenant_id' GROUP BY status ORDER BY count DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Requests by Status",
+      "type": "barchart"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "id": 13,
+      "panels": [],
+      "title": "Payer Performance",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineWidth": 1,
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+      "id": 14,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.6,
+        "groupWidth": 0.7,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": false },
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+          "format": "table",
+          "rawSql": "SELECT COALESCE(payer_name, payer_id) as payer, COUNT(*) as count FROM prior_auth.prior_auth_requests WHERE tenant_id = '$tenant_id' GROUP BY payer_name, payer_id ORDER BY count DESC LIMIT 10",
+          "refId": "A"
+        }
+      ],
+      "title": "Requests by Payer",
+      "type": "barchart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineWidth": 1,
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
+      "id": 15,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.6,
+        "groupWidth": 0.7,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": false },
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+          "format": "table",
+          "rawSql": "SELECT COALESCE(payer_name, payer_id) as payer, ROUND(100.0 * COUNT(*) FILTER (WHERE status IN ('APPROVED', 'PARTIALLY_APPROVED')) / NULLIF(COUNT(*) FILTER (WHERE status IN ('APPROVED', 'PARTIALLY_APPROVED', 'DENIED')), 0), 2) as approval_rate FROM prior_auth.prior_auth_requests WHERE tenant_id = '$tenant_id' GROUP BY payer_name, payer_id HAVING COUNT(*) FILTER (WHERE status IN ('APPROVED', 'PARTIALLY_APPROVED', 'DENIED')) > 0 ORDER BY approval_rate DESC LIMIT 10",
+          "refId": "A"
+        }
+      ],
+      "title": "Approval Rate by Payer",
+      "type": "barchart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineWidth": 1,
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "h"
+        }
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
+      "id": 16,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.6,
+        "groupWidth": 0.7,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": false },
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+          "format": "table",
+          "rawSql": "SELECT COALESCE(payer_name, payer_id) as payer, ROUND(AVG(EXTRACT(EPOCH FROM (decision_at - submitted_at))/3600), 2) as avg_response_hours FROM prior_auth.prior_auth_requests WHERE tenant_id = '$tenant_id' AND decision_at IS NOT NULL AND submitted_at IS NOT NULL GROUP BY payer_name, payer_id ORDER BY avg_response_hours ASC LIMIT 10",
+          "refId": "A"
+        }
+      ],
+      "title": "Avg Response Time by Payer (hours)",
+      "type": "barchart"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "id": 17,
+      "panels": [],
+      "title": "Alerts",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "urgency" },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  { "options": { "STAT": { "color": "red", "index": 0 } }, "type": "value" },
+                  { "options": { "ROUTINE": { "color": "yellow", "index": 1 } }, "type": "value" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 33 },
+      "id": 18,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+          "format": "table",
+          "rawSql": "SELECT pa_request_id, patient_id, urgency, service_description, payer_name, sla_deadline, ROUND(EXTRACT(EPOCH FROM (sla_deadline - NOW()))/3600, 1) as hours_remaining FROM prior_auth.prior_auth_requests WHERE tenant_id = '$tenant_id' AND status IN ('PENDING_SUBMISSION', 'SUBMITTED', 'PENDING_REVIEW', 'INFO_REQUESTED') AND sla_deadline IS NOT NULL AND sla_deadline > NOW() AND sla_deadline <= NOW() + INTERVAL '24 hours' ORDER BY sla_deadline ASC",
+          "refId": "A"
+        }
+      ],
+      "title": "Approaching SLA Deadline (< 24 hours)",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 33 },
+      "id": 19,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+          "format": "table",
+          "rawSql": "SELECT pa_request_id, patient_id, service_description, payer_name, decision_reason, decision_at FROM prior_auth.prior_auth_requests WHERE tenant_id = '$tenant_id' AND status = 'DENIED' ORDER BY decision_at DESC LIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "Recent Denials",
+      "type": "table"
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["prior-auth", "sla", "compliance", "cms"],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "default",
+          "value": "default"
+        },
+        "datasource": { "type": "postgres", "uid": "PostgreSQL-HDIM" },
+        "definition": "SELECT DISTINCT tenant_id FROM prior_auth.prior_auth_requests",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Tenant",
+        "multi": false,
+        "name": "tenant_id",
+        "options": [],
+        "query": "SELECT DISTINCT tenant_id FROM prior_auth.prior_auth_requests",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Prior Authorization SLA Dashboard",
+  "uid": "prior-auth-sla",
+  "version": 1,
+  "weekStart": ""
+}

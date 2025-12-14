@@ -1,9 +1,8 @@
 package com.healthdata.ecr.persistence;
 
+import com.healthdata.ecr.persistence.converter.MapJsonConverter;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -84,8 +83,8 @@ public class ElectronicCaseReportEntity {
     /**
      * The complete eICR FHIR Bundle as JSON
      */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "eicr_bundle_json", columnDefinition = "jsonb")
+    @Column(name = "eicr_bundle_json", columnDefinition = "text")
+    @Convert(converter = MapJsonConverter.class)
     private Map<String, Object> eicrBundleJson;
 
     /**
@@ -98,8 +97,8 @@ public class ElectronicCaseReportEntity {
     /**
      * Full Reportability Response as JSON
      */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "rr_response_json", columnDefinition = "jsonb")
+    @Column(name = "rr_response_json", columnDefinition = "text")
+    @Convert(converter = MapJsonConverter.class)
     private Map<String, Object> rrResponseJson;
 
     /**

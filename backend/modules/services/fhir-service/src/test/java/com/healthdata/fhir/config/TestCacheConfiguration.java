@@ -45,10 +45,31 @@ public class TestCacheConfiguration implements CachingConfigurer {
             // Procedure caches
             new ConcurrentMapCache("procedures"),
             new ConcurrentMapCache("proceduresByPatient"),
+            // Goal caches
+            new ConcurrentMapCache("fhir-goals"),
+            new ConcurrentMapCache("goals"),
+            // CarePlan caches
+            new ConcurrentMapCache("fhir-care-plans"),
+            new ConcurrentMapCache("fhir-careplans"),
+            new ConcurrentMapCache("careplans"),
+            // Coverage caches
+            new ConcurrentMapCache("fhir-coverages"),
+            new ConcurrentMapCache("coverages"),
+            // DiagnosticReport caches
+            new ConcurrentMapCache("fhir-diagnostic-reports"),
+            new ConcurrentMapCache("fhir-diagnosticreports"),
+            new ConcurrentMapCache("diagnosticreports"),
+            // DocumentReference caches
+            new ConcurrentMapCache("fhir-document-references"),
+            new ConcurrentMapCache("fhir-documentreferences"),
+            new ConcurrentMapCache("documentreferences"),
             // Other common caches
             new ConcurrentMapCache("patients"),
+            new ConcurrentMapCache("fhir-patients"),
             new ConcurrentMapCache("observations"),
+            new ConcurrentMapCache("fhir-observations"),
             new ConcurrentMapCache("conditions"),
+            new ConcurrentMapCache("fhir-conditions"),
             new ConcurrentMapCache("fhirResources")
         ));
         return cacheManager;

@@ -1,6 +1,14 @@
 package com.healthdata.authentication.config;
 
+import com.healthdata.authentication.service.JwtTokenService;
+import com.healthdata.authentication.config.JwtConfig;
+import com.healthdata.cache.CacheEvictionService;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+
+import java.time.Duration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
@@ -62,5 +70,43 @@ public class TestSecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * Cache manager for test environment.
+     */
+    @Bean
+    public CacheManager cacheManager() {
+        return new ConcurrentMapCacheManager("users", "tokens", "sessions", "tenants");
+    }
+
+    /**
+     * Cache eviction service for test environment.
+     */
+    @Bean
+    public CacheEvictionService cacheEvictionService(CacheManager cacheManager) {
+        return new CacheEvictionService(cacheManager);
+    }
+
+    /**
+     * JWT configuration for test environment.
+     */
+    @Bean
+    public JwtConfig jwtConfig() {
+        JwtConfig config = new JwtConfig();
+        config.setSecret("test-secret-key-that-is-at-least-256-bits-long-for-hs256-algorithm-and-more-padding");
+        config.setAccessTokenExpiration(Duration.ofHours(1));
+        config.setRefreshTokenExpiration(Duration.ofDays(7));
+        config.setIssuer("healthdata-test");
+        config.setAudience("healthdata-test-api");
+        return config;
+    }
+
+    /**
+     * JWT token service for test environment.
+     */
+    @Bean
+    public JwtTokenService jwtTokenService(JwtConfig jwtConfig) {
+        return new JwtTokenService(jwtConfig);
     }
 }

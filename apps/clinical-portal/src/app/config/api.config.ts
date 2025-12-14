@@ -35,7 +35,7 @@ export const API_CONFIG = {
     : '/fhir',  // Proxied to localhost:8083
 
   // Tenant Configuration
-  DEFAULT_TENANT_ID: 'default',
+  DEFAULT_TENANT_ID: 'demo-tenant',
 
   // HTTP Settings
   TIMEOUT_MS: 30000, // 30 seconds

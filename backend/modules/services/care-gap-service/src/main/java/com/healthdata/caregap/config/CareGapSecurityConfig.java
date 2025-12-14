@@ -102,6 +102,9 @@ public class CareGapSecurityConfig {
                     "/swagger-resources/**",
                     "/webjars/**"
                 ).permitAll()
+                // DEMO MODE: Permit all Care Gap API access (remove in production)
+                // Note: Context path is /care-gap, so internal paths are relative
+                .requestMatchers("/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

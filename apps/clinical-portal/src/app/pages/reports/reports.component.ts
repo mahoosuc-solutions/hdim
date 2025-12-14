@@ -1,4 +1,6 @@
-import { Component, OnInit, signal, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, ViewChild, AfterViewInit } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
@@ -1035,7 +1037,8 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
     `,
   ],
 })
-export class ReportsComponent implements OnInit, AfterViewInit {
+export class ReportsComponent implements OnInit, OnDestroy, AfterViewInit {
+  private destroy$ = new Subject<void>();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
@@ -1076,13 +1079,18 @@ export class ReportsComponent implements OnInit, AfterViewInit {
     this.dataSource.sort = this.sort;
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   /**
    * Load saved reports from the backend
    */
   @TrackInteraction('reports', 'load-reports')
   loadSavedReports(reportType?: ReportType): void {
     this.isLoadingReports.set(true);
-    this.evaluationService.getSavedReports(reportType).subscribe({
+    this.evaluationService.getSavedReports(reportType).pipe(takeUntil(this.destroy$)).subscribe({
       next: (reports) => {
         const reportsToDisplay = reports.length > 0 ? reports : INITIAL_SAVED_REPORTS;
         this.savedReports.set(reportsToDisplay);
@@ -1116,13 +1124,14 @@ export class ReportsComponent implements OnInit, AfterViewInit {
       disableClose: false,
     });
 
-    dialogRef.afterClosed().subscribe((patientId: string | null) => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((patientId: string | null) => {
       if (patientId) {
         const reportName = `Patient Report - ${new Date().toLocaleDateString()}`;
 
         this.isGeneratingPatientReport.set(true);
         this.evaluationService
           .savePatientReport(patientId, reportName, 'clinical-portal')
+          .pipe(takeUntil(this.destroy$))
           .subscribe({
             next: (report) => {
               this.toast.success('Patient report generated successfully');
@@ -1151,13 +1160,14 @@ export class ReportsComponent implements OnInit, AfterViewInit {
       disableClose: false,
     });
 
-    dialogRef.afterClosed().subscribe((year: number | null) => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((year: number | null) => {
       if (year) {
         const reportName = `Population Report ${year}`;
 
         this.isGeneratingPopulationReport.set(true);
         this.evaluationService
           .savePopulationReport(year, reportName, 'clinical-portal')
+          .pipe(takeUntil(this.destroy$))
           .subscribe({
             next: (report) => {
               this.toast.success('Population report generated successfully');
@@ -1192,6 +1202,7 @@ export class ReportsComponent implements OnInit, AfterViewInit {
   onExportCsv(report: SavedReport): void {
     this.evaluationService
       .exportAndDownloadReport(report.id, report.reportName, 'csv')
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           this.toast.success('Report exported to CSV');
@@ -1208,6 +1219,7 @@ export class ReportsComponent implements OnInit, AfterViewInit {
   onExportExcel(report: SavedReport): void {
     this.evaluationService
       .exportAndDownloadReport(report.id, report.reportName, 'excel')
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           this.toast.success('Report exported to Excel');
@@ -1234,9 +1246,9 @@ export class ReportsComponent implements OnInit, AfterViewInit {
       }
     });
 
-    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((confirmed: boolean) => {
       if (confirmed) {
-        this.evaluationService.deleteSavedReport(report.id).subscribe({
+        this.evaluationService.deleteSavedReport(report.id).pipe(takeUntil(this.destroy$)).subscribe({
           next: () => {
             this.toast.success('Report deleted successfully');
             this.loadSavedReports(this.selectedReportType() ?? undefined);
@@ -1378,7 +1390,7 @@ export class ReportsComponent implements OnInit, AfterViewInit {
       }
     });
 
-    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((confirmed: boolean) => {
       if (confirmed) {
         this.performDeleteSelected();
       }
@@ -1394,7 +1406,7 @@ export class ReportsComponent implements OnInit, AfterViewInit {
     let errorCount = 0;
 
     selectedReports.forEach((report) => {
-      this.evaluationService.deleteSavedReport(report.id).subscribe({
+      this.evaluationService.deleteSavedReport(report.id).pipe(takeUntil(this.destroy$)).subscribe({
         next: () => {
           deletedCount++;
           // Remove from local arrays

@@ -213,7 +213,7 @@ export class MADashboardComponent implements OnInit, OnDestroy {
       'Check In',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         this.updateTaskStatus(task.id, 'completed');
         task.taskType = 'vitals'; // Move to next step
@@ -245,7 +245,7 @@ export class MADashboardComponent implements OnInit, OnDestroy {
       'Mark Ready',
       'Cancel',
       'primary'
-    ).subscribe(confirmed => {
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
       if (confirmed) {
         this.updateTaskStatus(task.id, 'in-progress');
         this.roomsReady++;

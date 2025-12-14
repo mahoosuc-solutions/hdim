@@ -17,8 +17,9 @@ import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { SelectionModel } from '@angular/cdk/collections';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
-import { catchError, finalize } from 'rxjs/operators';
+import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { injectDestroy } from '../../shared/utils';
 
 import { EvaluationService } from '../../services/evaluation.service';
 import { PatientService } from '../../services/patient.service';
@@ -63,6 +64,8 @@ import { TrackInteraction } from '../../utils/ai-tracking.decorator';
   styleUrl: './results.component.scss',
 })
 export class ResultsComponent implements OnInit, AfterViewInit {
+  private destroy$ = injectDestroy();
+
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
@@ -172,6 +175,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
     this.evaluationService
       .getAllResults(0, 1000) // Load more results for client-side pagination
       .pipe(
+        takeUntil(this.destroy$),
         catchError((error) => {
           this.error = 'Failed to load results. Please try again.';
           console.error('Error loading results:', error);
@@ -335,17 +339,17 @@ export class ResultsComponent implements OnInit, AfterViewInit {
     // Load patient information
     const patientObservable = this.patientService.getPatient(result.patientId);
     if (patientObservable) {
-      patientObservable.subscribe(
-        (patient) => {
+      patientObservable.pipe(takeUntil(this.destroy$)).subscribe({
+        next: (patient) => {
           if (this.patientService.toPatientSummary) {
             const patientSummary = this.patientService.toPatientSummary(patient);
             // Store patient summary or use as needed
           }
         },
-        (error) => {
-          console.error('Error loading patient:', error);
+        error: (err) => {
+          console.error('Error loading patient:', err);
         }
-      );
+      });
     }
   }
 

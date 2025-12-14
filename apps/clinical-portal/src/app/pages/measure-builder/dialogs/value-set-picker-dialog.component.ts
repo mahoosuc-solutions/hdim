@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -13,6 +13,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { LoadingButtonComponent } from '../../../shared/components/loading-button/loading-button.component';
 import { CqlEngineService, ValueSetDisplay } from '../../../services/cql-engine.service';
 
@@ -348,9 +350,11 @@ interface ValueSet {
     }
   `],
 })
-export class ValueSetPickerDialogComponent implements OnInit, AfterViewInit {
+export class ValueSetPickerDialogComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+
+  private destroy$ = new Subject<void>();
 
   dataSource = new MatTableDataSource<ValueSet>([]);
   displayedColumns = ['select', 'name', 'category', 'version', 'codeCount'];
@@ -376,12 +380,17 @@ export class ValueSetPickerDialogComponent implements OnInit, AfterViewInit {
     this.dataSource.sort = this.sort;
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   /**
    * Load value sets from backend API
    */
   private loadValueSets(): void {
     this.loading = true;
-    this.cqlEngineService.listValueSets().subscribe({
+    this.cqlEngineService.listValueSets().pipe(takeUntil(this.destroy$)).subscribe({
       next: (valueSets) => {
         // Map to component format and mark current selections
         this.valueSets = valueSets.map((vs) => ({

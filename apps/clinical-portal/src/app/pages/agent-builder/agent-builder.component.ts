@@ -314,7 +314,7 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
       disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
       if (result) {
         this.loadAgents();
         this.toast.success('Agent created successfully');
@@ -323,7 +323,7 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   openEditDialog(agentId: string): void {
-    this.agentService.getAgent(agentId).subscribe({
+    this.agentService.getAgent(agentId).pipe(takeUntil(this.destroy$)).subscribe({
       next: (agent) => {
         const dialogRef = this.dialog.open(CreateAgentDialogComponent, {
           width: '800px',
@@ -337,7 +337,7 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
           disableClose: true,
         });
 
-        dialogRef.afterClosed().subscribe((result) => {
+        dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
           if (result) {
             this.loadAgents();
             this.toast.success('Agent updated successfully');
@@ -362,7 +362,7 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
 
   cloneAgent(agent: AgentConfiguration): void {
     const newName = `${agent.name} (Copy)`;
-    this.agentService.cloneAgent(agent.id, newName).subscribe({
+    this.agentService.cloneAgent(agent.id, newName).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.loadAgents();
         this.toast.success('Agent cloned successfully');
@@ -375,7 +375,7 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
 
   publishAgent(agent: AgentConfiguration): void {
     this.publishLoading = true;
-    this.agentService.publishAgent(agent.id).subscribe({
+    this.agentService.publishAgent(agent.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.loadAgents();
         this.toast.success('Agent published successfully');
@@ -389,7 +389,7 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   deprecateAgent(agent: AgentConfiguration): void {
-    this.agentService.deprecateAgent(agent.id).subscribe({
+    this.agentService.deprecateAgent(agent.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.loadAgents();
         this.toast.success('Agent deprecated');
@@ -412,10 +412,10 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
       },
     });
 
-    dialogRef.afterClosed().subscribe((confirmed) => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((confirmed) => {
       if (confirmed) {
         this.deleteLoading = true;
-        this.agentService.deleteAgent(agent.id).subscribe({
+        this.agentService.deleteAgent(agent.id).pipe(takeUntil(this.destroy$)).subscribe({
           next: () => {
             this.loadAgents();
             this.toast.success('Agent deleted');
@@ -453,7 +453,7 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
     let completed = 0;
 
     selected.forEach((agent) => {
-      this.agentService.publishAgent(agent.id).subscribe({
+      this.agentService.publishAgent(agent.id).pipe(takeUntil(this.destroy$)).subscribe({
         next: () => {
           completed++;
           if (completed === selected.length) {
@@ -489,13 +489,13 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
       },
     });
 
-    dialogRef.afterClosed().subscribe((confirmed) => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((confirmed) => {
       if (confirmed) {
         this.deleteLoading = true;
         let completed = 0;
 
         selected.forEach((agent) => {
-          this.agentService.deleteAgent(agent.id).subscribe({
+          this.agentService.deleteAgent(agent.id).pipe(takeUntil(this.destroy$)).subscribe({
             complete: () => {
               completed++;
               if (completed === selected.length) {

@@ -11,7 +11,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
-import { forkJoin, catchError, of, finalize } from 'rxjs';
+import { forkJoin, catchError, of, finalize, takeUntil } from 'rxjs';
+import { injectDestroy } from '../../shared/utils';
 import { EvaluationService } from '../../services/evaluation.service';
 import { PatientService } from '../../services/patient.service';
 import { MeasureService } from '../../services/measure.service';
@@ -117,6 +118,9 @@ export interface ComplianceTrendPoint {
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent implements OnInit {
+  // Subscription cleanup
+  private destroy$ = injectDestroy();
+
   // Role management
   currentRole: UserRole = UserRole.ADMIN;
   UserRole = UserRole; // Expose enum for template use
@@ -244,10 +248,12 @@ export class DashboardComponent implements OnInit {
     this.currentRole = this.userRoleService.getCurrentRole();
 
     // Subscribe to role changes
-    this.userRoleService.currentRole$.subscribe((role) => {
-      this.currentRole = role;
-      this.loadRoleComponent(role);
-    });
+    this.userRoleService.currentRole$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((role) => {
+        this.currentRole = role;
+        this.loadRoleComponent(role);
+      });
 
     this.loadDashboardData();
     this.loadRoleComponent(this.currentRole);
@@ -328,6 +334,7 @@ export class DashboardComponent implements OnInit {
       patients: this.patientService.getPatientsSummaryCached(),
       measures: this.measureService.getActiveMeasuresInfoCached(),
     }).pipe(
+      takeUntil(this.destroy$),
       catchError((error) => {
         console.error('Error loading critical dashboard data:', error);
         this.error = 'Failed to load dashboard data. Please try again.';
@@ -356,6 +363,7 @@ export class DashboardComponent implements OnInit {
    */
   private loadEvaluationsData(): void {
     this.evaluationService.getAllEvaluationsCached().pipe(
+      takeUntil(this.destroy$),
       catchError((error) => {
         console.error('Error loading evaluations:', error);
         // Continue with empty evaluations rather than failing completely

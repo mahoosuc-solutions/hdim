@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +14,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { SelectionModel } from '@angular/cdk/collections';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { ToastService } from '../../services/toast.service';
 import { DialogService } from '../../services/dialog.service';
 import { AIAssistantService } from '../../services/ai-assistant.service';
@@ -58,9 +60,11 @@ import { PublishConfirmDialogComponent } from './dialogs/publish-confirm-dialog.
   templateUrl: './measure-builder.component.html',
   styleUrls: ['./measure-builder.component.scss'],
 })
-export class MeasureBuilderComponent implements OnInit, AfterViewInit {
+export class MeasureBuilderComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+
+  private destroy$ = new Subject<void>();
 
   drafts: CustomMeasure[] = [];
   measures: CustomMeasure[] = [];
@@ -111,12 +115,17 @@ export class MeasureBuilderComponent implements OnInit, AfterViewInit {
     this.dataSource.sort = this.sort;
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   /**
    * Load draft measures from the backend
    */
   private loadDrafts(): void {
     this.loading = true;
-    this.customMeasureService.list('DRAFT').subscribe({
+    this.customMeasureService.list('DRAFT').pipe(takeUntil(this.destroy$)).subscribe({
       next: (drafts) => {
         this.drafts = drafts;
         this.measures = drafts;
@@ -148,10 +157,10 @@ export class MeasureBuilderComponent implements OnInit, AfterViewInit {
       autoFocus: true,
     });
 
-    dialogRef.afterClosed().subscribe((draft?: CreateCustomMeasureRequest) => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((draft?: CreateCustomMeasureRequest) => {
       if (!draft) return;
       this.loading = true;
-      this.customMeasureService.createDraft(draft).subscribe({
+      this.customMeasureService.createDraft(draft).pipe(takeUntil(this.destroy$)).subscribe({
         next: (saved) => {
           this.drafts = [saved, ...this.drafts];
           this.measures = this.drafts;
@@ -191,11 +200,11 @@ export class MeasureBuilderComponent implements OnInit, AfterViewInit {
       },
     });
 
-    dialogRef.afterClosed().subscribe((updatedCql?: string) => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((updatedCql?: string) => {
       if (updatedCql !== undefined) {
         // Persist the CQL changes to the backend
         this.loading = true;
-        this.customMeasureService.updateCql(measure.id, updatedCql).subscribe({
+        this.customMeasureService.updateCql(measure.id, updatedCql).pipe(takeUntil(this.destroy$)).subscribe({
           next: (updatedMeasure) => {
             // Update local data with the returned measure
             const index = this.drafts.findIndex(m => m.id === measure.id);
@@ -229,11 +238,11 @@ export class MeasureBuilderComponent implements OnInit, AfterViewInit {
       },
     });
 
-    dialogRef.afterClosed().subscribe((selectedValueSets?: any[]) => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((selectedValueSets?: any[]) => {
       if (selectedValueSets) {
         // Persist the value set changes to the backend
         this.loading = true;
-        this.customMeasureService.updateValueSets(measure.id, selectedValueSets).subscribe({
+        this.customMeasureService.updateValueSets(measure.id, selectedValueSets).pipe(takeUntil(this.destroy$)).subscribe({
           next: (updatedMeasure) => {
             // Update local data with the returned measure
             const index = this.drafts.findIndex(m => m.id === measure.id);
@@ -282,7 +291,7 @@ export class MeasureBuilderComponent implements OnInit, AfterViewInit {
       },
     });
 
-    dialogRef.afterClosed().subscribe((published?: boolean) => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((published?: boolean) => {
       if (published) {
         this.toast.success('Measure published successfully');
         this.loadMeasures();
@@ -296,13 +305,14 @@ export class MeasureBuilderComponent implements OnInit, AfterViewInit {
   deleteMeasure(measure: CustomMeasure): void {
     this.dialogService
       .confirmDelete(measure.name, 'measure')
+      .pipe(takeUntil(this.destroy$))
       .subscribe((confirmed) => {
         if (!confirmed) {
           return;
         }
 
         this.loading = true;
-        this.customMeasureService.delete(measure.id).subscribe({
+        this.customMeasureService.delete(measure.id).pipe(takeUntil(this.destroy$)).subscribe({
           next: () => {
             // Remove from local arrays
             this.measures = this.measures.filter((m) => m.id !== measure.id);
@@ -460,6 +470,7 @@ export class MeasureBuilderComponent implements OnInit, AfterViewInit {
 
     this.dialogService
       .confirm('Publish Selected Measures', message, 'Publish', 'Cancel')
+      .pipe(takeUntil(this.destroy$))
       .subscribe((confirmed) => {
         if (!confirmed) {
           return;
@@ -469,7 +480,7 @@ export class MeasureBuilderComponent implements OnInit, AfterViewInit {
         this.publishSelectedSuccess = false;
 
         const idsToPublish = draftMeasures.map((m) => m.id);
-        this.customMeasureService.batchPublish(idsToPublish).subscribe({
+        this.customMeasureService.batchPublish(idsToPublish).pipe(takeUntil(this.destroy$)).subscribe({
           next: (result) => {
             this.publishSelectedLoading = false;
             this.publishSelectedSuccess = true;
@@ -521,6 +532,7 @@ export class MeasureBuilderComponent implements OnInit, AfterViewInit {
         'Cancel',
         'warn'
       )
+      .pipe(takeUntil(this.destroy$))
       .subscribe((confirmed) => {
         if (!confirmed) {
           return;
@@ -530,7 +542,7 @@ export class MeasureBuilderComponent implements OnInit, AfterViewInit {
         this.deleteSelectedSuccess = false;
 
         const idsToDelete = selectedMeasures.map((m) => m.id);
-        this.customMeasureService.batchDelete(idsToDelete).subscribe({
+        this.customMeasureService.batchDelete(idsToDelete).pipe(takeUntil(this.destroy$)).subscribe({
           next: (result) => {
             // Remove deleted measures from the data source
             const deletedIds = new Set(idsToDelete.filter((id) => !result.failed.includes(id)));

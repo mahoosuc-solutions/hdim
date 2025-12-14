@@ -44,4 +44,16 @@ public interface AgentConfigurationRepository extends JpaRepository<AgentConfigu
            "(LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(a.description) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<AgentConfiguration> searchByTenantId(@Param("tenantId") String tenantId, @Param("search") String search, Pageable pageable);
+
+    /**
+     * Find all active agent configurations across all tenants.
+     * Used by Agent Runtime for cache warming.
+     */
+    @Query("SELECT a FROM AgentConfiguration a WHERE a.status IN ('ACTIVE', 'TESTING') ORDER BY a.tenantId, a.name")
+    List<AgentConfiguration> findAllActiveConfigurations();
+
+    /**
+     * Find active configurations by status across all tenants.
+     */
+    List<AgentConfiguration> findByStatus(AgentStatus status);
 }

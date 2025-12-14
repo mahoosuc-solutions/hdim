@@ -7,6 +7,7 @@ import com.healthdata.agentbuilder.domain.entity.AgentConfiguration.AgentStatus;
 import com.healthdata.agentbuilder.domain.entity.AgentVersion;
 import com.healthdata.agentbuilder.domain.entity.AgentVersion.ChangeType;
 import com.healthdata.agentbuilder.domain.entity.AgentVersion.VersionStatus;
+import com.healthdata.agentbuilder.event.AgentConfigEventPublisher;
 import com.healthdata.agentbuilder.repository.AgentConfigurationRepository;
 import com.healthdata.agentbuilder.repository.AgentVersionRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class AgentConfigurationService {
     private final AgentConfigurationRepository agentRepository;
     private final AgentVersionRepository versionRepository;
     private final ObjectMapper objectMapper;
+    private final AgentConfigEventPublisher eventPublisher;
 
     @Value("${hdim.agent-builder.max-agents-per-tenant:50}")
     private int maxAgentsPerTenant;
@@ -66,6 +68,9 @@ public class AgentConfigurationService {
 
         // Create initial version
         createVersion(saved, "Initial version", ChangeType.MAJOR, userId);
+
+        // Publish event for Runtime hot-reload
+        eventPublisher.publishCreated(saved, userId);
 
         log.info("Created agent: {} for tenant: {}", saved.getId(), saved.getTenantId());
         return saved;
@@ -146,6 +151,9 @@ public class AgentConfigurationService {
         // Create version snapshot
         createVersion(saved, changeSummary, ChangeType.MINOR, userId);
 
+        // Publish event for Runtime hot-reload
+        eventPublisher.publishUpdated(saved, userId);
+
         log.info("Updated agent: {} to version: {}", saved.getId(), newVersion);
         return saved;
     }
@@ -222,12 +230,18 @@ public class AgentConfigurationService {
     public void delete(String tenantId, UUID agentId, String userId) {
         AgentConfiguration agent = getByIdOrThrow(tenantId, agentId);
 
+        AgentStatus previousStatus = agent.getStatus();
+
         // Soft delete - archive
         agent.setStatus(AgentStatus.ARCHIVED);
         agent.setArchivedAt(Instant.now());
         agent.setUpdatedBy(userId);
 
-        agentRepository.save(agent);
+        AgentConfiguration saved = agentRepository.save(agent);
+
+        // Publish event for Runtime hot-reload
+        eventPublisher.publishDeleted(saved, userId);
+
         log.info("Archived agent: {}", agentId);
     }
 
@@ -263,11 +277,18 @@ public class AgentConfigurationService {
                 versionRepository.save(v);
             });
 
+        AgentStatus previousStatus = agent.getStatus();
+
         agent.setStatus(AgentStatus.ACTIVE);
         agent.setPublishedAt(Instant.now());
         agent.setUpdatedBy(userId);
 
         AgentConfiguration saved = agentRepository.save(agent);
+
+        // Publish events for Runtime hot-reload
+        eventPublisher.publishStatusChanged(saved, previousStatus, userId);
+        eventPublisher.publishDeployed(saved, userId);
+
         log.info("Published agent: {} by user: {}", agentId, userId);
         return saved;
     }
@@ -276,13 +297,23 @@ public class AgentConfigurationService {
      * Deprecate an agent.
      */
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = CacheConfig.CACHE_ACTIVE_AGENTS, key = "#tenantId"),
+        @CacheEvict(value = CacheConfig.CACHE_AGENT_CONFIG, key = "#agentId")
+    })
     public AgentConfiguration deprecate(String tenantId, UUID agentId, String userId) {
         AgentConfiguration agent = getByIdOrThrow(tenantId, agentId);
+
+        AgentStatus previousStatus = agent.getStatus();
 
         agent.setStatus(AgentStatus.DEPRECATED);
         agent.setUpdatedBy(userId);
 
         AgentConfiguration saved = agentRepository.save(agent);
+
+        // Publish event for Runtime hot-reload
+        eventPublisher.publishStatusChanged(saved, previousStatus, userId);
+
         log.info("Deprecated agent: {}", agentId);
         return saved;
     }

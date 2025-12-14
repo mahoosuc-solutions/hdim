@@ -31,6 +31,9 @@ dependencies {
     // OpenFeign for service communication
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 
+    // Kafka for event broadcasting
+    implementation("org.springframework.kafka:spring-kafka")
+
     // JSON processing
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")

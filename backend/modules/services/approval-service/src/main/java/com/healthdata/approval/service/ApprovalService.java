@@ -4,6 +4,7 @@ import com.healthdata.approval.domain.entity.ApprovalHistory;
 import com.healthdata.approval.domain.entity.ApprovalHistory.HistoryAction;
 import com.healthdata.approval.domain.entity.ApprovalRequest;
 import com.healthdata.approval.domain.entity.ApprovalRequest.*;
+import com.healthdata.approval.event.ApprovalEventPublisher;
 import com.healthdata.approval.repository.ApprovalHistoryRepository;
 import com.healthdata.approval.repository.ApprovalRequestRepository;
 import com.healthdata.approval.websocket.ApprovalNotificationService;
@@ -34,6 +35,7 @@ public class ApprovalService {
     private final ApprovalHistoryRepository historyRepository;
     private final ApprovalNotificationService notificationService;
     private final WebhookCallbackService webhookCallbackService;
+    private final ApprovalEventPublisher eventPublisher;
 
     @Value("${hdim.approval.default-timeout-hours:24}")
     private int defaultTimeoutHours;
@@ -76,6 +78,9 @@ public class ApprovalService {
         // Broadcast notification
         notificationService.notifyNewRequest(request);
 
+        // Publish Kafka event for other services
+        eventPublisher.publishCreated(request);
+
         log.info("Created approval request: id={}", request.getId());
         return request;
     }
@@ -104,6 +109,9 @@ public class ApprovalService {
         // Broadcast notification
         notificationService.notifyAssigned(request);
 
+        // Publish Kafka event
+        eventPublisher.publishAssigned(request, assignedBy);
+
         log.info("Assigned request {} to {}", requestId, assignedTo);
         return request;
     }
@@ -130,6 +138,9 @@ public class ApprovalService {
 
         // Send webhook callback to n8n or other integrations
         webhookCallbackService.sendDecisionCallback(request);
+
+        // Publish Kafka event for Agent Runtime and other services
+        eventPublisher.publishApproved(request, approvedBy);
 
         log.info("Approved request {} by {}", requestId, approvedBy);
         return request;
@@ -158,6 +169,9 @@ public class ApprovalService {
         // Send webhook callback to n8n or other integrations
         webhookCallbackService.sendDecisionCallback(request);
 
+        // Publish Kafka event for Agent Runtime and other services
+        eventPublisher.publishRejected(request, rejectedBy);
+
         log.info("Rejected request {} by {}", requestId, rejectedBy);
         return request;
     }
@@ -184,6 +198,9 @@ public class ApprovalService {
 
         // Broadcast notification
         notificationService.notifyStatusChange(request, escalatedBy);
+
+        // Publish Kafka event
+        eventPublisher.publishEscalated(request, escalatedBy);
 
         log.info("Escalated request {} to {} by {}", requestId, escalatedTo, escalatedBy);
         return request;

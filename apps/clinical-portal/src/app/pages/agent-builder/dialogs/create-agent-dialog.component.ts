@@ -153,9 +153,9 @@ export interface CreateAgentDialogData {
             </mat-form-field>
 
             <div class="slider-field">
-              <label>Temperature: {{ modelForm.get('temperature')?.value }}</label>
+              <label id="temperature-label">Temperature: {{ modelForm.get('temperature')?.value }}</label>
               <mat-slider min="0" max="1" step="0.1" discrete>
-                <input matSliderThumb formControlName="temperature" />
+                <input matSliderThumb formControlName="temperature" aria-label="Temperature setting" aria-labelledby="temperature-label" />
               </mat-slider>
               <div class="slider-hints">
                 <span>Precise</span>
@@ -164,9 +164,9 @@ export interface CreateAgentDialogData {
             </div>
 
             <div class="slider-field">
-              <label>Max Tokens: {{ modelForm.get('maxTokens')?.value }}</label>
+              <label id="max-tokens-label">Max Tokens: {{ modelForm.get('maxTokens')?.value }}</label>
               <mat-slider min="256" max="4096" step="256" discrete>
-                <input matSliderThumb formControlName="maxTokens" />
+                <input matSliderThumb formControlName="maxTokens" aria-label="Maximum tokens setting" aria-labelledby="max-tokens-label" />
               </mat-slider>
             </div>
 
@@ -314,9 +314,9 @@ export interface CreateAgentDialogData {
             </mat-form-field>
 
             <div class="slider-field">
-              <label>Max Output Tokens: {{ guardrailForm.get('maxOutputTokens')?.value }}</label>
+              <label id="max-output-tokens-label">Max Output Tokens: {{ guardrailForm.get('maxOutputTokens')?.value }}</label>
               <mat-slider min="256" max="4096" step="256" discrete>
-                <input matSliderThumb formControlName="maxOutputTokens" />
+                <input matSliderThumb formControlName="maxOutputTokens" aria-label="Maximum output tokens setting" aria-labelledby="max-output-tokens-label" />
               </mat-slider>
             </div>
 

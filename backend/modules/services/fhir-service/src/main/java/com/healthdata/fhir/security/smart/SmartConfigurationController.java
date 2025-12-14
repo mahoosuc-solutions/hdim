@@ -1,5 +1,11 @@
 package com.healthdata.fhir.security.smart;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -20,6 +26,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
+@Tag(name = "SMART", description = "SMART on FHIR OAuth 2.0 endpoints")
 public class SmartConfigurationController {
 
     @Value("${smart.base-url:http://localhost:8085/fhir}")
@@ -46,11 +53,18 @@ public class SmartConfigurationController {
     @Value("${smart.registration-endpoint:${smart.base-url}/oauth/register}")
     private String registrationEndpoint;
 
-    /**
-     * SMART on FHIR Configuration endpoint.
-     *
-     * Returns server capabilities for SMART authorization.
-     */
+    @Operation(
+        summary = "SMART Configuration Discovery",
+        description = "Returns SMART on FHIR configuration including authorization endpoints, supported scopes, and capabilities. This is the discovery endpoint for SMART apps.",
+        operationId = "getSmartConfiguration"
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "SMART configuration returned successfully",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = SmartConfiguration.class))
+        )
+    })
     @GetMapping(
         path = "/.well-known/smart-configuration",
         produces = MediaType.APPLICATION_JSON_VALUE

@@ -59,7 +59,7 @@ export interface TestAgentDialogData {
               {{ session.status }}
             </mat-chip>
           }
-          <button mat-icon-button (click)="onClose()">
+          <button mat-icon-button (click)="onClose()" aria-label="Close dialog">
             <mat-icon>close</mat-icon>
           </button>
         </div>
@@ -124,17 +124,20 @@ export interface TestAgentDialogData {
           <!-- Input -->
           <div class="input-container">
             <mat-form-field appearance="outline" class="message-input">
+              <mat-label>Test message</mat-label>
               <input
                 matInput
                 [(ngModel)]="inputMessage"
                 placeholder="Type a message..."
+                aria-label="Type a test message"
                 (keydown.enter)="sendMessage()"
                 [disabled]="sending || session?.status === 'COMPLETED'" />
               <button
                 matSuffix
                 mat-icon-button
                 (click)="sendMessage()"
-                [disabled]="!inputMessage.trim() || sending">
+                [disabled]="!inputMessage.trim() || sending"
+                aria-label="Send message">
                 <mat-icon>send</mat-icon>
               </button>
             </mat-form-field>
@@ -244,7 +247,8 @@ export interface TestAgentDialogData {
                 <button
                   mat-icon-button
                   (click)="rating = star"
-                  [color]="rating >= star ? 'primary' : ''">
+                  [color]="rating >= star ? 'primary' : ''"
+                  [attr.aria-label]="'Rate ' + star + ' out of 5 stars'">
                   <mat-icon>{{ rating >= star ? 'star' : 'star_border' }}</mat-icon>
                 </button>
               }
@@ -252,7 +256,7 @@ export interface TestAgentDialogData {
           </div>
           <mat-form-field appearance="outline" class="feedback-field">
             <mat-label>Feedback (optional)</mat-label>
-            <input matInput [(ngModel)]="feedback" placeholder="Any issues or suggestions?" />
+            <input matInput [(ngModel)]="feedback" placeholder="Any issues or suggestions?" aria-label="Provide feedback" />
           </mat-form-field>
           <button
             mat-flat-button

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
 import { map, catchError, switchMap, tap } from 'rxjs/operators';
@@ -9,15 +9,14 @@ import * as PatientActions from '../actions/patient.actions';
 
 /**
  * Patient Effects - Handle side effects for patient actions
+ * Uses inject() to ensure dependencies are available before class field initializers
  */
 @Injectable()
 export class PatientEffects {
-  constructor(
-    private actions$: Actions,
-    private patientService: PatientService,
-    private notificationService: NotificationService,
-    private router: Router
-  ) {}
+  private readonly actions$ = inject(Actions);
+  private readonly patientService = inject(PatientService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly router = inject(Router);
 
   /**
    * Load patients effect

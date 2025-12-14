@@ -76,6 +76,7 @@ export interface PromptVariable {
             mat-icon-button
             [matMenuTriggerFor]="variableMenu"
             matTooltip="Insert variable"
+            aria-label="Insert template variable"
             [disabled]="disabled">
             <mat-icon>data_object</mat-icon>
           </button>
@@ -94,6 +95,7 @@ export interface PromptVariable {
             mat-icon-button
             [matMenuTriggerFor]="snippetMenu"
             matTooltip="Insert snippet"
+            aria-label="Insert prompt snippet"
             [disabled]="disabled">
             <mat-icon>library_add</mat-icon>
           </button>
@@ -113,6 +115,7 @@ export interface PromptVariable {
           <button
             mat-icon-button
             matTooltip="Clear content"
+            aria-label="Clear all content"
             [disabled]="disabled || !value"
             (click)="clearContent()">
             <mat-icon>clear_all</mat-icon>
@@ -122,6 +125,7 @@ export interface PromptVariable {
           <button
             mat-icon-button
             [matTooltip]="isFullScreen ? 'Exit fullscreen' : 'Fullscreen'"
+            [attr.aria-label]="isFullScreen ? 'Exit fullscreen mode' : 'Enter fullscreen mode'"
             (click)="toggleFullScreen()">
             <mat-icon>{{ isFullScreen ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
           </button>

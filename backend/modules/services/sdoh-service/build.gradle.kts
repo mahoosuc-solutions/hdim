@@ -37,6 +37,9 @@ dependencies {
     // Spring Cache for caching
     implementation(libs.spring.boot.starter.data.redis)
 
+    // Kafka for event publishing
+    implementation(libs.bundles.kafka)
+
     // Lombok for reducing boilerplate
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)

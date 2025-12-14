@@ -6,10 +6,15 @@ import ca.uhn.hl7v2.model.v25.segment.MSH;
 import ca.uhn.hl7v2.parser.Parser;
 import com.healthdata.cdr.dto.Hl7v2Message;
 import com.healthdata.cdr.handler.AdtMessageHandler;
+import com.healthdata.cdr.handler.BarMessageHandler;
+import com.healthdata.cdr.handler.DftMessageHandler;
+import com.healthdata.cdr.handler.MdmMessageHandler;
 import com.healthdata.cdr.handler.OrmMessageHandler;
 import com.healthdata.cdr.handler.OruMessageHandler;
+import com.healthdata.cdr.handler.PprMessageHandler;
 import com.healthdata.cdr.handler.RdeMessageHandler;
 import com.healthdata.cdr.handler.RasMessageHandler;
+import com.healthdata.cdr.handler.SiuMessageHandler;
 import com.healthdata.cdr.handler.VxuMessageHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +35,11 @@ import java.util.Map;
  * - RDE messages (Pharmacy/Treatment Encoded Order)
  * - RAS messages (Pharmacy/Treatment Administration)
  * - VXU messages (Vaccination Updates)
+ * - MDM messages (Medical Document Management)
+ * - SIU messages (Scheduling Information Unsolicited)
+ * - BAR messages (Billing Account Record)
+ * - DFT messages (Detailed Financial Transaction)
+ * - PPR messages (Patient Problem)
  */
 @Slf4j
 @Service
@@ -43,6 +53,11 @@ public class Hl7v2ParserService {
     private final RdeMessageHandler rdeMessageHandler;
     private final RasMessageHandler rasMessageHandler;
     private final VxuMessageHandler vxuMessageHandler;
+    private final MdmMessageHandler mdmMessageHandler;
+    private final SiuMessageHandler siuMessageHandler;
+    private final BarMessageHandler barMessageHandler;
+    private final DftMessageHandler dftMessageHandler;
+    private final PprMessageHandler pprMessageHandler;
 
     private static final DateTimeFormatter HL7_DATE_FORMAT =
         DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -120,6 +135,11 @@ public class Hl7v2ParserService {
             case "RDE" -> rdeMessageHandler.handle(message);
             case "RAS" -> rasMessageHandler.handle(message);
             case "VXU" -> vxuMessageHandler.handle(message);
+            case "MDM" -> mdmMessageHandler.handle(message);
+            case "SIU" -> siuMessageHandler.handle(message);
+            case "BAR" -> barMessageHandler.handle(message);
+            case "DFT" -> dftMessageHandler.handle(message);
+            case "PPR" -> pprMessageHandler.handle(message);
             default -> {
                 log.warn("Unsupported message type: {}", messageType);
                 Map<String, Object> data = new HashMap<>();

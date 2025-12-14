@@ -79,3 +79,28 @@ body {
   .mat-mdc-snack-bar-label { color: white; }
   .mat-mdc-button { color: white; }
 }
+
+// =============================================================================
+// Accessibility: Minimum touch target size (Apple HIG - 44x44px)
+// WCAG 2.1 Success Criterion 2.5.5 Target Size (Enhanced)
+// =============================================================================
+.mat-mdc-icon-button {
+  --mdc-icon-button-state-layer-size: 44px;
+  width: 44px !important;
+  height: 44px !important;
+  padding: 10px !important;
+
+  .mat-mdc-button-touch-target {
+    width: 44px !important;
+    height: 44px !important;
+  }
+}
+
+// Ensure icon buttons in toolbars and dense contexts maintain touch target
+.mat-toolbar .mat-mdc-icon-button,
+.mat-card-header .mat-mdc-icon-button,
+.actions-cell .mat-mdc-icon-button {
+  --mdc-icon-button-state-layer-size: 44px;
+  width: 44px !important;
+  height: 44px !important;
+}

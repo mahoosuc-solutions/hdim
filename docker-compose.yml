@@ -131,6 +131,7 @@ services:
       BACKEND_SERVICES_QRDA_EXPORT_URL: http://qrda-export-service:8104
       BACKEND_SERVICES_HCC_URL: http://hcc-service:8105
       BACKEND_SERVICES_ECR_URL: http://ecr-service:8101
+      BACKEND_SERVICES_PRIOR_AUTH_URL: http://prior-auth-service:8102
     ports:
       - "8080:8080"
     healthcheck:
@@ -959,6 +960,43 @@ services:
       - "8105:8105"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8105/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8102 - Prior Authorization Service
+  prior-auth-service:
+    container_name: healthdata-prior-auth-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/prior-auth-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/prior_auth_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8102
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8102:8102"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8102/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5

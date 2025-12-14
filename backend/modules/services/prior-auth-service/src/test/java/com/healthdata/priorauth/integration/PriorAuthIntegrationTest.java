@@ -1,6 +1,9 @@
 package com.healthdata.priorauth.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.audit.repository.AuditEventRepository;
+import com.healthdata.audit.service.AuditService;
+import com.healthdata.priorauth.config.TestConfig;
 import com.healthdata.priorauth.dto.PriorAuthRequestDTO;
 import com.healthdata.priorauth.persistence.PayerEndpointEntity;
 import com.healthdata.priorauth.persistence.PayerEndpointRepository;
@@ -12,7 +15,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -36,18 +42,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     properties = {
         "spring.kafka.bootstrap-servers=",
         "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration",
-        "healthdata.persistence.primary.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL",
+        "healthdata.persistence.primary.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;INIT=CREATE SCHEMA IF NOT EXISTS prior_auth",
         "healthdata.persistence.primary.username=sa",
         "healthdata.persistence.primary.password=",
         "healthdata.persistence.primary.driver-class-name=org.h2.Driver",
         "healthdata.persistence.primary.pool-name=h2-test-pool",
-        "healthdata.persistence.rls-enabled=false"
+        "healthdata.persistence.rls-enabled=false",
+        "healthdata.security.jwt.secret=test-secret-key-for-unit-testing-only-minimum-32-chars",
+        "healthdata.security.jwt.accessTokenExpirationMs=900000",
+        "healthdata.security.jwt.refreshTokenExpirationMs=604800000"
     }
 )
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class PriorAuthIntegrationTest {
+
+    @MockBean
+    private KafkaTemplate<String, Object> kafkaTemplate;
+
+    @MockBean
+    private AuditService auditService;
+
+    @MockBean
+    private AuditEventRepository auditEventRepository;
 
     @Autowired
     private MockMvc mockMvc;

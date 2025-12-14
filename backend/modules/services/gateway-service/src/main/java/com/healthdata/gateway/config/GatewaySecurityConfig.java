@@ -120,10 +120,19 @@ public class GatewaySecurityConfig {
                 .requestMatchers("/api/v1/auth/refresh").permitAll()
                 .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                
+
+                // Backend service routes (permitAll for demo, authenticate in production)
+                .requestMatchers("/fhir/**").permitAll()
+                .requestMatchers("/cql-engine/**").permitAll()
+                .requestMatchers("/consent/**").permitAll()
+                .requestMatchers("/patient/**").permitAll()
+                .requestMatchers("/care-gap/**").permitAll()
+                .requestMatchers("/quality-measure/**").permitAll()
+                .requestMatchers("/events/**").permitAll()
+
                 // All other API routes require authentication
                 .requestMatchers("/api/**").authenticated()
-                
+
                 // Default deny
                 .anyRequest().authenticated()
             )

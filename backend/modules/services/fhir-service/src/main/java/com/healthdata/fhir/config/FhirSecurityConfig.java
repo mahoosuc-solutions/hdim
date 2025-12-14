@@ -96,6 +96,9 @@ public class FhirSecurityConfig {
                     "/webjars/**",
                     "/fhir/metadata"  // FHIR metadata endpoint
                 ).permitAll()
+                // DEMO MODE: Permit all FHIR API access (remove in production)
+                // Note: Context path is /fhir, so internal paths are relative
+                .requestMatchers("/**").permitAll()
                 .requestMatchers(
                     "/fhir/api/v1/$export",
                     "/fhir/api/v1/Patient/$export",

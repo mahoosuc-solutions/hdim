@@ -60,7 +60,13 @@ include(
     "modules:services:qrda-export-service",
     "modules:services:hcc-service",
     "modules:services:ecr-service",
-    "modules:services:prior-auth-service"
+    "modules:services:prior-auth-service",
+    "modules:services:migration-workflow-service"
+)
+
+// Applications
+include(
+    "modules:apps:migration-cli"
 )
 
 // Platform Modules

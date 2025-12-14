@@ -228,4 +228,17 @@
         </insert>
     </changeSet>
 
+    <!-- Extended RCTC Trigger Codes - CDC Reportable Conditions -->
+    <changeSet id="006-load-extended-rctc-codes" author="hdim">
+        <comment>Load comprehensive CDC RCTC trigger codes for eCR detection.
+            Includes: Bioterrorism agents (immediate), vaccine-preventable diseases (24hr),
+            STIs, TB, Hepatitis, foodborne illness (72hr), and lab result triggers (LOINC).</comment>
+        <sqlFile path="classpath:data/rctc-trigger-codes-seed.sql"
+                 splitStatements="true"
+                 stripComments="true"/>
+        <rollback>
+            <sql>DELETE FROM ecr.rctc_trigger_codes WHERE rctc_version = '2024.1';</sql>
+        </rollback>
+    </changeSet>
+
 </databaseChangeLog>

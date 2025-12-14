@@ -38,8 +38,8 @@ class ImmunizationRepositoryIT {
         registry.add("spring.datasource.password", () -> "");
         registry.add("spring.datasource.driver-class-name", () -> "org.h2.Driver");
         registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.H2Dialect");
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
-        registry.add("spring.liquibase.driver-class-name", () -> "org.h2.Driver");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
+        registry.add("spring.liquibase.enabled", () -> "false");
         registry.add("spring.flyway.enabled", () -> "false");
     }
 

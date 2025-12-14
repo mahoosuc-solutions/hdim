@@ -17,5 +17,10 @@
     <include file="db/changelog/0010-create-users-table.xml"/>
     <include file="db/changelog/0011-create-bulk-export-jobs-table.xml"/>
     <include file="db/changelog/0012-create-medication-administrations-table.xml"/>
+    <include file="db/changelog/0013-create-coverages-table.xml"/>
+    <include file="db/changelog/0014-create-goals-table.xml"/>
+    <include file="db/changelog/0015-create-document-references-table.xml"/>
+    <include file="db/changelog/0016-create-diagnostic-reports-table.xml"/>
+    <include file="db/changelog/0017-create-care-plans-table.xml"/>
 
 </databaseChangeLog>

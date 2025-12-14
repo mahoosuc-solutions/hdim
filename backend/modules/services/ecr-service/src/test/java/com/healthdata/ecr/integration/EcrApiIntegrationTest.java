@@ -5,6 +5,7 @@ import com.healthdata.audit.repository.AuditEventRepository;
 import com.healthdata.audit.service.AuditService;
 import com.healthdata.authentication.filter.JwtAuthenticationFilter;
 import com.healthdata.authentication.repository.UserRepository;
+import com.healthdata.ecr.config.TestKafkaConfig;
 import com.healthdata.ecr.controller.EcrController;
 import com.healthdata.ecr.persistence.*;
 import com.healthdata.ecr.persistence.ElectronicCaseReportEntity.*;
@@ -13,10 +14,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -31,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration tests for Electronic Case Reporting (eCR) API.
  *
  * Tests eCR listing, retrieval, evaluation, reprocessing, and cancellation endpoints.
+ * Uses Testcontainers PostgreSQL for proper JSON column support.
  */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -39,10 +45,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration",
         "spring.kafka.listener.auto-startup=false",
         "spring.cache.type=simple",
-        "spring.datasource.url=jdbc:h2:mem:ecrtestdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;INIT=CREATE SCHEMA IF NOT EXISTS ecr",
-        "spring.datasource.username=sa",
-        "spring.datasource.password=",
-        "spring.datasource.driver-class-name=org.h2.Driver",
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "healthdata.security.jwt.secret=test-secret-key-for-unit-testing-only-minimum-32-chars",
         "healthdata.security.jwt.accessTokenExpirationMs=900000",
@@ -52,7 +54,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Import(TestKafkaConfig.class)
 class EcrApiIntegrationTest {
+
+    // Testcontainers PostgreSQL - singleton pattern for all tests
+    static PostgreSQLContainer<?> postgres;
+
+    static {
+        postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+            .withDatabaseName("ecrtestdb")
+            .withUsername("test")
+            .withPassword("test")
+            .withInitScript("init-schema.sql");
+        postgres.start();
+    }
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+    }
 
     @MockBean
     private KafkaTemplate<String, Object> kafkaTemplate;

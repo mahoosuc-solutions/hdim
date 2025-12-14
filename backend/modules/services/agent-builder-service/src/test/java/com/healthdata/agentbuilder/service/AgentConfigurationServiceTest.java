@@ -3,6 +3,7 @@ package com.healthdata.agentbuilder.service;
 import com.healthdata.agentbuilder.domain.entity.AgentConfiguration;
 import com.healthdata.agentbuilder.domain.entity.AgentConfiguration.AgentStatus;
 import com.healthdata.agentbuilder.domain.entity.AgentVersion;
+import com.healthdata.agentbuilder.event.AgentConfigEventPublisher;
 import com.healthdata.agentbuilder.repository.AgentConfigurationRepository;
 import com.healthdata.agentbuilder.repository.AgentVersionRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,6 +36,9 @@ class AgentConfigurationServiceTest {
 
     @Mock
     private ObjectMapper objectMapper;
+
+    @Mock
+    private AgentConfigEventPublisher eventPublisher;
 
     @InjectMocks
     private AgentConfigurationService service;

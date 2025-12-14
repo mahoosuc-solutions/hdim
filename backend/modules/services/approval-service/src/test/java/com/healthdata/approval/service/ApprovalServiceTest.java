@@ -4,6 +4,7 @@ import com.healthdata.approval.domain.entity.ApprovalHistory;
 import com.healthdata.approval.domain.entity.ApprovalHistory.HistoryAction;
 import com.healthdata.approval.domain.entity.ApprovalRequest;
 import com.healthdata.approval.domain.entity.ApprovalRequest.*;
+import com.healthdata.approval.event.ApprovalEventPublisher;
 import com.healthdata.approval.repository.ApprovalHistoryRepository;
 import com.healthdata.approval.repository.ApprovalRequestRepository;
 import com.healthdata.approval.service.ApprovalService.CreateApprovalRequestDTO;
@@ -49,6 +50,9 @@ class ApprovalServiceTest {
 
     @Mock
     private WebhookCallbackService webhookCallbackService;
+
+    @Mock
+    private ApprovalEventPublisher eventPublisher;
 
     @InjectMocks
     private ApprovalService approvalService;

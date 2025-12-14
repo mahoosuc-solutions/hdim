@@ -152,6 +152,12 @@ hdim:
         requests-per-minute-per-user: 30
         requests-per-minute-per-tenant: 500
 
+    # Custom agent configuration
+    custom:
+      enabled: ${CUSTOM_AGENTS_ENABLED:true}
+      cache-refresh-minutes: ${CUSTOM_AGENTS_CACHE_REFRESH:30}
+      cache-ttl-minutes: ${CUSTOM_AGENTS_CACHE_TTL:60}
+
   # Service discovery
   services:
     fhir:
@@ -164,6 +170,10 @@ hdim:
       url: ${QUALITY_MEASURE_SERVICE_URL:http://localhost:8087}
     predictive-analytics:
       url: ${PREDICTIVE_ANALYTICS_URL:http://localhost:8090}
+    agent-builder:
+      url: ${AGENT_BUILDER_URL:http://localhost:8095}
+    approval:
+      url: ${APPROVAL_SERVICE_URL:http://localhost:8096}
 
 ---
 # Resilience4j Configuration
@@ -200,6 +210,14 @@ resilience4j:
         slidingWindowSize: 10
         failureRateThreshold: 50
         waitDurationInOpenState: 30s
+      agentBuilderService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 3
 
   retry:
     instances:
@@ -211,6 +229,14 @@ resilience4j:
         retryExceptions:
           - java.io.IOException
           - java.util.concurrent.TimeoutException
+      agentBuilderService:
+        maxAttempts: 3
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - feign.FeignException$ServiceUnavailable
 
   ratelimiter:
     instances:

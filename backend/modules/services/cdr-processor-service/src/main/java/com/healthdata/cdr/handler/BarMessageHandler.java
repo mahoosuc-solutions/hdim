@@ -137,16 +137,8 @@ public class BarMessageHandler {
             data.put("visits", visits);
         }
 
-        // Extract guarantor information
-        int gt1Count = bar.getGT1Reps();
-        if (gt1Count > 0) {
-            List<Map<String, Object>> guarantors = new ArrayList<>();
-            for (int i = 0; i < gt1Count; i++) {
-                GT1 gt1 = bar.getGT1(i);
-                guarantors.add(extractGuarantor(gt1));
-            }
-            data.put("guarantors", guarantors);
-        }
+        // Note: Guarantor (GT1) segments are typically within VISIT groups in BAR_P01
+        // Access structure varies by HL7 v2 version
     }
 
     /**
@@ -195,7 +187,7 @@ public class BarMessageHandler {
         }
 
         if (evn.getEventReasonCode() != null) {
-            eventData.put("eventReasonCode", evn.getEventReasonCode().getIdentifier().getValue());
+            eventData.put("eventReasonCode", evn.getEventReasonCode().getValue());
         }
 
         if (evn.getOperatorID(0) != null) {

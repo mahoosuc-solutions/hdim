@@ -1,5 +1,6 @@
 package com.healthdata.ehr.integration;
 
+import com.healthdata.ehr.config.TestSecurityConfiguration;
 import com.healthdata.ehr.dto.EhrConnectionConfig;
 import com.healthdata.ehr.factory.EhrConnectorFactory;
 import com.healthdata.ehr.model.EhrConnectionStatus;
@@ -11,8 +12,10 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -22,6 +25,8 @@ import java.io.IOException;
  * Tests the complete flow from connection registration to data retrieval.
  */
 @SpringBootTest
+@ActiveProfiles("test")
+@Import(TestSecurityConfiguration.class)
 @DisplayName("EHR Connector Integration Tests")
 class EhrConnectorIntegrationTest {
 

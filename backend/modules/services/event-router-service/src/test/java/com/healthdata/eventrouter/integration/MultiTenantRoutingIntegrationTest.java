@@ -6,23 +6,40 @@ import com.healthdata.eventrouter.entity.RoutingRuleEntity.Priority;
 import com.healthdata.eventrouter.persistence.RoutingRuleRepository;
 import com.healthdata.eventrouter.service.EventRouter;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Disabled("Integration tests require full Spring Boot context with database")
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @DisplayName("Multi-Tenant Routing Integration Tests")
 class MultiTenantRoutingIntegrationTest {
 
+    @DynamicPropertySource
+    static void configureH2(DynamicPropertyRegistry registry) {
+        // Configure H2 with legacy mode for Hibernate 6.x compatibility
+        registry.add("spring.datasource.url", () ->
+            "jdbc:h2:mem:routingtest;DB_CLOSE_DELAY=-1;MODE=LEGACY");
+        registry.add("spring.jpa.properties.hibernate.dialect", () ->
+            "org.hibernate.dialect.H2Dialect");
+    }
+
+    @Autowired
     private RoutingRuleRepository ruleRepository;
+
+    @Autowired
     private EventRouter eventRouter;
 
     @BeforeEach

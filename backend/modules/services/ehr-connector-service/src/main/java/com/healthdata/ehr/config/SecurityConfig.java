@@ -2,6 +2,7 @@ package com.healthdata.ehr.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -10,9 +11,11 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Security configuration for EHR Connector Service.
+ * Only active in non-test profiles to allow TestSecurityConfiguration to provide test-specific security.
  */
 @Configuration
 @EnableWebSecurity
+@Profile("!test")
 public class SecurityConfig {
 
     @Bean

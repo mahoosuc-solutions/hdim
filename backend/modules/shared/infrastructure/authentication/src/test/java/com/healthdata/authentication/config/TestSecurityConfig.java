@@ -2,6 +2,8 @@ package com.healthdata.authentication.config;
 
 import com.healthdata.authentication.service.JwtTokenService;
 import com.healthdata.authentication.config.JwtConfig;
+import com.healthdata.authentication.domain.User;
+import com.healthdata.authentication.repository.UserRepository;
 import com.healthdata.cache.CacheEvictionService;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -9,6 +11,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 
 import java.time.Duration;
+import java.time.Instant;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
@@ -16,7 +19,10 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -42,10 +48,16 @@ public class TestSecurityConfig {
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/v1/auth/login").permitAll()
+                .requestMatchers("/api/v1/auth/refresh").permitAll()
+                .requestMatchers("/api/v1/auth/register").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/api/v1/auth/logout").authenticated()
+                .requestMatchers("/api/v1/auth/me").authenticated()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/users/**").permitAll()
                 .anyRequest().authenticated()
-            );
+            )
+            .httpBasic(basic -> basic.realmName("HealthData Test"));
 
         return http.build();
     }
@@ -108,5 +120,32 @@ public class TestSecurityConfig {
     @Bean
     public JwtTokenService jwtTokenService(JwtConfig jwtConfig) {
         return new JwtTokenService(jwtConfig);
+    }
+
+    /**
+     * UserDetailsService for test environment.
+     * Loads users from the UserRepository for authentication.
+     */
+    @Bean
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
+        return usernameOrEmail -> {
+            User user = userRepository.findByUsernameOrEmail(usernameOrEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + usernameOrEmail));
+
+            boolean accountLocked = user.getAccountLockedUntil() != null
+                && user.getAccountLockedUntil().isAfter(Instant.now());
+
+            return org.springframework.security.core.userdetails.User
+                .withUsername(user.getUsername())
+                .password(user.getPasswordHash())
+                .authorities(user.getRoles().stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
+                    .toList())
+                .accountLocked(accountLocked)
+                .disabled(!user.isAccountActive())
+                .accountExpired(false)
+                .credentialsExpired(false)
+                .build();
+        };
     }
 }

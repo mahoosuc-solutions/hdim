@@ -10,6 +10,8 @@ import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -141,7 +143,7 @@ public class ValueSetAuditAspect {
                                         Instant timestamp, AuditEvent.OperationResult result,
                                         String errorMessage) {
         try {
-            String performedBy = "system"; // TODO: Extract from SecurityContextHolder
+            String performedBy = extractPerformedBy();
 
             ValueSetAuditEvent auditEvent = ValueSetAuditEvent.builder()
                     .eventId(eventId)
@@ -180,7 +182,7 @@ public class ValueSetAuditAspect {
                                                String eventId, Instant timestamp,
                                                AuditEvent.OperationResult result, String errorMessage) {
         try {
-            String performedBy = "system"; // TODO: Extract from SecurityContextHolder
+            String performedBy = extractPerformedBy();
 
             ValueSetAuditEvent auditEvent = ValueSetAuditEvent.builder()
                     .eventId(eventId)
@@ -221,5 +223,21 @@ public class ValueSetAuditAspect {
         return String.format("Value Set: %s (OID: %s, ID: %s, Codes length: %d)",
                 valueSet.getName(), valueSet.getOid(), valueSet.getId(),
                 valueSet.getCodes() != null ? valueSet.getCodes().length() : 0);
+    }
+
+    /**
+     * Extract the authenticated user from the security context.
+     * Falls back to "system" if no authentication is present.
+     */
+    private String extractPerformedBy() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated()) {
+                return auth.getName();
+            }
+        } catch (Exception e) {
+            logger.debug("Could not extract user context", e);
+        }
+        return "system";
     }
 }

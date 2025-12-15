@@ -1,5 +1,7 @@
 package com.healthdata.cql.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.cql.entity.ValueSet;
 import com.healthdata.cql.repository.ValueSetRepository;
 import org.slf4j.Logger;
@@ -26,9 +28,11 @@ public class ValueSetService {
     private static final Logger logger = LoggerFactory.getLogger(ValueSetService.class);
 
     private final ValueSetRepository valueSetRepository;
+    private final ObjectMapper objectMapper;
 
-    public ValueSetService(ValueSetRepository valueSetRepository) {
+    public ValueSetService(ValueSetRepository valueSetRepository, ObjectMapper objectMapper) {
         this.valueSetRepository = valueSetRepository;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -361,11 +365,13 @@ public class ValueSetService {
     }
 
     /**
-     * Check if a code exists in a value set
-     * This is a placeholder - actual implementation would parse the JSON codes
+     * Check if a code exists in a value set.
+     * Supports JSON codes in two formats:
+     * - Simple array: ["code1", "code2", "code3"]
+     * - Object array: [{"code": "code1", "display": "..."}, ...]
      */
     public boolean codeExistsInValueSet(UUID valueSetId, String tenantId, String code) {
-        logger.info("Checking if code {} exists in value set: {}", code, valueSetId);
+        logger.debug("Checking if code {} exists in value set: {}", code, valueSetId);
 
         ValueSet valueSet = getValueSetByIdAndTenant(valueSetId, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Value set not found: " + valueSetId));
@@ -374,9 +380,25 @@ public class ValueSetService {
             return false;
         }
 
-        // TODO: Parse JSON codes array and check if code exists
-        logger.warn("Code lookup not yet fully implemented - placeholder called");
-
-        return valueSet.getCodes().contains(code);
+        try {
+            JsonNode codesNode = objectMapper.readTree(valueSet.getCodes());
+            if (codesNode.isArray()) {
+                for (JsonNode node : codesNode) {
+                    // Handle simple string array: ["code1", "code2"]
+                    if (node.isTextual() && code.equals(node.asText())) {
+                        return true;
+                    }
+                    // Handle object array: [{"code": "xyz", "display": "..."}]
+                    if (node.isObject() && node.has("code") && code.equals(node.get("code").asText())) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            logger.warn("Failed to parse codes JSON for value set {}, falling back to contains check: {}",
+                    valueSetId, e.getMessage());
+            return valueSet.getCodes().contains(code);
+        }
     }
 }

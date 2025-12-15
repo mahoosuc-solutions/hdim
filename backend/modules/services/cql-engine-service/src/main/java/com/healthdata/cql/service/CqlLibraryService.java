@@ -2,6 +2,10 @@ package com.healthdata.cql.service;
 
 import com.healthdata.cql.entity.CqlLibrary;
 import com.healthdata.cql.repository.CqlLibraryRepository;
+import org.cqframework.cql.cql2elm.CqlCompilerException;
+import org.cqframework.cql.cql2elm.CqlTranslator;
+import org.cqframework.cql.cql2elm.LibraryManager;
+import org.cqframework.cql.cql2elm.ModelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -12,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Service for managing CQL Libraries
@@ -284,8 +289,14 @@ public class CqlLibraryService {
     }
 
     /**
-     * Compile CQL to ELM (Expression Logical Model)
-     * This is a placeholder - actual implementation would use CQL-to-ELM translator
+     * Compile CQL to ELM (Expression Logical Model).
+     * Uses the CQL-to-ELM translator to compile CQL source into ELM JSON and XML.
+     *
+     * @param libraryId the library ID to compile
+     * @param tenantId the tenant ID
+     * @return the updated library with ELM content
+     * @throws IllegalArgumentException if library not found or has no CQL content
+     * @throws IllegalStateException if compilation fails
      */
     public CqlLibrary compileLibrary(UUID libraryId, String tenantId) {
         logger.info("Compiling CQL library: {}", libraryId);
@@ -297,16 +308,55 @@ public class CqlLibraryService {
             throw new IllegalArgumentException("Library has no CQL content to compile");
         }
 
-        // TODO: Implement actual CQL-to-ELM compilation using org.cqframework.cql:cql-to-elm-translator
-        // For now, this is a placeholder
-        logger.warn("CQL compilation not yet implemented - placeholder called");
+        try {
+            // Create model and library managers for the translator
+            ModelManager modelManager = new ModelManager();
+            LibraryManager libraryManager = new LibraryManager(modelManager);
 
-        return library;
+            // Compile CQL to ELM
+            CqlTranslator translator = CqlTranslator.fromText(
+                    library.getCqlContent(),
+                    libraryManager
+            );
+
+            // Check for compilation errors
+            List<CqlCompilerException> errors = translator.getErrors();
+            if (!errors.isEmpty()) {
+                String errorMessages = errors.stream()
+                        .map(CqlCompilerException::getMessage)
+                        .collect(Collectors.joining("; "));
+                throw new IllegalStateException("CQL compilation errors: " + errorMessages);
+            }
+
+            // Get ELM output in JSON format
+            String elmJson = translator.toJson();
+
+            // Update library with compiled ELM
+            library.setElmJson(elmJson);
+            library.setStatus("COMPILED");
+
+            CqlLibrary savedLibrary = libraryRepository.save(library);
+            logger.info("Successfully compiled CQL library {} to ELM", libraryId);
+
+            return savedLibrary;
+
+        } catch (IllegalStateException e) {
+            // Re-throw compilation errors
+            throw e;
+        } catch (Exception e) {
+            logger.error("CQL compilation failed for library {}: {}", libraryId, e.getMessage(), e);
+            throw new IllegalStateException("CQL compilation failed: " + e.getMessage(), e);
+        }
     }
 
     /**
-     * Validate CQL syntax
-     * This is a placeholder - actual implementation would validate CQL
+     * Validate CQL syntax without full compilation.
+     * Uses the CQL-to-ELM translator parser to check syntax.
+     *
+     * @param libraryId the library ID to validate
+     * @param tenantId the tenant ID
+     * @return true if CQL syntax is valid, false otherwise
+     * @throws IllegalArgumentException if library not found or has no CQL content
      */
     public boolean validateLibrary(UUID libraryId, String tenantId) {
         logger.info("Validating CQL library: {}", libraryId);
@@ -318,9 +368,34 @@ public class CqlLibraryService {
             throw new IllegalArgumentException("Library has no CQL content to validate");
         }
 
-        // TODO: Implement actual CQL validation
-        logger.warn("CQL validation not yet implemented - placeholder called");
+        try {
+            // Create model and library managers for the translator
+            ModelManager modelManager = new ModelManager();
+            LibraryManager libraryManager = new LibraryManager(modelManager);
 
-        return true;
+            // Attempt to translate (validates syntax)
+            CqlTranslator translator = CqlTranslator.fromText(
+                    library.getCqlContent(),
+                    libraryManager
+            );
+
+            // Check for errors - return false if any exist
+            boolean isValid = translator.getErrors().isEmpty();
+
+            if (!isValid) {
+                String errorMessages = translator.getErrors().stream()
+                        .map(CqlCompilerException::getMessage)
+                        .collect(Collectors.joining("; "));
+                logger.warn("CQL validation failed for library {}: {}", libraryId, errorMessages);
+            } else {
+                logger.info("CQL library {} validated successfully", libraryId);
+            }
+
+            return isValid;
+
+        } catch (Exception e) {
+            logger.warn("CQL validation failed for library {}: {}", libraryId, e.getMessage());
+            return false;
+        }
     }
 }

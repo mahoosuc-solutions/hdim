@@ -1,6 +1,11 @@
 server:
   port: 0  # Random port for tests
 
+# Enable AuthController for integration tests
+authentication:
+  controller:
+    enabled: true
+
 # JWT Authentication Configuration for Tests
 jwt:
   secret: test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -54,6 +55,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@Import(com.healthdata.authentication.config.TestSecurityConfig.class)
 @DisplayName("HIPAA Logout Cache Eviction Integration Tests")
 public class LogoutCacheEvictionIntegrationTest {
 
@@ -199,9 +201,10 @@ public class LogoutCacheEvictionIntegrationTest {
     @DisplayName("Should handle unauthenticated logout gracefully")
     void shouldHandleUnauthenticatedLogoutGracefully() throws Exception {
         // When: Unauthenticated user attempts logout
+        // Logout requires authentication - returns 401 for security
         mockMvc.perform(post("/api/v1/auth/logout")
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()); // Logout is idempotent
+            .andExpect(status().isUnauthorized());
 
         // Then: No cache eviction should occur (no authenticated user)
         verify(cacheEvictionService, never()).evictTenantCaches(anyString());

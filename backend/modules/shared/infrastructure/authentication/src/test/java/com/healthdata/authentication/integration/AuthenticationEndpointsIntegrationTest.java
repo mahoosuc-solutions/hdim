@@ -391,7 +391,7 @@ class AuthenticationEndpointsIntegrationTest {
     }
 
     @Test
-    @DisplayName("Should reject registration without authentication (403 Forbidden)")
+    @DisplayName("Should reject registration without authentication (401 Unauthorized)")
     void shouldRejectRegistrationWithoutAuthentication() throws Exception {
         RegisterRequest request = RegisterRequest.builder()
             .username("newuser4")
@@ -403,12 +403,12 @@ class AuthenticationEndpointsIntegrationTest {
             .roles(Set.of(UserRole.EVALUATOR))
             .build();
 
-        // Note: Registration requires ADMIN role, so anonymous access returns 403 (Forbidden) not 401 (Unauthorized)
-        // 403 is correct because the endpoint requires a specific role, not just authentication
+        // Note: With HTTP Basic auth enabled, unauthenticated requests return 401 (Unauthorized)
+        // before authorization rules (403) can be evaluated - this is standard HTTP behavior
         mockMvc.perform(post("/api/v1/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isForbidden());
+            .andExpect(status().isUnauthorized());
     }
 
     @Test

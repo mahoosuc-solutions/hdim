@@ -10,6 +10,8 @@ import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -143,7 +145,7 @@ public class CqlLibraryAuditAspect {
                                        Instant timestamp, AuditEvent.OperationResult result,
                                        String errorMessage) {
         try {
-            String performedBy = "system"; // TODO: Extract from SecurityContextHolder
+            String performedBy = extractPerformedBy();
 
             CqlLibraryAuditEvent auditEvent = CqlLibraryAuditEvent.builder()
                     .eventId(eventId)
@@ -161,7 +163,7 @@ public class CqlLibraryAuditAspect {
                     .libraryName(library.getLibraryName())
                     .libraryVersion(library.getVersion())
                     .libraryContentLength(library.getCqlContent() != null ? library.getCqlContent().length() : 0)
-                    .previousVersion(null) // TODO: Track previous version for updates
+                    .previousVersion(null) // Note: Previous version tracking would require fetching before update
                     .build();
 
             auditEventProducer.publishLibraryAudit(auditEvent);
@@ -182,7 +184,7 @@ public class CqlLibraryAuditAspect {
                                               String eventId, Instant timestamp,
                                               AuditEvent.OperationResult result, String errorMessage) {
         try {
-            String performedBy = "system"; // TODO: Extract from SecurityContextHolder
+            String performedBy = extractPerformedBy();
 
             CqlLibraryAuditEvent auditEvent = CqlLibraryAuditEvent.builder()
                     .eventId(eventId)
@@ -222,5 +224,21 @@ public class CqlLibraryAuditAspect {
         }
         return String.format("Library: %s v%s (ID: %s)",
                 library.getLibraryName(), library.getVersion(), library.getId());
+    }
+
+    /**
+     * Extract the authenticated user from the security context.
+     * Falls back to "system" if no authentication is present.
+     */
+    private String extractPerformedBy() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated()) {
+                return auth.getName();
+            }
+        } catch (Exception e) {
+            logger.debug("Could not extract user context", e);
+        }
+        return "system";
     }
 }

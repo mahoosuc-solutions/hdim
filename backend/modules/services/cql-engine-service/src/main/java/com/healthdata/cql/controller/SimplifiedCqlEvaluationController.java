@@ -1,5 +1,6 @@
 package com.healthdata.cql.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.cql.entity.CqlEvaluation;
 import com.healthdata.cql.entity.CqlLibrary;
@@ -138,14 +139,41 @@ public class SimplifiedCqlEvaluationController {
                 response.put("error", evaluation.getErrorMessage());
             }
 
-            // Add placeholder measure results for quality-measure-service parsing
-            // TODO: Replace with actual CQL evaluation results once engine is fully implemented
+            // Parse actual measure results from evaluation or use defaults
             Map<String, Object> measureResult = new HashMap<>();
             measureResult.put("measureName", library.getLibraryName());
-            measureResult.put("inNumerator", false);
-            measureResult.put("inDenominator", true);
-            measureResult.put("complianceRate", 0.0);
-            measureResult.put("note", "CQL engine evaluation placeholder - full implementation pending");
+
+            if (evaluation.getEvaluationResult() != null && !evaluation.getEvaluationResult().isEmpty()) {
+                try {
+                    JsonNode resultNode = objectMapper.readTree(evaluation.getEvaluationResult());
+
+                    // Extract actual values from the evaluation result
+                    measureResult.put("inNumerator", resultNode.has("inNumerator") ?
+                            resultNode.get("inNumerator").asBoolean() : false);
+                    measureResult.put("inDenominator", resultNode.has("inDenominator") ?
+                            resultNode.get("inDenominator").asBoolean() : true);
+                    measureResult.put("complianceRate", resultNode.has("complianceRate") ?
+                            resultNode.get("complianceRate").asDouble() : 0.0);
+
+                    if (resultNode.has("exclusionReason") && !resultNode.get("exclusionReason").isNull()) {
+                        measureResult.put("exclusionReason", resultNode.get("exclusionReason").asText());
+                    }
+                    if (resultNode.has("careGaps") && resultNode.get("careGaps").isArray()) {
+                        measureResult.put("careGaps", objectMapper.convertValue(
+                                resultNode.get("careGaps"), java.util.List.class));
+                    }
+                } catch (Exception e) {
+                    logger.warn("Could not parse evaluation result, using defaults: {}", e.getMessage());
+                    measureResult.put("inNumerator", false);
+                    measureResult.put("inDenominator", true);
+                    measureResult.put("complianceRate", 0.0);
+                }
+            } else {
+                // No evaluation result available, use defaults
+                measureResult.put("inNumerator", false);
+                measureResult.put("inDenominator", true);
+                measureResult.put("complianceRate", 0.0);
+            }
 
             response.put("measureResult", measureResult);
 

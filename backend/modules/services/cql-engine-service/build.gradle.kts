@@ -59,6 +59,13 @@ dependencies {
     // HAPI FHIR for resource handling
     implementation(libs.bundles.hapi.fhir.client)
 
+    // CQL-to-ELM Translation (https://mvnrepository.com/artifact/info.cqframework)
+    implementation("info.cqframework:cql-to-elm:3.20.0")
+    implementation("info.cqframework:cql:3.20.0")
+    implementation("info.cqframework:elm:3.20.0")
+    implementation("info.cqframework:model:3.20.0")
+    implementation("info.cqframework:elm-jackson:3.20.0") // For ELM JSON serialization
+
     // Redis for caching (used for ELM template caching)
     implementation(libs.spring.boot.starter.data.redis)
     implementation("org.springframework.boot:spring-boot-starter-cache")

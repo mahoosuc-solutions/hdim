@@ -65,8 +65,17 @@ class EhrConnectorControllerTest {
                 .clientSecret("test-secret")
                 .build();
 
+        EhrConnectionStatus status = EhrConnectionStatus.builder()
+                .connectionId("conn-1")
+                .tenantId("test-tenant")
+                .status(EhrConnectionStatus.Status.CONNECTED)
+                .vendorType(EhrVendorType.EPIC)
+                .build();
+
         when(connectionManager.registerConnection(any(EhrConnectionConfig.class)))
                 .thenReturn(Mono.just("conn-1"));
+        when(connectionManager.getConnectionStatus(anyString(), anyString()))
+                .thenReturn(Mono.just(status));
 
         // When/Then
         mockMvc.perform(post("/api/v1/ehr/connections")

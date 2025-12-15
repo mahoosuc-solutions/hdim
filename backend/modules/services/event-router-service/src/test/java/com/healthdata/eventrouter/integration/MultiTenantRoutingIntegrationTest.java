@@ -11,10 +11,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityManager;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
 
 import java.util.Map;
 
@@ -24,16 +28,31 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @Transactional
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@EmbeddedKafka(
+    partitions = 1,
+    topics = {"tenant1.processing", "tenant2.processing", "processing.high-priority", "processing.normal"},
+    brokerProperties = {
+        "listeners=PLAINTEXT://localhost:0",
+        "port=0",
+        "auto.create.topics.enable=true"
+    }
+)
 @DisplayName("Multi-Tenant Routing Integration Tests")
 class MultiTenantRoutingIntegrationTest {
 
     @DynamicPropertySource
-    static void configureH2(DynamicPropertyRegistry registry) {
+    static void configureProperties(DynamicPropertyRegistry registry) {
         // Configure H2 with legacy mode for Hibernate 6.x compatibility
         registry.add("spring.datasource.url", () ->
             "jdbc:h2:mem:routingtest;DB_CLOSE_DELAY=-1;MODE=LEGACY");
         registry.add("spring.jpa.properties.hibernate.dialect", () ->
             "org.hibernate.dialect.H2Dialect");
+        // Use embedded Kafka
+        registry.add("spring.kafka.bootstrap-servers", () -> "${spring.embedded.kafka.brokers}");
+        // Reduce Kafka timeouts for tests
+        registry.add("spring.kafka.producer.properties.max.block.ms", () -> "5000");
+        registry.add("spring.kafka.producer.properties.request.timeout.ms", () -> "5000");
+        registry.add("spring.kafka.producer.properties.delivery.timeout.ms", () -> "10000");
     }
 
     @Autowired
@@ -42,9 +61,16 @@ class MultiTenantRoutingIntegrationTest {
     @Autowired
     private EventRouter eventRouter;
 
+    @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
+    private EmbeddedKafkaBroker embeddedKafkaBroker;
+
     @BeforeEach
     void setUp() {
         ruleRepository.deleteAll();
+        entityManager.flush();
     }
 
     @Test
@@ -53,8 +79,9 @@ class MultiTenantRoutingIntegrationTest {
         // Given
         RoutingRuleEntity tenant1Rule = createRule("tenant1", "rule1", "fhir.patient.created", "tenant1.processing");
         RoutingRuleEntity tenant2Rule = createRule("tenant2", "rule2", "fhir.patient.created", "tenant2.processing");
-        ruleRepository.save(tenant1Rule);
-        ruleRepository.save(tenant2Rule);
+        ruleRepository.saveAndFlush(tenant1Rule);
+        ruleRepository.saveAndFlush(tenant2Rule);
+        entityManager.clear(); // Clear persistence context to force fresh queries
 
         EventMessage tenant1Event = createEvent("PATIENT_CREATED", "tenant1");
         EventMessage tenant2Event = createEvent("PATIENT_CREATED", "tenant2");
@@ -63,7 +90,8 @@ class MultiTenantRoutingIntegrationTest {
         var result1 = eventRouter.route(tenant1Event);
         var result2 = eventRouter.route(tenant2Event);
 
-        // Then
+        // Then - verify routing found the rules and attempted to route
+        // Note: Kafka send may fail in test environment, but we verify rules were matched
         assertThat(result1.getTargetTopic()).isEqualTo("tenant1.processing");
         assertThat(result2.getTargetTopic()).isEqualTo("tenant2.processing");
     }

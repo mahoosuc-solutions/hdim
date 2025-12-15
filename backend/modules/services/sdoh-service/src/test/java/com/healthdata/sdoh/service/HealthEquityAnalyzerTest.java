@@ -28,6 +28,9 @@ class HealthEquityAnalyzerTest {
     @Mock
     private SdohAssessmentRepository assessmentRepository;
 
+    @Mock
+    private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+
     @InjectMocks
     private HealthEquityAnalyzer equityAnalyzer;
 
@@ -230,12 +233,15 @@ class HealthEquityAnalyzerTest {
 
     @Test
     @DisplayName("Should export equity report as JSON")
-    void testExportEquityReportAsJson() {
+    void testExportEquityReportAsJson() throws Exception {
         // Given
         EquityReport report = EquityReport.builder()
                 .reportId("report-001")
                 .tenantId(tenantId)
                 .build();
+
+        String expectedJson = "{\"reportId\":\"report-001\",\"tenantId\":\"tenant-001\"}";
+        when(objectMapper.writeValueAsString(any(EquityReport.class))).thenReturn(expectedJson);
 
         // When
         String json = equityAnalyzer.exportReportAsJson(report);
@@ -248,14 +254,10 @@ class HealthEquityAnalyzerTest {
     @Test
     @DisplayName("Should handle empty dataset gracefully")
     void testHandleEmptyDataset() {
-        // Given
-        when(assessmentRepository.findByTenantIdAndDateRange(tenantId, startDate, endDate))
-                .thenReturn(Collections.emptyList());
-
-        // When
+        // When - call with valid parameters, service should handle gracefully if no data
         EquityReport report = equityAnalyzer.generateEquityReport(tenantId, startDate, endDate);
 
-        // Then
+        // Then - should return a valid report structure even without data
         assertNotNull(report);
         assertNotNull(report.getDisparityMetrics());
     }

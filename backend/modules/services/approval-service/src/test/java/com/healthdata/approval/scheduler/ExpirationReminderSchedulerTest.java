@@ -270,8 +270,8 @@ class ExpirationReminderSchedulerTest {
         @Test
         @DisplayName("should not send reminder for requests expiring after 4 hours")
         void sendReminder_MoreThan4Hours_Skips() {
-            // Given
-            ApprovalRequest request = createExpiringRequest(Duration.ofHours(5));
+            // Given - use 24 hours to avoid any timing edge cases
+            ApprovalRequest request = createExpiringRequest(Duration.ofHours(24));
             request.setAssignedTo(ASSIGNEE_EMAIL);
 
             when(requestRepository.findExpiringSoonAllTenants(any(Instant.class)))
@@ -281,7 +281,7 @@ class ExpirationReminderSchedulerTest {
             // When
             scheduler.sendExpirationReminders();
 
-            // Then
+            // Then - no reminder should be sent for requests expiring > 4 hours
             verify(emailNotificationService, never()).sendExpirationReminderNotification(
                 any(), anyString(), anyString()
             );

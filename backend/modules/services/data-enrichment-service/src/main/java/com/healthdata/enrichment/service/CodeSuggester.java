@@ -24,7 +24,17 @@ public class CodeSuggester {
             new CodeMapping("E11.65", "Type 2 diabetes mellitus with hyperglycemia", 0.90, true),
             new CodeMapping("E11.2", "Type 2 diabetes mellitus with kidney complications", 0.85, true)
         ));
+        // Abbreviations for diabetes
+        ICD10_MAPPINGS.put("dm type 2", List.of(
+            new CodeMapping("E11.9", "Type 2 diabetes mellitus without complications", 0.95, true)
+        ));
+        ICD10_MAPPINGS.put("dm2", List.of(
+            new CodeMapping("E11.9", "Type 2 diabetes mellitus without complications", 0.95, true)
+        ));
         ICD10_MAPPINGS.put("hypertension", List.of(
+            new CodeMapping("I10", "Essential (primary) hypertension", 0.95, true)
+        ));
+        ICD10_MAPPINGS.put("htn", List.of(
             new CodeMapping("I10", "Essential (primary) hypertension", 0.95, true)
         ));
         ICD10_MAPPINGS.put("myocardial infarction", List.of(

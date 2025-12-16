@@ -27,6 +27,9 @@ dependencies {
     // Spring Cloud OpenFeign (for Feign clients)
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 
+    // OpenAPI/Swagger documentation
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+
     // CQL Engine dependencies - commented out until CQL Engine service is ready
     // implementation(libs.bundles.cql)
 

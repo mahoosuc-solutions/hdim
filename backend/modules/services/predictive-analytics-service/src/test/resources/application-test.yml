@@ -1,0 +1,93 @@
+server:
+  port: 0  # Random port for tests
+
+# JWT Authentication Configuration for Tests
+jwt:
+  secret: test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+  access-token-expiration: 1h
+  refresh-token-expiration: 1d
+  issuer: healthdata-in-motion-test
+  audience: healthdata-api-test
+
+spring:
+  application:
+    name: predictive-analytics-service-test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+    show-sql: false
+
+  liquibase:
+    enabled: false
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaStreamsAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaReactiveAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+  cache:
+    type: simple
+
+  # Kafka Configuration (disable for tests)
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+    consumer:
+      bootstrap-servers: localhost:9092
+      auto-offset-reset: earliest
+
+# HIPAA Audit Configuration
+audit:
+  enabled: false
+
+# Resilience4j Configuration (simplified for tests)
+resilience4j:
+  circuitbreaker:
+    instances:
+      predictiveAnalyticsDefault:
+        registerHealthIndicator: false
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+
+  retry:
+    instances:
+      predictiveAnalyticsDefault:
+        maxAttempts: 1
+        waitDuration: 0s
+
+  timelimiter:
+    instances:
+      predictiveAnalyticsDefault:
+        timeoutDuration: 30s
+        cancelRunningFuture: true
+
+  ratelimiter:
+    instances:
+      predictiveAnalyticsDefault:
+        limitForPeriod: 1000
+        limitRefreshPeriod: 1s
+        timeoutDuration: 5s
+
+logging:
+  level:
+    root: WARN
+    com.healthdata.predictive: INFO
+    org.springframework.test: INFO

@@ -5,9 +5,10 @@ import static org.awaitility.Awaitility.await;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.kafka.clients.consumer.Consumer;
@@ -17,6 +18,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.hl7.fhir.r4.model.Enumerations;
 import org.hl7.fhir.r4.model.Patient;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,22 +26,27 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
-import org.springframework.kafka.test.EmbeddedKafkaBroker;
-import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import com.healthdata.fhir.FhirServiceApplication;
+import com.healthdata.fhir.config.TestCacheConfiguration;
+import com.healthdata.fhir.config.TestSecurityConfiguration;
 import com.healthdata.fhir.persistence.PatientRepository;
 import com.healthdata.fhir.service.PatientService;
+import com.healthdata.fhir.service.PatientService.PatientEvent;
 
 /**
  * Kafka integration tests for FHIR resource event publishing.
- * Uses EmbeddedKafka to test the complete event flow.
+ * Uses Testcontainers Kafka to test the complete event flow.
  */
 @SpringBootTest(
     classes = FhirServiceApplication.class,
@@ -49,40 +56,40 @@ import com.healthdata.fhir.service.PatientService;
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.flyway.enabled=false",
         "spring.liquibase.enabled=false",
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration"
+        // Only exclude Redis, NOT Kafka - we need Kafka for these integration tests
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration",
+        // Override test profile exclusions to enable Kafka
+        "spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer",
+        "spring.kafka.producer.value-serializer=org.springframework.kafka.support.serializer.JsonSerializer"
     }
 )
-@EmbeddedKafka(
-    partitions = 1,
-    topics = {
-        "fhir.patients.created",
-        "fhir.patients.updated",
-        "fhir.patients.deleted"
-    },
-    brokerProperties = {
-        "listeners=PLAINTEXT://localhost:9092",
-        "port=9092"
-    }
-)
+@Import({TestCacheConfiguration.class, TestSecurityConfiguration.class})
+@Testcontainers
 @DirtiesContext
-@ActiveProfiles("test")
+@ActiveProfiles("kafka-it")
 class FhirEventKafkaIT {
 
     private static final String H2_URL = "jdbc:h2:mem:fhir_kafka_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH";
     private static final String TENANT_ID = "kafka-test-tenant";
     private static final String USER_ID = "test-user";
 
+    @Container
+    static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.5.0"));
+
     @DynamicPropertySource
-    static void overrideDatasourceProperties(DynamicPropertyRegistry registry) {
+    static void overrideProperties(DynamicPropertyRegistry registry) {
+        // Database properties
         registry.add("spring.datasource.url", () -> H2_URL);
         registry.add("spring.datasource.username", () -> "sa");
         registry.add("spring.datasource.password", () -> "");
         registry.add("spring.datasource.driver-class-name", () -> "org.h2.Driver");
         registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.H2Dialect");
-    }
 
-    @Autowired
-    private EmbeddedKafkaBroker embeddedKafka;
+        // Kafka properties from Testcontainers
+        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
+        registry.add("spring.kafka.producer.bootstrap-servers", kafka::getBootstrapServers);
+        registry.add("spring.kafka.consumer.bootstrap-servers", kafka::getBootstrapServers);
+    }
 
     @Autowired
     private PatientService patientService;
@@ -90,24 +97,23 @@ class FhirEventKafkaIT {
     @Autowired
     private PatientRepository patientRepository;
 
-    private Consumer<String, Map<String, Object>> consumer;
+    private Consumer<String, Object> consumer;
 
     @BeforeEach
     void setUp() {
-        // Create a test consumer
-        Map<String, Object> consumerProps = KafkaTestUtils.consumerProps(
-            "fhir-test-group",
-            "true",
-            embeddedKafka
-        );
+        // Create a test consumer with Object value type to handle PatientEvent deserialization
+        Map<String, Object> consumerProps = new HashMap<>();
+        consumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
+        consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, "fhir-test-group-" + UUID.randomUUID());
         consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         consumerProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+        consumerProps.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.healthdata.fhir.service.PatientService$PatientEvent");
 
-        ConsumerFactory<String, Map<String, Object>> cf = new DefaultKafkaConsumerFactory<>(consumerProps);
+        ConsumerFactory<String, Object> cf = new DefaultKafkaConsumerFactory<>(consumerProps);
         consumer = cf.createConsumer();
-        embeddedKafka.consumeFromAllEmbeddedTopics(consumer);
+        consumer.subscribe(Collections.singletonList("fhir.patients.created"));
     }
 
     @AfterEach
@@ -118,137 +124,163 @@ class FhirEventKafkaIT {
     }
 
     @Test
-    @Transactional
     void shouldPublishPatientCreatedEvent() {
         // Given
         Patient patient = createTestPatient("Created", "Patient");
 
         // When
         Patient created = patientService.createPatient(TENANT_ID, patient, USER_ID);
+        String expectedId = created.getIdPart();
 
-        // Then
-        await().atMost(10, TimeUnit.SECONDS)
-               .pollInterval(Duration.ofMillis(100))
-               .untilAsserted(() -> {
-                   ConsumerRecords<String, Map<String, Object>> records =
-                       KafkaTestUtils.getRecords(consumer, Duration.ofSeconds(5));
+        // Then - poll for messages
+        boolean foundCreatedEvent = false;
+        int pollAttempts = 0;
+        while (!foundCreatedEvent && pollAttempts < 30) {
+            pollAttempts++;
+            ConsumerRecords<String, Object> records = consumer.poll(Duration.ofSeconds(1));
 
-                   assertThat(records.count()).isGreaterThan(0);
+            for (var record : records) {
+                if (record.topic().equals("fhir.patients.created") &&
+                    record.key() != null &&
+                    record.key().equals(expectedId)) {
 
-                   boolean foundCreatedEvent = false;
-                   for (var record : records) {
-                       if (record.topic().equals("fhir.patients.created") &&
-                           record.key().equals(created.getIdPart())) {
-                           foundCreatedEvent = true;
-                           Map<String, Object> event = record.value();
-                           assertThat(event.get("resourceType")).isEqualTo("Patient");
-                           assertThat(event.get("tenantId")).isEqualTo(TENANT_ID);
-                       }
-                   }
-                   assertThat(foundCreatedEvent).isTrue();
-               });
+                    PatientEvent event = (PatientEvent) record.value();
+                    foundCreatedEvent = true;
+
+                    // Verify PatientEvent fields: id, tenantId, type, occurredAt, actor
+                    assertThat(event.type()).isEqualTo("CREATED");
+                    assertThat(event.tenantId()).isEqualTo(TENANT_ID);
+                    assertThat(event.id()).isEqualTo(expectedId);
+                    assertThat(event.actor()).isEqualTo(USER_ID);
+                    assertThat(event.occurredAt()).isNotNull();
+                }
+            }
+        }
+        assertThat(foundCreatedEvent)
+            .as("Expected to find a CREATED event for patient " + expectedId)
+            .isTrue();
     }
 
     @Test
-    @Transactional
     void shouldPublishPatientUpdatedEvent() {
+        // Subscribe to updated topic
+        consumer.subscribe(Collections.singletonList("fhir.patients.updated"));
+
         // Given
         Patient patient = createTestPatient("Original", "Name");
         Patient created = patientService.createPatient(TENANT_ID, patient, USER_ID);
+        String patientId = created.getIdPart();
 
-        // Consume the create event first
-        KafkaTestUtils.getRecords(consumer, Duration.ofSeconds(2));
+        // Consume any initial events
+        consumer.poll(Duration.ofSeconds(2));
 
         // When - Update the patient
         created.getNameFirstRep().setFamily("Updated");
-        Patient updated = patientService.updatePatient(
-            TENANT_ID,
-            created.getIdPart(),
-            created,
-            USER_ID
-        );
+        Patient updated = patientService.updatePatient(TENANT_ID, patientId, created, USER_ID);
 
         // Then
-        await().atMost(10, TimeUnit.SECONDS)
-               .pollInterval(Duration.ofMillis(100))
-               .untilAsserted(() -> {
-                   ConsumerRecords<String, Map<String, Object>> records =
-                       KafkaTestUtils.getRecords(consumer, Duration.ofSeconds(5));
+        boolean foundUpdatedEvent = false;
+        int pollAttempts = 0;
+        while (!foundUpdatedEvent && pollAttempts < 30) {
+            pollAttempts++;
+            ConsumerRecords<String, Object> records = consumer.poll(Duration.ofSeconds(1));
 
-                   boolean foundUpdatedEvent = false;
-                   for (var record : records) {
-                       if (record.topic().equals("fhir.patients.updated") &&
-                           record.key().equals(updated.getIdPart())) {
-                           foundUpdatedEvent = true;
-                           Map<String, Object> event = record.value();
-                           assertThat(event.get("resourceType")).isEqualTo("Patient");
-                       }
-                   }
-                   assertThat(foundUpdatedEvent).isTrue();
-               });
+            for (var record : records) {
+                if (record.topic().equals("fhir.patients.updated") &&
+                    record.key() != null &&
+                    record.key().equals(patientId)) {
+
+                    PatientEvent event = (PatientEvent) record.value();
+                    foundUpdatedEvent = true;
+
+                    assertThat(event.type()).isEqualTo("UPDATED");
+                    assertThat(event.tenantId()).isEqualTo(TENANT_ID);
+                    assertThat(event.id()).isEqualTo(patientId);
+                }
+            }
+        }
+        assertThat(foundUpdatedEvent)
+            .as("Expected to find an UPDATED event for patient " + patientId)
+            .isTrue();
     }
 
     @Test
-    @Transactional
     void shouldPublishPatientDeletedEvent() {
+        // Subscribe to deleted topic
+        consumer.subscribe(Collections.singletonList("fhir.patients.deleted"));
+
         // Given
         Patient patient = createTestPatient("ToDelete", "Patient");
         Patient created = patientService.createPatient(TENANT_ID, patient, USER_ID);
         String patientId = created.getIdPart();
 
-        // Consume the create event first
-        KafkaTestUtils.getRecords(consumer, Duration.ofSeconds(2));
+        // Consume any initial events
+        consumer.poll(Duration.ofSeconds(2));
 
         // When - Delete the patient
         patientService.deletePatient(TENANT_ID, patientId, USER_ID);
 
         // Then
-        await().atMost(10, TimeUnit.SECONDS)
-               .pollInterval(Duration.ofMillis(100))
-               .untilAsserted(() -> {
-                   ConsumerRecords<String, Map<String, Object>> records =
-                       KafkaTestUtils.getRecords(consumer, Duration.ofSeconds(5));
+        boolean foundDeletedEvent = false;
+        int pollAttempts = 0;
+        while (!foundDeletedEvent && pollAttempts < 30) {
+            pollAttempts++;
+            ConsumerRecords<String, Object> records = consumer.poll(Duration.ofSeconds(1));
 
-                   boolean foundDeletedEvent = false;
-                   for (var record : records) {
-                       if (record.topic().equals("fhir.patients.deleted") &&
-                           record.key().equals(patientId)) {
-                           foundDeletedEvent = true;
-                       }
-                   }
-                   assertThat(foundDeletedEvent).isTrue();
-               });
+            for (var record : records) {
+                if (record.topic().equals("fhir.patients.deleted") &&
+                    record.key() != null &&
+                    record.key().equals(patientId)) {
+
+                    PatientEvent event = (PatientEvent) record.value();
+                    foundDeletedEvent = true;
+
+                    assertThat(event.type()).isEqualTo("DELETED");
+                    assertThat(event.id()).isEqualTo(patientId);
+                }
+            }
+        }
+        assertThat(foundDeletedEvent)
+            .as("Expected to find a DELETED event for patient " + patientId)
+            .isTrue();
     }
 
     @Test
-    @Transactional
     void eventsShouldContainCorrectMetadata() {
         // Given
         Patient patient = createTestPatient("Metadata", "Test");
 
         // When
         Patient created = patientService.createPatient(TENANT_ID, patient, USER_ID);
+        String expectedId = created.getIdPart();
 
         // Then
-        await().atMost(10, TimeUnit.SECONDS)
-               .pollInterval(Duration.ofMillis(100))
-               .untilAsserted(() -> {
-                   ConsumerRecords<String, Map<String, Object>> records =
-                       KafkaTestUtils.getRecords(consumer, Duration.ofSeconds(5));
+        boolean foundEvent = false;
+        int pollAttempts = 0;
+        while (!foundEvent && pollAttempts < 30) {
+            pollAttempts++;
+            ConsumerRecords<String, Object> records = consumer.poll(Duration.ofSeconds(1));
 
-                   for (var record : records) {
-                       if (record.topic().equals("fhir.patients.created")) {
-                           Map<String, Object> event = record.value();
+            for (var record : records) {
+                if (record.topic().equals("fhir.patients.created") &&
+                    record.key() != null &&
+                    record.key().equals(expectedId)) {
 
-                           // Verify required metadata fields
-                           assertThat(event).containsKey("id");
-                           assertThat(event).containsKey("resourceType");
-                           assertThat(event).containsKey("tenantId");
-                           assertThat(event.get("resourceType")).isEqualTo("Patient");
-                           assertThat(event.get("tenantId")).isEqualTo(TENANT_ID);
-                       }
-                   }
-               });
+                    foundEvent = true;
+                    PatientEvent event = (PatientEvent) record.value();
+
+                    // Verify all PatientEvent record fields
+                    assertThat(event.id()).isEqualTo(expectedId);
+                    assertThat(event.tenantId()).isEqualTo(TENANT_ID);
+                    assertThat(event.type()).isEqualTo("CREATED");
+                    assertThat(event.occurredAt()).isNotNull();
+                    assertThat(event.actor()).isEqualTo(USER_ID);
+                }
+            }
+        }
+        assertThat(foundEvent)
+            .as("Expected to find event with metadata for patient " + expectedId)
+            .isTrue();
     }
 
     private Patient createTestPatient(String givenName, String familyName) {

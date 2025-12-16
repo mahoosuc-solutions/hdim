@@ -9,6 +9,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -23,6 +25,7 @@ import static org.mockito.Mockito.*;
  * Testing per-patient cost forecasting
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("CostPredictor Tests")
 class CostPredictorTest {
 
@@ -42,6 +45,15 @@ class CostPredictorTest {
     void setUp() {
         sampleFeatures = createSampleFeatures();
         samplePatientData = createSamplePatientData();
+
+        // Mock normalizeFeatures to return the feature vector as-is for simplicity
+        when(featureExtractor.normalizeFeatures(any(double[].class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Mock the additional cost prediction methods that are always called
+        when(costModel.predictLabCost(any(double[].class))).thenReturn(800.0);
+        when(costModel.predictImagingCost(any(double[].class))).thenReturn(600.0);
+        when(costModel.predictOtherCost(any(double[].class))).thenReturn(400.0);
     }
 
     // ==================== Basic Prediction Tests ====================
@@ -282,8 +294,15 @@ class CostPredictorTest {
         sampleFeatures.setHospitalizationsPastYear(5);
         when(featureExtractor.extractFeatures(any(), any(), any()))
             .thenReturn(sampleFeatures);
-        when(costModel.predictTotalCost(any(double[].class)))
-            .thenReturn(100000.0);
+        // Mock high costs for each component
+        when(costModel.predictInpatientCost(any(double[].class)))
+            .thenReturn(50000.0);
+        when(costModel.predictOutpatientCost(any(double[].class)))
+            .thenReturn(10000.0);
+        when(costModel.predictPharmacyCost(any(double[].class)))
+            .thenReturn(8000.0);
+        when(costModel.predictEmergencyCost(any(double[].class)))
+            .thenReturn(5000.0);
 
         // Act
         CostBreakdown costBreakdown = costPredictor.predictCosts(

@@ -88,19 +88,11 @@ Health systems are terrified of switching quality platforms because their custom
 
 ## How do you know people want this?
 
-1. **Only 8% of patients get all recommended preventive care** (AHRQ). Care gaps slip through because quality data arrives too late - batch processing means insights come 24-72 hours after the patient leaves.
-
-2. **"Most third-party software is designed and priced for large organizations"** - David Nash, MD, Dean of Population Health at Thomas Jefferson University. Small practices and FQHCs are priced out of quality infrastructure entirely.
-
-3. **6-8 month implementations are standard.** ACO Health Solutions confirms this timeline before organizations "see any meaningful data." We deploy in days.
-
-4. **Epic Healthy Planet user complaints:** KLAS Research shows users saying it was "overpromoted as the solution that was going to make population health work" and "not my favorite Epic module."
-
-5. **The "crowded desktop" problem:** Physicians juggle 6-20 clinical tools outside their EHR. 74% say external tools change their decisions, but most avoid using them because they disrupt workflow. Real-time, EHR-integrated alerts improve prescribing by 41% (PROMPT-HF trial).
-
-6. **FQHCs serve 30M patients** on thin margins with mandatory quality reporting. They need affordable, simple solutions - not 6-month enterprise implementations.
-
-7. **NCQA is going all-digital by 2030.** They're moving measures to electronic-only and adopting CQL as the standard. Legacy batch systems are technical debt.
+1. **Quality is late today:** Only 8% of patients get all recommended preventive care (AHRQ) because batch processing delivers insights 24-72 hours after the visit.
+2. **Implementation pain:** 6-8 month implementations are industry standard (ACO Health Solutions). We deploy in days.
+3. **Cost barrier:** "Most third-party software is designed and priced for large organizations" (David Nash, MD). FQHCs and small practices need an $80/month option, not $50K+.
+4. **Workflow matters:** Physicians juggle 6-20 external tools and avoid them if they break EHR workflow; EHR-integrated alerts improve prescribing by 41% (PROMPT-HF).
+5. **Standards tailwind:** NCQA is going all-digital by 2030; CQL cut measure build/test time by ~90% (NCQA). We're already 100% CQL/FHIR-native.
 
 ---
 
@@ -118,6 +110,15 @@ Health systems are terrified of switching quality platforms because their custom
 - Custom measure development ($5-20K per measure)
 
 **Target ACV:** $20K-100K for mid-market, $200K+ for enterprise
+
+---
+
+## Progress / current state
+
+- Platform built: 13 microservices, 52 HEDIS measures, Angular clinical portal
+- Deploys in Docker; demo environment running with real-time <200ms calculations validated against sample data
+- Batch engine achieves 10-40x faster throughput via concurrent evaluation
+- AI agent builder integrated; ready for pilot deployments
 
 ---
 
@@ -195,12 +196,17 @@ Long-term, we expand beyond quality measurement into:
 
 ## Demo Video
 
-[Link to 1-minute demo - see DEMO_VIDEO_SCRIPT.md]
+- Script and shot list: [DEMO_VIDEO_SCRIPT.md](DEMO_VIDEO_SCRIPT.md)
+- Demo test flows: [DEMO_TEST_SCENARIOS.md](DEMO_TEST_SCENARIOS.md)
+- Pending: add unlisted 1-minute video link after recording
 
 ---
 
 ## Additional Materials
 
-- GitHub repo: [private - can share with YC]
-- Technical architecture: [link]
-- Sample customer outreach: [link to CUSTOMER_OUTREACH.md]
+- Technical architecture: [ARCHITECTURE_ONEPAGER.md](ARCHITECTURE_ONEPAGER.md)
+- Product roadmap: [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md)
+- Product positioning: [PRODUCT_POSITIONING.md](PRODUCT_POSITIONING.md)
+- Sample customer outreach: [CUSTOMER_OUTREACH.md](CUSTOMER_OUTREACH.md)
+- Submission checklist: [YC_SUBMISSION_CHECKLIST.md](YC_SUBMISSION_CHECKLIST.md)
+- GitHub repo: private; share on request with YC reviewers

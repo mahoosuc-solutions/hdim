@@ -21,15 +21,19 @@ public class MedicalEntityRecognizer {
     private static final Pattern ICD10_PATTERN = Pattern.compile("[A-Z]\\d{2}\\.?\\d{0,2}");
     private static final Pattern DOSAGE_PATTERN = Pattern.compile("\\d+\\s*(mg|mcg|g|ml|units?)");
     private static final Pattern FREQUENCY_PATTERN = Pattern.compile("\\b(daily|BID|TID|QID|HS|PRN|QD|BID|TID)\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern SEVERITY_PATTERN = Pattern.compile("\\b(mild|moderate|severe|acute|chronic|extreme)\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern ANATOMICAL_PATTERN = Pattern.compile("\\b(left|right|bilateral|upper|lower)\\s+(knee|shoulder|arm|leg|hip|ankle|wrist|hand|foot|eye|ear)\\b", Pattern.CASE_INSENSITIVE);
 
     static {
         // Diagnoses
         MEDICAL_TERMINOLOGY.put(EntityType.DIAGNOSIS, Arrays.asList(
-            "diabetes mellitus", "diabetes", "DM", "Type 2 Diabetes", "Type 1 Diabetes",
-            "hypertension", "HTN", "hyperlipidemia", "HLD",
-            "myocardial infarction", "MI", "stroke", "CVA",
+            "diabetes mellitus", "diabetes", "Type 2 Diabetes", "Type 1 Diabetes",
+            "DM Type 2", "hypertension", "hyperlipidemia",
+            "myocardial infarction", "stroke",
             "pneumonia", "COPD", "asthma", "CHF", "heart failure",
-            "chronic kidney disease", "CKD", "renal failure"
+            "chronic kidney disease", "CKD", "renal failure",
+            "knee pain", "shoulder pain", "back pain", "pain",
+            "HTN", "HLD"
         ));
 
         // Medications
@@ -82,6 +86,9 @@ public class MedicalEntityRecognizer {
 
         // Extract ICD-10 codes
         entities.addAll(extractIcd10Codes(text));
+
+        // Extract anatomical location patterns directly
+        entities.addAll(extractAnatomicalPatterns(text));
 
         return entities;
     }
@@ -141,6 +148,30 @@ public class MedicalEntityRecognizer {
         String lowerText = text.toLowerCase();
         String lowerTerm = term.toLowerCase();
 
+        // For short terms (abbreviations), use word boundary matching
+        if (term.length() <= 4 && term.matches("[A-Za-z]+")) {
+            Pattern wordPattern = Pattern.compile("\\b" + Pattern.quote(lowerTerm) + "\\b", Pattern.CASE_INSENSITIVE);
+            Matcher matcher = wordPattern.matcher(text);
+            while (matcher.find()) {
+                boolean negated = isNegated(text, matcher.start());
+                ExtractedEntity entity = ExtractedEntity.builder()
+                    .type(type)
+                    .text(text.substring(matcher.start(), matcher.end()))
+                    .startPosition(matcher.start())
+                    .endPosition(matcher.end())
+                    .confidence(negated ? 0.7 : 0.85)
+                    .build();
+                entity.getMetadata().put("negated", negated);
+                if (type == EntityType.MEDICATION) {
+                    extractMedicationMetadata(text, entity);
+                }
+                extractSeverityMetadata(text, entity);
+                extractAnatomicalMetadata(text, entity);
+                entities.add(entity);
+            }
+            return entities;
+        }
+
         int index = 0;
         while ((index = lowerText.indexOf(lowerTerm, index)) != -1) {
             boolean negated = isNegated(text, index);
@@ -159,6 +190,12 @@ public class MedicalEntityRecognizer {
             if (type == EntityType.MEDICATION) {
                 extractMedicationMetadata(text, entity);
             }
+
+            // Extract severity if present
+            extractSeverityMetadata(text, entity);
+
+            // Extract anatomical location if present
+            extractAnatomicalMetadata(text, entity);
 
             entities.add(entity);
             index += term.length();
@@ -219,5 +256,55 @@ public class MedicalEntityRecognizer {
         if (freqMatcher.find()) {
             entity.getMetadata().put("frequency", freqMatcher.group());
         }
+    }
+
+    /**
+     * Extract severity indicators from surrounding text.
+     */
+    private void extractSeverityMetadata(String text, ExtractedEntity entity) {
+        int start = Math.max(0, entity.getStartPosition() - 30);
+        int end = Math.min(text.length(), entity.getEndPosition() + 30);
+        String context = text.substring(start, end);
+
+        Matcher severityMatcher = SEVERITY_PATTERN.matcher(context);
+        if (severityMatcher.find()) {
+            entity.getMetadata().put("severity", severityMatcher.group().toLowerCase());
+        }
+    }
+
+    /**
+     * Extract anatomical location from surrounding text.
+     */
+    private void extractAnatomicalMetadata(String text, ExtractedEntity entity) {
+        int start = Math.max(0, entity.getStartPosition() - 30);
+        int end = Math.min(text.length(), entity.getEndPosition() + 30);
+        String context = text.substring(start, end);
+
+        Matcher anatomicalMatcher = ANATOMICAL_PATTERN.matcher(context);
+        if (anatomicalMatcher.find()) {
+            entity.getMetadata().put("anatomicalLocation", anatomicalMatcher.group().toLowerCase());
+        }
+    }
+
+    /**
+     * Extract anatomical location patterns as entities.
+     */
+    private List<ExtractedEntity> extractAnatomicalPatterns(String text) {
+        List<ExtractedEntity> entities = new ArrayList<>();
+        Matcher matcher = ANATOMICAL_PATTERN.matcher(text);
+
+        while (matcher.find()) {
+            ExtractedEntity entity = ExtractedEntity.builder()
+                .type(EntityType.DIAGNOSIS)
+                .text(matcher.group())
+                .startPosition(matcher.start())
+                .endPosition(matcher.end())
+                .confidence(0.85)
+                .build();
+            entity.getMetadata().put("anatomicalLocation", matcher.group().toLowerCase());
+            entities.add(entity);
+        }
+
+        return entities;
     }
 }

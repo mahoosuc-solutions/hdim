@@ -22,6 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.migration.MigrationWorkflowApplication;
+import com.healthdata.migration.config.TestCacheConfiguration;
+import com.healthdata.migration.config.TestJpaConfiguration;
+import com.healthdata.migration.config.TestSecurityConfiguration;
 import com.healthdata.migration.dto.DataType;
 import com.healthdata.migration.dto.JobStatus;
 import com.healthdata.migration.dto.MigrationJobRequest;
@@ -35,7 +38,12 @@ import com.healthdata.migration.repository.MigrationJobRepository;
  * Tests the complete migration job lifecycle.
  */
 @SpringBootTest(
-    classes = MigrationWorkflowApplication.class,
+    classes = {
+        MigrationWorkflowApplication.class,
+        TestSecurityConfiguration.class,
+        TestCacheConfiguration.class,
+        TestJpaConfiguration.class
+    },
     properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.liquibase.enabled=false",
@@ -306,12 +314,21 @@ class MigrationJobControllerIT {
     }
 
     private MigrationJobEntity createTestJob(String name, JobStatus status) {
+        SourceConfig sourceConfig = SourceConfig.builder()
+                .sourceType(SourceType.FILE)
+                .path("/data/hl7")
+                .filePattern("*.hl7")
+                .encoding("UTF-8")
+                .recursive(true)
+                .build();
+
         MigrationJobEntity entity = MigrationJobEntity.builder()
                 .id(UUID.randomUUID())
                 .tenantId(TENANT_ID)
                 .jobName(name)
                 .status(status)
                 .sourceType(SourceType.FILE)
+                .sourceConfig(sourceConfig)
                 .dataType(DataType.HL7V2)
                 .convertToFhir(true)
                 .continueOnError(true)

@@ -18,6 +18,7 @@ import java.time.Instant;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class EpicAuthProviderTest {
@@ -39,10 +40,10 @@ class EpicAuthProviderTest {
         KeyPair keyPair = keyGen.generateKeyPair();
         testPrivateKey = keyPair.getPrivate();
 
-        when(config.getClientId()).thenReturn("test-client-id");
-        when(config.getTokenUrl()).thenReturn("https://fhir.epic.com/oauth2/token");
-        when(config.getPrivateKey()).thenReturn(testPrivateKey);
-        when(config.getTokenCacheDurationMinutes()).thenReturn(50);
+        // Use lenient stubbing because not all tests use all methods
+        lenient().when(config.getClientId()).thenReturn("test-client-id");
+        lenient().when(config.getTokenUrl()).thenReturn("https://fhir.epic.com/oauth2/token");
+        lenient().when(config.getPrivateKey()).thenReturn(testPrivateKey);
 
         authProvider = new EpicAuthProvider(config, restTemplate);
     }

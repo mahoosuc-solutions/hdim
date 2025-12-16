@@ -9,11 +9,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -24,9 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Note: Full end-to-end routing tests with Kafka require external infrastructure
  * and are tested in separate E2E test suites.
  */
-@SpringBootTest
+@DataJpaTest
 @ActiveProfiles("test")
-@Transactional
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @DisplayName("Multi-Tenant Routing Integration Tests")
 class MultiTenantRoutingIntegrationTest {
@@ -38,10 +36,6 @@ class MultiTenantRoutingIntegrationTest {
             "jdbc:h2:mem:routingtest;DB_CLOSE_DELAY=-1;MODE=LEGACY");
         registry.add("spring.jpa.properties.hibernate.dialect", () ->
             "org.hibernate.dialect.H2Dialect");
-        // Disable Kafka for these repository-focused tests
-        registry.add("spring.kafka.bootstrap-servers", () -> "localhost:9092");
-        registry.add("spring.autoconfigure.exclude", () ->
-            "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration");
     }
 
     @Autowired

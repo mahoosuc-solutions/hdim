@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.healthdata.migration.client.CdrProcessingResult;
+import com.healthdata.migration.client.CdrProcessorClient;
 import com.healthdata.migration.connector.SourceConnector;
 import com.healthdata.migration.connector.SourceConnectorFactory;
 import com.healthdata.migration.dto.JobStatus;
@@ -45,6 +47,7 @@ public class MigrationExecutorService {
     private final MigrationJobService jobService;
     private final SourceConnectorFactory connectorFactory;
     private final MigrationProgressPublisher progressPublisher;
+    private final CdrProcessorClient cdrProcessorClient;
 
     // Track running jobs for cancellation
     private final Map<UUID, AtomicBoolean> runningJobs = new ConcurrentHashMap<>();
@@ -210,14 +213,12 @@ public class MigrationExecutorService {
     }
 
     private boolean processRecord(MigrationJobEntity job, SourceRecord record) throws Exception {
-        // TODO: Integrate with CDR Processor Service for actual parsing/conversion
-        // For now, validate record format
-
         String content = record.getContent();
         if (content == null || content.trim().isEmpty()) {
             return false; // Skip empty records
         }
 
+        // Basic format validation before sending to CDR Processor
         switch (record.getDataType()) {
             case HL7V2:
                 if (!content.startsWith("MSH")) {
@@ -238,23 +239,31 @@ public class MigrationExecutorService {
                 break;
         }
 
-        // In production: call CDR Processor Service to parse and convert
-        // cdrProcessorClient.process(record.getContent(), record.getDataType(), job.getTenantId());
+        // Process record through CDR Processor Service
+        CdrProcessingResult result = cdrProcessorClient.processRecord(
+                content,
+                record.getDataType(),
+                job.getTenantId()
+        );
 
-        // Track FHIR resources created
+        if (!result.isSuccess()) {
+            throw new RuntimeException("CDR processing failed: " + result.getErrorMessage());
+        }
+
+        // Track FHIR resources created from CDR Processor response
         Map<String, Long> resources = job.getFhirResourcesCreated();
         if (resources == null) {
             resources = new HashMap<>();
             job.setFhirResourcesCreated(resources);
         }
 
-        // Placeholder: increment resource count based on data type
-        String resourceType = switch (record.getDataType()) {
-            case HL7V2 -> "Patient"; // Simplified - ADT creates Patient
-            case CDA -> "DocumentReference";
-            case FHIR_BUNDLE -> "Bundle";
-        };
-        resources.merge(resourceType, 1L, Long::sum);
+        // Merge resource counts from CDR processing result
+        for (Map.Entry<String, Long> entry : result.getResourceCounts().entrySet()) {
+            resources.merge(entry.getKey(), entry.getValue(), Long::sum);
+        }
+
+        log.debug("Processed record: type={}, resources={}",
+                record.getDataType(), result.getResourceCounts());
 
         return true;
     }

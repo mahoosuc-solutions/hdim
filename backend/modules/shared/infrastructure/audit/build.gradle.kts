@@ -29,6 +29,9 @@ dependencies {
     // Logging
     api("org.slf4j:slf4j-api")
 
+    // Kafka (optional - for audit event streaming)
+    compileOnly("org.springframework.kafka:spring-kafka")
+
     // Utilities
     implementation(libs.commons.lang3)
 

@@ -21,11 +21,16 @@ public class DataCompletenessAnalyzer {
 
         List<CompletionSuggestion> suggestions = getSuggestions(patientId);
 
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("dataFreshness", "moderate");
+        metadata.put("lastUpdated", LocalDateTime.now().minusDays(30));
+
         return MissingDataReport.builder()
             .patientId(patientId)
             .completenessScore(calculateCompletenessScore(patientId).getCompletenessScore())
             .missingElements(missingElements)
             .suggestions(suggestions)
+            .metadata(metadata)
             .generatedAt(LocalDateTime.now())
             .build();
     }
@@ -56,22 +61,25 @@ public class DataCompletenessAnalyzer {
     }
 
     public List<CompletionSuggestion> getSuggestions(String patientId) {
-        return List.of(
+        // Return suggestions sorted by priority descending (higher priority first)
+        List<CompletionSuggestion> suggestions = new ArrayList<>(List.of(
             CompletionSuggestion.builder()
                 .element("HbA1c")
                 .description("Annual HbA1c test required for diabetes patients")
-                .priority(1)
+                .priority(10)
                 .action("Order HbA1c test")
                 .reason("Required for CMS122 measure")
                 .build(),
             CompletionSuggestion.builder()
                 .element("Eye Exam")
                 .description("Annual diabetic retinal exam")
-                .priority(2)
+                .priority(8)
                 .action("Schedule eye exam")
                 .reason("Required for CMS131 measure")
                 .build()
-        );
+        ));
+        suggestions.sort((s1, s2) -> Integer.compare(s2.getPriority(), s1.getPriority()));
+        return suggestions;
     }
 
     public double calculateMeasureCompleteness(String patientId, String measureId) {

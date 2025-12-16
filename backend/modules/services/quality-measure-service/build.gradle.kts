@@ -69,6 +69,9 @@ dependencies {
     implementation(libs.commons.lang3)
     implementation(libs.guava)
 
+    // Twilio for SMS notifications
+    implementation("com.twilio.sdk:twilio:9.14.0")
+
     // Export functionality
     implementation("org.apache.commons:commons-csv:1.11.0")
     implementation("org.apache.poi:poi-ooxml:5.2.5")

@@ -56,11 +56,11 @@ public class DataEnrichmentController {
 
         if (request.isAsync()) {
             // Return task ID for async processing
-            Map<String, String> response = new HashMap<>();
-            response.put("taskId", UUID.randomUUID().toString());
+            String taskId = UUID.randomUUID().toString();
             return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .body(ExtractionResult.builder()
-                    .id(response.get("taskId"))
+                    .id(taskId)
+                    .taskId(taskId)
                     .build());
         }
 
@@ -208,6 +208,18 @@ public class DataEnrichmentController {
         log.error("Invalid argument: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getMessage());
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationException(
+            org.springframework.web.bind.MethodArgumentNotValidException ex) {
+        log.error("Validation error: {}", ex.getMessage());
+        Map<String, Object> error = new HashMap<>();
+        error.put("error", "Validation failed");
+        error.put("details", ex.getBindingResult().getFieldErrors().stream()
+            .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+            .toList());
         return ResponseEntity.badRequest().body(error);
     }
 

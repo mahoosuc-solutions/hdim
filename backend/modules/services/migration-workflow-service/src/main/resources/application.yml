@@ -1,5 +1,5 @@
 server:
-  port: 8092
+  port: ${SERVER_PORT:8103}
   servlet:
     context-path: /
 
@@ -83,6 +83,13 @@ management:
   endpoint:
     health:
       show-details: when_authorized
+
+# CDR Processor Service configuration
+cdr-processor:
+  url: ${CDR_PROCESSOR_SERVICE_URL:http://localhost:8099}
+  connect-timeout: 10s
+  read-timeout: 30s
+  timeout: 30s
 
 # Logging
 logging:

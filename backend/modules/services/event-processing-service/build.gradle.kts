@@ -15,6 +15,9 @@ dependencies {
     implementation(libs.bundles.spring.boot.web)
     implementation(libs.bundles.spring.boot.data)
 
+    // OpenAPI/Swagger documentation
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+
     // Kafka
     implementation(libs.bundles.kafka)
 

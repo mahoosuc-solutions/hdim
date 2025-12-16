@@ -2,6 +2,7 @@ package com.healthdata.enrichment.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.enrichment.analyzer.DataCompletenessAnalyzer;
+import com.healthdata.enrichment.config.TestSecurityConfiguration;
 import com.healthdata.enrichment.dto.*;
 import com.healthdata.enrichment.model.*;
 import com.healthdata.enrichment.service.*;
@@ -11,8 +12,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
@@ -31,6 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(DataEnrichmentController.class)
 @DisplayName("DataEnrichmentController TDD Tests")
+@ActiveProfiles("test")
+@Import(TestSecurityConfiguration.class)
 class DataEnrichmentControllerTest {
 
     @Autowired
@@ -158,7 +163,7 @@ class DataEnrichmentControllerTest {
         suggestion.setDescription("Type 2 diabetes mellitus without complications");
         suggestion.setConfidence(0.95);
 
-        when(codeSuggester.suggestIcd10(anyString())).thenReturn(List.of(suggestion));
+        when(codeSuggester.suggestIcd10(anyString(), anyInt())).thenReturn(List.of(suggestion));
 
         // When/Then
         mockMvc.perform(post("/api/v1/enrichment/suggest-codes")
@@ -170,7 +175,7 @@ class DataEnrichmentControllerTest {
             .andExpect(jsonPath("$[0].code").value("E11.9"))
             .andExpect(jsonPath("$[0].confidence").value(0.95));
 
-        verify(codeSuggester, times(1)).suggestIcd10("Type 2 Diabetes Mellitus");
+        verify(codeSuggester, times(1)).suggestIcd10(eq("Type 2 Diabetes Mellitus"), anyInt());
     }
 
     @Test

@@ -10,8 +10,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,11 +37,17 @@ public class AuditService {
 
     private static final Logger logger = LoggerFactory.getLogger(AuditService.class);
     private static final int RETENTION_YEARS = 7; // HIPAA requirement
+    private static final String DEFAULT_AUDIT_TOPIC = "audit-events";
 
     private final ObjectMapper objectMapper;
     private final AuditEncryptionService encryptionService;
     private final AuditEventRepository repository;
     private final AuditEventMapper mapper;
+
+    // Optional Kafka publishing support
+    private KafkaTemplate<String, String> kafkaTemplate;
+    private boolean kafkaEnabled;
+    private String auditTopic;
 
     public AuditService(
             ObjectMapper objectMapper,
@@ -49,6 +58,36 @@ public class AuditService {
         this.encryptionService = encryptionService;
         this.repository = repository;
         this.mapper = mapper;
+        this.kafkaEnabled = false;
+        this.auditTopic = DEFAULT_AUDIT_TOPIC;
+    }
+
+    /**
+     * Optional injection of KafkaTemplate for audit event streaming.
+     * If Kafka is configured in the application, audit events will be published.
+     */
+    @Autowired(required = false)
+    public void setKafkaTemplate(KafkaTemplate<String, String> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+        if (kafkaTemplate != null) {
+            logger.info("Kafka audit event publishing enabled");
+        }
+    }
+
+    /**
+     * Enable/disable Kafka publishing (default: enabled if KafkaTemplate is present)
+     */
+    @Value("${audit.kafka.enabled:true}")
+    public void setKafkaEnabled(boolean enabled) {
+        this.kafkaEnabled = enabled;
+    }
+
+    /**
+     * Configure the Kafka topic for audit events
+     */
+    @Value("${audit.kafka.topic:audit-events}")
+    public void setAuditTopic(String topic) {
+        this.auditTopic = topic;
     }
 
     /**
@@ -68,16 +107,43 @@ public class AuditService {
             repository.save(entity);
 
             // Log to file as backup (meets basic HIPAA requirements)
-            logger.info("AUDIT_EVENT: {}", objectMapper.writeValueAsString(event));
+            String eventJson = objectMapper.writeValueAsString(event);
+            logger.info("AUDIT_EVENT: {}", eventJson);
 
-            // TODO: Optionally create FHIR AuditEvent resource
-            // TODO: Optionally publish to audit event stream (Kafka)
+            // Optionally publish to Kafka audit event stream
+            publishToKafka(event, eventJson);
 
         } catch (Exception e) {
             // CRITICAL: Audit logging failure should never break the application
             // but must be logged separately for compliance review
             logger.error("CRITICAL: Failed to log audit event. Event ID: {}, Error: {}",
                 event.getId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Publish audit event to Kafka for real-time streaming/processing.
+     * Publishing is fire-and-forget to avoid impacting audit logging reliability.
+     */
+    private void publishToKafka(AuditEvent event, String eventJson) {
+        if (kafkaTemplate == null || !kafkaEnabled) {
+            return;
+        }
+
+        try {
+            // Use tenant ID as partition key for ordering guarantees within tenant
+            String key = event.getTenantId() != null ? event.getTenantId() : "system";
+            kafkaTemplate.send(auditTopic, key, eventJson)
+                    .whenComplete((result, ex) -> {
+                        if (ex != null) {
+                            logger.warn("Failed to publish audit event to Kafka: {}", ex.getMessage());
+                        } else {
+                            logger.debug("Audit event published to Kafka topic: {}", auditTopic);
+                        }
+                    });
+        } catch (Exception e) {
+            // Kafka publishing failure should not impact audit logging
+            logger.warn("Failed to publish audit event to Kafka: {}", e.getMessage());
         }
     }
 

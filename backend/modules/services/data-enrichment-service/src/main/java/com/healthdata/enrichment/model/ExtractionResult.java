@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 @Builder
 public class ExtractionResult {
     private String id;
+    private String taskId;  // For async processing
     private String tenantId;
 
     @Builder.Default

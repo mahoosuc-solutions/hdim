@@ -579,4 +579,276 @@ class MedicaidComplianceServiceTest {
             assertEquals("Controlling High Blood Pressure", result.getMeasureName());
         }
     }
+
+    @Nested
+    @DisplayName("Edge Cases and Error Handling Tests")
+    class EdgeCasesTests {
+
+        @Test
+        @DisplayName("Should handle empty measure performance map")
+        void shouldHandleEmptyMeasurePerformance() {
+            MedicaidStateConfig nyConfig = MedicaidStateConfig.StateConfigs.newYork();
+            Map<String, MedicaidComplianceService.MeasurePerformance> performance = new HashMap<>();
+
+            MedicaidComplianceReport report = complianceService.calculateComplianceReport(
+                MCO_ID, MCO_NAME, nyConfig, REPORTING_PERIOD, MEASUREMENT_YEAR, performance
+            );
+
+            assertNotNull(report);
+            assertEquals(0, report.getMeasureResults().size());
+            assertEquals(0.0, report.getOverallComplianceRate(), 0.001);
+        }
+
+        @Test
+        @DisplayName("Should handle zero denominator in measure performance")
+        void shouldHandleZeroDenominator() {
+            MedicaidStateConfig nyConfig = MedicaidStateConfig.StateConfigs.newYork();
+            Map<String, MedicaidComplianceService.MeasurePerformance> performance = new HashMap<>();
+            performance.put("CBP", new MedicaidComplianceService.MeasurePerformance(0, 0));
+
+            MedicaidComplianceReport report = complianceService.calculateComplianceReport(
+                MCO_ID, MCO_NAME, nyConfig, REPORTING_PERIOD, MEASUREMENT_YEAR, performance
+            );
+
+            assertNotNull(report);
+            assertEquals(1, report.getMeasureResults().size());
+            MedicaidMeasureResult result = report.getMeasureResults().get(0);
+            assertEquals(0.0, result.getPerformanceRate(), 0.001);
+            assertFalse(result.isMeetsThreshold());
+        }
+
+        @Test
+        @DisplayName("Should handle measure with numerator exceeding denominator")
+        void shouldHandleNumeratorExceedingDenominator() {
+            MedicaidStateConfig nyConfig = MedicaidStateConfig.StateConfigs.newYork();
+            Map<String, MedicaidComplianceService.MeasurePerformance> performance = new HashMap<>();
+            performance.put("CBP", new MedicaidComplianceService.MeasurePerformance(150, 100));
+
+            MedicaidComplianceReport report = complianceService.calculateComplianceReport(
+                MCO_ID, MCO_NAME, nyConfig, REPORTING_PERIOD, MEASUREMENT_YEAR, performance
+            );
+
+            assertNotNull(report);
+            MedicaidMeasureResult result = report.getMeasureResults().get(0);
+            assertEquals(1.5, result.getPerformanceRate(), 0.001);
+        }
+
+        @Test
+        @DisplayName("Should handle missing measure in performance map")
+        void shouldHandleMissingMeasureInPerformanceMap() {
+            MedicaidStateConfig nyConfig = MedicaidStateConfig.StateConfigs.newYork();
+            Map<String, MedicaidComplianceService.MeasurePerformance> performance = new HashMap<>();
+            // Only provide one measure when NY requires multiple
+            performance.put("CBP", new MedicaidComplianceService.MeasurePerformance(70, 100));
+
+            MedicaidComplianceReport report = complianceService.calculateComplianceReport(
+                MCO_ID, MCO_NAME, nyConfig, REPORTING_PERIOD, MEASUREMENT_YEAR, performance
+            );
+
+            assertNotNull(report);
+            // Should only include the measure that was provided
+            assertEquals(1, report.getMeasureResults().size());
+        }
+
+        @Test
+        @DisplayName("Should handle unknown measure codes gracefully")
+        void shouldHandleUnknownMeasureCodes() {
+            MedicaidStateConfig config = MedicaidStateConfig.builder()
+                .stateCode("TEST")
+                .stateName("Test State")
+                .programName("Test Medicaid")
+                .requiredMeasures(java.util.List.of("UNKNOWN_MEASURE"))
+                .qualityThresholds(Map.of("UNKNOWN_MEASURE", 0.50))
+                .performanceGoals(Map.of("UNKNOWN_MEASURE", 0.60))
+                .ncqaAccreditationRequired(false)
+                .build();
+
+            Map<String, MedicaidComplianceService.MeasurePerformance> performance = new HashMap<>();
+            performance.put("UNKNOWN_MEASURE", new MedicaidComplianceService.MeasurePerformance(60, 100));
+
+            MedicaidComplianceReport report = complianceService.calculateComplianceReport(
+                MCO_ID, MCO_NAME, config, REPORTING_PERIOD, MEASUREMENT_YEAR, performance
+            );
+
+            assertNotNull(report);
+            assertEquals(1, report.getMeasureResults().size());
+            // Measure name should default to measure code
+            MedicaidMeasureResult result = report.getMeasureResults().get(0);
+            assertEquals("UNKNOWN_MEASURE", result.getMeasureCode());
+        }
+
+        @Test
+        @DisplayName("Should handle very small performance rates")
+        void shouldHandleVerySmallPerformanceRates() {
+            MedicaidStateConfig nyConfig = MedicaidStateConfig.StateConfigs.newYork();
+            Map<String, MedicaidComplianceService.MeasurePerformance> performance = new HashMap<>();
+            performance.put("CBP", new MedicaidComplianceService.MeasurePerformance(1, 10000));
+
+            MedicaidComplianceReport report = complianceService.calculateComplianceReport(
+                MCO_ID, MCO_NAME, nyConfig, REPORTING_PERIOD, MEASUREMENT_YEAR, performance
+            );
+
+            MedicaidMeasureResult result = report.getMeasureResults().get(0);
+            assertEquals(0.0001, result.getPerformanceRate(), 0.00001);
+            assertFalse(result.isMeetsThreshold());
+        }
+
+        @Test
+        @DisplayName("Should handle perfect performance rate of 1.0")
+        void shouldHandlePerfectPerformanceRate() {
+            MedicaidStateConfig nyConfig = MedicaidStateConfig.StateConfigs.newYork();
+            Map<String, MedicaidComplianceService.MeasurePerformance> performance = new HashMap<>();
+            performance.put("CBP", new MedicaidComplianceService.MeasurePerformance(1000, 1000));
+            performance.put("CDC-H9", new MedicaidComplianceService.MeasurePerformance(1000, 1000));
+            performance.put("BCS", new MedicaidComplianceService.MeasurePerformance(1000, 1000));
+            performance.put("COL", new MedicaidComplianceService.MeasurePerformance(1000, 1000));
+
+            MedicaidComplianceReport report = complianceService.calculateComplianceReport(
+                MCO_ID, MCO_NAME, nyConfig, REPORTING_PERIOD, MEASUREMENT_YEAR, performance
+            );
+
+            assertEquals(ComplianceStatus.COMPLIANT, report.getOverallStatus());
+            assertEquals(1.0, report.getOverallComplianceRate(), 0.001);
+            report.getMeasureResults().forEach(result -> {
+                assertEquals(1.0, result.getPerformanceRate(), 0.001);
+                assertTrue(result.isMeetsThreshold());
+                assertTrue(result.isMeetsGoal());
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("California State Compliance Tests")
+    class CaliforniaComplianceTests {
+
+        private MedicaidStateConfig caConfig;
+
+        @BeforeEach
+        void setUp() {
+            caConfig = MedicaidStateConfig.StateConfigs.california();
+        }
+
+        @Test
+        @DisplayName("Should apply CA-specific compliance thresholds")
+        void shouldApplyCaliforniaThresholds() {
+            Map<String, MedicaidComplianceService.MeasurePerformance> performance = new HashMap<>();
+            // Provide performance for all CA required measures
+            performance.put("CBP", new MedicaidComplianceService.MeasurePerformance(68, 100));
+            performance.put("CDC-H9", new MedicaidComplianceService.MeasurePerformance(78, 100));
+            performance.put("BCS", new MedicaidComplianceService.MeasurePerformance(72, 100));
+
+            MedicaidComplianceReport report = complianceService.calculateComplianceReport(
+                MCO_ID, MCO_NAME, caConfig, REPORTING_PERIOD, MEASUREMENT_YEAR, performance
+            );
+
+            assertNotNull(report);
+            assertEquals("CA", report.getStateConfig().getStateCode());
+            assertTrue(report.getMeasureResults().size() > 0);
+        }
+
+        @Test
+        @DisplayName("Should require NCQA accreditation for CA")
+        void shouldRequireNcqaAccreditationForCA() {
+            Map<String, MedicaidComplianceService.MeasurePerformance> performance = new HashMap<>();
+            performance.put("CBP", new MedicaidComplianceService.MeasurePerformance(70, 100));
+
+            MedicaidComplianceReport report = complianceService.calculateComplianceReport(
+                MCO_ID, MCO_NAME, caConfig, REPORTING_PERIOD, MEASUREMENT_YEAR, performance
+            );
+
+            assertEquals("Required", report.getNcqaAccreditation());
+        }
+    }
+
+    @Nested
+    @DisplayName("Florida State Compliance Tests")
+    class FloridaComplianceTests {
+
+        private MedicaidStateConfig flConfig;
+
+        @BeforeEach
+        void setUp() {
+            flConfig = MedicaidStateConfig.StateConfigs.florida();
+        }
+
+        @Test
+        @DisplayName("Should apply FL-specific compliance thresholds")
+        void shouldApplyFloridaThresholds() {
+            Map<String, MedicaidComplianceService.MeasurePerformance> performance = new HashMap<>();
+            performance.put("CBP", new MedicaidComplianceService.MeasurePerformance(64, 100));
+
+            MedicaidComplianceReport report = complianceService.calculateComplianceReport(
+                MCO_ID, MCO_NAME, flConfig, REPORTING_PERIOD, MEASUREMENT_YEAR, performance
+            );
+
+            assertNotNull(report);
+            assertEquals("FL", report.getStateConfig().getStateCode());
+        }
+    }
+
+    @Nested
+    @DisplayName("Multiple Measures Tests")
+    class MultipleMeasuresTests {
+
+        @Test
+        @DisplayName("Should correctly aggregate multiple measures with mixed performance")
+        void shouldAggregateMultipleMeasuresWithMixedPerformance() {
+            MedicaidStateConfig config = createConfigWithMeasures(10);
+            Map<String, MedicaidComplianceService.MeasurePerformance> performance = new HashMap<>();
+            // 7/10 measures meet threshold = 70% compliance
+            for (int i = 1; i <= 7; i++) {
+                performance.put("M" + i, new MedicaidComplianceService.MeasurePerformance(80, 100));
+            }
+            for (int i = 8; i <= 10; i++) {
+                performance.put("M" + i, new MedicaidComplianceService.MeasurePerformance(30, 100));
+            }
+
+            MedicaidComplianceReport report = complianceService.calculateComplianceReport(
+                MCO_ID, MCO_NAME, config, REPORTING_PERIOD, MEASUREMENT_YEAR, performance
+            );
+
+            assertEquals(0.70, report.getOverallComplianceRate(), 0.001);
+            assertEquals(7, report.getMeasuresMetThreshold());
+            assertEquals(3, report.getMeasuresBelowThreshold());
+            assertEquals(3, report.getCorrectiveActionMeasures().size());
+        }
+
+        @Test
+        @DisplayName("Should handle single measure configuration")
+        void shouldHandleSingleMeasureConfiguration() {
+            MedicaidStateConfig config = createConfigWithMeasures(1);
+            Map<String, MedicaidComplianceService.MeasurePerformance> performance = new HashMap<>();
+            performance.put("M1", new MedicaidComplianceService.MeasurePerformance(80, 100));
+
+            MedicaidComplianceReport report = complianceService.calculateComplianceReport(
+                MCO_ID, MCO_NAME, config, REPORTING_PERIOD, MEASUREMENT_YEAR, performance
+            );
+
+            assertEquals(ComplianceStatus.COMPLIANT, report.getOverallStatus());
+            assertEquals(1.0, report.getOverallComplianceRate(), 0.001);
+        }
+
+        private MedicaidStateConfig createConfigWithMeasures(int count) {
+            java.util.List<String> measures = new java.util.ArrayList<>();
+            Map<String, Double> thresholds = new HashMap<>();
+            Map<String, Double> goals = new HashMap<>();
+
+            for (int i = 1; i <= count; i++) {
+                String measureCode = "M" + i;
+                measures.add(measureCode);
+                thresholds.put(measureCode, 0.50);
+                goals.put(measureCode, 0.60);
+            }
+
+            return MedicaidStateConfig.builder()
+                .stateCode("TEST")
+                .stateName("Test State")
+                .programName("Test Medicaid")
+                .requiredMeasures(measures)
+                .qualityThresholds(thresholds)
+                .performanceGoals(goals)
+                .ncqaAccreditationRequired(false)
+                .build();
+        }
+    }
 }

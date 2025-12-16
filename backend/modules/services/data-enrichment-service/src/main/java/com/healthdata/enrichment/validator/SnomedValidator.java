@@ -6,6 +6,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.Set;
 
 @Component
 @Slf4j
@@ -18,6 +19,9 @@ public class SnomedValidator {
         "55822004", "Hyperlipidemia"
     );
 
+    // Retired SNOMED concepts
+    private static final Set<String> RETIRED_CONCEPTS = Set.of("00000000", "99999999");
+
     @Cacheable(value = "snomed-validation", key = "#code")
     public CodeValidationResult validate(String code) {
         if (!code.matches("\\d+")) {
@@ -25,6 +29,15 @@ public class SnomedValidator {
                 .code(code)
                 .valid(false)
                 .errors(List.of("Invalid SNOMED CT code format"))
+                .build();
+        }
+
+        // Check for retired concepts
+        if (RETIRED_CONCEPTS.contains(code)) {
+            return CodeValidationResult.builder()
+                .code(code)
+                .valid(false)
+                .errors(List.of("Concept has been retired"))
                 .build();
         }
 

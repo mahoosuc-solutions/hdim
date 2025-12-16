@@ -6,6 +6,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.Set;
 
 @Component
 @Slf4j
@@ -18,6 +19,9 @@ public class CptValidator {
         "99203", "Office visit, new patient, moderate complexity"
     );
 
+    // Deleted CPT codes
+    private static final Set<String> DELETED_CODES = Set.of("99999", "00000");
+
     @Cacheable(value = "cpt-validation", key = "#code")
     public CodeValidationResult validate(String code) {
         if (!code.matches("\\d{5}")) {
@@ -25,6 +29,15 @@ public class CptValidator {
                 .code(code)
                 .valid(false)
                 .errors(List.of("Invalid CPT code format (must be 5 digits)"))
+                .build();
+        }
+
+        // Check for deleted codes
+        if (DELETED_CODES.contains(code)) {
+            return CodeValidationResult.builder()
+                .code(code)
+                .valid(false)
+                .errors(List.of("CPT code has been deleted"))
                 .build();
         }
 

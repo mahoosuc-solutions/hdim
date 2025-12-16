@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -155,10 +156,42 @@ public class EhrConnectorController {
 
     /**
      * Extract tenant ID from authentication context.
+     * Supports JWT tokens with "tenantIds" or "tenantId" claim.
      */
     private String getTenantId(Authentication authentication) {
-        // TODO: Extract from JWT claims or user details
-        // For now, return a default tenant
+        if (authentication == null || !authentication.isAuthenticated()) {
+            log.warn("No authenticated principal found, using default tenant");
+            return "default-tenant";
+        }
+
+        Object principal = authentication.getPrincipal();
+
+        // Handle JWT principal from oauth2ResourceServer
+        if (principal instanceof Jwt jwt) {
+            // Try "tenantIds" claim (comma-separated, use first)
+            String tenantIds = jwt.getClaimAsString("tenantIds");
+            if (tenantIds != null && !tenantIds.isBlank()) {
+                String firstTenant = tenantIds.split(",")[0].trim();
+                if (!firstTenant.isEmpty()) {
+                    return firstTenant;
+                }
+            }
+
+            // Try "tenantId" claim (single value)
+            String tenantId = jwt.getClaimAsString("tenantId");
+            if (tenantId != null && !tenantId.isBlank()) {
+                return tenantId.trim();
+            }
+
+            // Try "tenant" claim (alternative name)
+            String tenant = jwt.getClaimAsString("tenant");
+            if (tenant != null && !tenant.isBlank()) {
+                return tenant.trim();
+            }
+
+            log.warn("No tenant claim found in JWT for user {}, using default tenant", jwt.getSubject());
+        }
+
         return "default-tenant";
     }
 

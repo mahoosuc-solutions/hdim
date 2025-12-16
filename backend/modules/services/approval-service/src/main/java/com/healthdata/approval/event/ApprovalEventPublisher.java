@@ -82,6 +82,11 @@ public class ApprovalEventPublisher {
     }
 
     private void publishEvent(EventType eventType, ApprovalRequest request, String actor) {
+        if (request == null) {
+            log.warn("Cannot publish event {}: request is null", eventType);
+            return;
+        }
+
         if (!kafkaEnabled) {
             log.debug("Kafka disabled, skipping event: {} for request: {}", eventType, request.getId());
             return;

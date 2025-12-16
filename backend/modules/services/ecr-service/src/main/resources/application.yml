@@ -48,6 +48,13 @@ jwt:
   secret: ${JWT_SECRET:your-256-bit-secret-key-here-for-development-only}
   expiration: 86400000
 
+# External Service URLs
+services:
+  patient-service:
+    url: ${PATIENT_SERVICE_URL:http://localhost:8081}
+  fhir-service:
+    url: ${FHIR_SERVICE_URL:http://localhost:8082}
+
 # AIMS Platform Configuration
 ecr:
   aims:

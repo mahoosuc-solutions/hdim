@@ -150,6 +150,27 @@ websocket:
       enabled: true
       connections-per-minute: 10  # Max connection attempts per IP per minute
 
+# Notification Configuration
+notification:
+  email:
+    # Default email recipient for notifications when no specific recipient is found
+    # This is a fallback address (e.g., care team distribution list)
+    default-recipient: care-team@example.com
+  mental-health:
+    default-recipients:
+      email: care-team@hospital.com
+      sms: "+12345678900"
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
 # Logging Configuration
 logging:
   level:

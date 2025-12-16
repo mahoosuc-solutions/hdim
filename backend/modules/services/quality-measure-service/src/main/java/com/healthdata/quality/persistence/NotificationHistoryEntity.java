@@ -1,5 +1,6 @@
 package com.healthdata.quality.persistence;
 
+import com.healthdata.security.encryption.Encrypted;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -101,6 +102,7 @@ public class NotificationHistoryEntity {
      *
      * NOTE: Contains PHI - must be encrypted at rest
      */
+    @Encrypted(value = "Notification content with patient PHI", category = Encrypted.HipaaCategory.PHI)
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 

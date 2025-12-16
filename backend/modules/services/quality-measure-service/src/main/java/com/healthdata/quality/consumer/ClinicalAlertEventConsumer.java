@@ -180,12 +180,20 @@ public class ClinicalAlertEventConsumer {
             String metric = (String) event.get("metric");
             String severity = (String) event.get("severity");
 
-            // TODO: Implement chronic disease deterioration alert logic
-            // This would create CHRONIC_DETERIORATION type alerts
-            // For now, just log the event
+            // Evaluate for chronic deterioration alert
+            ClinicalAlertDTO alert = clinicalAlertService.evaluateChronicDiseaseDeterioration(
+                tenantId, patientId, condition, metric, severity
+            );
 
-            log.info("Chronic disease deterioration detected for patient {}: {} - {} ({})",
-                patientId, condition, metric, severity);
+            // Send notifications if alert was created
+            if (alert != null) {
+                notificationService.sendNotification(tenantId, alert);
+                log.warn("Chronic disease deterioration alert {} created for patient {}: {} - {} ({})",
+                    alert.getId(), patientId, condition, metric, severity);
+            } else {
+                log.debug("Chronic disease deterioration for patient {} did not warrant alert: {} - {} ({})",
+                    patientId, condition, metric, severity);
+            }
 
         } catch (Exception e) {
             log.error("Error processing chronic disease deterioration event: {}",
@@ -205,21 +213,53 @@ public class ClinicalAlertEventConsumer {
         try {
             log.info("Received clinical-alert.triggered event: {}", event);
 
-            // This listener could be used for:
-            // - Sending notifications to external systems
-            // - Triggering workflow automations
-            // - Logging to audit trail
-            // - Updating dashboards
-
             String alertId = (String) event.get("alertId");
+            String patientId = (String) event.get("patientId");
+            String tenantId = (String) event.get("tenantId");
+            String alertType = (String) event.get("alertType");
             String severity = (String) event.get("severity");
+            String triggeredAt = (String) event.get("triggeredAt");
 
-            log.info("Alert {} triggered with severity {}", alertId, severity);
+            // Log to audit trail
+            log.info("AUDIT: Clinical alert triggered - Alert ID: {}, Patient: {}, Type: {}, Severity: {}, Timestamp: {}",
+                alertId, patientId, alertType, severity, triggeredAt);
 
-            // TODO: Implement additional alert processing logic
+            // Send notifications to external systems
+            // Note: NotificationService already handles the primary notification channels
+            // This additional processing is for secondary/cascading notifications
+            try {
+                notificationService.sendNotificationWithStatus(tenantId,
+                    buildAlertDTOFromEvent(event));
+                log.debug("External system notifications sent for alert {}", alertId);
+            } catch (Exception e) {
+                log.error("Failed to send external notifications for alert {}: {}",
+                    alertId, e.getMessage());
+                // Continue processing despite notification failure
+            }
+
+            // Dashboard update is handled via WebSocket in NotificationService
+            // The alert has already been persisted to the database by ClinicalAlertService
+            // Dashboards can query the database for real-time updates
+            log.debug("Alert {} available for dashboard display via database query", alertId);
+
+            log.info("Alert {} processing completed - Type: {}, Severity: {}",
+                alertId, alertType, severity);
 
         } catch (Exception e) {
             log.error("Error processing alert triggered event: {}", e.getMessage(), e);
         }
+    }
+
+    /**
+     * Build ClinicalAlertDTO from event map for notification purposes
+     */
+    private ClinicalAlertDTO buildAlertDTOFromEvent(Map<String, Object> event) {
+        return ClinicalAlertDTO.builder()
+            .id((String) event.get("alertId"))
+            .patientId((String) event.get("patientId"))
+            .tenantId((String) event.get("tenantId"))
+            .alertType((String) event.get("alertType"))
+            .severity((String) event.get("severity"))
+            .build();
     }
 }

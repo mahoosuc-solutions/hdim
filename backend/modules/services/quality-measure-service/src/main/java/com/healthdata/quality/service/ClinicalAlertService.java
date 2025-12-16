@@ -122,6 +122,38 @@ public class ClinicalAlertService {
     }
 
     /**
+     * Evaluate chronic disease deterioration and create alert if needed
+     */
+    @Transactional
+    public ClinicalAlertDTO evaluateChronicDiseaseDeterioration(
+        String tenantId,
+        String patientId,
+        String condition,
+        String metric,
+        String severity
+    ) {
+        log.info("Evaluating chronic disease deterioration for patient {}: {} - {} ({})",
+            patientId, condition, metric, severity);
+
+        // Determine alert severity based on deterioration severity
+        // HIGH severity for severe deterioration, MEDIUM for moderate
+        ClinicalAlertEntity.AlertSeverity alertSeverity =
+            "SEVERE".equalsIgnoreCase(severity) || "CRITICAL".equalsIgnoreCase(severity)
+                ? ClinicalAlertEntity.AlertSeverity.HIGH
+                : ClinicalAlertEntity.AlertSeverity.MEDIUM;
+
+        // Only create alerts for moderate severity or higher
+        if ("MILD".equalsIgnoreCase(severity) || "LOW".equalsIgnoreCase(severity)) {
+            log.debug("Chronic disease deterioration severity {} does not warrant alert", severity);
+            return null;
+        }
+
+        return createChronicDeteriorationAlert(
+            tenantId, patientId, condition, metric, severity, alertSeverity
+        );
+    }
+
+    /**
      * Get active alerts for a patient (sorted by severity and time)
      */
     public List<ClinicalAlertDTO> getActiveAlerts(String tenantId, String patientId) {
@@ -462,6 +494,77 @@ public class ClinicalAlertService {
             notificationTrigger.onAlertTriggered(tenantId, alertDTO);
         } catch (Exception e) {
             log.error("Failed to trigger health score decline alert notification for patient {}: {}",
+                    patientId, e.getMessage(), e);
+            // Don't fail the alert creation if notification fails
+        }
+
+        return alertDTO;
+    }
+
+    /**
+     * Create chronic disease deterioration alert (HIGH or MEDIUM based on severity)
+     */
+    private ClinicalAlertDTO createChronicDeteriorationAlert(
+        String tenantId,
+        String patientId,
+        String condition,
+        String metric,
+        String severity,
+        ClinicalAlertEntity.AlertSeverity alertSeverity
+    ) {
+        // Check for duplicates
+        if (isDuplicate(tenantId, patientId,
+                ClinicalAlertEntity.AlertType.CHRONIC_DETERIORATION)) {
+            log.info("Duplicate chronic deterioration alert suppressed for patient {}",
+                patientId);
+            return null;
+        }
+
+        String title = alertSeverity == ClinicalAlertEntity.AlertSeverity.HIGH
+            ? "Severe Chronic Disease Deterioration"
+            : "Chronic Disease Deterioration Detected";
+
+        String message = String.format(
+            "Patient's %s condition showing %s deterioration. Metric: %s. " +
+            "%s Review care plan and consider intervention to prevent further decline.",
+            condition,
+            severity.toLowerCase(),
+            metric,
+            alertSeverity == ClinicalAlertEntity.AlertSeverity.HIGH
+                ? "Urgent attention required."
+                : "Monitoring and care plan adjustment recommended."
+        );
+
+        ClinicalAlertEntity alert = ClinicalAlertEntity.builder()
+            .tenantId(tenantId)
+            .patientId(patientId)
+            .alertType(ClinicalAlertEntity.AlertType.CHRONIC_DETERIORATION)
+            .severity(alertSeverity)
+            .title(title)
+            .message(message)
+            .sourceEventType("chronic-disease-deterioration")
+            .sourceEventId(null)
+            .triggeredAt(Instant.now())
+            .escalated(alertSeverity == ClinicalAlertEntity.AlertSeverity.HIGH)
+            .escalatedAt(alertSeverity == ClinicalAlertEntity.AlertSeverity.HIGH
+                ? Instant.now() : null)
+            .status(ClinicalAlertEntity.AlertStatus.ACTIVE)
+            .build();
+
+        alert = alertRepository.save(alert);
+        publishAlertEvent(alert);
+
+        log.warn("{} ALERT: Chronic disease deterioration detected for patient {}: {} - {} ({})",
+            alertSeverity, patientId, condition, metric, severity);
+
+        // Convert to DTO
+        ClinicalAlertDTO alertDTO = mapToDTO(alert);
+
+        // Trigger notification
+        try {
+            notificationTrigger.onAlertTriggered(tenantId, alertDTO);
+        } catch (Exception e) {
+            log.error("Failed to trigger chronic deterioration alert notification for patient {}: {}",
                     patientId, e.getMessage(), e);
             // Don't fail the alert creation if notification fails
         }

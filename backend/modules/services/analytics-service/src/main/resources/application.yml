@@ -104,6 +104,16 @@ resilience4j:
         limitRefreshPeriod: 1s
         timeoutDuration: 5s
 
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
 # Logging
 logging:
   level:

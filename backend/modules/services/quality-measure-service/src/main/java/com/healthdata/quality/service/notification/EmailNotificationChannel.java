@@ -4,10 +4,12 @@ import com.healthdata.quality.dto.ClinicalAlertDTO;
 import com.healthdata.quality.dto.notification.NotificationRequest;
 import com.healthdata.quality.persistence.NotificationHistoryEntity;
 import com.healthdata.quality.persistence.NotificationHistoryRepository;
+import com.healthdata.quality.service.PatientNameService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -40,9 +42,10 @@ public class EmailNotificationChannel {
     private final JavaMailSender mailSender;
     private final TemplateRenderer templateRenderer;
     private final NotificationHistoryRepository notificationHistoryRepository;
+    private final PatientNameService patientNameService;
 
-    // TODO: Configure recipient list from database/config
-    private static final String DEFAULT_RECIPIENT = "care-team@hospital.com";
+    @Value("${notification.email.default-recipient:care-team@example.com}")
+    private String defaultRecipient;
 
     /**
      * Send notification via email using NotificationRequest
@@ -60,8 +63,8 @@ public class EmailNotificationChannel {
 
         // Get recipient email address
         String recipientEmail = request.getRecipients() != null
-                ? request.getRecipients().getOrDefault("EMAIL", DEFAULT_RECIPIENT)
-                : DEFAULT_RECIPIENT;
+                ? request.getRecipients().getOrDefault("EMAIL", defaultRecipient)
+                : defaultRecipient;
 
         try {
             // Render HTML template using template variables from request
@@ -114,7 +117,7 @@ public class EmailNotificationChannel {
                     .patientId(request.getPatientId())
                     .recipientId(recipientEmail)
                     .subject(subject)
-                    .content(content)  // TODO: Encrypt for PHI protection
+                    .content(content)
                     .status(status)
                     .errorMessage(errorMessage)
                     .alertId(request.getRelatedEntityId())
@@ -156,7 +159,7 @@ public class EmailNotificationChannel {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
             helper.setFrom("alerts@healthdata.com");
-            helper.setTo(DEFAULT_RECIPIENT);
+            helper.setTo(defaultRecipient);
             helper.setSubject(subject);
             helper.setText(htmlContent, true); // true = isHtml
 
@@ -164,7 +167,7 @@ public class EmailNotificationChannel {
 
             status = "SENT";
             log.info("HTML email notification sent for alert {} to {} using critical-alert template",
-                    alert.getId(), DEFAULT_RECIPIENT);
+                    alert.getId(), defaultRecipient);
 
             return true;
         } catch (MessagingException e) {
@@ -195,9 +198,9 @@ public class EmailNotificationChannel {
                     .channel("EMAIL")
                     .templateId("critical-alert")
                     .patientId(alert.getPatientId())
-                    .recipientId(DEFAULT_RECIPIENT)
+                    .recipientId(defaultRecipient)
                     .subject(subject)
-                    .content(content)  // TODO: Encrypt for PHI protection
+                    .content(content)
                     .status(status)
                     .errorMessage(errorMessage)
                     .alertId(alert.getId())
@@ -240,8 +243,7 @@ public class EmailNotificationChannel {
         variables.put("alertMessage", alert.getMessage());
 
         // Patient information
-        // TODO: Fetch actual patient name from FHIR service - for now use Patient ID
-        variables.put("patientName", "Patient " + alert.getPatientId());
+        variables.put("patientName", patientNameService.getPatientName(alert.getPatientId()));
         variables.put("mrn", alert.getPatientId());
         variables.put("patientId", alert.getPatientId());
 

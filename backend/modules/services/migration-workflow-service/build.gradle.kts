@@ -87,6 +87,9 @@ dependencies {
     // OpenAPI/Swagger
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
+    // Monitoring & Metrics
+    implementation(libs.bundles.monitoring)
+
     // Lombok
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)

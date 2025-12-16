@@ -30,6 +30,12 @@ dependencies {
     // OpenAPI/Swagger documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
+    // Monitoring & Metrics
+    implementation(libs.bundles.monitoring)
+
+    // Distributed Tracing
+    implementation(libs.bundles.tracing)
+
     // HAPI FHIR Client (for FHIR resource parsing and integration)
     implementation(libs.bundles.hapi.fhir.client)
 

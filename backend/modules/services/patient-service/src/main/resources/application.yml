@@ -85,6 +85,16 @@ rate-limiting:
   api:
     per-minute: 100
 
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
 # Logging
 logging:
   level:

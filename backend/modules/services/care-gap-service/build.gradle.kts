@@ -46,6 +46,12 @@ dependencies {
     // Kafka for care gap events
     implementation(libs.bundles.kafka)
 
+    // Monitoring & Metrics
+    implementation(libs.bundles.monitoring)
+
+    // Distributed Tracing
+    implementation(libs.bundles.tracing)
+
     // Resilience4j for circuit breaker, retry, and rate limiting
     implementation("io.github.resilience4j:resilience4j-spring-boot3:2.1.0")
     implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.1.0")

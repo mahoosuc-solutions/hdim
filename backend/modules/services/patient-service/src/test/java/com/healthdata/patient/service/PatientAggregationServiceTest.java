@@ -6,7 +6,6 @@ import com.healthdata.patient.client.ConsentServiceClient;
 import com.healthdata.patient.client.FhirServiceClient;
 import feign.FeignException;
 import org.hl7.fhir.r4.model.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -32,6 +31,11 @@ import static org.mockito.Mockito.*;
 @DisplayName("Patient Aggregation Service Tests (HIPAA Critical)")
 class PatientAggregationServiceTest {
 
+    // Static FhirContext for performance - initialized once per test class
+    // (matches established pattern in fhir-service tests)
+    private static final FhirContext FHIR_CONTEXT = FhirContext.forR4();
+    private static final IParser JSON_PARSER = FHIR_CONTEXT.newJsonParser();
+
     @Mock
     private FhirServiceClient fhirServiceClient;
 
@@ -41,16 +45,8 @@ class PatientAggregationServiceTest {
     @InjectMocks
     private PatientAggregationService aggregationService;
 
-    private IParser jsonParser;
-
     private static final String TENANT_ID = "tenant-123";
     private static final String PATIENT_ID = "patient-456";
-
-    @BeforeEach
-    void setUp() {
-        FhirContext fhirContext = FhirContext.forR4();
-        jsonParser = fhirContext.newJsonParser();
-    }
 
     // ==================== Get Comprehensive Health Record Tests ====================
 
@@ -1034,14 +1030,14 @@ class PatientAggregationServiceTest {
             bundle.addEntry().setResource(resource);
         }
 
-        return jsonParser.encodeResourceToString(bundle);
+        return JSON_PARSER.encodeResourceToString(bundle);
     }
 
     private String createEmptyJsonBundle() {
         Bundle bundle = new Bundle();
         bundle.setType(Bundle.BundleType.COLLECTION);
         bundle.setTotal(0);
-        return jsonParser.encodeResourceToString(bundle);
+        return JSON_PARSER.encodeResourceToString(bundle);
     }
 
     private Resource createResource(String resourceType, int index) {

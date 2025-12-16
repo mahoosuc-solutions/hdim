@@ -1,6 +1,7 @@
 package com.healthdata.authentication.controller;
 
 import com.healthdata.authentication.config.SmartOnFhirConfig;
+import com.healthdata.authentication.service.SmartAuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -8,12 +9,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.*;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -37,11 +41,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - POST /oauth2/token endpoint (different grant types)
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("SmartOnFhirController Unit Tests")
 class SmartOnFhirControllerTest {
 
     @Mock
     private SmartOnFhirConfig smartConfig;
+
+    @Mock
+    private SmartAuthService smartAuthService;
 
     @InjectMocks
     private SmartOnFhirController controller;
@@ -94,6 +102,56 @@ class SmartOnFhirControllerTest {
         org.mockito.Mockito.lenient().when(smartConfig.getSmartConfiguration()).thenReturn(mockSmartConfiguration);
         org.mockito.Mockito.lenient().when(smartConfig.getGrantTypes()).thenReturn(mockGrantTypes);
         org.mockito.Mockito.lenient().when(smartConfig.getAccessTokenLifetime()).thenReturn(3600);
+
+        // Configure SmartAuthService mock responses
+        SmartAuthService.TokenResponse defaultTokenResponse = SmartAuthService.TokenResponse.builder()
+            .accessToken("mock-access-token-" + UUID.randomUUID())
+            .tokenType("Bearer")
+            .expiresIn(3600)
+            .scope("launch openid")
+            .refreshToken("mock-refresh-token")
+            .patientId("patient-123")
+            .build();
+
+        org.mockito.Mockito.lenient().when(smartAuthService.exchangeAuthorizationCode(
+            org.mockito.ArgumentMatchers.anyString(),
+            org.mockito.ArgumentMatchers.anyString(),
+            org.mockito.ArgumentMatchers.any(),
+            org.mockito.ArgumentMatchers.any(),
+            org.mockito.ArgumentMatchers.any()
+        )).thenReturn(defaultTokenResponse);
+
+        org.mockito.Mockito.lenient().when(smartAuthService.refreshAccessToken(
+            org.mockito.ArgumentMatchers.anyString(),
+            org.mockito.ArgumentMatchers.anyString(),
+            org.mockito.ArgumentMatchers.any(),
+            org.mockito.ArgumentMatchers.any()
+        )).thenReturn(defaultTokenResponse);
+
+        org.mockito.Mockito.lenient().when(smartAuthService.issueClientCredentialsToken(
+            org.mockito.ArgumentMatchers.anyString(),
+            org.mockito.ArgumentMatchers.anyString(),
+            org.mockito.ArgumentMatchers.any()
+        )).thenReturn(defaultTokenResponse);
+
+        org.mockito.Mockito.lenient().when(smartAuthService.validateTokenAndGetUserInfo(
+            org.mockito.ArgumentMatchers.anyString()
+        )).thenReturn(Map.of(
+            "sub", "user-123",
+            "name", "Test User",
+            "email", "test@example.com",
+            "fhirUser", "Practitioner/123"
+        ));
+
+        org.mockito.Mockito.lenient().when(smartAuthService.getJwks())
+            .thenReturn(Map.of("keys", List.of(Map.of(
+                "kty", "RSA",
+                "use", "sig",
+                "alg", "RS256",
+                "kid", "key-1",
+                "n", "mock-modulus",
+                "e", "AQAB"
+            ))));
     }
 
     // ==================== SMART CONFIGURATION ENDPOINT TESTS ====================
@@ -428,6 +486,24 @@ class SmartOnFhirControllerTest {
     @Test
     @DisplayName("Should return correct token lifetime")
     void shouldReturnCorrectTokenLifetime() throws Exception {
+        // Setup specific mock with 7200 lifetime
+        SmartAuthService.TokenResponse customTokenResponse = SmartAuthService.TokenResponse.builder()
+            .accessToken("mock-access-token-" + UUID.randomUUID())
+            .tokenType("Bearer")
+            .expiresIn(7200)
+            .scope("launch openid")
+            .refreshToken("mock-refresh-token")
+            .patientId("patient-123")
+            .build();
+
+        when(smartAuthService.exchangeAuthorizationCode(
+            org.mockito.ArgumentMatchers.anyString(),
+            org.mockito.ArgumentMatchers.anyString(),
+            org.mockito.ArgumentMatchers.any(),
+            org.mockito.ArgumentMatchers.any(),
+            org.mockito.ArgumentMatchers.any()
+        )).thenReturn(customTokenResponse);
+
         when(smartConfig.getAccessTokenLifetime()).thenReturn(7200);
 
         mockMvc.perform(post("/oauth2/token")

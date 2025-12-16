@@ -123,6 +123,16 @@ rate-limiting:
   api:
     per-minute: 60
 
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
 # Logging Configuration
 logging:
   level:

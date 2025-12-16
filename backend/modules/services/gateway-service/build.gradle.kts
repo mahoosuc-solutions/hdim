@@ -35,6 +35,12 @@ dependencies {
     // OpenAPI/Swagger for API documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
+    // Monitoring & Metrics
+    implementation(libs.bundles.monitoring)
+
+    // Distributed Tracing
+    implementation(libs.bundles.tracing)
+
     // Testing
     testImplementation(libs.bundles.testing)
 }

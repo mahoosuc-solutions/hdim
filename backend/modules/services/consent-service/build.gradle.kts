@@ -19,6 +19,9 @@ dependencies {
     // OpenAPI/Swagger documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
+    // Monitoring & Metrics
+    implementation(libs.bundles.monitoring)
+
     // Resilience4j for fault tolerance
     implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
     implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.2.0")

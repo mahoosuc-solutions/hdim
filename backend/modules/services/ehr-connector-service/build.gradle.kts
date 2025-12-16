@@ -53,6 +53,9 @@ dependencies {
     // OpenAPI/Swagger
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 
+    // Monitoring & Metrics
+    implementation(libs.bundles.monitoring)
+
     // Validation
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
@@ -69,7 +72,7 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.mockito:mockito-core:5.7.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.7.0")
-    testImplementation("com.github.tomakehurst:wiremock-jre8:2.35.1")
+    testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.1") // Use standalone version with all dependencies
     testImplementation("io.projectreactor:reactor-test") // For StepVerifier
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0") // For MockWebServer
     // Spring Kafka needed for class loading (audit module depends on KafkaTemplate)

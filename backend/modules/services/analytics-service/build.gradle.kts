@@ -30,6 +30,9 @@ dependencies {
     // OpenAPI/Swagger documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
+    // Monitoring & Metrics
+    implementation(libs.bundles.monitoring)
+
     // Jackson for JSON processing
     implementation(libs.jackson.databind)
     implementation(libs.jackson.datatype.jsr310)

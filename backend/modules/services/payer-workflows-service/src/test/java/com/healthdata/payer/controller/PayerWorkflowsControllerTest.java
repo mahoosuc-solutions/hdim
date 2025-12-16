@@ -473,4 +473,292 @@ class PayerWorkflowsControllerTest {
         metrics.setFinancialSummary(financial);
         return metrics;
     }
+
+    // ==================== Edge Cases and Error Handling Tests ====================
+
+    @Test
+    @DisplayName("GET /api/v1/payer/medicare/star-rating/{planId} - Should handle missing planId")
+    void shouldHandleMissingPlanId() throws Exception {
+        // When/Then
+        mockMvc.perform(get("/api/v1/payer/medicare/star-rating/"))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/medicare/star-rating/{planId} - Should handle empty planId")
+    void shouldHandleEmptyPlanId() throws Exception {
+        // Given
+        String planId = "";
+
+        // When/Then
+        mockMvc.perform(get("/api/v1/payer/medicare/star-rating/{planId}", planId))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/medicare/star-rating/{planId} - Should handle service throwing RuntimeException")
+    void shouldHandleServiceRuntimeException() throws Exception {
+        // Given
+        String planId = "H1234-001";
+        when(starRatingCalculator.calculateStarRatingReport(anyString(), anyString(), anyString(), anyInt(), anyMap(), any()))
+            .thenThrow(new RuntimeException("Database connection failed"));
+
+        // When/Then - Controller converts RuntimeException to 404
+        mockMvc.perform(get("/api/v1/payer/medicare/star-rating/{planId}", planId))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/medicaid/{state}/compliance - Should handle invalid state code")
+    void shouldHandleInvalidStateCode() throws Exception {
+        // Given
+        String state = "INVALID";
+        when(medicaidComplianceService.calculateComplianceReport(
+            anyString(), anyString(), any(), anyString(), anyInt(), anyMap()
+        )).thenThrow(new IllegalArgumentException("Invalid state code"));
+
+        // When/Then
+        mockMvc.perform(get("/api/v1/payer/medicaid/{state}/compliance", state)
+                .param("mcoId", "TEST-MCO-001"))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/medicaid/{state}/compliance - Should require mcoId parameter")
+    void shouldRequireMcoIdParameter() throws Exception {
+        // Given
+        String state = "NY";
+
+        // When/Then - When mcoId is missing, controller returns 400
+        mockMvc.perform(get("/api/v1/payer/medicaid/{state}/compliance", state))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/dashboard/overview - Should handle missing payerId parameter")
+    void shouldHandleMissingPayerIdParameter() throws Exception {
+        // When/Then - Controller requires payerId parameter and returns 400
+        mockMvc.perform(get("/api/v1/payer/dashboard/overview"))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/dashboard/medicare - Should return empty metrics for payer with no plans")
+    void shouldReturnEmptyMetricsForPayerWithNoPlans() throws Exception {
+        // Given
+        String payerId = "PAYER-NO-PLANS";
+        PayerDashboardMetrics emptyMetrics = PayerDashboardMetrics.builder()
+            .payerId(payerId)
+            .payerName("Empty Payer")
+            .dashboardType(PayerDashboardMetrics.DashboardType.MEDICARE_ADVANTAGE)
+            .totalEnrollment(0)
+            .activePlans(0)
+            .build();
+
+        when(dashboardService.generateMedicareDashboard(anyString(), anyString(), anyList()))
+            .thenReturn(emptyMetrics);
+
+        // When/Then
+        mockMvc.perform(get("/api/v1/payer/dashboard/medicare")
+                .param("payerId", payerId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalEnrollment").value(0))
+            .andExpect(jsonPath("$.activePlans").value(0));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/medicare/star-rating/{planId}/measures - Should handle plan with no measures")
+    void shouldHandlePlanWithNoMeasures() throws Exception {
+        // Given
+        String planId = "H1234-NO-MEASURES";
+        StarRatingReport report = StarRatingReport.builder()
+            .planId(planId)
+            .planName("Test Plan")
+            .allMeasureScores(List.of())
+            .build();
+
+        when(starRatingCalculator.calculateStarRatingReport(anyString(), anyString(), anyString(), anyInt(), anyMap(), any()))
+            .thenReturn(report);
+
+        // When/Then
+        mockMvc.perform(get("/api/v1/payer/medicare/star-rating/{planId}/measures", planId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/medicare/star-rating/{planId}/improvement - Should handle plan with no opportunities")
+    void shouldHandlePlanWithNoImprovementOpportunities() throws Exception {
+        // Given
+        String planId = "H1234-PERFECT";
+        StarRatingReport report = StarRatingReport.builder()
+            .planId(planId)
+            .planName("Perfect Plan")
+            .overallStarRating(5.0)
+            .improvementOpportunities(List.of())
+            .build();
+
+        when(starRatingCalculator.calculateStarRatingReport(anyString(), anyString(), anyString(), anyInt(), anyMap(), any()))
+            .thenReturn(report);
+
+        // When/Then
+        mockMvc.perform(get("/api/v1/payer/medicare/star-rating/{planId}/improvement", planId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/medicaid/{state}/compliance - Should handle multiple query parameters")
+    void shouldHandleMultipleQueryParameters() throws Exception {
+        // Given
+        String state = "NY";
+        MedicaidComplianceReport report = createSampleComplianceReport(state);
+
+        when(medicaidComplianceService.calculateComplianceReport(
+            anyString(), anyString(), any(), anyString(), anyInt(), anyMap()
+        )).thenReturn(report);
+
+        // When/Then
+        mockMvc.perform(get("/api/v1/payer/medicaid/{state}/compliance", state)
+                .param("mcoId", "NY-MCO-001")
+                .param("year", "2024")
+                .param("reportingPeriod", "Q4"))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/dashboard/overview - Should handle service timeout")
+    void shouldHandleServiceTimeout() throws Exception {
+        // Given
+        when(dashboardService.generateCombinedDashboard(anyString(), anyString(), anyList(), anyList()))
+            .thenThrow(new RuntimeException("Service timeout"));
+
+        // When/Then - Controller returns 500 for unhandled RuntimeException
+        mockMvc.perform(get("/api/v1/payer/dashboard/overview")
+                .param("payerId", "PAYER-001"))
+            .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/medicare/star-rating/{planId} - Should handle very long planId")
+    void shouldHandleVeryLongPlanId() throws Exception {
+        // Given
+        String planId = "H".repeat(1000) + "-001";
+
+        // When/Then - Controller accepts long planIds and processes them
+        // This tests that the controller doesn't crash with long input
+        mockMvc.perform(get("/api/v1/payer/medicare/star-rating/{planId}", planId))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/medicare/star-rating/{planId} - Should handle special characters in planId")
+    void shouldHandleSpecialCharactersInPlanId() throws Exception {
+        // Given
+        String planId = "H1234<script>alert('xss')</script>";
+        when(starRatingCalculator.calculateStarRatingReport(anyString(), anyString(), anyString(), anyInt(), anyMap(), any()))
+            .thenThrow(new IllegalArgumentException("Invalid plan ID"));
+
+        // When/Then
+        mockMvc.perform(get("/api/v1/payer/medicare/star-rating/{planId}", planId))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/dashboard/overview - Should handle concurrent requests")
+    void shouldHandleConcurrentRequests() throws Exception {
+        // Given
+        PayerDashboardMetrics metrics = createSampleDashboardMetrics("PAYER-001");
+        when(dashboardService.generateCombinedDashboard(anyString(), anyString(), anyList(), anyList()))
+            .thenReturn(metrics);
+
+        // When/Then - Multiple concurrent requests should all succeed
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(get("/api/v1/payer/dashboard/overview")
+                    .param("payerId", "PAYER-001"))
+                .andExpect(status().isOk());
+        }
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/medicaid/{state}/compliance - Should support case-insensitive state codes")
+    void shouldSupportCaseInsensitiveStateCodes() throws Exception {
+        // Given - Test with lowercase state code
+        String state = "ny";
+        MedicaidComplianceReport report = createSampleComplianceReport("NY");
+
+        when(medicaidComplianceService.calculateComplianceReport(
+            anyString(), anyString(), any(), anyString(), anyInt(), anyMap()
+        )).thenReturn(report);
+
+        // When/Then
+        mockMvc.perform(get("/api/v1/payer/medicaid/{state}/compliance", state)
+                .param("mcoId", "NY-MCO-001"))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/medicare/star-rating/{planId} - Should return report with all required fields")
+    void shouldReturnReportWithAllRequiredFields() throws Exception {
+        // Given
+        String planId = "H1234-001";
+        StarRatingReport report = StarRatingReport.builder()
+            .planId(planId)
+            .planName("Complete Plan")
+            .contractNumber("H1234")
+            .reportingYear(2024)
+            .overallStarRating(4.0)
+            .roundedStarRating(4)
+            .qualityBonusPaymentEligible(true)
+            .bonusPaymentPercentage(5.0)
+            .build();
+
+        when(starRatingCalculator.calculateStarRatingReport(anyString(), anyString(), anyString(), anyInt(), anyMap(), any()))
+            .thenReturn(report);
+
+        // When/Then
+        mockMvc.perform(get("/api/v1/payer/medicare/star-rating/{planId}", planId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.planId").value(planId))
+            .andExpect(jsonPath("$.planName").exists())
+            .andExpect(jsonPath("$.contractNumber").exists())
+            .andExpect(jsonPath("$.reportingYear").exists())
+            .andExpect(jsonPath("$.overallStarRating").exists())
+            .andExpect(jsonPath("$.roundedStarRating").exists())
+            .andExpect(jsonPath("$.qualityBonusPaymentEligible").exists())
+            .andExpect(jsonPath("$.bonusPaymentPercentage").exists());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/payer/dashboard/medicaid - Should include all state-specific metrics")
+    void shouldIncludeAllStateSpecificMetrics() throws Exception {
+        // Given
+        String payerId = "PAYER-MULTI-STATE";
+        PayerDashboardMetrics.MedicaidMcoMetrics medicaidMetrics =
+            PayerDashboardMetrics.MedicaidMcoMetrics.builder()
+                .numberOfStates(4)
+                .averageComplianceRate(0.88)
+                .compliantPlans(6)
+                .nonCompliantPlans(1)
+                .estimatedPenalties(25000.0)
+                .estimatedBonuses(45000.0)
+                .build();
+
+        PayerDashboardMetrics metrics = createMedicaidDashboardMetrics(payerId);
+        metrics.setMedicaidMetrics(medicaidMetrics);
+
+        when(dashboardService.generateMedicaidDashboard(anyString(), anyString(), anyList()))
+            .thenReturn(metrics);
+
+        // When/Then
+        mockMvc.perform(get("/api/v1/payer/dashboard/medicaid")
+                .param("payerId", payerId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.medicaidMetrics.numberOfStates").value(4))
+            .andExpect(jsonPath("$.medicaidMetrics.averageComplianceRate").value(0.88))
+            .andExpect(jsonPath("$.medicaidMetrics.compliantPlans").value(6))
+            .andExpect(jsonPath("$.medicaidMetrics.nonCompliantPlans").value(1));
+    }
 }

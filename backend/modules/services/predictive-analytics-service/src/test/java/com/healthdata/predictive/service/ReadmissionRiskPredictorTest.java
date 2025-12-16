@@ -8,6 +8,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -23,6 +25,7 @@ import static org.mockito.Mockito.*;
  * Testing 30/90-day hospital readmission risk prediction
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("ReadmissionRiskPredictor Tests")
 class ReadmissionRiskPredictorTest {
 
@@ -42,6 +45,10 @@ class ReadmissionRiskPredictorTest {
     void setUp() {
         sampleFeatures = createSampleFeatures();
         samplePatientData = createSamplePatientData();
+
+        // Mock normalizeFeatures to return the feature vector as-is for simplicity
+        when(featureExtractor.normalizeFeatures(any(double[].class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     // ==================== Basic Prediction Tests ====================

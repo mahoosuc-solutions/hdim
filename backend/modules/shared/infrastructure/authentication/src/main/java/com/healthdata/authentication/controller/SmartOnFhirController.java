@@ -1,6 +1,7 @@
 package com.healthdata.authentication.controller;
 
 import com.healthdata.authentication.config.SmartOnFhirConfig;
+import com.healthdata.authentication.service.SmartAuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -31,6 +32,7 @@ import java.util.Map;
 public class SmartOnFhirController {
 
     private final SmartOnFhirConfig smartConfig;
+    private final SmartAuthService smartAuthService;
 
     /**
      * SMART configuration discovery endpoint.
@@ -173,6 +175,7 @@ public class SmartOnFhirController {
 
     /**
      * Handle authorization code grant.
+     * Exchanges an authorization code for access and refresh tokens.
      */
     private ResponseEntity<Map<String, Object>> handleAuthorizationCodeGrant(
         String code,
@@ -188,19 +191,40 @@ public class SmartOnFhirController {
             ));
         }
 
-        // TODO: Implement actual code exchange
-        // This is a placeholder response for demonstration
-        return ResponseEntity.ok(Map.of(
-            "access_token", "placeholder_access_token",
-            "token_type", "Bearer",
-            "expires_in", smartConfig.getAccessTokenLifetime(),
-            "scope", "launch/patient patient/*.read openid",
-            "patient", "12345" // Patient context for SMART launch
-        ));
+        // Exchange authorization code for tokens
+        SmartAuthService.TokenResponse tokenResponse = smartAuthService.exchangeAuthorizationCode(
+                code, clientId, clientSecret, redirectUri, codeVerifier);
+
+        if (tokenResponse == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "invalid_grant",
+                "error_description", "Authorization code is invalid, expired, or has already been used"
+            ));
+        }
+
+        // Build response per SMART on FHIR spec
+        var response = new java.util.LinkedHashMap<String, Object>();
+        response.put("access_token", tokenResponse.getAccessToken());
+        response.put("token_type", tokenResponse.getTokenType());
+        response.put("expires_in", tokenResponse.getExpiresIn());
+        response.put("scope", tokenResponse.getScope());
+
+        if (tokenResponse.getRefreshToken() != null) {
+            response.put("refresh_token", tokenResponse.getRefreshToken());
+        }
+
+        // Include patient context if present (for launch/patient scope)
+        if (tokenResponse.getPatientId() != null) {
+            response.put("patient", tokenResponse.getPatientId());
+        }
+
+        log.info("Authorization code exchanged successfully for client: {}", clientId);
+        return ResponseEntity.ok(response);
     }
 
     /**
      * Handle refresh token grant.
+     * Issues new access and refresh tokens using a valid refresh token.
      */
     private ResponseEntity<Map<String, Object>> handleRefreshTokenGrant(
         String refreshToken,
@@ -215,17 +239,35 @@ public class SmartOnFhirController {
             ));
         }
 
-        // TODO: Implement actual token refresh
-        return ResponseEntity.ok(Map.of(
-            "access_token", "placeholder_refreshed_access_token",
-            "token_type", "Bearer",
-            "expires_in", smartConfig.getAccessTokenLifetime(),
-            "scope", scope != null ? scope : ""
-        ));
+        // Refresh access token using refresh token
+        SmartAuthService.TokenResponse tokenResponse = smartAuthService.refreshAccessToken(
+                refreshToken, clientId, clientSecret, scope);
+
+        if (tokenResponse == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "invalid_grant",
+                "error_description", "Refresh token is invalid or expired"
+            ));
+        }
+
+        // Build response
+        var response = new java.util.LinkedHashMap<String, Object>();
+        response.put("access_token", tokenResponse.getAccessToken());
+        response.put("token_type", tokenResponse.getTokenType());
+        response.put("expires_in", tokenResponse.getExpiresIn());
+        response.put("scope", tokenResponse.getScope());
+
+        if (tokenResponse.getRefreshToken() != null) {
+            response.put("refresh_token", tokenResponse.getRefreshToken());
+        }
+
+        log.info("Token refreshed successfully for client: {}", clientId);
+        return ResponseEntity.ok(response);
     }
 
     /**
      * Handle client credentials grant (backend services).
+     * Issues tokens for backend service-to-service authentication without user context.
      */
     private ResponseEntity<Map<String, Object>> handleClientCredentialsGrant(
         String clientId,
@@ -239,13 +281,26 @@ public class SmartOnFhirController {
             ));
         }
 
-        // TODO: Implement actual client authentication
-        return ResponseEntity.ok(Map.of(
-            "access_token", "placeholder_system_access_token",
-            "token_type", "Bearer",
-            "expires_in", smartConfig.getAccessTokenLifetime(),
-            "scope", scope != null ? scope : "system/*.read"
-        ));
+        // Issue client credentials token
+        SmartAuthService.TokenResponse tokenResponse = smartAuthService.issueClientCredentialsToken(
+                clientId, clientSecret, scope);
+
+        if (tokenResponse == null) {
+            return ResponseEntity.status(401).body(Map.of(
+                "error", "invalid_client",
+                "error_description", "Client authentication failed"
+            ));
+        }
+
+        // Build response (no refresh token for client credentials)
+        var response = new java.util.LinkedHashMap<String, Object>();
+        response.put("access_token", tokenResponse.getAccessToken());
+        response.put("token_type", tokenResponse.getTokenType());
+        response.put("expires_in", tokenResponse.getExpiresIn());
+        response.put("scope", tokenResponse.getScope());
+
+        log.info("Client credentials token issued for client: {}", clientId);
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -261,20 +316,9 @@ public class SmartOnFhirController {
     public ResponseEntity<Map<String, Object>> getJwks() {
         log.debug("JWKS requested");
 
-        // TODO: Implement actual JWKS generation from key store
-        // This is a placeholder structure
-        return ResponseEntity.ok(Map.of(
-            "keys", new Object[]{
-                Map.of(
-                    "kty", "RSA",
-                    "use", "sig",
-                    "alg", "RS256",
-                    "kid", "hdim-key-1",
-                    "n", "placeholder_modulus",
-                    "e", "AQAB"
-                )
-            }
-        ));
+        // Get JWKS from authentication service
+        Map<String, Object> jwks = smartAuthService.getJwks();
+        return ResponseEntity.ok(jwks);
     }
 
     /**
@@ -299,12 +343,20 @@ public class SmartOnFhirController {
             ));
         }
 
-        // TODO: Implement actual token validation and user lookup
-        return ResponseEntity.ok(Map.of(
-            "sub", "user123",
-            "name", "Test User",
-            "email", "test@example.com",
-            "fhirUser", "Practitioner/123"
-        ));
+        // Extract token from Authorization header
+        String token = authorization.substring(7); // Remove "Bearer " prefix
+
+        // Validate token and get user info
+        Map<String, Object> userInfo = smartAuthService.validateTokenAndGetUserInfo(token);
+
+        if (userInfo == null) {
+            return ResponseEntity.status(401).body(Map.of(
+                "error", "invalid_token",
+                "error_description", "Token is invalid or expired"
+            ));
+        }
+
+        log.debug("UserInfo returned for user: {}", userInfo.get("sub"));
+        return ResponseEntity.ok(userInfo);
     }
 }

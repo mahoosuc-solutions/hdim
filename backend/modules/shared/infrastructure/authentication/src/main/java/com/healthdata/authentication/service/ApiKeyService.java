@@ -8,6 +8,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -340,14 +342,85 @@ public class ApiKeyService {
             return true;
         }
 
-        // Check exact match
+        // Check exact match first
         if (allowedIps.contains(ipAddress)) {
             return true;
         }
 
-        // TODO: Implement CIDR matching for range-based IP restrictions
-        // For now, only exact matches are supported
+        // Check CIDR range matches
+        for (String allowedIp : allowedIps) {
+            if (allowedIp.contains("/") && isIpInCidrRange(ipAddress, allowedIp)) {
+                return true;
+            }
+        }
 
         return false;
+    }
+
+    /**
+     * Check if an IP address falls within a CIDR range.
+     *
+     * @param ipAddress the IP address to check (e.g., "192.168.1.100")
+     * @param cidr the CIDR range (e.g., "192.168.1.0/24")
+     * @return true if the IP is within the CIDR range
+     */
+    private boolean isIpInCidrRange(String ipAddress, String cidr) {
+        try {
+            String[] cidrParts = cidr.split("/");
+            if (cidrParts.length != 2) {
+                log.warn("Invalid CIDR notation: {}", cidr);
+                return false;
+            }
+
+            String networkAddress = cidrParts[0];
+            int prefixLength = Integer.parseInt(cidrParts[1]);
+
+            // Parse IP addresses
+            InetAddress ip = InetAddress.getByName(ipAddress);
+            InetAddress network = InetAddress.getByName(networkAddress);
+
+            byte[] ipBytes = ip.getAddress();
+            byte[] networkBytes = network.getAddress();
+
+            // Check if both are same IP version (IPv4 or IPv6)
+            if (ipBytes.length != networkBytes.length) {
+                return false;
+            }
+
+            // Validate prefix length
+            int maxPrefix = ipBytes.length * 8;
+            if (prefixLength < 0 || prefixLength > maxPrefix) {
+                log.warn("Invalid prefix length {} for CIDR: {}", prefixLength, cidr);
+                return false;
+            }
+
+            // Create mask and compare
+            int fullBytes = prefixLength / 8;
+            int remainingBits = prefixLength % 8;
+
+            // Check full bytes
+            for (int i = 0; i < fullBytes; i++) {
+                if (ipBytes[i] != networkBytes[i]) {
+                    return false;
+                }
+            }
+
+            // Check remaining bits if any
+            if (remainingBits > 0 && fullBytes < ipBytes.length) {
+                int mask = 0xFF << (8 - remainingBits);
+                if ((ipBytes[fullBytes] & mask) != (networkBytes[fullBytes] & mask)) {
+                    return false;
+                }
+            }
+
+            return true;
+
+        } catch (UnknownHostException e) {
+            log.warn("Invalid IP address in CIDR check: ip={}, cidr={}", ipAddress, cidr);
+            return false;
+        } catch (NumberFormatException e) {
+            log.warn("Invalid prefix length in CIDR: {}", cidr);
+            return false;
+        }
     }
 }

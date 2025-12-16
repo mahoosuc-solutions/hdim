@@ -20,6 +20,18 @@ configurations.all {
     }
 }
 
+// Exclude hibernate-types libraries from test runtime to avoid H2 compatibility issues
+configurations {
+    testRuntimeClasspath {
+        exclude(group = "com.vladmihalcea", module = "hibernate-types-60")
+        exclude(group = "io.hypersistence", module = "hypersistence-utils-hibernate-63")
+    }
+    testCompileClasspath {
+        exclude(group = "com.vladmihalcea", module = "hibernate-types-60")
+        exclude(group = "io.hypersistence", module = "hypersistence-utils-hibernate-63")
+    }
+}
+
 dependencies {
     // Shared modules
     implementation(project(":modules:shared:domain:common"))
@@ -37,6 +49,9 @@ dependencies {
     implementation(libs.bundles.spring.boot.web)
     implementation(libs.bundles.spring.boot.data)
     implementation(libs.spring.boot.starter.actuator)
+
+    // WebFlux for WebClient
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
 
     // WebSocket support
     implementation("org.springframework.boot:spring-boot-starter-websocket")

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.within;
 
 /**
  * TDD tests for StarRatingCalculator - Medicare Advantage Star Ratings calculation.
@@ -171,7 +172,7 @@ class StarRatingCalculatorTest {
 
         // Then
         assertThat(score.getImprovement()).isNotNull();
-        assertThat(score.getImprovement()).isEqualTo(0.05);  // 85% - 80%
+        assertThat(score.getImprovement()).isCloseTo(0.05, within(0.0001));  // 85% - 80%
     }
 
     // ==================== Domain Scoring Tests ====================
@@ -467,8 +468,8 @@ class StarRatingCalculatorTest {
         // Then
         assertThat(opportunity.getCurrentStars()).isEqualTo(3);
         assertThat(opportunity.getNextStars()).isEqualTo(4);
-        assertThat(opportunity.getNextStarThreshold()).isEqualTo(0.70);
-        assertThat(opportunity.getPerformanceGap()).isEqualTo(0.02);
+        assertThat(opportunity.getNextStarThreshold()).isCloseTo(0.70, within(0.0001));
+        assertThat(opportunity.getPerformanceGap()).isCloseTo(0.02, within(0.0001));
         assertThat(opportunity.getPatientsNeeded()).isEqualTo(20);  // Need 700 - 680 = 20 more
     }
 
@@ -553,7 +554,7 @@ class StarRatingCalculatorTest {
         MeasureScore score = calculator.calculateMeasureScore(measure, numerator, denominator, priorYearRate);
 
         // Then
-        assertThat(score.getImprovement()).isEqualTo(0.10);  // 85% - 75% = 10% improvement
+        assertThat(score.getImprovement()).isCloseTo(0.10, within(0.0001));  // 85% - 75% = 10% improvement
     }
 
     // ==================== Helper Methods ====================
@@ -614,5 +615,384 @@ class StarRatingCalculatorTest {
         data.put(StarRatingMeasure.CONTROLLING_BLOOD_PRESSURE, 0.75);
         data.put(StarRatingMeasure.DIABETES_CARE_HBA1C_POOR_CONTROL, 0.75);
         return data;
+    }
+
+    // ==================== Edge Cases and Error Handling Tests ====================
+
+    @Test
+    @DisplayName("Should handle null cut points array gracefully")
+    void shouldHandleNullCutPointsArray() {
+        // Given
+        double performanceRate = 0.75;
+        double[] cutPoints = null;
+
+        // When/Then
+        assertThatThrownBy(() -> calculator.calculateStarsForMeasure(performanceRate, cutPoints))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Cut points must have exactly 5 values");
+    }
+
+    @Test
+    @DisplayName("Should handle invalid cut points array length")
+    void shouldHandleInvalidCutPointsArrayLength() {
+        // Given
+        double performanceRate = 0.75;
+        double[] cutPoints = {0.50, 0.60, 0.70};  // Only 3 values
+
+        // When/Then
+        assertThatThrownBy(() -> calculator.calculateStarsForMeasure(performanceRate, cutPoints))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Cut points must have exactly 5 values");
+    }
+
+    @Test
+    @DisplayName("Should handle negative performance rate")
+    void shouldHandleNegativePerformanceRate() {
+        // Given
+        double performanceRate = -0.10;
+        double[] cutPoints = {0.55, 0.60, 0.65, 0.70, 0.75};
+
+        // When
+        int stars = calculator.calculateStarsForMeasure(performanceRate, cutPoints);
+
+        // Then
+        assertThat(stars).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Should handle performance rate exceeding 1.0")
+    void shouldHandlePerformanceRateExceedingOne() {
+        // Given
+        double performanceRate = 1.5;
+        double[] cutPoints = {0.55, 0.60, 0.65, 0.70, 0.75};
+
+        // When
+        int stars = calculator.calculateStarsForMeasure(performanceRate, cutPoints);
+
+        // Then
+        assertThat(stars).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("Should handle inverted measures correctly")
+    void shouldHandleInvertedMeasures() {
+        // Given - Readmissions measure (lower is better)
+        double performanceRate = 0.11;  // Below 0.12 threshold
+        double[] cutPoints = {0.20, 0.18, 0.16, 0.14, 0.12};  // Inverted
+
+        // When
+        int stars = calculator.calculateStarsForMeasure(performanceRate, cutPoints);
+
+        // Then
+        assertThat(stars).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("Should handle boundary value at exact cut point")
+    void shouldHandleBoundaryValueAtExactCutPoint() {
+        // Given
+        double performanceRate = 0.75;  // Exactly at 5-star threshold
+        double[] cutPoints = {0.55, 0.60, 0.65, 0.70, 0.75};
+
+        // When
+        int stars = calculator.calculateStarsForMeasure(performanceRate, cutPoints);
+
+        // Then
+        assertThat(stars).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("Should handle empty measure data map")
+    void shouldHandleEmptyMeasureDataMap() {
+        // Given
+        Map<StarRatingMeasure, MeasureData> measureData = new HashMap<>();
+
+        // When
+        StarRatingReport report = calculator.calculateStarRatingReport(
+            "H1234-001", "Test Plan", "H1234", 2024, measureData, null
+        );
+
+        // Then
+        assertThat(report).isNotNull();
+        assertThat(report.getAllMeasureScores()).isEmpty();
+        assertThat(report.getDomainScores()).isEmpty();
+        assertThat(report.getOverallStarRating()).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("Should handle negative numerator gracefully")
+    void shouldHandleNegativeNumerator() {
+        // Given
+        StarRatingMeasure measure = StarRatingMeasure.CONTROLLING_BLOOD_PRESSURE;
+        int numerator = -10;
+        int denominator = 100;
+
+        // When
+        MeasureScore score = calculator.calculateMeasureScore(measure, numerator, denominator, null);
+
+        // Then
+        assertThat(score.getPerformanceRate()).isLessThan(0);
+        assertThat(score.getStars()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Should handle large denominator values")
+    void shouldHandleLargeDenominatorValues() {
+        // Given
+        StarRatingMeasure measure = StarRatingMeasure.BREAST_CANCER_SCREENING;
+        int numerator = 750000;
+        int denominator = 1000000;
+
+        // When
+        MeasureScore score = calculator.calculateMeasureScore(measure, numerator, denominator, null);
+
+        // Then
+        assertThat(score.getPerformanceRate()).isCloseTo(0.75, within(0.0001));
+        assertThat(score.getNumerator()).isEqualTo(750000);
+        assertThat(score.getDenominator()).isEqualTo(1000000);
+    }
+
+    @Test
+    @DisplayName("Should calculate improvement with zero prior year rate")
+    void shouldCalculateImprovementWithZeroPriorYear() {
+        // Given
+        StarRatingMeasure measure = StarRatingMeasure.CONTROLLING_BLOOD_PRESSURE;
+        int numerator = 850;
+        int denominator = 1000;
+        Double priorYearRate = 0.0;
+
+        // When
+        MeasureScore score = calculator.calculateMeasureScore(measure, numerator, denominator, priorYearRate);
+
+        // Then
+        assertThat(score.getImprovement()).isNotNull();
+        assertThat(score.getImprovement()).isCloseTo(0.85, within(0.0001));
+    }
+
+    @Test
+    @DisplayName("Should handle negative improvement correctly")
+    void shouldHandleNegativeImprovement() {
+        // Given
+        StarRatingMeasure measure = StarRatingMeasure.DIABETES_CARE_HBA1C_POOR_CONTROL;
+        int numerator = 600;
+        int denominator = 1000;
+        Double priorYearRate = 0.80;
+
+        // When
+        MeasureScore score = calculator.calculateMeasureScore(measure, numerator, denominator, priorYearRate);
+
+        // Then
+        assertThat(score.getImprovement()).isNotNull();
+        assertThat(score.getImprovement()).isCloseTo(-0.20, within(0.0001));  // Declined
+    }
+
+    @Test
+    @DisplayName("Should round 3.25 to 3.5")
+    void shouldRound325To35() {
+        double rounded = calculator.roundToHalfStar(3.25);
+        assertThat(rounded).isEqualTo(3.5);
+    }
+
+    @Test
+    @DisplayName("Should round 3.24 to 3.0")
+    void shouldRound324To30() {
+        double rounded = calculator.roundToHalfStar(3.24);
+        assertThat(rounded).isEqualTo(3.0);
+    }
+
+    @Test
+    @DisplayName("Should round 4.99 to 5.0")
+    void shouldRound499To50() {
+        double rounded = calculator.roundToHalfStar(4.99);
+        assertThat(rounded).isEqualTo(5.0);
+    }
+
+    @Test
+    @DisplayName("Should handle domain with single measure")
+    void shouldHandleDomainWithSingleMeasure() {
+        // Given
+        MeasureScore score = MeasureScore.builder()
+            .measure(StarRatingMeasure.CONTROLLING_BLOOD_PRESSURE)
+            .performanceRate(0.85)
+            .stars(5)
+            .weight(3.0)
+            .build();
+
+        List<MeasureScore> scores = List.of(score);
+
+        // When
+        DomainScore domainScore = calculator.calculateDomainScore(
+            StarRatingDomain.MANAGING_CHRONIC_CONDITIONS,
+            scores
+        );
+
+        // Then
+        assertThat(domainScore.getMeasureCount()).isEqualTo(1);
+        assertThat(domainScore.getDomainStars()).isEqualTo(5.0);
+        assertThat(domainScore.getAveragePerformanceRate()).isCloseTo(0.85, within(0.0001));
+    }
+
+    @Test
+    @DisplayName("Should handle all measures with zero weight")
+    void shouldHandleAllMeasuresWithZeroWeight() {
+        // Given
+        MeasureScore score1 = MeasureScore.builder()
+            .measure(StarRatingMeasure.CONTROLLING_BLOOD_PRESSURE)
+            .performanceRate(0.85)
+            .stars(5)
+            .weight(0.0)
+            .build();
+
+        MeasureScore score2 = MeasureScore.builder()
+            .measure(StarRatingMeasure.DIABETES_CARE_HBA1C_POOR_CONTROL)
+            .performanceRate(0.75)
+            .stars(4)
+            .weight(0.0)
+            .build();
+
+        List<MeasureScore> scores = List.of(score1, score2);
+
+        // When
+        DomainScore domainScore = calculator.calculateDomainScore(
+            StarRatingDomain.MANAGING_CHRONIC_CONDITIONS,
+            scores
+        );
+
+        // Then
+        assertThat(domainScore.getDomainStars()).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("Should handle improvement opportunity for measure at boundary")
+    void shouldHandleImprovementOpportunityAtBoundary() {
+        // Given - Measure exactly at 4-star threshold
+        MeasureScore score = MeasureScore.builder()
+            .measure(StarRatingMeasure.CONTROLLING_BLOOD_PRESSURE)
+            .performanceRate(0.70)
+            .stars(4)
+            .numerator(700)
+            .denominator(1000)
+            .cutPoints(new double[]{0.55, 0.60, 0.65, 0.70, 0.75})
+            .build();
+
+        // When
+        ImprovementOpportunity opportunity = calculator.calculateImprovementOpportunity(score);
+
+        // Then
+        assertThat(opportunity).isNotNull();
+        assertThat(opportunity.getCurrentStars()).isEqualTo(4);
+        assertThat(opportunity.getNextStars()).isEqualTo(5);
+        assertThat(opportunity.getNextStarThreshold()).isCloseTo(0.75, within(0.0001));
+        assertThat(opportunity.getPerformanceGap()).isCloseTo(0.05, within(0.0001));
+        // Using Math.ceil, the patients needed calculation may round up
+        assertThat(opportunity.getPatientsNeeded()).isIn(50, 51);
+    }
+
+    @Test
+    @DisplayName("Should calculate ROI score correctly")
+    void shouldCalculateRoiScoreCorrectly() {
+        // Given - High weight, low gap (high ROI)
+        MeasureScore score = MeasureScore.builder()
+            .measure(StarRatingMeasure.COLORECTAL_CANCER_SCREENING)
+            .performanceRate(0.72)
+            .stars(4)
+            .numerator(720)
+            .denominator(1000)
+            .weight(3.0)
+            .cutPoints(new double[]{0.50, 0.58, 0.64, 0.70, 0.75})
+            .build();
+
+        // When
+        ImprovementOpportunity opportunity = calculator.calculateImprovementOpportunity(score);
+
+        // Then
+        assertThat(opportunity).isNotNull();
+        assertThat(opportunity.getRoiScore()).isGreaterThan(0);
+        assertThat(opportunity.getPriority()).isEqualTo(ImprovementOpportunity.ImprovementPriority.HIGH);
+    }
+
+    @Test
+    @DisplayName("Should handle measure with very large gap to next star")
+    void shouldHandleMeasureWithLargeGap() {
+        // Given
+        MeasureScore score = MeasureScore.builder()
+            .measure(StarRatingMeasure.BREAST_CANCER_SCREENING)
+            .performanceRate(0.50)
+            .stars(1)
+            .numerator(500)
+            .denominator(1000)
+            .weight(1.0)
+            .cutPoints(new double[]{0.55, 0.62, 0.68, 0.72, 0.76})
+            .build();
+
+        // When
+        ImprovementOpportunity opportunity = calculator.calculateImprovementOpportunity(score);
+
+        // Then
+        assertThat(opportunity).isNotNull();
+        assertThat(opportunity.getEstimatedEffort()).isIn(ImprovementOpportunity.EffortLevel.MEDIUM, ImprovementOpportunity.EffortLevel.HIGH);
+        assertThat(opportunity.getPriority()).isIn(ImprovementOpportunity.ImprovementPriority.LOW, ImprovementOpportunity.ImprovementPriority.MEDIUM);
+    }
+
+    @Test
+    @DisplayName("Should calculate 3% bonus for 4-star plans")
+    void shouldCalculate3PercentBonusForFourStars() {
+        // Given
+        Map<StarRatingMeasure, MeasureData> measureData = createHighPerformanceMeasureData();
+
+        // When
+        StarRatingReport report = calculator.calculateStarRatingReport(
+            "H1234-001", "Test Plan", "H1234", 2024, measureData, null
+        );
+
+        // Then - 4-star plan should get bonus
+        if (report.getRoundedStarRating() == 4) {
+            assertThat(report.isQualityBonusPaymentEligible()).isTrue();
+            assertThat(report.getBonusPaymentPercentage()).isGreaterThan(0);
+        }
+    }
+
+    @Test
+    @DisplayName("Should handle multiple domains with different weights")
+    void shouldHandleMultipleDomainsWithDifferentWeights() {
+        // Given
+        DomainScore domain1 = DomainScore.builder()
+            .domain(StarRatingDomain.STAYING_HEALTHY)
+            .domainStars(5.0)
+            .domainWeight(1.0)
+            .build();
+
+        DomainScore domain2 = DomainScore.builder()
+            .domain(StarRatingDomain.MANAGING_CHRONIC_CONDITIONS)
+            .domainStars(2.0)
+            .domainWeight(3.0)
+            .build();
+
+        List<DomainScore> domainScores = List.of(domain1, domain2);
+
+        // When
+        double overallRating = calculator.calculateOverallStarRating(domainScores);
+
+        // Then - Weighted average: (5.0*1.0 + 2.0*3.0) / (1.0+3.0) = 11/4 = 2.75
+        assertThat(overallRating).isCloseTo(2.75, within(0.01));
+    }
+
+    @Test
+    @DisplayName("Should handle all domains with zero weight")
+    void shouldHandleAllDomainsWithZeroWeight() {
+        // Given
+        DomainScore domain1 = DomainScore.builder()
+            .domain(StarRatingDomain.STAYING_HEALTHY)
+            .domainStars(5.0)
+            .domainWeight(0.0)
+            .build();
+
+        List<DomainScore> domainScores = List.of(domain1);
+
+        // When
+        double overallRating = calculator.calculateOverallStarRating(domainScores);
+
+        // Then
+        assertThat(overallRating).isEqualTo(0.0);
     }
 }

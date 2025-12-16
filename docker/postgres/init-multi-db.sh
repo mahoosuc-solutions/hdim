@@ -1,6 +1,6 @@
 #!/bin/bash
 # HDIM Healthcare Platform - Multi-Database Initialization Script
-# This script creates all databases required by the 22 microservices
+# This script creates all databases required by the 26 microservices
 
 set -e
 
@@ -35,6 +35,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     -- Workflow Services
     CREATE DATABASE approval_db;
     CREATE DATABASE payer_db;
+    CREATE DATABASE migration_db;
 
     -- Integration Services
     CREATE DATABASE ehr_connector_db;
@@ -62,6 +63,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE cdr_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE approval_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE payer_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE migration_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE ehr_connector_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE docs_db TO "$POSTGRES_USER";
 EOSQL

@@ -25,6 +25,9 @@ dependencies {
     // Metrics
     implementation("io.micrometer:micrometer-registry-prometheus")
 
+    // OpenAPI/Swagger documentation
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+
     // Database
     implementation("org.liquibase:liquibase-core")
     runtimeOnly("org.postgresql:postgresql")

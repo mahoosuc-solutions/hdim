@@ -46,6 +46,7 @@ include(
     "modules:services:quality-measure-service",
     "modules:services:care-gap-service",
     "modules:services:analytics-service",
+    "modules:services:documentation-service",
     "modules:services:gateway-service",
     "modules:services:ai-assistant-service",
     "modules:services:cdr-processor-service",

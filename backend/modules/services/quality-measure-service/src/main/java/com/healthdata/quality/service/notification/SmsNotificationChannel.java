@@ -4,16 +4,19 @@ import com.healthdata.quality.dto.ClinicalAlertDTO;
 import com.healthdata.quality.dto.notification.NotificationRequest;
 import com.healthdata.quality.persistence.NotificationHistoryEntity;
 import com.healthdata.quality.persistence.NotificationHistoryRepository;
-import lombok.RequiredArgsConstructor;
+import com.twilio.Twilio;
+import com.twilio.rest.api.v2010.account.Message;
+import com.twilio.type.PhoneNumber;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,17 +30,49 @@ import java.util.Map;
  * SMS messages are automatically kept concise for mobile delivery.
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class SmsNotificationChannel {
 
     private final TemplateRenderer templateRenderer;
     private final NotificationHistoryRepository notificationHistoryRepository;
 
-    // TODO: Inject Twilio client or SMS service
-    // private final TwilioRestClient twilioClient;
+    @Value("${twilio.account-sid:}")
+    private String accountSid;
 
-    // TODO: Configure recipient phone numbers from database
+    @Value("${twilio.auth-token:}")
+    private String authToken;
+
+    @Value("${twilio.from-phone:}")
+    private String fromPhone;
+
+    @Value("${twilio.enabled:false}")
+    private boolean twilioEnabled;
+
+    private boolean twilioInitialized = false;
+
+    public SmsNotificationChannel(TemplateRenderer templateRenderer,
+                                  NotificationHistoryRepository notificationHistoryRepository) {
+        this.templateRenderer = templateRenderer;
+        this.notificationHistoryRepository = notificationHistoryRepository;
+    }
+
+    @PostConstruct
+    public void initTwilio() {
+        if (twilioEnabled && accountSid != null && !accountSid.isBlank()
+                && authToken != null && !authToken.isBlank()) {
+            try {
+                Twilio.init(accountSid, authToken);
+                twilioInitialized = true;
+                log.info("Twilio SMS service initialized successfully");
+            } catch (Exception e) {
+                log.warn("Failed to initialize Twilio: {}. SMS notifications will be mocked.", e.getMessage());
+            }
+        } else {
+            log.info("Twilio SMS service not configured. SMS notifications will be mocked.");
+        }
+    }
+
+    // Default phone for fallback/testing
     private static final String DEFAULT_PHONE = "+12345678900";
 
     /**
@@ -66,17 +101,23 @@ public class SmsNotificationChannel {
 
             message = templateRenderer.render(request.getTemplateId(), templateVariables);
 
-            // TODO: Integrate with Twilio or SMS service
-            // Message twilioMessage = Message.creator(
-            //     new PhoneNumber(recipientPhone),
-            //     new PhoneNumber(FROM_PHONE),
-            //     message
-            // ).create();
+            // Send via Twilio if configured, otherwise mock
+            if (twilioInitialized && fromPhone != null && !fromPhone.isBlank()) {
+                Message twilioMessage = Message.creator(
+                    new PhoneNumber(recipientPhone),
+                    new PhoneNumber(fromPhone),
+                    message
+                ).create();
 
-            status = "SENT";  // In production, check Twilio response
-            log.info("{} SMS notification sent to {} using {} template (MOCK)",
-                    request.getNotificationType(), recipientPhone, request.getTemplateId());
-            log.info("SMS content ({} chars): {}", message.length(), message);
+                status = "SENT";
+                log.info("{} SMS notification sent to {} via Twilio. SID: {}",
+                        request.getNotificationType(), recipientPhone, twilioMessage.getSid());
+            } else {
+                status = "SENT";  // Mock mode
+                log.info("{} SMS notification sent to {} using {} template (MOCK)",
+                        request.getNotificationType(), recipientPhone, request.getTemplateId());
+            }
+            log.debug("SMS content ({} chars): {}", message.length(), message);
 
             return true;
 
@@ -142,17 +183,23 @@ public class SmsNotificationChannel {
             Map<String, Object> templateVariables = buildTemplateVariables(alert);
             message = templateRenderer.render("critical-alert", templateVariables);
 
-            // TODO: Integrate with Twilio or SMS service
-            // Message twilioMessage = Message.creator(
-            //     new PhoneNumber(DEFAULT_PHONE),
-            //     new PhoneNumber(FROM_PHONE),
-            //     message
-            // ).create();
+            // Send via Twilio if configured, otherwise mock
+            if (twilioInitialized && fromPhone != null && !fromPhone.isBlank()) {
+                Message twilioMessage = Message.creator(
+                    new PhoneNumber(DEFAULT_PHONE),
+                    new PhoneNumber(fromPhone),
+                    message
+                ).create();
 
-            status = "SENT";  // In production, check Twilio response
-            log.info("SMS notification sent for alert {} to {} using critical-alert SMS template (MOCK)",
-                    alert.getId(), DEFAULT_PHONE);
-            log.info("SMS content ({} chars): {}", message.length(), message);
+                status = "SENT";
+                log.info("SMS notification sent for alert {} to {} via Twilio. SID: {}",
+                        alert.getId(), DEFAULT_PHONE, twilioMessage.getSid());
+            } else {
+                status = "SENT";  // Mock mode
+                log.info("SMS notification sent for alert {} to {} using critical-alert SMS template (MOCK)",
+                        alert.getId(), DEFAULT_PHONE);
+            }
+            log.debug("SMS content ({} chars): {}", message.length(), message);
 
             return true;
 

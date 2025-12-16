@@ -39,16 +39,16 @@ class EhrConnectorIntegrationTest {
     @Autowired
     private EhrConnectorFactory connectorFactory;
 
-    private static MockWebServer mockWebServer;
+    private MockWebServer mockWebServer;
 
-    @BeforeAll
-    static void setupMockServer() throws IOException {
+    @BeforeEach
+    void setupMockServer() throws IOException {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
     }
 
-    @AfterAll
-    static void tearDownMockServer() throws IOException {
+    @AfterEach
+    void tearDownMockServer() throws IOException {
         mockWebServer.shutdown();
     }
 
@@ -125,9 +125,11 @@ class EhrConnectorIntegrationTest {
         // Given - Two different connections
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody("{\"access_token\":\"token1\",\"expires_in\":3600}"));
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody("{\"access_token\":\"token2\",\"expires_in\":3600}"));
 
         String baseUrl = mockWebServer.url("/").toString();

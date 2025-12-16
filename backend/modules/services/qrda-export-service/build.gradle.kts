@@ -45,10 +45,10 @@ dependencies {
     implementation("javax.xml.bind:jaxb-api:2.3.1")
     implementation("org.glassfish.jaxb:jaxb-runtime:4.0.4")
 
-    // Schematron for QRDA validation (optional - can be added later)
-    // Note: ph-schematron requires specific version coordination with ph-commons
-    // implementation("com.helger.schematron:ph-schematron:7.0.2")
-    // implementation("com.helger.commons:ph-commons:11.1.0")
+    // Schematron for QRDA validation (using pure Java implementation)
+    implementation("com.helger.schematron:ph-schematron-pure:8.0.3")
+    implementation("com.helger.schematron:ph-schematron-api:8.0.3")
+    implementation("com.helger.commons:ph-commons:11.1.6")
 
     // Jackson for JSON processing
     implementation(libs.jackson.databind)

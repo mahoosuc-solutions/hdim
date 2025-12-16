@@ -1,0 +1,61 @@
+# Kafka Integration Test Profile
+# This profile is used for Kafka integration tests with Testcontainers
+server:
+  port: 0
+
+jwt:
+  secret: test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+  access-token-expiration: 1h
+  refresh-token-expiration: 1d
+  issuer: healthdata-in-motion-test
+  audience: healthdata-api-test
+
+spring:
+  application:
+    name: fhir-service-kafka-it
+
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+    show-sql: false
+
+  liquibase:
+    enabled: false
+
+  # Only exclude Redis, NOT Kafka
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+  cache:
+    type: simple
+
+  # Kafka configuration - bootstrap-servers will be overridden by @DynamicPropertySource
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+audit:
+  enabled: false
+
+logging:
+  level:
+    root: WARN
+    com.healthdata.fhir: INFO
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN

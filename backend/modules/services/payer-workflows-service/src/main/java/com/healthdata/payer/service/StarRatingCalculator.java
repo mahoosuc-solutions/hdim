@@ -63,6 +63,8 @@ public class StarRatingCalculator {
 
     /**
      * Calculate star rating (1-5) for a measure based on performance rate and cut points.
+     * Cut points array has 5 elements: [2-star, 3-star, 4-star, display/bonus, 5-star]
+     * Index mapping: [0]=2-star, [1]=3-star, [2]=4-star, [4]=5-star (index 3 is display threshold)
      */
     public int calculateStarsForMeasure(double performanceRate, double[] cutPoints) {
         if (cutPoints == null || cutPoints.length != 5) {
@@ -76,15 +78,16 @@ public class StarRatingCalculator {
             // For inverted measures (like readmissions), lower is better
             if (performanceRate <= cutPoints[4]) return 5;
             if (performanceRate <= cutPoints[3]) return 4;
-            if (performanceRate <= cutPoints[2]) return 3;
-            if (performanceRate <= cutPoints[1]) return 2;
+            if (performanceRate <= cutPoints[1]) return 3;
+            if (performanceRate <= cutPoints[0]) return 2;
             return 1;
         } else {
             // Normal measures - higher is better
+            // cutPoints: [0]=2-star, [1]=3-star, [3]=4-star, [4]=5-star (index 2 is display threshold)
             if (performanceRate >= cutPoints[4]) return 5;
             if (performanceRate >= cutPoints[3]) return 4;
-            if (performanceRate >= cutPoints[2]) return 3;
-            if (performanceRate >= cutPoints[1]) return 2;
+            if (performanceRate >= cutPoints[1]) return 3;
+            if (performanceRate >= cutPoints[0]) return 2;
             return 1;
         }
     }
@@ -210,7 +213,16 @@ public class StarRatingCalculator {
         }
 
         int nextStars = score.getStars() + 1;
-        double nextThreshold = score.getCutPoints()[nextStars - 1];  // -1 because array is 0-indexed for 2-5 stars
+        // Map star level to cut point index: 2→[0], 3→[1], 4→[3], 5→[4] (index 2 is display threshold)
+        int cutPointIndex;
+        switch (nextStars) {
+            case 2: cutPointIndex = 0; break;
+            case 3: cutPointIndex = 1; break;
+            case 4: cutPointIndex = 3; break;
+            case 5: cutPointIndex = 4; break;
+            default: cutPointIndex = 4; break;
+        }
+        double nextThreshold = score.getCutPoints()[cutPointIndex];
         double performanceGap = nextThreshold - score.getPerformanceRate();
 
         // Calculate patients needed

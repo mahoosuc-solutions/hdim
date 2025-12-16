@@ -1,5 +1,5 @@
 # HDIM Healthcare Platform - Complete Docker Compose
-# All 25 Backend Services with Profiles (including 3 new regulatory compliance services)
+# All 26 Backend Services with Profiles (including migration-workflow-service)
 #
 # Usage:
 #   docker compose --profile core up -d      # Infrastructure + 10 core clinical services
@@ -799,6 +799,50 @@ services:
       - "8098:8098"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8098/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8103 - Migration Workflow Service
+  migration-workflow-service:
+    container_name: healthdata-migration-workflow-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/migration-workflow-service/Dockerfile
+    profiles: ["full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      fhir-service:
+        condition: service_started
+      cdr-processor-service:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/migration_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8103
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # Service URLs
+      FHIR_SERVICE_URL: http://fhir-service:8085
+      CDR_PROCESSOR_SERVICE_URL: http://cdr-processor-service:8099
+    ports:
+      - "8103:8103"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8103/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5

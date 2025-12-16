@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MigrationJobRequest {
 
-    @NotBlank(message = "Tenant ID is required")
+    // Set by controller from X-Tenant-ID header
     private String tenantId;
 
     @NotBlank(message = "Job name is required")

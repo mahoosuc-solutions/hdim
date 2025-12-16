@@ -18,6 +18,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -31,11 +34,18 @@ class EhrConnectorFactoryTest {
     @Mock
     private WebClient.Builder webClientBuilder;
 
+    @Mock
+    private WebClient webClient;
+
     private EhrConnectorFactory factory;
 
     @BeforeEach
     void setUp() {
-        when(webClientBuilder.build()).thenReturn(WebClient.builder().build());
+        // Mock the chained builder methods used in AbstractEhrConnector.buildWebClient()
+        // Use lenient stubbing because not all tests create connectors (e.g., null config tests)
+        lenient().when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
+        lenient().when(webClientBuilder.defaultHeader(anyString(), anyString())).thenReturn(webClientBuilder);
+        lenient().when(webClientBuilder.build()).thenReturn(webClient);
         factory = new EhrConnectorFactory(webClientBuilder);
     }
 

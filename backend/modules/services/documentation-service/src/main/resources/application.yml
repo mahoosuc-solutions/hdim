@@ -22,6 +22,10 @@ spring:
         format_sql: true
     show-sql: false
 
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
   data:
     redis:
       host: ${REDIS_HOST:localhost}

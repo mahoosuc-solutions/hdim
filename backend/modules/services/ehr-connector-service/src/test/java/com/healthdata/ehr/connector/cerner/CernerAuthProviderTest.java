@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.http.*;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -163,7 +164,9 @@ class CernerAuthProviderTest {
         // Assert
         HttpEntity<?> capturedRequest = requestCaptor.getValue();
         assertNotNull(capturedRequest);
-        assertTrue(capturedRequest.getBody().toString().contains("grant_type=client_credentials"));
+        @SuppressWarnings("unchecked")
+        MultiValueMap<String, String> body = (MultiValueMap<String, String>) capturedRequest.getBody();
+        assertEquals("client_credentials", body.getFirst("grant_type"));
     }
 
     @Test
@@ -291,7 +294,10 @@ class CernerAuthProviderTest {
 
         // Assert
         HttpEntity<?> capturedRequest = requestCaptor.getValue();
-        assertTrue(capturedRequest.getBody().toString().contains("scope=system"));
+        @SuppressWarnings("unchecked")
+        MultiValueMap<String, String> body = (MultiValueMap<String, String>) capturedRequest.getBody();
+        assertNotNull(body.getFirst("scope"));
+        assertTrue(body.getFirst("scope").contains("system"));
     }
 
     @Test

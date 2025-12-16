@@ -72,6 +72,8 @@ dependencies {
     testImplementation("com.github.tomakehurst:wiremock-jre8:2.35.1")
     testImplementation("io.projectreactor:reactor-test") // For StepVerifier
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0") // For MockWebServer
+    // Spring Kafka needed for class loading (audit module depends on KafkaTemplate)
+    testImplementation("org.springframework.kafka:spring-kafka")
     testRuntimeOnly("com.h2database:h2:2.2.224")
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)

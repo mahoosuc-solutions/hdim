@@ -1,0 +1,129 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Staging environment overlay for HDIM Platform
+# Deploy with: kubectl apply -k k8s/overlays/staging/
+
+namespace: hdim-staging
+
+resources:
+  # Staging-specific namespace
+  - namespace.yaml
+
+  # Base resources (secrets and configmap)
+  - ../../base
+
+  # Infrastructure
+  - ../../infrastructure/postgres.yaml
+  - ../../infrastructure/redis.yaml
+  - ../../infrastructure/kafka.yaml
+
+  # Core services
+  - ../../services/gateway-service.yaml
+  - ../../services/fhir-service.yaml
+  - ../../services/patient-service.yaml
+  - ../../services/care-gap-service.yaml
+  - ../../services/quality-measure-service.yaml
+  - ../../services/cql-engine-service.yaml
+  - ../../services/consent-service.yaml
+  - ../../services/event-processing-service.yaml
+  - ../../services/event-router-service.yaml
+
+  # AI services
+  - ../../services/agent-runtime-service.yaml
+  - ../../services/ai-assistant-service.yaml
+  - ../../services/agent-builder-service.yaml
+
+  # Analytics services
+  - ../../services/analytics-service.yaml
+  - ../../services/predictive-analytics-service.yaml
+  - ../../services/sdoh-service.yaml
+
+  # Workflow services
+  - ../../services/approval-service.yaml
+  - ../../services/payer-workflows-service.yaml
+
+  # Data services
+  - ../../services/cdr-processor-service.yaml
+  - ../../services/data-enrichment-service.yaml
+
+  # Integration services
+  - ../../services/ehr-connector-service.yaml
+
+  # Support services
+  - ../../services/documentation-service.yaml
+
+# Strategic merge patches for staging environment
+patches:
+  - path: patches/resources.yaml
+  - path: patches/replicas.yaml
+
+# ConfigMap generator for staging-specific configs
+configMapGenerator:
+  - name: hdim-environment-config
+    literals:
+      - SPRING_PROFILES_ACTIVE=kubernetes,staging
+      - LOG_LEVEL=DEBUG
+      - ENABLE_DEMO_DATA=true
+      - ENABLE_SWAGGER_UI=true
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_SERVICE_NAME_PREFIX=staging-
+
+# Labels for staging
+labels:
+  - pairs:
+      app.kubernetes.io/managed-by: kustomize
+      app.kubernetes.io/part-of: hdim-platform
+      environment: staging
+
+# Annotations
+commonAnnotations:
+  deployment.kubernetes.io/environment: staging
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+  prometheus.io/path: "/actuator/prometheus"
+
+# Images - staging uses specific tags
+images:
+  - name: hdim/gateway-service
+    newTag: staging
+  - name: hdim/fhir-service
+    newTag: staging
+  - name: hdim/patient-service
+    newTag: staging
+  - name: hdim/care-gap-service
+    newTag: staging
+  - name: hdim/quality-measure-service
+    newTag: staging
+  - name: hdim/cql-engine-service
+    newTag: staging
+  - name: hdim/consent-service
+    newTag: staging
+  - name: hdim/event-processing-service
+    newTag: staging
+  - name: hdim/event-router-service
+    newTag: staging
+  - name: hdim/agent-runtime-service
+    newTag: staging
+  - name: hdim/ai-assistant-service
+    newTag: staging
+  - name: hdim/agent-builder-service
+    newTag: staging
+  - name: hdim/analytics-service
+    newTag: staging
+  - name: hdim/predictive-analytics-service
+    newTag: staging
+  - name: hdim/sdoh-service
+    newTag: staging
+  - name: hdim/approval-service
+    newTag: staging
+  - name: hdim/payer-workflows-service
+    newTag: staging
+  - name: hdim/cdr-processor-service
+    newTag: staging
+  - name: hdim/data-enrichment-service
+    newTag: staging
+  - name: hdim/ehr-connector-service
+    newTag: staging
+  - name: hdim/documentation-service
+    newTag: staging

@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# HDIM Platform Monitoring Stack
+# Includes Prometheus, Grafana, and Jaeger for observability
+#
+# Deploy with: kubectl apply -k k8s/monitoring/
+
+namespace: hdim
+
+resources:
+  - prometheus.yaml
+  - grafana.yaml
+  - jaeger.yaml
+
+labels:
+  - pairs:
+      app.kubernetes.io/managed-by: kustomize
+      app.kubernetes.io/part-of: hdim-monitoring
+
+commonAnnotations:
+  monitoring.hdim.io/stack: "prometheus-grafana-jaeger"

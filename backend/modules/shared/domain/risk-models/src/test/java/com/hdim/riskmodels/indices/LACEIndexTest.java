@@ -134,8 +134,9 @@ class LACEIndexTest {
         @Test
         @DisplayName("Should score 1 point for Charlson 1-2")
         void testCharlson1to2() {
+            // LOS=1, not acute, MI (Charlson 1), 0 ED visits
             RiskIndexResult result = laceIndex.calculate(1, false,
-                Arrays.asList("I21.0"), 40); // MI = Charlson 1
+                Arrays.asList("I21.0"), 0); // MI = Charlson 1
 
             assertThat(result.getScore()).isEqualTo(2.0); // 1 (LOS) + 1 (Comorbidity)
         }
@@ -143,8 +144,9 @@ class LACEIndexTest {
         @Test
         @DisplayName("Should score 2 points for Charlson 3-4")
         void testCharlson3to4() {
+            // LOS=1, not acute, 3 conditions (Charlson 3), 0 ED visits
             RiskIndexResult result = laceIndex.calculate(1, false,
-                Arrays.asList("I21.0", "I50.1", "J44.0"), 40); // Charlson = 3
+                Arrays.asList("I21.0", "I50.1", "J44.0"), 0); // Charlson = 3
 
             assertThat(result.getScore()).isEqualTo(3.0); // 1 (LOS) + 2 (Comorbidity)
         }
@@ -152,8 +154,9 @@ class LACEIndexTest {
         @Test
         @DisplayName("Should score 5 points for Charlson 5+")
         void testCharlson5Plus() {
+            // LOS=1, not acute, metastatic cancer (Charlson 6), 0 ED visits
             RiskIndexResult result = laceIndex.calculate(1, false,
-                Arrays.asList("C78.00"), 40); // Metastatic cancer = Charlson 6
+                Arrays.asList("C78.00"), 0); // Metastatic cancer = Charlson 6
 
             assertThat(result.getScore()).isEqualTo(6.0); // 1 (LOS) + 5 (Comorbidity)
         }

@@ -129,12 +129,12 @@ class FrailtyIndexTest {
         @DisplayName("Should identify specific deficits")
         void testSpecificDeficits() {
             RiskIndexResult result = frailtyIndex.calculate(
-                true, false, true, false, false,
+                true, false, true, false, false,  // hasWeightLoss=true, hasExhaustion=true
                 false, false, false, false, false
             );
 
             assertThat(result.getExplanations()).anyMatch(e -> e.getFactor().contains("Weight Loss"));
-            assertThat(result.getExplanations()).anyMatch(e -> e.getFactor().contains("Low Activity"));
+            assertThat(result.getExplanations()).anyMatch(e -> e.getFactor().contains("Exhaustion"));
         }
     }
 

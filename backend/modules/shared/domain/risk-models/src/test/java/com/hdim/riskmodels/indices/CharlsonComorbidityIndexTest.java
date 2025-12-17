@@ -33,7 +33,7 @@ class CharlsonComorbidityIndexTest {
         @Test
         @DisplayName("Should return zero score for no diagnoses")
         void testNodiagnoses() {
-            RiskIndexResult result = charlsonIndex.calculate(Collections.emptyList(), 50);
+            RiskIndexResult result = charlsonIndex.calculate(Collections.emptyList(), 40);
 
             assertThat(result).isNotNull();
             assertThat(result.getScore()).isEqualTo(0.0);
@@ -45,7 +45,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should calculate score for single comorbidity - Myocardial Infarction")
         void testSingleMyocardialInfarction() {
             List<String> icd10Codes = Arrays.asList("I21.0"); // Acute MI
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(1.0);
             assertThat(result.getExplanations()).hasSize(1);
@@ -56,7 +56,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should calculate score for CHF")
         void testCongestiveHeartFailure() {
             List<String> icd10Codes = Arrays.asList("I50.1"); // CHF
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(1.0);
             assertThat(result.getExplanations().get(0).getFactor()).isEqualTo("Congestive Heart Failure");
@@ -66,7 +66,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should calculate score for Peripheral Vascular Disease")
         void testPeripheralVascularDisease() {
             List<String> icd10Codes = Arrays.asList("I73.9");
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(1.0);
             assertThat(result.getExplanations().get(0).getFactor()).isEqualTo("Peripheral Vascular Disease");
@@ -81,18 +81,18 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should score diabetes without complications")
         void testDiabetesWithoutComplications() {
             List<String> icd10Codes = Arrays.asList("E11.9"); // Type 2 diabetes without complications
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(1.0);
             assertThat(result.getExplanations().get(0).getFactor()).contains("Diabetes");
-            assertThat(result.getExplanations().get(0).getFactor()).doesNotContain("complications");
+            assertThat(result.getExplanations().get(0).getFactor()).doesNotContain("end organ damage");
         }
 
         @Test
         @DisplayName("Should score diabetes with end organ damage")
         void testDiabetesWithComplications() {
             List<String> icd10Codes = Arrays.asList("E11.21"); // Type 2 diabetes with diabetic nephropathy
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(2.0);
             assertThat(result.getExplanations().get(0).getFactor()).contains("Diabetes");
@@ -103,7 +103,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should not double-count diabetes with and without complications")
         void testDiabetesNoDuplication() {
             List<String> icd10Codes = Arrays.asList("E11.9", "E11.21");
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             // Should only count the higher score (with complications = 2)
             assertThat(result.getScore()).isEqualTo(2.0);
@@ -114,7 +114,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should score Type 1 diabetes with retinopathy")
         void testType1DiabetesWithRetinopathy() {
             List<String> icd10Codes = Arrays.asList("E10.311"); // Type 1 with retinopathy
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(2.0);
         }
@@ -132,7 +132,7 @@ class CharlsonComorbidityIndexTest {
                 "I50.1",  // CHF = 1
                 "I73.9"   // PVD = 1
             );
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(3.0);
             assertThat(result.getExplanations()).hasSize(3);
@@ -146,7 +146,7 @@ class CharlsonComorbidityIndexTest {
                 "I21.1",  // Another MI code
                 "I21.2"   // Another MI code
             );
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             // Should count MI only once
             assertThat(result.getScore()).isEqualTo(1.0);
@@ -163,7 +163,7 @@ class CharlsonComorbidityIndexTest {
                 "J44.0",   // COPD = 1
                 "K70.30"   // Liver disease = 1
             );
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(6.0);
             assertThat(result.getExplanations()).hasSize(5);
@@ -279,7 +279,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should interpret score 5+ as Very High Risk")
         void testVeryHighRiskInterpretation() {
             List<String> icd10Codes = Arrays.asList(
-                "C18.0"  // Metastatic solid tumor = 6
+                "C78.00"  // Metastatic solid tumor = 6
             );
             RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
@@ -296,7 +296,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should score moderate/severe liver disease correctly")
         void testSevereLiverDisease() {
             List<String> icd10Codes = Arrays.asList("K72.00"); // Acute hepatic failure
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(3.0);
             assertThat(result.getExplanations().get(0).getFactor()).contains("Liver Disease");
@@ -309,7 +309,7 @@ class CharlsonComorbidityIndexTest {
                 "K70.30",  // Mild liver disease = 1
                 "K72.00"   // Severe liver disease = 3
             );
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             // Should only count the higher score (severe = 3)
             assertThat(result.getScore()).isEqualTo(3.0);
@@ -320,7 +320,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should score hemiplegia correctly")
         void testHemiplegia() {
             List<String> icd10Codes = Arrays.asList("G81.90"); // Hemiplegia
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(2.0);
         }
@@ -329,7 +329,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should score moderate/severe renal disease correctly")
         void testSevereRenalDisease() {
             List<String> icd10Codes = Arrays.asList("N18.4"); // CKD Stage 4
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(2.0);
         }
@@ -338,7 +338,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should score any tumor correctly")
         void testTumor() {
             List<String> icd10Codes = Arrays.asList("C50.911"); // Breast cancer
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(2.0);
         }
@@ -347,7 +347,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should score leukemia correctly")
         void testLeukemia() {
             List<String> icd10Codes = Arrays.asList("C91.10"); // Chronic lymphocytic leukemia
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(2.0);
         }
@@ -356,7 +356,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should score lymphoma correctly")
         void testLymphoma() {
             List<String> icd10Codes = Arrays.asList("C82.00"); // Follicular lymphoma
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(2.0);
         }
@@ -365,7 +365,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should score metastatic solid tumor correctly")
         void testMetastaticTumor() {
             List<String> icd10Codes = Arrays.asList("C78.00"); // Secondary malignant neoplasm
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(6.0);
         }
@@ -374,7 +374,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should score AIDS correctly")
         void testAIDS() {
             List<String> icd10Codes = Arrays.asList("B20"); // HIV with complications
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(6.0);
         }
@@ -386,7 +386,7 @@ class CharlsonComorbidityIndexTest {
                 "C50.911",  // Any tumor = 2
                 "C78.00"    // Metastatic tumor = 6
             );
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             // Should only count the higher score (metastatic = 6)
             assertThat(result.getScore()).isEqualTo(6.0);
@@ -401,7 +401,7 @@ class CharlsonComorbidityIndexTest {
         @Test
         @DisplayName("Should handle null diagnosis list")
         void testNullDiagnosisList() {
-            assertThatThrownBy(() -> charlsonIndex.calculate(null, 50))
+            assertThatThrownBy(() -> charlsonIndex.calculate(null, 40))
                 .isInstanceOf(NullPointerException.class);
         }
 
@@ -409,7 +409,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should handle invalid ICD-10 codes gracefully")
         void testInvalidICD10Codes() {
             List<String> icd10Codes = Arrays.asList("INVALID", "CODE");
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(0.0);
         }
@@ -422,7 +422,7 @@ class CharlsonComorbidityIndexTest {
                 "INVALID",  // Invalid
                 "I50.1"     // Valid CHF
             );
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(2.0); // Only valid codes counted
         }
@@ -481,7 +481,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should recognize cerebrovascular disease codes")
         void testCerebrovascularDisease() {
             List<String> icd10Codes = Arrays.asList("I63.9"); // Cerebral infarction
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(1.0);
             assertThat(result.getExplanations().get(0).getFactor()).contains("Cerebrovascular Disease");
@@ -491,7 +491,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should recognize dementia codes")
         void testDementia() {
             List<String> icd10Codes = Arrays.asList("F03.90"); // Unspecified dementia
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(1.0);
             assertThat(result.getExplanations().get(0).getFactor()).contains("Dementia");
@@ -501,7 +501,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should recognize COPD codes")
         void testCOPD() {
             List<String> icd10Codes = Arrays.asList("J44.1"); // COPD with exacerbation
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(1.0);
             assertThat(result.getExplanations().get(0).getFactor()).contains("Chronic Pulmonary Disease");
@@ -511,7 +511,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should recognize connective tissue disease codes")
         void testConnectiveTissueDisease() {
             List<String> icd10Codes = Arrays.asList("M32.10"); // Systemic lupus erythematosus
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(1.0);
             assertThat(result.getExplanations().get(0).getFactor()).contains("Connective Tissue Disease");
@@ -521,7 +521,7 @@ class CharlsonComorbidityIndexTest {
         @DisplayName("Should recognize peptic ulcer disease codes")
         void testPepticUlcer() {
             List<String> icd10Codes = Arrays.asList("K27.9"); // Peptic ulcer
-            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 50);
+            RiskIndexResult result = charlsonIndex.calculate(icd10Codes, 40);
 
             assertThat(result.getScore()).isEqualTo(1.0);
             assertThat(result.getExplanations().get(0).getFactor()).contains("Peptic Ulcer Disease");

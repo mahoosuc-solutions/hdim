@@ -183,4 +183,44 @@ public class PatientDataService {
             throw new RuntimeException("Failed to fetch patient", e);
         }
     }
+
+    /**
+     * Fetch social history observations for SDOH score calculation
+     *
+     * Queries FHIR Observation resources with category = "social-history"
+     * to identify Social Determinants of Health (SDOH) screenings and findings.
+     *
+     * Common SDOH observation codes include:
+     * - Housing stability (LOINC 71802-3)
+     * - Food insecurity (LOINC 88122-7)
+     * - Transportation access (LOINC 93030-5)
+     * - Employment status (LOINC 67875-5)
+     * - Education level (LOINC 82589-3)
+     * - Social isolation (LOINC 93159-2)
+     *
+     * @param tenantId Tenant identifier
+     * @param patientId Patient identifier
+     * @return List of social history observations
+     */
+    public List<Observation> fetchSocialHistoryObservations(String tenantId, String patientId) {
+        log.debug("Fetching social history observations for patient: {} (tenant: {})", patientId, tenantId);
+        try {
+            Bundle bundle = fhirClient.search()
+                .forResource(Observation.class)
+                .where(Observation.PATIENT.hasId(patientId))
+                .where(Observation.CATEGORY.exactly().code("social-history"))
+                .returnBundle(Bundle.class)
+                .execute();
+
+            List<Observation> observations = bundle.getEntry().stream()
+                .map(entry -> (Observation) entry.getResource())
+                .collect(Collectors.toList());
+
+            log.debug("Found {} social history observations for patient {}", observations.size(), patientId);
+            return observations;
+        } catch (Exception e) {
+            log.warn("Error fetching social history observations for patient {}: {}", patientId, e.getMessage());
+            return List.of();
+        }
+    }
 }

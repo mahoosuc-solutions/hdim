@@ -156,7 +156,7 @@ public class CqlEvaluationAuditAspect {
                     .denominator(parseDenominator(evaluation))
                     .exclusion(parseExclusion(evaluation))
                     .errorMessage(null)
-                    .cacheHit(false) // TODO: Track cache hits
+                    .cacheHit(wasCacheHit(dataFlowSteps))
                     .dataFlowSteps(dataFlowSteps != null ? dataFlowSteps : Collections.emptyList())
                     .build();
 
@@ -366,5 +366,22 @@ public class CqlEvaluationAuditAspect {
                         Function.identity(),
                         Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
                 ));
+    }
+
+    /**
+     * Determine if the evaluation hit the template cache.
+     *
+     * Checks data flow steps for CACHE_LOOKUP step type with "from cache" in the decision,
+     * indicating the template was loaded from Redis cache instead of database.
+     */
+    private boolean wasCacheHit(List<DataFlowStep> steps) {
+        if (steps == null || steps.isEmpty()) {
+            return false;
+        }
+        return steps.stream()
+                .anyMatch(step ->
+                    "CACHE_LOOKUP".equals(step.getStepType()) &&
+                    step.getDecision() != null &&
+                    step.getDecision().toLowerCase().contains("from cache"));
     }
 }

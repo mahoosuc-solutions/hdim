@@ -99,4 +99,12 @@ public interface MentalHealthAssessmentRepository extends JpaRepository<MentalHe
      * Count total assessments for a patient
      */
     long countByTenantIdAndPatientId(String tenantId, String patientId);
+
+    /**
+     * Find the most recent assessment for a patient (any type)
+     */
+    Optional<MentalHealthAssessmentEntity> findFirstByTenantIdAndPatientIdOrderByAssessmentDateDesc(
+        String tenantId,
+        String patientId
+    );
 }

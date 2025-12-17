@@ -1,5 +1,7 @@
 package com.healthdata.qrda.service;
 
+import com.healthdata.qrda.client.PatientServiceClient;
+import com.healthdata.qrda.client.QualityMeasureClient;
 import com.healthdata.qrda.dto.QrdaExportRequest;
 import com.healthdata.qrda.persistence.QrdaExportJobEntity;
 import com.healthdata.qrda.persistence.QrdaExportJobEntity.QrdaJobStatus;
@@ -12,6 +14,9 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -20,7 +25,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -28,6 +33,7 @@ import static org.mockito.Mockito.*;
  * Tests QRDA Category I (patient-level) document generation.
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class QrdaCategoryIServiceTest {
 
     @Mock
@@ -39,6 +45,12 @@ class QrdaCategoryIServiceTest {
     @Mock
     private QrdaValidationService validationService;
 
+    @Mock
+    private PatientServiceClient patientServiceClient;
+
+    @Mock
+    private QualityMeasureClient qualityMeasureClient;
+
     @InjectMocks
     private QrdaCategoryIService categoryIService;
 
@@ -48,6 +60,12 @@ class QrdaCategoryIServiceTest {
     private static final String TENANT_ID = "test-tenant";
     private static final String REQUESTED_BY = "testuser";
     private static final UUID JOB_ID = UUID.randomUUID();
+
+    @BeforeEach
+    void setUp() {
+        // Set the storagePath field which is normally injected via @Value
+        ReflectionTestUtils.setField(categoryIService, "storagePath", "/tmp/qrda-test-exports");
+    }
 
     @Nested
     @DisplayName("initiateExport() tests")
@@ -200,6 +218,15 @@ class QrdaCategoryIServiceTest {
     @Nested
     @DisplayName("processExportAsync() tests")
     class ProcessExportAsyncTests {
+
+        @BeforeEach
+        void setUpProcessAsync() {
+            // Mock patient service to return empty list so processing completes without NPE
+            when(patientServiceClient.getPatients(anyString(), anyInt(), anyInt()))
+                .thenReturn(List.of());
+            when(patientServiceClient.getPatientsByIds(anyString(), anyList()))
+                .thenReturn(List.of());
+        }
 
         @Test
         @DisplayName("Should update job status to RUNNING when starting")

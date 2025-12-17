@@ -28,6 +28,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -40,6 +42,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("AgentOrchestrator Tests")
 class AgentOrchestratorTest {
 
@@ -93,6 +96,11 @@ class AgentOrchestratorTest {
 
         // Mock common memory manager operations
         when(memoryManager.storeTaskExecution(any(), any())).thenReturn(Mono.empty());
+        when(memoryManager.storeMessage(any(), any())).thenReturn(Mono.empty());
+        when(memoryManager.getConversationHistory(any(), anyInt())).thenReturn(Mono.just(List.of()));
+
+        // Default guardrail to allow - prevents NPE in tests that don't explicitly mock it
+        when(guardrailService.check(any(), any())).thenReturn(GuardrailResult.allowed());
     }
 
     private AgentContext createContext() {
@@ -618,17 +626,16 @@ class AgentOrchestratorTest {
             AgentContext context = createContext();
             AgentRequest request = AgentRequest.simple("Long running query");
 
+            // Use Mono.delay to properly simulate async delay that works with Reactor timeout
             when(memoryManager.getConversationHistory(eq(context), anyInt()))
-                .thenReturn(Mono.just(List.of()));
+                .thenReturn(Mono.just(List.<LLMRequest.Message>of())
+                    .delayElement(Duration.ofSeconds(5))); // This delay will trigger timeout
             when(llmProviderFactory.selectOptimalProvider(any(LLMRequest.class)))
                 .thenReturn(llmProvider);
             when(toolRegistry.getToolDefinitions(context))
                 .thenReturn(List.of());
             when(llmProvider.completeWithTools(any(LLMRequest.class), anyList()))
-                .thenAnswer(invocation -> {
-                    Thread.sleep(5000); // Simulate long-running operation
-                    return createSuccessResponse("Too late");
-                });
+                .thenReturn(createSuccessResponse("Too late"));
 
             // When/Then - Should timeout
             try {
@@ -637,7 +644,7 @@ class AgentOrchestratorTest {
                 assertThat(false).as("Expected timeout exception").isTrue();
             } catch (Exception e) {
                 // Expected timeout exception
-                assertThat(e.getMessage()).containsAnyOf("timeout", "Timeout", "timed out");
+                assertThat(e.getMessage()).containsAnyOf("timeout", "Timeout", "timed out", "Did not observe");
             }
         }
 

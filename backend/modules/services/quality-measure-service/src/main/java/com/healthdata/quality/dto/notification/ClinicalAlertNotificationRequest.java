@@ -28,6 +28,14 @@ public class ClinicalAlertNotificationRequest implements NotificationRequest {
 
     private final ClinicalAlertDTO alert;
     private final Map<String, String> recipients;
+    private final String patientName; // Optional - set by caller via PatientNameService
+
+    /**
+     * Convenience constructor without patient name (backwards compatible)
+     */
+    public ClinicalAlertNotificationRequest(ClinicalAlertDTO alert, Map<String, String> recipients) {
+        this(alert, recipients, null);
+    }
 
     @Override
     public String getNotificationType() {
@@ -84,8 +92,7 @@ public class ClinicalAlertNotificationRequest implements NotificationRequest {
         variables.put("alertMessage", alert.getMessage());
 
         // Patient information
-        // TODO: Fetch actual patient name from FHIR service
-        variables.put("patientName", "Patient " + alert.getPatientId());
+        variables.put("patientName", patientName != null ? patientName : "Patient " + alert.getPatientId());
         variables.put("mrn", alert.getPatientId());
         variables.put("patientId", alert.getPatientId());
 

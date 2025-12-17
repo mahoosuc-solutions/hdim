@@ -90,6 +90,9 @@ class AgentOrchestratorTest {
         // Set reasonable defaults for configuration
         ReflectionTestUtils.setField(orchestrator, "maxIterations", 10);
         ReflectionTestUtils.setField(orchestrator, "timeoutSeconds", 120);
+
+        // Mock common memory manager operations
+        when(memoryManager.storeTaskExecution(any(), any())).thenReturn(Mono.empty());
     }
 
     private AgentContext createContext() {

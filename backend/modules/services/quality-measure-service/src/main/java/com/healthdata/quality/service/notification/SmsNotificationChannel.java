@@ -4,6 +4,7 @@ import com.healthdata.quality.dto.ClinicalAlertDTO;
 import com.healthdata.quality.dto.notification.NotificationRequest;
 import com.healthdata.quality.persistence.NotificationHistoryEntity;
 import com.healthdata.quality.persistence.NotificationHistoryRepository;
+import com.healthdata.quality.service.PatientNameService;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
@@ -35,6 +36,7 @@ public class SmsNotificationChannel {
 
     private final TemplateRenderer templateRenderer;
     private final NotificationHistoryRepository notificationHistoryRepository;
+    private final PatientNameService patientNameService;
 
     @Value("${twilio.account-sid:}")
     private String accountSid;
@@ -51,9 +53,11 @@ public class SmsNotificationChannel {
     private boolean twilioInitialized = false;
 
     public SmsNotificationChannel(TemplateRenderer templateRenderer,
-                                  NotificationHistoryRepository notificationHistoryRepository) {
+                                  NotificationHistoryRepository notificationHistoryRepository,
+                                  PatientNameService patientNameService) {
         this.templateRenderer = templateRenderer;
         this.notificationHistoryRepository = notificationHistoryRepository;
+        this.patientNameService = patientNameService;
     }
 
     @PostConstruct
@@ -147,7 +151,7 @@ public class SmsNotificationChannel {
                     .patientId(request.getPatientId())
                     .recipientId(recipientPhone)
                     .subject(null)  // SMS doesn't have subjects
-                    .content(content)  // TODO: Encrypt for PHI protection
+                    .content(content)  // Encrypted via @Encrypted annotation on entity
                     .status(status)
                     .errorMessage(errorMessage)
                     .alertId(request.getRelatedEntityId())
@@ -228,7 +232,7 @@ public class SmsNotificationChannel {
                     .patientId(alert.getPatientId())
                     .recipientId(DEFAULT_PHONE)
                     .subject(null)  // SMS doesn't have subjects
-                    .content(content)  // TODO: Encrypt for PHI protection
+                    .content(content)  // Encrypted via @Encrypted annotation on entity
                     .status(status)
                     .errorMessage(errorMessage)
                     .alertId(alert.getId())
@@ -260,9 +264,8 @@ public class SmsNotificationChannel {
         variables.put("severity", alert.getSeverity());
         variables.put("alertMessage", alert.getMessage());
 
-        // Patient information
-        // TODO: Fetch actual patient name from FHIR service - for now use Patient ID
-        variables.put("patientName", "Patient " + alert.getPatientId());
+        // Patient information - fetch from FHIR via PatientNameService
+        variables.put("patientName", patientNameService.getPatientName(alert.getPatientId()));
         variables.put("mrn", alert.getPatientId());
         variables.put("patientId", alert.getPatientId());
 

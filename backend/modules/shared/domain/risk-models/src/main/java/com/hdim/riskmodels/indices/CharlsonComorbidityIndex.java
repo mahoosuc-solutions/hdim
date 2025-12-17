@@ -345,9 +345,10 @@ public class CharlsonComorbidityIndex {
         String prefix = start.substring(0, 1);
         int startNum = Integer.parseInt(start.substring(1));
         int endNum = Integer.parseInt(end.substring(1));
+        int numLength = start.substring(1).length(); // Preserve leading zeros
 
         for (int i = startNum; i <= endNum; i++) {
-            String code = prefix + i;
+            String code = prefix + String.format("%0" + numLength + "d", i);
             map.put(code, category);
         }
     }

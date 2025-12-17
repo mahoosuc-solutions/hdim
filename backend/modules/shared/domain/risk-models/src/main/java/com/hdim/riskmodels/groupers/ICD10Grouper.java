@@ -118,6 +118,14 @@ public class ICD10Grouper {
             return false;
         }
 
+        // Validate ICD-10 code format: letter followed by digits
+        if (!Character.isLetter(code.charAt(0))) {
+            return false;
+        }
+        if (code.length() < 2 || !Character.isDigit(code.charAt(1))) {
+            return false;
+        }
+
         char codeFirst = code.charAt(0);
         char startFirst = start.charAt(0);
         char endFirst = end.charAt(0);
@@ -126,11 +134,27 @@ public class ICD10Grouper {
             return false;
         }
 
-        if (codeFirst > startFirst && codeFirst < endFirst) {
-            return true;
+        // For cross-letter ranges (e.g., C00-D49)
+        if (startFirst != endFirst) {
+            if (codeFirst > startFirst && codeFirst < endFirst) {
+                return true; // Code letter is between start and end letters
+            }
+            // At boundary - check numeric part
+            try {
+                int codeNum = extractNumber(code);
+                if (codeFirst == startFirst) {
+                    int startNum = extractNumber(start);
+                    return codeNum >= startNum;
+                } else if (codeFirst == endFirst) {
+                    int endNum = extractNumber(end);
+                    return codeNum <= endNum;
+                }
+            } catch (Exception e) {
+                return false;
+            }
         }
 
-        // Same first character, compare numbers
+        // Same first character range, compare numbers
         try {
             int codeNum = extractNumber(code);
             int startNum = extractNumber(start);

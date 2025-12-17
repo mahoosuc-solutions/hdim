@@ -43,6 +43,7 @@ public class GenericNotificationRequest implements NotificationRequest {
     private final String templateId;
     private final String tenantId;
     private final String patientId;
+    private final String patientName; // Optional - set by caller via PatientNameService
     private final String title;
     private final String message;
     private final String severity;
@@ -76,7 +77,7 @@ public class GenericNotificationRequest implements NotificationRequest {
         }
 
         if (!variables.containsKey("patientName") && patientId != null) {
-            variables.put("patientName", "Patient " + patientId); // TODO: Fetch from FHIR
+            variables.put("patientName", patientName != null ? patientName : "Patient " + patientId);
         }
 
         if (!variables.containsKey("title")) {

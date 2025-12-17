@@ -33,6 +33,7 @@ public class HealthScoreNotificationRequest implements NotificationRequest {
     private final Double changeAmount;
     private final String changeDirection; // "INCREASED", "DECREASED", "STABLE"
     private final Map<String, String> recipients;
+    private final String patientName; // Optional - set by caller via PatientNameService
 
     @Override
     public String getNotificationType() {
@@ -91,7 +92,7 @@ public class HealthScoreNotificationRequest implements NotificationRequest {
 
         // Patient information
         variables.put("patientId", patientId);
-        variables.put("patientName", "Patient " + patientId); // TODO: Fetch from FHIR
+        variables.put("patientName", patientName != null ? patientName : "Patient " + patientId);
 
         // Health score data
         variables.put("currentScore", String.format("%.1f", newScore));

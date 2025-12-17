@@ -43,6 +43,7 @@ import java.util.Map;
 public class AuditLoggingInterceptor implements HandshakeInterceptor {
 
     private final ObjectMapper objectMapper;
+    private final AuditEventPublisher auditEventPublisher;
 
     @Override
     public boolean beforeHandshake(
@@ -181,9 +182,12 @@ public class AuditLoggingInterceptor implements HandshakeInterceptor {
                     log.debug("AUDIT: {}", auditJson);
             }
 
-            // TODO: Future enhancement - send to dedicated audit service/database
-            // This could be implemented with Kafka or direct database writes
-            // Example: auditEventPublisher.publish(auditEvent);
+            // Publish to Kafka for dedicated audit service/database consumption
+            if (auditEvent.containsKey("securityViolation")) {
+                auditEventPublisher.publishSecurityEvent(auditEvent);
+            } else {
+                auditEventPublisher.publish(auditEvent);
+            }
 
         } catch (Exception e) {
             // Never fail the connection due to audit logging errors

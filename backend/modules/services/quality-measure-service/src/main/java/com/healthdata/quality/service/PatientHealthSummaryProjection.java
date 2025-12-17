@@ -11,7 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Patient Health Summary Projection (CQRS Read Model)
@@ -41,6 +44,8 @@ public class PatientHealthSummaryProjection {
     private final RiskAssessmentRepository riskRepository;
     private final MentalHealthAssessmentRepository mentalHealthRepository;
     private final PopulationMetricsRepository populationMetricsRepository;
+    private final HealthScoreHistoryRepository healthScoreHistoryRepository;
+    private final ClinicalAlertRepository clinicalAlertRepository;
 
     /**
      * Handle health score updated event
@@ -180,7 +185,49 @@ public class PatientHealthSummaryProjection {
             summary.setRiskUpdatedAt(risk.getAssessmentDate());
         });
 
-        // TODO: Aggregate other data points (health score, alerts, mental health)
+        // Aggregate health score data
+        List<HealthScoreHistoryEntity> recentScores =
+            healthScoreHistoryRepository.findRecentScores(tenantId, patientId, 2);
+        if (!recentScores.isEmpty()) {
+            HealthScoreHistoryEntity latestScore = recentScores.get(0);
+            summary.setLatestHealthScore(latestScore.getOverallScore());
+            summary.setHealthScoreUpdatedAt(latestScore.getCalculatedAt());
+
+            // Calculate trend from last 2 scores
+            if (recentScores.size() >= 2) {
+                double latest = latestScore.getOverallScore();
+                double previous = recentScores.get(1).getOverallScore();
+                if (latest > previous + 5) {
+                    summary.setHealthTrend("improving");
+                } else if (latest < previous - 5) {
+                    summary.setHealthTrend("declining");
+                } else {
+                    summary.setHealthTrend("stable");
+                }
+            }
+        }
+
+        // Aggregate clinical alert data
+        long activeAlerts = clinicalAlertRepository.countByTenantIdAndPatientIdAndStatus(
+            tenantId, patientId, ClinicalAlertEntity.AlertStatus.ACTIVE);
+        summary.setActiveAlertsCount((int) activeAlerts);
+
+        List<ClinicalAlertEntity> criticalAlerts = clinicalAlertRepository.findByTenantIdAndSeverityAndStatusOrderByTriggeredAtDesc(
+            tenantId, ClinicalAlertEntity.AlertSeverity.CRITICAL, ClinicalAlertEntity.AlertStatus.ACTIVE);
+        long criticalCount = criticalAlerts.stream()
+            .filter(a -> patientId.equals(a.getPatientId()))
+            .count();
+        summary.setCriticalAlertsCount((int) criticalCount);
+        summary.setAlertsUpdatedAt(Instant.now());
+
+        // Aggregate mental health data
+        Optional<MentalHealthAssessmentEntity> latestMentalHealth =
+            mentalHealthRepository.findFirstByTenantIdAndPatientIdOrderByAssessmentDateDesc(tenantId, patientId);
+        latestMentalHealth.ifPresent(assessment -> {
+            summary.setLatestMentalHealthScore(assessment.getScore());
+            summary.setMentalHealthSeverity(assessment.getSeverity());
+            summary.setMentalHealthUpdatedAt(assessment.getAssessmentDate());
+        });
 
         readRepository.save(summary);
         log.info("Rebuilt projection for patient {}", patientId);
@@ -195,8 +242,36 @@ public class PatientHealthSummaryProjection {
     @Transactional
     public void rebuildAllProjections() {
         log.info("Starting scheduled rebuild of all projections");
-        // TODO: Implement full rebuild
-        // For each patient in write model, call rebuildProjectionForPatient
+
+        // Get all tenants from existing projections and care gaps
+        Set<String> tenantIds = new HashSet<>();
+        tenantIds.addAll(readRepository.findDistinctTenantIds());
+        tenantIds.addAll(careGapRepository.findDistinctTenantIds());
+
+        int totalRebuilt = 0;
+        for (String tenantId : tenantIds) {
+            log.info("Rebuilding projections for tenant {}", tenantId);
+
+            // Get all patients from both the read model and care gaps
+            Set<String> patientIds = new HashSet<>();
+            patientIds.addAll(readRepository.findDistinctPatientIdsByTenantId(tenantId));
+            patientIds.addAll(careGapRepository.findDistinctPatientIdsByTenantId(tenantId));
+
+            for (String patientId : patientIds) {
+                try {
+                    rebuildProjectionForPatient(tenantId, patientId);
+                    totalRebuilt++;
+                } catch (Exception e) {
+                    log.error("Failed to rebuild projection for patient {} in tenant {}: {}",
+                        patientId, tenantId, e.getMessage());
+                }
+            }
+
+            log.info("Rebuilt {} projections for tenant {}", patientIds.size(), tenantId);
+        }
+
+        log.info("Completed scheduled rebuild of {} projections across {} tenants",
+            totalRebuilt, tenantIds.size());
     }
 
     /**
@@ -229,8 +304,26 @@ public class PatientHealthSummaryProjection {
     public void calculateDailyPopulationMetrics() {
         log.info("Calculating daily population metrics");
 
-        // TODO: Get all tenants and calculate metrics for each
-        String tenantId = "default"; // Placeholder
+        // Get all tenants from the read model
+        List<String> tenantIds = readRepository.findDistinctTenantIds();
+
+        if (tenantIds.isEmpty()) {
+            log.warn("No tenants found for population metrics calculation");
+            return;
+        }
+
+        for (String tenantId : tenantIds) {
+            calculateMetricsForTenant(tenantId);
+        }
+
+        log.info("Completed daily population metrics calculation for {} tenants", tenantIds.size());
+    }
+
+    /**
+     * Calculate and save metrics for a specific tenant
+     */
+    private void calculateMetricsForTenant(String tenantId) {
+        log.debug("Calculating metrics for tenant {}", tenantId);
 
         LocalDate today = LocalDate.now();
 
@@ -261,7 +354,7 @@ public class PatientHealthSummaryProjection {
         metrics.setCalculatedAt(Instant.now());
 
         populationMetricsRepository.save(metrics);
-        log.info("Saved daily population metrics for {}", today);
+        log.info("Saved daily population metrics for tenant {} date {}", tenantId, today);
     }
 
     /**

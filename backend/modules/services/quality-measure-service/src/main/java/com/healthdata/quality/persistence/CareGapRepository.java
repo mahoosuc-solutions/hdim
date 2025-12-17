@@ -134,4 +134,17 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
         @Param("tenantId") String tenantId,
         @Param("patientId") String patientId
     );
+
+    /**
+     * Get all distinct tenant IDs
+     */
+    @Query("SELECT DISTINCT c.tenantId FROM CareGapEntity c")
+    List<String> findDistinctTenantIds();
+
+    /**
+     * Get all distinct patient IDs for a tenant
+     */
+    @Query("SELECT DISTINCT c.patientId FROM CareGapEntity c " +
+           "WHERE c.tenantId = :tenantId")
+    List<String> findDistinctPatientIdsByTenantId(@Param("tenantId") String tenantId);
 }

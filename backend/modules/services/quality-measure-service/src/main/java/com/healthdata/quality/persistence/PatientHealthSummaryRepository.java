@@ -109,4 +109,17 @@ public interface PatientHealthSummaryRepository extends JpaRepository<PatientHea
         String tenantId,
         String healthTrend
     );
+
+    /**
+     * Get all distinct tenant IDs from the read model
+     */
+    @Query("SELECT DISTINCT phs.tenantId FROM PatientHealthSummaryEntity phs")
+    List<String> findDistinctTenantIds();
+
+    /**
+     * Get all distinct patient IDs for a tenant
+     */
+    @Query("SELECT DISTINCT phs.patientId FROM PatientHealthSummaryEntity phs " +
+           "WHERE phs.tenantId = :tenantId")
+    List<String> findDistinctPatientIdsByTenantId(@Param("tenantId") String tenantId);
 }

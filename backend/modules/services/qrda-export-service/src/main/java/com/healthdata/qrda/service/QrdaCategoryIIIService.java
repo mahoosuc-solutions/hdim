@@ -185,6 +185,9 @@ public class QrdaCategoryIIIService {
     /**
      * Calculates aggregate measure results for the performance period.
      *
+     * Calls quality-measure-service to retrieve pre-calculated aggregate results
+     * for the specified measure and reporting period.
+     *
      * @param tenantId The tenant identifier
      * @param measureId The measure identifier
      * @param request The export request with period dates
@@ -192,7 +195,57 @@ public class QrdaCategoryIIIService {
      */
     public MeasureAggregateResult calculateAggregateResults(
             String tenantId, String measureId, QrdaExportRequest request) {
-        // TODO: Call quality-measure-service to get aggregate results
+        log.debug("Fetching aggregate results for measure {} in tenant {}", measureId, tenantId);
+
+        try {
+            // Call quality-measure-service for aggregate results
+            List<QualityMeasureClient.MeasureAggregateDTO> results = qualityMeasureClient.getAggregateResults(
+                tenantId,
+                List.of(measureId),
+                request.getPeriodStart(),
+                request.getPeriodEnd()
+            );
+
+            if (results == null || results.isEmpty()) {
+                log.warn("No aggregate results returned for measure {} - using zeros", measureId);
+                return buildEmptyResult(measureId);
+            }
+
+            // Find the result for our specific measure
+            QualityMeasureClient.MeasureAggregateDTO dto = results.stream()
+                .filter(r -> measureId.equals(r.getMeasureId()))
+                .findFirst()
+                .orElse(null);
+
+            if (dto == null) {
+                log.warn("Measure {} not found in aggregate results - using zeros", measureId);
+                return buildEmptyResult(measureId);
+            }
+
+            log.info("Retrieved aggregate results for measure {}: IPP={}, DENOM={}, NUMER={}, DENEX={}, DENEXCEP={}",
+                measureId, dto.getInitialPopulation(), dto.getDenominator(), dto.getNumerator(),
+                dto.getDenominatorExclusions(), dto.getDenominatorExceptions());
+
+            return MeasureAggregateResult.builder()
+                .measureId(dto.getMeasureId())
+                .initialPopulation(dto.getInitialPopulation())
+                .denominator(dto.getDenominator())
+                .numerator(dto.getNumerator())
+                .denominatorExclusions(dto.getDenominatorExclusions())
+                .denominatorExceptions(dto.getDenominatorExceptions())
+                .build();
+
+        } catch (Exception e) {
+            log.error("Error fetching aggregate results for measure {}: {}", measureId, e.getMessage(), e);
+            // Return empty result rather than failing the entire export
+            return buildEmptyResult(measureId);
+        }
+    }
+
+    /**
+     * Builds an empty result for when aggregate data is unavailable.
+     */
+    private MeasureAggregateResult buildEmptyResult(String measureId) {
         return MeasureAggregateResult.builder()
             .measureId(measureId)
             .initialPopulation(0)

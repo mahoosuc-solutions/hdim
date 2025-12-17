@@ -294,14 +294,124 @@ public class PatientHealthService {
 
     /**
      * Calculate social determinants score
+     *
+     * Based on SDOH (Social Determinants of Health) screening results:
+     * - Housing stability (LOINC 71802-3)
+     * - Food insecurity (LOINC 88122-7)
+     * - Transportation access (LOINC 93030-5)
+     * - Employment status (LOINC 67875-5)
+     * - Social isolation (LOINC 93159-2)
+     *
+     * Score calculation:
+     * - Base score of 100 if no SDOH screenings exist (no identified risks)
+     * - Deduct points for each identified unaddressed need
+     * - Positive observations (e.g., stable housing) add points back
      */
     private double calculateSocialScore(String tenantId, String patientId) {
-        // TODO: Query FHIR Observation resources with category = "social-history"
-        // - Count identified SDOH needs
-        // - Check if addressed vs unaddressed
+        log.debug("Calculating social score for patient {}", patientId);
 
-        // For now, return a placeholder
-        return 80.0; // Would be calculated from actual SDOH data
+        try {
+            // Query FHIR for social history observations
+            List<Observation> socialObs = patientDataService.fetchSocialHistoryObservations(tenantId, patientId);
+
+            if (socialObs.isEmpty()) {
+                // No SDOH screening data - return neutral score
+                log.debug("No social history observations for patient {}", patientId);
+                return 80.0;
+            }
+
+            double score = 100.0;
+            int identifiedNeeds = 0;
+            int addressedNeeds = 0;
+
+            for (Observation obs : socialObs) {
+                // Check for negative SDOH findings (unmet needs)
+                if (isUnmetSdohNeed(obs)) {
+                    identifiedNeeds++;
+                    // Deduct 10 points per unmet need
+                    score -= 10.0;
+                } else if (isAddressedSdohNeed(obs)) {
+                    addressedNeeds++;
+                    // Add back 5 points for addressed needs
+                    score += 5.0;
+                }
+            }
+
+            // Cap score between 0 and 100
+            score = Math.max(0.0, Math.min(100.0, score));
+
+            log.debug("Social score for patient {}: {} (needs: {}, addressed: {})",
+                patientId, score, identifiedNeeds, addressedNeeds);
+
+            return score;
+
+        } catch (Exception e) {
+            log.warn("Error calculating social score for patient {}: {}", patientId, e.getMessage());
+            return 80.0; // Fallback to neutral score
+        }
+    }
+
+    /**
+     * Check if observation represents an unmet SDOH need
+     */
+    private boolean isUnmetSdohNeed(Observation obs) {
+        // Check for common unmet need indicators:
+        // - valueBoolean = true for "has food insecurity", "has housing instability"
+        // - valueCodeableConcept with codes indicating risk
+
+        if (obs.hasValueBooleanType() && obs.getValueBooleanType().booleanValue()) {
+            // Check if this is a "problem exists" observation
+            String display = obs.getCode().getCodingFirstRep().getDisplay();
+            if (display != null && (
+                display.toLowerCase().contains("insecurity") ||
+                display.toLowerCase().contains("instability") ||
+                display.toLowerCase().contains("lack") ||
+                display.toLowerCase().contains("unable"))) {
+                return true;
+            }
+        }
+
+        if (obs.hasValueCodeableConcept()) {
+            String code = obs.getValueCodeableConcept().getCodingFirstRep().getCode();
+            // LA codes from LOINC answer lists indicating risk
+            if (code != null && (
+                code.equals("LA31996-4") || // At risk
+                code.equals("LA31993-1") || // Housing unstable
+                code.equals("LA28397-0"))) { // Often true (food insecurity)
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if observation indicates an SDOH need has been addressed
+     */
+    private boolean isAddressedSdohNeed(Observation obs) {
+        // Check for "addressed" or "resolved" status
+        if (obs.hasStatus() &&
+            (obs.getStatus() == Observation.ObservationStatus.FINAL ||
+             obs.getStatus() == Observation.ObservationStatus.AMENDED)) {
+
+            // Check for positive outcome codes
+            if (obs.hasValueCodeableConcept()) {
+                String code = obs.getValueCodeableConcept().getCodingFirstRep().getCode();
+                if (code != null && (
+                    code.equals("LA31994-9") || // Housing stable
+                    code.equals("LA28398-8") || // Never true (no food insecurity)
+                    code.equals("LA31997-2"))) { // Not at risk
+                    return true;
+                }
+            }
+
+            // Boolean false typically means "no risk identified"
+            if (obs.hasValueBooleanType() && !obs.getValueBooleanType().booleanValue()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

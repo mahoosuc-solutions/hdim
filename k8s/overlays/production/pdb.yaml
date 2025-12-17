@@ -1,0 +1,134 @@
+# Pod Disruption Budgets for production
+# Ensures high availability during node maintenance and updates
+
+# Gateway Service PDB - critical entry point
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gateway-service-pdb
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: gateway-service
+
+# FHIR Service PDB - critical data service
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: fhir-service-pdb
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: fhir-service
+
+# Patient Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: patient-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: patient-service
+
+# Care Gap Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: care-gap-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: care-gap-service
+
+# Quality Measure Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: quality-measure-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: quality-measure-service
+
+# CQL Engine Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cql-engine-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: cql-engine-service
+
+# Consent Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: consent-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: consent-service
+
+# Event Processing Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: event-processing-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: event-processing-service
+
+# Event Router Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: event-router-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: event-router-service
+
+# Predictive Analytics Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: predictive-analytics-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: predictive-analytics-service
+
+# EHR Connector Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ehr-connector-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ehr-connector-service

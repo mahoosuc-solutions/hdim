@@ -4,9 +4,9 @@ java = "21"
 kotlin = "2.0.21"
 
 # Spring Framework
-spring-boot = "3.3.5"
-spring-cloud = "2023.0.3"
-spring-dependency-management = "1.1.6"
+spring-boot = "3.3.11"
+spring-cloud = "2023.0.5"
+spring-dependency-management = "1.1.7"
 
 # Healthcare Libraries
 hapi-fhir = "7.6.0"
@@ -14,7 +14,7 @@ cql-engine = "3.3.1"
 cql-evaluator = "3.3.1"
 
 # Databases & Persistence
-postgresql = "42.7.4"
+postgresql = "42.7.7"
 hikaricp = "6.0.0"
 hibernate = "6.6.1.Final"
 liquibase = "4.29.2"
@@ -30,7 +30,7 @@ swagger = "2.2.25"
 jackson = "2.17.2"  # Must match Spring Boot BOM version
 
 # Security
-spring-security = "6.3.4"
+spring-security = "6.3.8"
 jjwt = "0.12.6"
 bouncycastle = "1.78.1"
 
@@ -56,6 +56,15 @@ opentelemetry = "1.32.0"
 # Build Tools
 openapi-generator = "7.9.0"
 gradle-versions-plugin = "0.51.0"
+
+# Security Patches (override transitive dependencies)
+logback = "1.5.16"
+jetty = "12.0.19"
+reactor-netty = "1.2.4"
+netty = "4.1.118.Final"
+commons-fileupload = "1.6.0"
+lz4-java = "1.8.1"
+ucum = "1.0.9"
 
 [libraries]
 # Spring Boot Starters
@@ -136,6 +145,14 @@ guava = { module = "com.google.guava:guava", version.ref = "guava" }
 # Monitoring
 micrometer-core = { module = "io.micrometer:micrometer-core", version.ref = "micrometer" }
 micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "prometheus" }
+
+# Security Patches
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+logback-core = { module = "ch.qos.logback:logback-core", version.ref = "logback" }
+jetty-http = { module = "org.eclipse.jetty:jetty-http", version.ref = "jetty" }
+jetty-io = { module = "org.eclipse.jetty:jetty-io", version.ref = "jetty" }
+jetty-server = { module = "org.eclipse.jetty:jetty-server", version.ref = "jetty" }
+reactor-netty-http = { module = "io.projectreactor.netty:reactor-netty-http", version.ref = "reactor-netty" }
 
 # Distributed Tracing
 micrometer-tracing = { module = "io.micrometer:micrometer-tracing", version.ref = "micrometer-tracing" }

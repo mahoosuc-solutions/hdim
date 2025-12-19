@@ -36,6 +36,32 @@ subprojects {
             if (requested.group == "com.fasterxml.jackson.dataformat" && requested.name.startsWith("jackson-")) {
                 useVersion(libs.versions.jackson.get())
             }
+            // Security patches - CVE-2024-12798, CVE-2024-12801
+            if (requested.group == "ch.qos.logback") {
+                useVersion(libs.versions.logback.get())
+            }
+            // Security patches - CVE-2024-12829, CVE-2025-48795, CVE-2025-48794
+            if (requested.group == "org.eclipse.jetty" && requested.name.startsWith("jetty-")) {
+                useVersion(libs.versions.jetty.get())
+            }
+            // Security patch - CVE-2025-46969
+            if (requested.group == "io.projectreactor.netty" && requested.name == "reactor-netty-http") {
+                useVersion(libs.versions.reactor.netty.get())
+            }
+            // Security patch - CVE-2025-24970 (netty SslHandler)
+            if (requested.group == "io.netty") {
+                useVersion(libs.versions.netty.get())
+            }
+            // Security patch - CVE-2025-48976 (commons-fileupload DoS)
+            if (requested.group == "commons-fileupload" && requested.name == "commons-fileupload") {
+                useVersion(libs.versions.commons.fileupload.get())
+            }
+            // Note: lz4-java CVE-2025-12183 has capability conflict between org.lz4 and at.yawk.lz4
+            // Accept risk until Kafka updates dependency
+            // Security patch - CVE-2024-55887 (ucum XXE)
+            if (requested.group == "org.fhir" && requested.name == "ucum") {
+                useVersion(libs.versions.ucum.get())
+            }
         }
     }
 

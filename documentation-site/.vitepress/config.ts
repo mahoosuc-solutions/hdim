@@ -17,6 +17,7 @@ export default defineConfig({
       { text: 'Workflows', link: '/workflows/' },
       { text: 'Guides', link: '/guides/' },
       { text: 'API Reference', link: '/api/' },
+      { text: 'Security', link: '/security/' },
       { text: 'About', link: '/about/' }
     ],
 
@@ -70,6 +71,14 @@ export default defineConfig({
             { text: 'Quality Measure Service', link: '/api/quality-measure-service' },
             { text: 'CQL Engine Service', link: '/api/cql-engine-service' },
             { text: 'Care Gap Service', link: '/api/care-gap-service' }
+          ]
+        }
+      ],
+      '/security/': [
+        {
+          text: 'Security',
+          items: [
+            { text: 'Security Architecture', link: '/security/' }
           ]
         }
       ],

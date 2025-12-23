@@ -8,13 +8,6 @@
     <changeSet id="0004-update-care-gaps-table" author="healthdata-team4">
         <comment>Update care gaps table to add new fields for CQL integration and comprehensive tracking</comment>
 
-        <!-- Add measure category -->
-        <addColumn tableName="care_gaps">
-            <column name="measure_category" type="varchar(50)">
-                <constraints nullable="true"/>
-            </column>
-        </addColumn>
-
         <!-- Add measure year -->
         <addColumn tableName="care_gaps">
             <column name="measure_year" type="integer">
@@ -22,19 +15,7 @@
             </column>
         </addColumn>
 
-        <!-- Rename status column to gap_status for clarity -->
-        <renameColumn tableName="care_gaps"
-                      oldColumnName="status"
-                      newColumnName="gap_status"
-                      columnDataType="varchar(50)"/>
-
-        <!-- Add gap description and reason -->
-        <addColumn tableName="care_gaps">
-            <column name="gap_description" type="text">
-                <constraints nullable="true"/>
-            </column>
-        </addColumn>
-
+        <!-- Add gap reason -->
         <addColumn tableName="care_gaps">
             <column name="gap_reason" type="text">
                 <constraints nullable="true"/>
@@ -47,16 +28,6 @@
                 <constraints nullable="true"/>
             </column>
         </addColumn>
-
-        <!-- Change identified_date from timestamp to date -->
-        <modifyDataType tableName="care_gaps"
-                        columnName="identified_date"
-                        newDataType="date"/>
-
-        <!-- Rename closed_date and change to date type -->
-        <modifyDataType tableName="care_gaps"
-                        columnName="closed_date"
-                        newDataType="date"/>
 
         <!-- Add recommendation fields -->
         <addColumn tableName="care_gaps">
@@ -159,23 +130,23 @@
                         newDataType="uuid"/>
 
         <!-- Create additional indexes -->
-        <createIndex indexName="idx_care_gaps_measure_category" tableName="care_gaps">
+        <createIndex indexName="idx_care_gaps_gap_category" tableName="care_gaps">
             <column name="tenant_id"/>
-            <column name="measure_category"/>
-            <column name="gap_status"/>
+            <column name="gap_category"/>
+            <column name="status"/>
         </createIndex>
 
         <createIndex indexName="idx_care_gaps_priority_status" tableName="care_gaps">
             <column name="tenant_id"/>
             <column name="priority"/>
-            <column name="gap_status"/>
+            <column name="status"/>
             <column name="due_date"/>
         </createIndex>
 
         <createIndex indexName="idx_care_gaps_patient_status" tableName="care_gaps">
             <column name="tenant_id"/>
             <column name="patient_id"/>
-            <column name="gap_status"/>
+            <column name="status"/>
         </createIndex>
 
         <createIndex indexName="idx_care_gaps_measure_year" tableName="care_gaps">
@@ -187,7 +158,7 @@
             <dropIndex indexName="idx_care_gaps_measure_year" tableName="care_gaps"/>
             <dropIndex indexName="idx_care_gaps_patient_status" tableName="care_gaps"/>
             <dropIndex indexName="idx_care_gaps_priority_status" tableName="care_gaps"/>
-            <dropIndex indexName="idx_care_gaps_measure_category" tableName="care_gaps"/>
+            <dropIndex indexName="idx_care_gaps_gap_category" tableName="care_gaps"/>
             <dropColumn tableName="care_gaps" columnName="version"/>
             <dropColumn tableName="care_gaps" columnName="updated_by"/>
             <dropColumn tableName="care_gaps" columnName="created_by"/>
@@ -205,9 +176,7 @@
             <dropColumn tableName="care_gaps" columnName="recommendation"/>
             <dropColumn tableName="care_gaps" columnName="risk_score"/>
             <dropColumn tableName="care_gaps" columnName="gap_reason"/>
-            <dropColumn tableName="care_gaps" columnName="gap_description"/>
             <dropColumn tableName="care_gaps" columnName="measure_year"/>
-            <dropColumn tableName="care_gaps" columnName="measure_category"/>
         </rollback>
     </changeSet>
 

@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -49,7 +50,7 @@ class MeasureCalculationApiIntegrationTest {
     private KafkaTemplate<String, String> kafkaTemplate;
 
     private static final String TENANT_ID = "test-tenant";
-    private static final String PATIENT_ID = "550e8400-e29b-41d4-a716-446655440000";
+    private static final UUID PATIENT_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
     private static final String MEASURE_ID = "HEDIS_CDC_A1C9";
 
     @BeforeEach
@@ -74,13 +75,13 @@ class MeasureCalculationApiIntegrationTest {
                 }
                 """;
 
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenReturn(cqlResponse);
 
         // Execute request
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", MEASURE_ID)
                         .param("createdBy", "integration-test")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -88,7 +89,7 @@ class MeasureCalculationApiIntegrationTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.tenantId").value(TENANT_ID))
-                .andExpect(jsonPath("$.patientId").value(PATIENT_ID))
+                .andExpect(jsonPath("$.patientId").value(PATIENT_ID.toString()))
                 .andExpect(jsonPath("$.measureId").value(MEASURE_ID))
                 .andExpect(jsonPath("$.measureName").value("Comprehensive Diabetes Care: HbA1c Control (<9.0%)"))
                 .andExpect(jsonPath("$.measureCategory").value("HEDIS"))
@@ -122,12 +123,12 @@ class MeasureCalculationApiIntegrationTest {
                 }
                 """;
 
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenReturn(cqlResponse);
 
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", MEASURE_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
@@ -138,14 +139,14 @@ class MeasureCalculationApiIntegrationTest {
     @DisplayName("Should return 400 when X-Tenant-ID header is missing")
     void shouldReturnBadRequestWhenTenantIdMissing() throws Exception {
         mockMvc.perform(post("/quality-measure/calculate")
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", MEASURE_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
         // Verify CQL Engine was not called
         verify(cqlEngineServiceClient, never())
-                .evaluateCql(anyString(), anyString(), anyString(), anyString());
+                .evaluateCql(anyString(), anyString(), any(UUID.class), anyString());
     }
 
     @Test
@@ -163,7 +164,7 @@ class MeasureCalculationApiIntegrationTest {
     void shouldReturnBadRequestWhenMeasureIdMissing() throws Exception {
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
@@ -171,12 +172,12 @@ class MeasureCalculationApiIntegrationTest {
     @Test
     @DisplayName("Should handle CQL Engine failures gracefully")
     void shouldHandleCqlEngineFailure() throws Exception {
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenThrow(new RuntimeException("CQL Engine unavailable"));
 
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", MEASURE_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError());
@@ -195,12 +196,12 @@ class MeasureCalculationApiIntegrationTest {
                 }
                 """;
 
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenReturn(cqlResponse);
 
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", "CMS_122")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
@@ -220,12 +221,12 @@ class MeasureCalculationApiIntegrationTest {
                 }
                 """;
 
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenReturn(cqlResponse);
 
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", "CUSTOM_001")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
@@ -246,7 +247,7 @@ class MeasureCalculationApiIntegrationTest {
                 }
                 """;
 
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenReturn(cqlResponse);
 
         // Before calculation
@@ -254,7 +255,7 @@ class MeasureCalculationApiIntegrationTest {
 
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", MEASURE_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
@@ -264,7 +265,7 @@ class MeasureCalculationApiIntegrationTest {
         assert countAfter == countBefore + 1;
 
         // Verify the persisted entity
-        var results = repository.findByTenantIdAndPatientId(TENANT_ID, UUID.fromString(PATIENT_ID));
+        var results = repository.findByTenantIdAndPatientId(TENANT_ID, PATIENT_ID);
         assert results.size() == 1;
         QualityMeasureResultEntity entity = results.get(0);
         assert entity.getMeasureId().equals(MEASURE_ID);
@@ -287,12 +288,12 @@ class MeasureCalculationApiIntegrationTest {
                 }
                 """;
 
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenReturn(cqlResponse);
 
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", MEASURE_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())

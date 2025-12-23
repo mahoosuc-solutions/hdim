@@ -3,8 +3,8 @@ spring:
     name: sdoh-service
   # ⚠️ SECURITY: Database credentials MUST be provided via environment variables
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/hdim_sdoh}
-    username: ${SPRING_DATASOURCE_USERNAME:hdim_user}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/healthdata_sdoh}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
     password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
   jpa:

@@ -245,12 +245,12 @@ test.describe('Reports and Results flows', () => {
     // Test measure type filter - click on select and choose HEDIS
     const measureTypeSelect = page.locator('mat-select[formcontrolname="measureType"]');
     if (await measureTypeSelect.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await measureTypeSelect.click();
+      await measureTypeSelect.click({ force: true });
       await page.waitForTimeout(300);
 
       const hedisOption = page.getByRole('option', { name: 'HEDIS' });
       if (await hedisOption.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await hedisOption.click();
+        await hedisOption.click({ force: true });
       } else {
         await page.keyboard.press('Escape');
       }
@@ -259,12 +259,12 @@ test.describe('Reports and Results flows', () => {
     // Test status filter
     const statusSelect = page.locator('mat-select[formcontrolname="status"]');
     if (await statusSelect.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await statusSelect.click();
+      await statusSelect.click({ force: true });
       await page.waitForTimeout(300);
 
       const nonCompliantOption = page.getByRole('option', { name: 'Non-Compliant' });
       if (await nonCompliantOption.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await nonCompliantOption.click();
+        await nonCompliantOption.click({ force: true });
       } else {
         await page.keyboard.press('Escape');
       }

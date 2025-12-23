@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -17,6 +18,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.lenient;
@@ -47,7 +49,7 @@ class ClinicalAlertServiceTest {
     private ClinicalAlertService clinicalAlertService;
 
     private static final String TENANT_ID = "test-tenant";
-    private static final String PATIENT_ID = "patient-123";
+    private static final UUID PATIENT_ID = UUID.fromString("22222222-3333-4444-5555-666666666666");
     private static final String PROVIDER_ID = "provider-001";
 
     @BeforeEach
@@ -221,6 +223,26 @@ class ClinicalAlertServiceTest {
     }
 
     @Test
+    @DisplayName("Should not create alert when risk level is HIGH or below")
+    void shouldSkipRiskAlertWhenNotVeryHigh() {
+        RiskAssessmentEntity riskAssessment = RiskAssessmentEntity.builder()
+            .id(UUID.randomUUID())
+            .tenantId(TENANT_ID)
+            .patientId(PATIENT_ID)
+            .riskScore(60)
+            .riskLevel(RiskAssessmentEntity.RiskLevel.HIGH)
+            .assessmentDate(Instant.now())
+            .build();
+
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateRiskAssessment(
+            TENANT_ID, riskAssessment
+        );
+
+        assertThat(alert).isNull();
+        verify(alertRepository, never()).save(any(ClinicalAlertEntity.class));
+    }
+
+    @Test
     @DisplayName("Should create MEDIUM alert for health score decline >= 15 points")
     void shouldCreateMediumAlertForHealthScoreDecline() {
         // Given: Health score declined by 15+ points
@@ -372,6 +394,25 @@ class ClinicalAlertServiceTest {
     }
 
     @Test
+    @DisplayName("Should swallow notification errors on acknowledgment")
+    void shouldHandleNotificationFailureOnAcknowledge() {
+        UUID alertId = UUID.randomUUID();
+        ClinicalAlertEntity alert = createAlertEntityWithId(alertId);
+
+        when(alertRepository.findById(alertId)).thenReturn(Optional.of(alert));
+        when(alertRepository.save(any(ClinicalAlertEntity.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+        doThrow(new RuntimeException("notify")).when(notificationTrigger)
+            .onAlertAcknowledged(eq(TENANT_ID), any(ClinicalAlertDTO.class));
+
+        ClinicalAlertDTO acknowledged = clinicalAlertService.acknowledgeAlert(
+            TENANT_ID, alertId.toString(), PROVIDER_ID
+        );
+
+        assertThat(acknowledged.getStatus()).isEqualTo("ACKNOWLEDGED");
+    }
+
+    @Test
     @DisplayName("Should resolve alert and update status")
     void shouldResolveAlert() {
         // Given: Acknowledged alert
@@ -398,6 +439,33 @@ class ClinicalAlertServiceTest {
     }
 
     @Test
+    @DisplayName("Should reject resolve when alert not found")
+    void shouldRejectResolveWhenAlertNotFound() {
+        UUID alertId = UUID.randomUUID();
+        when(alertRepository.findById(alertId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> clinicalAlertService.resolveAlert(
+            TENANT_ID, alertId.toString(), PROVIDER_ID
+        )).isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Alert not found");
+    }
+
+    @Test
+    @DisplayName("Should reject resolve when alert belongs to another tenant")
+    void shouldRejectResolveWhenTenantMismatch() {
+        UUID alertId = UUID.randomUUID();
+        ClinicalAlertEntity alert = createAlertEntityWithId(alertId);
+        alert.setTenantId("other-tenant");
+
+        when(alertRepository.findById(alertId)).thenReturn(Optional.of(alert));
+
+        assertThatThrownBy(() -> clinicalAlertService.resolveAlert(
+            TENANT_ID, alertId.toString(), PROVIDER_ID
+        )).isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("does not belong to tenant");
+    }
+
+    @Test
     @DisplayName("Should NOT create alert for moderate depression (PHQ-9 10-14)")
     void shouldNotCreateAlertForModerateDepression() {
         // Given: PHQ-9 with moderate score (not critical)
@@ -413,6 +481,433 @@ class ClinicalAlertServiceTest {
         // Then: No alert created (below threshold)
         assertThat(alert).isNull();
         verify(alertRepository, never()).save(any(ClinicalAlertEntity.class));
+    }
+
+    @Test
+    @DisplayName("Should create HIGH alert for severe chronic deterioration")
+    void shouldCreateChronicDeteriorationAlert() {
+        when(alertRepository.findRecentDuplicates(
+            eq(TENANT_ID),
+            eq(PATIENT_ID),
+            eq(ClinicalAlertEntity.AlertType.CHRONIC_DETERIORATION),
+            any(Instant.class)
+        )).thenReturn(Collections.emptyList());
+
+        when(alertRepository.save(any(ClinicalAlertEntity.class)))
+            .thenAnswer(invocation -> {
+                ClinicalAlertEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateChronicDiseaseDeterioration(
+            TENANT_ID, PATIENT_ID, "COPD", "FEV1", "SEVERE"
+        );
+
+        assertThat(alert).isNotNull();
+        assertThat(alert.getAlertType()).isEqualTo("CHRONIC_DETERIORATION");
+        assertThat(alert.getSeverity()).isEqualTo("HIGH");
+        verify(kafkaTemplate).send(eq("clinical-alert.triggered"), any());
+    }
+
+    @Test
+    @DisplayName("Should create MEDIUM alert for moderate chronic deterioration")
+    void shouldCreateModerateChronicDeteriorationAlert() {
+        when(alertRepository.findRecentDuplicates(
+            eq(TENANT_ID),
+            eq(PATIENT_ID),
+            eq(ClinicalAlertEntity.AlertType.CHRONIC_DETERIORATION),
+            any(Instant.class)
+        )).thenReturn(Collections.emptyList());
+
+        when(alertRepository.save(any(ClinicalAlertEntity.class)))
+            .thenAnswer(invocation -> {
+                ClinicalAlertEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateChronicDiseaseDeterioration(
+            TENANT_ID, PATIENT_ID, "Diabetes", "HbA1c", "MODERATE"
+        );
+
+        assertThat(alert).isNotNull();
+        assertThat(alert.getSeverity()).isEqualTo("MEDIUM");
+        assertThat(alert.isEscalated()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should not create alert for mild chronic deterioration")
+    void shouldSkipChronicDeteriorationWhenMild() {
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateChronicDiseaseDeterioration(
+            TENANT_ID, PATIENT_ID, "COPD", "FEV1", "MILD"
+        );
+
+        assertThat(alert).isNull();
+        verify(alertRepository, never()).save(any(ClinicalAlertEntity.class));
+    }
+
+    @Test
+    @DisplayName("Should not create alert for low chronic deterioration")
+    void shouldSkipChronicDeteriorationWhenLow() {
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateChronicDiseaseDeterioration(
+            TENANT_ID, PATIENT_ID, "COPD", "FEV1", "LOW"
+        );
+
+        assertThat(alert).isNull();
+        verify(alertRepository, never()).save(any(ClinicalAlertEntity.class));
+    }
+
+    @Test
+    @DisplayName("Should not create alert when health score decline below threshold")
+    void shouldSkipHealthScoreDeclineBelowThreshold() {
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateHealthScoreChange(
+            TENANT_ID, PATIENT_ID, 80, 70
+        );
+
+        assertThat(alert).isNull();
+        verify(alertRepository, never()).save(any(ClinicalAlertEntity.class));
+    }
+
+    @Test
+    @DisplayName("Should suppress duplicate risk escalation alerts")
+    void shouldSuppressDuplicateRiskEscalationAlerts() {
+        RiskAssessmentEntity riskAssessment = RiskAssessmentEntity.builder()
+            .id(UUID.randomUUID())
+            .tenantId(TENANT_ID)
+            .patientId(PATIENT_ID)
+            .riskScore(90)
+            .riskLevel(RiskAssessmentEntity.RiskLevel.VERY_HIGH)
+            .assessmentDate(Instant.now())
+            .build();
+
+        when(alertRepository.findRecentDuplicates(
+            eq(TENANT_ID),
+            eq(PATIENT_ID),
+            eq(ClinicalAlertEntity.AlertType.RISK_ESCALATION),
+            any(Instant.class)
+        )).thenReturn(List.of(ClinicalAlertEntity.builder().build()));
+
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateRiskAssessment(
+            TENANT_ID, riskAssessment
+        );
+
+        assertThat(alert).isNull();
+        verify(alertRepository, never()).save(any(ClinicalAlertEntity.class));
+        verify(kafkaTemplate, never()).send(anyString(), any());
+    }
+
+    @Test
+    @DisplayName("Should suppress duplicate health score decline alerts")
+    void shouldSuppressDuplicateHealthScoreDeclineAlerts() {
+        when(alertRepository.findRecentDuplicates(
+            eq(TENANT_ID),
+            eq(PATIENT_ID),
+            eq(ClinicalAlertEntity.AlertType.HEALTH_DECLINE),
+            any(Instant.class)
+        )).thenReturn(List.of(ClinicalAlertEntity.builder().build()));
+
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateHealthScoreChange(
+            TENANT_ID, PATIENT_ID, 80, 60
+        );
+
+        assertThat(alert).isNull();
+        verify(alertRepository, never()).save(any(ClinicalAlertEntity.class));
+        verify(kafkaTemplate, never()).send(anyString(), any());
+    }
+
+    @Test
+    @DisplayName("Should suppress duplicate chronic deterioration alerts")
+    void shouldSuppressDuplicateChronicDeteriorationAlerts() {
+        when(alertRepository.findRecentDuplicates(
+            eq(TENANT_ID),
+            eq(PATIENT_ID),
+            eq(ClinicalAlertEntity.AlertType.CHRONIC_DETERIORATION),
+            any(Instant.class)
+        )).thenReturn(List.of(ClinicalAlertEntity.builder().build()));
+
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateChronicDiseaseDeterioration(
+            TENANT_ID, PATIENT_ID, "CHF", "Ejection Fraction", "SEVERE"
+        );
+
+        assertThat(alert).isNull();
+        verify(alertRepository, never()).save(any(ClinicalAlertEntity.class));
+        verify(kafkaTemplate, never()).send(anyString(), any());
+    }
+
+    @Test
+    @DisplayName("Should swallow notification errors on alert trigger")
+    void shouldHandleNotificationFailureOnTrigger() {
+        RiskAssessmentEntity riskAssessment = RiskAssessmentEntity.builder()
+            .id(UUID.randomUUID())
+            .tenantId(TENANT_ID)
+            .patientId(PATIENT_ID)
+            .riskScore(85)
+            .riskLevel(RiskAssessmentEntity.RiskLevel.VERY_HIGH)
+            .assessmentDate(Instant.now())
+            .build();
+
+        when(alertRepository.findRecentDuplicates(
+            eq(TENANT_ID),
+            eq(PATIENT_ID),
+            eq(ClinicalAlertEntity.AlertType.RISK_ESCALATION),
+            any(Instant.class)
+        )).thenReturn(Collections.emptyList());
+
+        when(alertRepository.save(any(ClinicalAlertEntity.class)))
+            .thenAnswer(invocation -> {
+                ClinicalAlertEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        doThrow(new RuntimeException("notify")).when(notificationTrigger)
+            .onAlertTriggered(eq(TENANT_ID), any(ClinicalAlertDTO.class));
+
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateRiskAssessment(
+            TENANT_ID, riskAssessment
+        );
+
+        assertThat(alert).isNotNull();
+        verify(alertRepository).save(any(ClinicalAlertEntity.class));
+    }
+
+    @Test
+    @DisplayName("Should swallow notification errors for suicide risk alerts")
+    void shouldHandleNotificationFailureForSuicideRisk() {
+        Map<String, Integer> responses = new HashMap<>();
+        responses.put("item_9", 1);
+        MentalHealthAssessmentEntity assessment = createMentalHealthAssessmentWithResponses(
+            "PHQ-9", 12, "moderate", responses
+        );
+
+        when(alertRepository.findRecentDuplicates(
+            eq(TENANT_ID),
+            eq(PATIENT_ID),
+            eq(ClinicalAlertEntity.AlertType.MENTAL_HEALTH_CRISIS),
+            any(Instant.class)
+        )).thenReturn(Collections.emptyList());
+
+        when(alertRepository.save(any(ClinicalAlertEntity.class)))
+            .thenAnswer(invocation -> {
+                ClinicalAlertEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        doThrow(new RuntimeException("notify")).when(notificationTrigger)
+            .onAlertTriggered(eq(TENANT_ID), any(ClinicalAlertDTO.class));
+
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateMentalHealthAssessment(
+            TENANT_ID, assessment
+        );
+
+        assertThat(alert).isNotNull();
+        verify(alertRepository).save(any(ClinicalAlertEntity.class));
+    }
+
+    @Test
+    @DisplayName("Should swallow notification errors for severe depression alerts")
+    void shouldHandleNotificationFailureForSevereDepression() {
+        MentalHealthAssessmentEntity assessment = createMentalHealthAssessment(
+            "PHQ-9", 22, "severe"
+        );
+
+        when(alertRepository.findRecentDuplicates(
+            eq(TENANT_ID),
+            eq(PATIENT_ID),
+            eq(ClinicalAlertEntity.AlertType.MENTAL_HEALTH_CRISIS),
+            any(Instant.class)
+        )).thenReturn(Collections.emptyList());
+
+        when(alertRepository.save(any(ClinicalAlertEntity.class)))
+            .thenAnswer(invocation -> {
+                ClinicalAlertEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        doThrow(new RuntimeException("notify")).when(notificationTrigger)
+            .onAlertTriggered(eq(TENANT_ID), any(ClinicalAlertDTO.class));
+
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateMentalHealthAssessment(
+            TENANT_ID, assessment
+        );
+
+        assertThat(alert).isNotNull();
+        verify(alertRepository).save(any(ClinicalAlertEntity.class));
+    }
+
+    @Test
+    @DisplayName("Should swallow notification errors for severe anxiety alerts")
+    void shouldHandleNotificationFailureForSevereAnxiety() {
+        MentalHealthAssessmentEntity assessment = createMentalHealthAssessment(
+            "GAD-7", 18, "severe"
+        );
+
+        when(alertRepository.findRecentDuplicates(
+            eq(TENANT_ID),
+            eq(PATIENT_ID),
+            eq(ClinicalAlertEntity.AlertType.MENTAL_HEALTH_CRISIS),
+            any(Instant.class)
+        )).thenReturn(Collections.emptyList());
+
+        when(alertRepository.save(any(ClinicalAlertEntity.class)))
+            .thenAnswer(invocation -> {
+                ClinicalAlertEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        doThrow(new RuntimeException("notify")).when(notificationTrigger)
+            .onAlertTriggered(eq(TENANT_ID), any(ClinicalAlertDTO.class));
+
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateMentalHealthAssessment(
+            TENANT_ID, assessment
+        );
+
+        assertThat(alert).isNotNull();
+        verify(alertRepository).save(any(ClinicalAlertEntity.class));
+    }
+
+    @Test
+    @DisplayName("Should swallow notification errors for health score decline alerts")
+    void shouldHandleNotificationFailureForHealthScoreDecline() {
+        when(alertRepository.findRecentDuplicates(
+            eq(TENANT_ID),
+            eq(PATIENT_ID),
+            eq(ClinicalAlertEntity.AlertType.HEALTH_DECLINE),
+            any(Instant.class)
+        )).thenReturn(Collections.emptyList());
+
+        when(alertRepository.save(any(ClinicalAlertEntity.class)))
+            .thenAnswer(invocation -> {
+                ClinicalAlertEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        doThrow(new RuntimeException("notify")).when(notificationTrigger)
+            .onAlertTriggered(eq(TENANT_ID), any(ClinicalAlertDTO.class));
+
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateHealthScoreChange(
+            TENANT_ID, PATIENT_ID, 90, 70
+        );
+
+        assertThat(alert).isNotNull();
+        verify(alertRepository).save(any(ClinicalAlertEntity.class));
+    }
+
+    @Test
+    @DisplayName("Should swallow notification errors for chronic deterioration alerts")
+    void shouldHandleNotificationFailureForChronicDeterioration() {
+        when(alertRepository.findRecentDuplicates(
+            eq(TENANT_ID),
+            eq(PATIENT_ID),
+            eq(ClinicalAlertEntity.AlertType.CHRONIC_DETERIORATION),
+            any(Instant.class)
+        )).thenReturn(Collections.emptyList());
+
+        when(alertRepository.save(any(ClinicalAlertEntity.class)))
+            .thenAnswer(invocation -> {
+                ClinicalAlertEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        doThrow(new RuntimeException("notify")).when(notificationTrigger)
+            .onAlertTriggered(eq(TENANT_ID), any(ClinicalAlertDTO.class));
+
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateChronicDiseaseDeterioration(
+            TENANT_ID, PATIENT_ID, "CHF", "Ejection Fraction", "SEVERE"
+        );
+
+        assertThat(alert).isNotNull();
+        verify(alertRepository).save(any(ClinicalAlertEntity.class));
+    }
+
+    @Test
+    @DisplayName("Should suppress duplicate suicide risk alerts")
+    void shouldSuppressDuplicateSuicideRiskAlerts() {
+        Map<String, Integer> responses = new HashMap<>();
+        responses.put("item_9", 1);
+        MentalHealthAssessmentEntity assessment = createMentalHealthAssessmentWithResponses(
+            "PHQ-9", 15, "moderate", responses
+        );
+
+        when(alertRepository.findRecentDuplicates(
+            eq(TENANT_ID),
+            eq(PATIENT_ID),
+            eq(ClinicalAlertEntity.AlertType.MENTAL_HEALTH_CRISIS),
+            any(Instant.class)
+        )).thenReturn(List.of(ClinicalAlertEntity.builder().build()));
+
+        ClinicalAlertDTO alert = clinicalAlertService.evaluateMentalHealthAssessment(
+            TENANT_ID, assessment
+        );
+
+        assertThat(alert).isNull();
+        verify(alertRepository, never()).save(any(ClinicalAlertEntity.class));
+    }
+
+    @Test
+    @DisplayName("Should publish alert event with expected payload")
+    @SuppressWarnings("unchecked")
+    void shouldPublishAlertEventWithExpectedPayload() {
+        when(alertRepository.findRecentDuplicates(
+            eq(TENANT_ID),
+            eq(PATIENT_ID),
+            eq(ClinicalAlertEntity.AlertType.HEALTH_DECLINE),
+            any(Instant.class)
+        )).thenReturn(Collections.emptyList());
+
+        when(alertRepository.save(any(ClinicalAlertEntity.class)))
+            .thenAnswer(invocation -> {
+                ClinicalAlertEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        clinicalAlertService.evaluateHealthScoreChange(
+            TENANT_ID, PATIENT_ID, 90, 70
+        );
+
+        ArgumentCaptor<Map<String, Object>> eventCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(kafkaTemplate).send(eq("clinical-alert.triggered"), eventCaptor.capture());
+
+        Map<String, Object> payload = eventCaptor.getValue();
+        assertThat(payload.get("patientId")).isEqualTo(PATIENT_ID);
+        assertThat(payload.get("tenantId")).isEqualTo(TENANT_ID);
+        assertThat(payload.get("alertType")).isEqualTo("HEALTH_DECLINE");
+        assertThat(payload.get("severity")).isEqualTo("MEDIUM");
+        assertThat(payload.get("alertId")).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Should reject acknowledging alert from another tenant")
+    void shouldRejectAcknowledgeWhenTenantMismatch() {
+        UUID alertId = UUID.randomUUID();
+        ClinicalAlertEntity alert = createAlertEntityWithId(alertId);
+        alert.setTenantId("other-tenant");
+
+        when(alertRepository.findById(alertId)).thenReturn(Optional.of(alert));
+
+        assertThatThrownBy(() -> clinicalAlertService.acknowledgeAlert(
+            TENANT_ID, alertId.toString(), PROVIDER_ID))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("does not belong to tenant");
+    }
+
+    @Test
+    @DisplayName("Should reject acknowledging when alert not found")
+    void shouldRejectAcknowledgeWhenAlertNotFound() {
+        UUID alertId = UUID.randomUUID();
+        when(alertRepository.findById(alertId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> clinicalAlertService.acknowledgeAlert(
+            TENANT_ID, alertId.toString(), PROVIDER_ID))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Alert not found");
     }
 
     // Helper methods

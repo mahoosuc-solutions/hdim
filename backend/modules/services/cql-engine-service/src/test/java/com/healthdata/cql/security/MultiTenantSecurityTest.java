@@ -7,6 +7,7 @@ import com.healthdata.cql.entity.ValueSet;
 import com.healthdata.cql.repository.CqlEvaluationRepository;
 import com.healthdata.cql.repository.CqlLibraryRepository;
 import com.healthdata.cql.repository.ValueSetRepository;
+import com.healthdata.cql.test.CqlTestcontainersBase;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
 @DisplayName("Multi-Tenant Data Isolation Security Tests")
-class MultiTenantSecurityTest {
+class MultiTenantSecurityTest extends CqlTestcontainersBase {
 
     @Autowired
     private CqlLibraryRepository libraryRepository;
@@ -60,8 +61,9 @@ class MultiTenantSecurityTest {
     private static final String TENANT_C = "tenant-gamma";
 
     // Test patient IDs (per tenant)
-    private static final String PATIENT_A = "patient-a-123";
-    private static final String PATIENT_B = "patient-b-456";
+    private static final UUID PATIENT_A = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private static final UUID PATIENT_B = UUID.fromString("22222222-2222-2222-2222-222222222222");
+    private static final UUID PHI_PATIENT_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
 
     // Test data holders
     private CqlLibrary tenantALibrary;
@@ -281,7 +283,7 @@ class MultiTenantSecurityTest {
         // Use countByTenantIdAndPatientId as countByTenantId doesn't exist
         long tenantACount = evaluationRepository.countByTenantIdAndPatientId(TENANT_A, PATIENT_A);
         long tenantBCount = evaluationRepository.countByTenantIdAndPatientId(TENANT_B, PATIENT_B);
-        long unknownTenantCount = evaluationRepository.countByTenantIdAndPatientId(TENANT_C, "any-patient");
+        long unknownTenantCount = evaluationRepository.countByTenantIdAndPatientId(TENANT_C, UUID.randomUUID());
 
         assertTrue(tenantACount > 0, "Tenant A should have evaluations for their patient");
         assertTrue(tenantBCount > 0, "Tenant B should have evaluations for their patient");
@@ -295,14 +297,14 @@ class MultiTenantSecurityTest {
     @DisplayName("Patient data should not leak between tenants")
     void testPatientDataIsolation_NoLeakBetweenTenants() {
         // Create evaluation with sensitive patient data
-        CqlEvaluation sensitiveEval = new CqlEvaluation(TENANT_A, tenantALibrary, "PHI-PATIENT-SSN-123");
+        CqlEvaluation sensitiveEval = new CqlEvaluation(TENANT_A, tenantALibrary, PHI_PATIENT_ID);
         sensitiveEval.setStatus("SUCCESS");
         sensitiveEval.setEvaluationDate(Instant.now());
         evaluationRepository.save(sensitiveEval);
 
         // Try to access from Tenant B context
         List<CqlEvaluation> tenantBSearch = evaluationRepository
-            .findByTenantIdAndPatientId(TENANT_B, "PHI-PATIENT-SSN-123");
+            .findByTenantIdAndPatientId(TENANT_B, PHI_PATIENT_ID);
 
         assertTrue(tenantBSearch.isEmpty(),
             "PHI patient data must not leak between tenants");

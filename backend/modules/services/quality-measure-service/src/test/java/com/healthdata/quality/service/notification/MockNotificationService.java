@@ -48,7 +48,7 @@ public class MockNotificationService extends com.healthdata.quality.service.Noti
     /**
      * Thread-safe storage for notification records
      */
-    private final Map<String, List<NotificationRecord>> notificationsByPatient = new ConcurrentHashMap<>();
+    private final Map<java.util.UUID, List<NotificationRecord>> notificationsByPatient = new ConcurrentHashMap<>();
     private final List<NotificationRecord> allNotifications = new ArrayList<>();
 
     /**
@@ -120,7 +120,7 @@ public class MockNotificationService extends com.healthdata.quality.service.Noti
     /**
      * Get all notification records for a specific patient
      */
-    public List<NotificationRecord> getRecordsForPatient(String patientId) {
+    public List<NotificationRecord> getRecordsForPatient(java.util.UUID patientId) {
         return new ArrayList<>(notificationsByPatient.getOrDefault(patientId, List.of()));
     }
 
@@ -254,7 +254,7 @@ public class MockNotificationService extends com.healthdata.quality.service.Noti
             return request.getNotificationType();
         }
 
-        public String getPatientId() {
+        public java.util.UUID getPatientId() {
             return request.getPatientId();
         }
 

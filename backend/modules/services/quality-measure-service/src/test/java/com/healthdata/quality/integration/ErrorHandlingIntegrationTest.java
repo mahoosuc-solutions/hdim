@@ -15,7 +15,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -45,7 +48,7 @@ class ErrorHandlingIntegrationTest {
     private KafkaTemplate<String, String> kafkaTemplate;
 
     private static final String TENANT_ID = "test-tenant";
-    private static final String PATIENT_ID = "550e8400-e29b-41d4-a716-446655440000";
+    private static final UUID PATIENT_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
 
     @BeforeEach
     void setUp() {
@@ -68,7 +71,7 @@ class ErrorHandlingIntegrationTest {
     void shouldReturn400ForEmptyTenantId() throws Exception {
         mockMvc.perform(get("/quality-measure/results")
                         .header("X-Tenant-ID", "")
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
@@ -89,7 +92,7 @@ class ErrorHandlingIntegrationTest {
     void shouldReturn400ForEmptyMeasureId() throws Exception {
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", "")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
@@ -98,12 +101,12 @@ class ErrorHandlingIntegrationTest {
     @Test
     @DisplayName("Should handle CQL Engine connection timeout")
     void shouldHandleCqlEngineConnectionTimeout() throws Exception {
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenThrow(new RuntimeException("Connection timeout"));
 
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", "HEDIS_CDC")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError());
@@ -115,12 +118,12 @@ class ErrorHandlingIntegrationTest {
     @Test
     @DisplayName("Should handle CQL Engine service unavailable")
     void shouldHandleCqlEngineServiceUnavailable() throws Exception {
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenThrow(new RuntimeException("Service unavailable"));
 
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", "HEDIS_CDC")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError());
@@ -129,12 +132,12 @@ class ErrorHandlingIntegrationTest {
     @Test
     @DisplayName("Should handle invalid JSON in CQL response")
     void shouldHandleInvalidJsonInCqlResponse() throws Exception {
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenReturn("{ invalid json format");
 
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", "HEDIS_CDC")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError());
@@ -143,12 +146,12 @@ class ErrorHandlingIntegrationTest {
     @Test
     @DisplayName("Should handle null CQL response")
     void shouldHandleNullCqlResponse() throws Exception {
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenReturn(null);
 
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", "HEDIS_CDC")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError());
@@ -157,13 +160,13 @@ class ErrorHandlingIntegrationTest {
     @Test
     @DisplayName("Should handle empty CQL response")
     void shouldHandleEmptyCqlResponse() throws Exception {
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenReturn("");
 
         // Service currently accepts empty response - may want to add validation in future
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", "HEDIS_CDC")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
@@ -181,7 +184,7 @@ class ErrorHandlingIntegrationTest {
                 }
                 """;
 
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenReturn(cqlResponse);
 
         // Kafka failure should not prevent measure calculation
@@ -191,7 +194,7 @@ class ErrorHandlingIntegrationTest {
         // Should still succeed even if Kafka fails
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", "HEDIS_CDC")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
@@ -217,7 +220,7 @@ class ErrorHandlingIntegrationTest {
 
         mockMvc.perform(get("/quality-measure/results")
                         .header("X-Tenant-ID", longTenantId)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
@@ -234,14 +237,14 @@ class ErrorHandlingIntegrationTest {
                 }
                 """;
 
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenReturn(cqlResponse);
 
         String specialMeasureId = "HEDIS_TEST-2024_v1.0";
 
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", specialMeasureId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
@@ -276,14 +279,14 @@ class ErrorHandlingIntegrationTest {
         // PUT not supported on results endpoint
         mockMvc.perform(put("/quality-measure/results")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isMethodNotAllowed());
 
         // DELETE not supported on score endpoint
         mockMvc.perform(delete("/quality-measure/score")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isMethodNotAllowed());
     }
@@ -300,14 +303,14 @@ class ErrorHandlingIntegrationTest {
                 }
                 """;
 
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenReturn(cqlResponse);
 
         // Simulate concurrent requests (in test, they'll be sequential but test the logic)
         for (int i = 0; i < 5; i++) {
             mockMvc.perform(post("/quality-measure/calculate")
                             .header("X-Tenant-ID", TENANT_ID)
-                            .param("patient", PATIENT_ID)
+                            .param("patient", PATIENT_ID.toString())
                             .param("measure", "HEDIS_CDC_" + i)
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isCreated());
@@ -326,13 +329,13 @@ class ErrorHandlingIntegrationTest {
                 }
                 """;
 
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenReturn(malformedResponse);
 
         // Service currently accepts malformed response - may want to add stricter validation in future
         mockMvc.perform(post("/quality-measure/calculate")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .param("measure", "HEDIS_CDC")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
@@ -345,7 +348,7 @@ class ErrorHandlingIntegrationTest {
         // but we can verify the endpoint structure handles errors
         mockMvc.perform(get("/quality-measure/results")
                         .header("X-Tenant-ID", TENANT_ID)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()); // Should succeed with empty data
     }
@@ -378,7 +381,7 @@ class ErrorHandlingIntegrationTest {
 
         mockMvc.perform(get("/quality-measure/results")
                         .header("X-Tenant-ID", encodedTenantId)
-                        .param("patient", PATIENT_ID)
+                        .param("patient", PATIENT_ID.toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }

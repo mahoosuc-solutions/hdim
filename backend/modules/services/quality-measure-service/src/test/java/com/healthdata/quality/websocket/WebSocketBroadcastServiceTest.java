@@ -16,6 +16,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -78,8 +79,8 @@ class WebSocketBroadcastServiceTest {
             }
 
             @Override
-            public String getPatientId() {
-                return "patient-123";
+            public UUID getPatientId() {
+                return UUID.fromString("abababab-abab-abab-abab-abababababab");
             }
 
             @Override
@@ -198,7 +199,7 @@ class WebSocketBroadcastServiceTest {
         assertThat(parsed.get("title")).isEqualTo("Test Notification");
         assertThat(parsed.get("message")).isEqualTo("Test message content");
         assertThat(parsed.get("severity")).isEqualTo("MEDIUM");
-        assertThat(parsed.get("patientId")).isEqualTo("patient-123");
+        assertThat(parsed.get("patientId")).isEqualTo("abababab-abab-abab-abab-abababababab");
         assertThat(parsed.get("tenantId")).isEqualTo("TENANT001");
     }
 
@@ -394,7 +395,7 @@ class WebSocketBroadcastServiceTest {
             @Override
             public String getTenantId() { return "TENANT001"; }
             @Override
-            public String getPatientId() { return "patient-123"; }
+            public UUID getPatientId() { return UUID.fromString("abababab-abab-abab-abab-abababababab"); }
             @Override
             public String getTitle() { return "Test"; }
             @Override
@@ -423,5 +424,84 @@ class WebSocketBroadcastServiceTest {
         // Then - Should still attempt broadcast (service doesn't validate channel)
         // The calling service (NotificationService) should check shouldSendWebSocket()
         verify(webSocketHandler).broadcastGenericNotification(eq("TENANT001"), any(Map.class));
+    }
+
+    @Test
+    @DisplayName("Should return false when broadcast throws exception")
+    void testBroadcastExceptionHandling() {
+        NotificationRequest notification = createTestNotification("ALERT", "TENANT001", "HIGH");
+
+        when(webSocketHandler.broadcastGenericNotification(eq("TENANT001"), any(Map.class)))
+                .thenThrow(new RuntimeException("boom"));
+
+        boolean result = broadcastService.broadcastNotification("TENANT001", notification);
+
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should return false when user broadcast throws exception")
+    void testBroadcastToUserExceptionHandling() {
+        NotificationRequest notification = createTestNotification("ALERT", "TENANT001", "HIGH");
+
+        when(webSocketHandler.broadcastToUser(eq("user-123"), eq("TENANT001"), any(Map.class)))
+                .thenThrow(new RuntimeException("boom"));
+
+        boolean result = broadcastService.broadcastToUser("user-123", notification);
+
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should return false when role broadcast throws exception")
+    void testBroadcastToRoleExceptionHandling() {
+        NotificationRequest notification = createTestNotification("ALERT", "TENANT001", "HIGH");
+
+        when(webSocketHandler.broadcastToRole(eq("TENANT001"), eq("DOCTOR"), any(Map.class)))
+                .thenThrow(new RuntimeException("boom"));
+
+        boolean result = broadcastService.broadcastToRole("TENANT001", "DOCTOR", notification);
+
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should default timestamp when notification timestamp missing")
+    void testDefaultTimestampWhenMissing() throws Exception {
+        NotificationRequest notification = new NotificationRequest() {
+            @Override
+            public String getNotificationType() { return "ALERT"; }
+            @Override
+            public String getTemplateId() { return "test-template"; }
+            @Override
+            public String getTenantId() { return "TENANT001"; }
+            @Override
+            public UUID getPatientId() { return UUID.fromString("abababab-abab-abab-abab-abababababab"); }
+            @Override
+            public String getTitle() { return "Test"; }
+            @Override
+            public String getMessage() { return "Message"; }
+            @Override
+            public String getSeverity() { return "LOW"; }
+            @Override
+            public Instant getTimestamp() { return null; }
+            @Override
+            public Map<String, String> getRecipients() { return Map.of(); }
+            @Override
+            public Map<String, Object> getTemplateVariables() { return Map.of(); }
+            @Override
+            public Map<String, Object> getMetadata() { return Map.of(); }
+            @Override
+            public boolean shouldSendEmail() { return false; }
+            @Override
+            public boolean shouldSendSms() { return false; }
+            @Override
+            public boolean shouldSendWebSocket() { return true; }
+        };
+
+        String json = broadcastService.formatNotificationMessage(notification);
+
+        Map<String, Object> parsed = objectMapper.readValue(json, Map.class);
+        assertThat(parsed.get("timestamp")).isNotNull();
     }
 }

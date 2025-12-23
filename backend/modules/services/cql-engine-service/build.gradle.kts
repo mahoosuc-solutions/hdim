@@ -4,6 +4,9 @@ plugins {
     java
 }
 
+// Use a user-owned build directory to avoid permission issues from prior runs.
+buildDir = file("build-user")
+
 // Add repositories for CQL engine libraries
 repositories {
     mavenCentral()
@@ -96,5 +99,16 @@ dependencies {
     // Testing
     testImplementation(libs.bundles.testing)
     testImplementation("org.springframework.security:spring-security-test")
-    testRuntimeOnly("com.h2database:h2:2.2.224")
+    testImplementation(libs.bundles.testcontainers)
+    testImplementation(libs.testcontainers.junit.jupiter)
+    testImplementation(libs.testcontainers.kafka)
+}
+
+tasks.withType<Test> {
+    systemProperty("spring.datasource.url", "jdbc:tc:postgresql:15-alpine:///testdb")
+    systemProperty("spring.datasource.username", "test")
+    systemProperty("spring.datasource.password", "test")
+    systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
+    systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
+    systemProperty("spring.profiles.active", "test")
 }

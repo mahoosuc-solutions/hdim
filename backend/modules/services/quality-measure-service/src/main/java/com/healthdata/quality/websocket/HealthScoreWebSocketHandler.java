@@ -12,6 +12,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.UUID;
 
 /**
  * HIPAA-Compliant WebSocket Handler for Real-Time Health Score Updates
@@ -325,7 +326,7 @@ public class HealthScoreWebSocketHandler extends TextWebSocketHandler {
      * @param patientId The patient ID for filtering
      * @return true if message was sent successfully
      */
-    public boolean broadcastClinicalAlertToPatient(Object alert, String tenantId, String patientId) {
+    public boolean broadcastClinicalAlertToPatient(Object alert, String tenantId, UUID patientId) {
         Map<String, Object> message = Map.of(
                 "type", "CLINICAL_ALERT",
                 "data", alert,

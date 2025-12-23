@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -77,7 +78,7 @@ class PatientReportApiIntegrationTest {
 
         // Mock care gap service
         String careGapResponse = "{\"totalGaps\": 3, \"highPriority\": 1}";
-        when(careGapServiceClient.getCareGapSummary(anyString(), anyString()))
+        when(careGapServiceClient.getCareGapSummary(anyString(), any(UUID.class)))
                 .thenReturn(careGapResponse);
 
         mockMvc.perform(get("/quality-measure/report/patient")
@@ -97,7 +98,7 @@ class PatientReportApiIntegrationTest {
 
         // Verify care gap service was called
         verify(careGapServiceClient, times(1))
-                .getCareGapSummary(eq(TENANT_ID), eq(PATIENT_ID.toString()));
+                .getCareGapSummary(eq(TENANT_ID), eq(PATIENT_ID));
     }
 
     @Test
@@ -199,7 +200,7 @@ class PatientReportApiIntegrationTest {
         createMeasureResult(TENANT_ID, PATIENT_ID, "HEDIS_CDC", "HEDIS", true);
 
         // Mock care gap service failure
-        when(careGapServiceClient.getCareGapSummary(anyString(), anyString()))
+        when(careGapServiceClient.getCareGapSummary(anyString(), any(UUID.class)))
                 .thenThrow(new RuntimeException("Service unavailable"));
 
         // Report should still be generated
@@ -286,7 +287,7 @@ class PatientReportApiIntegrationTest {
                 }
                 """.formatted(PATIENT_ID);
 
-        when(careGapServiceClient.getCareGapSummary(anyString(), anyString()))
+        when(careGapServiceClient.getCareGapSummary(anyString(), any(UUID.class)))
                 .thenReturn(careGapResponse);
 
         mockMvc.perform(get("/quality-measure/report/patient")

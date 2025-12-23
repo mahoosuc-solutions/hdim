@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Response DTO for care gaps
@@ -24,7 +25,7 @@ public class CareGapDTO {
     /**
      * Patient FHIR ID
      */
-    private String patientId;
+    private UUID patientId;
 
     /**
      * Gap category (preventive-care, chronic-disease, mental-health, medication, screening)

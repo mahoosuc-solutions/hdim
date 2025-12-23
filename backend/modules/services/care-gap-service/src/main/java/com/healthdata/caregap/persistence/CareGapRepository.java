@@ -40,7 +40,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
     /**
      * Find open care gaps for a patient
      */
-    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'open' ORDER BY c.priority DESC, c.dueDate ASC")
+    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'OPEN' ORDER BY c.priority DESC, c.dueDate ASC")
     List<CareGapEntity> findOpenGapsByPatient(
         @Param("tenantId") String tenantId,
         @Param("patientId") UUID patientId
@@ -49,7 +49,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
     /**
      * Find high priority open gaps for a patient
      */
-    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'open' AND c.priority = 'high' ORDER BY c.dueDate ASC")
+    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'OPEN' AND c.priority = 'high' ORDER BY c.dueDate ASC")
     List<CareGapEntity> findHighPriorityOpenGaps(
         @Param("tenantId") String tenantId,
         @Param("patientId") UUID patientId
@@ -58,7 +58,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
     /**
      * Find closed care gaps for a patient
      */
-    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'closed' ORDER BY c.closedDate DESC")
+    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'CLOSED' ORDER BY c.closedDate DESC")
     List<CareGapEntity> findClosedGapsByPatient(
         @Param("tenantId") String tenantId,
         @Param("patientId") UUID patientId
@@ -79,7 +79,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
     /**
      * Find care gaps by measure category (HEDIS, CMS, etc.)
      */
-    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.measureCategory = :category AND c.gapStatus = 'open' ORDER BY c.priority DESC")
+    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapCategory = :category AND c.gapStatus = 'OPEN' ORDER BY c.priority DESC")
     List<CareGapEntity> findByMeasureCategory(
         @Param("tenantId") String tenantId,
         @Param("patientId") UUID patientId,
@@ -100,7 +100,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
     /**
      * Find overdue care gaps
      */
-    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.gapStatus = 'open' AND c.dueDate < :currentDate ORDER BY c.dueDate ASC")
+    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.gapStatus = 'OPEN' AND c.dueDate < :currentDate ORDER BY c.dueDate ASC")
     List<CareGapEntity> findOverdueGaps(
         @Param("tenantId") String tenantId,
         @Param("currentDate") LocalDate currentDate
@@ -109,7 +109,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
     /**
      * Find care gaps due within date range
      */
-    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'open' AND c.dueDate BETWEEN :startDate AND :endDate ORDER BY c.dueDate ASC")
+    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'OPEN' AND c.dueDate BETWEEN :startDate AND :endDate ORDER BY c.dueDate ASC")
     List<CareGapEntity> findGapsDueInRange(
         @Param("tenantId") String tenantId,
         @Param("patientId") UUID patientId,
@@ -118,39 +118,39 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
     );
 
     /**
-     * Find gaps identified within date range
+     * Find gaps identified within a date range
      */
     @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.identifiedDate BETWEEN :startDate AND :endDate ORDER BY c.identifiedDate DESC")
     List<CareGapEntity> findGapsIdentifiedInRange(
         @Param("tenantId") String tenantId,
-        @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate
+        @Param("startDate") java.time.Instant startDate,
+        @Param("endDate") java.time.Instant endDate
     );
 
-    // ==================== Count Queries ====================
+    // ==================== Analytics Queries ====================
 
     /**
-     * Count open care gaps for a patient
+     * Count open gaps by patient
      */
-    @Query("SELECT COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'open'")
+    @Query("SELECT COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'OPEN'")
     long countOpenGaps(
         @Param("tenantId") String tenantId,
         @Param("patientId") UUID patientId
     );
 
     /**
-     * Count high priority gaps for a patient
+     * Count high priority open gaps
      */
-    @Query("SELECT COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'open' AND c.priority = 'high'")
+    @Query("SELECT COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'OPEN' AND c.priority = 'high'")
     long countHighPriorityGaps(
         @Param("tenantId") String tenantId,
         @Param("patientId") UUID patientId
     );
 
     /**
-     * Count overdue gaps for a patient
+     * Count overdue open gaps
      */
-    @Query("SELECT COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'open' AND c.dueDate < :currentDate")
+    @Query("SELECT COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'OPEN' AND c.dueDate < :currentDate")
     long countOverdueGaps(
         @Param("tenantId") String tenantId,
         @Param("patientId") UUID patientId,
@@ -158,47 +158,33 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
     );
 
     /**
-     * Count care gaps by measure
+     * Find all open gaps for a tenant
      */
-    @Query("SELECT COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.measureId = :measureId")
-    long countByMeasure(
-        @Param("tenantId") String tenantId,
-        @Param("patientId") UUID patientId,
-        @Param("measureId") String measureId
-    );
-
-    // ==================== Analytics Queries ====================
-
-    /**
-     * Find all open gaps for a tenant (for population-level reporting)
-     */
-    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.gapStatus = 'open' ORDER BY c.priority DESC, c.dueDate ASC")
+    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.gapStatus = 'OPEN' ORDER BY c.priority DESC, c.dueDate ASC")
     List<CareGapEntity> findAllOpenGaps(@Param("tenantId") String tenantId);
 
     /**
-     * Count gaps by status for a tenant
+     * Count gaps by status
      */
     @Query("SELECT c.gapStatus, COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId GROUP BY c.gapStatus")
-    List<Object[]> countByStatus(@Param("tenantId") String tenantId);
+    List<Object[]> countGapsByStatus(@Param("tenantId") String tenantId);
 
     /**
-     * Count gaps by priority for a tenant
+     * Count gaps by priority
      */
-    @Query("SELECT c.priority, COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.gapStatus = 'open' GROUP BY c.priority")
-    List<Object[]> countByPriority(@Param("tenantId") String tenantId);
+    @Query("SELECT c.priority, COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.gapStatus = 'OPEN' GROUP BY c.priority")
+    List<Object[]> countGapsByPriority(@Param("tenantId") String tenantId);
 
     /**
-     * Count gaps by measure category for a tenant
+     * Count gaps by category
      */
-    @Query("SELECT c.measureCategory, COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.gapStatus = 'open' GROUP BY c.measureCategory")
-    List<Object[]> countByMeasureCategory(@Param("tenantId") String tenantId);
-
-    // ==================== Existence Checks ====================
+    @Query("SELECT c.gapCategory, COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.gapStatus = 'OPEN' GROUP BY c.gapCategory")
+    List<Object[]> countGapsByCategory(@Param("tenantId") String tenantId);
 
     /**
-     * Check if patient has open gap for specific measure
+     * Check if patient has open gap for measure
      */
-    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.measureId = :measureId AND c.gapStatus = 'open'")
+    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.measureId = :measureId AND c.gapStatus = 'OPEN'")
     boolean hasOpenGapForMeasure(
         @Param("tenantId") String tenantId,
         @Param("patientId") UUID patientId,
@@ -206,10 +192,10 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
     );
 
     /**
-     * Check if patient has any high priority gaps
+     * Check if patient has high priority gap
      */
-    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'open' AND c.priority = 'high'")
-    boolean hasHighPriorityGaps(
+    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.gapStatus = 'OPEN' AND c.priority = 'high'")
+    boolean hasHighPriorityGap(
         @Param("tenantId") String tenantId,
         @Param("patientId") UUID patientId
     );

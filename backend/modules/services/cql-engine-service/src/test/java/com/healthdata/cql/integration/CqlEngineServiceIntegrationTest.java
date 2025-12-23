@@ -7,6 +7,7 @@ import com.healthdata.cql.entity.ValueSet;
 import com.healthdata.cql.repository.CqlEvaluationRepository;
 import com.healthdata.cql.repository.CqlLibraryRepository;
 import com.healthdata.cql.repository.ValueSetRepository;
+import com.healthdata.cql.test.CqlTestcontainersBase;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
-class CqlEngineServiceIntegrationTest {
+class CqlEngineServiceIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
     private CqlLibraryRepository libraryRepository;
@@ -43,7 +45,7 @@ class CqlEngineServiceIntegrationTest {
     private ValueSetRepository valueSetRepository;
 
     private static final String TEST_TENANT = "test-tenant-1";
-    private static final String TEST_PATIENT = "patient-123";
+    private static final UUID TEST_PATIENT = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     @Test
     @Order(1)
@@ -301,19 +303,21 @@ class CqlEngineServiceIntegrationTest {
         library = libraryRepository.save(library);
 
         // Create test evaluations
-        CqlEvaluation eval1 = new CqlEvaluation(TEST_TENANT, library, "patient-1");
+        UUID patient1 = UUID.fromString("22222222-2222-2222-2222-222222222222");
+        UUID patient2 = UUID.fromString("33333333-3333-3333-3333-333333333333");
+        CqlEvaluation eval1 = new CqlEvaluation(TEST_TENANT, library, patient1);
         eval1.setStatus("SUCCESS");
         eval1.setDurationMs(100L);
         eval1.setEvaluationDate(Instant.now().minusSeconds(3600)); // 1 hour ago
         evaluationRepository.save(eval1);
 
-        CqlEvaluation eval2 = new CqlEvaluation(TEST_TENANT, library, "patient-2");
+        CqlEvaluation eval2 = new CqlEvaluation(TEST_TENANT, library, patient2);
         eval2.setStatus("SUCCESS");
         eval2.setDurationMs(200L);
         eval2.setEvaluationDate(Instant.now().minusSeconds(1800)); // 30 min ago
         evaluationRepository.save(eval2);
 
-        CqlEvaluation eval3 = new CqlEvaluation(TEST_TENANT, library, "patient-1");
+        CqlEvaluation eval3 = new CqlEvaluation(TEST_TENANT, library, patient1);
         eval3.setStatus("FAILED");
         eval3.setErrorMessage("Connection timeout");
         eval3.setEvaluationDate(Instant.now().minusSeconds(600)); // 10 min ago
@@ -321,7 +325,7 @@ class CqlEngineServiceIntegrationTest {
 
         // Test find by patient
         List<CqlEvaluation> patientEvals = evaluationRepository
-                .findByTenantIdAndPatientId(TEST_TENANT, "patient-1");
+                .findByTenantIdAndPatientId(TEST_TENANT, patient1);
         assertTrue(patientEvals.size() >= 2);
         System.out.println("✓ Found evaluations for patient: " + patientEvals.size());
 
@@ -339,7 +343,7 @@ class CqlEngineServiceIntegrationTest {
 
         // Test find latest
         Optional<CqlEvaluation> latest = evaluationRepository
-                .findLatestByPatientAndLibrary(TEST_TENANT, "patient-1", library.getId());
+                .findLatestByPatientAndLibrary(TEST_TENANT, patient1, library.getId());
         assertTrue(latest.isPresent());
         assertEquals("FAILED", latest.get().getStatus()); // Most recent for patient-1
         System.out.println("✓ Found latest evaluation for patient");
@@ -402,7 +406,7 @@ class CqlEngineServiceIntegrationTest {
 
         // Create multiple evaluations
         for (int i = 0; i < 10; i++) {
-            CqlEvaluation eval = new CqlEvaluation(TEST_TENANT, library, "patient-" + i);
+            CqlEvaluation eval = new CqlEvaluation(TEST_TENANT, library, UUID.randomUUID());
             eval.setStatus(i % 2 == 0 ? "SUCCESS" : "FAILED");
             eval.setEvaluationDate(Instant.now().minusSeconds(i * 60));
             evaluationRepository.save(eval);

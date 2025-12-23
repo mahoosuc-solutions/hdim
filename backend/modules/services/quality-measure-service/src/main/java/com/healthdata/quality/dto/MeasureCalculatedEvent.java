@@ -29,7 +29,7 @@ public class MeasureCalculatedEvent {
     /**
      * Patient FHIR ID
      */
-    private String patientId;
+    private UUID patientId;
 
     /**
      * Measure ID

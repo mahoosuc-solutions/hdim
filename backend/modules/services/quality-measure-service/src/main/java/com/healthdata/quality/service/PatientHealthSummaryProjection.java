@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Patient Health Summary Projection (CQRS Read Model)
@@ -52,7 +53,7 @@ public class PatientHealthSummaryProjection {
      */
     @KafkaListener(topics = "health-score.updated", groupId = "patient-health-summary-projection")
     @Transactional
-    public void onHealthScoreUpdated(String tenantId, String patientId, Double score, String trend) {
+    public void onHealthScoreUpdated(String tenantId, UUID patientId, Double score, String trend) {
         log.debug("Processing health score update for patient {}: score={}, trend={}",
             patientId, score, trend);
 
@@ -71,7 +72,7 @@ public class PatientHealthSummaryProjection {
      */
     public void onHealthScoreUpdatedWithTimestamp(
         String tenantId,
-        String patientId,
+        UUID patientId,
         Double score,
         String trend,
         Instant eventTimestamp
@@ -97,7 +98,7 @@ public class PatientHealthSummaryProjection {
      */
     @KafkaListener(topics = "care-gap.auto-closed", groupId = "patient-health-summary-projection")
     @Transactional
-    public void onCareGapAutoClosed(String tenantId, String patientId, String gapId) {
+    public void onCareGapAutoClosed(String tenantId, UUID patientId, String gapId) {
         log.debug("Processing care gap closure for patient {}: gapId={}", patientId, gapId);
 
         PatientHealthSummaryEntity summary = getOrCreateSummary(tenantId, patientId);
@@ -119,7 +120,7 @@ public class PatientHealthSummaryProjection {
      */
     @KafkaListener(topics = "risk-assessment.updated", groupId = "patient-health-summary-projection")
     @Transactional
-    public void onRiskAssessmentUpdated(String tenantId, String patientId, String riskLevel, Double riskScore) {
+    public void onRiskAssessmentUpdated(String tenantId, UUID patientId, String riskLevel, Double riskScore) {
         log.debug("Processing risk assessment update for patient {}: level={}, score={}",
             patientId, riskLevel, riskScore);
 
@@ -138,7 +139,7 @@ public class PatientHealthSummaryProjection {
      */
     @KafkaListener(topics = "clinical-alert.triggered", groupId = "patient-health-summary-projection")
     @Transactional
-    public void onClinicalAlertTriggered(String tenantId, String patientId, String severity, String message) {
+    public void onClinicalAlertTriggered(String tenantId, UUID patientId, String severity, String message) {
         log.debug("Processing clinical alert for patient {}: severity={}", patientId, severity);
 
         PatientHealthSummaryEntity summary = getOrCreateSummary(tenantId, patientId);
@@ -163,7 +164,7 @@ public class PatientHealthSummaryProjection {
      * - Recovery from errors
      */
     @Transactional
-    public void rebuildProjectionForPatient(String tenantId, String patientId) {
+    public void rebuildProjectionForPatient(String tenantId, UUID patientId) {
         log.info("Rebuilding projection for patient {}", patientId);
 
         PatientHealthSummaryEntity summary = new PatientHealthSummaryEntity();
@@ -253,11 +254,11 @@ public class PatientHealthSummaryProjection {
             log.info("Rebuilding projections for tenant {}", tenantId);
 
             // Get all patients from both the read model and care gaps
-            Set<String> patientIds = new HashSet<>();
+            Set<UUID> patientIds = new HashSet<>();
             patientIds.addAll(readRepository.findDistinctPatientIdsByTenantId(tenantId));
             patientIds.addAll(careGapRepository.findDistinctPatientIdsByTenantId(tenantId));
 
-            for (String patientId : patientIds) {
+            for (UUID patientId : patientIds) {
                 try {
                     rebuildProjectionForPatient(tenantId, patientId);
                     totalRebuilt++;
@@ -360,7 +361,7 @@ public class PatientHealthSummaryProjection {
     /**
      * Get or create patient health summary
      */
-    private PatientHealthSummaryEntity getOrCreateSummary(String tenantId, String patientId) {
+    private PatientHealthSummaryEntity getOrCreateSummary(String tenantId, UUID patientId) {
         return readRepository.findByTenantIdAndPatientId(tenantId, patientId)
             .orElseGet(() -> {
                 PatientHealthSummaryEntity newSummary = new PatientHealthSummaryEntity();

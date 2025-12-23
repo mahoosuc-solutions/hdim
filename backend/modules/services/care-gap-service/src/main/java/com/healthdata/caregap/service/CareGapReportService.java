@@ -8,7 +8,13 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.Collectors;
 
 /**
@@ -35,17 +41,15 @@ public class CareGapReportService {
      * @return Care gap summary
      */
     @Cacheable(value = "careGapSummary", key = "#tenantId + ':' + #patientId")
-    public CareGapSummary getCareGapSummary(String tenantId, String patientId) {
+    public CareGapSummary getCareGapSummary(String tenantId, UUID patientId) {
         log.info("Generating care gap summary for patient: {}", patientId);
 
-        UUID patientUuid = UUID.fromString(patientId);
+        List<CareGapEntity> allGaps = careGapRepository.findByTenantIdAndPatientId(tenantId, patientId);
+        List<CareGapEntity> openGaps = careGapRepository.findOpenGapsByPatient(tenantId, patientId);
+        List<CareGapEntity> closedGaps = careGapRepository.findClosedGapsByPatient(tenantId, patientId);
+        List<CareGapEntity> highPriorityGaps = careGapRepository.findHighPriorityOpenGaps(tenantId, patientId);
 
-        List<CareGapEntity> allGaps = careGapRepository.findByTenantIdAndPatientId(tenantId, patientUuid);
-        List<CareGapEntity> openGaps = careGapRepository.findOpenGapsByPatient(tenantId, patientUuid);
-        List<CareGapEntity> closedGaps = careGapRepository.findClosedGapsByPatient(tenantId, patientUuid);
-        List<CareGapEntity> highPriorityGaps = careGapRepository.findHighPriorityOpenGaps(tenantId, patientUuid);
-
-        long overdueCount = careGapRepository.countOverdueGaps(tenantId, patientUuid, LocalDate.now());
+        long overdueCount = careGapRepository.countOverdueGaps(tenantId, patientId, LocalDate.now());
 
         // Calculate closure rate
         double closureRate = allGaps.isEmpty() ? 0.0 :
@@ -70,13 +74,13 @@ public class CareGapReportService {
      * @param patientId Patient ID
      * @return Map of measure category -> gap count
      */
-    public Map<String, Long> getGapsByMeasureCategory(String tenantId, String patientId) {
+    public Map<String, Long> getGapsByMeasureCategory(String tenantId, UUID patientId) {
         List<CareGapEntity> openGaps = careGapRepository.findOpenGapsByPatient(
-                tenantId, UUID.fromString(patientId));
+                tenantId, patientId);
 
         return openGaps.stream()
                 .collect(Collectors.groupingBy(
-                        gap -> gap.getMeasureCategory() != null ? gap.getMeasureCategory() : "Unknown",
+                        gap -> gap.getGapCategory() != null ? gap.getGapCategory() : "Unknown",
                         Collectors.counting()
                 ));
     }
@@ -88,9 +92,9 @@ public class CareGapReportService {
      * @param patientId Patient ID
      * @return Map of priority -> gap count
      */
-    public Map<String, Long> getGapsByPriority(String tenantId, String patientId) {
+    public Map<String, Long> getGapsByPriority(String tenantId, UUID patientId) {
         List<CareGapEntity> openGaps = careGapRepository.findOpenGapsByPatient(
-                tenantId, UUID.fromString(patientId));
+                tenantId, patientId);
 
         return openGaps.stream()
                 .collect(Collectors.groupingBy(
@@ -106,9 +110,9 @@ public class CareGapReportService {
      * @param patientId Patient ID
      * @return List of overdue care gaps
      */
-    public List<CareGapEntity> getOverdueGaps(String tenantId, String patientId) {
+    public List<CareGapEntity> getOverdueGaps(String tenantId, UUID patientId) {
         List<CareGapEntity> openGaps = careGapRepository.findOpenGapsByPatient(
-                tenantId, UUID.fromString(patientId));
+                tenantId, patientId);
 
         LocalDate today = LocalDate.now();
         return openGaps.stream()
@@ -125,12 +129,12 @@ public class CareGapReportService {
      * @param days Number of days to look ahead
      * @return List of upcoming care gaps
      */
-    public List<CareGapEntity> getUpcomingGaps(String tenantId, String patientId, int days) {
+    public List<CareGapEntity> getUpcomingGaps(String tenantId, UUID patientId, int days) {
         LocalDate today = LocalDate.now();
         LocalDate endDate = today.plusDays(days);
 
         return careGapRepository.findGapsDueInRange(
-                tenantId, UUID.fromString(patientId), today, endDate);
+                tenantId, patientId, today, endDate);
     }
 
     /**
@@ -165,7 +169,7 @@ public class CareGapReportService {
         // Get gaps by measure category
         Map<String, Long> gapsByCategory = allOpenGaps.stream()
                 .collect(Collectors.groupingBy(
-                        gap -> gap.getMeasureCategory() != null ? gap.getMeasureCategory() : "Unknown",
+                        gap -> gap.getGapCategory() != null ? gap.getGapCategory() : "Unknown",
                         Collectors.counting()
                 ));
 
@@ -196,7 +200,7 @@ public class CareGapReportService {
 
     private List<String> extractMeasureCategories(List<CareGapEntity> gaps) {
         return gaps.stream()
-                .map(CareGapEntity::getMeasureCategory)
+                .map(CareGapEntity::getGapCategory)
                 .filter(Objects::nonNull)
                 .distinct()
                 .sorted()

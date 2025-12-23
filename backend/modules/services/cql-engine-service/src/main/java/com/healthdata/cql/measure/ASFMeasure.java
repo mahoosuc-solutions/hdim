@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * ASF - Unhealthy Alcohol Use Screening and Follow-Up (HEDIS)
@@ -77,7 +78,7 @@ public class ASFMeasure extends AbstractHedisMeasure {
 
     @Override
     @Cacheable(value = "hedisMeasures", key = "'ASF-' + #tenantId + '-' + #patientId")
-    public MeasureResult evaluate(String tenantId, String patientId) {
+    public MeasureResult evaluate(String tenantId, UUID patientId) {
         logger.info("Evaluating ASF measure for patient: {}", patientId);
 
         MeasureResult.MeasureResultBuilder resultBuilder = MeasureResult.builder()
@@ -232,7 +233,7 @@ public class ASFMeasure extends AbstractHedisMeasure {
     }
 
     @Override
-    public boolean isEligible(String tenantId, String patientId) {
+    public boolean isEligible(String tenantId, UUID patientId) {
         JsonNode patient = getPatientData(tenantId, patientId);
         if (patient == null) return false;
 

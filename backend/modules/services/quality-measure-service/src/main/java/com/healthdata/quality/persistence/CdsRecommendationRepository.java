@@ -32,7 +32,7 @@ public interface CdsRecommendationRepository extends JpaRepository<CdsRecommenda
            "r.priority ASC")
     List<CdsRecommendationEntity> findActiveRecommendations(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId
+        @Param("patientId") UUID patientId
     );
 
     /**
@@ -40,7 +40,7 @@ public interface CdsRecommendationRepository extends JpaRepository<CdsRecommenda
      */
     List<CdsRecommendationEntity> findByTenantIdAndPatientIdAndStatusOrderByUrgencyAscPriorityAsc(
         String tenantId,
-        String patientId,
+        UUID patientId,
         CdsRecommendationEntity.CdsStatus status
     );
 
@@ -49,7 +49,7 @@ public interface CdsRecommendationRepository extends JpaRepository<CdsRecommenda
      */
     List<CdsRecommendationEntity> findByTenantIdAndPatientIdAndCategoryOrderByUrgencyAscPriorityAsc(
         String tenantId,
-        String patientId,
+        UUID patientId,
         CdsRuleEntity.CdsCategory category
     );
 
@@ -63,7 +63,7 @@ public interface CdsRecommendationRepository extends JpaRepository<CdsRecommenda
            "ORDER BY r.urgency ASC, r.priority ASC")
     List<CdsRecommendationEntity> findUrgentRecommendations(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId
+        @Param("patientId") UUID patientId
     );
 
     /**
@@ -75,7 +75,7 @@ public interface CdsRecommendationRepository extends JpaRepository<CdsRecommenda
            "AND r.urgency = :urgency")
     Long countActiveByUrgency(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("urgency") CdsRuleEntity.CdsUrgency urgency
     );
 
@@ -87,7 +87,7 @@ public interface CdsRecommendationRepository extends JpaRepository<CdsRecommenda
            "AND r.status IN ('ACTIVE', 'ACKNOWLEDGED', 'IN_PROGRESS')")
     Long countActiveRecommendations(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId
+        @Param("patientId") UUID patientId
     );
 
     /**
@@ -100,7 +100,7 @@ public interface CdsRecommendationRepository extends JpaRepository<CdsRecommenda
            "ORDER BY r.dueDate ASC")
     List<CdsRecommendationEntity> findOverdueRecommendations(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("now") Instant now
     );
 
@@ -122,7 +122,7 @@ public interface CdsRecommendationRepository extends JpaRepository<CdsRecommenda
            "AND r.status IN ('ACTIVE', 'ACKNOWLEDGED', 'IN_PROGRESS')")
     boolean existsActiveRecommendation(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("ruleId") UUID ruleId
     );
 
@@ -158,7 +158,7 @@ public interface CdsRecommendationRepository extends JpaRepository<CdsRecommenda
            "ORDER BY r.urgency ASC, r.priority ASC")
     List<CdsRecommendationEntity> findByFilters(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("category") CdsRuleEntity.CdsCategory category,
         @Param("urgency") CdsRuleEntity.CdsUrgency urgency,
         @Param("status") CdsRecommendationEntity.CdsStatus status
@@ -172,7 +172,7 @@ public interface CdsRecommendationRepository extends JpaRepository<CdsRecommenda
            "GROUP BY r.status")
     List<Object[]> getStatusCounts(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId
+        @Param("patientId") UUID patientId
     );
 
     /**

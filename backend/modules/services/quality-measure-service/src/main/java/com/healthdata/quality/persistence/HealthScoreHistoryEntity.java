@@ -31,7 +31,7 @@ public class HealthScoreHistoryEntity {
     private UUID id;
 
     @Column(name = "patient_id", nullable = false, length = 100)
-    private String patientId;
+    private UUID patientId;
 
     @Column(name = "tenant_id", nullable = false, length = 100)
     private String tenantId;

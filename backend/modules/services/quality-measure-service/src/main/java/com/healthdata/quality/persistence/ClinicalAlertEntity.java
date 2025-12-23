@@ -50,7 +50,7 @@ public class ClinicalAlertEntity {
      * Patient FHIR ID
      */
     @Column(name = "patient_id", nullable = false, length = 100)
-    private String patientId;
+    private UUID patientId;
 
     /**
      * Tenant ID for multi-tenant isolation

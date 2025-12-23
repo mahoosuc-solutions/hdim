@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Health Score API Controller
@@ -63,7 +64,7 @@ public class HealthScoreController {
     @GetMapping(value = "/{patientId:.+}/health-score", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<HealthScoreDTO> getCurrentHealthScore(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @PathVariable String patientId
+            @PathVariable UUID patientId
     ) {
         log.info("GET /quality-measure/patients/{}/health-score - tenant: {}", patientId, tenantId);
 
@@ -89,7 +90,7 @@ public class HealthScoreController {
     @GetMapping(value = "/{patientId:.+}/health-score/history", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<HealthScoreDTO>> getHealthScoreHistory(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @PathVariable String patientId,
+            @PathVariable UUID patientId,
             @RequestParam(value = "limit", defaultValue = "50") @PositiveOrZero int limit
     ) {
         log.info("GET /quality-measure/patients/{}/health-score/history - tenant: {}, limit: {}",

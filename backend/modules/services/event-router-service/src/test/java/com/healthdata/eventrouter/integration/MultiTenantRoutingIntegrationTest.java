@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DataJpaTest
 @ActiveProfiles("test")
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DisplayName("Multi-Tenant Routing Integration Tests")
 class MultiTenantRoutingIntegrationTest {
 
@@ -33,9 +33,9 @@ class MultiTenantRoutingIntegrationTest {
     static void configureProperties(DynamicPropertyRegistry registry) {
         // Configure H2 with legacy mode for Hibernate 6.x compatibility
         registry.add("spring.datasource.url", () ->
-            "jdbc:h2:mem:routingtest;DB_CLOSE_DELAY=-1;MODE=LEGACY");
+            "jdbc:tc:postgresql:15-alpine:///testdb");
         registry.add("spring.jpa.properties.hibernate.dialect", () ->
-            "org.hibernate.dialect.H2Dialect");
+            "org.hibernate.dialect.PostgreSQLDialect");
     }
 
     @Autowired

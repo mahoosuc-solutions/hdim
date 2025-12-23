@@ -10,6 +10,7 @@ import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Notification Entity
@@ -39,7 +40,7 @@ public class NotificationEntity {
     private String tenantId;
 
     @Column(name = "patient_id")
-    private String patientId;
+    private UUID patientId;
 
     @Column(name = "user_id")
     private String userId;

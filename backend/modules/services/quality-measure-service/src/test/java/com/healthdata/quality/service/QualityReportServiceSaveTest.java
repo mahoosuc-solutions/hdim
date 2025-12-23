@@ -73,13 +73,13 @@ class QualityReportServiceSaveTest {
         List<QualityMeasureResultEntity> results = createMockResults();
         MeasureCalculationService.QualityScore score = new MeasureCalculationService.QualityScore(5, 4, 80.0);
 
-        when(calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID.toString())).thenReturn(results);
-        when(calculationService.getQualityScore(TENANT_ID, PATIENT_ID.toString())).thenReturn(score);
-        when(careGapServiceClient.getCareGapSummary(TENANT_ID, PATIENT_ID.toString())).thenReturn("{\"gaps\": 1}");
+        when(calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID)).thenReturn(results);
+        when(calculationService.getQualityScore(TENANT_ID, PATIENT_ID)).thenReturn(score);
+        when(careGapServiceClient.getCareGapSummary(TENANT_ID, PATIENT_ID)).thenReturn("{\"gaps\": 1}");
         when(savedReportRepository.save(any(SavedReportEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        SavedReportEntity savedReport = reportService.savePatientReport(TENANT_ID, PATIENT_ID.toString(), reportName, CREATED_BY);
+        SavedReportEntity savedReport = reportService.savePatientReport(TENANT_ID, PATIENT_ID, reportName, CREATED_BY);
 
         // Assert
         assertThat(savedReport).isNotNull();
@@ -221,14 +221,14 @@ class QualityReportServiceSaveTest {
         List<QualityMeasureResultEntity> results = createMockResults();
         MeasureCalculationService.QualityScore score = new MeasureCalculationService.QualityScore(5, 4, 80.0);
 
-        when(calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID.toString())).thenReturn(results);
-        when(calculationService.getQualityScore(TENANT_ID, PATIENT_ID.toString())).thenReturn(score);
-        when(careGapServiceClient.getCareGapSummary(TENANT_ID, PATIENT_ID.toString()))
+        when(calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID)).thenReturn(results);
+        when(calculationService.getQualityScore(TENANT_ID, PATIENT_ID)).thenReturn(score);
+        when(careGapServiceClient.getCareGapSummary(TENANT_ID, PATIENT_ID))
                 .thenThrow(new RuntimeException("Care Gap Service unavailable"));
         when(savedReportRepository.save(any(SavedReportEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        SavedReportEntity savedReport = reportService.savePatientReport(TENANT_ID, PATIENT_ID.toString(), reportName, CREATED_BY);
+        SavedReportEntity savedReport = reportService.savePatientReport(TENANT_ID, PATIENT_ID, reportName, CREATED_BY);
 
         // Assert - Report should still be saved even if care gap service fails
         assertThat(savedReport).isNotNull();
@@ -244,14 +244,14 @@ class QualityReportServiceSaveTest {
         List<QualityMeasureResultEntity> results = createMockResults();
         MeasureCalculationService.QualityScore score = new MeasureCalculationService.QualityScore(5, 4, 80.0);
 
-        when(calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID.toString())).thenReturn(results);
-        when(calculationService.getQualityScore(TENANT_ID, PATIENT_ID.toString())).thenReturn(score);
+        when(calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID)).thenReturn(results);
+        when(calculationService.getQualityScore(TENANT_ID, PATIENT_ID)).thenReturn(score);
 
         ArgumentCaptor<SavedReportEntity> captor = ArgumentCaptor.forClass(SavedReportEntity.class);
         when(savedReportRepository.save(captor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        reportService.savePatientReport(TENANT_ID, PATIENT_ID.toString(), reportName, CREATED_BY);
+        reportService.savePatientReport(TENANT_ID, PATIENT_ID, reportName, CREATED_BY);
 
         // Assert
         SavedReportEntity captured = captor.getValue();

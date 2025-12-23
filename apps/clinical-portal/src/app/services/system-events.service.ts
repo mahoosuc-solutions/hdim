@@ -15,7 +15,8 @@ import {
   createSystemEvent,
   getCategoryFromType,
 } from '../models/system-event.model';
-import { WebSocketVisualizationService, WebSocketStatus, BatchProgressEvent } from '../visualization/core/websocket-visualization.service';
+import { WebSocketVisualizationService, WebSocketStatus, BatchProgressEvent, CareGapNotificationEvent } from '../visualization/core/websocket-visualization.service';
+import { NotificationService } from './notification.service';
 import { API_CONFIG } from '../config/api.config';
 
 /**
@@ -85,7 +86,8 @@ export class SystemEventsService implements OnDestroy {
 
   constructor(
     private wsService: WebSocketVisualizationService,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private notificationService: NotificationService
   ) {
     this.initializeWebSocketSubscription();
   }
@@ -116,6 +118,97 @@ export class SystemEventsService implements OnDestroy {
     this.wsService.evaluationProgress$
       .pipe(takeUntil(this.destroy$))
       .subscribe(event => this.handleEvaluationProgressEvent(event));
+
+    // Subscribe to care gap notifications
+    this.wsService.careGapNotification$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(event => this.handleCareGapNotification(event));
+  }
+
+  /**
+   * Handle care gap notification from WebSocket
+   * Creates system event and shows toast notification
+   */
+  private handleCareGapNotification(event: CareGapNotificationEvent): void {
+    if (this.isPausedSubject.value) return;
+
+    // Determine event type and severity based on notification type
+    let eventType: SystemEventType;
+    let severity: 'info' | 'success' | 'warning' | 'error' = 'info';
+
+    if (event.type === 'CARE_GAP_ADDRESSED') {
+      eventType = 'CARE_GAP_CLOSED';
+      severity = 'success';
+    } else {
+      eventType = 'CARE_GAP_DETECTED';
+      severity = event.priority === 'CRITICAL' || event.priority === 'HIGH' ? 'warning' : 'info';
+    }
+
+    // Create system event using positional parameters: type, title, description, options
+    const systemEvent = createSystemEvent(
+      eventType,
+      event.title,
+      event.message,
+      {
+        severity,
+        source: 'quality-measure-service',
+        patient: {
+          id: event.patientId,
+          name: event.patientName,
+        },
+        measure: event.qualityMeasure ? {
+          id: event.qualityMeasure,
+          name: event.qualityMeasure,
+        } : undefined,
+        metadata: {
+          gapId: event.gapId,
+          gapType: event.gapType,
+          category: event.category,
+          priority: event.priority,
+          dueDate: event.dueDate,
+          actionUrl: event.actionUrl,
+        },
+      }
+    );
+
+    // Add event to buffer
+    this.addEvent(systemEvent);
+
+    // Show toast notification for high-priority care gaps
+    this.showCareGapToastNotification(event);
+  }
+
+  /**
+   * Show toast notification for care gap events
+   */
+  private showCareGapToastNotification(event: CareGapNotificationEvent): void {
+    const patientName = event.patientName || `Patient ${event.patientId}`;
+
+    if (event.type === 'CARE_GAP_ADDRESSED') {
+      this.notificationService.success(
+        `Care gap resolved: ${event.title}`,
+        4000,
+        'View'
+      );
+    } else if (event.priority === 'CRITICAL') {
+      this.notificationService.error(
+        `[CRITICAL] New care gap for ${patientName}: ${event.title}`,
+        6000,
+        'View Details'
+      );
+    } else if (event.priority === 'HIGH') {
+      this.notificationService.warning(
+        `[HIGH] New care gap for ${patientName}: ${event.title}`,
+        5000,
+        'View Details'
+      );
+    } else {
+      this.notificationService.info(
+        `New care gap detected for ${patientName}: ${event.title}`,
+        4000,
+        'View'
+      );
+    }
   }
 
   /**

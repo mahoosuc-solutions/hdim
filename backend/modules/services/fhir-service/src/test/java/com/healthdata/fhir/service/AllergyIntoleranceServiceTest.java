@@ -170,6 +170,46 @@ class AllergyIntoleranceServiceTest {
     }
 
     @Test
+    void getAllergyIntoleranceShouldMapEntityWhenNoStoredResource() {
+        AllergyIntoleranceEntity entity = AllergyIntoleranceEntity.builder()
+                .id(ALLERGY_ID)
+                .tenantId(TENANT)
+                .patientId(PATIENT_ID)
+                .clinicalStatus("active")
+                .verificationStatus("confirmed")
+                .type("allergy")
+                .category("food")
+                .criticality("high")
+                .code(ALLERGY_CODE)
+                .codeSystem("http://snomed.info/sct")
+                .codeDisplay("Fish (substance)")
+                .recordedDate(LocalDateTime.now())
+                .hasReactions(true)
+                .reactionSeverity("mild")
+                .fhirResource(null)
+                .createdAt(LocalDateTime.now())
+                .lastModifiedAt(LocalDateTime.now())
+                .version(0)
+                .build();
+        when(allergyIntoleranceRepository.findByTenantIdAndId(TENANT, ALLERGY_ID))
+                .thenReturn(Optional.of(entity));
+
+        Optional<AllergyIntolerance> result = allergyIntoleranceService
+                .getAllergyIntolerance(TENANT, ALLERGY_ID.toString());
+
+        assertThat(result).isPresent();
+        AllergyIntolerance allergy = result.get();
+        assertThat(allergy.getIdElement().getIdPart()).isEqualTo(ALLERGY_ID.toString());
+        assertThat(allergy.getClinicalStatus().getCodingFirstRep().getCode()).isEqualTo("active");
+        assertThat(allergy.getVerificationStatus().getCodingFirstRep().getCode()).isEqualTo("confirmed");
+        assertThat(allergy.getType().toCode()).isEqualTo("allergy");
+        assertThat(allergy.getCategory().get(0).getValue().toCode()).isEqualTo("food");
+        assertThat(allergy.getCriticality().toCode()).isEqualTo("high");
+        assertThat(allergy.getCode().getCodingFirstRep().getCode()).isEqualTo(ALLERGY_CODE);
+        assertThat(allergy.getReaction()).hasSize(1);
+    }
+
+    @Test
     void updateAllergyIntoleranceShouldPersistChanges() {
         AllergyIntoleranceEntity existing = createAllergyEntity();
         AllergyIntolerance updated = createValidAllergyIntolerance();

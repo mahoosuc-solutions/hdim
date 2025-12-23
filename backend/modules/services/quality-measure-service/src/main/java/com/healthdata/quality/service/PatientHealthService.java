@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Patient Health Service
@@ -35,7 +36,7 @@ public class PatientHealthService {
     /**
      * Get complete health overview for a patient
      */
-    public PatientHealthOverviewDTO getPatientHealthOverview(String tenantId, String patientId) {
+    public PatientHealthOverviewDTO getPatientHealthOverview(String tenantId, UUID patientId) {
         log.info("Fetching health overview for patient {}", patientId);
 
         // Get recent mental health assessments (last 5)
@@ -79,7 +80,7 @@ public class PatientHealthService {
      * - Preventive care (15%): Screenings up to date, immunizations
      * - Chronic disease management (15%): Care plan adherence, gaps
      */
-    public HealthScoreDTO calculateHealthScore(String tenantId, String patientId) {
+    public HealthScoreDTO calculateHealthScore(String tenantId, UUID patientId) {
         log.info("Calculating health score for patient {} (tenant: {})", patientId, tenantId);
 
         // Calculate component scores from real FHIR data
@@ -146,7 +147,7 @@ public class PatientHealthService {
      *
      * Score = (vitals in range / total vitals) * 100
      */
-    private double calculatePhysicalHealthScore(String tenantId, String patientId) {
+    private double calculatePhysicalHealthScore(String tenantId, UUID patientId) {
         log.debug("Calculating physical health score for patient {}", patientId);
 
         try {
@@ -264,7 +265,7 @@ public class PatientHealthService {
     /**
      * Calculate mental health score
      */
-    private double calculateMentalHealthScore(String tenantId, String patientId) {
+    private double calculateMentalHealthScore(String tenantId, UUID patientId) {
         // Query recent mental health assessments
         var assessments = mentalHealthRepository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
             tenantId, patientId, PageRequest.of(0, 3)
@@ -307,7 +308,7 @@ public class PatientHealthService {
      * - Deduct points for each identified unaddressed need
      * - Positive observations (e.g., stable housing) add points back
      */
-    private double calculateSocialScore(String tenantId, String patientId) {
+    private double calculateSocialScore(String tenantId, UUID patientId) {
         log.debug("Calculating social score for patient {}", patientId);
 
         try {
@@ -425,7 +426,7 @@ public class PatientHealthService {
      *
      * Score = (completed screenings / recommended screenings) * 100
      */
-    private double calculatePreventiveCareScore(String tenantId, String patientId) {
+    private double calculatePreventiveCareScore(String tenantId, UUID patientId) {
         log.debug("Calculating preventive care score for patient {}", patientId);
 
         try {
@@ -555,7 +556,7 @@ public class PatientHealthService {
      *
      * Score = 100 if no chronic conditions, otherwise based on control percentage
      */
-    private double calculateChronicDiseaseScore(String tenantId, String patientId) {
+    private double calculateChronicDiseaseScore(String tenantId, UUID patientId) {
         log.debug("Calculating chronic disease score for patient {}", patientId);
 
         try {
@@ -749,7 +750,7 @@ public class PatientHealthService {
      */
     private PatientHealthOverviewDTO.SummaryStatsDTO calculateSummaryStats(
         String tenantId,
-        String patientId,
+        UUID patientId,
         List<CareGapDTO> openCareGaps
     ) {
         int totalOpenCareGaps = openCareGaps.size();

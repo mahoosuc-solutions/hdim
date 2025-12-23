@@ -160,4 +160,50 @@ describe('StatCardComponent', () => {
     const card = fixture.nativeElement.querySelector('.stat-card');
     expect(card.classList.contains('clickable')).toBe(true);
   });
+
+  describe('Target comparisons', () => {
+    it('returns null when target or value is missing', () => {
+      component.value = 'N/A';
+      component.targetValue = 10;
+
+      expect(component.meetsTarget()).toBeNull();
+
+      component.value = '12';
+      component.targetValue = undefined;
+
+      expect(component.meetsTarget()).toBeNull();
+    });
+
+    it('evaluates target with higher-is-better', () => {
+      component.value = '90';
+      component.targetValue = 85;
+      component.higherIsBetter = true;
+
+      expect(component.meetsTarget()).toBe(true);
+      expect(component.getTargetStatusClass()).toBe('target-met');
+    });
+
+    it('evaluates target with lower-is-better', () => {
+      component.value = '12';
+      component.targetValue = 10;
+      component.higherIsBetter = false;
+
+      expect(component.meetsTarget()).toBe(false);
+      expect(component.getTargetStatusClass()).toBe('target-not-met');
+    });
+
+    it('formats target differences with percentages', () => {
+      component.value = '82%';
+      component.targetValue = 85;
+
+      expect(component.getTargetDifference()).toBe('-3.0%');
+    });
+
+    it('formats target differences with absolute values', () => {
+      component.value = '1200';
+      component.targetValue = 1000;
+
+      expect(component.getTargetDifference()).toBe('+200');
+    });
+  });
 });

@@ -34,6 +34,18 @@ export const API_CONFIG = {
     ? `${API_GATEWAY_URL}/api/fhir`
     : '/fhir',  // Proxied to localhost:8085
 
+  CARE_GAP_URL: USE_API_GATEWAY
+    ? `${API_GATEWAY_URL}/api/care-gap`
+    : '/care-gap',  // Proxied to localhost:8086
+
+  PATIENT_URL: USE_API_GATEWAY
+    ? `${API_GATEWAY_URL}/api/patient`
+    : '/patient',  // Proxied to localhost:8084
+
+  QRDA_EXPORT_URL: USE_API_GATEWAY
+    ? `${API_GATEWAY_URL}/api/qrda`
+    : '/qrda',  // Proxied to localhost:8104
+
   // Tenant Configuration
   DEFAULT_TENANT_ID: 'demo-tenant',
 
@@ -150,6 +162,23 @@ export const QUALITY_MEASURE_ENDPOINTS = {
 };
 
 /**
+ * QRDA Export Service Endpoints
+ */
+export const QRDA_EXPORT_ENDPOINTS = {
+  // QRDA Category I (Patient-level)
+  GENERATE_CATEGORY_I: '/api/v1/qrda/category-i/generate',
+
+  // QRDA Category III (Aggregate)
+  GENERATE_CATEGORY_III: '/api/v1/qrda/category-iii/generate',
+
+  // Job Management
+  JOBS: '/api/v1/qrda/jobs',
+  JOB_BY_ID: (jobId: string) => `/api/v1/qrda/jobs/${jobId}`,
+  JOB_DOWNLOAD: (jobId: string) => `/api/v1/qrda/jobs/${jobId}/download`,
+  JOB_CANCEL: (jobId: string) => `/api/v1/qrda/jobs/${jobId}/cancel`,
+};
+
+/**
  * FHIR Server Endpoints
  */
 export const FHIR_ENDPOINTS = {
@@ -213,6 +242,22 @@ export function buildFhirUrl(endpoint: string, params?: Record<string, string>):
   let url = `${API_CONFIG.FHIR_SERVER_URL}${endpoint}`;
 
   if (params) {
+    const queryString = Object.entries(params)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .join('&');
+    url += `?${queryString}`;
+  }
+
+  return url;
+}
+
+/**
+ * Build full URL for QRDA Export endpoint
+ */
+export function buildQrdaExportUrl(endpoint: string, params?: Record<string, string>): string {
+  let url = `${API_CONFIG.QRDA_EXPORT_URL}${endpoint}`;
+
+  if (params && Object.keys(params).length > 0) {
     const queryString = Object.entries(params)
       .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
       .join('&');

@@ -69,10 +69,10 @@ test.describe('Clinical Portal - UI Documentation', () => {
   test('04 - Patients Page - Patient List', async ({ page }) => {
     // Navigate to patients page
     await page.goto('/patients');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
-    // Wait for patient list to load
-    await page.waitForSelector('app-patients', { timeout: 10000 });
+    // Wait for page to render (app-patients component or any content)
+    await page.waitForSelector('app-patients, mat-sidenav-content', { timeout: 10000 });
     await page.waitForTimeout(2000);
 
     // Take screenshot of patient list

@@ -4,8 +4,8 @@ spring:
 
   # ⚠️ SECURITY: Database credentials MUST be provided via environment variables
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/hdim_predictive}
-    username: ${SPRING_DATASOURCE_USERNAME:hdim}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/healthdata_predictive}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
     password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
 

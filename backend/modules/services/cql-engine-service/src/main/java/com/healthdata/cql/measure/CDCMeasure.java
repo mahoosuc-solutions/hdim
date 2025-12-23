@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * CDC - Comprehensive Diabetes Care (HEDIS)
@@ -66,7 +67,7 @@ public class CDCMeasure extends AbstractHedisMeasure {
 
     @Override
     @Cacheable(value = "hedisMeasures", key = "'CDC-' + #tenantId + '-' + #patientId")
-    public MeasureResult evaluate(String tenantId, String patientId) {
+    public MeasureResult evaluate(String tenantId, UUID patientId) {
         logger.info("Evaluating CDC measure for patient: {}", patientId);
 
         MeasureResult.MeasureResultBuilder resultBuilder = MeasureResult.builder()
@@ -113,7 +114,7 @@ public class CDCMeasure extends AbstractHedisMeasure {
     }
 
     @Override
-    public boolean isEligible(String tenantId, String patientId) {
+    public boolean isEligible(String tenantId, UUID patientId) {
         // Patient is eligible if they have a diabetes diagnosis
         JsonNode conditions = getConditions(tenantId, patientId, null);
         if (conditions == null) {
@@ -137,7 +138,7 @@ public class CDCMeasure extends AbstractHedisMeasure {
     /**
      * Evaluate HbA1c control (<8%)
      */
-    private boolean evaluateHbA1cControl(String tenantId, String patientId,
+    private boolean evaluateHbA1cControl(String tenantId, UUID patientId,
                                          MeasureResult.MeasureResultBuilder resultBuilder) {
         String dateFilter = "ge" + LocalDate.now().minusMonths(12).toString();
         JsonNode observations = getObservations(tenantId, patientId, String.join(",", HBA1C_CODES), dateFilter);
@@ -189,7 +190,7 @@ public class CDCMeasure extends AbstractHedisMeasure {
     /**
      * Evaluate blood pressure control (<140/90 mmHg)
      */
-    private boolean evaluateBPControl(String tenantId, String patientId,
+    private boolean evaluateBPControl(String tenantId, UUID patientId,
                                       MeasureResult.MeasureResultBuilder resultBuilder) {
         String dateFilter = "ge" + LocalDate.now().minusMonths(12).toString();
         JsonNode observations = getObservations(tenantId, patientId, String.join(",", BP_CODES), dateFilter);
@@ -262,7 +263,7 @@ public class CDCMeasure extends AbstractHedisMeasure {
     /**
      * Evaluate eye exam completion (retinal or dilated)
      */
-    private boolean evaluateEyeExam(String tenantId, String patientId,
+    private boolean evaluateEyeExam(String tenantId, UUID patientId,
                                     MeasureResult.MeasureResultBuilder resultBuilder) {
         String dateFilter = "ge" + LocalDate.now().minusMonths(24).toString(); // Every 2 years
         JsonNode procedures = getProcedures(tenantId, patientId, String.join(",", EYE_EXAM_CODES), dateFilter);

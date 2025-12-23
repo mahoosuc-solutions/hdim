@@ -16,6 +16,28 @@ export enum WebSocketStatus {
 }
 
 /**
+ * Care Gap Notification Event (from backend WebSocket)
+ * Aligned with backend CareGapNotificationTrigger
+ */
+export interface CareGapNotificationEvent {
+  type: 'CARE_GAP_IDENTIFIED' | 'CARE_GAP_ADDRESSED';
+  gapId: string;
+  patientId: string;
+  patientName?: string;
+  title: string;
+  message: string;
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  category: string;
+  gapType: string;
+  qualityMeasure?: string;
+  dueDate?: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH';
+  timestamp: string;
+  actionUrl?: string;
+  metadata?: Record<string, unknown>;
+}
+
+/**
  * Batch Progress Event (from backend WebSocket)
  * Aligned with backend BatchProgressEvent model
  */
@@ -93,12 +115,14 @@ export class WebSocketVisualizationService {
   private statusSubject = new BehaviorSubject<WebSocketStatus>(WebSocketStatus.DISCONNECTED);
   private batchProgressSubject = new Subject<BatchProgressEvent>();
   private evaluationProgressSubject = new Subject<EvaluationProgressEvent>();
+  private careGapNotificationSubject = new Subject<CareGapNotificationEvent>();
   private errorSubject = new Subject<Error>();
 
   // Public observables
   public status$ = this.statusSubject.asObservable().pipe(distinctUntilChanged(), share());
   public batchProgress$ = this.batchProgressSubject.asObservable().pipe(share());
   public evaluationProgress$ = this.evaluationProgressSubject.asObservable().pipe(share());
+  public careGapNotification$ = this.careGapNotificationSubject.asObservable().pipe(share());
   public error$ = this.errorSubject.asObservable().pipe(share());
 
   // WebSocket endpoint (from backend CQL Engine Service)
@@ -183,7 +207,7 @@ export class WebSocketVisualizationService {
     // Send initial subscription message if needed
     this.sendMessage({
       type: 'subscribe',
-      events: ['batch_progress', 'evaluation_progress']
+      events: ['batch_progress', 'evaluation_progress', 'care_gap_notification']
     });
   }
 
@@ -196,7 +220,10 @@ export class WebSocketVisualizationService {
       console.log('WebSocket message received:', data);
 
       // Route message based on type
-      if (data.type === 'batch_progress' || data.batchId) {
+      // Check care gap notifications first (they have specific type markers)
+      if (data.type === 'CARE_GAP_IDENTIFIED' || data.type === 'CARE_GAP_ADDRESSED' || data.notificationType?.includes('CARE_GAP')) {
+        this.handleCareGapNotification(data);
+      } else if (data.type === 'batch_progress' || data.batchId) {
         this.handleBatchProgress(data);
       } else if (data.type === 'evaluation_progress' || data.patientId) {
         this.handleEvaluationProgress(data);
@@ -207,6 +234,32 @@ export class WebSocketVisualizationService {
       console.error('Failed to parse WebSocket message:', error);
       this.errorSubject.next(new Error('Failed to parse WebSocket message'));
     }
+  }
+
+  /**
+   * Handle care gap notification event
+   */
+  private handleCareGapNotification(data: any): void {
+    const notification: CareGapNotificationEvent = {
+      type: data.notificationType || data.type,
+      gapId: data.metadata?.careGapId || data.gapId || '',
+      patientId: data.patientId || '',
+      patientName: data.templateVariables?.patientName || data.patientName,
+      title: data.title || '',
+      message: data.message || '',
+      priority: data.metadata?.priority || data.priority || 'MEDIUM',
+      category: data.metadata?.category || data.category || 'UNKNOWN',
+      gapType: data.metadata?.gapType || data.gapType || 'UNKNOWN',
+      qualityMeasure: data.metadata?.qualityMeasure || data.qualityMeasure,
+      dueDate: data.templateVariables?.dueDate || data.dueDate,
+      severity: data.severity || 'MEDIUM',
+      timestamp: data.timestamp || new Date().toISOString(),
+      actionUrl: data.templateVariables?.actionUrl || data.actionUrl,
+      metadata: data.metadata,
+    };
+
+    console.log('Care gap notification received:', notification);
+    this.careGapNotificationSubject.next(notification);
   }
 
   /**

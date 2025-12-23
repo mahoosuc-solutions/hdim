@@ -23,7 +23,7 @@ public interface HealthScoreHistoryRepository extends JpaRepository<HealthScoreH
            "ORDER BY h.calculatedAt DESC")
     List<HealthScoreHistoryEntity> findByPatientIdOrderByCalculatedAtDesc(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId
+        @Param("patientId") UUID patientId
     );
 
     /**
@@ -35,7 +35,7 @@ public interface HealthScoreHistoryRepository extends JpaRepository<HealthScoreH
            "ORDER BY h.calculatedAt DESC")
     List<HealthScoreHistoryEntity> findByPatientIdAndDateRange(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("startDate") Instant startDate,
         @Param("endDate") Instant endDate
     );
@@ -48,7 +48,7 @@ public interface HealthScoreHistoryRepository extends JpaRepository<HealthScoreH
            "ORDER BY h.calculatedAt DESC LIMIT :limit")
     List<HealthScoreHistoryEntity> findRecentScores(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("limit") int limit
     );
 }

@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Category-Specific Risk Assessment Service (Phase 4)
@@ -50,7 +51,7 @@ public class CategorySpecificRiskService {
     @Transactional
     public RiskAssessmentDTO calculateCategoryRisk(
         String tenantId,
-        String patientId,
+        UUID patientId,
         String category,
         Map<String, Object> patientData
     ) {
@@ -113,7 +114,7 @@ public class CategorySpecificRiskService {
      * @return List of risk assessments for all categories
      */
     @Transactional
-    public List<RiskAssessmentDTO> recalculateAllRisks(String tenantId, String patientId) {
+    public List<RiskAssessmentDTO> recalculateAllRisks(String tenantId, UUID patientId) {
         log.info("Recalculating all risk categories for patient {}", patientId);
 
         List<RiskAssessmentDTO> results = new ArrayList<>();
@@ -140,7 +141,7 @@ public class CategorySpecificRiskService {
      * @return true if deterioration detected
      */
     @Transactional
-    public boolean detectDeterioration(String tenantId, String patientId, String category) {
+    public boolean detectDeterioration(String tenantId, UUID patientId, String category) {
         log.info("Checking for deterioration in {} risk for patient {}", category, patientId);
 
         // Get previous assessment
@@ -927,7 +928,7 @@ public class CategorySpecificRiskService {
      */
     private void publishDeteriorationEvent(
         String tenantId,
-        String patientId,
+        UUID patientId,
         String category,
         RiskAssessmentEntity.RiskLevel previousLevel,
         RiskAssessmentEntity.RiskLevel newLevel

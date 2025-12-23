@@ -42,10 +42,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     properties = {
         "spring.kafka.bootstrap-servers=",
         "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration",
-        "healthdata.persistence.primary.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;INIT=CREATE SCHEMA IF NOT EXISTS prior_auth",
+        "healthdata.persistence.primary.url=jdbc:tc:postgresql:15-alpine:///testdb",
         "healthdata.persistence.primary.username=sa",
         "healthdata.persistence.primary.password=",
-        "healthdata.persistence.primary.driver-class-name=org.h2.Driver",
+        "healthdata.persistence.primary.driver-class-name=org.testcontainers.jdbc.ContainerDatabaseDriver",
         "healthdata.persistence.primary.pool-name=h2-test-pool",
         "healthdata.persistence.rls-enabled=false",
         "healthdata.security.jwt.secret=test-secret-key-for-unit-testing-only-minimum-32-chars",

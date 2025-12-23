@@ -36,8 +36,8 @@ bouncycastle = "1.78.1"
 
 # Testing
 junit = "5.11.2"
-mockito = "5.14.1"
-testcontainers = "1.20.2"
+mockito = "5.2.0"
+testcontainers = "1.20.4"
 rest-assured = "5.5.0"
 testcontainers-redis = "2.2.2"
 
@@ -128,6 +128,7 @@ bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref 
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
+mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }

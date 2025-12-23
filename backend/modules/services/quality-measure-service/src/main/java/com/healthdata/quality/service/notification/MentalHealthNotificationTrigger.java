@@ -19,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Mental Health Assessment Notification Trigger
@@ -312,7 +313,7 @@ public class MentalHealthNotificationTrigger {
      * @param patientId Patient ID
      * @return Map of channel -> recipient ID
      */
-    private Map<String, String> getRecipients(String tenantId, String patientId) {
+    private Map<String, String> getRecipients(String tenantId, UUID patientId) {
         Map<String, String> recipients = new HashMap<>();
 
         try {
@@ -383,7 +384,7 @@ public class MentalHealthNotificationTrigger {
      * @param assessment Mental health assessment
      * @return Map of channel -> recipient ID
      */
-    private Map<String, String> getRecipientsForSevereAssessment(String tenantId, String patientId, MentalHealthAssessmentDTO assessment) {
+    private Map<String, String> getRecipientsForSevereAssessment(String tenantId, UUID patientId, MentalHealthAssessmentDTO assessment) {
         Map<String, String> recipients = getRecipients(tenantId, patientId);
 
         try {

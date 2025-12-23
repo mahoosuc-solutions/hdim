@@ -1,0 +1,39 @@
+{
+  "name": "analytics-service",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "backend/modules/services/analytics-service/src",
+  "tags": [
+    "backend",
+    "service"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/modules/services/analytics-service/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:analytics-service:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:analytics-service:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:analytics-service:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:analytics-service:test :modules:services:analytics-service:jacocoTestReport :modules:services:analytics-service:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

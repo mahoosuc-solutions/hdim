@@ -6,10 +6,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -264,6 +266,48 @@ class FileSourceConnectorTest {
             // Then
             assertThat(records).isEmpty();
         }
+
+        @Test
+        @DisplayName("Should read gzip-compressed HL7 file")
+        void shouldReadGzipFile() throws IOException {
+            Path testFile = tempDir.resolve("compressed.hl7.gz");
+            String message = "MSH|^~\\&|TEST|||20240101000000||ADT^A01|123|P|2.5\r";
+            try (GZIPOutputStream gzip = new GZIPOutputStream(Files.newOutputStream(testFile))) {
+                gzip.write(message.getBytes(StandardCharsets.UTF_8));
+            }
+
+            SourceConfig config = SourceConfig.builder()
+                    .sourceType(SourceType.FILE)
+                    .path(testFile.toString())
+                    .dataType(DataType.HL7V2)
+                    .compression(SourceConfig.CompressionType.GZIP)
+                    .build();
+
+            connector.connect(config);
+
+            Iterator<SourceRecord> iterator = connector.readRecords(10);
+            assertThat(iterator.hasNext()).isTrue();
+            SourceRecord record = iterator.next();
+            assertThat(record.getContent()).contains("MSH");
+        }
+
+        @Test
+        @DisplayName("Should detect JSON bundle when data type is not set")
+        void shouldDetectJsonBundle() throws IOException {
+            Path testFile = tempDir.resolve("bundle.json");
+            Files.writeString(testFile, "{\"resourceType\":\"Bundle\"}");
+
+            SourceConfig config = SourceConfig.builder()
+                    .sourceType(SourceType.FILE)
+                    .path(testFile.toString())
+                    .build();
+
+            connector.connect(config);
+
+            Iterator<SourceRecord> iterator = connector.readRecords(10);
+            SourceRecord record = iterator.next();
+            assertThat(record.getDataType()).isEqualTo(DataType.FHIR_BUNDLE);
+        }
     }
 
     @Nested
@@ -320,6 +364,26 @@ class FileSourceConnectorTest {
             long count = connector.countRecords();
 
             // Then
+            assertThat(count).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("Should count files when data type is not specified")
+        void shouldCountFilesWhenDataTypeNotSpecified() throws IOException {
+            Path file1 = tempDir.resolve("file1.hl7");
+            Path file2 = tempDir.resolve("file2.hl7");
+            Files.writeString(file1, "MSH|^~\\&|TEST");
+            Files.writeString(file2, "MSH|^~\\&|TEST");
+
+            SourceConfig config = SourceConfig.builder()
+                    .sourceType(SourceType.FILE)
+                    .path(tempDir.toString() + "/*.hl7")
+                    .build();
+
+            connector.connect(config);
+
+            long count = connector.countRecords();
+
             assertThat(count).isEqualTo(2);
         }
 

@@ -134,7 +134,7 @@ class CdsControllerTest {
     private CdsService cdsService;
 
     private static final String TENANT_ID = "test-tenant-001";
-    private static final String PATIENT_ID = "patient-12345";
+    private static final UUID PATIENT_ID = UUID.fromString("12121212-3434-5656-7878-909090909090");
     private static final String RULE_CODE = "DIABETES_HBA1C_CHECK";
     private static final String CATEGORY = "PREVENTIVE_CARE";
 
@@ -502,7 +502,7 @@ class CdsControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(1)))
-                    .andExpect(jsonPath("$[0].patientId", is(PATIENT_ID)))
+                    .andExpect(jsonPath("$[0].patientId", is(PATIENT_ID.toString())))
                     .andExpect(jsonPath("$[0].title", is("HbA1c Test Overdue")))
                     .andExpect(jsonPath("$[0].urgency", is("URGENT")))
                     .andExpect(jsonPath("$[0].status", is("ACTIVE")));
@@ -546,10 +546,10 @@ class CdsControllerTest {
 
         @Test
         @WithMockUser(roles = "PROVIDER")
-        @DisplayName("Should handle patient IDs with special characters")
-        void shouldHandlePatientIdWithSpecialCharacters() throws Exception {
+        @DisplayName("Should handle UUID patient IDs")
+        void shouldHandleUuidPatientId() throws Exception {
             // Given
-            String specialPatientId = "patient-123.456@test";
+            UUID specialPatientId = UUID.randomUUID();
             when(cdsService.getActiveRecommendations(TENANT_ID, specialPatientId))
                     .thenReturn(Collections.emptyList());
 
@@ -589,7 +589,7 @@ class CdsControllerTest {
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(jsonPath("$.patientId", is(PATIENT_ID)))
+                    .andExpect(jsonPath("$.patientId", is(PATIENT_ID.toString())))
                     .andExpect(jsonPath("$.totalActive", is(11)))
                     .andExpect(jsonPath("$.emergent", is(1)))
                     .andExpect(jsonPath("$.urgent", is(3)))
@@ -677,7 +677,7 @@ class CdsControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(1)))
-                    .andExpect(jsonPath("$[0].patientId", is(PATIENT_ID)))
+                    .andExpect(jsonPath("$[0].patientId", is(PATIENT_ID.toString())))
                     .andExpect(jsonPath("$[0].daysOverdue", is(1)));
 
             verify(cdsService, times(1)).getOverdueRecommendations(TENANT_ID, PATIENT_ID);
@@ -723,7 +723,7 @@ class CdsControllerTest {
                             .with(csrf()))
                     .andExpect(status().isCreated())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(jsonPath("$.patientId", is(PATIENT_ID)))
+                    .andExpect(jsonPath("$.patientId", is(PATIENT_ID.toString())))
                     .andExpect(jsonPath("$.rulesEvaluated", is(5)))
                     .andExpect(jsonPath("$.recommendationsGenerated", is(2)))
                     .andExpect(jsonPath("$.existingRecommendationsSkipped", is(1)))

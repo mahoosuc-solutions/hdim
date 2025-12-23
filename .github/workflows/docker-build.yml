@@ -56,6 +56,13 @@ jobs:
           ./gradlew :modules:services:cql-engine-service:build -x test --no-daemon
 
       - name: Run tests
+        env:
+          # Override any docker-compose env vars to ensure tests use H2
+          SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+          SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
+          SPRING_DATASOURCE_USERNAME: sa
+          SPRING_DATASOURCE_PASSWORD: ""
+          SPRING_PROFILES_ACTIVE: test
         run: |
           cd backend
           ./gradlew :modules:services:cql-engine-service:test --no-daemon

@@ -37,4 +37,8 @@
     <!-- Phase 4: Risk Stratification Automation - Category-specific tracking -->
     <include file="db/changelog/0015-add-risk-category-tracking.xml"/>
 
+    <!-- Notification routing and recipient configuration -->
+    <include file="db/changelog/0016-create-notification-routing-tables.xml"/>
+    <include file="db/changelog/0017-convert-quality-patient-ids-to-uuid.xml"/>
+
 </databaseChangeLog>

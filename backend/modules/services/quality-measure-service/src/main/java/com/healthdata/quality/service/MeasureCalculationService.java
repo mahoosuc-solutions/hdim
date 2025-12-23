@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.UUID;
 
 /**
  * Measure Calculation Service
@@ -41,7 +42,7 @@ public class MeasureCalculationService {
     @Transactional
     public QualityMeasureResultEntity calculateMeasure(
             String tenantId,
-            String patientId,
+            UUID patientId,
             String measureId,
             String createdBy
     ) {
@@ -58,7 +59,7 @@ public class MeasureCalculationService {
             // Create and save result
             QualityMeasureResultEntity entity = QualityMeasureResultEntity.builder()
                     .tenantId(tenantId)
-                    .patientId(UUID.fromString(patientId))
+                    .patientId(patientId)
                     .measureId(measureId)
                     .measureName(extractMeasureName(measureId, result))
                     .measureCategory(extractMeasureCategory(measureId))
@@ -91,9 +92,9 @@ public class MeasureCalculationService {
     @Cacheable(value = "measureResults", key = "#tenantId + ':' + #patientId")
     public List<QualityMeasureResultEntity> getPatientMeasureResults(
             String tenantId,
-            String patientId
+            UUID patientId
     ) {
-        return repository.findByTenantIdAndPatientId(tenantId, UUID.fromString(patientId));
+        return repository.findByTenantIdAndPatientId(tenantId, patientId);
     }
 
     /**
@@ -113,11 +114,11 @@ public class MeasureCalculationService {
     /**
      * Get quality score for a patient (percentage of compliant measures)
      */
-    public QualityScore getQualityScore(String tenantId, String patientId) {
+    public QualityScore getQualityScore(String tenantId, UUID patientId) {
         List<QualityMeasureResultEntity> results = getPatientMeasureResults(tenantId, patientId);
 
         long total = results.size();
-        long compliant = repository.countCompliantMeasures(tenantId, UUID.fromString(patientId));
+        long compliant = repository.countCompliantMeasures(tenantId, patientId);
 
         double score = total > 0 ? (double) compliant / total * 100 : 0.0;
 
@@ -171,7 +172,7 @@ public class MeasureCalculationService {
         return null;
     }
 
-    private void publishCalculationEvent(String tenantId, String patientId, String measureId) {
+    private void publishCalculationEvent(String tenantId, UUID patientId, String measureId) {
         try {
             String event = String.format(
                     "{\"tenantId\":\"%s\",\"patientId\":\"%s\",\"measureId\":\"%s\",\"timestamp\":\"%s\"}",

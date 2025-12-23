@@ -15,17 +15,17 @@ spring:
     name: fhir-service-kafka-it
 
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    url: jdbc:tc:postgresql:15-alpine:///testdb
     username: sa
     password:
-    driver-class-name: org.h2.Driver
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
 
   jpa:
     hibernate:
       ddl-auto: create-drop
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
 
   liquibase:

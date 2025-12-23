@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export NX_ISOLATE_PLUGINS=false
+export NX_SOCKET_DIR=.nx/socket
+export NX_DAEMON_SOCKET_DIR=.nx/socket
+export NX_DAEMON=false
+
+exec npx nx "$@"

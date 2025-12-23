@@ -2,9 +2,12 @@ package com.healthdata.quality.service;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
+import org.hl7.fhir.r4.model.HumanName;
+import org.hl7.fhir.r4.model.Patient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -17,7 +20,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PatientNameServiceTest {
 
-    @Mock
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private IGenericClient fhirClient;
 
     private PatientNameService patientNameService;
@@ -40,10 +43,9 @@ class PatientNameServiceTest {
 
     @Test
     void shouldHandleNullAndEmptyIds() {
-        // When: Getting patient name with null or empty IDs
+        // When: Getting patient name with null ID
         // Then: Should return fallback
         assertThat(patientNameService.getPatientName(null)).isEqualTo("Patient");
-        assertThat(patientNameService.getPatientName("")).isEqualTo("Patient");
     }
 
     @Test
@@ -63,7 +65,7 @@ class PatientNameServiceTest {
     @Test
     void shouldHandlePatientNotFound() {
         // Given: Patient does not exist in FHIR server
-        String patientId = "patient-nonexistent";
+        java.util.UUID patientId = java.util.UUID.randomUUID();
 
         // Mock FHIR client to throw ResourceNotFoundException
         when(fhirClient.read()).thenThrow(new ResourceNotFoundException("Patient not found"));
@@ -87,8 +89,8 @@ class PatientNameServiceTest {
 
     @Test
     void shouldHandleEmptyPatientId() {
-        // When: Getting patient name with empty ID
-        String name = patientNameService.getPatientName("");
+        // When: Getting patient name with null ID
+        String name = patientNameService.getPatientName(null);
 
         // Then: Should return fallback without calling FHIR client
         assertThat(name).isEqualTo("Patient");
@@ -97,12 +99,144 @@ class PatientNameServiceTest {
 
     @Test
     void shouldHandleWhitespacePatientId() {
-        // When: Getting patient name with whitespace ID
-        String name = patientNameService.getPatientName("   ");
+        // When: Getting patient name with null ID
+        String name = patientNameService.getPatientName(null);
 
         // Then: Should return fallback without calling FHIR client
         assertThat(name).isEqualTo("Patient");
         verify(fhirClient, never()).read();
     }
 
+    @Test
+    void shouldReturnOfficialNameWhenPresent() {
+        java.util.UUID patientId = java.util.UUID.randomUUID();
+
+        Patient patient = new Patient();
+        patient.addName()
+            .setUse(HumanName.NameUse.USUAL)
+            .addGiven("Sam")
+            .setFamily("Smith");
+        patient.addName()
+            .setUse(HumanName.NameUse.OFFICIAL)
+            .addGiven("Ana")
+            .setFamily("Jones");
+
+        when(fhirClient.read()
+            .resource(Patient.class)
+            .withId(patientId.toString())
+            .execute()).thenReturn(patient);
+
+        String name = patientNameService.getPatientName(patientId);
+
+        assertThat(name).isEqualTo("Ana Jones");
+    }
+
+    @Test
+    void shouldFallBackToUsualNameWhenNoOfficial() {
+        java.util.UUID patientId = java.util.UUID.randomUUID();
+
+        Patient patient = new Patient();
+        patient.addName()
+            .setUse(HumanName.NameUse.USUAL)
+            .addGiven("Jamie")
+            .setFamily("Nguyen");
+
+        when(fhirClient.read()
+            .resource(Patient.class)
+            .withId(patientId.toString())
+            .execute()).thenReturn(patient);
+
+        String name = patientNameService.getPatientName(patientId);
+
+        assertThat(name).isEqualTo("Jamie Nguyen");
+    }
+
+    @Test
+    void shouldUseFirstAvailableNameWhenNoUseProvided() {
+        java.util.UUID patientId = java.util.UUID.randomUUID();
+
+        Patient patient = new Patient();
+        patient.addName()
+            .addGiven("Alex")
+            .setFamily("Kim");
+        patient.addName()
+            .addGiven("Sam")
+            .setFamily("Lee");
+
+        when(fhirClient.read()
+            .resource(Patient.class)
+            .withId(patientId.toString())
+            .execute()).thenReturn(patient);
+
+        String name = patientNameService.getPatientName(patientId);
+
+        assertThat(name).isEqualTo("Alex Kim");
+    }
+
+    @Test
+    void shouldHandleGivenNameOnly() {
+        java.util.UUID patientId = java.util.UUID.randomUUID();
+
+        Patient patient = new Patient();
+        patient.addName()
+            .setUse(HumanName.NameUse.USUAL)
+            .addGiven("Taylor");
+
+        when(fhirClient.read()
+            .resource(Patient.class)
+            .withId(patientId.toString())
+            .execute()).thenReturn(patient);
+
+        String name = patientNameService.getPatientName(patientId);
+
+        assertThat(name).isEqualTo("Taylor");
+    }
+
+    @Test
+    void shouldHandleFamilyNameOnly() {
+        java.util.UUID patientId = java.util.UUID.randomUUID();
+
+        Patient patient = new Patient();
+        patient.addName()
+            .setFamily("Patel");
+
+        when(fhirClient.read()
+            .resource(Patient.class)
+            .withId(patientId.toString())
+            .execute()).thenReturn(patient);
+
+        String name = patientNameService.getPatientName(patientId);
+
+        assertThat(name).isEqualTo("Patel");
+    }
+
+    @Test
+    void shouldReturnFallbackWhenPatientHasNoNames() {
+        java.util.UUID patientId = java.util.UUID.randomUUID();
+
+        Patient patient = new Patient();
+
+        when(fhirClient.read()
+            .resource(Patient.class)
+            .withId(patientId.toString())
+            .execute()).thenReturn(patient);
+
+        String name = patientNameService.getPatientName(patientId);
+
+        assertThat(name).isEqualTo("Patient");
+    }
+
+    @Test
+    void shouldReturnFallbackWhenClientThrows() {
+        java.util.UUID patientId = java.util.UUID.randomUUID();
+
+        when(fhirClient.read()
+            .resource(Patient.class)
+            .withId(patientId.toString())
+            .execute()).thenThrow(new RuntimeException("boom"));
+
+        String name = patientNameService.getPatientName(patientId);
+
+        assertThat(name).isEqualTo("Patient");
+    }
 }

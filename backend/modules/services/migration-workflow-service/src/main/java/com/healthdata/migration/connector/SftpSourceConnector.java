@@ -47,7 +47,7 @@ public class SftpSourceConnector extends AbstractSourceConnector {
     @Override
     protected void doConnect() throws IOException {
         try {
-            jsch = new JSch();
+            jsch = createJsch();
 
             // Configure authentication
             if (config.getAuthType() == SourceConfig.AuthType.KEY && config.getPrivateKeyPath() != null) {
@@ -81,6 +81,10 @@ public class SftpSourceConnector extends AbstractSourceConnector {
         } catch (JSchException | SftpException e) {
             throw new IOException("Failed to connect to SFTP: " + e.getMessage(), e);
         }
+    }
+
+    protected JSch createJsch() {
+        return new JSch();
     }
 
     @SuppressWarnings("unchecked")

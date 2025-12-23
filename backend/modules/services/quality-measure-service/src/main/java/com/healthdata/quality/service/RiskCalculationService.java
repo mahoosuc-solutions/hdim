@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Risk Calculation Service
@@ -45,7 +46,7 @@ public class RiskCalculationService {
     @Transactional
     public RiskAssessmentDTO recalculateRiskOnCondition(
         String tenantId,
-        String patientId,
+        UUID patientId,
         Map<String, Object> conditionData
     ) {
         log.info("Recalculating risk for patient {} on new condition", patientId);
@@ -131,7 +132,7 @@ public class RiskCalculationService {
     @Transactional
     public RiskAssessmentDTO recalculateRiskOnObservation(
         String tenantId,
-        String patientId,
+        UUID patientId,
         Map<String, Object> observationData
     ) {
         log.info("Recalculating risk for patient {} on new observation", patientId);
@@ -417,7 +418,7 @@ public class RiskCalculationService {
      */
     private void publishRiskAssessmentUpdatedEvent(
         String tenantId,
-        String patientId,
+        UUID patientId,
         RiskAssessmentEntity assessment
     ) {
         Map<String, Object> event = Map.of(
@@ -439,7 +440,7 @@ public class RiskCalculationService {
      */
     private void publishRiskLevelChangedEvent(
         String tenantId,
-        String patientId,
+        UUID patientId,
         RiskAssessmentEntity.RiskLevel previousLevel,
         RiskAssessmentEntity.RiskLevel newLevel
     ) {

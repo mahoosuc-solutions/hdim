@@ -457,6 +457,30 @@ class ImmunizationServiceTest {
         assertThat(imm.hasExpirationDate()).isTrue();
     }
 
+    @Test
+    void shouldParseFhirResourceWhenStored() {
+        Immunization resource = new Immunization();
+        resource.setId(IMMUNIZATION_ID);
+        resource.setStatus(Immunization.ImmunizationStatus.COMPLETED);
+        resource.setPatient(new Reference("Patient/" + PATIENT_ID));
+        String json = ca.uhn.fhir.context.FhirContext.forR4().newJsonParser().encodeResourceToString(resource);
+
+        ImmunizationEntity entity = ImmunizationEntity.builder()
+                .id(UUID.fromString(IMMUNIZATION_ID))
+                .tenantId(TENANT)
+                .patientId(UUID.fromString(PATIENT_ID))
+                .fhirResource(json)
+                .build();
+
+        when(immunizationRepository.findByTenantIdAndId(TENANT, UUID.fromString(IMMUNIZATION_ID)))
+                .thenReturn(Optional.of(entity));
+
+        Optional<Immunization> result = immunizationService.getImmunization(TENANT, IMMUNIZATION_ID);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getIdElement().getIdPart()).isEqualTo(IMMUNIZATION_ID);
+    }
+
     // Helper methods
     private Immunization createFhirImmunization() {
         Immunization immunization = new Immunization();

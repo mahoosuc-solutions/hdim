@@ -2,12 +2,12 @@ import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { QrdaExportService, QrdaExportJob, QrdaExportRequest } from './qrda-export.service';
-import { environment } from '../../environments/environment';
+import { API_CONFIG, QRDA_EXPORT_ENDPOINTS, buildQrdaExportUrl } from '../config/api.config';
 
 describe('QrdaExportService', () => {
   let service: QrdaExportService;
   let httpMock: HttpTestingController;
-  const baseUrl = `${environment.apiUrl}/qrda`;
+  const baseUrl = API_CONFIG.QRDA_EXPORT_URL;
 
   const mockJob: QrdaExportJob = {
     id: 'job-123',
@@ -59,7 +59,7 @@ describe('QrdaExportService', () => {
         expect(job).toEqual(mockJob);
       });
 
-      const req = httpMock.expectOne(`${baseUrl}/category-i/generate`);
+      const req = httpMock.expectOne(buildQrdaExportUrl(QRDA_EXPORT_ENDPOINTS.GENERATE_CATEGORY_I));
       expect(req.request.method).toBe('POST');
       expect(req.request.body.jobType).toBe('QRDA_I');
       req.flush(mockJob);
@@ -72,7 +72,7 @@ describe('QrdaExportService', () => {
         expect(job).toEqual(mockJob);
       });
 
-      const req = httpMock.expectOne(`${baseUrl}/category-iii/generate`);
+      const req = httpMock.expectOne(buildQrdaExportUrl(QRDA_EXPORT_ENDPOINTS.GENERATE_CATEGORY_III));
       expect(req.request.method).toBe('POST');
       expect(req.request.body.jobType).toBe('QRDA_III');
       req.flush(mockJob);
@@ -85,7 +85,7 @@ describe('QrdaExportService', () => {
         expect(job).toEqual(mockJob);
       });
 
-      const req = httpMock.expectOne(`${baseUrl}/jobs/job-123`);
+      const req = httpMock.expectOne(buildQrdaExportUrl(QRDA_EXPORT_ENDPOINTS.JOB_BY_ID('job-123')));
       expect(req.request.method).toBe('GET');
       req.flush(mockJob);
     });
@@ -106,7 +106,7 @@ describe('QrdaExportService', () => {
         expect(page.totalElements).toBe(1);
       });
 
-      const req = httpMock.expectOne(`${baseUrl}/jobs?page=0&size=20`);
+      const req = httpMock.expectOne(buildQrdaExportUrl(QRDA_EXPORT_ENDPOINTS.JOBS, { page: '0', size: '20' }));
       expect(req.request.method).toBe('GET');
       req.flush(mockPage);
     });
@@ -122,7 +122,12 @@ describe('QrdaExportService', () => {
 
       service.listJobs(0, 20, 'QRDA_III', 'COMPLETED').subscribe();
 
-      const req = httpMock.expectOne(`${baseUrl}/jobs?page=0&size=20&jobType=QRDA_III&status=COMPLETED`);
+      const req = httpMock.expectOne(buildQrdaExportUrl(QRDA_EXPORT_ENDPOINTS.JOBS, {
+        page: '0',
+        size: '20',
+        jobType: 'QRDA_III',
+        status: 'COMPLETED',
+      }));
       expect(req.request.method).toBe('GET');
       req.flush(mockPage);
     });
@@ -136,7 +141,7 @@ describe('QrdaExportService', () => {
         expect(blob).toBeTruthy();
       });
 
-      const req = httpMock.expectOne(`${baseUrl}/jobs/job-123/download`);
+      const req = httpMock.expectOne(buildQrdaExportUrl(QRDA_EXPORT_ENDPOINTS.JOB_DOWNLOAD('job-123')));
       expect(req.request.method).toBe('GET');
       expect(req.request.responseType).toBe('blob');
       req.flush(mockBlob);
@@ -151,7 +156,7 @@ describe('QrdaExportService', () => {
         expect(job.status).toBe('CANCELLED');
       });
 
-      const req = httpMock.expectOne(`${baseUrl}/jobs/job-123/cancel`);
+      const req = httpMock.expectOne(buildQrdaExportUrl(QRDA_EXPORT_ENDPOINTS.JOB_CANCEL('job-123')));
       expect(req.request.method).toBe('POST');
       req.flush(cancelledJob);
     });

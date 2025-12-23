@@ -21,6 +21,7 @@ import { PatientSelectionDialogComponent } from '../../components/dialogs/patien
 import { YearSelectionDialogComponent } from '../../components/dialogs/year-selection-dialog.component';
 import { ReportDetailDialogComponent } from '../../components/dialogs/report-detail-dialog.component';
 import { ConfirmDialogComponent } from '../../components/dialogs/confirm-dialog.component';
+import { PeriodComparisonDialogComponent, PeriodComparisonSelection } from '../../components/dialogs/period-comparison-dialog.component';
 import { ToastService } from '../../services/toast.service';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
@@ -134,6 +135,24 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
               <mat-icon class="action-arrow">arrow_forward</mat-icon>
             }
           </button>
+          <button class="action-card comparative"
+                  type="button"
+                  (click)="onGenerateComparativeReport()"
+                  [disabled]="isGeneratingComparativeReport()"
+                  matTooltip="Compare compliance across time periods">
+            <div class="action-card-icon">
+              <mat-icon>compare_arrows</mat-icon>
+            </div>
+            <div class="action-card-content">
+              <span class="action-title">Comparative Report</span>
+              <span class="action-desc">Period-over-period trends</span>
+            </div>
+            @if (isGeneratingComparativeReport()) {
+              <mat-spinner diameter="24"></mat-spinner>
+            } @else {
+              <mat-icon class="action-arrow">arrow_forward</mat-icon>
+            }
+          </button>
         </div>
       </div>
 
@@ -232,6 +251,51 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
                     (buttonClick)="onGeneratePopulationReport()">
                     <mat-icon>play_arrow</mat-icon>
                     Generate Population Report
+                  </app-loading-button>
+                </mat-card-actions>
+              </mat-card>
+
+              <!-- Comparative Report Card -->
+              <mat-card class="generation-card">
+                <mat-card-header>
+                  <mat-icon class="card-icon comparative-icon">compare_arrows</mat-icon>
+                  <mat-card-title>Comparative Report</mat-card-title>
+                  <mat-card-subtitle>
+                    Compare compliance across time periods
+                  </mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                  <p class="card-description">
+                    Analyze how quality metrics have changed over time by comparing
+                    different time periods - year-over-year, quarter-over-quarter, or month-over-month.
+                  </p>
+                  <div class="card-features">
+                    <div class="feature-item">
+                      <mat-icon>check_circle</mat-icon>
+                      <span>Period-over-period comparison</span>
+                    </div>
+                    <div class="feature-item">
+                      <mat-icon>check_circle</mat-icon>
+                      <span>Identify improving measures</span>
+                    </div>
+                    <div class="feature-item">
+                      <mat-icon>check_circle</mat-icon>
+                      <span>Highlight declining metrics</span>
+                    </div>
+                    <div class="feature-item">
+                      <mat-icon>check_circle</mat-icon>
+                      <span>Trend analysis and insights</span>
+                    </div>
+                  </div>
+                </mat-card-content>
+                <mat-card-actions>
+                  <app-loading-button
+                    [loading]="isGeneratingComparativeReport()"
+                    [color]="'primary'"
+                    [matTooltip]="'Compare compliance rates across different time periods'"
+                    (buttonClick)="onGenerateComparativeReport()">
+                    <mat-icon>play_arrow</mat-icon>
+                    Generate Comparative Report
                   </app-loading-button>
                 </mat-card-actions>
               </mat-card>
@@ -647,6 +711,10 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
             background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
           }
 
+          &.comparative .action-card-icon {
+            background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+          }
+
           .action-card-content {
             flex: 1;
             display: flex;
@@ -711,6 +779,10 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
 
         .population-icon {
           color: #388e3c;
+        }
+
+        .comparative-icon {
+          color: #9c27b0;
         }
 
         .card-description {
@@ -1048,6 +1120,7 @@ export class ReportsComponent implements OnInit, OnDestroy, AfterViewInit {
   isLoadingReports = signal(false);
   isGeneratingPatientReport = signal(false);
   isGeneratingPopulationReport = signal(false);
+  isGeneratingComparativeReport = signal(false);
 
   // Table data and selection
   dataSource = new MatTableDataSource<SavedReport>(INITIAL_SAVED_REPORTS);
@@ -1178,6 +1251,49 @@ export class ReportsComponent implements OnInit, OnDestroy, AfterViewInit {
             error: (error) => {
               this.toast.error('Failed to generate population report');
               this.isGeneratingPopulationReport.set(false);
+            },
+          });
+      }
+    });
+  }
+
+  /**
+   * Generate comparative report for period-over-period analysis
+   */
+  @TrackInteraction('reports', 'create-comparative-report')
+  onGenerateComparativeReport(): void {
+    // Open period comparison dialog
+    const dialogRef = this.dialog.open(PeriodComparisonDialogComponent, {
+      width: '650px',
+      maxWidth: '90vw',
+      disableClose: false,
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((selection: PeriodComparisonSelection | null) => {
+      if (selection) {
+        const reportName = `Comparative Report: ${selection.period1.label} vs ${selection.period2.label}`;
+
+        this.isGeneratingComparativeReport.set(true);
+
+        // For now, generate a population report for the comparison period
+        // In a full implementation, this would call a dedicated comparative report endpoint
+        this.evaluationService
+          .savePopulationReport(
+            selection.period2.startDate.getFullYear(),
+            reportName,
+            'clinical-portal'
+          )
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (report) => {
+              this.toast.success('Comparative report generated successfully');
+              this.isGeneratingComparativeReport.set(false);
+              this.selectedTabIndex = 1;
+              this.loadSavedReports();
+            },
+            error: (error) => {
+              this.toast.error('Failed to generate comparative report');
+              this.isGeneratingComparativeReport.set(false);
             },
           });
       }

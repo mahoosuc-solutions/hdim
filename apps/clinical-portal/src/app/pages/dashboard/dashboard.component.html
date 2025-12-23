@@ -427,6 +427,162 @@
     </mat-card>
     </section>
 
+    <!-- PRIORITY 3.5: My Measures - Favorites and Recent Activity -->
+    <section class="dashboard-section my-measures-section" aria-label="My Measures">
+      <div class="section-header">
+        <mat-icon class="section-icon primary">star</mat-icon>
+        <div class="section-text">
+          <h2>My Measures</h2>
+          <p class="section-description">Quick access to your favorite and recently used measures</p>
+        </div>
+      </div>
+
+      <div class="my-measures-grid">
+        <!-- Favorite Measures -->
+        <mat-card class="favorites-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar class="card-icon">star</mat-icon>
+            <mat-card-title>Favorite Measures</mat-card-title>
+            <mat-card-subtitle>
+              {{ measureFavorites.favoritesCount() }} measure{{ measureFavorites.favoritesCount() !== 1 ? 's' : '' }} saved
+            </mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="favorites-list" *ngIf="measureFavorites.favorites().length > 0">
+              @for (fav of measureFavorites.favorites(); track fav.measureId) {
+                <div class="favorite-item"
+                     role="button"
+                     tabindex="0"
+                     (click)="evaluateMeasure(fav.measureId)"
+                     (keydown.enter)="evaluateMeasure(fav.measureId)"
+                     [attr.aria-label]="'Evaluate ' + fav.displayName">
+                  <div class="measure-icon">
+                    <mat-icon color="primary">assessment</mat-icon>
+                  </div>
+                  <div class="measure-info">
+                    <div class="measure-name">{{ fav.displayName }}</div>
+                    <div class="measure-category">{{ fav.category || 'Quality Measure' }}</div>
+                  </div>
+                  <div class="measure-actions">
+                    <button mat-icon-button
+                            color="warn"
+                            matTooltip="Remove from favorites"
+                            aria-label="Remove from favorites"
+                            (click)="removeFavorite(fav.measureId, $event)">
+                      <mat-icon>star</mat-icon>
+                    </button>
+                    <mat-icon class="action-arrow">arrow_forward</mat-icon>
+                  </div>
+                </div>
+              }
+            </div>
+            <div class="empty-message" *ngIf="measureFavorites.favorites().length === 0">
+              <mat-icon>star_border</mat-icon>
+              <p>No favorite measures yet</p>
+              <span class="hint">Star measures from the Evaluations page to add them here</span>
+            </div>
+          </mat-card-content>
+          <mat-card-actions *ngIf="measureFavorites.favorites().length > 0">
+            <button mat-button color="primary" (click)="navigateTo('/evaluations')">
+              <mat-icon>add</mat-icon>
+              Add More
+            </button>
+          </mat-card-actions>
+        </mat-card>
+
+        <!-- Recently Used Measures -->
+        <mat-card class="recent-measures-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar class="card-icon">history</mat-icon>
+            <mat-card-title>Recently Used</mat-card-title>
+            <mat-card-subtitle>
+              @if (measureFavorites.hasRecent()) {
+                Quick access to your recent measures
+              } @else {
+                No recent activity
+              }
+            </mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="recent-list" *ngIf="measureFavorites.recentMeasures().length > 0">
+              @for (recent of measureFavorites.recentMeasures().slice(0, 5); track recent.measureId) {
+                <div class="recent-item"
+                     role="button"
+                     tabindex="0"
+                     (click)="evaluateMeasure(recent.measureId)"
+                     (keydown.enter)="evaluateMeasure(recent.measureId)"
+                     [attr.aria-label]="'Evaluate ' + recent.displayName">
+                  <div class="measure-icon">
+                    <mat-icon>schedule</mat-icon>
+                  </div>
+                  <div class="measure-info">
+                    <div class="measure-name">{{ recent.displayName }}</div>
+                    <div class="measure-meta">
+                      <span class="usage-count">{{ recent.usageCount }} use{{ recent.usageCount !== 1 ? 's' : '' }}</span>
+                      <span class="separator">·</span>
+                      <span class="last-used">{{ formatRelativeTime(recent.lastUsedAt) }}</span>
+                    </div>
+                  </div>
+                  <div class="measure-actions">
+                    <mat-icon class="action-arrow">arrow_forward</mat-icon>
+                  </div>
+                </div>
+              }
+            </div>
+            <div class="empty-message" *ngIf="measureFavorites.recentMeasures().length === 0">
+              <mat-icon>history</mat-icon>
+              <p>No recent measures</p>
+              <span class="hint">Measures you evaluate will appear here</span>
+            </div>
+          </mat-card-content>
+          <mat-card-actions *ngIf="measureFavorites.recentMeasures().length > 0">
+            <button mat-button color="primary" (click)="navigateTo('/evaluations')">
+              <mat-icon>play_arrow</mat-icon>
+              New Evaluation
+            </button>
+            <button mat-button color="warn" (click)="clearRecentMeasures()">
+              <mat-icon>clear_all</mat-icon>
+              Clear History
+            </button>
+          </mat-card-actions>
+        </mat-card>
+
+        <!-- Most Frequently Used -->
+        <mat-card class="frequent-measures-card" *ngIf="measureFavorites.getMostUsed(5).length > 0">
+          <mat-card-header>
+            <mat-icon mat-card-avatar class="card-icon">trending_up</mat-icon>
+            <mat-card-title>Most Used</mat-card-title>
+            <mat-card-subtitle>Your top 5 measures by usage</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="frequent-list">
+              @for (measure of measureFavorites.getMostUsed(5); track measure.measureId; let i = $index) {
+                <div class="frequent-item"
+                     role="button"
+                     tabindex="0"
+                     (click)="evaluateMeasure(measure.measureId)"
+                     (keydown.enter)="evaluateMeasure(measure.measureId)"
+                     [attr.aria-label]="'Evaluate ' + measure.displayName">
+                  <div class="rank-badge" [class]="'rank-' + (i + 1)">{{ i + 1 }}</div>
+                  <div class="measure-info">
+                    <div class="measure-name">{{ measure.displayName }}</div>
+                    <div class="usage-bar">
+                      <div class="bar-fill"
+                           [style.width.%]="getUsagePercentage(measure.usageCount)">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="usage-count-badge">
+                    {{ measure.usageCount }}
+                  </div>
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+
     <!-- PRIORITY 4: Activity and Analytics -->
     <section class="dashboard-section analytics-section" aria-label="Activity and Analytics">
       <div class="section-header">

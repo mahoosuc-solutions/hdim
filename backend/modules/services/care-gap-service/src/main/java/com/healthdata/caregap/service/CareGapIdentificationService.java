@@ -15,6 +15,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -53,7 +54,7 @@ public class CareGapIdentificationService {
      * @return List of identified care gaps
      */
     @Transactional
-    public List<CareGapEntity> identifyAllCareGaps(String tenantId, String patientId, String createdBy) {
+    public List<CareGapEntity> identifyAllCareGaps(String tenantId, UUID patientId, String createdBy) {
         log.info("Identifying all care gaps for patient: {} in tenant: {}", patientId, tenantId);
 
         List<CareGapEntity> gaps = new ArrayList<>();
@@ -93,7 +94,7 @@ public class CareGapIdentificationService {
     @Transactional
     public List<CareGapEntity> identifyCareGapsForLibrary(
             String tenantId,
-            String patientId,
+            UUID patientId,
             String libraryName,
             String createdBy
     ) {
@@ -137,12 +138,12 @@ public class CareGapIdentificationService {
      * @return List of active care gaps
      */
     @Transactional
-    public List<CareGapEntity> refreshCareGaps(String tenantId, String patientId, String createdBy) {
+    public List<CareGapEntity> refreshCareGaps(String tenantId, UUID patientId, String createdBy) {
         log.info("Refreshing care gaps for patient: {}", patientId);
 
         // Get existing open gaps
         List<CareGapEntity> existingGaps = careGapRepository.findOpenGapsByPatient(
-                tenantId, UUID.fromString(patientId));
+                tenantId, patientId);
 
         // Re-evaluate all measures
         List<CareGapEntity> currentGaps = identifyAllCareGaps(tenantId, patientId, createdBy);
@@ -153,8 +154,8 @@ public class CareGapIdentificationService {
 
         for (CareGapEntity existingGap : existingGaps) {
             if (!currentMeasureIds.contains(existingGap.getMeasureId())) {
-                existingGap.setGapStatus("closed");
-                existingGap.setClosedDate(LocalDate.now());
+                existingGap.setGapStatus("CLOSED");
+                existingGap.setClosedDate(Instant.now());
                 existingGap.setClosedBy("system");
                 existingGap.setClosureReason("Gap resolved - measure criteria now met");
                 careGapRepository.save(existingGap);
@@ -190,8 +191,8 @@ public class CareGapIdentificationService {
         CareGapEntity gap = careGapRepository.findByIdAndTenantId(gapId, tenantId)
                 .orElseThrow(() -> new RuntimeException("Care gap not found: " + gapId));
 
-        gap.setGapStatus("closed");
-        gap.setClosedDate(LocalDate.now());
+        gap.setGapStatus("CLOSED");
+        gap.setClosedDate(Instant.now());
         gap.setClosedBy(closedBy);
         gap.setClosureReason(closureReason);
         gap.setClosureAction(closureAction);
@@ -213,8 +214,8 @@ public class CareGapIdentificationService {
      * @return List of open care gaps
      */
     @Cacheable(value = "patientCareGaps", key = "#tenantId + ':' + #patientId")
-    public List<CareGapEntity> getOpenCareGaps(String tenantId, String patientId) {
-        return careGapRepository.findOpenGapsByPatient(tenantId, UUID.fromString(patientId));
+    public List<CareGapEntity> getOpenCareGaps(String tenantId, UUID patientId) {
+        return careGapRepository.findOpenGapsByPatient(tenantId, patientId);
     }
 
     /**
@@ -224,8 +225,8 @@ public class CareGapIdentificationService {
      * @param patientId Patient ID
      * @return List of high priority care gaps
      */
-    public List<CareGapEntity> getHighPriorityCareGaps(String tenantId, String patientId) {
-        return careGapRepository.findHighPriorityOpenGaps(tenantId, UUID.fromString(patientId));
+    public List<CareGapEntity> getHighPriorityCareGaps(String tenantId, UUID patientId) {
+        return careGapRepository.findHighPriorityOpenGaps(tenantId, patientId);
     }
 
     /**
@@ -235,12 +236,10 @@ public class CareGapIdentificationService {
      * @param patientId Patient ID
      * @return Care gap statistics
      */
-    public CareGapStats getCareGapStats(String tenantId, String patientId) {
-        UUID patientUuid = UUID.fromString(patientId);
-
-        long openGapsCount = careGapRepository.countOpenGaps(tenantId, patientUuid);
-        long highPriorityCount = careGapRepository.countHighPriorityGaps(tenantId, patientUuid);
-        long overdueCount = careGapRepository.countOverdueGaps(tenantId, patientUuid, LocalDate.now());
+    public CareGapStats getCareGapStats(String tenantId, UUID patientId) {
+        long openGapsCount = careGapRepository.countOpenGaps(tenantId, patientId);
+        long highPriorityCount = careGapRepository.countHighPriorityGaps(tenantId, patientId);
+        long overdueCount = careGapRepository.countOverdueGaps(tenantId, patientId, LocalDate.now());
 
         return new CareGapStats(
                 openGapsCount,
@@ -296,25 +295,25 @@ public class CareGapIdentificationService {
 
     private CareGapEntity createCareGapFromCqlResult(
             String tenantId,
-            String patientId,
+            UUID patientId,
             String libraryName,
             JsonNode cqlResult,
             String createdBy
     ) {
         return CareGapEntity.builder()
                 .tenantId(tenantId)
-                .patientId(UUID.fromString(patientId))
+                .patientId(patientId)
                 .measureId(extractMeasureId(libraryName, cqlResult))
                 .measureName(extractMeasureName(libraryName, cqlResult))
-                .measureCategory(extractMeasureCategory(libraryName))
+                .gapCategory(extractMeasureCategory(libraryName))
                 .measureYear(LocalDate.now().getYear())
                 .gapType("care-gap")
-                .gapStatus("open")
+                .gapStatus("OPEN")
                 .gapDescription(extractGapDescription(cqlResult))
                 .gapReason(extractGapReason(cqlResult))
                 .priority(extractPriority(cqlResult))
                 .riskScore(extractRiskScore(cqlResult))
-                .identifiedDate(LocalDate.now())
+                .identifiedDate(Instant.now())
                 .dueDate(extractDueDate(cqlResult))
                 .recommendation(extractRecommendation(cqlResult))
                 .recommendationType(extractRecommendationType(cqlResult))
@@ -409,7 +408,7 @@ public class CareGapIdentificationService {
         return null;
     }
 
-    private void publishGapIdentificationEvent(String tenantId, String patientId, int gapCount) {
+    private void publishGapIdentificationEvent(String tenantId, UUID patientId, int gapCount) {
         try {
             String event = String.format("{\"tenantId\":\"%s\",\"patientId\":\"%s\",\"gapCount\":%d,\"timestamp\":\"%s\"}",
                     tenantId, patientId, gapCount, LocalDate.now());

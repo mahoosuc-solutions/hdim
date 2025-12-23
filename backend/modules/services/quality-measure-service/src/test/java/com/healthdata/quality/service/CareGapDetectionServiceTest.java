@@ -52,7 +52,7 @@ class CareGapDetectionServiceTest {
         patientId = UUID.randomUUID();
 
         // Default stubbing for prioritization service
-        when(prioritizationService.determinePriority(anyString(), anyString(), anyString(), any()))
+        when(prioritizationService.determinePriority(anyString(), any(UUID.class), anyString(), any()))
             .thenReturn(CareGapEntity.Priority.HIGH);
         when(prioritizationService.calculateDueDate(any()))
             .thenReturn(Instant.now().plus(14, ChronoUnit.DAYS));
@@ -91,7 +91,7 @@ class CareGapDetectionServiceTest {
 
         CareGapEntity createdGap = gapCaptor.getValue();
         assertThat(createdGap.getTenantId()).isEqualTo(tenantId);
-        assertThat(createdGap.getPatientId()).isEqualTo(patientId.toString());
+        assertThat(createdGap.getPatientId()).isEqualTo(patientId);
         assertThat(createdGap.getQualityMeasure()).isEqualTo("CMS125");
         assertThat(createdGap.getStatus()).isEqualTo(CareGapEntity.Status.OPEN);
         assertThat(createdGap.isCreatedFromMeasure()).isTrue();
@@ -168,7 +168,7 @@ class CareGapDetectionServiceTest {
             .build();
 
         // Existing open gap already exists
-        when(careGapRepository.existsOpenCareGap(eq(tenantId), eq(patientId.toString()), eq("measure-gap-cms125")))
+        when(careGapRepository.existsOpenCareGap(eq(tenantId), eq(patientId), eq("measure-gap-cms125")))
             .thenReturn(true);
 
         // When: Analyze measure result
@@ -199,18 +199,18 @@ class CareGapDetectionServiceTest {
 
         // Patient has high risk assessment
         RiskAssessmentEntity riskAssessment = RiskAssessmentEntity.builder()
-            .patientId(patientId.toString())
+            .patientId(patientId)
             .riskLevel(RiskAssessmentEntity.RiskLevel.HIGH)
             .riskScore(85)
             .build();
 
-        when(riskAssessmentRepository.findLatestByTenantIdAndPatientId(tenantId, patientId.toString()))
+        when(riskAssessmentRepository.findLatestByTenantIdAndPatientId(tenantId, patientId))
             .thenReturn(java.util.Optional.of(riskAssessment));
         when(careGapRepository.existsOpenCareGap(any(), any(), any())).thenReturn(false);
         when(careGapRepository.save(any(CareGapEntity.class))).thenAnswer(i -> i.getArgument(0));
 
         // Override default stubbing for this test
-        when(prioritizationService.determinePriority(eq(tenantId), eq(patientId.toString()), eq("CMS134"), any()))
+        when(prioritizationService.determinePriority(eq(tenantId), eq(patientId), eq("CMS134"), any()))
             .thenReturn(CareGapEntity.Priority.URGENT);
 
         // When: Analyze measure result
@@ -244,18 +244,18 @@ class CareGapDetectionServiceTest {
 
         // Patient has low risk
         RiskAssessmentEntity riskAssessment = RiskAssessmentEntity.builder()
-            .patientId(patientId.toString())
+            .patientId(patientId)
             .riskLevel(RiskAssessmentEntity.RiskLevel.LOW)
             .riskScore(25)
             .build();
 
-        when(riskAssessmentRepository.findLatestByTenantIdAndPatientId(tenantId, patientId.toString()))
+        when(riskAssessmentRepository.findLatestByTenantIdAndPatientId(tenantId, patientId))
             .thenReturn(java.util.Optional.of(riskAssessment));
         when(careGapRepository.existsOpenCareGap(any(), any(), any())).thenReturn(false);
         when(careGapRepository.save(any(CareGapEntity.class))).thenAnswer(i -> i.getArgument(0));
 
         // Override default stubbing for this test
-        when(prioritizationService.determinePriority(eq(tenantId), eq(patientId.toString()), eq("CMS125"), any()))
+        when(prioritizationService.determinePriority(eq(tenantId), eq(patientId), eq("CMS125"), any()))
             .thenReturn(CareGapEntity.Priority.MEDIUM);
 
         // When: Analyze measure result
@@ -376,7 +376,7 @@ class CareGapDetectionServiceTest {
         // Verify deduplication check used correct tenant
         verify(careGapRepository).existsOpenCareGap(
             eq(correctTenantId),
-            anyString(),
+            any(UUID.class),
             anyString()
         );
     }

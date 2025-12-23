@@ -20,7 +20,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
      */
     List<CareGapEntity> findByTenantIdAndPatientIdOrderByPriorityAscDueDateAsc(
         String tenantId,
-        String patientId
+        UUID patientId
     );
 
     /**
@@ -32,7 +32,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
            "ORDER BY c.priority ASC, c.dueDate ASC")
     List<CareGapEntity> findOpenCareGaps(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId
+        @Param("patientId") UUID patientId
     );
 
     /**
@@ -40,7 +40,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
      */
     List<CareGapEntity> findByTenantIdAndPatientIdAndStatusOrderByDueDateAsc(
         String tenantId,
-        String patientId,
+        UUID patientId,
         CareGapEntity.Status status
     );
 
@@ -49,7 +49,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
      */
     List<CareGapEntity> findByTenantIdAndPatientIdAndCategoryOrderByPriorityAscDueDateAsc(
         String tenantId,
-        String patientId,
+        UUID patientId,
         CareGapEntity.GapCategory category
     );
 
@@ -73,7 +73,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
            "ORDER BY c.priority ASC, c.dueDate ASC")
     List<CareGapEntity> findOverdueCareGaps(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("now") Instant now
     );
 
@@ -86,7 +86,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
            "AND c.priority = :priority")
     Long countOpenCareGapsByPriority(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("priority") CareGapEntity.Priority priority
     );
 
@@ -99,7 +99,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
            "AND c.status IN ('OPEN', 'IN_PROGRESS')")
     boolean existsOpenCareGap(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("gapType") String gapType
     );
 
@@ -108,7 +108,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
      */
     Long countByTenantIdAndPatientIdAndStatus(
         String tenantId,
-        String patientId,
+        UUID patientId,
         CareGapEntity.Status status
     );
 
@@ -120,7 +120,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
            "AND c.status IN ('OPEN', 'IN_PROGRESS')")
     Long countOpenCareGaps(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId
+        @Param("patientId") UUID patientId
     );
 
     /**
@@ -132,7 +132,7 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
            "AND c.priority = 'URGENT'")
     Long countUrgentCareGaps(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId
+        @Param("patientId") UUID patientId
     );
 
     /**
@@ -146,5 +146,5 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
      */
     @Query("SELECT DISTINCT c.patientId FROM CareGapEntity c " +
            "WHERE c.tenantId = :tenantId")
-    List<String> findDistinctPatientIdsByTenantId(@Param("tenantId") String tenantId);
+    List<UUID> findDistinctPatientIdsByTenantId(@Param("tenantId") String tenantId);
 }

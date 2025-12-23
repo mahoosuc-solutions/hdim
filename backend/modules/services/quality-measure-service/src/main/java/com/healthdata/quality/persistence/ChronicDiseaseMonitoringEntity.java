@@ -50,7 +50,7 @@ public class ChronicDiseaseMonitoringEntity {
     private String tenantId;
 
     @Column(name = "patient_id", nullable = false, length = 100)
-    private String patientId;
+    private UUID patientId;
 
     /**
      * SNOMED CT code for the chronic disease

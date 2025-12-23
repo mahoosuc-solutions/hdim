@@ -12,7 +12,7 @@
 const USE_API_GATEWAY = false; // Direct mode with Angular proxy for CORS
 
 // API Gateway configuration (our Gateway service, not Kong)
-const API_GATEWAY_URL = 'http://localhost:9000'; // Gateway service URL
+const API_GATEWAY_URL = 'http://localhost:8080'; // Gateway service URL
 
 export const API_CONFIG = {
   // API Gateway Settings
@@ -32,7 +32,19 @@ export const API_CONFIG = {
 
   FHIR_SERVER_URL: USE_API_GATEWAY
     ? `${API_GATEWAY_URL}/api/fhir`
-    : '/fhir',  // Proxied to localhost:8083
+    : '/fhir',  // Proxied to localhost:8085
+
+  CARE_GAP_URL: USE_API_GATEWAY
+    ? `${API_GATEWAY_URL}/api/care-gap`
+    : '/care-gap',  // Proxied to localhost:8086
+
+  PATIENT_URL: USE_API_GATEWAY
+    ? `${API_GATEWAY_URL}/api/patient`
+    : '/patient',  // Proxied to localhost:8084
+
+  QRDA_EXPORT_URL: USE_API_GATEWAY
+    ? `${API_GATEWAY_URL}/api/qrda`
+    : '/qrda',  // Proxied to localhost:8104
 
   // Tenant Configuration
   DEFAULT_TENANT_ID: 'demo-tenant',
@@ -71,6 +83,11 @@ export const CQL_ENGINE_ENDPOINTS = {
   EVALUATIONS_BY_LIBRARY: (libraryId: string) =>
     `/api/v1/cql/evaluations/library/${libraryId}`,
   EVALUATE_SIMPLE: '/evaluate', // Simplified endpoint
+
+  // HEDIS Measure Discovery Endpoints (Phase 1)
+  HEDIS_MEASURES: '/evaluate/measures', // List all registered HEDIS measures
+  HEDIS_MEASURE_BY_ID: (measureId: string) => `/evaluate/measures/${measureId}`,
+  HEDIS_MEASURE_EXISTS: (measureId: string) => `/evaluate/measures/${measureId}/exists`,
 };
 
 /**
@@ -78,20 +95,20 @@ export const CQL_ENGINE_ENDPOINTS = {
  * Note: Controller now uses /api/v1 (servlet context-path /quality-measure is already in base URL)
  */
 export const QUALITY_MEASURE_ENDPOINTS = {
-  CALCULATE: '/api/v1/calculate',
-  RESULTS_BY_PATIENT: '/api/v1/results',
-  QUALITY_SCORE: '/api/v1/score',
-  PATIENT_REPORT: '/api/v1/report/patient',
-  POPULATION_REPORT: '/api/v1/report/population',
+  CALCULATE: '/calculate',
+  RESULTS_BY_PATIENT: '/results',
+  QUALITY_SCORE: '/score',
+  PATIENT_REPORT: '/report/patient',
+  POPULATION_REPORT: '/report/population',
   HEALTH: '/_health',
 
   // Saved Reports Endpoints
-  SAVE_PATIENT_REPORT: '/api/v1/report/patient/save',
-  SAVE_POPULATION_REPORT: '/api/v1/report/population/save',
-  SAVED_REPORTS: '/api/v1/reports',
-  SAVED_REPORT_BY_ID: (reportId: string) => `/api/v1/reports/${reportId}`,
-  EXPORT_CSV: (reportId: string) => `/api/v1/reports/${reportId}/export/csv`,
-  EXPORT_EXCEL: (reportId: string) => `/api/v1/reports/${reportId}/export/excel`,
+  SAVE_PATIENT_REPORT: '/report/patient/save',
+  SAVE_POPULATION_REPORT: '/report/population/save',
+  SAVED_REPORTS: '/reports',
+  SAVED_REPORT_BY_ID: (reportId: string) => `/reports/${reportId}`,
+  EXPORT_CSV: (reportId: string) => `/reports/${reportId}/export/csv`,
+  EXPORT_EXCEL: (reportId: string) => `/reports/${reportId}/export/excel`,
 
   // Patient Health Overview Endpoints
   PATIENT_HEALTH_OVERVIEW: (patientId: string) => `/patient-health/overview/${patientId}`,
@@ -128,10 +145,10 @@ export const QUALITY_MEASURE_ENDPOINTS = {
   SDOH_REFERRAL_METRICS: (patientId: string) => `/patient-health/sdoh/referrals/patient/${patientId}/metrics`,
 
   // Batch Population Calculation Endpoints
-  POPULATION_CALCULATE: '/api/v1/population/calculate',
-  POPULATION_JOBS: '/api/v1/population/jobs',
-  POPULATION_JOB_BY_ID: (jobId: string) => `/api/v1/population/jobs/${jobId}`,
-  POPULATION_JOB_CANCEL: (jobId: string) => `/api/v1/population/jobs/${jobId}/cancel`,
+  POPULATION_CALCULATE: '/population/calculate',
+  POPULATION_JOBS: '/population/jobs',
+  POPULATION_JOB_BY_ID: (jobId: string) => `/population/jobs/${jobId}`,
+  POPULATION_JOB_CANCEL: (jobId: string) => `/population/jobs/${jobId}/cancel`,
 
   // Clinical Decision Support (CDS) Endpoints
   CDS_RULES: '/cds/rules',
@@ -142,6 +159,23 @@ export const QUALITY_MEASURE_ENDPOINTS = {
   CDS_RECOMMENDATIONS_OVERDUE: (patientId: string) => `/cds/recommendations/${patientId}/overdue`,
   CDS_EVALUATE: '/cds/evaluate',
   CDS_ACKNOWLEDGE: '/cds/acknowledge',
+};
+
+/**
+ * QRDA Export Service Endpoints
+ */
+export const QRDA_EXPORT_ENDPOINTS = {
+  // QRDA Category I (Patient-level)
+  GENERATE_CATEGORY_I: '/api/v1/qrda/category-i/generate',
+
+  // QRDA Category III (Aggregate)
+  GENERATE_CATEGORY_III: '/api/v1/qrda/category-iii/generate',
+
+  // Job Management
+  JOBS: '/api/v1/qrda/jobs',
+  JOB_BY_ID: (jobId: string) => `/api/v1/qrda/jobs/${jobId}`,
+  JOB_DOWNLOAD: (jobId: string) => `/api/v1/qrda/jobs/${jobId}/download`,
+  JOB_CANCEL: (jobId: string) => `/api/v1/qrda/jobs/${jobId}/cancel`,
 };
 
 /**
@@ -208,6 +242,22 @@ export function buildFhirUrl(endpoint: string, params?: Record<string, string>):
   let url = `${API_CONFIG.FHIR_SERVER_URL}${endpoint}`;
 
   if (params) {
+    const queryString = Object.entries(params)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .join('&');
+    url += `?${queryString}`;
+  }
+
+  return url;
+}
+
+/**
+ * Build full URL for QRDA Export endpoint
+ */
+export function buildQrdaExportUrl(endpoint: string, params?: Record<string, string>): string {
+  let url = `${API_CONFIG.QRDA_EXPORT_URL}${endpoint}`;
+
+  if (params && Object.keys(params).length > 0) {
     const queryString = Object.entries(params)
       .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
       .join('&');

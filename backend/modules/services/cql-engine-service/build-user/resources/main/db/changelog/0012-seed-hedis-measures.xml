@@ -1,0 +1,1062 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0012-seed-hedis-measures" author="healthdata-system">
+        <comment>Seed all 56 HEDIS quality measures as CQL library entries for discovery and evaluation</comment>
+
+        <!-- Add measure_class column to link to Java implementation -->
+        <addColumn tableName="cql_libraries">
+            <column name="measure_class" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="cql_libraries">
+            <column name="category" type="varchar(64)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Preventive Care Measures -->
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-AAP"/>
+            <column name="library_name" value="HEDIS-AAP"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: AAPMeasure"/>
+            <column name="description" value="Adults' Access to Preventive/Ambulatory Health Services"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.AAPMeasure"/>
+            <column name="category" value="PREVENTIVE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-ABA"/>
+            <column name="library_name" value="HEDIS-ABA"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: ABAMeasure"/>
+            <column name="description" value="Adult BMI Assessment"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.ABAMeasure"/>
+            <column name="category" value="PREVENTIVE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-BCS"/>
+            <column name="library_name" value="HEDIS-BCS"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: BCSMeasure"/>
+            <column name="description" value="Breast Cancer Screening"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.BCSMeasure"/>
+            <column name="category" value="PREVENTIVE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-CCS"/>
+            <column name="library_name" value="HEDIS-CCS"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: CCSMeasure"/>
+            <column name="description" value="Cervical Cancer Screening"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.CCSMeasure"/>
+            <column name="category" value="PREVENTIVE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-COL"/>
+            <column name="library_name" value="HEDIS-COL"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: COLMeasure"/>
+            <column name="description" value="Colorectal Cancer Screening"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.COLMeasure"/>
+            <column name="category" value="PREVENTIVE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-W15"/>
+            <column name="library_name" value="HEDIS-W15"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: W15Measure"/>
+            <column name="description" value="Weight Assessment and Counseling for Nutrition and Physical Activity for Children/Adolescents"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.W15Measure"/>
+            <column name="category" value="PREVENTIVE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <!-- Diabetes Care Measures -->
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-CDC"/>
+            <column name="library_name" value="HEDIS-CDC"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: CDCMeasure"/>
+            <column name="description" value="Comprehensive Diabetes Care"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.CDCMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-HBD"/>
+            <column name="library_name" value="HEDIS-HBD"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: HBDMeasure"/>
+            <column name="description" value="Hemoglobin A1c Control for Patients with Diabetes"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.HBDMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-HDO"/>
+            <column name="library_name" value="HEDIS-HDO"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: HDOMeasure"/>
+            <column name="description" value="Diabetic Kidney Disease Monitoring"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.HDOMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-NCS"/>
+            <column name="library_name" value="HEDIS-NCS"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: NCSMeasure"/>
+            <column name="description" value="Nephropathy Screening for Diabetics"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.NCSMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <!-- Cardiovascular Measures -->
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-CBP"/>
+            <column name="library_name" value="HEDIS-CBP"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: CBPMeasure"/>
+            <column name="description" value="Controlling High Blood Pressure"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.CBPMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-CAP"/>
+            <column name="library_name" value="HEDIS-CAP"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: CAPMeasure"/>
+            <column name="description" value="ACE/ARB Therapy for Patients with CAD"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.CAPMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-PBH"/>
+            <column name="library_name" value="HEDIS-PBH"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: PBHMeasure"/>
+            <column name="description" value="Persistence of Beta-Blocker Treatment After Heart Attack"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.PBHMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-SPR"/>
+            <column name="library_name" value="HEDIS-SPR"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: SPRMeasure"/>
+            <column name="description" value="Statin Therapy for Prevention and Treatment of Cardiovascular Disease"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.SPRMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <!-- Respiratory Measures -->
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-AIS"/>
+            <column name="library_name" value="HEDIS-AIS"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: AISMeasure"/>
+            <column name="description" value="Use of Imaging Studies for Low Back Pain"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.AISMeasure"/>
+            <column name="category" value="RESPIRATORY"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-AMR"/>
+            <column name="library_name" value="HEDIS-AMR"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: AMRMeasure"/>
+            <column name="description" value="Asthma Medication Ratio"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.AMRMeasure"/>
+            <column name="category" value="RESPIRATORY"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-PCE"/>
+            <column name="library_name" value="HEDIS-PCE"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: PCEMeasure"/>
+            <column name="description" value="Pharmacotherapy Management of COPD Exacerbation"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.PCEMeasure"/>
+            <column name="category" value="RESPIRATORY"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <!-- Mental Health / Behavioral Health Measures -->
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-FUH"/>
+            <column name="library_name" value="HEDIS-FUH"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: FUHMeasure"/>
+            <column name="description" value="Follow-Up After Hospitalization for Mental Illness"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.FUHMeasure"/>
+            <column name="category" value="BEHAVIORAL_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-FUA"/>
+            <column name="library_name" value="HEDIS-FUA"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: FUAMeasure"/>
+            <column name="description" value="Follow-Up After ED Visit for Alcohol/Drug Use"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.FUAMeasure"/>
+            <column name="category" value="BEHAVIORAL_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-FUM"/>
+            <column name="library_name" value="HEDIS-FUM"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: FUMMeasure"/>
+            <column name="description" value="Follow-Up After ED Visit for Mental Illness"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.FUMMeasure"/>
+            <column name="category" value="BEHAVIORAL_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-IET"/>
+            <column name="library_name" value="HEDIS-IET"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: IETMeasure"/>
+            <column name="description" value="Initiation and Engagement of Alcohol and Drug Dependence Treatment"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.IETMeasure"/>
+            <column name="category" value="BEHAVIORAL_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-ADD"/>
+            <column name="library_name" value="HEDIS-ADD"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: ADDMeasure"/>
+            <column name="description" value="Use of Multiple Concurrent Antipsychotics in Children and Adolescents"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.ADDMeasure"/>
+            <column name="category" value="BEHAVIORAL_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-AMM"/>
+            <column name="library_name" value="HEDIS-AMM"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: AMMMeasure"/>
+            <column name="description" value="Antidepressant Medication Management"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.AMMMeasure"/>
+            <column name="category" value="BEHAVIORAL_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <!-- Medication Management Measures -->
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-APM"/>
+            <column name="library_name" value="HEDIS-APM"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: APMMeasure"/>
+            <column name="description" value="Metabolic Monitoring for Children and Adolescents on Antipsychotics"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.APMMeasure"/>
+            <column name="category" value="MEDICATION"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-MMA"/>
+            <column name="library_name" value="HEDIS-MMA"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: MMAMeasure"/>
+            <column name="description" value="Medication Management for People with Asthma"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.MMAMeasure"/>
+            <column name="category" value="MEDICATION"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-MRP"/>
+            <column name="library_name" value="HEDIS-MRP"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: MRPMeasure"/>
+            <column name="description" value="Medication Reconciliation Post-Discharge"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.MRPMeasure"/>
+            <column name="category" value="MEDICATION"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-LSC"/>
+            <column name="library_name" value="HEDIS-LSC"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: LSCMeasure"/>
+            <column name="description" value="Statin Therapy for Patients with Cardiovascular Disease"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.LSCMeasure"/>
+            <column name="category" value="MEDICATION"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <!-- Women's Health Measures -->
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-CHL"/>
+            <column name="library_name" value="HEDIS-CHL"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: CHLMeasure"/>
+            <column name="description" value="Chlamydia Screening in Women"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.CHLMeasure"/>
+            <column name="category" value="WOMENS_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-PPC"/>
+            <column name="library_name" value="HEDIS-PPC"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: PPCMeasure"/>
+            <column name="description" value="Prenatal and Postpartum Care"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.PPCMeasure"/>
+            <column name="category" value="WOMENS_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <!-- Child/Adolescent Health Measures -->
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-CIS"/>
+            <column name="library_name" value="HEDIS-CIS"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: CISMeasure"/>
+            <column name="description" value="Childhood Immunization Status"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.CISMeasure"/>
+            <column name="category" value="CHILD_ADOLESCENT"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-IMA"/>
+            <column name="library_name" value="HEDIS-IMA"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: IMAMeasure"/>
+            <column name="description" value="Immunizations for Adolescents"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.IMAMeasure"/>
+            <column name="category" value="CHILD_ADOLESCENT"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-WCC"/>
+            <column name="library_name" value="HEDIS-WCC"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: WCCMeasure"/>
+            <column name="description" value="Weight Assessment and Counseling for Nutrition and Physical Activity"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.WCCMeasure"/>
+            <column name="category" value="CHILD_ADOLESCENT"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <!-- SDOH Measures -->
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-SDOH1"/>
+            <column name="library_name" value="HEDIS-SDOH1"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: SDOH1Measure"/>
+            <column name="description" value="Social Determinants of Health Screening"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.SDOH1Measure"/>
+            <column name="category" value="SDOH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-SDOH2"/>
+            <column name="library_name" value="HEDIS-SDOH2"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: SDOH2Measure"/>
+            <column name="description" value="Social Determinants of Health Risk Assessment"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.SDOH2Measure"/>
+            <column name="category" value="SDOH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <!-- Additional Measures (remaining from the 56) -->
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-ASF"/>
+            <column name="library_name" value="HEDIS-ASF"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: ASFMeasure"/>
+            <column name="description" value="Unhealthy Alcohol Use Screening and Follow-Up"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.ASFMeasure"/>
+            <column name="category" value="BEHAVIORAL_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-BPD"/>
+            <column name="library_name" value="HEDIS-BPD"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: BPDMeasure"/>
+            <column name="description" value="Blood Pressure Control for Patients with Diabetes"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.BPDMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-COA"/>
+            <column name="library_name" value="HEDIS-COA"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: COAMeasure"/>
+            <column name="description" value="Care for Older Adults"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.COAMeasure"/>
+            <column name="category" value="OLDER_ADULTS"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-CWP"/>
+            <column name="library_name" value="HEDIS-CWP"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: CWPMeasure"/>
+            <column name="description" value="Appropriate Testing for Pharyngitis"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.CWPMeasure"/>
+            <column name="category" value="OVERUSE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-DRR"/>
+            <column name="library_name" value="HEDIS-DRR"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: DRRMeasure"/>
+            <column name="description" value="Diabetic Retinopathy: Documentation of Results"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.DRRMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-DSF"/>
+            <column name="library_name" value="HEDIS-DSF"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: DSFMeasure"/>
+            <column name="description" value="Depression Screening and Follow-Up"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.DSFMeasure"/>
+            <column name="category" value="BEHAVIORAL_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-EED"/>
+            <column name="library_name" value="HEDIS-EED"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: EEDMeasure"/>
+            <column name="description" value="Eye Exam for Patients with Diabetes"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.EEDMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-FVA"/>
+            <column name="library_name" value="HEDIS-FVA"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: FVAMeasure"/>
+            <column name="description" value="Flu Vaccinations for Adults"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.FVAMeasure"/>
+            <column name="category" value="PREVENTIVE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-KEDMeasure"/>
+            <column name="library_name" value="HEDIS-KED"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: KEDMeasure"/>
+            <column name="description" value="Kidney Health Evaluation for Patients with Diabetes"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.KEDMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-LBP"/>
+            <column name="library_name" value="HEDIS-LBP"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: LBPMeasure"/>
+            <column name="description" value="Use of Imaging Studies for Low Back Pain"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.LBPMeasure"/>
+            <column name="category" value="OVERUSE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-MSC"/>
+            <column name="library_name" value="HEDIS-MSC"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: MSCMeasure"/>
+            <column name="description" value="Medical Attention for Nephropathy"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.MSCMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-OMW"/>
+            <column name="library_name" value="HEDIS-OMW"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: OMWMeasure"/>
+            <column name="description" value="Osteoporosis Management in Women"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.OMWMeasure"/>
+            <column name="category" value="WOMENS_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-PCR"/>
+            <column name="library_name" value="HEDIS-PCR"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: PCRMeasure"/>
+            <column name="description" value="Plan All-Cause Readmissions"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.PCRMeasure"/>
+            <column name="category" value="UTILIZATION"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-PDS"/>
+            <column name="library_name" value="HEDIS-PDS"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: PDSMeasure"/>
+            <column name="description" value="Potentially Harmful Drug-Disease Interactions in the Elderly"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.PDSMeasure"/>
+            <column name="category" value="OLDER_ADULTS"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-SAA"/>
+            <column name="library_name" value="HEDIS-SAA"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: SAAMeasure"/>
+            <column name="description" value="Adherence to Antipsychotic Medications for Schizophrenia"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.SAAMeasure"/>
+            <column name="category" value="BEHAVIORAL_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-SFM"/>
+            <column name="library_name" value="HEDIS-SFM"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: SFMMeasure"/>
+            <column name="description" value="Safety of First Medication for ADHD"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.SFMMeasure"/>
+            <column name="category" value="BEHAVIORAL_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-SMC"/>
+            <column name="library_name" value="HEDIS-SMC"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: SMCMeasure"/>
+            <column name="description" value="Screening for Depression and Follow-Up Care"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.SMCMeasure"/>
+            <column name="category" value="BEHAVIORAL_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-SPD"/>
+            <column name="library_name" value="HEDIS-SPD"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: SPDMeasure"/>
+            <column name="description" value="Statin Therapy for Patients with Diabetes"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.SPDMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-SSD"/>
+            <column name="library_name" value="HEDIS-SSD"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: SSDMeasure"/>
+            <column name="description" value="Screening for Depression and Follow-Up"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.SSDMeasure"/>
+            <column name="category" value="BEHAVIORAL_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-TSC"/>
+            <column name="library_name" value="HEDIS-TSC"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: TSCMeasure"/>
+            <column name="description" value="Tobacco Use: Screening and Cessation Intervention"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.TSCMeasure"/>
+            <column name="category" value="PREVENTIVE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-URI"/>
+            <column name="library_name" value="HEDIS-URI"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: URIMeasure"/>
+            <column name="description" value="Appropriate Treatment for Upper Respiratory Infection"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.URIMeasure"/>
+            <column name="category" value="OVERUSE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-VLS"/>
+            <column name="library_name" value="HEDIS-VLS"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation: VLSMeasure"/>
+            <column name="description" value="HIV Viral Load Suppression"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.VLSMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <!-- Create index on measure_class for faster lookups -->
+        <createIndex indexName="idx_cql_libraries_measure_class" tableName="cql_libraries">
+            <column name="measure_class"/>
+        </createIndex>
+
+        <createIndex indexName="idx_cql_libraries_category" tableName="cql_libraries">
+            <column name="category"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex indexName="idx_cql_libraries_category" tableName="cql_libraries"/>
+            <dropIndex indexName="idx_cql_libraries_measure_class" tableName="cql_libraries"/>
+            <delete tableName="cql_libraries">
+                <where>created_by = 'system' AND publisher = 'NCQA'</where>
+            </delete>
+            <dropColumn tableName="cql_libraries" columnName="category"/>
+            <dropColumn tableName="cql_libraries" columnName="measure_class"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

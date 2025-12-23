@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Clinical Alert Notification Request
@@ -53,7 +54,7 @@ public class ClinicalAlertNotificationRequest implements NotificationRequest {
     }
 
     @Override
-    public String getPatientId() {
+    public UUID getPatientId() {
         return alert.getPatientId();
     }
 
@@ -92,9 +93,10 @@ public class ClinicalAlertNotificationRequest implements NotificationRequest {
         variables.put("alertMessage", alert.getMessage());
 
         // Patient information
-        variables.put("patientName", patientName != null ? patientName : "Patient " + alert.getPatientId());
-        variables.put("mrn", alert.getPatientId());
-        variables.put("patientId", alert.getPatientId());
+        String patientId = alert.getPatientId() != null ? alert.getPatientId().toString() : null;
+        variables.put("patientName", patientName != null ? patientName : "Patient " + patientId);
+        variables.put("mrn", patientId);
+        variables.put("patientId", patientId);
 
         // Timestamp (convert Instant to LocalDateTime for formatting)
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -107,7 +109,7 @@ public class ClinicalAlertNotificationRequest implements NotificationRequest {
         variables.put("facilityName", "HealthData Clinical System");
 
         // Action URL - link to patient detail page
-        variables.put("actionUrl", "https://healthdata-in-motion.com/patients/" + alert.getPatientId());
+        variables.put("actionUrl", "https://healthdata-in-motion.com/patients/" + patientId);
 
         // Additional details (for email template)
         Map<String, String> details = new HashMap<>();

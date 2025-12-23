@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Risk Assessment Controller - REST API for risk stratification
@@ -45,7 +46,7 @@ public class RiskAssessmentController {
     @GetMapping(value = "/patients/{patientId}/risk-assessment", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RiskAssessmentDTO> getCurrentRiskAssessment(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @PathVariable("patientId") String patientId
+            @PathVariable("patientId") UUID patientId
     ) {
         log.info("GET /api/patients/{}/risk-assessment - tenant: {}", patientId, tenantId);
 
@@ -66,7 +67,7 @@ public class RiskAssessmentController {
     @GetMapping(value = "/patients/{patientId}/risk-history", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<RiskAssessmentDTO>> getRiskHistory(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @PathVariable("patientId") String patientId
+            @PathVariable("patientId") UUID patientId
     ) {
         log.info("GET /api/patients/{}/risk-history - tenant: {}", patientId, tenantId);
 
@@ -88,7 +89,7 @@ public class RiskAssessmentController {
     @GetMapping(value = "/patients/{patientId}/risk-by-category/{category}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RiskAssessmentDTO> getRiskByCategory(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @PathVariable("patientId") String patientId,
+            @PathVariable("patientId") UUID patientId,
             @PathVariable("category") String category
     ) {
         log.info("GET /api/patients/{}/risk-by-category/{} - tenant: {}", patientId, category, tenantId);
@@ -110,7 +111,7 @@ public class RiskAssessmentController {
     @PostMapping(value = "/patients/{patientId}/recalculate-risk", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RiskAssessmentDTO> recalculateRisk(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @PathVariable("patientId") String patientId
+            @PathVariable("patientId") UUID patientId
     ) {
         log.info("POST /api/patients/{}/recalculate-risk - tenant: {}", patientId, tenantId);
 

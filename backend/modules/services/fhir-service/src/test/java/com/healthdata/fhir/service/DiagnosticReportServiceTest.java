@@ -124,6 +124,23 @@ class DiagnosticReportServiceTest {
     }
 
     @Test
+    void createDiagnosticReportShouldRejectInvalidPatientId() {
+        DiagnosticReport report = new DiagnosticReport();
+        report.setId(REPORT_ID.toString());
+        report.setStatus(DiagnosticReport.DiagnosticReportStatus.FINAL);
+        report.setSubject(new Reference("Patient/not-a-uuid"));
+        report.setCode(new CodeableConcept()
+                .addCoding(new Coding()
+                        .setSystem("http://loinc.org")
+                        .setCode(CODE)
+                        .setDisplay(CODE_DISPLAY)));
+
+        assertThatThrownBy(() -> diagnosticReportService.createDiagnosticReport(TENANT, report, "user-1"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("subject");
+    }
+
+    @Test
     void getDiagnosticReportShouldReturnFhirResource() {
         // Given
         DiagnosticReportEntity entity = createDiagnosticReportEntityWithJson();
@@ -314,6 +331,16 @@ class DiagnosticReportServiceTest {
     }
 
     @Test
+    void getLatestReportByCodeShouldReturnEmptyWhenMissing() {
+        when(diagnosticReportRepository.findLatestByCode(eq(TENANT), eq(PATIENT_ID), eq(CODE), any(PageRequest.class)))
+                .thenReturn(List.of());
+
+        Optional<DiagnosticReport> result = diagnosticReportService.getLatestReportByCode(TENANT, PATIENT_ID, CODE);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     void searchReportsShouldReturnPagedResults() {
         // Given
         Pageable pageable = PageRequest.of(0, 10);
@@ -347,6 +374,85 @@ class DiagnosticReportServiceTest {
 
         // Then
         assertThat(results).hasSize(1);
+    }
+
+    @Test
+    void createDiagnosticReportShouldMapOptionalFields() {
+        DiagnosticReport report = createFhirDiagnosticReport();
+        report.setCode(new CodeableConcept().setText("CBC Text")
+                .addCoding(new Coding().setSystem("http://loinc.org").setCode(CODE)));
+        report.getCategoryFirstRep().setText("Laboratory Text");
+        report.addConclusionCode(new CodeableConcept()
+                .addCoding(new Coding().setCode("HGB")));
+        report.addResult(new Reference("Observation/obs-1"));
+        report.addBasedOn(new Reference("ServiceRequest/req-1"));
+        report.addSpecimen(new Reference("Specimen/spec-1"));
+        report.addPresentedForm(new Attachment()
+                .setUrl("http://example.org/report.pdf")
+                .setContentType("application/pdf"));
+
+        when(diagnosticReportRepository.save(any(DiagnosticReportEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        diagnosticReportService.createDiagnosticReport(TENANT, report, "user-4");
+
+        ArgumentCaptor<DiagnosticReportEntity> captor = ArgumentCaptor.forClass(DiagnosticReportEntity.class);
+        verify(diagnosticReportRepository).save(captor.capture());
+        DiagnosticReportEntity saved = captor.getValue();
+
+        assertThat(saved.getCodeDisplay()).isEqualTo("CBC Text");
+        assertThat(saved.getCategoryDisplay()).isEqualTo("Laboratory Text");
+        assertThat(saved.getConclusionCodes()).isEqualTo("HGB");
+        assertThat(saved.getResultCount()).isEqualTo(1);
+        assertThat(saved.getBasedOnReference()).isEqualTo("ServiceRequest/req-1");
+        assertThat(saved.getSpecimenReferences()).isEqualTo("Specimen/spec-1");
+        assertThat(saved.getPresentedFormUrl()).isEqualTo("http://example.org/report.pdf");
+        assertThat(saved.getPresentedFormContentType()).isEqualTo("application/pdf");
+    }
+
+    @Test
+    void createDiagnosticReportShouldHandleMissingOptionalFields() {
+        DiagnosticReport report = new DiagnosticReport();
+        report.setId(REPORT_ID.toString());
+        report.setStatus(DiagnosticReport.DiagnosticReportStatus.PRELIMINARY);
+        report.setSubject(new Reference("Patient/" + PATIENT_ID));
+        report.setEncounter(new Reference("Encounter/not-a-uuid"));
+        report.setCode(new CodeableConcept());
+        report.addCategory(new CodeableConcept().setText("Imaging"));
+        report.addPresentedForm(new Attachment().setContentType("application/pdf"));
+        report.addSpecimen(new Reference().setDisplay("No reference"));
+
+        when(diagnosticReportRepository.save(any(DiagnosticReportEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        diagnosticReportService.createDiagnosticReport(TENANT, report, "user-4");
+
+        ArgumentCaptor<DiagnosticReportEntity> captor = ArgumentCaptor.forClass(DiagnosticReportEntity.class);
+        verify(diagnosticReportRepository).save(captor.capture());
+        DiagnosticReportEntity saved = captor.getValue();
+
+        assertThat(saved.getEncounterId()).isNull();
+        assertThat(saved.getCode()).isNull();
+        assertThat(saved.getCodeSystem()).isNull();
+        assertThat(saved.getCodeDisplay()).isNull();
+        assertThat(saved.getCategoryCode()).isNull();
+        assertThat(saved.getCategoryDisplay()).isEqualTo("Imaging");
+        assertThat(saved.getPresentedFormUrl()).isNull();
+        assertThat(saved.getPresentedFormContentType()).isEqualTo("application/pdf");
+        assertThat(saved.getSpecimenReferences()).isEqualTo("");
+    }
+
+    @Test
+    void createDiagnosticReportShouldIgnorePublishFailures() {
+        DiagnosticReport report = createFhirDiagnosticReport();
+        DiagnosticReportEntity savedEntity = createDiagnosticReportEntity();
+        when(diagnosticReportRepository.save(any(DiagnosticReportEntity.class))).thenReturn(savedEntity);
+        when(kafkaTemplate.send(any(), any(), any())).thenThrow(new RuntimeException("kafka down"));
+
+        DiagnosticReport result = diagnosticReportService.createDiagnosticReport(TENANT, report, "user-1");
+
+        assertThat(result).isNotNull();
+        verify(diagnosticReportRepository).save(any(DiagnosticReportEntity.class));
     }
 
     // Helper methods

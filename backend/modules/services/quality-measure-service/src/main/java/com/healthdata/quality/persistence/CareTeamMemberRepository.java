@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Care Team Member Repository
@@ -23,7 +24,7 @@ public interface CareTeamMemberRepository extends JpaRepository<CareTeamMemberEn
            "AND c.tenantId = :tenantId AND c.active = true " +
            "AND (c.endDate IS NULL OR c.endDate > CURRENT_TIMESTAMP)")
     List<CareTeamMemberEntity> findActiveByPatientIdAndTenantId(
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("tenantId") String tenantId
     );
 
@@ -34,7 +35,7 @@ public interface CareTeamMemberRepository extends JpaRepository<CareTeamMemberEn
            "AND c.tenantId = :tenantId AND c.active = true AND c.isPrimary = true " +
            "AND (c.endDate IS NULL OR c.endDate > CURRENT_TIMESTAMP)")
     Optional<CareTeamMemberEntity> findPrimaryByPatientIdAndTenantId(
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("tenantId") String tenantId
     );
 
@@ -50,7 +51,7 @@ public interface CareTeamMemberRepository extends JpaRepository<CareTeamMemberEn
            "AND c.tenantId = :tenantId AND c.role = :role AND c.active = true " +
            "AND (c.endDate IS NULL OR c.endDate > CURRENT_TIMESTAMP)")
     List<CareTeamMemberEntity> findActiveByPatientIdAndTenantIdAndRole(
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("tenantId") String tenantId,
         @Param("role") CareTeamMemberEntity.CareTeamRole role
     );
@@ -62,7 +63,7 @@ public interface CareTeamMemberRepository extends JpaRepository<CareTeamMemberEn
            "AND c.tenantId = :tenantId AND c.active = true " +
            "AND (c.endDate IS NULL OR c.endDate > CURRENT_TIMESTAMP)")
     long countActiveByPatientIdAndTenantId(
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("tenantId") String tenantId
     );
 }

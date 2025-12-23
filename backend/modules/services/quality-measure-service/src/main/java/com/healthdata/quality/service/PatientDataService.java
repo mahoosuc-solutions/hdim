@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Service for fetching patient data from FHIR server.
@@ -28,17 +29,17 @@ public class PatientDataService {
     /**
      * Fetch all data needed for quality measure calculation
      *
-     * @param patientId FHIR Patient ID
+     * @param patientId Patient ID (UUID)
      * @return PatientData with all resources
      */
-    public PatientData fetchPatientData(String patientId) {
+    public PatientData fetchPatientData(UUID patientId) {
         log.debug("Fetching patient data for patient: {}", patientId);
 
         try {
             // Fetch patient demographics
             Patient patient = fhirClient.read()
                 .resource(Patient.class)
-                .withId(patientId)
+                .withId(patientId.toString())
                 .execute();
 
             // Fetch all related resources
@@ -68,10 +69,10 @@ public class PatientDataService {
         }
     }
 
-    private List<Condition> fetchConditions(String patientId) {
+    private List<Condition> fetchConditions(UUID patientId) {
         Bundle bundle = fhirClient.search()
             .forResource(Condition.class)
-            .where(Condition.PATIENT.hasId(patientId))
+            .where(Condition.PATIENT.hasId(patientId.toString()))
             .returnBundle(Bundle.class)
             .execute();
 
@@ -80,10 +81,10 @@ public class PatientDataService {
             .collect(Collectors.toList());
     }
 
-    private List<Observation> fetchObservations(String patientId) {
+    private List<Observation> fetchObservations(UUID patientId) {
         Bundle bundle = fhirClient.search()
             .forResource(Observation.class)
-            .where(Observation.PATIENT.hasId(patientId))
+            .where(Observation.PATIENT.hasId(patientId.toString()))
             .returnBundle(Bundle.class)
             .execute();
 
@@ -92,10 +93,10 @@ public class PatientDataService {
             .collect(Collectors.toList());
     }
 
-    private List<Procedure> fetchProcedures(String patientId) {
+    private List<Procedure> fetchProcedures(UUID patientId) {
         Bundle bundle = fhirClient.search()
             .forResource(Procedure.class)
-            .where(Procedure.PATIENT.hasId(patientId))
+            .where(Procedure.PATIENT.hasId(patientId.toString()))
             .returnBundle(Bundle.class)
             .execute();
 
@@ -104,10 +105,10 @@ public class PatientDataService {
             .collect(Collectors.toList());
     }
 
-    private List<Encounter> fetchEncounters(String patientId) {
+    private List<Encounter> fetchEncounters(UUID patientId) {
         Bundle bundle = fhirClient.search()
             .forResource(Encounter.class)
-            .where(Encounter.PATIENT.hasId(patientId))
+            .where(Encounter.PATIENT.hasId(patientId.toString()))
             .returnBundle(Bundle.class)
             .execute();
 
@@ -116,10 +117,10 @@ public class PatientDataService {
             .collect(Collectors.toList());
     }
 
-    private List<MedicationStatement> fetchMedicationStatements(String patientId) {
+    private List<MedicationStatement> fetchMedicationStatements(UUID patientId) {
         Bundle bundle = fhirClient.search()
             .forResource(MedicationStatement.class)
-            .where(MedicationStatement.PATIENT.hasId(patientId))
+            .where(MedicationStatement.PATIENT.hasId(patientId.toString()))
             .returnBundle(Bundle.class)
             .execute();
 
@@ -128,10 +129,10 @@ public class PatientDataService {
             .collect(Collectors.toList());
     }
 
-    private List<Immunization> fetchImmunizations(String patientId) {
+    private List<Immunization> fetchImmunizations(UUID patientId) {
         Bundle bundle = fhirClient.search()
             .forResource(Immunization.class)
-            .where(Immunization.PATIENT.hasId(patientId))
+            .where(Immunization.PATIENT.hasId(patientId.toString()))
             .returnBundle(Bundle.class)
             .execute();
 
@@ -144,7 +145,7 @@ public class PatientDataService {
      * Fetch patient observations for health score calculation
      * Supports tenant isolation if needed
      */
-    public List<Observation> fetchPatientObservations(String tenantId, String patientId) {
+    public List<Observation> fetchPatientObservations(String tenantId, UUID patientId) {
         log.debug("Fetching observations for patient: {} (tenant: {})", patientId, tenantId);
         return fetchObservations(patientId);
     }
@@ -153,7 +154,7 @@ public class PatientDataService {
      * Fetch patient conditions for health score calculation
      * Supports tenant isolation if needed
      */
-    public List<Condition> fetchPatientConditions(String tenantId, String patientId) {
+    public List<Condition> fetchPatientConditions(String tenantId, UUID patientId) {
         log.debug("Fetching conditions for patient: {} (tenant: {})", patientId, tenantId);
         return fetchConditions(patientId);
     }
@@ -162,7 +163,7 @@ public class PatientDataService {
      * Fetch patient procedures for health score calculation
      * Supports tenant isolation if needed
      */
-    public List<Procedure> fetchPatientProcedures(String tenantId, String patientId) {
+    public List<Procedure> fetchPatientProcedures(String tenantId, UUID patientId) {
         log.debug("Fetching procedures for patient: {} (tenant: {})", patientId, tenantId);
         return fetchProcedures(patientId);
     }
@@ -171,12 +172,12 @@ public class PatientDataService {
      * Fetch patient demographics
      * Supports tenant isolation if needed
      */
-    public Patient fetchPatient(String tenantId, String patientId) {
+    public Patient fetchPatient(String tenantId, UUID patientId) {
         log.debug("Fetching patient demographics: {} (tenant: {})", patientId, tenantId);
         try {
             return fhirClient.read()
                 .resource(Patient.class)
-                .withId(patientId)
+                .withId(patientId.toString())
                 .execute();
         } catch (Exception e) {
             log.error("Error fetching patient {}", patientId, e);
@@ -202,12 +203,12 @@ public class PatientDataService {
      * @param patientId Patient identifier
      * @return List of social history observations
      */
-    public List<Observation> fetchSocialHistoryObservations(String tenantId, String patientId) {
+    public List<Observation> fetchSocialHistoryObservations(String tenantId, UUID patientId) {
         log.debug("Fetching social history observations for patient: {} (tenant: {})", patientId, tenantId);
         try {
             Bundle bundle = fhirClient.search()
                 .forResource(Observation.class)
-                .where(Observation.PATIENT.hasId(patientId))
+                .where(Observation.PATIENT.hasId(patientId.toString()))
                 .where(Observation.CATEGORY.exactly().code("social-history"))
                 .returnBundle(Bundle.class)
                 .execute();

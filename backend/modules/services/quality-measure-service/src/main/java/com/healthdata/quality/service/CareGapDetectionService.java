@@ -145,7 +145,7 @@ public class CareGapDetectionService {
         String gapType = buildGapType(measureResult);
         if (careGapRepository.existsOpenCareGap(
             measureResult.getTenantId(),
-            measureResult.getPatientId().toString(),
+            measureResult.getPatientId(),
             gapType
         )) {
             log.info("Care gap already exists for patient {} measure {} - skipping duplicate",
@@ -189,7 +189,7 @@ public class CareGapDetectionService {
         // Determine priority based on patient risk and gap category
         CareGapEntity.Priority priority = prioritizationService.determinePriority(
             measureResult.getTenantId(),
-            measureResult.getPatientId().toString(),
+            measureResult.getPatientId(),
             measureResult.getMeasureId(),
             category
         );
@@ -199,7 +199,7 @@ public class CareGapDetectionService {
 
         return CareGapEntity.builder()
             .tenantId(measureResult.getTenantId())
-            .patientId(measureResult.getPatientId().toString())
+            .patientId(measureResult.getPatientId())
             .category(category)
             .gapType(buildGapType(measureResult))
             .title(buildTitle(measureResult, metadata))

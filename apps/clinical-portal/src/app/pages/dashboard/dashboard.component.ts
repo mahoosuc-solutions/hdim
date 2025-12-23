@@ -29,6 +29,7 @@ import { BatchCalculationComponent } from '../../shared/components/batch-calcula
 import { SystemActivitySectionComponent } from '../../shared/components/system-activity-section/system-activity-section.component';
 import { TrackInteraction } from '../../utils/ai-tracking.decorator';
 import { UserRoleService, UserRole } from '../../shared/services/user-role.service';
+import { MeasureFavoritesService, FavoriteMeasure, RecentMeasure } from '../../services/measure-favorites.service';
 
 /**
  * Dashboard Statistics Interface
@@ -240,7 +241,8 @@ export class DashboardComponent implements OnInit {
     private measureService: MeasureService,
     private router: Router,
     public aiAssistant: AIAssistantService,
-    private userRoleService: UserRoleService
+    private userRoleService: UserRoleService,
+    public measureFavorites: MeasureFavoritesService
   ) {}
 
   ngOnInit(): void {
@@ -959,5 +961,76 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/reports'], {
       queryParams: { reportType: 'compliance' },
     });
+  }
+
+  // ==================== Favorites & Recent Measures ====================
+
+  /**
+   * Navigate to evaluations page with a specific measure pre-selected
+   */
+  evaluateMeasure(measureId: string): void {
+    this.router.navigate(['/evaluations'], {
+      queryParams: { measure: measureId },
+    });
+  }
+
+  /**
+   * Remove a measure from favorites
+   */
+  removeFavorite(measureId: string, event: Event): void {
+    event.stopPropagation();
+    this.measureFavorites.removeFavorite(measureId);
+  }
+
+  /**
+   * Clear all recent measures
+   */
+  clearRecentMeasures(): void {
+    this.measureFavorites.clearRecent();
+  }
+
+  /**
+   * Get display name for a measure, fallback to ID if not found
+   */
+  getMeasureDisplayName(measureId: string): string {
+    const measure = this.allMeasures.find(m => m.id === measureId);
+    return measure?.displayName || measureId;
+  }
+
+  /**
+   * Get category for a measure
+   */
+  getMeasureCategory(measureId: string): string {
+    const measure = this.allMeasures.find(m => m.id === measureId);
+    return measure?.category || 'Quality Measure';
+  }
+
+  /**
+   * Format relative time for display
+   */
+  formatRelativeTime(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  }
+
+  /**
+   * Calculate usage percentage for the bar chart in most-used measures
+   */
+  getUsagePercentage(usageCount: number): number {
+    const mostUsed = this.measureFavorites.getMostUsed(1);
+    if (!mostUsed || mostUsed.length === 0 || !mostUsed[0].usageCount) {
+      return 100;
+    }
+    return (usageCount / mostUsed[0].usageCount) * 100;
   }
 }

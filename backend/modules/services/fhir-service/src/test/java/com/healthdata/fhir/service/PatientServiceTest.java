@@ -206,4 +206,23 @@ class PatientServiceTest {
         assertThat(bundle.getEntry()).hasSize(1);
         assertThat(bundle.getEntryFirstRep().getResource().getIdElement().getIdPart()).isEqualTo(PATIENT_ID);
     }
+
+    @Test
+    void shouldHandleMissingCache() {
+        CacheManager noCacheManager = org.mockito.Mockito.mock(CacheManager.class);
+        when(noCacheManager.getCache("fhir-patients")).thenReturn(null);
+        PatientService noCacheService = new PatientService(patientRepository, validator, kafkaTemplate, noCacheManager);
+
+        PatientEntity entity = PatientEntity.builder()
+                .id(UUID.fromString(PATIENT_ID))
+                .tenantId(TENANT)
+                .resourceJson("{\"resourceType\":\"Patient\",\"id\":\"" + PATIENT_ID + "\"}")
+                .build();
+        when(patientRepository.findActiveByTenantIdAndId(TENANT, UUID.fromString(PATIENT_ID)))
+                .thenReturn(Optional.of(entity));
+
+        Optional<Patient> result = noCacheService.getPatient(TENANT, PATIENT_ID);
+
+        assertThat(result).isPresent();
+    }
 }

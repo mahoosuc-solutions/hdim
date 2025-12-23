@@ -350,6 +350,54 @@ public class CqlLibraryService {
     }
 
     /**
+     * Get libraries by category
+     */
+    @Transactional(readOnly = true)
+    public List<CqlLibrary> getLibrariesByCategory(String tenantId, String category) {
+        return libraryRepository.findByTenantIdAndCategoryAndActiveTrue(tenantId, category);
+    }
+
+    /**
+     * Get libraries by category with pagination
+     */
+    @Transactional(readOnly = true)
+    public Page<CqlLibrary> getLibrariesByCategory(String tenantId, String category, Pageable pageable) {
+        return libraryRepository.findByTenantIdAndCategory(tenantId, category, pageable);
+    }
+
+    /**
+     * Get all HEDIS measures
+     */
+    @Transactional(readOnly = true)
+    public List<CqlLibrary> getHedisMeasures(String tenantId) {
+        return libraryRepository.findHedisMeasures(tenantId);
+    }
+
+    /**
+     * Get libraries with Java measure implementations
+     */
+    @Transactional(readOnly = true)
+    public List<CqlLibrary> getLibrariesWithJavaImplementation(String tenantId) {
+        return libraryRepository.findLibrariesWithJavaImplementation(tenantId);
+    }
+
+    /**
+     * Get all unique measure categories
+     */
+    @Transactional(readOnly = true)
+    public List<String> getAllCategories(String tenantId) {
+        return libraryRepository.findDistinctCategories(tenantId);
+    }
+
+    /**
+     * Count libraries by category
+     */
+    @Transactional(readOnly = true)
+    public long countLibrariesByCategory(String tenantId, String category) {
+        return libraryRepository.countByTenantIdAndCategory(tenantId, category);
+    }
+
+    /**
      * Validate CQL syntax without full compilation.
      * Uses the CQL-to-ELM translator parser to check syntax.
      *

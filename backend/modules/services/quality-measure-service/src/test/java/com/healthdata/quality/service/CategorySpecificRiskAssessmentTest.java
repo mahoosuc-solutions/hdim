@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -42,7 +43,7 @@ class CategorySpecificRiskAssessmentTest {
     private CategorySpecificRiskService categoryRiskService;
 
     private static final String TENANT_ID = "test-tenant";
-    private static final String PATIENT_ID = "patient-123";
+    private static final UUID PATIENT_ID = UUID.fromString("33333333-4444-5555-6666-777777777777");
 
     @BeforeEach
     void setUp() {
@@ -194,6 +195,51 @@ class CategorySpecificRiskAssessmentTest {
     }
 
     @Test
+    void testMentalHealthRiskCalculation_LowRisk() {
+        Map<String, Object> patientData = Map.of(
+            "phq9Score", 2,
+            "gad7Score", 1,
+            "recentCrisisEvent", false
+        );
+
+        when(riskAssessmentRepository.save(any(RiskAssessmentEntity.class)))
+            .thenAnswer(invocation -> {
+                RiskAssessmentEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        RiskAssessmentDTO result = categoryRiskService.calculateCategoryRisk(
+            TENANT_ID, PATIENT_ID, "MENTAL_HEALTH", patientData);
+
+        assertThat(result.getRiskLevel()).isEqualTo("low");
+        assertThat(result.getPredictedOutcomes()).hasSize(1);
+    }
+
+    @Test
+    void testMentalHealthRiskCalculation_HighRiskRecommendations() {
+        Map<String, Object> patientData = Map.of(
+            "phq9Score", 15,
+            "gad7Score", 15,
+            "medicationCompliance", 0.60
+        );
+
+        when(riskAssessmentRepository.save(any(RiskAssessmentEntity.class)))
+            .thenAnswer(invocation -> {
+                RiskAssessmentEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        RiskAssessmentDTO result = categoryRiskService.calculateCategoryRisk(
+            TENANT_ID, PATIENT_ID, "MENTAL_HEALTH", patientData);
+
+        assertThat(result.getRiskLevel()).isEqualTo("high");
+        assertThat(result.getRecommendations())
+            .anyMatch(rec -> rec.contains("behavioral health"));
+    }
+
+    @Test
     void testCardiovascularRiskCalculation_LowRisk() {
         // Given: Patient with good control and healthy lifestyle
         Map<String, Object> patientData = Map.of(
@@ -225,6 +271,28 @@ class CategorySpecificRiskAssessmentTest {
     }
 
     @Test
+    void testCardiovascularRiskCalculation_ModerateRisk() {
+        Map<String, Object> patientData = Map.of(
+            "systolicBP", 142.0,
+            "hdlCholesterol", 38.0,
+            "age", 68
+        );
+
+        when(riskAssessmentRepository.save(any(RiskAssessmentEntity.class)))
+            .thenAnswer(invocation -> {
+                RiskAssessmentEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        RiskAssessmentDTO result = categoryRiskService.calculateCategoryRisk(
+            TENANT_ID, PATIENT_ID, "CARDIOVASCULAR", patientData);
+
+        assertThat(result.getRiskLevel()).isEqualTo("moderate");
+        assertThat(result.getPredictedOutcomes()).hasSize(1);
+    }
+
+    @Test
     void testDiabetesRiskCalculation_WellControlled() {
         // Given: Patient with well-controlled diabetes
         Map<String, Object> patientData = Map.of(
@@ -251,6 +319,116 @@ class CategorySpecificRiskAssessmentTest {
         assertThat(result).isNotNull();
         assertThat(result.getRiskScore()).isLessThan(50);
         assertThat(result.getRiskLevel()).isIn("low", "moderate");
+    }
+
+    @Test
+    void testDiabetesRiskCalculation_ModerateRisk() {
+        Map<String, Object> patientData = Map.of(
+            "hba1c", 7.4,
+            "medicationAdherence", 0.75,
+            "openCareGaps", 1
+        );
+
+        when(riskAssessmentRepository.save(any(RiskAssessmentEntity.class)))
+            .thenAnswer(invocation -> {
+                RiskAssessmentEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        RiskAssessmentDTO result = categoryRiskService.calculateCategoryRisk(
+            TENANT_ID, PATIENT_ID, "DIABETES", patientData);
+
+        assertThat(result.getRiskLevel()).isEqualTo("moderate");
+        assertThat(result.getPredictedOutcomes()).hasSize(1);
+    }
+
+    @Test
+    void testDiabetesRiskCalculation_WithTwoCareGaps() {
+        Map<String, Object> patientData = Map.of(
+            "hba1c", 7.8,
+            "openCareGaps", 2
+        );
+
+        when(riskAssessmentRepository.save(any(RiskAssessmentEntity.class)))
+            .thenAnswer(invocation -> {
+                RiskAssessmentEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        RiskAssessmentDTO result = categoryRiskService.calculateCategoryRisk(
+            TENANT_ID, PATIENT_ID, "DIABETES", patientData);
+
+        assertThat(result.getRiskFactors())
+            .anyMatch(rf -> rf.getFactor().contains("Open Care Gaps"));
+    }
+
+    @Test
+    void testDiabetesRiskCalculation_RecommendationsForAdherenceAndGaps() {
+        Map<String, Object> patientData = Map.of(
+            "hba1c", 9.2,
+            "medicationAdherence", 0.55,
+            "openCareGaps", 3
+        );
+
+        when(riskAssessmentRepository.save(any(RiskAssessmentEntity.class)))
+            .thenAnswer(invocation -> {
+                RiskAssessmentEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        RiskAssessmentDTO result = categoryRiskService.calculateCategoryRisk(
+            TENANT_ID, PATIENT_ID, "DIABETES", patientData);
+
+        assertThat(result.getRecommendations())
+            .anyMatch(rec -> rec.contains("adherence"));
+        assertThat(result.getRecommendations())
+            .anyMatch(rec -> rec.contains("care gaps"));
+    }
+
+    @Test
+    void testRespiratoryRiskCalculation_RecommendationsForExacerbations() {
+        Map<String, Object> patientData = Map.of(
+            "oxygenSaturation", 92.0,
+            "fev1Percent", 60.0,
+            "exacerbationsLast12Months", 2
+        );
+
+        when(riskAssessmentRepository.save(any(RiskAssessmentEntity.class)))
+            .thenAnswer(invocation -> {
+                RiskAssessmentEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        RiskAssessmentDTO result = categoryRiskService.calculateCategoryRisk(
+            TENANT_ID, PATIENT_ID, "RESPIRATORY", patientData);
+
+        assertThat(result.getRecommendations())
+            .anyMatch(rec -> rec.contains("inhaler"));
+    }
+
+    @Test
+    void testCardiovascularRiskCalculation_WithNonNumericValues() {
+        Map<String, Object> patientData = Map.of(
+            "systolicBP", "bad",
+            "age", "bad"
+        );
+
+        when(riskAssessmentRepository.save(any(RiskAssessmentEntity.class)))
+            .thenAnswer(invocation -> {
+                RiskAssessmentEntity entity = invocation.getArgument(0);
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+        RiskAssessmentDTO result = categoryRiskService.calculateCategoryRisk(
+            TENANT_ID, PATIENT_ID, "CARDIOVASCULAR", patientData);
+
+        assertThat(result.getRiskScore()).isEqualTo(0);
+        assertThat(result.getRiskFactors()).isEmpty();
     }
 
     @Test
@@ -323,6 +501,7 @@ class CategorySpecificRiskAssessmentTest {
         // Should publish deterioration event
         verify(kafkaTemplate).send(eq("patient-risk.escalated"), argThat(event -> {
             if (event instanceof Map) {
+                @SuppressWarnings("unchecked")
                 Map<String, Object> eventMap = (Map<String, Object>) event;
                 return eventMap.get("patientId").equals(PATIENT_ID) &&
                        eventMap.get("riskCategory").equals("CARDIOVASCULAR") &&
@@ -331,6 +510,55 @@ class CategorySpecificRiskAssessmentTest {
             }
             return false;
         }));
+    }
+
+    @Test
+    void testDetectDeterioration_NoPreviousAssessment() {
+        when(riskAssessmentRepository.findLatestByCategoryAndPatient(
+            TENANT_ID, PATIENT_ID, "MENTAL_HEALTH"))
+            .thenReturn(Optional.empty());
+
+        boolean hasDeterioration = categoryRiskService.detectDeterioration(
+            TENANT_ID, PATIENT_ID, "MENTAL_HEALTH");
+
+        assertThat(hasDeterioration).isFalse();
+        verify(kafkaTemplate, never()).send(eq("patient-risk.escalated"), any());
+    }
+
+    @Test
+    void testDetectDeterioration_NoIncrease() {
+        RiskAssessmentEntity previousAssessment = RiskAssessmentEntity.builder()
+            .id(UUID.randomUUID())
+            .tenantId(TENANT_ID)
+            .patientId(PATIENT_ID)
+            .riskCategory("RESPIRATORY")
+            .riskLevel(RiskAssessmentEntity.RiskLevel.VERY_HIGH)
+            .riskScore(90)
+            .assessmentDate(Instant.now().minusSeconds(86400))
+            .riskFactors(List.of())
+            .predictedOutcomes(List.of())
+            .recommendations(List.of())
+            .build();
+
+        when(riskAssessmentRepository.findLatestByCategoryAndPatient(
+            TENANT_ID, PATIENT_ID, "RESPIRATORY"))
+            .thenReturn(Optional.of(previousAssessment));
+        when(riskAssessmentRepository.save(any(RiskAssessmentEntity.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
+        boolean hasDeterioration = categoryRiskService.detectDeterioration(
+            TENANT_ID, PATIENT_ID, "RESPIRATORY");
+
+        assertThat(hasDeterioration).isFalse();
+        verify(kafkaTemplate, never()).send(eq("patient-risk.escalated"), any());
+    }
+
+    @Test
+    void testCalculateCategoryRisk_UnknownCategory() {
+        assertThatThrownBy(() -> categoryRiskService.calculateCategoryRisk(
+            TENANT_ID, PATIENT_ID, "UNKNOWN", Map.of()))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Unknown risk category");
     }
 
     @Test

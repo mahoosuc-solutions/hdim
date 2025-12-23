@@ -49,15 +49,15 @@ class AdminPortalControllerIT {
     @Autowired
     private PatientRepository patientRepository;
 
-    private static final String H2_URL = "jdbc:h2:mem:admin_portal;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH";
+    private static final String H2_URL = "jdbc:tc:postgresql:15-alpine:///testdb";
 
     @DynamicPropertySource
     static void overrideDatasource(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", () -> H2_URL);
         registry.add("spring.datasource.username", () -> "sa");
         registry.add("spring.datasource.password", () -> "");
-        registry.add("spring.datasource.driver-class-name", () -> "org.h2.Driver");
-        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.H2Dialect");
+        registry.add("spring.datasource.driver-class-name", () -> "org.testcontainers.jdbc.ContainerDatabaseDriver");
+        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
         // Enable auto-creation of database schema in tests
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
         registry.add("spring.flyway.enabled", () -> "false");

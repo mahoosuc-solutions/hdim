@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -46,8 +47,7 @@ class CareGapControllerTest {
     private CareGapReportService reportService;
 
     private static final String TENANT_ID = "tenant-123";
-    private static final String PATIENT_ID = "550e8400-e29b-41d4-a716-446655440000";
-    private static final UUID PATIENT_UUID = UUID.fromString(PATIENT_ID);
+    private static final UUID PATIENT_UUID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
 
     @Nested
     @DisplayName("POST /care-gap/identify Tests")
@@ -58,16 +58,16 @@ class CareGapControllerTest {
         void shouldIdentifyAllCareGaps() throws Exception {
             // Given
             List<CareGapEntity> gaps = List.of(
-                    createGap("CDC_A1C", "open", "high"),
-                    createGap("BCS", "open", "medium")
+                    createGap("CDC_A1C", "OPEN", "high"),
+                    createGap("BCS", "OPEN", "medium")
             );
-            when(identificationService.identifyAllCareGaps(TENANT_ID, PATIENT_ID, "system"))
+            when(identificationService.identifyAllCareGaps(TENANT_ID, PATIENT_UUID, "system"))
                     .thenReturn(gaps);
 
             // When/Then
             mockMvc.perform(post("/care-gap/identify")
                             .header("X-Tenant-ID", TENANT_ID)
-                            .param("patient", PATIENT_ID))
+                            .param("patient", PATIENT_UUID.toString()))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.length()").value(2))
                     .andExpect(jsonPath("$[0].measureId").value("CDC_A1C"))
@@ -78,13 +78,13 @@ class CareGapControllerTest {
         @DisplayName("Should use custom createdBy parameter")
         void shouldUseCustomCreatedBy() throws Exception {
             // Given
-            when(identificationService.identifyAllCareGaps(TENANT_ID, PATIENT_ID, "clinician-1"))
+            when(identificationService.identifyAllCareGaps(TENANT_ID, PATIENT_UUID, "clinician-1"))
                     .thenReturn(List.of());
 
             // When/Then
             mockMvc.perform(post("/care-gap/identify")
                             .header("X-Tenant-ID", TENANT_ID)
-                            .param("patient", PATIENT_ID)
+                            .param("patient", PATIENT_UUID.toString())
                             .param("createdBy", "clinician-1"))
                     .andExpect(status().isCreated());
         }
@@ -98,15 +98,15 @@ class CareGapControllerTest {
         @DisplayName("Should identify gaps for specific library")
         void shouldIdentifyGapsForLibrary() throws Exception {
             // Given
-            List<CareGapEntity> gaps = List.of(createGap("HEDIS_CDC_A1C", "open", "high"));
+            List<CareGapEntity> gaps = List.of(createGap("HEDIS_CDC_A1C", "OPEN", "high"));
             when(identificationService.identifyCareGapsForLibrary(
-                    TENANT_ID, PATIENT_ID, "HEDIS_CDC_A1C", "system"))
+                    TENANT_ID, PATIENT_UUID, "HEDIS_CDC_A1C", "system"))
                     .thenReturn(gaps);
 
             // When/Then
             mockMvc.perform(post("/care-gap/identify/HEDIS_CDC_A1C")
                             .header("X-Tenant-ID", TENANT_ID)
-                            .param("patient", PATIENT_ID))
+                            .param("patient", PATIENT_UUID.toString()))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.length()").value(1))
                     .andExpect(jsonPath("$[0].measureId").value("HEDIS_CDC_A1C"));
@@ -121,14 +121,14 @@ class CareGapControllerTest {
         @DisplayName("Should refresh care gaps and return 200")
         void shouldRefreshCareGaps() throws Exception {
             // Given
-            List<CareGapEntity> refreshedGaps = List.of(createGap("CDC_A1C", "open", "high"));
-            when(identificationService.refreshCareGaps(TENANT_ID, PATIENT_ID, "system"))
+            List<CareGapEntity> refreshedGaps = List.of(createGap("CDC_A1C", "OPEN", "high"));
+            when(identificationService.refreshCareGaps(TENANT_ID, PATIENT_UUID, "system"))
                     .thenReturn(refreshedGaps);
 
             // When/Then
             mockMvc.perform(post("/care-gap/refresh")
                             .header("X-Tenant-ID", TENANT_ID)
-                            .param("patient", PATIENT_ID))
+                            .param("patient", PATIENT_UUID.toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(1));
         }
@@ -143,11 +143,11 @@ class CareGapControllerTest {
         void shouldCloseCareGap() throws Exception {
             // Given
             UUID gapId = UUID.randomUUID();
-            CareGapEntity closedGap = createGap("CDC_A1C", "closed", "high");
+            CareGapEntity closedGap = createGap("CDC_A1C", "CLOSED", "high");
             closedGap.setId(gapId);
             closedGap.setClosedBy("clinician-1");
             closedGap.setClosureReason("A1C test completed");
-            closedGap.setClosedDate(LocalDate.now());
+            closedGap.setClosedDate(Instant.now());
 
             when(identificationService.closeCareGap(
                     eq(TENANT_ID), eq(gapId), eq("clinician-1"), eq("A1C test completed"), eq("Lab order")))
@@ -161,7 +161,7 @@ class CareGapControllerTest {
                             .param("closureReason", "A1C test completed")
                             .param("closureAction", "Lab order"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.gapStatus").value("closed"))
+                    .andExpect(jsonPath("$.gapStatus").value("CLOSED"))
                     .andExpect(jsonPath("$.closedBy").value("clinician-1"));
         }
     }
@@ -175,30 +175,30 @@ class CareGapControllerTest {
         void shouldReturnOpenGaps() throws Exception {
             // Given
             List<CareGapEntity> gaps = List.of(
-                    createGap("CDC_A1C", "open", "high"),
-                    createGap("BCS", "open", "medium")
+                    createGap("CDC_A1C", "OPEN", "high"),
+                    createGap("BCS", "OPEN", "medium")
             );
-            when(identificationService.getOpenCareGaps(TENANT_ID, PATIENT_ID)).thenReturn(gaps);
+            when(identificationService.getOpenCareGaps(TENANT_ID, PATIENT_UUID)).thenReturn(gaps);
 
             // When/Then
             mockMvc.perform(get("/care-gap/open")
                             .header("X-Tenant-ID", TENANT_ID)
-                            .param("patient", PATIENT_ID))
+                            .param("patient", PATIENT_UUID.toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(2))
-                    .andExpect(jsonPath("$[0].gapStatus").value("open"));
+                    .andExpect(jsonPath("$[0].gapStatus").value("OPEN"));
         }
 
         @Test
         @DisplayName("Should return empty list when no open gaps")
         void shouldReturnEmptyList() throws Exception {
             // Given
-            when(identificationService.getOpenCareGaps(TENANT_ID, PATIENT_ID)).thenReturn(List.of());
+            when(identificationService.getOpenCareGaps(TENANT_ID, PATIENT_UUID)).thenReturn(List.of());
 
             // When/Then
             mockMvc.perform(get("/care-gap/open")
                             .header("X-Tenant-ID", TENANT_ID)
-                            .param("patient", PATIENT_ID))
+                            .param("patient", PATIENT_UUID.toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(0));
         }
@@ -212,13 +212,13 @@ class CareGapControllerTest {
         @DisplayName("Should return high priority gaps")
         void shouldReturnHighPriorityGaps() throws Exception {
             // Given
-            List<CareGapEntity> gaps = List.of(createGap("CRITICAL_MEASURE", "open", "high"));
-            when(identificationService.getHighPriorityCareGaps(TENANT_ID, PATIENT_ID)).thenReturn(gaps);
+            List<CareGapEntity> gaps = List.of(createGap("CRITICAL_MEASURE", "OPEN", "high"));
+            when(identificationService.getHighPriorityCareGaps(TENANT_ID, PATIENT_UUID)).thenReturn(gaps);
 
             // When/Then
             mockMvc.perform(get("/care-gap/high-priority")
                             .header("X-Tenant-ID", TENANT_ID)
-                            .param("patient", PATIENT_ID))
+                            .param("patient", PATIENT_UUID.toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(1))
                     .andExpect(jsonPath("$[0].priority").value("high"));
@@ -233,14 +233,14 @@ class CareGapControllerTest {
         @DisplayName("Should return overdue gaps")
         void shouldReturnOverdueGaps() throws Exception {
             // Given
-            CareGapEntity overdueGap = createGap("CDC_A1C", "open", "high");
+            CareGapEntity overdueGap = createGap("CDC_A1C", "OPEN", "high");
             overdueGap.setDueDate(LocalDate.now().minusDays(10));
-            when(reportService.getOverdueGaps(TENANT_ID, PATIENT_ID)).thenReturn(List.of(overdueGap));
+            when(reportService.getOverdueGaps(TENANT_ID, PATIENT_UUID)).thenReturn(List.of(overdueGap));
 
             // When/Then
             mockMvc.perform(get("/care-gap/overdue")
                             .header("X-Tenant-ID", TENANT_ID)
-                            .param("patient", PATIENT_ID))
+                            .param("patient", PATIENT_UUID.toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(1));
         }
@@ -254,15 +254,15 @@ class CareGapControllerTest {
         @DisplayName("Should return upcoming gaps within default 30 days")
         void shouldReturnUpcomingGaps() throws Exception {
             // Given
-            CareGapEntity upcomingGap = createGap("CDC_A1C", "open", "medium");
+            CareGapEntity upcomingGap = createGap("CDC_A1C", "OPEN", "medium");
             upcomingGap.setDueDate(LocalDate.now().plusDays(15));
-            when(reportService.getUpcomingGaps(TENANT_ID, PATIENT_ID, 30))
+            when(reportService.getUpcomingGaps(TENANT_ID, PATIENT_UUID, 30))
                     .thenReturn(List.of(upcomingGap));
 
             // When/Then
             mockMvc.perform(get("/care-gap/upcoming")
                             .header("X-Tenant-ID", TENANT_ID)
-                            .param("patient", PATIENT_ID))
+                            .param("patient", PATIENT_UUID.toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(1));
         }
@@ -271,13 +271,13 @@ class CareGapControllerTest {
         @DisplayName("Should use custom days parameter")
         void shouldUseCustomDays() throws Exception {
             // Given
-            when(reportService.getUpcomingGaps(TENANT_ID, PATIENT_ID, 7))
+            when(reportService.getUpcomingGaps(TENANT_ID, PATIENT_UUID, 7))
                     .thenReturn(List.of());
 
             // When/Then
             mockMvc.perform(get("/care-gap/upcoming")
                             .header("X-Tenant-ID", TENANT_ID)
-                            .param("patient", PATIENT_ID)
+                            .param("patient", PATIENT_UUID.toString())
                             .param("days", "7"))
                     .andExpect(status().isOk());
         }
@@ -293,12 +293,12 @@ class CareGapControllerTest {
             // Given
             CareGapIdentificationService.CareGapStats stats =
                     new CareGapIdentificationService.CareGapStats(5, 2, 1, true, true);
-            when(identificationService.getCareGapStats(TENANT_ID, PATIENT_ID)).thenReturn(stats);
+            when(identificationService.getCareGapStats(TENANT_ID, PATIENT_UUID)).thenReturn(stats);
 
             // When/Then
             mockMvc.perform(get("/care-gap/stats")
                             .header("X-Tenant-ID", TENANT_ID)
-                            .param("patient", PATIENT_ID))
+                            .param("patient", PATIENT_UUID.toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.openGapsCount").value(5))
                     .andExpect(jsonPath("$.highPriorityCount").value(2))
@@ -321,12 +321,12 @@ class CareGapControllerTest {
                     List.of("HEDIS", "CMS"),
                     Map.of("CDC_A1C", 3L, "BCS", 2L)
             );
-            when(reportService.getCareGapSummary(TENANT_ID, PATIENT_ID)).thenReturn(summary);
+            when(reportService.getCareGapSummary(TENANT_ID, PATIENT_UUID)).thenReturn(summary);
 
             // When/Then
             mockMvc.perform(get("/care-gap/summary")
                             .header("X-Tenant-ID", TENANT_ID)
-                            .param("patient", PATIENT_ID))
+                            .param("patient", PATIENT_UUID.toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.totalGaps").value(10))
                     .andExpect(jsonPath("$.openGaps").value(6))
@@ -345,12 +345,12 @@ class CareGapControllerTest {
         void shouldReturnGapsByCategory() throws Exception {
             // Given
             Map<String, Long> categoryMap = Map.of("HEDIS", 5L, "CMS", 3L);
-            when(reportService.getGapsByMeasureCategory(TENANT_ID, PATIENT_ID)).thenReturn(categoryMap);
+            when(reportService.getGapsByMeasureCategory(TENANT_ID, PATIENT_UUID)).thenReturn(categoryMap);
 
             // When/Then
             mockMvc.perform(get("/care-gap/by-category")
                             .header("X-Tenant-ID", TENANT_ID)
-                            .param("patient", PATIENT_ID))
+                            .param("patient", PATIENT_UUID.toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.HEDIS").value(5))
                     .andExpect(jsonPath("$.CMS").value(3));
@@ -366,12 +366,12 @@ class CareGapControllerTest {
         void shouldReturnGapsByPriority() throws Exception {
             // Given
             Map<String, Long> priorityMap = Map.of("high", 2L, "medium", 5L, "low", 1L);
-            when(reportService.getGapsByPriority(TENANT_ID, PATIENT_ID)).thenReturn(priorityMap);
+            when(reportService.getGapsByPriority(TENANT_ID, PATIENT_UUID)).thenReturn(priorityMap);
 
             // When/Then
             mockMvc.perform(get("/care-gap/by-priority")
                             .header("X-Tenant-ID", TENANT_ID)
-                            .param("patient", PATIENT_ID))
+                            .param("patient", PATIENT_UUID.toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.high").value(2))
                     .andExpect(jsonPath("$.medium").value(5))
@@ -432,11 +432,11 @@ class CareGapControllerTest {
                 .patientId(PATIENT_UUID)
                 .measureId(measureId)
                 .measureName(measureId + " Measure")
-                .measureCategory("HEDIS")
+                .gapCategory("HEDIS")
                 .gapType("care-gap")
                 .gapStatus(status)
                 .priority(priority)
-                .identifiedDate(LocalDate.now())
+                .identifiedDate(Instant.now())
                 .build();
     }
 }

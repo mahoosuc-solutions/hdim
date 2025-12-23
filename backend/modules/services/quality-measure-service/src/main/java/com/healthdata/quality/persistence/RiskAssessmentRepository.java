@@ -24,13 +24,13 @@ public interface RiskAssessmentRepository extends JpaRepository<RiskAssessmentEn
            "ORDER BY r.assessmentDate DESC LIMIT 1")
     Optional<RiskAssessmentEntity> findMostRecent(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId
+        @Param("patientId") UUID patientId
     );
 
     /**
      * Find latest risk assessment for a patient (alias for test compatibility)
      */
-    default Optional<RiskAssessmentEntity> findLatestByTenantIdAndPatientId(String tenantId, String patientId) {
+    default Optional<RiskAssessmentEntity> findLatestByTenantIdAndPatientId(String tenantId, UUID patientId) {
         return findMostRecent(tenantId, patientId);
     }
 
@@ -39,7 +39,7 @@ public interface RiskAssessmentRepository extends JpaRepository<RiskAssessmentEn
      */
     List<RiskAssessmentEntity> findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
         String tenantId,
-        String patientId
+        UUID patientId
     );
 
     /**
@@ -71,7 +71,7 @@ public interface RiskAssessmentRepository extends JpaRepository<RiskAssessmentEn
            "ORDER BY r.assessmentDate DESC LIMIT 1")
     Optional<RiskAssessmentEntity> findLatestByCategoryAndPatient(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("category") String category
     );
 
@@ -85,7 +85,7 @@ public interface RiskAssessmentRepository extends JpaRepository<RiskAssessmentEn
            "ORDER BY r.assessmentDate ASC")
     List<RiskAssessmentEntity> findByCategoryForPeriod(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("category") String category,
         @Param("startDate") Instant startDate,
         @Param("endDate") Instant endDate

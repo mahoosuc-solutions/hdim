@@ -225,6 +225,18 @@ describe('PatientService', () => {
       expect(req.request.body).toEqual(newPatient);
       req.flush(newPatient);
     });
+
+    it('should invalidate cache on create', () => {
+      const invalidateSpy = jest.spyOn(service, 'invalidateCache');
+      const newPatient = PatientFactory.create();
+
+      service.createPatient(newPatient).subscribe();
+
+      const req = httpMock.expectOne(buildFhirUrl(FHIR_ENDPOINTS.PATIENT));
+      req.flush(newPatient);
+
+      expect(invalidateSpy).toHaveBeenCalled();
+    });
   });
 
   describe('updatePatient', () => {
@@ -242,6 +254,68 @@ describe('PatientService', () => {
       expect(req.request.method).toBe('PUT');
       expect(req.request.body).toEqual(updatedPatient);
       req.flush(updatedPatient);
+    });
+
+    it('should invalidate cache on update', () => {
+      const invalidateSpy = jest.spyOn(service, 'invalidateCache');
+      const updatedPatient = PatientFactory.createJohnDoe();
+
+      service.updatePatient('patient-001', updatedPatient).subscribe();
+
+      const req = httpMock.expectOne(buildFhirUrl(FHIR_ENDPOINTS.PATIENT_BY_ID('patient-001')));
+      req.flush(updatedPatient);
+
+      expect(invalidateSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('deletePatient', () => {
+    it('should delete a patient and invalidate cache', () => {
+      const invalidateSpy = jest.spyOn(service, 'invalidateCache');
+
+      service.deletePatient('patient-001').subscribe();
+
+      const req = httpMock.expectOne(buildFhirUrl(FHIR_ENDPOINTS.PATIENT_BY_ID('patient-001')));
+      expect(req.request.method).toBe('DELETE');
+      req.flush({});
+
+      expect(invalidateSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('caching', () => {
+    it('should return cached patients within TTL', () => {
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1000);
+      const mockPatients = PatientFactory.createMany(2);
+      const bundle = PatientFactory.createBundle(mockPatients);
+      const expectedUrl = buildFhirUrl(FHIR_ENDPOINTS.PATIENT, { _count: '100' });
+
+      service.getPatientsCached().subscribe((patients) => {
+        expect(patients.length).toBe(2);
+      });
+
+      const req = httpMock.expectOne(expectedUrl);
+      req.flush(bundle);
+
+      service.getPatientsCached().subscribe((patients) => {
+        expect(patients.length).toBe(2);
+      });
+
+      httpMock.expectNone(expectedUrl);
+      nowSpy.mockRestore();
+    });
+
+    it('should report cache validity based on timestamp', () => {
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1000);
+      service.getPatientsCached().subscribe();
+      const req = httpMock.expectOne(buildFhirUrl(FHIR_ENDPOINTS.PATIENT, { _count: '100' }));
+      req.flush(PatientFactory.createBundle([]));
+
+      expect(service.isCacheValid()).toBe(true);
+
+      nowSpy.mockReturnValue(1000 + (5 * 60 * 1000) + 1);
+      expect(service.isCacheValid()).toBe(false);
+      nowSpy.mockRestore();
     });
   });
 
@@ -352,6 +426,22 @@ describe('PatientService', () => {
       const mrn = service.getPatientMRN(patient);
 
       expect(mrn).toBeUndefined();
+    });
+  });
+
+  describe('getPatientMRNAuthority', () => {
+    it('should extract MRN assigning authority', () => {
+      const patient = PatientFactory.createJohnDoe();
+      const authority = service.getPatientMRNAuthority(patient);
+
+      expect(authority).toBeDefined();
+    });
+
+    it('should return undefined when no MRN authority exists', () => {
+      const patient = PatientFactory.createPatientWithoutIdentifier();
+      const authority = service.getPatientMRNAuthority(patient);
+
+      expect(authority).toBeUndefined();
     });
   });
 });

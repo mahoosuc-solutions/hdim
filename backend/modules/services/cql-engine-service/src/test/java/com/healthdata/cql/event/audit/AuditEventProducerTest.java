@@ -62,7 +62,7 @@ class AuditEventProducerTest {
                 .evaluationId(UUID.randomUUID())
                 .cqlLibraryId(UUID.randomUUID())
                 .cqlLibraryName("DiabetesControl")
-                .patientId("patient-456")
+                .patientId(UUID.fromString("11111111-1111-1111-1111-111111111111"))
                 .durationMs(250L)
                 .dataFlowSteps(Collections.emptyList())
                 .build();
@@ -258,7 +258,7 @@ class AuditEventProducerTest {
                 .resourceType("DATA_ACCESS")
                 .resourceId(UUID.randomUUID().toString())
                 .result(AuditEvent.OperationResult.SUCCESS)
-                .patientId("patient-789")
+                .patientId(UUID.fromString("22222222-2222-2222-2222-222222222222"))
                 .fhirResourceIds(List.of("Patient/123", "Observation/456"))
                 .fhirResourceType("Observation")
                 .resourceCount(2)

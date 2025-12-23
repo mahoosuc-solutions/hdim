@@ -115,28 +115,77 @@
             ariaLabel="Reset all filters"
             (buttonClick)="resetFilters()">
           </app-loading-button>
-          <app-loading-button
-            text="Export CSV"
-            loadingText="Exporting..."
-            successText="Exported!"
-            icon="download"
-            variant="raised"
-            [loading]="exportCsvLoading"
-            [success]="exportCsvSuccess"
-            ariaLabel="Export results to CSV file"
-            (buttonClick)="exportToCSV()">
-          </app-loading-button>
-          <app-loading-button
-            text="Export Excel"
-            loadingText="Exporting..."
-            successText="Exported!"
-            icon="table_chart"
-            variant="raised"
-            [loading]="exportExcelLoading"
-            [success]="exportExcelSuccess"
-            ariaLabel="Export results to Excel file"
-            (buttonClick)="exportToExcel()">
-          </app-loading-button>
+
+          <!-- Export Options Menu -->
+          <button mat-raised-button [matMenuTriggerFor]="exportMenu" class="export-menu-btn">
+            <mat-icon>download</mat-icon>
+            Export
+            <mat-icon>arrow_drop_down</mat-icon>
+          </button>
+          <mat-menu #exportMenu="matMenu">
+            <button mat-menu-item (click)="exportToCSV()">
+              <mat-icon>text_snippet</mat-icon>
+              <span>Export CSV</span>
+            </button>
+            <button mat-menu-item (click)="exportToExcel()">
+              <mat-icon>table_chart</mat-icon>
+              <span>Export Excel</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="exportToPDF()" [disabled]="exportPdfLoading">
+              <mat-icon>picture_as_pdf</mat-icon>
+              <span>{{ exportPdfLoading ? 'Generating...' : 'PDF Report' }}</span>
+            </button>
+            <button mat-menu-item (click)="exportToHTML()">
+              <mat-icon>code</mat-icon>
+              <span>HTML Report</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="exportToQrdaIII()" [disabled]="exportQrdaLoading">
+              <mat-icon>medical_information</mat-icon>
+              <span>{{ exportQrdaLoading ? 'Generating...' : 'QRDA III (CMS)' }}</span>
+            </button>
+          </mat-menu>
+        </div>
+
+        <!-- QRDA Export Status -->
+        <div class="qrda-export-status" *ngIf="qrdaExportJob || qrdaExportError">
+          <mat-card class="qrda-status-card" [ngClass]="{'error': qrdaExportError, 'success': exportQrdaSuccess}">
+            <mat-card-content>
+              <div class="qrda-status-content">
+                <div class="status-icon">
+                  <mat-spinner *ngIf="exportQrdaLoading" diameter="24"></mat-spinner>
+                  <mat-icon *ngIf="exportQrdaSuccess" class="success-icon">check_circle</mat-icon>
+                  <mat-icon *ngIf="qrdaExportError" class="error-icon">error</mat-icon>
+                </div>
+                <div class="status-text">
+                  <ng-container *ngIf="exportQrdaLoading">
+                    <strong>Generating QRDA III...</strong>
+                    <span>This may take a few moments</span>
+                  </ng-container>
+                  <ng-container *ngIf="exportQrdaSuccess">
+                    <strong>QRDA III Export Complete</strong>
+                    <span>Your download should start automatically</span>
+                  </ng-container>
+                  <ng-container *ngIf="qrdaExportError">
+                    <strong>Export Failed</strong>
+                    <span>{{ qrdaExportError }}</span>
+                  </ng-container>
+                </div>
+                <div class="status-actions">
+                  <button mat-icon-button *ngIf="exportQrdaLoading" (click)="cancelQrdaExport()" matTooltip="Cancel export">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                  <button mat-icon-button *ngIf="exportQrdaSuccess" (click)="downloadQrdaExport()" matTooltip="Download again">
+                    <mat-icon>download</mat-icon>
+                  </button>
+                  <button mat-icon-button *ngIf="qrdaExportError || exportQrdaSuccess" (click)="clearQrdaExportState()" matTooltip="Dismiss">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
         </div>
       </form>
     </mat-card-content>
@@ -149,11 +198,39 @@
     [spinnerSize]="64">
   </app-loading-overlay>
 
+  <!-- Compliance Trend Chart - Full Width -->
+  <mat-card class="trend-chart-card" *ngIf="!loading && complianceTrendChartData.length > 0 && complianceTrendChartData[0]?.series?.length > 1">
+    <mat-card-header>
+      <mat-icon class="header-icon" color="primary">trending_up</mat-icon>
+      <mat-card-title>Compliance Trend</mat-card-title>
+      <mat-card-subtitle>Weekly compliance rates over the past 12 weeks</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="trend-chart-container">
+        <ngx-charts-line-chart
+          [view]="lineChartView"
+          [results]="complianceTrendChartData"
+          [xAxis]="lineChartShowXAxis"
+          [yAxis]="lineChartShowYAxis"
+          [legend]="lineChartShowLegend"
+          [showXAxisLabel]="lineChartShowXAxisLabel"
+          [showYAxisLabel]="lineChartShowYAxisLabel"
+          [xAxisLabel]="lineChartXAxisLabel"
+          [yAxisLabel]="lineChartYAxisLabel"
+          [scheme]="lineChartColorScheme"
+          [gradient]="lineChartGradient"
+          [autoScale]="true">
+        </ngx-charts-line-chart>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
   <!-- Visualizations -->
   <div class="charts-grid" *ngIf="!loading && filteredResults.length > 0">
     <!-- Outcome Distribution Pie Chart -->
     <mat-card class="chart-card">
       <mat-card-header>
+        <mat-icon class="header-icon" color="primary">pie_chart</mat-icon>
         <mat-card-title>Outcome Distribution</mat-card-title>
         <mat-card-subtitle>Breakdown of evaluation outcomes</mat-card-subtitle>
       </mat-card-header>
@@ -174,6 +251,7 @@
     <!-- Category Compliance Bar Chart -->
     <mat-card class="chart-card">
       <mat-card-header>
+        <mat-icon class="header-icon" color="primary">bar_chart</mat-icon>
         <mat-card-title>Compliance by Category</mat-card-title>
         <mat-card-subtitle>Compliance rates by measure category</mat-card-subtitle>
       </mat-card-header>
@@ -196,6 +274,30 @@
       </mat-card-content>
     </mat-card>
   </div>
+
+  <!-- Measure Performance Chart -->
+  <mat-card class="measure-performance-card" *ngIf="!loading && measurePerformanceChartData.length > 0">
+    <mat-card-header>
+      <mat-icon class="header-icon" color="primary">leaderboard</mat-icon>
+      <mat-card-title>Top Performing Measures</mat-card-title>
+      <mat-card-subtitle>Measures ranked by compliance rate (minimum 3 evaluations)</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="performance-chart-container">
+        <ngx-charts-bar-horizontal
+          [view]="horizontalBarView"
+          [results]="measurePerformanceChartData"
+          [xAxis]="true"
+          [yAxis]="true"
+          [showXAxisLabel]="true"
+          [showYAxisLabel]="false"
+          [xAxisLabel]="'Compliance Rate (%)'"
+          [scheme]="horizontalBarColorScheme"
+          [gradient]="true">
+        </ngx-charts-bar-horizontal>
+      </div>
+    </mat-card-content>
+  </mat-card>
 
   <!-- Results Table -->
   <mat-card class="results-table-card" *ngIf="!loading">

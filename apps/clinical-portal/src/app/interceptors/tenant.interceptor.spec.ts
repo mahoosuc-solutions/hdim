@@ -54,13 +54,16 @@ describe('TenantInterceptor', () => {
       req.flush({});
     });
 
-    it('should NOT add X-Tenant-ID header to FHIR Server requests', (done) => {
+    it('should add X-Tenant-ID header to FHIR Server requests', (done) => {
       const url = `${API_CONFIG.FHIR_SERVER_URL}/Patient`;
 
       httpClient.get(url).subscribe(() => done());
 
       const req = httpMock.expectOne(url);
-      expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(false);
+      expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
+      expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe(
+        API_CONFIG.DEFAULT_TENANT_ID
+      );
       req.flush({});
     });
 

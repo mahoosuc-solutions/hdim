@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Quality Report Service
@@ -36,7 +37,7 @@ public class QualityReportService {
      * Get comprehensive quality report for a patient
      */
     @Cacheable(value = "qualityReport", key = "#tenantId + ':' + #patientId")
-    public QualityReport getPatientQualityReport(String tenantId, String patientId) {
+    public QualityReport getPatientQualityReport(String tenantId, UUID patientId) {
         log.info("Generating quality report for patient: {}", patientId);
 
         List<QualityMeasureResultEntity> results = calculationService.getPatientMeasureResults(tenantId, patientId);
@@ -107,7 +108,7 @@ public class QualityReportService {
     }
 
     public record QualityReport(
-            String patientId,
+            UUID patientId,
             long totalMeasures,
             long compliantMeasures,
             double qualityScore,
@@ -130,7 +131,7 @@ public class QualityReportService {
      * Save patient quality report to database
      */
     @Transactional
-    public SavedReportEntity savePatientReport(String tenantId, String patientId, String reportName, String createdBy) {
+    public SavedReportEntity savePatientReport(String tenantId, UUID patientId, String reportName, String createdBy) {
         log.info("Saving patient quality report: {} for patient: {}", reportName, patientId);
 
         // Generate the report
@@ -150,7 +151,7 @@ public class QualityReportService {
                 .tenantId(tenantId)
                 .reportType("PATIENT")
                 .reportName(reportName)
-                .patientId(UUID.fromString(patientId))
+                .patientId(patientId)
                 .reportData(reportJson)
                 .createdBy(createdBy)
                 .status("COMPLETED")

@@ -6,6 +6,7 @@ import com.healthdata.cql.entity.CqlEvaluation;
 import com.healthdata.cql.entity.CqlLibrary;
 import com.healthdata.cql.repository.CqlEvaluationRepository;
 import com.healthdata.cql.repository.CqlLibraryRepository;
+import com.healthdata.cql.test.CqlTestcontainersBase;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -43,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
-public class CqlEvaluationControllerIntegrationTest {
+public class CqlEvaluationControllerIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
     private MockMvc mockMvc;
@@ -59,7 +60,7 @@ public class CqlEvaluationControllerIntegrationTest {
 
     private static final String BASE_URL = "/api/v1/cql/evaluations";
     private static final String TENANT_ID = "test-tenant";
-    private static final String PATIENT_ID = "patient-123";
+    private static final UUID PATIENT_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     private CqlLibrary testLibrary;
     private CqlEvaluation testEvaluation;
@@ -84,15 +85,16 @@ public class CqlEvaluationControllerIntegrationTest {
     @Order(1)
     @DisplayName("Should create and execute evaluation successfully")
     void testCreateAndExecuteEvaluation() throws Exception {
+        UUID newPatientId = UUID.randomUUID();
         mockMvc.perform(post(BASE_URL)
                 .header("X-Tenant-ID", TENANT_ID)
                 .param("libraryId", testLibrary.getId().toString())
-                .param("patientId", "new-patient-001"))
+                .param("patientId", newPatientId.toString()))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.tenantId").value(TENANT_ID))
-                .andExpect(jsonPath("$.patientId").value("new-patient-001"))
+                .andExpect(jsonPath("$.patientId").value(newPatientId.toString()))
                 .andExpect(jsonPath("$.status").isNotEmpty())
                 .andExpect(jsonPath("$.evaluationDate").exists())
                 .andExpect(jsonPath("$.library.id").value(testLibrary.getId().toString()));
@@ -107,7 +109,7 @@ public class CqlEvaluationControllerIntegrationTest {
         mockMvc.perform(post(BASE_URL)
                 .header("X-Tenant-ID", TENANT_ID)
                 .param("libraryId", invalidLibraryId.toString())
-                .param("patientId", PATIENT_ID))
+                .param("patientId", PATIENT_ID.toString()))
                 .andExpect(status().is4xxClientError());
     }
 
@@ -117,7 +119,7 @@ public class CqlEvaluationControllerIntegrationTest {
     void testCreateEvaluationWithoutTenant() throws Exception {
         mockMvc.perform(post(BASE_URL)
                 .param("libraryId", testLibrary.getId().toString())
-                .param("patientId", PATIENT_ID))
+                .param("patientId", PATIENT_ID.toString()))
                 .andExpect(status().is4xxClientError());
     }
 
@@ -126,7 +128,7 @@ public class CqlEvaluationControllerIntegrationTest {
     @DisplayName("Should execute existing evaluation")
     void testExecuteEvaluation() throws Exception {
         // Create a pending evaluation
-        CqlEvaluation pendingEval = new CqlEvaluation(TENANT_ID, testLibrary, "execute-test-patient");
+        CqlEvaluation pendingEval = new CqlEvaluation(TENANT_ID, testLibrary, UUID.randomUUID());
         pendingEval.setStatus("PENDING");
         pendingEval = evaluationRepository.save(pendingEval);
 
@@ -162,7 +164,7 @@ public class CqlEvaluationControllerIntegrationTest {
                 .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(testEvaluation.getId().toString()))
-                .andExpect(jsonPath("$.patientId").value(PATIENT_ID))
+                .andExpect(jsonPath("$.patientId").value(PATIENT_ID.toString()))
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.library.id").value(testLibrary.getId().toString()));
     }
@@ -189,7 +191,7 @@ public class CqlEvaluationControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content", hasSize(greaterThan(0))))
-                .andExpect(jsonPath("$.content[0].patientId").value(PATIENT_ID));
+                .andExpect(jsonPath("$.content[0].patientId").value(PATIENT_ID.toString()));
     }
 
     @Test
@@ -210,20 +212,21 @@ public class CqlEvaluationControllerIntegrationTest {
     @Order(10)
     @DisplayName("Should get latest evaluation for patient and library")
     void testGetLatestEvaluationForPatientAndLibrary() throws Exception {
+        UUID patientId = UUID.randomUUID();
         // Create multiple evaluations
-        CqlEvaluation older = new CqlEvaluation(TENANT_ID, testLibrary, "latest-test-patient");
+        CqlEvaluation older = new CqlEvaluation(TENANT_ID, testLibrary, patientId);
         older.setEvaluationDate(Instant.now().minus(1, ChronoUnit.HOURS));
         evaluationRepository.save(older);
 
-        CqlEvaluation newer = new CqlEvaluation(TENANT_ID, testLibrary, "latest-test-patient");
+        CqlEvaluation newer = new CqlEvaluation(TENANT_ID, testLibrary, patientId);
         newer.setEvaluationDate(Instant.now());
         newer = evaluationRepository.save(newer);
 
-        mockMvc.perform(get(BASE_URL + "/patient/latest-test-patient/library/" + testLibrary.getId() + "/latest")
+        mockMvc.perform(get(BASE_URL + "/patient/" + patientId + "/library/" + testLibrary.getId() + "/latest")
                 .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(newer.getId().toString()))
-                .andExpect(jsonPath("$.patientId").value("latest-test-patient"));
+                .andExpect(jsonPath("$.patientId").value(patientId.toString()));
     }
 
     @Test
@@ -289,7 +292,7 @@ public class CqlEvaluationControllerIntegrationTest {
     @DisplayName("Should retry failed evaluation")
     void testRetryEvaluation() throws Exception {
         // Create a failed evaluation
-        CqlEvaluation failed = new CqlEvaluation(TENANT_ID, testLibrary, "retry-patient");
+        CqlEvaluation failed = new CqlEvaluation(TENANT_ID, testLibrary, UUID.randomUUID());
         failed.setStatus("FAILED");
         failed.setErrorMessage("Connection timeout");
         failed = evaluationRepository.save(failed);
@@ -316,7 +319,7 @@ public class CqlEvaluationControllerIntegrationTest {
     @DisplayName("Should perform batch evaluation")
     @org.junit.jupiter.api.Disabled("TODO: Fix template engine/security setup - currently returns 400")
     void testBatchEvaluate() throws Exception {
-        List<String> patientIds = Arrays.asList("batch-patient-1", "batch-patient-2", "batch-patient-3");
+        List<UUID> patientIds = Arrays.asList(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
         String requestBody = objectMapper.writeValueAsString(patientIds);
 
         mockMvc.perform(post(BASE_URL + "/batch")
@@ -327,7 +330,11 @@ public class CqlEvaluationControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$", hasSize(3)))
-                .andExpect(jsonPath("$[*].patientId", containsInAnyOrder("batch-patient-1", "batch-patient-2", "batch-patient-3")));
+                .andExpect(jsonPath("$[*].patientId", containsInAnyOrder(
+                        patientIds.get(0).toString(),
+                        patientIds.get(1).toString(),
+                        patientIds.get(2).toString()
+                )));
     }
 
     @Test
@@ -335,7 +342,7 @@ public class CqlEvaluationControllerIntegrationTest {
     @DisplayName("Should get failed evaluations for retry")
     void testGetFailedEvaluationsForRetry() throws Exception {
         // Create some recent failed evaluations
-        CqlEvaluation failed1 = new CqlEvaluation(TENANT_ID, testLibrary, "failed-patient-1");
+        CqlEvaluation failed1 = new CqlEvaluation(TENANT_ID, testLibrary, UUID.randomUUID());
         failed1.setStatus("FAILED");
         failed1.setEvaluationDate(Instant.now().minus(2, ChronoUnit.HOURS));
         evaluationRepository.save(failed1);
@@ -396,7 +403,7 @@ public class CqlEvaluationControllerIntegrationTest {
     @DisplayName("Should delete old evaluations")
     void testDeleteOldEvaluations() throws Exception {
         // Create an old evaluation
-        CqlEvaluation old = new CqlEvaluation(TENANT_ID, testLibrary, "old-patient");
+        CqlEvaluation old = new CqlEvaluation(TENANT_ID, testLibrary, UUID.randomUUID());
         old.setEvaluationDate(Instant.now().minus(100, ChronoUnit.DAYS));
         evaluationRepository.save(old);
 
@@ -416,7 +423,7 @@ public class CqlEvaluationControllerIntegrationTest {
         CqlLibrary otherLibrary = new CqlLibrary(otherTenant, "OtherLibrary", "1.0.0");
         otherLibrary = libraryRepository.save(otherLibrary);
 
-        CqlEvaluation otherEvaluation = new CqlEvaluation(otherTenant, otherLibrary, "other-patient");
+        CqlEvaluation otherEvaluation = new CqlEvaluation(otherTenant, otherLibrary, UUID.randomUUID());
         otherEvaluation = evaluationRepository.save(otherEvaluation);
 
         // Try to access other tenant's evaluation with current tenant ID
@@ -439,7 +446,7 @@ public class CqlEvaluationControllerIntegrationTest {
             mockMvc.perform(post(BASE_URL)
                     .header("X-Tenant-ID", TENANT_ID)
                     .param("libraryId", testLibrary.getId().toString())
-                    .param("patientId", "concurrent-patient-" + i))
+                    .param("patientId", UUID.randomUUID().toString()))
                     .andExpect(status().isCreated());
         }
 

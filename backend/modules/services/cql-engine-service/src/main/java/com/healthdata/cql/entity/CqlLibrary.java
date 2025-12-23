@@ -61,6 +61,12 @@ public class CqlLibrary {
     @Column(name = "active")
     private Boolean active = true;
 
+    @Column(name = "measure_class", length = 255)
+    private String measureClass; // Fully qualified Java class name for HEDIS measure implementation
+
+    @Column(name = "category", length = 64)
+    private String category; // Measure category (PREVENTIVE, CHRONIC_DISEASE, BEHAVIORAL_HEALTH, etc.)
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -208,6 +214,29 @@ public class CqlLibrary {
         this.active = active;
     }
 
+    public String getMeasureClass() {
+        return measureClass;
+    }
+
+    public void setMeasureClass(String measureClass) {
+        this.measureClass = measureClass;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    /**
+     * Check if this library has a Java measure implementation
+     */
+    public boolean hasJavaImplementation() {
+        return measureClass != null && !measureClass.isEmpty();
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -241,6 +270,8 @@ public class CqlLibrary {
                 ", version='" + version + '\'' +
                 ", status='" + status + '\'' +
                 ", active=" + active +
+                ", category='" + category + '\'' +
+                ", measureClass='" + measureClass + '\'' +
                 '}';
     }
 }

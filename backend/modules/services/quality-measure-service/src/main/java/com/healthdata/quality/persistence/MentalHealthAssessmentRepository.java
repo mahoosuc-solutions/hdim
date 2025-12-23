@@ -22,7 +22,7 @@ public interface MentalHealthAssessmentRepository extends JpaRepository<MentalHe
      */
     List<MentalHealthAssessmentEntity> findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
         String tenantId,
-        String patientId
+        UUID patientId
     );
 
     /**
@@ -30,7 +30,7 @@ public interface MentalHealthAssessmentRepository extends JpaRepository<MentalHe
      */
     List<MentalHealthAssessmentEntity> findByTenantIdAndPatientIdAndTypeOrderByAssessmentDateDesc(
         String tenantId,
-        String patientId,
+        UUID patientId,
         MentalHealthAssessmentEntity.AssessmentType type
     );
 
@@ -39,7 +39,7 @@ public interface MentalHealthAssessmentRepository extends JpaRepository<MentalHe
      */
     List<MentalHealthAssessmentEntity> findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
         String tenantId,
-        String patientId,
+        UUID patientId,
         Pageable pageable
     );
 
@@ -48,7 +48,7 @@ public interface MentalHealthAssessmentRepository extends JpaRepository<MentalHe
      */
     Optional<MentalHealthAssessmentEntity> findFirstByTenantIdAndPatientIdAndTypeOrderByAssessmentDateDesc(
         String tenantId,
-        String patientId,
+        UUID patientId,
         MentalHealthAssessmentEntity.AssessmentType type
     );
 
@@ -63,7 +63,7 @@ public interface MentalHealthAssessmentRepository extends JpaRepository<MentalHe
            "ORDER BY a.assessmentDate DESC")
     List<MentalHealthAssessmentEntity> findPositiveScreensRequiringFollowup(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId
+        @Param("patientId") UUID patientId
     );
 
     /**
@@ -77,7 +77,7 @@ public interface MentalHealthAssessmentRepository extends JpaRepository<MentalHe
            "ORDER BY a.assessmentDate ASC")
     List<MentalHealthAssessmentEntity> findByDateRange(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("type") MentalHealthAssessmentEntity.AssessmentType type,
         @Param("startDate") Instant startDate,
         @Param("endDate") Instant endDate
@@ -92,19 +92,19 @@ public interface MentalHealthAssessmentRepository extends JpaRepository<MentalHe
            "AND a.positiveScreen = true")
     long countPositiveScreens(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId
+        @Param("patientId") UUID patientId
     );
 
     /**
      * Count total assessments for a patient
      */
-    long countByTenantIdAndPatientId(String tenantId, String patientId);
+    long countByTenantIdAndPatientId(String tenantId, UUID patientId);
 
     /**
      * Find the most recent assessment for a patient (any type)
      */
     Optional<MentalHealthAssessmentEntity> findFirstByTenantIdAndPatientIdOrderByAssessmentDateDesc(
         String tenantId,
-        String patientId
+        UUID patientId
     );
 }

@@ -1,0 +1,37 @@
+{
+  "name": "healthdata-platform-e2e-tests",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "healthdata-platform/e2e",
+  "tags": ["e2e", "frontend"],
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm test",
+        "cwd": "healthdata-platform/e2e"
+      }
+    },
+    "test:ui": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm run test:ui",
+        "cwd": "healthdata-platform/e2e"
+      }
+    },
+    "test:ci": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm run test:ci",
+        "cwd": "healthdata-platform/e2e"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm run test:ci",
+        "cwd": "healthdata-platform/e2e"
+      }
+    }
+  }
+}

@@ -17,7 +17,7 @@ public class EvaluationStartedEvent implements EvaluationEvent {
     private final String tenantId;
     private final String measureId;
     private final String measureName;
-    private final String patientId;
+    private final UUID patientId;
     private final Instant timestamp;
     private final String batchId;  // Null for individual evaluations
 
@@ -28,7 +28,7 @@ public class EvaluationStartedEvent implements EvaluationEvent {
             @JsonProperty("tenantId") String tenantId,
             @JsonProperty("measureId") String measureId,
             @JsonProperty("measureName") String measureName,
-            @JsonProperty("patientId") String patientId,
+            @JsonProperty("patientId") UUID patientId,
             @JsonProperty("timestamp") Instant timestamp,
             @JsonProperty("batchId") String batchId) {
         this.eventId = eventId;
@@ -74,7 +74,7 @@ public class EvaluationStartedEvent implements EvaluationEvent {
         return measureName;
     }
 
-    public String getPatientId() {
+    public UUID getPatientId() {
         return patientId;
     }
 
@@ -92,7 +92,7 @@ public class EvaluationStartedEvent implements EvaluationEvent {
         private String tenantId;
         private String measureId;
         private String measureName;
-        private String patientId;
+        private UUID patientId;
         private Instant timestamp = Instant.now();
         private String batchId;
 
@@ -116,7 +116,7 @@ public class EvaluationStartedEvent implements EvaluationEvent {
             return this;
         }
 
-        public Builder patientId(String patientId) {
+        public Builder patientId(UUID patientId) {
             this.patientId = patientId;
             return this;
         }

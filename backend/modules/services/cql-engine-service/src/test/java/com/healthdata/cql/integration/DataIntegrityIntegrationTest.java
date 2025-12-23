@@ -7,6 +7,7 @@ import com.healthdata.cql.entity.ValueSet;
 import com.healthdata.cql.repository.CqlEvaluationRepository;
 import com.healthdata.cql.repository.CqlLibraryRepository;
 import com.healthdata.cql.repository.ValueSetRepository;
+import com.healthdata.cql.test.CqlTestcontainersBase;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.*;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
-public class DataIntegrityIntegrationTest {
+public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
     private CqlLibraryRepository libraryRepository;
@@ -53,6 +55,10 @@ public class DataIntegrityIntegrationTest {
     private EntityManager entityManager;
 
     private static final String TENANT_ID = "test-tenant";
+    private static final UUID PATIENT_ID_1 = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private static final UUID PATIENT_ID_2 = UUID.fromString("22222222-2222-2222-2222-222222222222");
+    private static final UUID PATIENT_ID_3 = UUID.fromString("33333333-3333-3333-3333-333333333333");
+    private static final UUID PATIENT_ID_4 = UUID.fromString("44444444-4444-4444-4444-444444444444");
 
     @Test
     @Order(1)
@@ -140,7 +146,7 @@ public class DataIntegrityIntegrationTest {
     void testEvaluationLibraryForeignKey() {
         CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "FKTest", "1.0.0"));
 
-        CqlEvaluation evaluation = new CqlEvaluation(TENANT_ID, library, "patient-123");
+        CqlEvaluation evaluation = new CqlEvaluation(TENANT_ID, library, PATIENT_ID_1);
         evaluation = evaluationRepository.save(evaluation);
 
         CqlEvaluation retrieved = evaluationRepository.findById(evaluation.getId()).orElse(null);
@@ -155,7 +161,7 @@ public class DataIntegrityIntegrationTest {
     void testReferentialIntegrity() {
         CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "RefTest", "1.0.0"));
 
-        CqlEvaluation evaluation = new CqlEvaluation(TENANT_ID, library, "patient-ref");
+        CqlEvaluation evaluation = new CqlEvaluation(TENANT_ID, library, PATIENT_ID_2);
         evaluationRepository.save(evaluation);
 
         // Should be able to query evaluation through library relationship
@@ -173,8 +179,8 @@ public class DataIntegrityIntegrationTest {
         CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "ParentTest", "1.0.0"));
 
         // Create child evaluations
-        evaluationRepository.save(new CqlEvaluation(TENANT_ID, library, "patient-1"));
-        evaluationRepository.save(new CqlEvaluation(TENANT_ID, library, "patient-2"));
+        evaluationRepository.save(new CqlEvaluation(TENANT_ID, library, PATIENT_ID_3));
+        evaluationRepository.save(new CqlEvaluation(TENANT_ID, library, PATIENT_ID_4));
 
         // Update parent
         library.setDescription("Updated description");
@@ -313,7 +319,7 @@ public class DataIntegrityIntegrationTest {
     @DisplayName("Should maintain evaluation-library relationship after library update")
     void testRelationshipAfterUpdate() {
         CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "RelUpdate", "1.0.0"));
-        CqlEvaluation evaluation = evaluationRepository.save(new CqlEvaluation(TENANT_ID, library, "patient-rel"));
+        CqlEvaluation evaluation = evaluationRepository.save(new CqlEvaluation(TENANT_ID, library, UUID.randomUUID()));
 
         // Update library
         library.setDescription("Updated");
@@ -350,7 +356,7 @@ public class DataIntegrityIntegrationTest {
     @DisplayName("Should preserve evaluation status history")
     void testEvaluationStatusHistory() {
         CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "StatusHistory", "1.0.0"));
-        CqlEvaluation evaluation = evaluationRepository.save(new CqlEvaluation(TENANT_ID, library, "patient-status"));
+        CqlEvaluation evaluation = evaluationRepository.save(new CqlEvaluation(TENANT_ID, library, UUID.randomUUID()));
 
         // Change status multiple times
         evaluation.setStatus("PENDING");
@@ -423,7 +429,7 @@ public class DataIntegrityIntegrationTest {
     @DisplayName("Should handle instant/timestamp fields with precision")
     void testTimestampPrecision() throws Exception {
         CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "TimePrecision", "1.0.0"));
-        CqlEvaluation evaluation = new CqlEvaluation(TENANT_ID, library, "patient-time");
+        CqlEvaluation evaluation = new CqlEvaluation(TENANT_ID, library, UUID.randomUUID());
 
         Instant before = Instant.now();
         Thread.sleep(10); // Small delay
@@ -442,7 +448,7 @@ public class DataIntegrityIntegrationTest {
     @DisplayName("Should handle numeric fields correctly")
     void testNumericFields() {
         CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "NumericTest", "1.0.0"));
-        CqlEvaluation evaluation = new CqlEvaluation(TENANT_ID, library, "patient-numeric");
+        CqlEvaluation evaluation = new CqlEvaluation(TENANT_ID, library, UUID.randomUUID());
 
         evaluation.setDurationMs(12345L);
         evaluation = evaluationRepository.save(evaluation);

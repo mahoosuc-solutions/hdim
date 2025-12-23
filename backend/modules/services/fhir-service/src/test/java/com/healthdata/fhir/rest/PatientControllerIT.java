@@ -46,18 +46,18 @@ class PatientControllerIT {
 
     private static final String TENANT = "tenant-1";
     private static final MediaType FHIR_JSON = MediaType.valueOf("application/fhir+json");
-    private static final String H2_URL = "jdbc:h2:mem:patient_controller;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH";
+    private static final String H2_URL = "jdbc:tc:postgresql:15-alpine:///testdb";
 
     @DynamicPropertySource
     static void overrideDatasource(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", () -> H2_URL);
         registry.add("spring.datasource.username", () -> "sa");
         registry.add("spring.datasource.password", () -> "");
-        registry.add("spring.datasource.driver-class-name", () -> "org.h2.Driver");
-        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.H2Dialect");
+        registry.add("spring.datasource.driver-class-name", () -> "org.testcontainers.jdbc.ContainerDatabaseDriver");
+        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
         // Enable auto-creation of database schema in tests
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
-        registry.add("spring.liquibase.driver-class-name", () -> "org.h2.Driver");
+        registry.add("spring.liquibase.driver-class-name", () -> "org.testcontainers.jdbc.ContainerDatabaseDriver");
         registry.add("spring.flyway.enabled", () -> "false");
         // JWT configuration for tests
         registry.add("jwt.secret", () -> "test-secret-key-that-is-at-least-256-bits-long-for-HS256-algorithm");

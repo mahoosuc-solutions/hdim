@@ -30,19 +30,19 @@ public interface CqlEvaluationRepository extends JpaRepository<CqlEvaluation, UU
     /**
      * Find all evaluations for a specific patient
      */
-    List<CqlEvaluation> findByTenantIdAndPatientId(String tenantId, String patientId);
+    List<CqlEvaluation> findByTenantIdAndPatientId(String tenantId, UUID patientId);
 
     /**
      * Find all evaluations for a patient with pagination
      */
     Page<CqlEvaluation> findByTenantIdAndPatientId(
-            String tenantId, String patientId, Pageable pageable);
+            String tenantId, UUID patientId, Pageable pageable);
 
     /**
      * Find evaluations for a patient ordered by date (most recent first)
      */
     List<CqlEvaluation> findByTenantIdAndPatientIdOrderByEvaluationDateDesc(
-            String tenantId, String patientId);
+            String tenantId, UUID patientId);
 
     /**
      * Find evaluations by library
@@ -59,7 +59,7 @@ public interface CqlEvaluationRepository extends JpaRepository<CqlEvaluation, UU
      * Find evaluations by patient and library
      */
     List<CqlEvaluation> findByTenantIdAndPatientIdAndLibrary_Id(
-            String tenantId, String patientId, UUID libraryId);
+            String tenantId, UUID patientId, UUID libraryId);
 
     /**
      * Find the most recent evaluation for a patient and library
@@ -69,7 +69,7 @@ public interface CqlEvaluationRepository extends JpaRepository<CqlEvaluation, UU
            "ORDER BY e.evaluationDate DESC LIMIT 1")
     Optional<CqlEvaluation> findLatestByPatientAndLibrary(
             @Param("tenantId") String tenantId,
-            @Param("patientId") String patientId,
+            @Param("patientId") UUID patientId,
             @Param("libraryId") UUID libraryId);
 
     /**
@@ -108,7 +108,7 @@ public interface CqlEvaluationRepository extends JpaRepository<CqlEvaluation, UU
            "ORDER BY e.evaluationDate DESC")
     List<CqlEvaluation> findByPatientAndDateRange(
             @Param("tenantId") String tenantId,
-            @Param("patientId") String patientId,
+            @Param("patientId") UUID patientId,
             @Param("startDate") Instant startDate,
             @Param("endDate") Instant endDate);
 
@@ -116,7 +116,7 @@ public interface CqlEvaluationRepository extends JpaRepository<CqlEvaluation, UU
      * Find successful evaluations for a patient
      */
     List<CqlEvaluation> findByTenantIdAndPatientIdAndStatus(
-            String tenantId, String patientId, String status);
+            String tenantId, UUID patientId, String status);
 
     /**
      * Count evaluations by status
@@ -131,7 +131,7 @@ public interface CqlEvaluationRepository extends JpaRepository<CqlEvaluation, UU
     /**
      * Count evaluations for a patient
      */
-    long countByTenantIdAndPatientId(String tenantId, String patientId);
+    long countByTenantIdAndPatientId(String tenantId, UUID patientId);
 
     /**
      * Get average evaluation duration for a library

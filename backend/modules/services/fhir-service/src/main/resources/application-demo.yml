@@ -1,0 +1,65 @@
+# Demo profile for FHIR Service
+# Use with: --spring.profiles.active=demo
+# Tables are created automatically via Hibernate DDL
+
+server:
+  port: 8085
+  servlet:
+    context-path: /fhir
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5435/fhir_db
+    username: healthdata
+    password: healthdata_password
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+    show-sql: false
+
+  # Disable all migration tools - use Hibernate DDL
+  liquibase:
+    enabled: false
+  flyway:
+    enabled: false
+
+  # Exclude Kafka and Redis auto-configuration for demo
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+  cache:
+    type: simple
+
+# JWT Configuration
+jwt:
+  secret: demo_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+  access-token-expiration: 1h
+  refresh-token-expiration: 1d
+  issuer: healthdata-demo
+  audience: healthdata-api-demo
+
+# Disable HIPAA audit for demo
+audit:
+  enabled: false
+
+# Disable rate limiting for demo
+rate-limiting:
+  enabled: false
+
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+    org.hibernate.SQL: DEBUG

@@ -12,6 +12,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.Instant;
 import java.util.Map;
@@ -41,17 +42,17 @@ class MentalHealthAssessmentServiceTest {
     private MentalHealthAssessmentService service;
 
     private String tenantId;
-    private String patientId;
+    private UUID patientId;
     private String assessedBy;
 
     @BeforeEach
     void setUp() {
         tenantId = "test-tenant";
-        patientId = "Patient/123";
+        patientId = UUID.fromString("44444444-4444-4444-4444-444444444444");
         assessedBy = "Practitioner/Dr-Smith";
 
         // Setup common repository mock behavior
-        when(repository.save(any(MentalHealthAssessmentEntity.class))).thenAnswer(invocation -> {
+        lenient().when(repository.save(any(MentalHealthAssessmentEntity.class))).thenAnswer(invocation -> {
             MentalHealthAssessmentEntity entity = invocation.getArgument(0);
             entity.setId(UUID.randomUUID());
             entity.setCreatedAt(Instant.now());
@@ -676,6 +677,149 @@ class MentalHealthAssessmentServiceTest {
         assertEquals("Positive screen for bipolar disorder", result.getInterpretation());
         assertTrue(result.getPositiveScreen());
         assertTrue(result.getRequiresFollowup());
+    }
+
+    @Test
+    void shouldHandleNotificationFailureOnSubmit() {
+        MentalHealthAssessmentRequest request = createPHQ9Request(
+            Map.of("q1", 3, "q2", 3, "q3", 3, "q4", 3, "q5", 3, "q6", 3, "q7", 3, "q8", 2, "q9", 1)
+        );
+
+        doThrow(new RuntimeException("notify-fail"))
+            .when(notificationTrigger)
+            .onAssessmentCompleted(anyString(), any());
+
+        MentalHealthAssessmentDTO result = assertDoesNotThrow(() -> service.submitAssessment(tenantId, request));
+
+        assertEquals("severe", result.getSeverity());
+        verify(notificationTrigger).onAssessmentCompleted(eq(tenantId), any(MentalHealthAssessmentDTO.class));
+    }
+
+    @Test
+    void shouldThrowWhenAssessmentTypeUnsupported() {
+        MentalHealthAssessmentRequest request = MentalHealthAssessmentRequest.builder()
+            .patientId(patientId)
+            .assessmentType("cage-aid")
+            .responses(Map.of("q1", 1))
+            .assessedBy(assessedBy)
+            .assessmentDate(null)
+            .build();
+
+        UnsupportedOperationException ex = assertThrows(
+            UnsupportedOperationException.class,
+            () -> service.submitAssessment(tenantId, request)
+        );
+        assertTrue(ex.getMessage().contains("Assessment type not yet implemented"));
+    }
+
+    @Test
+    void shouldFetchPatientAssessmentsWithTypeFilter() {
+        MentalHealthAssessmentEntity entity = createMockEntity(
+            MentalHealthAssessmentEntity.AssessmentType.CAGE_AID,
+            3,
+            4,
+            "negative",
+            false
+        );
+        when(repository.findByTenantIdAndPatientIdAndTypeOrderByAssessmentDateDesc(
+            tenantId,
+            patientId,
+            MentalHealthAssessmentEntity.AssessmentType.CAGE_AID
+        )).thenReturn(java.util.List.of(entity));
+
+        var results = service.getPatientAssessments(tenantId, patientId, "cage-aid", 10, 0);
+
+        assertEquals(1, results.size());
+        assertEquals("CAGE Adapted to Include Drugs", results.get(0).getName());
+    }
+
+    @Test
+    void shouldFetchPatientAssessmentsWithPagination() {
+        MentalHealthAssessmentEntity entity = createMockEntity(
+            MentalHealthAssessmentEntity.AssessmentType.PHQ_2,
+            1,
+            6,
+            "negative",
+            false
+        );
+        when(repository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
+            eq(tenantId),
+            eq(patientId),
+            any(PageRequest.class)
+        )).thenReturn(java.util.List.of(entity));
+
+        var results = service.getPatientAssessments(tenantId, patientId, null, 5, 0);
+
+        assertEquals(1, results.size());
+        verify(repository).findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
+            eq(tenantId),
+            eq(patientId),
+            eq(PageRequest.of(0, 5))
+        );
+    }
+
+    @Test
+    void shouldReturnUnknownTrendWhenNoAssessments() {
+        when(repository.findByDateRange(
+            eq(tenantId),
+            eq(patientId),
+            eq(MentalHealthAssessmentEntity.AssessmentType.PHQ_9),
+            any(Instant.class),
+            any(Instant.class)
+        )).thenReturn(java.util.List.of());
+
+        MentalHealthAssessmentService.AssessmentTrend trend = service.getAssessmentTrend(
+            tenantId,
+            patientId,
+            "phq-9",
+            null,
+            null
+        );
+
+        assertEquals("unknown", trend.getTrend());
+        assertEquals(0.0, trend.getAverageScore());
+        assertTrue(trend.getDataPoints().isEmpty());
+    }
+
+    @Test
+    void shouldBuildTrendWithPreviousSeverity() {
+        MentalHealthAssessmentEntity older = createMockEntity(
+            MentalHealthAssessmentEntity.AssessmentType.GAD_7,
+            8,
+            21,
+            "mild",
+            false
+        );
+        older.setAssessmentDate(Instant.now().minusSeconds(86400 * 10));
+        MentalHealthAssessmentEntity newer = createMockEntity(
+            MentalHealthAssessmentEntity.AssessmentType.GAD_7,
+            15,
+            21,
+            "severe",
+            true
+        );
+        newer.setAssessmentDate(Instant.now());
+
+        when(repository.findByDateRange(
+            eq(tenantId),
+            eq(patientId),
+            eq(MentalHealthAssessmentEntity.AssessmentType.GAD_7),
+            any(Instant.class),
+            any(Instant.class)
+        )).thenReturn(java.util.List.of(older, newer));
+
+        MentalHealthAssessmentService.AssessmentTrend trend = service.getAssessmentTrend(
+            tenantId,
+            patientId,
+            "gad-7",
+            "2024-01-01",
+            "2024-12-31"
+        );
+
+        assertEquals("declining", trend.getTrend());
+        assertEquals("severe", trend.getCurrentSeverity());
+        assertEquals("mild", trend.getPreviousSeverity());
+        assertEquals(2, trend.getDataPoints().size());
     }
 
     /**

@@ -49,7 +49,7 @@ class CareGapAutoClosureTest {
     private ObjectMapper objectMapper;
 
     private static final String TENANT_ID = "test-tenant";
-    private static final String PATIENT_ID = "patient-123";
+    private static final UUID PATIENT_ID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
 
     @BeforeEach
     void setUp() {

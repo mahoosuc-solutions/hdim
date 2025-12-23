@@ -103,6 +103,96 @@ describe('DialogService', () => {
     });
   });
 
+  describe('openBatchEvaluation', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should emit mock batch result after delay', () => {
+      const results: any[] = [];
+
+      service.openBatchEvaluation().subscribe((result) => results.push(result));
+
+      jest.advanceTimersByTime(1000);
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toEqual({
+        successCount: 10,
+        errorCount: 0,
+        results: [],
+      });
+    });
+  });
+
+  describe('openExportConfig', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should emit export config after delay', () => {
+      const results: any[] = [];
+
+      service.openExportConfig(['name', 'dob'], [{ id: 1 }]).subscribe((result) => results.push(result));
+
+      jest.advanceTimersByTime(500);
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toEqual({
+        format: 'csv',
+        columns: ['name', 'dob'],
+        fileName: 'export.csv',
+      });
+    });
+  });
+
+  describe('openErrorDetails', () => {
+    it('should log error details from Error', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+      const error = new Error('Boom');
+
+      service.openErrorDetails(error);
+
+      expect(errorSpy).toHaveBeenCalled();
+      const [, errorInfo] = errorSpy.mock.calls[0];
+      expect(errorInfo.message).toBe('Boom');
+      expect(errorInfo.severity).toBe('error');
+      errorSpy.mockRestore();
+    });
+
+    it('should log provided error info', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+      const errorInfo = {
+        message: 'Bad request',
+        timestamp: new Date('2024-01-01T00:00:00Z'),
+        severity: 'warning' as const,
+      };
+
+      service.openErrorDetails(errorInfo);
+
+      expect(errorSpy).toHaveBeenCalledWith('Error Details:', errorInfo);
+      errorSpy.mockRestore();
+    });
+  });
+
+  describe('openHelp', () => {
+    it('should log help topic', () => {
+      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      service.openHelp('patients');
+
+      expect(logSpy).toHaveBeenCalledWith('Opening help for topic:', 'patients');
+      logSpy.mockRestore();
+    });
+  });
+
   describe('confirm', () => {
     it('should open confirmation dialog and return true on confirm', (done) => {
       const mockDialogRef = {
@@ -133,6 +223,23 @@ describe('DialogService', () => {
     });
   });
 
+  describe('confirmWarning', () => {
+    it('should open warning confirmation with custom button text', () => {
+      const mockDialogRef = {
+        afterClosed: () => of(true),
+      } as MatDialogRef<any>;
+
+      dialog.open.mockReturnValue(mockDialogRef);
+
+      service.confirmWarning('Warning', 'Proceed?').subscribe();
+
+      expect(dialog.open).toHaveBeenCalled();
+      const callArgs = dialog.open.mock.calls[dialog.open.mock.calls.length - 1];
+      expect(callArgs[1]?.data?.confirmText).toBe('Continue');
+      expect(callArgs[1]?.data?.confirmColor).toBe('warn');
+    });
+  });
+
   describe('confirmDelete', () => {
     it('should open delete confirmation with proper styling', () => {
       const mockDialogRef = {
@@ -147,6 +254,7 @@ describe('DialogService', () => {
       const callArgs = dialog.open.mock.calls[dialog.open.mock.calls.length - 1];
       expect(callArgs[1]?.data?.confirmColor).toBe('warn');
       expect(callArgs[1]?.data?.icon).toBe('warning');
+      expect(callArgs[1]?.data?.message).toContain('Test Item');
     });
   });
 
@@ -161,9 +269,19 @@ describe('DialogService', () => {
       expect(service.hasOpenDialogs()).toBe(true);
     });
 
+    it('should return false when no dialogs are open', () => {
+      (dialog as any).openDialogs = [];
+      expect(service.hasOpenDialogs()).toBe(false);
+    });
+
     it('should get open dialog count', () => {
       (dialog as any).openDialogs = [{}, {}];
       expect(service.getOpenDialogCount()).toBe(2);
+    });
+
+    it('should return zero when no dialogs are open', () => {
+      (dialog as any).openDialogs = [];
+      expect(service.getOpenDialogCount()).toBe(0);
     });
   });
 });

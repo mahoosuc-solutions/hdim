@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.UUID;
 
 /**
  * FHIR Data Provider for Measure Evaluation
@@ -48,7 +49,7 @@ public class FHIRDataProvider {
      * @param patientId Patient identifier
      * @return Patient context with all relevant resources
      */
-    public PatientContext getPatientContext(String tenantId, String patientId) {
+    public PatientContext getPatientContext(String tenantId, UUID patientId) {
         logger.debug("Loading patient context for patient={}, tenant={}", patientId, tenantId);
 
         try {
@@ -97,7 +98,7 @@ public class FHIRDataProvider {
     /**
      * Get patient resource
      */
-    public JsonNode getPatient(String tenantId, String patientId) {
+    public JsonNode getPatient(String tenantId, UUID patientId) {
         String cacheKey = "patient_" + patientId;
         return getCached(cacheKey, () -> {
             try {
@@ -113,7 +114,7 @@ public class FHIRDataProvider {
     /**
      * Get observations for a patient
      */
-    public List<JsonNode> getObservations(String tenantId, String patientId, String code, String date) {
+    public List<JsonNode> getObservations(String tenantId, UUID patientId, String code, String date) {
         String cacheKey = "observations_" + patientId + "_" + code + "_" + date;
         return getCached(cacheKey, () -> {
             try {
@@ -130,7 +131,7 @@ public class FHIRDataProvider {
     /**
      * Get conditions for a patient
      */
-    public List<JsonNode> getConditions(String tenantId, String patientId, String code) {
+    public List<JsonNode> getConditions(String tenantId, UUID patientId, String code) {
         String cacheKey = "conditions_" + patientId + "_" + code;
         return getCached(cacheKey, () -> {
             try {
@@ -147,7 +148,7 @@ public class FHIRDataProvider {
     /**
      * Get procedures for a patient
      */
-    public List<JsonNode> getProcedures(String tenantId, String patientId, String code, String date) {
+    public List<JsonNode> getProcedures(String tenantId, UUID patientId, String code, String date) {
         String cacheKey = "procedures_" + patientId + "_" + code + "_" + date;
         return getCached(cacheKey, () -> {
             try {
@@ -164,7 +165,7 @@ public class FHIRDataProvider {
     /**
      * Get medication requests for a patient
      */
-    public List<JsonNode> getMedicationRequests(String tenantId, String patientId) {
+    public List<JsonNode> getMedicationRequests(String tenantId, UUID patientId) {
         String cacheKey = "medications_" + patientId;
         return getCached(cacheKey, () -> {
             try {
@@ -181,7 +182,7 @@ public class FHIRDataProvider {
     /**
      * Get encounters for a patient
      */
-    public List<JsonNode> getEncounters(String tenantId, String patientId, String code, String date) {
+    public List<JsonNode> getEncounters(String tenantId, UUID patientId, String code, String date) {
         String cacheKey = "encounters_" + patientId + "_" + code + "_" + date;
         return getCached(cacheKey, () -> {
             try {
@@ -251,7 +252,7 @@ public class FHIRDataProvider {
      * Patient Context - encapsulates all data needed for measure evaluation
      */
     public static class PatientContext {
-        private String patientId;
+        private UUID patientId;
         private String tenantId;
         private JsonNode patient;
         private List<JsonNode> observations = new ArrayList<>();
@@ -261,11 +262,11 @@ public class FHIRDataProvider {
         private List<JsonNode> encounters = new ArrayList<>();
 
         // Getters and Setters
-        public String getPatientId() {
+        public UUID getPatientId() {
             return patientId;
         }
 
-        public void setPatientId(String patientId) {
+        public void setPatientId(UUID patientId) {
             this.patientId = patientId;
         }
 

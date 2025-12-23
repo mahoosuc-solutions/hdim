@@ -194,6 +194,18 @@ describe('MedicationAdherenceService', () => {
       const req = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION));
       req.flush(mockBundle);
     });
+
+    it('should return empty array when medication fetch fails', (done) => {
+      const patientId = 'patient-123';
+
+      service.getActiveMedications(patientId).subscribe((medications) => {
+        expect(medications).toEqual([]);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION));
+      req.flush('error', { status: 500, statusText: 'Server Error' });
+    });
   });
 
   // ==========================================================================
@@ -474,6 +486,25 @@ describe('MedicationAdherenceService', () => {
         ],
       });
     });
+
+    it('should return 0% PDC when no dispenses exist', (done) => {
+      const patientId = 'patient-123';
+      const medicationCode = '197361';
+      const period: DateRange = {
+        startDate: new Date('2025-01-01'),
+        endDate: new Date('2025-01-30'),
+      };
+
+      service.calculatePDC(patientId, medicationCode, period).subscribe((result) => {
+        expect(result.pdc).toBe(0);
+        expect(result.gaps.length).toBe(1);
+        expect(result.medicationName).toBe(medicationCode);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) => request.url.includes('/MedicationRequest'));
+      req.flush({ resourceType: 'Bundle', entry: [] });
+    });
   });
 
   // ==========================================================================
@@ -481,6 +512,19 @@ describe('MedicationAdherenceService', () => {
   // ==========================================================================
 
   describe('Overall Adherence', () => {
+    it('returns zeroed score when no active medications', (done) => {
+      const patientId = 'patient-123';
+
+      service.calculateOverallAdherence(patientId).subscribe((score) => {
+        expect(score.totalMedications).toBe(0);
+        expect(score.overallPDC).toBe(0);
+        done();
+      });
+
+      const req1 = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION) && request.params.get('status') === 'active');
+      req1.flush({ resourceType: 'Bundle', entry: [] });
+    });
+
     it('should average PDC across all active medications', (done) => {
       const patientId = 'patient-123';
 
@@ -637,6 +681,18 @@ describe('MedicationAdherenceService', () => {
         ],
       });
     });
+
+    it('handles overall adherence errors gracefully', (done) => {
+      const patientId = 'patient-123';
+
+      service.calculateOverallAdherence(patientId).subscribe((score) => {
+        expect(score.overallPDC).toBe(0);
+        done();
+      });
+
+      const req1 = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION) && request.params.get('status') === 'active');
+      req1.flush('error', { status: 500, statusText: 'Server Error' });
+    });
   });
 
   // ==========================================================================
@@ -788,6 +844,18 @@ describe('MedicationAdherenceService', () => {
   // ==========================================================================
 
   describe('Problematic Medications', () => {
+    it('returns empty list when there are no active medications', (done) => {
+      const patientId = 'patient-123';
+
+      service.getProblematicMedications(patientId).subscribe((medications) => {
+        expect(medications).toEqual([]);
+        done();
+      });
+
+      const req1 = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION) && request.params.get('status') === 'active');
+      req1.flush({ resourceType: 'Bundle', entry: [] });
+    });
+
     it('should return only medications with PDC < 80%', (done) => {
       const patientId = 'patient-123';
 
@@ -914,6 +982,37 @@ describe('MedicationAdherenceService', () => {
       });
     });
 
+    it('uses medication text when coding is missing', (done) => {
+      const patientId = 'patient-123';
+
+      service.getProblematicMedications(patientId).subscribe((medications) => {
+        expect(medications[0].medicationName).toBe('Custom Med');
+        done();
+      });
+
+      const req1 = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION) && request.params.get('status') === 'active');
+      req1.flush({
+        resourceType: 'Bundle',
+        entry: [
+          {
+            resource: {
+              id: 'med-1',
+              status: 'active',
+              medicationCodeableConcept: { text: 'Custom Med' },
+            },
+          },
+        ],
+      });
+
+      const req2 = httpMock.expectOne((request) => request.url.includes('/MedicationRequest'));
+      req2.flush({
+        resourceType: 'Bundle',
+        entry: [
+          { resource: { whenHandedOver: '2025-01-01', daysSupply: { value: 10 } } },
+        ],
+      });
+    });
+
     it('should sort by lowest PDC first', (done) => {
       const patientId = 'patient-123';
 
@@ -966,6 +1065,18 @@ describe('MedicationAdherenceService', () => {
           { resource: { whenHandedOver: '2025-01-01', daysSupply: { value: 15 } } },
         ],
       });
+    });
+
+    it('returns empty list on error', (done) => {
+      const patientId = 'patient-123';
+
+      service.getProblematicMedications(patientId).subscribe((medications) => {
+        expect(medications).toEqual([]);
+        done();
+      });
+
+      const req1 = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION) && request.params.get('status') === 'active');
+      req1.flush('error', { status: 500, statusText: 'Server Error' });
     });
   });
 });

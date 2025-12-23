@@ -77,7 +77,7 @@ public class CqlEvaluationAuditEvent implements AuditEvent {
     String cqlLibraryVersion;
 
     @JsonProperty("patientId")
-    String patientId;
+    UUID patientId;
 
     @JsonProperty("measureIdentifier")
     String measureIdentifier; // For HEDIS/quality measures

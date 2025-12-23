@@ -1,11 +1,14 @@
 {
   "/fhir": {
-    "target": "http://localhost:8083",
+    "target": "http://localhost:8085",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug",
     "pathRewrite": {
-      "^/fhir": "/fhir"
+      "^/fhir": "/fhir/fhir"
+    },
+    "headers": {
+      "X-Tenant-ID": "demo-tenant"
     }
   },
   "/quality-measure": {
@@ -14,7 +17,10 @@
     "changeOrigin": true,
     "logLevel": "debug",
     "pathRewrite": {
-      "^/quality-measure": "/quality-measure"
+      "^/quality-measure": "/quality-measure/quality-measure"
+    },
+    "headers": {
+      "X-Tenant-ID": "demo-tenant"
     }
   },
   "/cql-engine": {
@@ -24,6 +30,45 @@
     "logLevel": "debug",
     "pathRewrite": {
       "^/cql-engine": "/cql-engine"
+    },
+    "headers": {
+      "X-Tenant-ID": "demo-tenant"
+    }
+  },
+  "/care-gap": {
+    "target": "http://localhost:8086",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/care-gap": "/care-gap/care-gap"
+    },
+    "headers": {
+      "X-Tenant-ID": "demo-tenant"
+    }
+  },
+  "/patient": {
+    "target": "http://localhost:8084",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/patient": "/patient"
+    },
+    "headers": {
+      "X-Tenant-ID": "demo-tenant"
+    }
+  },
+  "/qrda": {
+    "target": "http://localhost:8104",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/qrda": "/qrda-export"
+    },
+    "headers": {
+      "X-Tenant-ID": "demo-tenant"
     }
   }
 }

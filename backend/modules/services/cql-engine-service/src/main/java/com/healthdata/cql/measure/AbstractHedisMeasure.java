@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Abstract base class for HEDIS measures
@@ -31,7 +32,7 @@ public abstract class AbstractHedisMeasure implements HedisMeasure {
     /**
      * Get patient data as JSON
      */
-    protected JsonNode getPatientData(String tenantId, String patientId) {
+    protected JsonNode getPatientData(String tenantId, UUID patientId) {
         try {
             String patientJson = fhirClient.getPatient(tenantId, patientId);
             return objectMapper.readTree(patientJson);
@@ -44,7 +45,7 @@ public abstract class AbstractHedisMeasure implements HedisMeasure {
     /**
      * Get observations for a patient
      */
-    protected JsonNode getObservations(String tenantId, String patientId, String code, String date) {
+    protected JsonNode getObservations(String tenantId, UUID patientId, String code, String date) {
         try {
             String obsJson = fhirClient.searchObservations(tenantId, patientId, code, null, date, 1000);
             return objectMapper.readTree(obsJson);
@@ -57,7 +58,7 @@ public abstract class AbstractHedisMeasure implements HedisMeasure {
     /**
      * Get conditions for a patient
      */
-    protected JsonNode getConditions(String tenantId, String patientId, String code) {
+    protected JsonNode getConditions(String tenantId, UUID patientId, String code) {
         try {
             String conditionsJson = fhirClient.searchConditions(tenantId, patientId, code, "active");
             return objectMapper.readTree(conditionsJson);
@@ -70,7 +71,7 @@ public abstract class AbstractHedisMeasure implements HedisMeasure {
     /**
      * Get procedures for a patient
      */
-    protected JsonNode getProcedures(String tenantId, String patientId, String code, String date) {
+    protected JsonNode getProcedures(String tenantId, UUID patientId, String code, String date) {
         try {
             String proceduresJson = fhirClient.searchProcedures(tenantId, patientId, code, date);
             return objectMapper.readTree(proceduresJson);
@@ -83,7 +84,7 @@ public abstract class AbstractHedisMeasure implements HedisMeasure {
     /**
      * Get medication requests for a patient
      */
-    protected JsonNode getMedicationRequests(String tenantId, String patientId) {
+    protected JsonNode getMedicationRequests(String tenantId, UUID patientId) {
         try {
             String medsJson = fhirClient.searchMedicationRequests(tenantId, patientId, "active");
             return objectMapper.readTree(medsJson);
@@ -96,7 +97,7 @@ public abstract class AbstractHedisMeasure implements HedisMeasure {
     /**
      * Get medication requests for a patient with code and date filters
      */
-    protected JsonNode getMedicationRequests(String tenantId, String patientId, String code, String date) {
+    protected JsonNode getMedicationRequests(String tenantId, UUID patientId, String code, String date) {
         try {
             // Note: Simplified - real implementation would need to support medication code filtering via FHIR API
             String medsJson = fhirClient.searchMedicationRequests(tenantId, patientId, "active");
@@ -110,7 +111,7 @@ public abstract class AbstractHedisMeasure implements HedisMeasure {
     /**
      * Get encounters for a patient
      */
-    protected JsonNode getEncounters(String tenantId, String patientId, String code, String date) {
+    protected JsonNode getEncounters(String tenantId, UUID patientId, String code, String date) {
         try {
             String encountersJson = fhirClient.searchEncounters(tenantId, patientId, code, date);
             return objectMapper.readTree(encountersJson);

@@ -187,8 +187,7 @@ class MigrationJobServiceTest {
             );
             Page<MigrationJobEntity> page = new PageImpl<>(jobs);
 
-            when(jobRepository.findByTenantIdWithFilters(
-                eq(TENANT_ID), eq(null), eq(null), any(Pageable.class)))
+            when(jobRepository.findByTenantId(eq(TENANT_ID), any(Pageable.class)))
                 .thenReturn(page);
 
             // When
@@ -209,8 +208,8 @@ class MigrationJobServiceTest {
             );
             Page<MigrationJobEntity> page = new PageImpl<>(jobs);
 
-            when(jobRepository.findByTenantIdWithFilters(
-                eq(TENANT_ID), eq(JobStatus.RUNNING), eq(null), any(Pageable.class)))
+            when(jobRepository.findByTenantIdAndStatus(
+                eq(TENANT_ID), eq(JobStatus.RUNNING), any(Pageable.class)))
                 .thenReturn(page);
 
             // When
@@ -219,8 +218,48 @@ class MigrationJobServiceTest {
 
             // Then
             assertThat(result.getContent()).hasSize(1);
+            verify(jobRepository).findByTenantIdAndStatus(
+                eq(TENANT_ID), eq(JobStatus.RUNNING), any(Pageable.class));
+        }
+
+        @Test
+        @DisplayName("Should filter jobs by name")
+        void shouldFilterByName() {
+            List<MigrationJobEntity> jobs = List.of(
+                createJobEntity(UUID.randomUUID(), "Alpha", JobStatus.PENDING)
+            );
+            Page<MigrationJobEntity> page = new PageImpl<>(jobs);
+
+            when(jobRepository.findByTenantIdWithFilters(
+                eq(TENANT_ID), eq(null), eq("Alpha"), any(Pageable.class)))
+                .thenReturn(page);
+
+            Page<MigrationJobResponse> result = service.listJobs(
+                TENANT_ID, null, "Alpha", Pageable.unpaged());
+
+            assertThat(result.getContent()).hasSize(1);
             verify(jobRepository).findByTenantIdWithFilters(
-                eq(TENANT_ID), eq(JobStatus.RUNNING), eq(null), any(Pageable.class));
+                eq(TENANT_ID), eq(null), eq("Alpha"), any(Pageable.class));
+        }
+
+        @Test
+        @DisplayName("Should filter jobs by name and status")
+        void shouldFilterByNameAndStatus() {
+            List<MigrationJobEntity> jobs = List.of(
+                createJobEntity(UUID.randomUUID(), "Running Job", JobStatus.RUNNING)
+            );
+            Page<MigrationJobEntity> page = new PageImpl<>(jobs);
+
+            when(jobRepository.findByTenantIdWithFilters(
+                eq(TENANT_ID), eq(JobStatus.RUNNING), eq("Run"), any(Pageable.class)))
+                .thenReturn(page);
+
+            Page<MigrationJobResponse> result = service.listJobs(
+                TENANT_ID, JobStatus.RUNNING, "Run", Pageable.unpaged());
+
+            assertThat(result.getContent()).hasSize(1);
+            verify(jobRepository).findByTenantIdWithFilters(
+                eq(TENANT_ID), eq(JobStatus.RUNNING), eq("Run"), any(Pageable.class));
         }
     }
 
@@ -309,6 +348,18 @@ class MigrationJobServiceTest {
             // Then
             assertThat(response.getStatus()).isEqualTo(JobStatus.RUNNING);
             verify(jobRepository).save(entity);
+        }
+
+        @Test
+        @DisplayName("Should not resume when job is not paused")
+        void shouldNotResumeWhenNotPaused() {
+            MigrationJobEntity entity = createJobEntity(JOB_ID, "Test Job", JobStatus.RUNNING);
+            when(jobRepository.findByIdAndTenantId(JOB_ID, TENANT_ID))
+                .thenReturn(Optional.of(entity));
+
+            assertThatThrownBy(() -> service.resumeJob(JOB_ID, TENANT_ID))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Only paused jobs can be resumed");
         }
 
         @Test
@@ -618,6 +669,23 @@ class MigrationJobServiceTest {
             // Then
             assertThat(result).isEqualTo(csv);
             verify(dataQualityService).exportReportToCsv(JOB_ID);
+        }
+
+        @Test
+        @DisplayName("Should delegate errors CSV export")
+        void shouldDelegateErrorsCsvExport() throws Exception {
+            MigrationJobEntity entity = createJobEntity(JOB_ID, "Test Job", JobStatus.COMPLETED);
+            String csv = "errors csv";
+
+            when(jobRepository.findByIdAndTenantId(JOB_ID, TENANT_ID))
+                .thenReturn(Optional.of(entity));
+            when(dataQualityService.exportErrorsToCsv(JOB_ID))
+                .thenReturn(csv);
+
+            String result = service.exportErrorsCsv(JOB_ID, TENANT_ID);
+
+            assertThat(result).isEqualTo(csv);
+            verify(dataQualityService).exportErrorsToCsv(JOB_ID);
         }
     }
 

@@ -845,3 +845,288 @@
   font-size: 13px;
   font-weight: 600;
 }
+
+// ==================== My Measures Section ====================
+.my-measures-section {
+  .my-measures-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+  }
+}
+
+// Shared styles for favorites, recent, and frequent cards
+.favorites-card,
+.recent-measures-card,
+.frequent-measures-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--card-shadow);
+  }
+
+  .card-icon {
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+    color: var(--primary-color);
+  }
+
+  .mat-mdc-card-content {
+    padding: 0 !important;
+  }
+
+  .mat-mdc-card-actions {
+    padding: 8px 16px;
+    border-top: 1px solid var(--divider-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .empty-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    gap: 8px;
+    text-align: center;
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: var(--text-disabled);
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--text-hint);
+      font-weight: 500;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--text-disabled);
+      max-width: 200px;
+    }
+  }
+}
+
+// Favorites list styles
+.favorites-list,
+.recent-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.favorite-item,
+.recent-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--divider-color);
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: var(--bg-hover);
+    transform: translateX(4px);
+  }
+
+  &:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+  }
+
+  .measure-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: var(--bg-selected);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  .measure-info {
+    flex: 1;
+    min-width: 0;
+
+    .measure-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .measure-category {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .measure-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+
+      .separator {
+        color: var(--text-disabled);
+      }
+
+      .last-used {
+        color: var(--text-hint);
+      }
+    }
+  }
+
+  .measure-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    .action-arrow {
+      color: var(--text-hint);
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      transition: transform 0.2s;
+    }
+  }
+
+  &:hover .action-arrow {
+    transform: translateX(4px);
+    color: var(--primary-color);
+  }
+}
+
+// Recent measures card specific
+.recent-measures-card {
+  .card-icon {
+    color: #9c27b0;
+  }
+
+  .measure-icon {
+    background: #f3e5f5;
+
+    mat-icon {
+      color: #9c27b0;
+    }
+  }
+}
+
+// Most frequently used measures
+.frequent-measures-card {
+  .card-icon {
+    color: var(--status-success);
+  }
+
+  .frequent-list {
+    padding: 8px 0;
+  }
+
+  .frequent-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: var(--bg-hover);
+    }
+
+    .rank-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      background: var(--text-hint);
+
+      &.rank-1 {
+        background: linear-gradient(135deg, #ffd700 0%, #ffb700 100%);
+        color: #333;
+      }
+
+      &.rank-2 {
+        background: linear-gradient(135deg, #c0c0c0 0%, #a0a0a0 100%);
+        color: #333;
+      }
+
+      &.rank-3 {
+        background: linear-gradient(135deg, #cd7f32 0%, #b87333 100%);
+        color: white;
+      }
+    }
+
+    .measure-info {
+      flex: 1;
+      min-width: 0;
+
+      .measure-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 6px;
+      }
+
+      .usage-bar {
+        height: 6px;
+        background: var(--bg-hover);
+        border-radius: 3px;
+        overflow: hidden;
+
+        .bar-fill {
+          height: 100%;
+          background: linear-gradient(90deg, var(--status-success) 0%, #8bc34a 100%);
+          border-radius: 3px;
+          transition: width 0.3s ease;
+        }
+      }
+    }
+
+    .usage-count-badge {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      background: var(--bg-selected);
+      border-radius: 12px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .my-measures-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

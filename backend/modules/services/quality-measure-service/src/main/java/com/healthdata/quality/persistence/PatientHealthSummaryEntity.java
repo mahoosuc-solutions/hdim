@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Patient Health Summary Entity (CQRS Read Model)
@@ -35,7 +36,7 @@ public class PatientHealthSummaryEntity {
     private String tenantId;
 
     @Column(name = "patient_id", nullable = false, length = 100)
-    private String patientId;
+    private UUID patientId;
 
     // Health Score Data
     @Column(name = "latest_health_score")

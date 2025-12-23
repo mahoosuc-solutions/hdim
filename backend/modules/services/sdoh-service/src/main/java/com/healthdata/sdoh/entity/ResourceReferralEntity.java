@@ -12,7 +12,7 @@ import org.hibernate.annotations.GenericGenerator;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "resource_referrals")
+@Table(name = "resource_referrals", schema = "sdoh")
 @Data
 @Builder
 @NoArgsConstructor

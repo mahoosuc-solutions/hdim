@@ -8,10 +8,7 @@ spring:
     name: quality-measure-service
 
   datasource:
-    # SHARED DATABASE: Uses healthdata_cql database for user authentication
-    # This allows sharing the users, user_roles, and user_tenants tables
-    # Quality measure data is still isolated by tenant_id
-    url: jdbc:postgresql://localhost:5435/healthdata_cql
+    url: jdbc:postgresql://localhost:5435/healthdata_quality_measure
     username: healthdata
     password: ${DB_PASSWORD:healthdata_password}
     driver-class-name: org.postgresql.Driver

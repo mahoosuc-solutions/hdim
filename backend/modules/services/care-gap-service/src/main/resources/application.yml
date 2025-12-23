@@ -8,7 +8,7 @@ spring:
     name: care-gap-service
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_cql}  # Shared database with cql-engine-service for user authentication
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_care_gap}
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}
     # ⚠️ SECURITY: Password MUST be provided via environment variable
     password: ${SPRING_DATASOURCE_PASSWORD:}

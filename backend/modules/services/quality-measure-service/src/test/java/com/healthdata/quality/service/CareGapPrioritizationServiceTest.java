@@ -35,12 +35,12 @@ class CareGapPrioritizationServiceTest {
     private CareGapPrioritizationService service;
 
     private String tenantId;
-    private String patientId;
+    private UUID patientId;
 
     @BeforeEach
     void setUp() {
         tenantId = "tenant-123";
-        patientId = UUID.randomUUID().toString();
+        patientId = UUID.randomUUID();
     }
 
     /**
@@ -279,6 +279,91 @@ class CareGapPrioritizationServiceTest {
         assertThat(priority).isIn(
             CareGapEntity.Priority.URGENT,
             CareGapEntity.Priority.HIGH
+        );
+    }
+
+    @Test
+    @DisplayName("Should set URGENT priority for high-risk medication gaps")
+    void shouldSetUrgentPriority_HighRiskMedication() {
+        RiskAssessmentEntity riskAssessment = RiskAssessmentEntity.builder()
+            .tenantId(tenantId)
+            .patientId(patientId)
+            .riskLevel(RiskAssessmentEntity.RiskLevel.VERY_HIGH)
+            .riskScore(90)
+            .build();
+
+        when(riskAssessmentRepository.findLatestByTenantIdAndPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(riskAssessment));
+
+        CareGapEntity.Priority priority = service.determinePriority(
+            tenantId,
+            patientId,
+            "CMS999",
+            CareGapEntity.GapCategory.MEDICATION
+        );
+
+        assertThat(priority).isEqualTo(CareGapEntity.Priority.URGENT);
+    }
+
+    @Test
+    @DisplayName("Should set MEDIUM priority for moderate-risk medication gaps without chronic conditions")
+    void shouldSetMediumPriority_ModerateMedicationWithoutChronic() {
+        RiskAssessmentEntity riskAssessment = RiskAssessmentEntity.builder()
+            .tenantId(tenantId)
+            .patientId(patientId)
+            .riskLevel(RiskAssessmentEntity.RiskLevel.MODERATE)
+            .riskScore(45)
+            .chronicConditionCount(0)
+            .build();
+
+        when(riskAssessmentRepository.findLatestByTenantIdAndPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(riskAssessment));
+
+        CareGapEntity.Priority priority = service.determinePriority(
+            tenantId,
+            patientId,
+            "CMS238",
+            CareGapEntity.GapCategory.MEDICATION
+        );
+
+        assertThat(priority).isEqualTo(CareGapEntity.Priority.MEDIUM);
+    }
+
+    @Test
+    @DisplayName("Should set LOW priority for low-risk non-preventive gaps")
+    void shouldSetLowPriority_LowRiskNonPreventive() {
+        RiskAssessmentEntity riskAssessment = RiskAssessmentEntity.builder()
+            .tenantId(tenantId)
+            .patientId(patientId)
+            .riskLevel(RiskAssessmentEntity.RiskLevel.LOW)
+            .riskScore(15)
+            .build();
+
+        when(riskAssessmentRepository.findLatestByTenantIdAndPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(riskAssessment));
+
+        CareGapEntity.Priority priority = service.determinePriority(
+            tenantId,
+            patientId,
+            "CMS999",
+            CareGapEntity.GapCategory.MEDICATION
+        );
+
+        assertThat(priority).isEqualTo(CareGapEntity.Priority.LOW);
+    }
+
+    @Test
+    @DisplayName("Should calculate due date for measure based on priority")
+    void shouldCalculateDueDateForMeasure() {
+        Instant dueDate = service.calculateDueDateForMeasure(
+            "CMS999",
+            CareGapEntity.Priority.HIGH
+        );
+
+        Instant expectedDueDate = Instant.now().plus(14, ChronoUnit.DAYS);
+        assertThat(dueDate).isBetween(
+            expectedDueDate.minus(1, ChronoUnit.MINUTES),
+            expectedDueDate.plus(1, ChronoUnit.MINUTES)
         );
     }
 }

@@ -1,0 +1,39 @@
+{
+  "name": "platform-build-logic",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "backend/platform/build-logic/src",
+  "tags": [
+    "backend",
+    "lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/platform/build-logic/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:build-logic:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:build-logic:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:build-logic:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:build-logic:test :platform:build-logic:jacocoTestReport :platform:build-logic:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

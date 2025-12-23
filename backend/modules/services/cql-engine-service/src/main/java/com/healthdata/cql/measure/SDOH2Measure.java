@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * SDOH-2 - Social Determinants of Health Screen Positive Rate
@@ -109,7 +110,7 @@ public class SDOH2Measure extends AbstractHedisMeasure {
 
     @Override
     @Cacheable(value = "hedisMeasures", key = "'SDOH2-' + #tenantId + '-' + #patientId")
-    public MeasureResult evaluate(String tenantId, String patientId) {
+    public MeasureResult evaluate(String tenantId, UUID patientId) {
         logger.info("Evaluating SDOH-2 measure for patient: {}", patientId);
 
         MeasureResult.MeasureResultBuilder resultBuilder = MeasureResult.builder()
@@ -227,7 +228,7 @@ public class SDOH2Measure extends AbstractHedisMeasure {
     }
 
     @Override
-    public boolean isEligible(String tenantId, String patientId) {
+    public boolean isEligible(String tenantId, UUID patientId) {
         JsonNode patient = getPatientData(tenantId, patientId);
         Integer age = getPatientAge(patient);
         return age != null && age >= 18;
@@ -236,7 +237,7 @@ public class SDOH2Measure extends AbstractHedisMeasure {
     /**
      * Check if patient has completed SDOH screening for all 5 domains.
      */
-    private boolean hasCompletedSdohScreening(String tenantId, String patientId) {
+    private boolean hasCompletedSdohScreening(String tenantId, UUID patientId) {
         String dateFilter = "ge" + LocalDate.now().minusMonths(12).toString();
 
         int domainsCompleted = 0;
@@ -255,7 +256,7 @@ public class SDOH2Measure extends AbstractHedisMeasure {
     /**
      * Evaluate if a specific HRSN domain has a positive screen result.
      */
-    private boolean evaluateDomainPositive(String tenantId, String patientId,
+    private boolean evaluateDomainPositive(String tenantId, UUID patientId,
                                             String screeningCode, List<String> positiveCodes,
                                             String domainName) {
         String dateFilter = "ge" + LocalDate.now().minusMonths(12).toString();
@@ -304,7 +305,7 @@ public class SDOH2Measure extends AbstractHedisMeasure {
     /**
      * Create care gaps for positive screens that lack documented interventions.
      */
-    private void createInterventionCareGaps(String tenantId, String patientId,
+    private void createInterventionCareGaps(String tenantId, UUID patientId,
                                              List<String> positiveDomains,
                                              List<MeasureResult.CareGap> careGaps) {
         for (String domain : positiveDomains) {
@@ -324,7 +325,7 @@ public class SDOH2Measure extends AbstractHedisMeasure {
     /**
      * Check if patient has documented intervention for a specific SDOH domain.
      */
-    private boolean hasDocumentedIntervention(String tenantId, String patientId, String domain) {
+    private boolean hasDocumentedIntervention(String tenantId, UUID patientId, String domain) {
         // Look for referrals, service requests, or documented interventions
         String dateFilter = "ge" + LocalDate.now().minusMonths(12).toString();
 
@@ -352,7 +353,7 @@ public class SDOH2Measure extends AbstractHedisMeasure {
     /**
      * Get procedures for a patient.
      */
-    protected JsonNode getProcedures(String tenantId, String patientId, String code, String date) {
+    protected JsonNode getProcedures(String tenantId, UUID patientId, String code, String date) {
         try {
             String proceduresJson = fhirClient.searchProcedures(tenantId, patientId, code, date);
             return objectMapper.readTree(proceduresJson);
@@ -365,7 +366,7 @@ public class SDOH2Measure extends AbstractHedisMeasure {
     /**
      * Check if patient is in hospice care.
      */
-    private boolean isInHospice(String tenantId, String patientId) {
+    private boolean isInHospice(String tenantId, UUID patientId) {
         JsonNode encounters = getEncounters(tenantId, patientId, "183919006", null);
         return !getEntries(encounters).isEmpty();
     }

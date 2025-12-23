@@ -274,10 +274,17 @@ export class AuthService {
 
   /**
    * Check if token is valid (not expired)
+   * Supports both real JWT tokens and demo tokens
    */
   private hasValidToken(): boolean {
     const token = this.getToken();
     if (!token) return false;
+
+    // Check for demo token (starts with 'demo-')
+    if (token.startsWith('demo-')) {
+      // Demo tokens are always valid if user exists
+      return this.getUserFromStorage() !== null;
+    }
 
     try {
       const payload = this.parseJwt(token);

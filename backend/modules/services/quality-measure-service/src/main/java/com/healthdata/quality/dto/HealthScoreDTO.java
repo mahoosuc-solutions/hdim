@@ -19,7 +19,7 @@ import java.util.UUID;
 public class HealthScoreDTO {
 
     private UUID id;
-    private String patientId;
+    private UUID patientId;
     private String tenantId;
 
     /**

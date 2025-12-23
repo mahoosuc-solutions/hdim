@@ -63,7 +63,7 @@ import ca.uhn.fhir.parser.IParser;
 @Transactional
 class AllergyIntoleranceControllerIT {
 
-    private static final String H2_URL = "jdbc:h2:mem:healthdata_fhir_allergy_controller;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH";
+    private static final String H2_URL = "jdbc:tc:postgresql:15-alpine:///testdb";
     private static final String TENANT_ID = "tenant-test-1";
     private static final UUID PATIENT_ID = UUID.randomUUID();
     private static final String BASE_URL = "/fhir/AllergyIntolerance";
@@ -73,10 +73,10 @@ class AllergyIntoleranceControllerIT {
         registry.add("spring.datasource.url", () -> H2_URL);
         registry.add("spring.datasource.username", () -> "sa");
         registry.add("spring.datasource.password", () -> "");
-        registry.add("spring.datasource.driver-class-name", () -> "org.h2.Driver");
-        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.H2Dialect");
+        registry.add("spring.datasource.driver-class-name", () -> "org.testcontainers.jdbc.ContainerDatabaseDriver");
+        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
-        registry.add("spring.liquibase.driver-class-name", () -> "org.h2.Driver");
+        registry.add("spring.liquibase.driver-class-name", () -> "org.testcontainers.jdbc.ContainerDatabaseDriver");
         registry.add("spring.flyway.enabled", () -> "false");
         // JWT configuration for tests
         registry.add("jwt.secret", () -> "test-secret-key-that-is-at-least-256-bits-long-for-HS256-algorithm");

@@ -81,7 +81,7 @@ public class NotificationHistoryEntity {
      * Patient FHIR ID (if notification is related to a specific patient)
      */
     @Column(name = "patient_id", length = 255)
-    private String patientId;
+    private UUID patientId;
 
     /**
      * Recipient identifier (email address, phone number, user ID, etc.)

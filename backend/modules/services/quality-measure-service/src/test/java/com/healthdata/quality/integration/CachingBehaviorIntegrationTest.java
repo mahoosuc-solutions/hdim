@@ -75,18 +75,18 @@ class CachingBehaviorIntegrationTest {
 
         // First call - should hit database
         List<QualityMeasureResultEntity> firstCall =
-                calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID.toString());
+                calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID);
         assertEquals(2, firstCall.size());
 
         // Verify cache contains the result
         Cache cache = cacheManager.getCache("measureResults");
         assertNotNull(cache);
-        String cacheKey = TENANT_ID + ":" + PATIENT_ID.toString();
+        String cacheKey = TENANT_ID + ":" + PATIENT_ID;
         assertNotNull(cache.get(cacheKey), "Cache should contain results after first call");
 
         // Second call - should hit cache
         List<QualityMeasureResultEntity> secondCall =
-                calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID.toString());
+                calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID);
         assertEquals(2, secondCall.size());
 
         // Results should be the same
@@ -108,19 +108,19 @@ class CachingBehaviorIntegrationTest {
 
         // First call - should generate report
         QualityReportService.QualityReport firstCall =
-                reportService.getPatientQualityReport(TENANT_ID, PATIENT_ID.toString());
+                reportService.getPatientQualityReport(TENANT_ID, PATIENT_ID);
         assertNotNull(firstCall);
         assertEquals(2, firstCall.totalMeasures());
 
         // Verify cache contains the report
         Cache cache = cacheManager.getCache("qualityReport");
         assertNotNull(cache);
-        String cacheKey = TENANT_ID + ":" + PATIENT_ID.toString();
+        String cacheKey = TENANT_ID + ":" + PATIENT_ID;
         assertNotNull(cache.get(cacheKey), "Cache should contain report after first call");
 
         // Second call - should hit cache
         QualityReportService.QualityReport secondCall =
-                reportService.getPatientQualityReport(TENANT_ID, PATIENT_ID.toString());
+                reportService.getPatientQualityReport(TENANT_ID, PATIENT_ID);
         assertNotNull(secondCall);
         assertEquals(firstCall.totalMeasures(), secondCall.totalMeasures());
     }
@@ -178,20 +178,20 @@ class CachingBehaviorIntegrationTest {
 
         // Get results for tenant 1
         List<QualityMeasureResultEntity> tenant1Results =
-                calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID.toString());
+                calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID);
         assertEquals(2, tenant1Results.size());
 
         // Get results for tenant 2
         List<QualityMeasureResultEntity> tenant2Results =
-                calculationService.getPatientMeasureResults(tenant2, PATIENT_ID.toString());
+                calculationService.getPatientMeasureResults(tenant2, PATIENT_ID);
         assertEquals(1, tenant2Results.size());
 
         // Verify cache has separate entries
         Cache cache = cacheManager.getCache("measureResults");
         assertNotNull(cache);
 
-        String cacheKey1 = TENANT_ID + ":" + PATIENT_ID.toString();
-        String cacheKey2 = tenant2 + ":" + PATIENT_ID.toString();
+        String cacheKey1 = TENANT_ID + ":" + PATIENT_ID;
+        String cacheKey2 = tenant2 + ":" + PATIENT_ID;
 
         assertNotNull(cache.get(cacheKey1), "Tenant 1 cache should exist");
         assertNotNull(cache.get(cacheKey2), "Tenant 2 cache should exist");
@@ -217,19 +217,19 @@ class CachingBehaviorIntegrationTest {
 
         // Get results for patient 1
         List<QualityMeasureResultEntity> patient1Results =
-                calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID.toString());
+                calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID);
         assertEquals(1, patient1Results.size());
 
         // Get results for patient 2
         List<QualityMeasureResultEntity> patient2Results =
-                calculationService.getPatientMeasureResults(TENANT_ID, patient2.toString());
+                calculationService.getPatientMeasureResults(TENANT_ID, patient2);
         assertEquals(2, patient2Results.size());
 
         // Verify cache has separate entries
         Cache cache = cacheManager.getCache("measureResults");
         assertNotNull(cache);
 
-        String cacheKey1 = TENANT_ID + ":" + PATIENT_ID.toString();
+        String cacheKey1 = TENANT_ID + ":" + PATIENT_ID;
         String cacheKey2 = TENANT_ID + ":" + patient2.toString();
 
         assertNotNull(cache.get(cacheKey1), "Patient 1 cache should exist");
@@ -247,7 +247,7 @@ class CachingBehaviorIntegrationTest {
 
         // Query for patient with no data - should return empty list
         List<QualityMeasureResultEntity> results =
-                calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID.toString());
+                calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID);
 
         assertNotNull(results);
         assertEquals(0, results.size());
@@ -255,7 +255,7 @@ class CachingBehaviorIntegrationTest {
         // Verify empty result was cached
         Cache cache = cacheManager.getCache("measureResults");
         assertNotNull(cache);
-        String cacheKey = TENANT_ID + ":" + PATIENT_ID.toString();
+        String cacheKey = TENANT_ID + ":" + PATIENT_ID;
         assertNotNull(cache.get(cacheKey), "Empty result should be cached");
     }
 
@@ -274,7 +274,7 @@ class CachingBehaviorIntegrationTest {
 
         // Get report - should calculate and cache score
         QualityReportService.QualityReport report =
-                reportService.getPatientQualityReport(TENANT_ID, PATIENT_ID.toString());
+                reportService.getPatientQualityReport(TENANT_ID, PATIENT_ID);
 
         assertNotNull(report);
         assertEquals(2, report.totalMeasures());
@@ -284,7 +284,7 @@ class CachingBehaviorIntegrationTest {
         // Verify report is cached
         Cache cache = cacheManager.getCache("qualityReport");
         assertNotNull(cache);
-        String cacheKey = TENANT_ID + ":" + PATIENT_ID.toString();
+        String cacheKey = TENANT_ID + ":" + PATIENT_ID;
 
         Cache.ValueWrapper cachedValue = cache.get(cacheKey);
         assertNotNull(cachedValue, "Report should be cached");
@@ -346,13 +346,13 @@ class CachingBehaviorIntegrationTest {
         // First call
         long startTime1 = System.currentTimeMillis();
         List<QualityMeasureResultEntity> firstCall =
-                calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID.toString());
+                calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID);
         long duration1 = System.currentTimeMillis() - startTime1;
 
         // Second call (from cache - should be faster or same)
         long startTime2 = System.currentTimeMillis();
         List<QualityMeasureResultEntity> secondCall =
-                calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID.toString());
+                calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID);
         long duration2 = System.currentTimeMillis() - startTime2;
 
         // Results should be identical

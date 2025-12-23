@@ -7,6 +7,7 @@ import com.healthdata.cql.repository.CqlEvaluationRepository;
 import com.healthdata.cql.repository.CqlLibraryRepository;
 import com.healthdata.cql.repository.ValueSetRepository;
 import com.healthdata.cql.config.TestRedisConfiguration;
+import com.healthdata.cql.test.CqlTestcontainersBase;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
-public class PerformanceIntegrationTest {
+public class PerformanceIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
     private CqlLibraryRepository libraryRepository;
@@ -124,7 +125,7 @@ public class PerformanceIntegrationTest {
 
         List<CqlEvaluation> evaluations = new ArrayList<>();
         for (int i = 0; i < BULK_SIZE; i++) {
-            CqlEvaluation evaluation = new CqlEvaluation(TENANT_ID, library, "patient-" + i);
+            CqlEvaluation evaluation = new CqlEvaluation(TENANT_ID, library, UUID.randomUUID());
             evaluation.setStatus("PENDING");
             evaluation.setEvaluationDate(Instant.now());
             evaluations.add(evaluation);
@@ -143,16 +144,17 @@ public class PerformanceIntegrationTest {
     void testEvaluationQueryByPatient() {
         CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "QueryEvalLib", "1.0.0"));
 
+        UUID patientId = UUID.randomUUID();
         // Create evaluations for same patient
         for (int i = 0; i < 30; i++) {
-            CqlEvaluation eval = new CqlEvaluation(TENANT_ID, library, "test-patient");
+            CqlEvaluation eval = new CqlEvaluation(TENANT_ID, library, patientId);
             eval.setEvaluationDate(Instant.now().minusSeconds(i * 60));
             evaluationRepository.save(eval);
         }
 
         long startTime = System.currentTimeMillis();
         List<CqlEvaluation> results = evaluationRepository.findByTenantIdAndPatientId(
-                TENANT_ID, "test-patient");
+                TENANT_ID, patientId);
         long duration = System.currentTimeMillis() - startTime;
 
         assertTrue(results.size() >= 30);
@@ -168,7 +170,7 @@ public class PerformanceIntegrationTest {
 
         // Create evaluations for library
         for (int i = 0; i < 40; i++) {
-            CqlEvaluation eval = new CqlEvaluation(TENANT_ID, library, "patient-" + i);
+            CqlEvaluation eval = new CqlEvaluation(TENANT_ID, library, UUID.randomUUID());
             evaluationRepository.save(eval);
         }
 
@@ -190,7 +192,7 @@ public class PerformanceIntegrationTest {
 
         Instant now = Instant.now();
         for (int i = 0; i < 60; i++) {
-            CqlEvaluation eval = new CqlEvaluation(TENANT_ID, library, "patient-" + i);
+            CqlEvaluation eval = new CqlEvaluation(TENANT_ID, library, UUID.randomUUID());
             eval.setEvaluationDate(now.minusSeconds(i * 3600)); // Hours apart
             evaluationRepository.save(eval);
         }
@@ -357,7 +359,7 @@ public class PerformanceIntegrationTest {
 
         // Create evaluations (which join with library)
         for (int i = 0; i < 30; i++) {
-            CqlEvaluation eval = new CqlEvaluation(TENANT_ID, library, "patient-" + i);
+            CqlEvaluation eval = new CqlEvaluation(TENANT_ID, library, UUID.randomUUID());
             eval.setStatus("SUCCESS");
             evaluationRepository.save(eval);
         }

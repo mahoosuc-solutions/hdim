@@ -64,12 +64,12 @@ import com.healthdata.fhir.service.PatientService.PatientEvent;
     }
 )
 @Import({TestCacheConfiguration.class, TestSecurityConfiguration.class})
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @DirtiesContext
 @ActiveProfiles("kafka-it")
 class FhirEventKafkaIT {
 
-    private static final String H2_URL = "jdbc:h2:mem:fhir_kafka_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH";
+    private static final String H2_URL = "jdbc:tc:postgresql:15-alpine:///testdb";
     private static final String TENANT_ID = "kafka-test-tenant";
     private static final String USER_ID = "test-user";
 
@@ -82,8 +82,8 @@ class FhirEventKafkaIT {
         registry.add("spring.datasource.url", () -> H2_URL);
         registry.add("spring.datasource.username", () -> "sa");
         registry.add("spring.datasource.password", () -> "");
-        registry.add("spring.datasource.driver-class-name", () -> "org.h2.Driver");
-        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.H2Dialect");
+        registry.add("spring.datasource.driver-class-name", () -> "org.testcontainers.jdbc.ContainerDatabaseDriver");
+        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
 
         // Kafka properties from Testcontainers
         registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);

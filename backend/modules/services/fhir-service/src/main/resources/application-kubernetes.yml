@@ -4,7 +4,7 @@ server:
 
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/healthdata_db}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/healthdata_fhir}
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}
     password: ${SPRING_DATASOURCE_PASSWORD:healthdata_dev_password}
 

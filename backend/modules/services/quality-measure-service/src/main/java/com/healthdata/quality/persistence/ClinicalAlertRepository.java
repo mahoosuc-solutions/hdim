@@ -36,7 +36,7 @@ public interface ClinicalAlertRepository extends JpaRepository<ClinicalAlertEnti
     """)
     List<ClinicalAlertEntity> findActiveAlertsForPatient(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId
+        @Param("patientId") UUID patientId
     );
 
     /**
@@ -53,7 +53,7 @@ public interface ClinicalAlertRepository extends JpaRepository<ClinicalAlertEnti
     """)
     List<ClinicalAlertEntity> findRecentDuplicates(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("alertType") ClinicalAlertEntity.AlertType alertType,
         @Param("since") Instant since
     );
@@ -63,7 +63,7 @@ public interface ClinicalAlertRepository extends JpaRepository<ClinicalAlertEnti
      */
     List<ClinicalAlertEntity> findByTenantIdAndPatientIdOrderByTriggeredAtDesc(
         String tenantId,
-        String patientId
+        UUID patientId
     );
 
     /**
@@ -102,7 +102,7 @@ public interface ClinicalAlertRepository extends JpaRepository<ClinicalAlertEnti
      */
     long countByTenantIdAndPatientIdAndStatus(
         String tenantId,
-        String patientId,
+        UUID patientId,
         ClinicalAlertEntity.AlertStatus status
     );
 

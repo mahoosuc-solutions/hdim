@@ -6,6 +6,9 @@ import {
   CqlLibraryRequest,
   LibraryStatus,
   MeasureInfo,
+  HedisMeasureInfo,
+  HedisMeasuresResponse,
+  MeasureCategory,
 } from '../models/cql-library.model';
 import {
   API_CONFIG,
@@ -28,7 +31,9 @@ export class MeasureService {
   // Caching infrastructure - 10 minute TTL since measures change infrequently
   private activeMeasuresCache$: Observable<CqlLibrary[]> | null = null;
   private activeMeasuresInfoCache$: Observable<MeasureInfo[]> | null = null;
+  private hedisMeasuresCache$: Observable<HedisMeasureInfo[]> | null = null;
   private cacheTimestamp = 0;
+  private hedisCacheTimestamp = 0;
   private readonly CACHE_TTL = 10 * 60 * 1000; // 10 minutes
   // Toggle to expose preview custom measures until backend APIs are available.
   private readonly includePreviewCustomMeasures = true;
@@ -106,7 +111,137 @@ export class MeasureService {
   invalidateCache(): void {
     this.activeMeasuresCache$ = null;
     this.activeMeasuresInfoCache$ = null;
+    this.hedisMeasuresCache$ = null;
     this.cacheTimestamp = 0;
+    this.hedisCacheTimestamp = 0;
+  }
+
+  // ============================================================================
+  // HEDIS Measure Discovery Methods (Phase 2)
+  // These methods use the new /evaluate/measures endpoints from Phase 1
+  // ============================================================================
+
+  /**
+   * Get all registered HEDIS measures from the backend registry
+   * Endpoint: GET /evaluate/measures
+   * Returns all 56 HEDIS measures with their metadata
+   */
+  getHedisMeasures(): Observable<HedisMeasureInfo[]> {
+    const url = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.HEDIS_MEASURES);
+    return this.http.get<HedisMeasuresResponse>(url).pipe(
+      map((response) => response.measures || [])
+    );
+  }
+
+  /**
+   * Get all HEDIS measures with caching (10-minute TTL)
+   * Use this for dropdowns and lists to avoid repeated API calls
+   */
+  getHedisMeasuresCached(): Observable<HedisMeasureInfo[]> {
+    const now = Date.now();
+    if (this.hedisMeasuresCache$ && (now - this.hedisCacheTimestamp) < this.CACHE_TTL) {
+      return this.hedisMeasuresCache$;
+    }
+    this.hedisCacheTimestamp = now;
+    this.hedisMeasuresCache$ = this.getHedisMeasures().pipe(shareReplay(1));
+    return this.hedisMeasuresCache$;
+  }
+
+  /**
+   * Get HEDIS measures as MeasureInfo for UI dropdowns
+   * Converts HedisMeasureInfo to MeasureInfo format for compatibility
+   */
+  getHedisMeasuresAsInfo(): Observable<MeasureInfo[]> {
+    return this.getHedisMeasuresCached().pipe(
+      map((measures) => measures.map((m) => this.hedisMeasureToInfo(m)))
+    );
+  }
+
+  /**
+   * Get a specific HEDIS measure by ID
+   * Endpoint: GET /evaluate/measures/{measureId}
+   */
+  getHedisMeasureById(measureId: string): Observable<HedisMeasureInfo> {
+    const url = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.HEDIS_MEASURE_BY_ID(measureId));
+    return this.http.get<HedisMeasureInfo>(url);
+  }
+
+  /**
+   * Check if a HEDIS measure is registered
+   * Endpoint: GET /evaluate/measures/{measureId}/exists
+   */
+  hedisMeasureExists(measureId: string): Observable<boolean> {
+    const url = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.HEDIS_MEASURE_EXISTS(measureId));
+    return this.http.get<{ measureId: string; exists: boolean }>(url).pipe(
+      map((response) => response.exists)
+    );
+  }
+
+  /**
+   * Get all measures (combines HEDIS + active library measures)
+   * This provides a unified list of all available measures for evaluation
+   */
+  getAllAvailableMeasures(): Observable<MeasureInfo[]> {
+    return this.getHedisMeasuresAsInfo().pipe(
+      map((hedisMeasures) => {
+        // Add preview custom measures if enabled
+        return this.includePreviewCustomMeasures
+          ? [...hedisMeasures, ...this.previewCustomMeasures]
+          : hedisMeasures;
+      })
+    );
+  }
+
+  /**
+   * Get measures filtered by category
+   */
+  getMeasuresByCategory(category: MeasureCategory): Observable<MeasureInfo[]> {
+    return this.getAllAvailableMeasures().pipe(
+      map((measures) => measures.filter((m) => m.category === category))
+    );
+  }
+
+  /**
+   * Helper: Convert HedisMeasureInfo to MeasureInfo
+   */
+  private hedisMeasureToInfo(measure: HedisMeasureInfo): MeasureInfo {
+    // Determine category from measure ID pattern
+    const category = this.inferCategory(measure.measureId);
+
+    return {
+      id: measure.measureId,
+      name: measure.measureId,
+      version: measure.version,
+      description: measure.measureName,
+      category,
+      displayName: `${measure.measureId} - ${measure.measureName} (v${measure.version})`,
+    };
+  }
+
+  /**
+   * Helper: Infer category from measure ID
+   * Based on HEDIS measure categories
+   */
+  private inferCategory(measureId: string): string {
+    const categoryMap: Record<string, string[]> = {
+      PREVENTIVE: ['AAP', 'ABA', 'BCS', 'CCS', 'COL', 'FVA', 'IMA', 'W15', 'LSC', 'CIS'],
+      CHRONIC_DISEASE: ['CDC', 'CBP', 'SPD', 'KED', 'HBD', 'VLS', 'SSD'],
+      BEHAVIORAL_HEALTH: ['ADD', 'AMM', 'FUH', 'FUM', 'FUA', 'IET', 'SSD', 'PBH', 'DSF', 'AIS'],
+      MEDICATION: ['MMA', 'SFM', 'PDC', 'DRR', 'PCE', 'SAA', 'HDO', 'SPR', 'SMC', 'MRP'],
+      WOMENS_HEALTH: ['PPC', 'CHL', 'NCS', 'EED', 'BPD'],
+      CHILD_ADOLESCENT: ['CIS', 'IMA', 'W15', 'WCC', 'ADD', 'AMR', 'CWP'],
+      SDOH: ['SDOH1', 'SDOH2'],
+      UTILIZATION: ['PCR', 'MSC'],
+      CARE_COORDINATION: ['COA', 'MRP', 'TSC', 'OMW', 'FUH', 'FUM'],
+      OVERUSE: ['LBP', 'URI', 'CWP', 'ASF', 'CAP'],
+    };
+
+    for (const [category, measureIds] of Object.entries(categoryMap)) {
+      if (measureIds.includes(measureId)) {
+        return category;
+      }
+    }
+    return 'OTHER';
   }
 
   /**

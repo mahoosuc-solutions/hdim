@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -36,7 +37,7 @@ class HealthScoreNotificationTriggerTest {
     private HealthScoreNotificationTrigger trigger;
 
     private static final String TENANT_ID = "tenant-123";
-    private static final String PATIENT_ID = "patient-456";
+    private static final UUID PATIENT_ID = UUID.fromString("44444444-5555-6666-7777-888888888888");
 
     @BeforeEach
     void setUp() {

@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -86,7 +87,7 @@ class MultiTenantIsolationIntegrationTest {
                 }
                 """;
 
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenReturn(cqlResponse);
 
         // Calculate measure for tenant 1
@@ -339,7 +340,7 @@ class MultiTenantIsolationIntegrationTest {
                 }
                 """;
 
-        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), anyString(), anyString()))
+        when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(UUID.class), anyString()))
                 .thenReturn(cqlResponse);
 
         // Calculate measure for tenant 1
@@ -352,7 +353,7 @@ class MultiTenantIsolationIntegrationTest {
 
         // Verify CQL Engine was called with tenant 1 ID
         verify(cqlEngineServiceClient, times(1))
-                .evaluateCql(eq(TENANT_1), anyString(), anyString(), anyString());
+                .evaluateCql(eq(TENANT_1), anyString(), any(UUID.class), anyString());
 
         // Calculate measure for tenant 2
         mockMvc.perform(post("/quality-measure/calculate")
@@ -364,7 +365,7 @@ class MultiTenantIsolationIntegrationTest {
 
         // Verify CQL Engine was called with tenant 2 ID
         verify(cqlEngineServiceClient, times(1))
-                .evaluateCql(eq(TENANT_2), anyString(), anyString(), anyString());
+                .evaluateCql(eq(TENANT_2), anyString(), any(UUID.class), anyString());
     }
 
     @Test

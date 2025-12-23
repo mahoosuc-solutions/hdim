@@ -3,6 +3,7 @@ package com.healthdata.cql.integration;
 import com.healthdata.cql.config.TestRedisConfiguration;
 import com.healthdata.cql.entity.CqlLibrary;
 import com.healthdata.cql.repository.CqlLibraryRepository;
+import com.healthdata.cql.test.CqlTestcontainersBase;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -12,6 +13,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -29,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
-public class SimplifiedCqlEvaluationControllerIntegrationTest {
+public class SimplifiedCqlEvaluationControllerIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
     private MockMvc mockMvc;
@@ -39,6 +42,7 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest {
 
     private static final String BASE_URL = "/evaluate";
     private static final String TENANT_ID = "test-tenant";
+    private static final UUID PATIENT_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     private CqlLibrary testLibrary;
 
@@ -57,7 +61,7 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest {
         mockMvc.perform(post(BASE_URL)
                 .header("X-Tenant-ID", TENANT_ID)
                 .param("library", "CDC")
-                .param("patient", "test-patient-001")
+                .param("patient", PATIENT_ID.toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andExpect(status().isOk())
@@ -66,7 +70,7 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest {
                 .andExpect(jsonPath("$.status").exists())
                 .andExpect(jsonPath("$.libraryName").value("CDC"))
                 .andExpect(jsonPath("$.libraryVersion").value("1.0.0"))
-                .andExpect(jsonPath("$.patientId").value("test-patient-001"))
+                .andExpect(jsonPath("$.patientId").value(PATIENT_ID.toString()))
                 .andExpect(jsonPath("$.evaluationDate").exists())
                 .andExpect(jsonPath("$.durationMs").exists())
                 .andExpect(jsonPath("$.measureResult").exists());
@@ -79,7 +83,7 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest {
         mockMvc.perform(post(BASE_URL)
                 .header("X-Tenant-ID", TENANT_ID)
                 .param("library", "NonExistentLibrary")
-                .param("patient", "test-patient-001")
+                .param("patient", PATIENT_ID.toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andExpect(status().isNotFound())
@@ -92,7 +96,7 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest {
     void testEvaluateCqlWithoutTenant() throws Exception {
         mockMvc.perform(post(BASE_URL)
                 .param("library", "CDC")
-                .param("patient", "test-patient-001")
+                .param("patient", PATIENT_ID.toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andExpect(status().is4xxClientError());
@@ -104,7 +108,7 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest {
     void testEvaluateCqlWithoutLibrary() throws Exception {
         mockMvc.perform(post(BASE_URL)
                 .header("X-Tenant-ID", TENANT_ID)
-                .param("patient", "test-patient-001")
+                .param("patient", PATIENT_ID.toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andExpect(status().is4xxClientError());
@@ -127,14 +131,15 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest {
     @DisplayName("Should evaluate multiple patients with same library")
     void testEvaluateMultiplePatients() throws Exception {
         for (int i = 1; i <= 3; i++) {
+            UUID patientId = UUID.randomUUID();
             mockMvc.perform(post(BASE_URL)
                     .header("X-Tenant-ID", TENANT_ID)
                     .param("library", "CDC")
-                    .param("patient", "patient-" + i)
+                    .param("patient", patientId.toString())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{}"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.patientId").value("patient-" + i));
+                    .andExpect(jsonPath("$.patientId").value(patientId.toString()));
         }
     }
 
@@ -151,7 +156,7 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest {
         mockMvc.perform(post(BASE_URL)
                 .header("X-Tenant-ID", TENANT_ID)
                 .param("library", "CDC")
-                .param("patient", "version-test-patient")
+                .param("patient", UUID.randomUUID().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andExpect(status().isOk())
@@ -167,7 +172,7 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest {
         mockMvc.perform(post(BASE_URL)
                 .header("X-Tenant-ID", TENANT_ID)
                 .param("library", "CDC")
-                .param("patient", "params-test-patient")
+                .param("patient", UUID.randomUUID().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(parameters))
                 .andExpect(status().isOk())
@@ -189,7 +194,7 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest {
         mockMvc.perform(post(BASE_URL)
                 .header("X-Tenant-ID", TENANT_ID)
                 .param("library", "TenantSpecific")
-                .param("patient", "test-patient")
+                .param("patient", UUID.randomUUID().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andExpect(status().isNotFound());
@@ -198,7 +203,7 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest {
         mockMvc.perform(post(BASE_URL)
                 .header("X-Tenant-ID", otherTenant)
                 .param("library", "TenantSpecific")
-                .param("patient", "test-patient")
+                .param("patient", UUID.randomUUID().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andExpect(status().isOk());
@@ -211,7 +216,7 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest {
         mockMvc.perform(post(BASE_URL)
                 .header("X-Tenant-ID", TENANT_ID)
                 .param("library", "InvalidLibrary")
-                .param("patient", "test-patient")
+                .param("patient", UUID.randomUUID().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andExpect(status().isNotFound())
@@ -229,7 +234,7 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest {
             mockMvc.perform(post(BASE_URL)
                     .header("X-Tenant-ID", TENANT_ID)
                     .param("library", "CDC")
-                    .param("patient", "concurrent-patient-" + i)
+                    .param("patient", UUID.randomUUID().toString())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{}"))
                     .andExpect(status().isOk());
@@ -238,17 +243,16 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest {
 
     @Test
     @Order(12)
-    @DisplayName("Should handle special characters in patient ID")
-    void testSpecialCharactersInPatientId() throws Exception {
-        String specialPatientId = "patient-with-dash_and_underscore.123";
+    @DisplayName("Should reject invalid patient ID format")
+    void testInvalidPatientIdFormat() throws Exception {
+        String invalidPatientId = "patient-with-dash_and_underscore.123";
 
         mockMvc.perform(post(BASE_URL)
                 .header("X-Tenant-ID", TENANT_ID)
                 .param("library", "CDC")
-                .param("patient", specialPatientId)
+                .param("patient", invalidPatientId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.patientId").value(specialPatientId));
+                .andExpect(status().is4xxClientError());
     }
 }

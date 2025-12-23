@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Response DTO for complete patient health overview
@@ -20,7 +21,7 @@ public class PatientHealthOverviewDTO {
     /**
      * Patient FHIR ID
      */
-    private String patientId;
+    private UUID patientId;
 
     /**
      * Overall health score

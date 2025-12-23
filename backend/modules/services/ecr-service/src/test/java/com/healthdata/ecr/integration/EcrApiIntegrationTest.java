@@ -22,6 +22,8 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -45,7 +47,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration",
         "spring.kafka.listener.auto-startup=false",
         "spring.cache.type=simple",
-        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.jpa.hibernate.ddl-auto=create",
+        "spring.jpa.properties.hibernate.hbm2ddl.create_namespaces=true",
+        "spring.jpa.properties.hibernate.default_schema=ecr",
         "healthdata.security.jwt.secret=test-secret-key-for-unit-testing-only-minimum-32-chars",
         "healthdata.security.jwt.accessTokenExpirationMs=900000",
         "healthdata.security.jwt.refreshTokenExpirationMs=604800000"
@@ -55,19 +59,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Import(TestKafkaConfig.class)
+@Testcontainers(disabledWithoutDocker = true)
 class EcrApiIntegrationTest {
 
     // Testcontainers PostgreSQL - singleton pattern for all tests
-    static PostgreSQLContainer<?> postgres;
-
-    static {
-        postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withDatabaseName("ecrtestdb")
-            .withUsername("test")
-            .withPassword("test")
-            .withInitScript("init-schema.sql");
-        postgres.start();
-    }
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+        .withDatabaseName("ecrtestdb")
+        .withUsername("test")
+        .withPassword("test");
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

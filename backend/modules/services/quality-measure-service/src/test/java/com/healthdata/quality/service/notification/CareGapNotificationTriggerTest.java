@@ -16,10 +16,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.lenient;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * Tests for CareGapNotificationTrigger
@@ -40,7 +43,7 @@ class CareGapNotificationTriggerTest {
     private CareGapNotificationTrigger trigger;
 
     private static final String TENANT_ID = "tenant-123";
-    private static final String PATIENT_ID = "patient-456";
+    private static final UUID PATIENT_ID = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc");
 
     @BeforeEach
     void setUp() {
@@ -48,7 +51,7 @@ class CareGapNotificationTriggerTest {
             .allSuccessful(true)
             .build();
         lenient().when(notificationService.sendNotification(any())).thenReturn(status);
-        lenient().when(patientNameService.getPatientName(anyString())).thenReturn("Jane Smith");
+        lenient().when(patientNameService.getPatientName(any(UUID.class))).thenReturn("Jane Smith");
     }
 
     @Test
@@ -127,6 +130,79 @@ class CareGapNotificationTriggerTest {
         verify(notificationService).sendNotification(argThat(request ->
             request.getRecipients().get("EMAIL").equals("primary@example.com")
         ));
+    }
+
+    @Test
+    void shouldHandlePartialFailureOnIdentification() {
+        CareGapDTO careGap = createCareGap("HIGH");
+        NotificationService.NotificationStatus status = NotificationService.NotificationStatus.builder()
+            .channelStatus(java.util.Map.of("websocket", true, "email", false))
+            .allSuccessful(false)
+            .build();
+        when(notificationService.sendNotification(any())).thenReturn(status);
+        when(recipientResolutionService.resolveRecipients(any(), any(), any(), any()))
+            .thenReturn(List.of());
+
+        trigger.onCareGapIdentified(TENANT_ID, careGap);
+
+        verify(notificationService).sendNotification(any());
+    }
+
+    @Test
+    void shouldHandleExceptionOnIdentification() {
+        CareGapDTO careGap = createCareGap("HIGH");
+        when(notificationService.sendNotification(any()))
+            .thenThrow(new RuntimeException("notify failed"));
+        when(recipientResolutionService.resolveRecipients(any(), any(), any(), any()))
+            .thenReturn(List.of());
+
+        trigger.onCareGapIdentified(TENANT_ID, careGap);
+
+        verify(notificationService).sendNotification(any());
+    }
+
+    @Test
+    void shouldNotifyLowPriorityGapDueSoon() {
+        CareGapDTO careGap = createCareGap("LOW");
+        careGap.setDueDate(Instant.now().plusSeconds(2 * 24 * 60 * 60));
+
+        boolean shouldNotify = (boolean) ReflectionTestUtils.invokeMethod(
+            trigger, "shouldNotifyOnIdentification", careGap);
+
+        assertThat(shouldNotify).isTrue();
+    }
+
+    @Test
+    void shouldSkipLowPriorityGapWithoutDueDate() {
+        CareGapDTO careGap = createCareGap("LOW");
+        careGap.setDueDate(null);
+
+        boolean shouldNotify = (boolean) ReflectionTestUtils.invokeMethod(
+            trigger, "shouldNotifyOnIdentification", careGap);
+
+        assertThat(shouldNotify).isFalse();
+    }
+
+    @Test
+    void shouldSkipMediumPriorityGapWithDistantDueDate() {
+        CareGapDTO careGap = createCareGap("MEDIUM");
+        careGap.setDueDate(Instant.now().plusSeconds(40L * 24 * 60 * 60));
+
+        boolean shouldNotify = (boolean) ReflectionTestUtils.invokeMethod(
+            trigger, "shouldNotifyOnIdentification", careGap);
+
+        assertThat(shouldNotify).isFalse();
+    }
+
+    @Test
+    void shouldNotifyMediumPriorityGapWithoutDueDate() {
+        CareGapDTO careGap = createCareGap("MEDIUM");
+        careGap.setDueDate(null);
+
+        boolean shouldNotify = (boolean) ReflectionTestUtils.invokeMethod(
+            trigger, "shouldNotifyOnIdentification", careGap);
+
+        assertThat(shouldNotify).isTrue();
     }
 
     private CareGapDTO createCareGap(String priority) {

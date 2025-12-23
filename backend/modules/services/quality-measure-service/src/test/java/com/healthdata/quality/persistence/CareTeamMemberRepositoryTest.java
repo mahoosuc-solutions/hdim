@@ -3,12 +3,14 @@ package com.healthdata.quality.persistence;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -16,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests for CareTeamMemberRepository
  */
 @DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
 class CareTeamMemberRepositoryTest {
 
@@ -23,7 +26,7 @@ class CareTeamMemberRepositoryTest {
     private CareTeamMemberRepository repository;
 
     private static final String TENANT_ID = "tenant-123";
-    private static final String PATIENT_ID = "patient-456";
+    private static final UUID PATIENT_ID = UUID.fromString("77777777-7777-7777-7777-777777777777");
     private static final String USER_ID_1 = "user-1";
     private static final String USER_ID_2 = "user-2";
     private static final String USER_ID_3 = "user-3";
@@ -103,10 +106,10 @@ class CareTeamMemberRepositoryTest {
     void shouldFindByUserIdAndTenantId() {
         // Given
         CareTeamMemberEntity member1 = createMember(USER_ID_1, true, null);
-        member1.setPatientId("patient-1");
+        member1.setPatientId(UUID.fromString("88888888-8888-8888-8888-888888888888"));
 
         CareTeamMemberEntity member2 = createMember(USER_ID_1, true, null);
-        member2.setPatientId("patient-2");
+        member2.setPatientId(UUID.fromString("99999999-9999-9999-9999-999999999999"));
 
         CareTeamMemberEntity member3 = createMember(USER_ID_2, true, null);
 
@@ -118,7 +121,10 @@ class CareTeamMemberRepositoryTest {
         // Then
         assertThat(members).hasSize(2);
         assertThat(members).extracting(CareTeamMemberEntity::getPatientId)
-            .containsExactlyInAnyOrder("patient-1", "patient-2");
+            .containsExactlyInAnyOrder(
+                UUID.fromString("88888888-8888-8888-8888-888888888888"),
+                UUID.fromString("99999999-9999-9999-9999-999999999999")
+            );
     }
 
     @Test

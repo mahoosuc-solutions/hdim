@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * AIS - Adult Immunization Status (19+)
@@ -122,7 +123,7 @@ public class AISMeasure extends AbstractHedisMeasure {
 
     @Override
     @Cacheable(value = "hedisMeasures", key = "'AIS-' + #tenantId + '-' + #patientId")
-    public MeasureResult evaluate(String tenantId, String patientId) {
+    public MeasureResult evaluate(String tenantId, UUID patientId) {
         logger.info("Evaluating AIS measure for patient: {}", patientId);
 
         MeasureResult.MeasureResultBuilder resultBuilder = MeasureResult.builder()
@@ -215,7 +216,7 @@ public class AISMeasure extends AbstractHedisMeasure {
     }
 
     @Override
-    public boolean isEligible(String tenantId, String patientId) {
+    public boolean isEligible(String tenantId, UUID patientId) {
         JsonNode patient = getPatientData(tenantId, patientId);
         Integer age = getPatientAge(patient);
         return age != null && age >= 19;
@@ -224,7 +225,7 @@ public class AISMeasure extends AbstractHedisMeasure {
     /**
      * Check if patient has had influenza vaccine within the last year.
      */
-    private boolean evaluateInfluenzaStatus(String tenantId, String patientId,
+    private boolean evaluateInfluenzaStatus(String tenantId, UUID patientId,
                                             MeasureResult.MeasureResultBuilder resultBuilder,
                                             List<MeasureResult.CareGap> careGaps) {
         // Look for flu shot in last 12 months (flu season)
@@ -260,7 +261,7 @@ public class AISMeasure extends AbstractHedisMeasure {
     /**
      * Check if patient has had Td/Tdap vaccine within the last 10 years.
      */
-    private boolean evaluateTdapStatus(String tenantId, String patientId,
+    private boolean evaluateTdapStatus(String tenantId, UUID patientId,
                                        MeasureResult.MeasureResultBuilder resultBuilder,
                                        List<MeasureResult.CareGap> careGaps) {
         // Look for Td/Tdap in last 10 years
@@ -296,7 +297,7 @@ public class AISMeasure extends AbstractHedisMeasure {
     /**
      * Check if patient (50+) has completed zoster vaccine series.
      */
-    private boolean evaluateZosterStatus(String tenantId, String patientId,
+    private boolean evaluateZosterStatus(String tenantId, UUID patientId,
                                          MeasureResult.MeasureResultBuilder resultBuilder,
                                          List<MeasureResult.CareGap> careGaps) {
         // Look for zoster vaccine (Shingrix is 2-dose series)
@@ -338,7 +339,7 @@ public class AISMeasure extends AbstractHedisMeasure {
     /**
      * Check if patient (65+) has received pneumococcal vaccine.
      */
-    private boolean evaluatePneumococcalStatus(String tenantId, String patientId,
+    private boolean evaluatePneumococcalStatus(String tenantId, UUID patientId,
                                                MeasureResult.MeasureResultBuilder resultBuilder,
                                                List<MeasureResult.CareGap> careGaps) {
         // Look for any pneumococcal vaccine
@@ -372,7 +373,7 @@ public class AISMeasure extends AbstractHedisMeasure {
     /**
      * Check if patient is in hospice care.
      */
-    private boolean isInHospice(String tenantId, String patientId) {
+    private boolean isInHospice(String tenantId, UUID patientId) {
         // Check for hospice encounter or service
         JsonNode encounters = getEncounters(tenantId, patientId, "183919006", null); // SNOMED hospice
         return !getEntries(encounters).isEmpty();
@@ -381,7 +382,7 @@ public class AISMeasure extends AbstractHedisMeasure {
     /**
      * Check for vaccine contraindication or documented refusal.
      */
-    private boolean hasContraindication(String tenantId, String patientId, String vaccineType) {
+    private boolean hasContraindication(String tenantId, UUID patientId, String vaccineType) {
         JsonNode conditions = getConditions(tenantId, patientId, null);
         List<JsonNode> conditionEntries = getEntries(conditions);
 
@@ -403,7 +404,7 @@ public class AISMeasure extends AbstractHedisMeasure {
     /**
      * Get immunizations for a patient.
      */
-    protected JsonNode getImmunizations(String tenantId, String patientId, String codes, String date) {
+    protected JsonNode getImmunizations(String tenantId, UUID patientId, String codes, String date) {
         try {
             // Use FHIR client to search immunizations
             // In real implementation, this would call the FHIR service

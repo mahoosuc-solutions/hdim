@@ -6,7 +6,7 @@ spring:
     name: ecr-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/healthdata
+    url: jdbc:postgresql://localhost:5432/healthdata_ecr
     username: ${DB_USERNAME:healthdata}
     password: ${DB_PASSWORD:healthdata}
     driver-class-name: org.postgresql.Driver

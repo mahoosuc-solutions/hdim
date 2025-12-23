@@ -49,7 +49,7 @@ import com.healthdata.fhir.config.TestContainersConfiguration;
     }
 )
 @Import({TestContainersConfiguration.class, TestCacheConfiguration.class})
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 class PatientRepositoryIT {
 
     @Autowired

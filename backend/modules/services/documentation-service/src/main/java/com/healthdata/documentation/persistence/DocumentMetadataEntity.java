@@ -19,10 +19,10 @@ import java.util.Map;
 @Entity
 @Table(name = "document_metadata",
        indexes = {
-           @Index(name = "idx_document_portal_type", columnList = "portalType"),
+           @Index(name = "idx_document_portal_type", columnList = "portal_type"),
            @Index(name = "idx_document_category", columnList = "category"),
            @Index(name = "idx_document_status", columnList = "status"),
-           @Index(name = "idx_document_tenant", columnList = "tenantId")
+           @Index(name = "idx_document_tenant", columnList = "tenant_id")
        })
 @Data
 @Builder
@@ -40,7 +40,7 @@ public class DocumentMetadataEntity {
     @Size(min = 10, max = 100, message = "Title must be between 10 and 100 characters")
     private String title;
 
-    @Column(length = 10, nullable = false)
+    @Column(name = "portal_type", length = 10, nullable = false)
     @NotBlank(message = "Portal type is required")
     @Pattern(regexp = "product|user|sales", message = "Invalid portal type")
     private String portalType;
@@ -74,7 +74,7 @@ public class DocumentMetadataEntity {
     @NotBlank(message = "Summary is required")
     private String summary;
 
-    @Column(nullable = false)
+    @Column(name = "estimated_read_time", nullable = false)
     @Min(value = 1, message = "Estimated read time must be positive")
     private Integer estimatedReadTime;
 
@@ -82,7 +82,7 @@ public class DocumentMetadataEntity {
     @Pattern(regexp = "beginner|intermediate|advanced", message = "Invalid difficulty level")
     private String difficulty;
 
-    @Column(nullable = false)
+    @Column(name = "last_updated", nullable = false)
     @NotNull
     private LocalDate lastUpdated;
 
@@ -93,7 +93,7 @@ public class DocumentMetadataEntity {
     @Size(min = 1, max = 5, message = "Must have between 1 and 5 target audiences")
     private String[] targetAudience;
 
-    @Column(length = 20, nullable = false)
+    @Column(name = "access_level", length = 20, nullable = false)
     @NotBlank(message = "Access level is required")
     @Pattern(regexp = "public|internal|restricted", message = "Invalid access level")
     private String accessLevel;
@@ -102,12 +102,12 @@ public class DocumentMetadataEntity {
     @NotBlank(message = "Owner is required")
     private String owner;
 
-    @Column(length = 20, nullable = false)
+    @Column(name = "review_cycle", length = 20, nullable = false)
     @NotBlank(message = "Review cycle is required")
     @Pattern(regexp = "monthly|quarterly|semi-annual|annual", message = "Invalid review cycle")
     private String reviewCycle;
 
-    @Column(nullable = false)
+    @Column(name = "next_review_date", nullable = false)
     @NotNull
     private LocalDate nextReviewDate;
 
@@ -122,7 +122,7 @@ public class DocumentMetadataEntity {
     @Pattern(regexp = "^\\d+\\.\\d+$", message = "Version must follow format X.Y")
     private String version;
 
-    @Column(nullable = false)
+    @Column(name = "last_reviewed", nullable = false)
     @NotNull
     private LocalDate lastReviewed;
 
@@ -136,40 +136,40 @@ public class DocumentMetadataEntity {
     @Column(name = "external_links", columnDefinition = "jsonb")
     private Map<String, Object> externalLinks;
 
-    @Column(nullable = false)
+    @Column(name = "has_video", nullable = false)
     private Boolean hasVideo = false;
 
-    @Column(length = 255)
+    @Column(name = "video_url", length = 255)
     private String videoUrl;
 
     // Content Metrics
-    @Column
+    @Column(name = "word_count")
     private Integer wordCount;
 
-    @Column
+    @Column(name = "created_date")
     private LocalDate createdDate;
 
-    @Column(nullable = false)
+    @Column(name = "view_count", nullable = false)
     private Integer viewCount = 0;
 
-    @Column(precision = 2, scale = 1)
+    @Column(name = "avg_rating", precision = 2, scale = 1)
     @DecimalMin(value = "1.0", message = "Rating must be at least 1.0")
     @DecimalMax(value = "5.0", message = "Rating must not exceed 5.0")
     private BigDecimal avgRating;
 
-    @Column(nullable = false)
+    @Column(name = "feedback_count", nullable = false)
     private Integer feedbackCount = 0;
 
     // Multi-tenancy
-    @Column(length = 100, nullable = false)
+    @Column(name = "tenant_id", length = 100, nullable = false)
     @NotBlank
     private String tenantId = "default";
 
     // Audit fields
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist

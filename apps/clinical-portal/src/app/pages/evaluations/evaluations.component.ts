@@ -26,7 +26,8 @@ import { PatientService } from '../../services/patient.service';
 import { DialogService } from '../../services/dialog.service';
 import { FilterPersistenceService } from '../../services/filter-persistence.service';
 import { AIAssistantService } from '../../services/ai-assistant.service';
-import { MeasureInfo } from '../../models/cql-library.model';
+import { MeasureFavoritesService } from '../../services/measure-favorites.service';
+import { MeasureInfo, MeasureCategory } from '../../models/cql-library.model';
 import { PatientSummary } from '../../models/patient.model';
 import { QualityMeasureResult } from '../../models/quality-result.model';
 import { AppError, ErrorFactory } from '../../models/error.model';
@@ -72,9 +73,27 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
 
   // Available measures
   measures: MeasureInfo[] = [];
+  allMeasures: MeasureInfo[] = []; // Store all measures for filtering
   loadingMeasures = false;
   measuresError: string | null = null;
   measuresErrorDetails: AppError | null = null;
+
+  // Category filtering
+  selectedCategory: string = '';
+  measureCategories: { value: string; label: string }[] = [
+    { value: '', label: 'All Categories' },
+    { value: 'PREVENTIVE', label: 'Preventive Care' },
+    { value: 'CHRONIC_DISEASE', label: 'Chronic Disease' },
+    { value: 'BEHAVIORAL_HEALTH', label: 'Behavioral Health' },
+    { value: 'MEDICATION', label: 'Medication Management' },
+    { value: 'WOMENS_HEALTH', label: "Women's Health" },
+    { value: 'CHILD_ADOLESCENT', label: 'Child & Adolescent' },
+    { value: 'SDOH', label: 'Social Determinants' },
+    { value: 'UTILIZATION', label: 'Utilization' },
+    { value: 'CARE_COORDINATION', label: 'Care Coordination' },
+    { value: 'OVERUSE', label: 'Overuse/Appropriateness' },
+    { value: 'CUSTOM', label: 'Custom Measures' },
+  ];
 
   // Available patients
   patients: PatientSummary[] = [];
@@ -119,7 +138,8 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     private patientService: PatientService,
     private dialogService: DialogService,
     private filterPersistence: FilterPersistenceService,
-    public aiAssistant: AIAssistantService
+    public aiAssistant: AIAssistantService,
+    public measureFavorites: MeasureFavoritesService
   ) {
     this.evaluationForm = this.fb.group({
       measureId: ['', Validators.required],
@@ -141,26 +161,58 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * Load available CQL measures from backend
+   * Load available HEDIS measures from backend registry
+   * Uses the new /evaluate/measures endpoint for discovery
    */
   loadActiveMeasures(): void {
     this.loadingMeasures = true;
     this.measuresError = null;
     this.measuresErrorDetails = null;
 
-    this.measureService.getActiveMeasuresInfo().pipe(
+    // Use getAllAvailableMeasures() which fetches from the HEDIS registry
+    this.measureService.getAllAvailableMeasures().pipe(
       takeUntil(this.destroy$),
       catchError((error) => {
         this.measuresErrorDetails = ErrorFactory.createCqlEngineError('load measures', error);
         this.measuresError = this.measuresErrorDetails.userMessage;
-        console.error('[ERR-5002] Error loading measures:', error);
-        return of([]);
+        console.error('[ERR-5002] Error loading HEDIS measures:', error);
+        // Fallback to active library measures if HEDIS registry fails
+        return this.measureService.getActiveMeasuresInfo().pipe(
+          catchError(() => of([]))
+        );
       })
     ).subscribe((measures) => {
+      this.allMeasures = measures;
       this.measures = measures;
       this.loadingMeasures = false;
-      console.log('Loaded measures:', measures);
+      console.log(`Loaded ${measures.length} HEDIS measures:`, measures);
     });
+  }
+
+  /**
+   * Filter measures by category
+   */
+  onCategoryChange(category: string): void {
+    this.selectedCategory = category;
+    if (!category) {
+      this.measures = this.allMeasures;
+    } else {
+      this.measures = this.allMeasures.filter(m => m.category === category);
+    }
+    // Clear measure selection if current selection is not in filtered list
+    const currentMeasureId = this.evaluationForm.get('measureId')?.value;
+    if (currentMeasureId && !this.measures.some(m => m.name === currentMeasureId)) {
+      this.evaluationForm.patchValue({ measureId: '' });
+    }
+    console.log(`Filtered to ${this.measures.length} measures in category: ${category || 'All'}`);
+  }
+
+  /**
+   * Get count of measures in a category
+   */
+  getCategoryCount(category: string): number {
+    if (!category) return this.allMeasures.length;
+    return this.allMeasures.filter(m => m.category === category).length;
   }
 
   /**
@@ -248,6 +300,12 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
 
     console.log('Submitting evaluation:', { measureId, patientId });
 
+    // Record measure usage for recent tracking
+    const selectedMeasure = this.allMeasures.find(m => m.name === measureId);
+    if (selectedMeasure) {
+      this.measureFavorites.recordUsage(selectedMeasure);
+    }
+
     // Use Quality Measure Service to calculate measure
     this.evaluationService.calculateQualityMeasure(patientId, measureId).pipe(
       takeUntil(this.destroy$),
@@ -265,6 +323,49 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
       }
       this.submitting = false;
     });
+  }
+
+  /**
+   * Toggle favorite status for a measure
+   */
+  toggleFavorite(measure: MeasureInfo, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.measureFavorites.toggleFavorite(measure);
+  }
+
+  /**
+   * Check if a measure is favorited
+   */
+  isFavorite(measureId: string): boolean {
+    return this.measureFavorites.isFavorite(measureId);
+  }
+
+  /**
+   * Get favorite measures from the full measures list
+   */
+  getFavoriteMeasures(): MeasureInfo[] {
+    const favoriteIds = this.measureFavorites.getFavoriteIds();
+    return this.allMeasures.filter(m => favoriteIds.includes(m.id));
+  }
+
+  /**
+   * Get recent measures from the full measures list
+   */
+  getRecentMeasures(): MeasureInfo[] {
+    const recentIds = this.measureFavorites.getRecentIds();
+    return recentIds
+      .map(id => this.allMeasures.find(m => m.id === id))
+      .filter((m): m is MeasureInfo => m !== undefined)
+      .slice(0, 5);
+  }
+
+  /**
+   * Quick select a measure (from favorites or recent)
+   */
+  quickSelectMeasure(measure: MeasureInfo): void {
+    this.evaluationForm.patchValue({ measureId: measure.name });
   }
 
   /**

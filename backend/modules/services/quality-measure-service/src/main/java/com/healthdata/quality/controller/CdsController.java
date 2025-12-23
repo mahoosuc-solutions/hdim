@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Clinical Decision Support Controller
@@ -104,7 +105,7 @@ public class CdsController {
     @GetMapping(value = "/recommendations/{patientId:.+}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CdsRecommendationDTO>> getRecommendations(
             @RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
-            @PathVariable String patientId
+            @PathVariable UUID patientId
     ) {
         log.info("GET /cds/recommendations/{} - tenant: {}", patientId, tenantId);
         List<CdsRecommendationDTO> recommendations = cdsService.getActiveRecommendations(tenantId, patientId);
@@ -120,7 +121,7 @@ public class CdsController {
     @GetMapping(value = "/recommendations/{patientId:.+}/count", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RecommendationCountResponse> getRecommendationCount(
             @RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
-            @PathVariable String patientId
+            @PathVariable UUID patientId
     ) {
         log.info("GET /cds/recommendations/{}/count - tenant: {}", patientId, tenantId);
 
@@ -148,7 +149,7 @@ public class CdsController {
     @GetMapping(value = "/recommendations/{patientId:.+}/overdue", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CdsRecommendationDTO>> getOverdueRecommendations(
             @RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
-            @PathVariable String patientId
+            @PathVariable UUID patientId
     ) {
         log.info("GET /cds/recommendations/{}/overdue - tenant: {}", patientId, tenantId);
         List<CdsRecommendationDTO> recommendations = cdsService.getOverdueRecommendations(tenantId, patientId);
@@ -205,7 +206,7 @@ public class CdsController {
     @lombok.NoArgsConstructor
     @lombok.AllArgsConstructor
     public static class RecommendationCountResponse {
-        private String patientId;
+        private UUID patientId;
         private Long totalActive;
         private Long emergent;
         private Long urgent;

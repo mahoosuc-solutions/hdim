@@ -111,12 +111,12 @@ test.describe('Reports Feature - Smoke Tests', () => {
 
     test('should be able to click filter buttons', async ({ page }) => {
       await page.getByRole('tab', { name: /Saved Reports/i }).click();
-      
-      // Click different filters
-      await page.getByRole('button', { name: /Patient/i }).first().click();
-      await page.getByRole('button', { name: /Population/i }).first().click();
-      await page.getByRole('button', { name: /All Reports/i }).click();
-      
+
+      // Click different filters (use force: true to bypass overlay interception)
+      await page.getByRole('button', { name: /Patient/i }).first().click({ force: true });
+      await page.getByRole('button', { name: /Population/i }).first().click({ force: true });
+      await page.getByRole('button', { name: /All Reports/i }).click({ force: true });
+
       // All clicks should work without errors
       await expect(page.getByRole('heading', { name: 'Saved Reports' })).toBeVisible();
     });

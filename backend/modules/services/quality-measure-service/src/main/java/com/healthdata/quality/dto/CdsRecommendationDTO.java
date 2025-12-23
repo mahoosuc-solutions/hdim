@@ -20,7 +20,7 @@ import java.util.UUID;
 public class CdsRecommendationDTO {
 
     private UUID id;
-    private String patientId;
+    private UUID patientId;
     private UUID ruleId;
     private String title;
     private String description;

@@ -5,6 +5,7 @@ import com.healthdata.cql.config.TestRedisConfiguration;
 import com.healthdata.cql.dto.CqlLibraryRequest;
 import com.healthdata.cql.entity.CqlLibrary;
 import com.healthdata.cql.repository.CqlLibraryRepository;
+import com.healthdata.cql.test.CqlTestcontainersBase;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -37,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
-public class ErrorHandlingIntegrationTest {
+public class ErrorHandlingIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
     private MockMvc mockMvc;

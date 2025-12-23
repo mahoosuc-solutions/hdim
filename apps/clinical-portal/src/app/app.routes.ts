@@ -1,6 +1,34 @@
 import { Route } from '@angular/router';
+import { AuthGuard } from './guards/auth.guard';
+import { RoleGuard } from './guards/role.guard';
 
+/**
+ * Application Routes Configuration
+ *
+ * Route Protection:
+ * - Public routes: login, forgot-password, unauthorized
+ * - Protected routes: All others require AuthGuard
+ * - Role-based routes: Some require specific roles via RoleGuard
+ *
+ * Demo Mode: When gateway.auth.enforced=false (demo mode), authentication
+ * is optional and the demo login bypasses actual authentication.
+ */
 export const appRoutes: Route[] = [
+  // ==================== Public Routes ====================
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./pages/login/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'unauthorized',
+    loadComponent: () =>
+      import('./pages/unauthorized/unauthorized.component').then(
+        (m) => m.UnauthorizedComponent
+      ),
+  },
+
+  // ==================== Protected Routes ====================
   {
     path: '',
     redirectTo: '/dashboard',
@@ -12,6 +40,7 @@ export const appRoutes: Route[] = [
       import('./pages/dashboard/dashboard.component').then(
         (m) => m.DashboardComponent
       ),
+    canActivate: [AuthGuard],
   },
   {
     path: 'patients',
@@ -19,6 +48,8 @@ export const appRoutes: Route[] = [
       import('./pages/patients/patients.component').then(
         (m) => m.PatientsComponent
       ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_PATIENTS'] },
   },
   {
     path: 'patients/:id',
@@ -26,6 +57,8 @@ export const appRoutes: Route[] = [
       import('./pages/patient-detail/patient-detail.component').then(
         (m) => m.PatientDetailComponent
       ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_PATIENTS'] },
   },
   {
     path: 'evaluations',
@@ -33,6 +66,8 @@ export const appRoutes: Route[] = [
       import('./pages/evaluations/evaluations.component').then(
         (m) => m.EvaluationsComponent
       ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_EVALUATIONS'] },
   },
   {
     path: 'results',
@@ -40,6 +75,8 @@ export const appRoutes: Route[] = [
       import('./pages/results/results.component').then(
         (m) => m.ResultsComponent
       ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_EVALUATIONS'] },
   },
   {
     path: 'reports',
@@ -47,6 +84,8 @@ export const appRoutes: Route[] = [
       import('./pages/reports/reports.component').then(
         (m) => m.ReportsComponent
       ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_REPORTS'] },
   },
   {
     path: 'visualization',
@@ -54,6 +93,7 @@ export const appRoutes: Route[] = [
       import('./visualization/angular/visualization-layout.component').then(
         (m) => m.VisualizationLayoutComponent
       ),
+    canActivate: [AuthGuard],
     children: [
       {
         path: '',
@@ -96,6 +136,8 @@ export const appRoutes: Route[] = [
       import('./pages/measure-builder/measure-builder.component').then(
         (m) => m.MeasureBuilderComponent
       ),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN', 'MEASURE_DEVELOPER'] },
   },
   {
     path: 'ai-assistant',
@@ -103,9 +145,11 @@ export const appRoutes: Route[] = [
       import('./pages/ai-dashboard/ai-dashboard.component').then(
         (m) => m.AIDashboardComponent
       ),
+    canActivate: [AuthGuard],
   },
   {
     path: 'knowledge-base',
+    canActivate: [AuthGuard],
     children: [
       {
         path: '',
@@ -136,6 +180,26 @@ export const appRoutes: Route[] = [
       import('./pages/care-recommendations/care-recommendations.component').then(
         (m) => m.CareRecommendationsComponent
       ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_CARE_GAPS'] },
+  },
+  {
+    path: 'care-gaps',
+    loadComponent: () =>
+      import('./pages/care-gaps/care-gap-manager.component').then(
+        (m) => m.CareGapManagerComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_CARE_GAPS'] },
+  },
+  {
+    path: 'patient-health',
+    loadComponent: () =>
+      import('./pages/patient-health-overview/patient-health-overview.component').then(
+        (m) => m.PatientHealthOverviewComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_PATIENTS'] },
   },
   {
     path: 'agent-builder',
@@ -143,6 +207,8 @@ export const appRoutes: Route[] = [
       import('./pages/agent-builder/agent-builder.component').then(
         (m) => m.AgentBuilderComponent
       ),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN', 'DEVELOPER'] },
   },
   {
     path: 'agent-builder/:id',
@@ -150,7 +216,11 @@ export const appRoutes: Route[] = [
       import('./pages/agent-builder/agent-builder.component').then(
         (m) => m.AgentBuilderComponent
       ),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN', 'DEVELOPER'] },
   },
+
+  // ==================== Fallback Route ====================
   {
     path: '**',
     redirectTo: '/dashboard',

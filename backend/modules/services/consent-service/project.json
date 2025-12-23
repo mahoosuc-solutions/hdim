@@ -1,0 +1,39 @@
+{
+  "name": "consent-service",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "backend/modules/services/consent-service/src",
+  "tags": [
+    "backend",
+    "service"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/modules/services/consent-service/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:consent-service:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:consent-service:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:consent-service:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:consent-service:test :modules:services:consent-service:jacocoTestReport :modules:services:consent-service:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

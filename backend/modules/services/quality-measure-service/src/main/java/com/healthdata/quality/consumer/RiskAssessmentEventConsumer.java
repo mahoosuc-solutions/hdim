@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Risk Assessment Event Consumer
@@ -47,7 +48,7 @@ public class RiskAssessmentEventConsumer {
             log.info("Received fhir.conditions.created event");
 
             String tenantId = (String) event.get("tenantId");
-            String patientId = extractPatientId(event);
+            UUID patientId = extractPatientId(event);
             Map<String, Object> conditionData = (Map<String, Object>) event.get("resource");
 
             if (tenantId == null || patientId == null || conditionData == null) {
@@ -86,7 +87,7 @@ public class RiskAssessmentEventConsumer {
             log.info("Received fhir.conditions.updated event");
 
             String tenantId = (String) event.get("tenantId");
-            String patientId = extractPatientId(event);
+            UUID patientId = extractPatientId(event);
             Map<String, Object> conditionData = (Map<String, Object>) event.get("resource");
 
             if (tenantId == null || patientId == null || conditionData == null) {
@@ -126,7 +127,7 @@ public class RiskAssessmentEventConsumer {
             log.info("Received fhir.observations.created event");
 
             String tenantId = (String) event.get("tenantId");
-            String patientId = extractPatientId(event);
+            UUID patientId = extractPatientId(event);
             Map<String, Object> observationData = (Map<String, Object>) event.get("resource");
 
             if (tenantId == null || patientId == null || observationData == null) {
@@ -156,10 +157,10 @@ public class RiskAssessmentEventConsumer {
     /**
      * Extract patient ID from event
      */
-    private String extractPatientId(Map<String, Object> event) {
+    private UUID extractPatientId(Map<String, Object> event) {
         // Try direct patientId field
         if (event.containsKey("patientId")) {
-            return (String) event.get("patientId");
+            return parsePatientIdValue(event.get("patientId"));
         }
 
         // Try resource.subject.reference
@@ -169,11 +170,29 @@ public class RiskAssessmentEventConsumer {
             if (subject != null && subject.containsKey("reference")) {
                 String reference = (String) subject.get("reference");
                 // Extract ID from "Patient/123"
-                return reference.replace("Patient/", "");
+                return parsePatientIdString(reference.replace("Patient/", ""));
             }
         }
 
         return null;
+    }
+
+    private UUID parsePatientIdValue(Object patientId) {
+        if (patientId instanceof UUID) {
+            return (UUID) patientId;
+        }
+        return parsePatientIdString(patientId != null ? patientId.toString() : null);
+    }
+
+    private UUID parsePatientIdString(String patientId) {
+        if (patientId == null) {
+            return null;
+        }
+        try {
+            return UUID.fromString(patientId);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     /**

@@ -276,6 +276,218 @@ describe('RNDashboardComponent (TDD - Phase 6.2)', () => {
     });
   });
 
+  describe('RN dashboard utilities', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('loads care gaps and updates loading state', () => {
+      (component as any).loadCareGaps();
+      expect(component.loading).toBe(true);
+
+      jest.advanceTimersByTime(500);
+
+      expect(component.careGaps.length).toBeGreaterThan(0);
+      expect(component.loading).toBe(false);
+    });
+
+    it('loads outreach tasks', () => {
+      (component as any).loadOutreachTasks();
+      jest.advanceTimersByTime(500);
+
+      expect(component.outreachTasks.length).toBeGreaterThan(0);
+    });
+
+    it('loads metrics', () => {
+      (component as any).loadMetrics();
+
+      expect(component.careGapsAssigned).toBe(15);
+      expect(component.patientCallsPending).toBe(8);
+      expect(component.medReconciliationsNeeded).toBe(5);
+      expect(component.patientEducationDue).toBe(7);
+    });
+
+    it('refreshes dashboard data', () => {
+      const loadSpy = jest.spyOn(component as any, 'loadDashboardData');
+
+      component.refreshData();
+
+      expect(loadSpy).toHaveBeenCalled();
+    });
+
+    it('navigates when addressing care gaps', () => {
+      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+      const gap: CareGapTask = {
+        id: '1',
+        patientName: 'Davis, Jennifer',
+        patientMRN: 'MRN-101',
+        gapType: 'Diabetes Education',
+        priority: 'high',
+        category: 'education',
+        dueDate: '2025-12-01',
+        assignedTo: 'RN Davis',
+        status: 'pending'
+      };
+
+      component.addressCareGap(gap);
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patient-detail', gap.id],
+        expect.objectContaining({
+          queryParams: { action: 'address-gap', gapId: gap.id }
+        })
+      );
+      logSpy.mockRestore();
+    });
+
+    it('completes patient education flow', () => {
+      const gap: CareGapTask = {
+        id: '1',
+        patientName: 'Davis, Jennifer',
+        patientMRN: 'MRN-101',
+        gapType: 'Diabetes Education',
+        priority: 'high',
+        category: 'education',
+        dueDate: '2025-12-01',
+        assignedTo: 'RN Davis',
+        status: 'pending'
+      };
+
+      component.patientEducationDue = 1;
+      mockDialogService.confirm.mockReturnValue(of(true));
+
+      component.provideEducation(gap);
+
+      expect(gap.status).toBe('completed');
+      expect(component.patientEducationDue).toBe(0);
+      expect(mockNotificationService.success).toHaveBeenCalled();
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients', gap.id],
+        expect.objectContaining({
+          queryParams: { action: 'document-education', gapType: gap.gapType }
+        })
+      );
+    });
+
+    it('starts medication reconciliation flow', () => {
+      const gap: CareGapTask = {
+        id: '1',
+        patientName: 'Davis, Jennifer',
+        patientMRN: 'MRN-101',
+        gapType: 'Medication Reconciliation',
+        priority: 'high',
+        category: 'medication',
+        dueDate: '2025-12-01',
+        assignedTo: 'RN Davis',
+        status: 'pending'
+      };
+
+      mockDialogService.confirm.mockReturnValue(of(true));
+
+      component.reconcileMedications(gap);
+
+      expect(gap.status).toBe('in-progress');
+      expect(mockNotificationService.info).toHaveBeenCalled();
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients', gap.id],
+        expect.objectContaining({
+          queryParams: { action: 'med-reconciliation' }
+        })
+      );
+    });
+
+    it('documents patient calls and communications', () => {
+      const outreach: PatientOutreach = {
+        id: '1',
+        patientName: 'Anderson, Lisa',
+        patientMRN: 'MRN-201',
+        outreachType: 'call',
+        reason: 'Pre-visit preparation',
+        scheduledDate: '2025-11-26 10:00',
+        status: 'scheduled'
+      };
+
+      mockDialogService.confirm.mockReturnValue(of(true));
+
+      component.makePatientCall(outreach);
+      expect(mockNotificationService.info).toHaveBeenCalled();
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients', outreach.id],
+        expect.objectContaining({
+          queryParams: { action: 'document-call', reason: outreach.reason }
+        })
+      );
+
+      component.sendCommunication({ ...outreach, outreachType: 'email' });
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients', outreach.id],
+        expect.objectContaining({
+          queryParams: expect.objectContaining({ action: 'send-communication', type: 'email' })
+        })
+      );
+
+      component.sendCommunication({ ...outreach, outreachType: 'letter' });
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients', outreach.id],
+        expect.objectContaining({
+          queryParams: expect.objectContaining({ action: 'send-communication', type: 'letter' })
+        })
+      );
+    });
+
+    it('supports navigation helpers and color helpers', () => {
+      component.viewPatient('patient-1');
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/patient-detail', 'patient-1']);
+
+      expect(component.getPriorityColor('high')).toBe('warn');
+      expect(component.getPriorityColor('medium')).toBe('accent');
+      expect(component.getPriorityColor('low')).toBe('primary');
+      expect(component.getPriorityColor('other')).toBe('');
+
+      expect(component.getCategoryIcon('education')).toBe('school');
+      expect(component.getCategoryIcon('medication')).toBe('medication');
+      expect(component.getCategoryIcon('coordination')).toBe('sync');
+      expect(component.getCategoryIcon('assessment')).toBe('assessment');
+      expect(component.getCategoryIcon('other')).toBe('task');
+
+      expect(component.getCategoryColor('education')).toBe('#4caf50');
+      expect(component.getCategoryColor('medication')).toBe('#f44336');
+      expect(component.getCategoryColor('coordination')).toBe('#2196f3');
+      expect(component.getCategoryColor('assessment')).toBe('#9c27b0');
+      expect(component.getCategoryColor('other')).toBe('#757575');
+
+      expect(component.getOutreachIcon('call')).toBe('phone');
+      expect(component.getOutreachIcon('email')).toBe('email');
+      expect(component.getOutreachIcon('letter')).toBe('mail');
+      expect(component.getOutreachIcon('other')).toBe('contact_mail');
+
+      expect(component.getStatusColor('completed')).toBe('success');
+      expect(component.getStatusColor('in-progress')).toBe('warn');
+      expect(component.getStatusColor('pending')).toBe('primary');
+      expect(component.getStatusColor('scheduled')).toBe('primary');
+      expect(component.getStatusColor('missed')).toBe('warn');
+      expect(component.getStatusColor('other')).toBe('');
+    });
+
+    it('navigates to aggregated views', () => {
+      component.viewAllCareGaps();
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients'],
+        expect.objectContaining({ queryParams: { view: 'care-gaps' } })
+      );
+
+      component.viewAllOutreach();
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients'],
+        expect.objectContaining({ queryParams: { view: 'outreach' } })
+      );
+    });
+  });
+
   // ============================================================================
   // 2. Care Coordination Tasks (7 tests)
   // ============================================================================

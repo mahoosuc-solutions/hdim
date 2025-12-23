@@ -88,12 +88,14 @@ describe('MeasureService', () => {
       ];
 
       service.getActiveMeasuresInfo().subscribe((measures) => {
-        expect(measures.length).toBe(2);
-        expect(measures[0]).toHaveProperty('displayName');
-        expect(measures[0]).toHaveProperty('category');
-        expect(measures[0].category).toBe('HEDIS');
-        expect(measures[0].displayName).toContain('HEDIS-CDC');
-        expect(measures[0].displayName).toContain('v1.0.0');
+        const hedisCdc = measures.find((measure) => measure.name === 'HEDIS_CDC');
+        expect(measures.length).toBe(3);
+        expect(hedisCdc).toBeDefined();
+        expect(hedisCdc).toHaveProperty('displayName');
+        expect(hedisCdc).toHaveProperty('category');
+        expect(hedisCdc?.category).toBe('HEDIS');
+        expect(hedisCdc?.displayName).toContain('HEDIS-CDC');
+        expect(hedisCdc?.displayName).toContain('v1.0.0');
       });
 
       const req = httpMock.expectOne(buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.LIBRARIES_ACTIVE));
@@ -486,6 +488,91 @@ describe('MeasureService', () => {
       const req = httpMock.expectOne(expectedUrl);
       expect(req.request.method).toBe('DELETE');
       req.flush(null);
+    });
+  });
+
+  describe('caching and helpers', () => {
+    it('adds preview custom measures for active info', () => {
+      const mockLibraries = [
+        CqlLibraryFactory.create({ name: 'HEDIS-CDC', version: '1.0.0' }),
+      ];
+
+      service.getActiveMeasuresInfo().subscribe((measures) => {
+        const preview = measures.find((measure) => measure.id === 'preview-custom-mrna-screening');
+        const hedis = measures.find((measure) => measure.name === 'HEDIS_CDC');
+        expect(hedis).toBeDefined();
+        expect(preview).toBeDefined();
+      });
+
+      const req = httpMock.expectOne(buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.LIBRARIES_ACTIVE));
+      req.flush(mockLibraries);
+    });
+
+    it('caches active measures within the TTL window', () => {
+      const mockLibraries = [CqlLibraryFactory.createHedisCdc()];
+      const expectedUrl = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.LIBRARIES_ACTIVE);
+
+      service.getActiveMeasuresCached().subscribe((libraries) => {
+        expect(libraries.length).toBe(1);
+      });
+
+      const req = httpMock.expectOne(expectedUrl);
+      req.flush(mockLibraries);
+
+      service.getActiveMeasuresCached().subscribe((libraries) => {
+        expect(libraries.length).toBe(1);
+      });
+
+      httpMock.expectNone(expectedUrl);
+    });
+
+    it('refreshes cache after invalidation', () => {
+      const mockLibraries = [CqlLibraryFactory.createHedisCdc()];
+      const expectedUrl = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.LIBRARIES_ACTIVE);
+
+      service.getActiveMeasuresCached().subscribe();
+      const req = httpMock.expectOne(expectedUrl);
+      req.flush(mockLibraries);
+
+      service.invalidateCache();
+
+      service.getActiveMeasuresCached().subscribe();
+      const req2 = httpMock.expectOne(expectedUrl);
+      req2.flush(mockLibraries);
+    });
+
+    it('caches active measures info within the TTL window', () => {
+      const mockLibraries = [CqlLibraryFactory.createHedisCdc()];
+      const expectedUrl = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.LIBRARIES_ACTIVE);
+
+      service.getActiveMeasuresInfoCached().subscribe((measures) => {
+        expect(measures.length).toBeGreaterThan(0);
+      });
+
+      const req = httpMock.expectOne(expectedUrl);
+      req.flush(mockLibraries);
+
+      service.getActiveMeasuresInfoCached().subscribe((measures) => {
+        expect(measures.length).toBeGreaterThan(0);
+      });
+
+      httpMock.expectNone(expectedUrl);
+    });
+
+    it('checks cache validity based on TTL', () => {
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1000);
+      const mockLibraries = [CqlLibraryFactory.createHedisCdc()];
+      const expectedUrl = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.LIBRARIES_ACTIVE);
+
+      service.getActiveMeasuresCached().subscribe();
+      const req = httpMock.expectOne(expectedUrl);
+      req.flush(mockLibraries);
+
+      expect(service.isCacheValid()).toBe(true);
+
+      nowSpy.mockReturnValue(1000 + 10 * 60 * 1000 + 1);
+      expect(service.isCacheValid()).toBe(false);
+      nowSpy.mockRestore();
     });
   });
 });

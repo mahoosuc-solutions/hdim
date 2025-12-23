@@ -53,7 +53,7 @@ public class CqlEvaluationService {
     /**
      * Create a new evaluation record
      */
-    public CqlEvaluation createEvaluation(String tenantId, UUID libraryId, String patientId) {
+    public CqlEvaluation createEvaluation(String tenantId, UUID libraryId, UUID patientId) {
         logger.info("Creating evaluation for patient: {} with library: {}", patientId, libraryId);
 
         CqlLibrary library = libraryRepository.findById(libraryId)
@@ -91,7 +91,7 @@ public class CqlEvaluationService {
             // Get the library information
             CqlLibrary library = evaluation.getLibrary();
             String measureId = library.getLibraryName();
-            String patientId = evaluation.getPatientId();
+            UUID patientId = evaluation.getPatientId();
 
             logger.info("Evaluating measure {} for patient {} using template engine", measureId, patientId);
 
@@ -169,7 +169,7 @@ public class CqlEvaluationService {
      * Get all evaluations for a patient
      */
     @Transactional(readOnly = true)
-    public List<CqlEvaluation> getEvaluationsForPatient(String tenantId, String patientId) {
+    public List<CqlEvaluation> getEvaluationsForPatient(String tenantId, UUID patientId) {
         return evaluationRepository.findByTenantIdAndPatientIdOrderByEvaluationDateDesc(
                 tenantId, patientId);
     }
@@ -179,7 +179,7 @@ public class CqlEvaluationService {
      */
     @Transactional(readOnly = true)
     public Page<CqlEvaluation> getEvaluationsForPatient(
-            String tenantId, String patientId, Pageable pageable) {
+            String tenantId, UUID patientId, Pageable pageable) {
         return evaluationRepository.findByTenantIdAndPatientId(tenantId, patientId, pageable);
     }
 
@@ -205,7 +205,7 @@ public class CqlEvaluationService {
      */
     @Transactional(readOnly = true)
     public Optional<CqlEvaluation> getLatestEvaluationForPatientAndLibrary(
-            String tenantId, String patientId, UUID libraryId) {
+            String tenantId, UUID patientId, UUID libraryId) {
         return evaluationRepository.findLatestByPatientAndLibrary(tenantId, patientId, libraryId);
     }
 
@@ -240,7 +240,7 @@ public class CqlEvaluationService {
      */
     @Transactional(readOnly = true)
     public List<CqlEvaluation> getEvaluationsForPatientByDateRange(
-            String tenantId, String patientId, Instant startDate, Instant endDate) {
+            String tenantId, UUID patientId, Instant startDate, Instant endDate) {
         return evaluationRepository.findByPatientAndDateRange(
                 tenantId, patientId, startDate, endDate);
     }
@@ -249,7 +249,7 @@ public class CqlEvaluationService {
      * Get successful evaluations for a patient
      */
     @Transactional(readOnly = true)
-    public List<CqlEvaluation> getSuccessfulEvaluationsForPatient(String tenantId, String patientId) {
+    public List<CqlEvaluation> getSuccessfulEvaluationsForPatient(String tenantId, UUID patientId) {
         return evaluationRepository.findByTenantIdAndPatientIdAndStatus(
                 tenantId, patientId, "SUCCESS");
     }
@@ -283,7 +283,7 @@ public class CqlEvaluationService {
      * Count evaluations for a patient
      */
     @Transactional(readOnly = true)
-    public long countEvaluationsForPatient(String tenantId, String patientId) {
+    public long countEvaluationsForPatient(String tenantId, UUID patientId) {
         return evaluationRepository.countByTenantIdAndPatientId(tenantId, patientId);
     }
 
@@ -327,7 +327,7 @@ public class CqlEvaluationService {
      * Batch evaluate CQL for multiple patients using concurrent template engine
      */
     public List<CqlEvaluation> batchEvaluate(
-            String tenantId, UUID libraryId, List<String> patientIds) {
+            String tenantId, UUID libraryId, List<UUID> patientIds) {
         logger.info("Starting concurrent batch evaluation for {} patients with library: {}",
                 patientIds.size(), libraryId);
 
@@ -344,7 +344,7 @@ public class CqlEvaluationService {
         String measureId = library.getLibraryName();
 
         // Use template engine's concurrent batch evaluation
-        Map<String, MeasureResult> results = templateEngine.evaluateBatch(measureId, patientIds, tenantId);
+        Map<UUID, MeasureResult> results = templateEngine.evaluateBatch(measureId, patientIds, tenantId);
 
         // Create and save evaluation records for each patient
         List<CqlEvaluation> evaluations = patientIds.stream()

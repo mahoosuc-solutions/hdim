@@ -23,26 +23,28 @@ echo ""
 elapsed=0
 
 # Services to check
-declare -A SERVICES=(
-    ["PostgreSQL"]="http://localhost:5435"
-    ["Redis"]="http://localhost:6379"
-    ["Kafka"]="http://localhost:9092"
-    ["CQL Engine"]="http://localhost:8081/actuator/health"
-    ["FHIR Server"]="http://localhost:8080/fhir/metadata"
+SERVICES=(
+    "PostgreSQL|tcp|localhost:5435"
+    "Redis|tcp|localhost:6380"
+    "Kafka|tcp|localhost:9094"
+    "Gateway Service|http|http://localhost:8080/actuator/health"
+    "CQL Engine|http|http://localhost:8081/actuator/health"
+    "FHIR Service|http|http://localhost:8085/actuator/health"
 )
 
 # Check if service is ready
 is_service_ready() {
     local name=$1
-    local url=$2
+    local type=$2
+    local target=$3
 
-    if [[ $url == http* ]]; then
-        # HTTP check
-        response=$(curl -s -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000")
+    if [ "$type" = "http" ]; then
+        response=$(curl -s -o /dev/null -w "%{http_code}" "$target" 2>/dev/null || echo "000")
         [ "$response" == "200" ] && return 0
     else
-        # TCP check
-        nc -z localhost "${url##*:}" 2>/dev/null && return 0
+        local host=${target%:*}
+        local port=${target##*:}
+        nc -z "$host" "$port" 2>/dev/null && return 0
     fi
 
     return 1
@@ -52,8 +54,9 @@ is_service_ready() {
 while [ $elapsed -lt $TIMEOUT ]; do
     all_ready=true
 
-    for service in "${!SERVICES[@]}"; do
-        if ! is_service_ready "$service" "${SERVICES[$service]}"; then
+    for entry in "${SERVICES[@]}"; do
+        IFS='|' read -r service type target <<< "$entry"
+        if ! is_service_ready "$service" "$type" "$target"; then
             all_ready=false
             echo -e "${YELLOW}⏳ Waiting for $service... (${elapsed}s/${TIMEOUT}s)${NC}"
             break

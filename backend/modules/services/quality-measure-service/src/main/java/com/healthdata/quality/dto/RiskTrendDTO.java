@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Risk Trend DTO
@@ -19,7 +20,7 @@ import java.util.List;
 @AllArgsConstructor
 public class RiskTrendDTO {
 
-    private String patientId;
+    private UUID patientId;
     private String riskCategory;
     private String trendDirection; // IMPROVING, STABLE, DETERIORATING
     private Double scoreChange; // Total change over period

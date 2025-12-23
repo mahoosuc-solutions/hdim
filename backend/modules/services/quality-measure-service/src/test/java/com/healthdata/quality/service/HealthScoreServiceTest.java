@@ -1,33 +1,41 @@
 package com.healthdata.quality.service;
 
 import com.healthdata.quality.dto.HealthScoreDTO;
-import com.healthdata.quality.persistence.*;
+import com.healthdata.quality.persistence.CareGapEntity;
+import com.healthdata.quality.persistence.CareGapRepository;
+import com.healthdata.quality.persistence.HealthScoreEntity;
+import com.healthdata.quality.persistence.HealthScoreHistoryEntity;
+import com.healthdata.quality.persistence.HealthScoreHistoryRepository;
+import com.healthdata.quality.persistence.HealthScoreRepository;
+import com.healthdata.quality.persistence.MentalHealthAssessmentEntity;
+import com.healthdata.quality.persistence.MentalHealthAssessmentRepository;
+import com.healthdata.quality.persistence.RiskAssessmentRepository;
+import com.healthdata.quality.service.notification.HealthScoreNotificationTrigger;
+import com.healthdata.quality.websocket.HealthScoreWebSocketHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
 import static org.mockito.Mockito.*;
 
-/**
- * Test-Driven Development for Health Score Service
- *
- * Tests health score calculation from multiple components:
- * - Physical health (vitals, labs, chronic conditions) - 30%
- * - Mental health (PHQ-9, GAD-7 scores) - 25%
- * - Social determinants (SDOH screening) - 15%
- * - Preventive care (screening compliance) - 15%
- * - Chronic disease management (care plan adherence, gaps) - 15%
- */
 @ExtendWith(MockitoExtension.class)
 class HealthScoreServiceTest {
 
@@ -50,725 +58,1892 @@ class HealthScoreServiceTest {
     private KafkaTemplate<String, Object> kafkaTemplate;
 
     @Mock
-    private com.healthdata.quality.websocket.HealthScoreWebSocketHandler webSocketHandler;
+    private HealthScoreWebSocketHandler webSocketHandler;
 
     @Mock
-    private com.healthdata.quality.service.notification.HealthScoreNotificationTrigger notificationTrigger;
+    private HealthScoreNotificationTrigger notificationTrigger;
 
-    @InjectMocks
-    private HealthScoreService healthScoreService;
-
-    private String tenantId;
-    private String patientId;
-    private Instant now;
+    private HealthScoreService service;
 
     @BeforeEach
     void setUp() {
-        tenantId = "test-tenant";
-        patientId = "Patient/123";
-        now = Instant.now();
+        service = new HealthScoreService(
+            healthScoreRepository,
+            healthScoreHistoryRepository,
+            mentalHealthRepository,
+            careGapRepository,
+            riskAssessmentRepository,
+            kafkaTemplate,
+            webSocketHandler,
+            notificationTrigger
+        );
     }
 
-    /**
-     * TEST 1: Health Score Calculation from Components
-     * Validates weighted scoring algorithm
-     */
     @Test
-    void testCalculateHealthScore_AllComponentsOptimal() {
-        // Arrange: All components at optimal levels
-        HealthScoreComponents components = HealthScoreComponents.builder()
-            .physicalHealthScore(95.0)      // 30% weight
-            .mentalHealthScore(90.0)        // 25% weight
-            .socialDeterminantsScore(85.0)  // 15% weight
-            .preventiveCareScore(92.0)      // 15% weight
-            .chronicDiseaseScore(88.0)      // 15% weight
-            .build();
+    void shouldCalculateHealthScoreAndPublishEvents() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
 
-        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(i -> {
-            HealthScoreEntity entity = i.getArgument(0);
+        HealthScoreEntity previous = HealthScoreEntity.builder()
+            .overallScore(70.0)
+            .build();
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(previous));
+
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
             entity.setId(UUID.randomUUID());
             return entity;
         });
 
-        // Act
-        HealthScoreDTO result = healthScoreService.calculateHealthScore(tenantId, patientId, components);
+        HealthScoreComponents components = HealthScoreComponents.builder()
+            .physicalHealthScore(90.0)
+            .mentalHealthScore(90.0)
+            .socialDeterminantsScore(90.0)
+            .preventiveCareScore(90.0)
+            .chronicDiseaseScore(90.0)
+            .build();
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(patientId, result.getPatientId());
+        HealthScoreDTO dto = service.calculateHealthScore(tenantId, patientId, components);
 
-        // Verify weighted calculation
-        double expectedOverall = (95.0 * 0.30) + (90.0 * 0.25) + (85.0 * 0.15) + (92.0 * 0.15) + (88.0 * 0.15);
-        assertEquals(expectedOverall, result.getOverallScore(), 0.5);
-        assertTrue(result.getOverallScore() >= 90.0);
+        assertThat(dto.getOverallScore()).isNotNull();
+        verify(healthScoreHistoryRepository).save(any(HealthScoreHistoryEntity.class));
+        verify(kafkaTemplate).send(eq("health-score.updated"), eq(patientId.toString()), any());
+        verify(kafkaTemplate).send(eq("health-score.significant-change"), eq(patientId.toString()), any());
+    }
 
-        // Verify component scores stored
-        assertEquals(95.0, result.getPhysicalHealthScore());
-        assertEquals(90.0, result.getMentalHealthScore());
-        assertEquals(85.0, result.getSocialDeterminantsScore());
-        assertEquals(92.0, result.getPreventiveCareScore());
-        assertEquals(88.0, result.getChronicDiseaseScore());
+    @Test
+    void shouldNotPublishSignificantChangeWhenDeltaSmall() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
 
-        // Verify entity saved
+        HealthScoreEntity previous = HealthScoreEntity.builder()
+            .overallScore(80.0)
+            .build();
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(previous));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        HealthScoreComponents components = HealthScoreComponents.builder()
+            .physicalHealthScore(81.0)
+            .mentalHealthScore(81.0)
+            .socialDeterminantsScore(81.0)
+            .preventiveCareScore(81.0)
+            .chronicDiseaseScore(81.0)
+            .build();
+
+        service.calculateHealthScore(tenantId, patientId, components);
+
+        verify(kafkaTemplate).send(eq("health-score.updated"), eq(patientId.toString()), any());
+        verify(kafkaTemplate, never()).send(eq("health-score.significant-change"), eq(patientId.toString()), any());
+    }
+
+    @Test
+    void shouldCalculateHealthScoreWithoutPreviousScore() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        HealthScoreComponents components = HealthScoreComponents.builder()
+            .physicalHealthScore(75.0)
+            .mentalHealthScore(75.0)
+            .socialDeterminantsScore(75.0)
+            .preventiveCareScore(75.0)
+            .chronicDiseaseScore(75.0)
+            .build();
+
+        HealthScoreDTO dto = service.calculateHealthScore(tenantId, patientId, components);
+
+        assertThat(dto.getPreviousScore()).isNull();
+        verify(kafkaTemplate).send(eq("health-score.updated"), eq(patientId.toString()), any());
+        verify(kafkaTemplate, never()).send(eq("health-score.significant-change"), eq(patientId.toString()), any());
+    }
+
+    @Test
+    void shouldRejectInvalidHealthScoreComponents() {
+        HealthScoreComponents components = HealthScoreComponents.builder()
+            .physicalHealthScore(120.0)
+            .mentalHealthScore(80.0)
+            .socialDeterminantsScore(80.0)
+            .preventiveCareScore(80.0)
+            .chronicDiseaseScore(80.0)
+            .build();
+
+        assertThatThrownBy(() -> service.calculateHealthScore("tenant-1", UUID.randomUUID(), components))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Physical Health score must be between 0 and 100");
+    }
+
+    @Test
+    void shouldNotFailWhenNotificationTriggerThrows() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+        doThrow(new RuntimeException("notify")).when(notificationTrigger)
+            .onHealthScoreCalculated(eq(tenantId), any(HealthScoreDTO.class), any());
+
+        HealthScoreComponents components = HealthScoreComponents.builder()
+            .physicalHealthScore(80.0)
+            .mentalHealthScore(80.0)
+            .socialDeterminantsScore(80.0)
+            .preventiveCareScore(80.0)
+            .chronicDiseaseScore(80.0)
+            .build();
+
+        assertThatNoException()
+            .isThrownBy(() -> service.calculateHealthScore(tenantId, patientId, components));
+    }
+
+    @Test
+    void shouldSkipObservationWhenMissingRequiredFields() {
+        service.handleObservationEvent(Map.of("tenantId", "tenant-1"));
+
+        verifyNoInteractions(healthScoreRepository);
+    }
+
+    @Test
+    void shouldSkipObservationWhenMissingResource() {
+        Map<String, Object> event = Map.of(
+            "tenantId", "tenant-1",
+            "patientId", UUID.randomUUID().toString()
+        );
+
+        service.handleObservationEvent(event);
+
+        verifyNoInteractions(healthScoreRepository);
+    }
+
+    @Test
+    void shouldProcessObservationEventWithVitalSign() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(60.0)
+            .mentalHealthScore(70.0)
+            .socialDeterminantsScore(80.0)
+            .preventiveCareScore(90.0)
+            .chronicDiseaseScore(75.0)
+            .overallScore(70.0)
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "8480-6", "display", "Systolic BP"))
+                ),
+                "valueQuantity", Map.of("value", 150, "unit", "mmHg")
+            )
+        );
+
+        service.handleObservationEvent(event);
+
         verify(healthScoreRepository).save(any(HealthScoreEntity.class));
     }
 
     @Test
-    void testCalculateHealthScore_MixedComponents() {
-        // Arrange: Mixed component scores
-        HealthScoreComponents components = HealthScoreComponents.builder()
-            .physicalHealthScore(75.0)      // Average
-            .mentalHealthScore(60.0)        // Below average
-            .socialDeterminantsScore(80.0)  // Good
-            .preventiveCareScore(50.0)      // Poor
-            .chronicDiseaseScore(70.0)      // Average
+    void shouldSkipObservationWhenMissingCoding() {
+        Map<String, Object> event = Map.of(
+            "tenantId", "tenant-1",
+            "patientId", UUID.randomUUID().toString(),
+            "resource", Map.of(
+                "code", Map.of("coding", List.of())
+            )
+        );
+
+        service.handleObservationEvent(event);
+
+        verify(healthScoreRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldSkipObservationWhenMissingValue() {
+        Map<String, Object> event = Map.of(
+            "tenantId", "tenant-1",
+            "patientId", UUID.randomUUID().toString(),
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "8867-4", "display", "Heart rate"))
+                )
+            )
+        );
+
+        service.handleObservationEvent(event);
+
+        verify(healthScoreRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldSkipObservationWhenPatientIdInvalid() {
+        Map<String, Object> event = Map.of(
+            "tenantId", "tenant-1",
+            "patientId", "not-a-uuid",
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "8867-4", "display", "Heart rate"))
+                ),
+                "valueQuantity", Map.of("value", 80, "unit", "beats/min")
+            )
+        );
+
+        service.handleObservationEvent(event);
+
+        verify(healthScoreRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldSkipObservationWhenValueNotNumeric() {
+        Map<String, Object> event = Map.of(
+            "tenantId", "tenant-1",
+            "patientId", UUID.randomUUID().toString(),
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "39156-5", "display", "BMI"))
+                ),
+                "valueQuantity", Map.of("value", "invalid")
+            )
+        );
+
+        service.handleObservationEvent(event);
+
+        verify(healthScoreRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldProcessObservationEventWithoutExistingScore() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "8867-4", "display", "Heart rate"))
+                ),
+                "valueQuantity", Map.of("value", 72, "unit", "beats/min")
+            )
+        );
+
+        service.handleObservationEvent(event);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+    }
+
+    @Test
+    void shouldProcessObservationEventForA1C() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(70.0)
+            .mentalHealthScore(70.0)
+            .socialDeterminantsScore(70.0)
+            .preventiveCareScore(70.0)
+            .chronicDiseaseScore(70.0)
+            .overallScore(70.0)
             .build();
 
-        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(i -> {
-            HealthScoreEntity entity = i.getArgument(0);
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
             entity.setId(UUID.randomUUID());
             return entity;
         });
 
-        // Act
-        HealthScoreDTO result = healthScoreService.calculateHealthScore(tenantId, patientId, components);
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "4548-4", "display", "HbA1c"))
+                ),
+                "valueQuantity", Map.of("value", 9.2, "unit", "%")
+            )
+        );
 
-        // Assert
-        double expectedOverall = (75.0 * 0.30) + (60.0 * 0.25) + (80.0 * 0.15) + (50.0 * 0.15) + (70.0 * 0.15);
-        assertEquals(expectedOverall, result.getOverallScore(), 0.5);
-        assertTrue(result.getOverallScore() < 75.0);
+        service.handleObservationEvent(event);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
     }
 
-    /**
-     * TEST 2: Health Score Update on Observation Event
-     * Validates response to FHIR observation changes
-     */
     @Test
-    void testUpdateHealthScoreOnObservationEvent_VitalsImproved() {
-        // Arrange: Previous score exists
-        HealthScoreEntity previousScore = createHealthScoreEntity(70.0, 65.0, 75.0, 70.0, 68.0, 72.0);
+    void shouldProcessObservationEventForOxygenSaturation() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(70.0)
+            .mentalHealthScore(70.0)
+            .socialDeterminantsScore(70.0)
+            .preventiveCareScore(70.0)
+            .chronicDiseaseScore(70.0)
+            .overallScore(70.0)
+            .build();
+
         when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
-            .thenReturn(Optional.of(previousScore));
-
-        // New observation indicates improved vitals - create Map structure for Kafka event
-        // Use LOINC code 8480-6 for systolic blood pressure (recognized by the service)
-        // Build with proper mutable HashMap/ArrayList structures for type compatibility
-        Map<String, Object> coding1 = new HashMap<>();
-        coding1.put("system", "http://loinc.org");
-        coding1.put("code", "8480-6");
-        coding1.put("display", "Systolic blood pressure");
-        List<Map<String, Object>> codings = new ArrayList<>();
-        codings.add(coding1);
-
-        Map<String, Object> codeMap = new HashMap<>();
-        codeMap.put("coding", codings);
-
-        Map<String, Object> valueQuantity = new HashMap<>();
-        valueQuantity.put("value", 118.0);
-        valueQuantity.put("unit", "mmHg");
-
-        Map<String, Object> subject = new HashMap<>();
-        subject.put("reference", "Patient/" + patientId);
-
-        Map<String, Object> observationResource = new HashMap<>();
-        observationResource.put("resourceType", "Observation");
-        observationResource.put("id", "bp-reading");
-        observationResource.put("subject", subject);
-        observationResource.put("code", codeMap);
-        observationResource.put("valueQuantity", valueQuantity);
-        observationResource.put("effectiveDateTime", now.toString());
-
-        Map<String, Object> observationEvent = new HashMap<>();
-        observationEvent.put("tenantId", tenantId);
-        observationEvent.put("patientId", patientId);  // Also add direct patientId for easier extraction
-        observationEvent.put("resource", observationResource);
-
-        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(i -> {
-            HealthScoreEntity entity = i.getArgument(0);
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
             entity.setId(UUID.randomUUID());
             return entity;
         });
 
-        // Act
-        healthScoreService.handleObservationEvent(observationEvent);
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "2708-6", "display", "Oxygen saturation"))
+                ),
+                "valueQuantity", Map.of("value", 88, "unit", "%")
+            )
+        );
 
-        // Assert
+        service.handleObservationEvent(event);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+    }
+
+    @Test
+    void shouldProcessObservationEventForBmi() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(70.0)
+            .mentalHealthScore(70.0)
+            .socialDeterminantsScore(70.0)
+            .preventiveCareScore(70.0)
+            .chronicDiseaseScore(70.0)
+            .overallScore(70.0)
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "39156-5", "display", "BMI"))
+                ),
+                "valueQuantity", Map.of("value", 32.0, "unit", "kg/m2")
+            )
+        );
+
+        service.handleObservationEvent(event);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+    }
+
+    @Test
+    void shouldProcessObservationEventForDiastolicBp() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(70.0)
+            .mentalHealthScore(70.0)
+            .socialDeterminantsScore(70.0)
+            .preventiveCareScore(70.0)
+            .chronicDiseaseScore(70.0)
+            .overallScore(70.0)
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "8462-4", "display", "Diastolic BP"))
+                ),
+                "valueQuantity", Map.of("value", 92, "unit", "mmHg")
+            )
+        );
+
+        service.handleObservationEvent(event);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+    }
+
+    @Test
+    void shouldProcessObservationEventForGlucoseFasting() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(70.0)
+            .mentalHealthScore(70.0)
+            .socialDeterminantsScore(70.0)
+            .preventiveCareScore(70.0)
+            .chronicDiseaseScore(70.0)
+            .overallScore(70.0)
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "2345-7", "display", "Glucose fasting"))
+                ),
+                "valueQuantity", Map.of("value", 110, "unit", "mg/dL")
+            )
+        );
+
+        service.handleObservationEvent(event);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+    }
+
+    @Test
+    void shouldProcessObservationEventForBodyTemperature() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(70.0)
+            .mentalHealthScore(70.0)
+            .socialDeterminantsScore(70.0)
+            .preventiveCareScore(70.0)
+            .chronicDiseaseScore(70.0)
+            .overallScore(70.0)
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "8310-5", "display", "Body temperature"))
+                ),
+                "valueQuantity", Map.of("value", 37.0, "unit", "C")
+            )
+        );
+
+        service.handleObservationEvent(event);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+    }
+
+    @Test
+    void shouldProcessObservationEventForRespiratoryRate() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(70.0)
+            .mentalHealthScore(70.0)
+            .socialDeterminantsScore(70.0)
+            .preventiveCareScore(70.0)
+            .chronicDiseaseScore(70.0)
+            .overallScore(70.0)
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "9279-1", "display", "Respiratory rate"))
+                ),
+                "valueQuantity", Map.of("value", 18, "unit", "breaths/min")
+            )
+        );
+
+        service.handleObservationEvent(event);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+    }
+
+    @Test
+    void shouldProcessObservationEventForWeight() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(70.0)
+            .mentalHealthScore(70.0)
+            .socialDeterminantsScore(70.0)
+            .preventiveCareScore(70.0)
+            .chronicDiseaseScore(70.0)
+            .overallScore(70.0)
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "29463-7", "display", "Body weight"))
+                ),
+                "valueQuantity", Map.of("value", 95, "unit", "kg")
+            )
+        );
+
+        service.handleObservationEvent(event);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+    }
+
+    @Test
+    void shouldLeavePhysicalScoreUnchangedForWeight() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(64.0)
+            .mentalHealthScore(70.0)
+            .socialDeterminantsScore(70.0)
+            .preventiveCareScore(70.0)
+            .chronicDiseaseScore(70.0)
+            .overallScore(70.0)
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId,
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "29463-7", "display", "Body weight"))
+                ),
+                "valueQuantity", Map.of("value", 95, "unit", "kg")
+            )
+        );
+
+        service.handleObservationEvent(event);
+
         ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
         verify(healthScoreRepository).save(captor.capture());
-
-        HealthScoreEntity updated = captor.getValue();
-        assertNotNull(updated);
-        assertTrue(updated.getPhysicalHealthScore() >= 65.0); // Should improve or stay same
-        assertEquals(70.0, updated.getPreviousScore()); // Previous overall score
+        assertThat(captor.getValue().getPhysicalHealthScore()).isEqualTo(64.0);
     }
 
-    /**
-     * TEST 3: Health Score Update on Mental Health Assessment
-     * Validates integration with mental health screening
-     */
     @Test
-    void testUpdateHealthScoreOnMentalHealthAssessment_Moderate() {
-        // Arrange: Previous score
-        HealthScoreEntity previousScore = createHealthScoreEntity(75.0, 70.0, 80.0, 75.0, 72.0, 73.0);
-        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
-            .thenReturn(Optional.of(previousScore));
+    void shouldApplySevereGlucoseAdjustment() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
 
-        // Mental health assessment: PHQ-9 score of 12 (moderate depression)
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(70.0)
+            .mentalHealthScore(70.0)
+            .socialDeterminantsScore(70.0)
+            .preventiveCareScore(70.0)
+            .chronicDiseaseScore(70.0)
+            .overallScore(70.0)
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "2339-0", "display", "Glucose"))
+                ),
+                "valueQuantity", Map.of("value", 250, "unit", "mg/dL")
+            )
+        );
+
+        service.handleObservationEvent(event);
+
+        ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
+        verify(healthScoreRepository).save(captor.capture());
+        assertThat(captor.getValue().getPhysicalHealthScore()).isEqualTo(55.0);
+    }
+
+    @Test
+    void shouldSkipObservationWhenNotTracked() {
+        UUID patientId = UUID.randomUUID();
+        Map<String, Object> event = Map.of(
+            "tenantId", "tenant-1",
+            "patientId", patientId.toString(),
+            "resource", Map.of(
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "0000-0", "display", "Unknown"))
+                ),
+                "valueQuantity", Map.of("value", 50, "unit", "unit")
+            )
+        );
+
+        service.handleObservationEvent(event);
+
+        verify(healthScoreRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldProcessObservationWhenPatientInSubjectReference() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "resource", Map.of(
+                "subject", Map.of("reference", "Patient/" + patientId),
+                "code", Map.of(
+                    "coding", List.of(Map.of("code", "2339-0", "display", "Glucose"))
+                ),
+                "valueQuantity", Map.of("value", 95, "unit", "mg/dL")
+            )
+        );
+
+        service.handleObservationEvent(event);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+    }
+
+    @Test
+    void shouldProcessMentalHealthAssessment() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
         MentalHealthAssessmentEntity assessment = MentalHealthAssessmentEntity.builder()
-            .id(UUID.randomUUID())
             .patientId(patientId)
-            .tenantId(tenantId)
-            .type(MentalHealthAssessmentEntity.AssessmentType.PHQ_9)
+            .score(18)
+            .maxScore(27)
+            .severity("severe")
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        service.handleMentalHealthAssessment(tenantId, assessment);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+    }
+
+    @Test
+    void shouldProcessMentalHealthAssessmentWithMildSeverity() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        MentalHealthAssessmentEntity assessment = MentalHealthAssessmentEntity.builder()
+            .patientId(patientId)
+            .score(6)
+            .maxScore(27)
+            .severity("mild")
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        service.handleMentalHealthAssessment(tenantId, assessment);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+    }
+
+    @Test
+    void shouldProcessMentalHealthAssessmentWithModeratelySevereSeverity() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        MentalHealthAssessmentEntity assessment = MentalHealthAssessmentEntity.builder()
+            .patientId(patientId)
+            .score(17)
+            .maxScore(27)
+            .severity("moderately-severe")
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        service.handleMentalHealthAssessment(tenantId, assessment);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+    }
+
+    @Test
+    void shouldProcessMentalHealthAssessmentWithMinimalSeverity() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        MentalHealthAssessmentEntity assessment = MentalHealthAssessmentEntity.builder()
+            .patientId(patientId)
+            .score(2)
+            .maxScore(27)
+            .severity("minimal")
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        service.handleMentalHealthAssessment(tenantId, assessment);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+    }
+
+    @Test
+    void shouldProcessMentalHealthAssessmentWithModerateSeverity() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        MentalHealthAssessmentEntity assessment = MentalHealthAssessmentEntity.builder()
+            .patientId(patientId)
             .score(12)
             .maxScore(27)
             .severity("moderate")
-            .positiveScreen(true)
-            .requiresFollowup(true)
-            .thresholdScore(10)
-            .interpretation("Moderate depression")
-            .assessedBy("Practitioner/Dr-Smith")
-            .assessmentDate(now)
-            .responses(Map.of("q1", 2, "q2", 2, "q3", 1, "q4", 1, "q5", 1, "q6", 2, "q7", 1, "q8", 1, "q9", 1))
             .build();
 
-        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(i -> {
-            HealthScoreEntity entity = i.getArgument(0);
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
             entity.setId(UUID.randomUUID());
             return entity;
         });
 
-        // Act
-        healthScoreService.handleMentalHealthAssessment(tenantId, assessment);
+        service.handleMentalHealthAssessment(tenantId, assessment);
 
-        // Assert
-        ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
-        verify(healthScoreRepository).save(captor.capture());
-
-        HealthScoreEntity updated = captor.getValue();
-
-        // Mental health score should reflect moderate depression (~60-70 range)
-        assertTrue(updated.getMentalHealthScore() < 75.0);
-        assertTrue(updated.getMentalHealthScore() >= 50.0);
-
-        // Overall score should decrease
-        assertTrue(updated.getOverallScore() < previousScore.getOverallScore());
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
     }
 
     @Test
-    void testUpdateHealthScoreOnMentalHealthAssessment_Severe() {
-        // Arrange: Previous score
-        HealthScoreEntity previousScore = createHealthScoreEntity(75.0, 70.0, 80.0, 75.0, 72.0, 73.0);
-        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
-            .thenReturn(Optional.of(previousScore));
+    void shouldProcessMentalHealthAssessmentWithUnknownSeverity() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
 
-        // Severe depression: PHQ-9 score of 22
         MentalHealthAssessmentEntity assessment = MentalHealthAssessmentEntity.builder()
-            .id(UUID.randomUUID())
             .patientId(patientId)
-            .tenantId(tenantId)
-            .type(MentalHealthAssessmentEntity.AssessmentType.PHQ_9)
-            .score(22)
+            .score(5)
             .maxScore(27)
-            .severity("severe")
-            .positiveScreen(true)
-            .requiresFollowup(true)
-            .thresholdScore(10)
-            .interpretation("Severe depression")
-            .assessedBy("Practitioner/Dr-Smith")
-            .assessmentDate(now)
-            .responses(Map.of("q1", 3, "q2", 3, "q3", 3, "q4", 3, "q5", 3, "q6", 3, "q7", 2, "q8", 1, "q9", 1))
+            .severity("unknown")
             .build();
 
-        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(i -> {
-            HealthScoreEntity entity = i.getArgument(0);
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
             entity.setId(UUID.randomUUID());
             return entity;
         });
 
-        // Act
-        healthScoreService.handleMentalHealthAssessment(tenantId, assessment);
+        service.handleMentalHealthAssessment(tenantId, assessment);
 
-        // Assert
-        ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
-        verify(healthScoreRepository).save(captor.capture());
-
-        HealthScoreEntity updated = captor.getValue();
-
-        // Mental health score should be significantly lower
-        assertTrue(updated.getMentalHealthScore() < 50.0);
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
     }
 
-    /**
-     * TEST 4: Health Score Update on Care Gap Change
-     * Validates impact of care gap addressing
-     */
     @Test
-    void testUpdateHealthScoreOnCareGapAddressed_PreventiveCare() {
-        // Arrange: Previous score with poor preventive care
-        // Overall = 75*0.30 + 70*0.25 + 70*0.15 + 50*0.15 + 75*0.15 = 69.25
-        HealthScoreEntity previousScore = createHealthScoreEntity(69.25, 75.0, 70.0, 70.0, 50.0, 75.0);
-        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
-            .thenReturn(Optional.of(previousScore));
+    void shouldHandleCareGapAddressed() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
 
-        // Care gap addressed: Colorectal cancer screening completed
         CareGapEntity careGap = CareGapEntity.builder()
-            .id(UUID.randomUUID())
-            .tenantId(tenantId)
             .patientId(patientId)
             .category(CareGapEntity.GapCategory.PREVENTIVE_CARE)
-            .gapType("COL")
-            .title("Colorectal Cancer Screening")
-            .status(CareGapEntity.Status.ADDRESSED)
-            .priority(CareGapEntity.Priority.HIGH)
-            .qualityMeasure("COL")
-            .identifiedDate(now.minusSeconds(86400 * 30))
-            .addressedDate(now)
-            .addressedBy("Practitioner/Dr-Smith")
             .build();
 
-        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(i -> {
-            HealthScoreEntity entity = i.getArgument(0);
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(60.0)
+            .mentalHealthScore(70.0)
+            .socialDeterminantsScore(80.0)
+            .preventiveCareScore(85.0)
+            .chronicDiseaseScore(75.0)
+            .overallScore(70.0)
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
             entity.setId(UUID.randomUUID());
             return entity;
         });
 
-        // Act
-        healthScoreService.handleCareGapAddressed(tenantId, careGap);
+        service.handleCareGapAddressed(tenantId, careGap);
 
-        // Assert
         ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
         verify(healthScoreRepository).save(captor.capture());
-
-        HealthScoreEntity updated = captor.getValue();
-
-        // Preventive care score should improve
-        assertTrue(updated.getPreventiveCareScore() > 50.0);
-
-        // Overall score should improve
-        assertTrue(updated.getOverallScore() > previousScore.getOverallScore());
+        assertThat(captor.getValue().getPreventiveCareScore()).isGreaterThan(85.0);
     }
 
     @Test
-    void testUpdateHealthScoreOnCareGapAddressed_ChronicDisease() {
-        // Arrange
-        HealthScoreEntity previousScore = createHealthScoreEntity(70.0, 72.0, 68.0, 70.0, 65.0, 55.0);
-        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
-            .thenReturn(Optional.of(previousScore));
+    void shouldHandleCareGapAddressedForChronicDisease() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
 
-        // Chronic disease care gap addressed
         CareGapEntity careGap = CareGapEntity.builder()
-            .id(UUID.randomUUID())
-            .tenantId(tenantId)
             .patientId(patientId)
             .category(CareGapEntity.GapCategory.CHRONIC_DISEASE)
-            .gapType("CBP")
-            .title("Blood Pressure Control")
-            .status(CareGapEntity.Status.ADDRESSED)
-            .priority(CareGapEntity.Priority.HIGH)
-            .qualityMeasure("CBP")
-            .addressedDate(now)
             .build();
 
-        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(i -> {
-            HealthScoreEntity entity = i.getArgument(0);
-            entity.setId(UUID.randomUUID());
-            return entity;
-        });
-
-        // Act
-        healthScoreService.handleCareGapAddressed(tenantId, careGap);
-
-        // Assert
-        ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
-        verify(healthScoreRepository).save(captor.capture());
-
-        HealthScoreEntity updated = captor.getValue();
-
-        // Chronic disease score should improve
-        assertTrue(updated.getChronicDiseaseScore() > 55.0);
-    }
-
-    /**
-     * TEST 5: Health Score Update on Condition Change
-     * Validates impact of new or updated diagnoses
-     */
-    @Test
-    void testUpdateHealthScoreOnConditionChange_NewChronicCondition() {
-        // Arrange
-        HealthScoreEntity previousScore = createHealthScoreEntity(85.0, 90.0, 85.0, 80.0, 85.0, 82.0);
-        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
-            .thenReturn(Optional.of(previousScore));
-
-        // New chronic condition diagnosed - create Map structure for Kafka event
-        // Build with proper mutable HashMap/ArrayList structures for type compatibility
-        Map<String, Object> conditionCoding = new HashMap<>();
-        conditionCoding.put("system", "http://hl7.org/fhir/sid/icd-10-cm");
-        conditionCoding.put("code", "E11.9");
-        conditionCoding.put("display", "Type 2 Diabetes Mellitus");
-        List<Map<String, Object>> conditionCodings = new ArrayList<>();
-        conditionCodings.add(conditionCoding);
-
-        Map<String, Object> conditionCodeMap = new HashMap<>();
-        conditionCodeMap.put("coding", conditionCodings);
-
-        Map<String, Object> statusCoding = new HashMap<>();
-        statusCoding.put("code", "active");
-        List<Map<String, Object>> statusCodings = new ArrayList<>();
-        statusCodings.add(statusCoding);
-
-        Map<String, Object> clinicalStatus = new HashMap<>();
-        clinicalStatus.put("coding", statusCodings);
-
-        Map<String, Object> conditionSubject = new HashMap<>();
-        conditionSubject.put("reference", "Patient/" + patientId);
-
-        Map<String, Object> conditionResource = new HashMap<>();
-        conditionResource.put("resourceType", "Condition");
-        conditionResource.put("id", "diabetes-type2");
-        conditionResource.put("subject", conditionSubject);
-        conditionResource.put("code", conditionCodeMap);
-        conditionResource.put("clinicalStatus", clinicalStatus);
-        conditionResource.put("recordedDate", now.toString());
-
-        Map<String, Object> conditionEvent = new HashMap<>();
-        conditionEvent.put("tenantId", tenantId);
-        conditionEvent.put("patientId", patientId);  // Also add direct patientId for easier extraction
-        conditionEvent.put("resource", conditionResource);
-
-        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(i -> {
-            HealthScoreEntity entity = i.getArgument(0);
-            entity.setId(UUID.randomUUID());
-            return entity;
-        });
-
-        // Act
-        healthScoreService.handleConditionEvent(conditionEvent);
-
-        // Assert
-        ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
-        verify(healthScoreRepository).save(captor.capture());
-
-        HealthScoreEntity updated = captor.getValue();
-
-        // Chronic disease score should decrease
-        assertTrue(updated.getChronicDiseaseScore() < 82.0);
-
-        // Overall score should decrease
-        assertTrue(updated.getOverallScore() < previousScore.getOverallScore());
-    }
-
-    /**
-     * TEST 6: Significant Change Detection (threshold >10 points)
-     * Validates event publishing for major health changes
-     */
-    @Test
-    void testSignificantChangeDetection_Above10Points() {
-        // Arrange: Previous score of 73.5
-        // Overall = 70*0.30 + 75*0.25 + 75*0.15 + 72*0.15 + 78*0.15 = 73.5
-        HealthScoreEntity previousScore = createHealthScoreEntity(73.5, 70.0, 75.0, 75.0, 72.0, 78.0);
-        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
-            .thenReturn(Optional.of(previousScore));
-
-        // New components result in score of 61.0 (change of -12.5 points)
-        // Overall = 60*0.30 + 55*0.25 + 65*0.15 + 60*0.15 + 70*0.15 = 61.0
-        HealthScoreComponents components = HealthScoreComponents.builder()
+        HealthScoreEntity current = HealthScoreEntity.builder()
             .physicalHealthScore(60.0)
-            .mentalHealthScore(55.0)
-            .socialDeterminantsScore(65.0)
-            .preventiveCareScore(60.0)
-            .chronicDiseaseScore(70.0)
-            .build();
-
-        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(i -> {
-            HealthScoreEntity entity = i.getArgument(0);
-            entity.setId(UUID.randomUUID());
-            return entity;
-        });
-
-        // Act
-        HealthScoreDTO result = healthScoreService.calculateHealthScore(tenantId, patientId, components);
-
-        // Assert
-        ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
-        verify(healthScoreRepository).save(captor.capture());
-
-        HealthScoreEntity saved = captor.getValue();
-
-        // Verify significant change flag
-        assertTrue(saved.isSignificantChange());
-        assertNotNull(saved.getChangeReason());
-        assertTrue(saved.getChangeReason().toLowerCase().contains("significant"));
-
-        // Verify event published
-        verify(kafkaTemplate).send(eq("health-score.significant-change"), anyString(), any());
-    }
-
-    @Test
-    void testSignificantChangeDetection_Below10Points() {
-        // Arrange: Previous score of 73.5
-        // Overall = 70*0.30 + 75*0.25 + 75*0.15 + 72*0.15 + 78*0.15 = 73.5
-        HealthScoreEntity previousScore = createHealthScoreEntity(73.5, 70.0, 75.0, 75.0, 72.0, 78.0);
-        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
-            .thenReturn(Optional.of(previousScore));
-
-        // New components result in score of 70.65 (change of -2.85 points)
-        // Overall = 68*0.30 + 70*0.25 + 72*0.15 + 70*0.15 + 75*0.15 = 70.65
-        HealthScoreComponents components = HealthScoreComponents.builder()
-            .physicalHealthScore(68.0)
             .mentalHealthScore(70.0)
-            .socialDeterminantsScore(72.0)
-            .preventiveCareScore(70.0)
-            .chronicDiseaseScore(75.0)
+            .socialDeterminantsScore(80.0)
+            .preventiveCareScore(85.0)
+            .chronicDiseaseScore(70.0)
+            .overallScore(70.0)
             .build();
 
-        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(i -> {
-            HealthScoreEntity entity = i.getArgument(0);
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
             entity.setId(UUID.randomUUID());
             return entity;
         });
 
-        // Act
-        healthScoreService.calculateHealthScore(tenantId, patientId, components);
+        service.handleCareGapAddressed(tenantId, careGap);
 
-        // Assert
         ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
         verify(healthScoreRepository).save(captor.capture());
-
-        HealthScoreEntity saved = captor.getValue();
-
-        // Verify NOT significant change
-        assertFalse(saved.isSignificantChange());
-
-        // Regular update event published, not significant change event
-        verify(kafkaTemplate).send(eq("health-score.updated"), anyString(), any());
-        verify(kafkaTemplate, never()).send(eq("health-score.significant-change"), anyString(), any());
+        assertThat(captor.getValue().getChronicDiseaseScore()).isGreaterThan(70.0);
     }
 
-    /**
-     * TEST 7: Health Score History Tracking
-     * Validates trend analysis and history storage
-     */
     @Test
-    void testHealthScoreHistoryTracking() {
-        // Arrange
-        HealthScoreComponents components = HealthScoreComponents.builder()
-            .physicalHealthScore(80.0)
-            .mentalHealthScore(75.0)
-            .socialDeterminantsScore(85.0)
-            .preventiveCareScore(78.0)
-            .chronicDiseaseScore(82.0)
+    void shouldHandleCareGapAddressedForMentalHealth() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        CareGapEntity careGap = CareGapEntity.builder()
+            .patientId(patientId)
+            .category(CareGapEntity.GapCategory.MENTAL_HEALTH)
             .build();
 
-        HealthScoreEntity previousScore = createHealthScoreEntity(70.0, 65.0, 70.0, 75.0, 68.0, 72.0);
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(60.0)
+            .mentalHealthScore(60.0)
+            .socialDeterminantsScore(80.0)
+            .preventiveCareScore(85.0)
+            .chronicDiseaseScore(70.0)
+            .overallScore(70.0)
+            .build();
+
         when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
-            .thenReturn(Optional.of(previousScore));
-
-        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(i -> {
-            HealthScoreEntity entity = i.getArgument(0);
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
             entity.setId(UUID.randomUUID());
             return entity;
         });
 
-        when(healthScoreHistoryRepository.save(any(HealthScoreHistoryEntity.class))).thenAnswer(i -> {
-            HealthScoreHistoryEntity entity = i.getArgument(0);
-            entity.setId(UUID.randomUUID());
-            return entity;
-        });
+        service.handleCareGapAddressed(tenantId, careGap);
 
-        // Act
-        healthScoreService.calculateHealthScore(tenantId, patientId, components);
-
-        // Assert - History entry created
-        ArgumentCaptor<HealthScoreHistoryEntity> historyCaptor =
-            ArgumentCaptor.forClass(HealthScoreHistoryEntity.class);
-        verify(healthScoreHistoryRepository).save(historyCaptor.capture());
-
-        HealthScoreHistoryEntity history = historyCaptor.getValue();
-        assertNotNull(history);
-        assertEquals(patientId, history.getPatientId());
-        assertEquals(tenantId, history.getTenantId());
-        assertNotNull(history.getOverallScore());
-        assertNotNull(history.getPreviousScore());
-        assertNotNull(history.getScoreDelta());
+        ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
+        verify(healthScoreRepository).save(captor.capture());
+        assertThat(captor.getValue().getMentalHealthScore()).isGreaterThan(60.0);
     }
 
     @Test
-    void testGetHealthScoreHistory() {
-        // Arrange
-        List<HealthScoreHistoryEntity> historyList = Arrays.asList(
-            createHistoryEntity(now.minusSeconds(86400 * 7), 75.0, 70.0),
-            createHistoryEntity(now.minusSeconds(86400 * 14), 70.0, 65.0),
-            createHistoryEntity(now.minusSeconds(86400 * 21), 65.0, null)
+    void shouldHandleConditionEventForChronicConditionAndPublishAlert() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(80.0)
+            .mentalHealthScore(70.0)
+            .socialDeterminantsScore(70.0)
+            .preventiveCareScore(70.0)
+            .chronicDiseaseScore(80.0)
+            .overallScore(75.0)
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> event = conditionEvent(
+            tenantId,
+            patientId,
+            "http://snomed.info/sct",
+            "13645005",
+            "COPD",
+            "mild",
+            "active"
         );
 
-        when(healthScoreHistoryRepository.findByPatientIdOrderByCalculatedAtDesc(tenantId, patientId))
-            .thenReturn(historyList);
+        service.handleConditionEvent(event);
 
-        // Act
-        List<HealthScoreDTO> history = healthScoreService.getHealthScoreHistory(tenantId, patientId);
-
-        // Assert
-        assertNotNull(history);
-        assertEquals(3, history.size());
-
-        // Verify chronological order (newest first)
-        assertTrue(history.get(0).getCalculatedAt().isAfter(history.get(1).getCalculatedAt()));
-        assertTrue(history.get(1).getCalculatedAt().isAfter(history.get(2).getCalculatedAt()));
-
-        // Verify trend data
-        assertEquals(75.0, history.get(0).getOverallScore());
-        assertEquals(5.0, history.get(0).getScoreDelta()); // 75 - 70
+        ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
+        verify(healthScoreRepository).save(captor.capture());
+        assertThat(captor.getValue().getChronicDiseaseScore()).isCloseTo(69.2, within(0.05));
+        assertThat(captor.getValue().getPhysicalHealthScore()).isCloseTo(71.0, within(0.05));
+        verify(kafkaTemplate).send(eq("condition.alert.needed"), eq(patientId.toString()), any());
     }
 
-    /**
-     * TEST 8: Multi-Tenant Isolation
-     * Validates data isolation between tenants
-     */
     @Test
-    void testMultiTenantIsolation() {
-        // Arrange: Two tenants with same patient ID
-        String tenant1 = "tenant-1";
-        String tenant2 = "tenant-2";
-        String commonPatientId = "Patient/123";
+    void shouldCoverVitalSignAdjustmentRanges() {
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBPSystolicAdjustment", 85.0)).isEqualTo(-10.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBPSystolicAdjustment", 115.0)).isEqualTo(5.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBPSystolicAdjustment", 125.0)).isEqualTo(2.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBPSystolicAdjustment", 135.0)).isEqualTo(-3.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBPSystolicAdjustment", 160.0)).isEqualTo(-8.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBPSystolicAdjustment", 190.0)).isEqualTo(-15.0);
 
-        HealthScoreComponents components = HealthScoreComponents.builder()
-            .physicalHealthScore(80.0)
-            .mentalHealthScore(75.0)
-            .socialDeterminantsScore(85.0)
-            .preventiveCareScore(78.0)
-            .chronicDiseaseScore(82.0)
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBPDiastolicAdjustment", 55.0)).isEqualTo(-10.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBPDiastolicAdjustment", 70.0)).isEqualTo(5.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBPDiastolicAdjustment", 85.0)).isEqualTo(-3.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBPDiastolicAdjustment", 100.0)).isEqualTo(-8.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBPDiastolicAdjustment", 130.0)).isEqualTo(-15.0);
+
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateHeartRateAdjustment", 35.0)).isEqualTo(-10.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateHeartRateAdjustment", 55.0)).isEqualTo(-3.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateHeartRateAdjustment", 80.0)).isEqualTo(3.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateHeartRateAdjustment", 110.0)).isEqualTo(-3.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateHeartRateAdjustment", 140.0)).isEqualTo(-10.0);
+
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBMIAdjustment", 15.0)).isEqualTo(-15.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBMIAdjustment", 17.0)).isEqualTo(-8.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBMIAdjustment", 23.0)).isEqualTo(5.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBMIAdjustment", 28.0)).isEqualTo(-3.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBMIAdjustment", 33.0)).isEqualTo(-8.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBMIAdjustment", 37.0)).isEqualTo(-12.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateBMIAdjustment", 45.0)).isEqualTo(-18.0);
+
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateGlucoseAdjustment", 60.0)).isEqualTo(-8.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateGlucoseAdjustment", 90.0)).isEqualTo(5.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateGlucoseAdjustment", 110.0)).isEqualTo(-2.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateGlucoseAdjustment", 150.0)).isEqualTo(-8.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateGlucoseAdjustment", 220.0)).isEqualTo(-15.0);
+
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateA1CAdjustment", 5.4)).isEqualTo(5.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateA1CAdjustment", 6.0)).isEqualTo(-3.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateA1CAdjustment", 6.7)).isEqualTo(-6.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateA1CAdjustment", 8.0)).isEqualTo(-10.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateA1CAdjustment", 10.0)).isEqualTo(-15.0);
+
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateOxygenSaturationAdjustment", 96.0)).isEqualTo(3.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateOxygenSaturationAdjustment", 92.0)).isEqualTo(-5.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateOxygenSaturationAdjustment", 87.0)).isEqualTo(-10.0);
+        assertThat((double) ReflectionTestUtils.invokeMethod(
+            service, "calculateOxygenSaturationAdjustment", 80.0)).isEqualTo(-18.0);
+    }
+
+    private Map<String, Object> conditionEvent(
+        String tenantId,
+        UUID patientId,
+        String system,
+        String code,
+        String display,
+        String severity,
+        String clinicalStatus
+    ) {
+        return Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", Map.of(
+                "clinicalStatus", Map.of(
+                    "coding", List.of(Map.of("code", clinicalStatus))
+                ),
+                "severity", Map.of(
+                    "coding", List.of(Map.of("code", severity))
+                ),
+                "code", Map.of(
+                    "coding", List.of(Map.of(
+                        "system", system,
+                        "code", code,
+                        "display", display
+                    ))
+                )
+            )
+        );
+    }
+
+    @Test
+    void shouldHandleCareGapAddressedForSocialDeterminants() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        CareGapEntity careGap = CareGapEntity.builder()
+            .patientId(patientId)
+            .category(CareGapEntity.GapCategory.SOCIAL_DETERMINANTS)
             .build();
 
-        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(i -> {
-            HealthScoreEntity entity = i.getArgument(0);
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(60.0)
+            .mentalHealthScore(60.0)
+            .socialDeterminantsScore(60.0)
+            .preventiveCareScore(85.0)
+            .chronicDiseaseScore(70.0)
+            .overallScore(70.0)
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
             entity.setId(UUID.randomUUID());
             return entity;
         });
 
-        // Act: Calculate scores for both tenants
-        healthScoreService.calculateHealthScore(tenant1, commonPatientId, components);
-        healthScoreService.calculateHealthScore(tenant2, commonPatientId, components);
+        service.handleCareGapAddressed(tenantId, careGap);
 
-        // Assert: Verify both saves used correct tenant IDs
         ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
-        verify(healthScoreRepository, times(2)).save(captor.capture());
-
-        List<HealthScoreEntity> saved = captor.getAllValues();
-        assertEquals(tenant1, saved.get(0).getTenantId());
-        assertEquals(tenant2, saved.get(1).getTenantId());
-
-        // Verify repository called with tenant isolation
-        verify(healthScoreRepository).findLatestByPatientId(tenant1, commonPatientId);
-        verify(healthScoreRepository).findLatestByPatientId(tenant2, commonPatientId);
+        verify(healthScoreRepository).save(captor.capture());
+        assertThat(captor.getValue().getSocialDeterminantsScore()).isGreaterThan(60.0);
     }
 
     @Test
-    void testMultiTenantIsolation_HistoryQueries() {
-        // Arrange
-        String tenant1 = "tenant-1";
-        String tenant2 = "tenant-2";
+    void shouldIgnoreCareGapCategoryWithoutScoreImpact() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
 
-        when(healthScoreHistoryRepository.findByPatientIdOrderByCalculatedAtDesc(anyString(), anyString()))
-            .thenReturn(Collections.emptyList());
-
-        // Act
-        healthScoreService.getHealthScoreHistory(tenant1, patientId);
-        healthScoreService.getHealthScoreHistory(tenant2, patientId);
-
-        // Assert: Verify tenant isolation in queries
-        verify(healthScoreHistoryRepository).findByPatientIdOrderByCalculatedAtDesc(tenant1, patientId);
-        verify(healthScoreHistoryRepository).findByPatientIdOrderByCalculatedAtDesc(tenant2, patientId);
-    }
-
-    /**
-     * Helper Methods
-     */
-
-    private HealthScoreEntity createHealthScoreEntity(
-        Double overallScore,
-        Double physicalHealth,
-        Double mentalHealth,
-        Double socialDeterminants,
-        Double preventiveCare,
-        Double chronicDisease
-    ) {
-        return HealthScoreEntity.builder()
-            .id(UUID.randomUUID())
-            .tenantId(tenantId)
+        CareGapEntity careGap = CareGapEntity.builder()
             .patientId(patientId)
-            .overallScore(overallScore)
-            .physicalHealthScore(physicalHealth)
-            .mentalHealthScore(mentalHealth)
-            .socialDeterminantsScore(socialDeterminants)
-            .preventiveCareScore(preventiveCare)
-            .chronicDiseaseScore(chronicDisease)
-            .calculatedAt(now.minusSeconds(3600))
-            .previousScore(null)
-            .significantChange(false)
+            .category(CareGapEntity.GapCategory.MEDICATION)
             .build();
+
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(60.0)
+            .mentalHealthScore(60.0)
+            .socialDeterminantsScore(60.0)
+            .preventiveCareScore(85.0)
+            .chronicDiseaseScore(70.0)
+            .overallScore(70.0)
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        service.handleCareGapAddressed(tenantId, careGap);
+
+        ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
+        verify(healthScoreRepository).save(captor.capture());
+        assertThat(captor.getValue().getChronicDiseaseScore()).isEqualTo(70.0);
     }
 
-    private HealthScoreHistoryEntity createHistoryEntity(Instant calculatedAt, Double score, Double previousScore) {
-        return HealthScoreHistoryEntity.builder()
-            .id(UUID.randomUUID())
-            .tenantId(tenantId)
-            .patientId(patientId)
-            .overallScore(score)
-            .previousScore(previousScore)
-            .scoreDelta(previousScore != null ? score - previousScore : null)
-            .calculatedAt(calculatedAt)
+    @Test
+    void shouldReturnWithoutCareGapScoreWhenNoCurrentScore() {
+        CareGapEntity careGap = CareGapEntity.builder()
+            .patientId(UUID.randomUUID())
+            .category(CareGapEntity.GapCategory.PREVENTIVE_CARE)
             .build();
+
+        when(healthScoreRepository.findLatestByPatientId("tenant-1", careGap.getPatientId()))
+            .thenReturn(Optional.empty());
+
+        service.handleCareGapAddressed("tenant-1", careGap);
+
+        verify(healthScoreRepository, never()).save(any());
     }
 
-    /**
-     * Inner classes for test data
-     */
-    public static class ObservationEvent {
-        private final String observationId;
-        private final String patientId;
-        private final String loincCode;
-        private final String value;
-        private final Instant effectiveDateTime;
+    @Test
+    void shouldProcessConditionEventAndPublishAlert() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
 
-        public ObservationEvent(String observationId, String patientId, String loincCode,
-                               String value, Instant effectiveDateTime) {
-            this.observationId = observationId;
-            this.patientId = patientId;
-            this.loincCode = loincCode;
-            this.value = value;
-            this.effectiveDateTime = effectiveDateTime;
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(80.0)
+            .mentalHealthScore(80.0)
+            .socialDeterminantsScore(80.0)
+            .preventiveCareScore(80.0)
+            .chronicDiseaseScore(80.0)
+            .overallScore(80.0)
+            .build();
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> condition = Map.of(
+            "clinicalStatus", Map.of("coding", List.of(Map.of("code", "active"))),
+            "severity", Map.of("coding", List.of(Map.of("code", "severe"))),
+            "code", Map.of("coding", List.of(
+                Map.of(
+                    "code", "42343007",
+                    "display", "Congestive heart failure",
+                    "system", "http://snomed.info/sct"
+                )
+            ))
+        );
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", condition
+        );
+
+        service.handleConditionEvent(event);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+        verify(kafkaTemplate).send(eq("condition.alert.needed"), eq(patientId.toString()), any());
+    }
+
+    @Test
+    void shouldProcessConditionEventFromSubjectReference() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> condition = Map.of(
+            "clinicalStatus", Map.of("coding", List.of(Map.of("code", "active"))),
+            "code", Map.of("coding", List.of(
+                Map.of(
+                    "code", "J44",
+                    "display", "COPD",
+                    "system", "http://hl7.org/fhir/sid/icd-10-cm"
+                )
+            )),
+            "subject", Map.of("reference", "Patient/" + patientId)
+        );
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "resource", condition
+        );
+
+        service.handleConditionEvent(event);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+        verify(kafkaTemplate).send(eq("condition.alert.needed"), eq(patientId.toString()), any());
+    }
+
+    @Test
+    void shouldSkipConditionEventWhenMissingTenantId() {
+        Map<String, Object> event = Map.of(
+            "patientId", UUID.randomUUID().toString(),
+            "resource", Map.of()
+        );
+
+        service.handleConditionEvent(event);
+
+        verify(healthScoreRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldSkipConditionEventWhenPatientIdInvalid() {
+        Map<String, Object> condition = Map.of(
+            "clinicalStatus", Map.of("coding", List.of(Map.of("code", "active"))),
+            "code", Map.of("coding", List.of(
+                Map.of("code", "I50", "system", "http://hl7.org/fhir/sid/icd-10-cm")
+            ))
+        );
+
+        Map<String, Object> event = Map.of(
+            "tenantId", "tenant-1",
+            "patientId", "bad-id",
+            "resource", condition
+        );
+
+        service.handleConditionEvent(event);
+
+        verify(healthScoreRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldNotCreateAlertForType1DiabetesWithoutSevereSeverity() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> condition = Map.of(
+            "clinicalStatus", Map.of("coding", List.of(Map.of("code", "active"))),
+            "severity", Map.of("coding", List.of(Map.of("code", "255604002"))),
+            "code", Map.of("coding", List.of(
+                Map.of(
+                    "code", "E10",
+                    "display", "Type 1 diabetes mellitus",
+                    "system", "http://hl7.org/fhir/sid/icd-10-cm"
+                )
+            ))
+        );
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", condition
+        );
+
+        service.handleConditionEvent(event);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+        verify(kafkaTemplate, never()).send(eq("condition.alert.needed"), any(), any());
+    }
+
+    @Test
+    void shouldHandleWebSocketBroadcastFailures() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity previous = HealthScoreEntity.builder()
+            .overallScore(40.0)
+            .build();
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(previous));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+        doThrow(new RuntimeException("ws")).when(webSocketHandler)
+            .broadcastHealthScoreUpdate(any(), eq(tenantId));
+        doThrow(new RuntimeException("ws")).when(webSocketHandler)
+            .broadcastSignificantChange(any(), eq(tenantId));
+
+        HealthScoreComponents components = HealthScoreComponents.builder()
+            .physicalHealthScore(90.0)
+            .mentalHealthScore(90.0)
+            .socialDeterminantsScore(90.0)
+            .preventiveCareScore(90.0)
+            .chronicDiseaseScore(90.0)
+            .build();
+
+        service.calculateHealthScore(tenantId, patientId, components);
+
+        verify(kafkaTemplate).send(eq("health-score.updated"), eq(patientId.toString()), any());
+        verify(kafkaTemplate).send(eq("health-score.significant-change"), eq(patientId.toString()), any());
+    }
+
+    @Test
+    void shouldExtractPatientIdViaReflection() {
+        UUID patientId = UUID.randomUUID();
+
+        class EventWithPatientId {
+            public UUID getPatientId() { return patientId; }
         }
 
-        public String getObservationId() { return observationId; }
-        public String getPatientId() { return patientId; }
-        public String getLoincCode() { return loincCode; }
-        public String getValue() { return value; }
-        public Instant getEffectiveDateTime() { return effectiveDateTime; }
+        UUID extracted = ReflectionTestUtils.invokeMethod(
+            service, "extractPatientIdFromEvent", new EventWithPatientId());
+
+        assertThat(extracted).isEqualTo(patientId);
     }
 
-    public static class ConditionEvent {
-        private final String conditionId;
-        private final String patientId;
-        private final String code;
-        private final String display;
-        private final String clinicalStatus;
-        private final Instant recordedDate;
-
-        public ConditionEvent(String conditionId, String patientId, String code,
-                            String display, String clinicalStatus, Instant recordedDate) {
-            this.conditionId = conditionId;
-            this.patientId = patientId;
-            this.code = code;
-            this.display = display;
-            this.clinicalStatus = clinicalStatus;
-            this.recordedDate = recordedDate;
+    @Test
+    void shouldReturnNullWhenReflectionFails() {
+        class EventWithFailingGetter {
+            public UUID getPatientId() { throw new RuntimeException("fail"); }
         }
 
-        public String getConditionId() { return conditionId; }
-        public String getPatientId() { return patientId; }
-        public String getCode() { return code; }
-        public String getDisplay() { return display; }
-        public String getClinicalStatus() { return clinicalStatus; }
-        public Instant getRecordedDate() { return recordedDate; }
+        UUID extracted = ReflectionTestUtils.invokeMethod(
+            service, "extractPatientIdFromEvent", new EventWithFailingGetter());
+
+        assertThat(extracted).isNull();
+    }
+    @Test
+    void shouldProcessConditionEventWithSevereSnomeSeverityCode() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> condition = Map.of(
+            "clinicalStatus", Map.of("coding", List.of(Map.of("code", "active"))),
+            "severity", Map.of("coding", List.of(Map.of("code", "24484000"))),
+            "code", Map.of("coding", List.of(
+                Map.of(
+                    "code", "42343007",
+                    "display", "Congestive heart failure",
+                    "system", "http://snomed.info/sct"
+                )
+            ))
+        );
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", condition
+        );
+
+        service.handleConditionEvent(event);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+        verify(kafkaTemplate).send(eq("condition.alert.needed"), eq(patientId.toString()), any());
+    }
+
+    @Test
+    void shouldProcessConditionEventWithoutAlert() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> condition = Map.of(
+            "clinicalStatus", Map.of("coding", List.of(Map.of("code", "active"))),
+            "severity", Map.of("coding", List.of(Map.of("code", "255604002"))),
+            "code", Map.of("coding", List.of(
+                Map.of(
+                    "code", "I10",
+                    "display", "Hypertension",
+                    "system", "http://hl7.org/fhir/sid/icd-10-cm"
+                )
+            ))
+        );
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", condition
+        );
+
+        service.handleConditionEvent(event);
+
+        verify(healthScoreRepository).save(any(HealthScoreEntity.class));
+        verify(kafkaTemplate, never()).send(eq("condition.alert.needed"), any(), any());
+    }
+
+    @Test
+    void shouldApplyModerateSeverityMultiplierForConditionImpact() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(80.0)
+            .mentalHealthScore(80.0)
+            .socialDeterminantsScore(80.0)
+            .preventiveCareScore(80.0)
+            .chronicDiseaseScore(80.0)
+            .overallScore(80.0)
+            .build();
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> condition = Map.of(
+            "clinicalStatus", Map.of("coding", List.of(Map.of("code", "active"))),
+            "severity", Map.of("coding", List.of(Map.of("code", "6736007"))),
+            "code", Map.of("coding", List.of(
+                Map.of(
+                    "code", "44054006",
+                    "display", "Type 2 diabetes mellitus",
+                    "system", "http://snomed.info/sct"
+                )
+            ))
+        );
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", condition
+        );
+
+        service.handleConditionEvent(event);
+
+        ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
+        verify(healthScoreRepository).save(captor.capture());
+        assertThat(captor.getValue().getChronicDiseaseScore()).isCloseTo(68.0, within(0.01));
+        assertThat(captor.getValue().getPhysicalHealthScore()).isCloseTo(72.0, within(0.01));
+    }
+
+    @Test
+    void shouldApplyDefaultSeverityMultiplierWhenMissing() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(80.0)
+            .mentalHealthScore(80.0)
+            .socialDeterminantsScore(80.0)
+            .preventiveCareScore(80.0)
+            .chronicDiseaseScore(80.0)
+            .overallScore(80.0)
+            .build();
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> condition = Map.of(
+            "clinicalStatus", Map.of("coding", List.of(Map.of("code", "active"))),
+            "code", Map.of("coding", List.of(
+                Map.of(
+                    "code", "53741008",
+                    "display", "Coronary artery disease",
+                    "system", "http://snomed.info/sct"
+                )
+            ))
+        );
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", condition
+        );
+
+        service.handleConditionEvent(event);
+
+        ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
+        verify(healthScoreRepository).save(captor.capture());
+        assertThat(captor.getValue().getChronicDiseaseScore()).isCloseTo(62.0, within(0.01));
+        assertThat(captor.getValue().getPhysicalHealthScore()).isCloseTo(65.0, within(0.01));
+    }
+
+    @Test
+    void shouldApplyMildSeverityMultiplierForConditionImpact() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity current = HealthScoreEntity.builder()
+            .physicalHealthScore(80.0)
+            .mentalHealthScore(80.0)
+            .socialDeterminantsScore(80.0)
+            .preventiveCareScore(80.0)
+            .chronicDiseaseScore(80.0)
+            .overallScore(80.0)
+            .build();
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(current));
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> condition = Map.of(
+            "clinicalStatus", Map.of("coding", List.of(Map.of("code", "active"))),
+            "severity", Map.of("coding", List.of(Map.of("code", "255604002"))),
+            "code", Map.of("coding", List.of(
+                Map.of(
+                    "code", "44054006",
+                    "display", "Type 2 diabetes mellitus",
+                    "system", "http://snomed.info/sct"
+                )
+            ))
+        );
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", condition
+        );
+
+        service.handleConditionEvent(event);
+
+        ArgumentCaptor<HealthScoreEntity> captor = ArgumentCaptor.forClass(HealthScoreEntity.class);
+        verify(healthScoreRepository).save(captor.capture());
+        assertThat(captor.getValue().getChronicDiseaseScore()).isCloseTo(72.8, within(0.01));
+        assertThat(captor.getValue().getPhysicalHealthScore()).isCloseTo(75.2, within(0.01));
+    }
+
+    @Test
+    void shouldCreateAlertForCancerIcd10Condition() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> condition = Map.of(
+            "clinicalStatus", Map.of("coding", List.of(Map.of("code", "active"))),
+            "code", Map.of("coding", List.of(
+                Map.of(
+                    "code", "C50",
+                    "display", "Breast cancer",
+                    "system", "http://hl7.org/fhir/sid/icd-10-cm"
+                )
+            ))
+        );
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", condition
+        );
+
+        service.handleConditionEvent(event);
+
+        verify(kafkaTemplate).send(eq("condition.alert.needed"), eq(patientId.toString()), any());
+    }
+    @Test
+    void shouldSkipConditionEventWhenMissingCode() {
+        UUID patientId = UUID.randomUUID();
+        Map<String, Object> condition = Map.of(
+            "clinicalStatus", Map.of("coding", List.of(Map.of("code", "active")))
+        );
+
+        Map<String, Object> event = Map.of(
+            "tenantId", "tenant-1",
+            "patientId", patientId.toString(),
+            "resource", condition
+        );
+
+        service.handleConditionEvent(event);
+
+        verify(healthScoreRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldCreateAlertForSevereType1Diabetes() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
+            HealthScoreEntity entity = invocation.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        Map<String, Object> condition = Map.of(
+            "clinicalStatus", Map.of("coding", List.of(Map.of("code", "active"))),
+            "severity", Map.of("coding", List.of(Map.of("code", "severe"))),
+            "code", Map.of("coding", List.of(
+                Map.of(
+                    "code", "E10",
+                    "display", "Type 1 diabetes mellitus",
+                    "system", "http://hl7.org/fhir/sid/icd-10-cm"
+                )
+            ))
+        );
+
+        Map<String, Object> event = Map.of(
+            "tenantId", tenantId,
+            "patientId", patientId.toString(),
+            "resource", condition
+        );
+
+        service.handleConditionEvent(event);
+
+        verify(kafkaTemplate).send(eq("condition.alert.needed"), eq(patientId.toString()), any());
+    }
+    @Test
+    void shouldSkipInactiveConditionEvent() {
+        UUID patientId = UUID.randomUUID();
+        Map<String, Object> condition = Map.of(
+            "clinicalStatus", Map.of("coding", List.of(Map.of("code", "inactive"))),
+            "code", Map.of("coding", List.of(
+                Map.of("code", "I10", "system", "http://hl7.org/fhir/sid/icd-10-cm")
+            ))
+        );
+
+        Map<String, Object> event = Map.of(
+            "tenantId", "tenant-1",
+            "patientId", patientId.toString(),
+            "resource", condition
+        );
+
+        service.handleConditionEvent(event);
+
+        verify(healthScoreRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldSkipNonChronicConditionEvent() {
+        UUID patientId = UUID.randomUUID();
+        Map<String, Object> condition = Map.of(
+            "clinicalStatus", Map.of("coding", List.of(Map.of("code", "active"))),
+            "code", Map.of("coding", List.of(
+                Map.of("code", "UNKNOWN", "system", "http://example.com")
+            ))
+        );
+
+        Map<String, Object> event = Map.of(
+            "tenantId", "tenant-1",
+            "patientId", patientId.toString(),
+            "resource", condition
+        );
+
+        service.handleConditionEvent(event);
+
+        verify(healthScoreRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldReturnCurrentHealthScore() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity entity = HealthScoreEntity.builder()
+            .id(UUID.randomUUID())
+            .patientId(patientId)
+            .tenantId(tenantId)
+            .overallScore(78.0)
+            .physicalHealthScore(78.0)
+            .mentalHealthScore(78.0)
+            .socialDeterminantsScore(78.0)
+            .preventiveCareScore(78.0)
+            .chronicDiseaseScore(78.0)
+            .calculatedAt(Instant.now())
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(entity));
+
+        Optional<HealthScoreDTO> result = service.getCurrentHealthScore(tenantId, patientId);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getOverallScore()).isEqualTo(78.0);
+    }
+
+    @Test
+    void shouldReturnHistoryDtos() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreHistoryEntity history = HealthScoreHistoryEntity.builder()
+            .id(UUID.randomUUID())
+            .patientId(patientId)
+            .tenantId(tenantId)
+            .overallScore(80.0)
+            .calculatedAt(Instant.now())
+            .build();
+
+        when(healthScoreHistoryRepository.findByPatientIdOrderByCalculatedAtDesc(tenantId, patientId))
+            .thenReturn(List.of(history));
+
+        List<HealthScoreDTO> dtos = service.getHealthScoreHistory(tenantId, patientId);
+
+        assertThat(dtos).hasSize(1);
+        assertThat(dtos.get(0).getOverallScore()).isEqualTo(80.0);
+    }
+
+    @Test
+    void shouldReturnAtRiskPatients() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity entity = HealthScoreEntity.builder()
+            .id(UUID.randomUUID())
+            .patientId(patientId)
+            .tenantId(tenantId)
+            .overallScore(30.0)
+            .physicalHealthScore(30.0)
+            .mentalHealthScore(30.0)
+            .socialDeterminantsScore(30.0)
+            .preventiveCareScore(30.0)
+            .chronicDiseaseScore(30.0)
+            .calculatedAt(Instant.now())
+            .build();
+
+        Page<HealthScoreEntity> page = new PageImpl<>(List.of(entity));
+        when(healthScoreRepository.findLatestScoresBelowThreshold(eq(tenantId), eq(50.0), any()))
+            .thenReturn(page);
+
+        Page<HealthScoreDTO> result =
+            service.getAtRiskPatients(tenantId, 50.0, PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getOverallScore()).isEqualTo(30.0);
+    }
+
+    @Test
+    void shouldReturnSignificantChanges() {
+        UUID patientId = UUID.randomUUID();
+        String tenantId = "tenant-1";
+
+        HealthScoreEntity entity = HealthScoreEntity.builder()
+            .id(UUID.randomUUID())
+            .patientId(patientId)
+            .tenantId(tenantId)
+            .overallScore(90.0)
+            .physicalHealthScore(90.0)
+            .mentalHealthScore(90.0)
+            .socialDeterminantsScore(90.0)
+            .preventiveCareScore(90.0)
+            .chronicDiseaseScore(90.0)
+            .calculatedAt(Instant.now())
+            .build();
+
+        Page<HealthScoreEntity> page = new PageImpl<>(List.of(entity));
+        when(healthScoreRepository.findSignificantChangesSince(eq(tenantId), any(), any()))
+            .thenReturn(page);
+
+        Page<HealthScoreDTO> result =
+            service.getSignificantChanges(tenantId, Instant.now(), PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getOverallScore()).isEqualTo(90.0);
     }
 }

@@ -13,6 +13,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Chronic Disease Monitoring Service
@@ -51,7 +52,7 @@ public class ChronicDiseaseMonitoringService {
     @Transactional
     public ChronicDiseaseMonitoringEntity processLabResult(
         String tenantId,
-        String patientId,
+        UUID patientId,
         Map<String, Object> observationData
     ) {
         log.info("Processing lab result for patient {}", patientId);
@@ -130,7 +131,7 @@ public class ChronicDiseaseMonitoringService {
     /**
      * Get all monitoring records for a patient
      */
-    public List<ChronicDiseaseMonitoringEntity> getPatientMonitoring(String tenantId, String patientId) {
+    public List<ChronicDiseaseMonitoringEntity> getPatientMonitoring(String tenantId, UUID patientId) {
         return monitoringRepository.findByTenantIdAndPatientIdOrderByMonitoredAtDesc(tenantId, patientId);
     }
 
@@ -228,7 +229,7 @@ public class ChronicDiseaseMonitoringService {
      */
     private void publishDeteriorationEvent(
         String tenantId,
-        String patientId,
+        UUID patientId,
         ChronicDiseaseMonitoringEntity monitoring,
         LabResult labResult
     ) {

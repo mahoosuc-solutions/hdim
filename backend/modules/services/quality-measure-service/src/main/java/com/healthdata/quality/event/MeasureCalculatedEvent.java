@@ -18,7 +18,7 @@ import java.util.UUID;
 public class MeasureCalculatedEvent {
     private UUID measureResultId;
     private String tenantId;
-    private String patientId;
+    private UUID patientId;
     private String measureId;
     private String result; // "PASS", "FAIL", "NOT_APPLICABLE"
 }

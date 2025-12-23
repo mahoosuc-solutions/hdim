@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * FHIR Resource Event DTO
@@ -23,7 +24,7 @@ public class FhirResourceEvent {
     private String resourceType; // "Procedure", "Observation"
     private String resourceId;
     private String tenantId;
-    private String patientId;
+    private UUID patientId;
     private Instant timestamp;
 
     // Resource-specific data

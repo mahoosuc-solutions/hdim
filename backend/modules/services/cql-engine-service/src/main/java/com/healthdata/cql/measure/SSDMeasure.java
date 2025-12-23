@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * SSD - Diabetes Screening for People with Schizophrenia or Bipolar Disorder Who Are Using Antipsychotic Medications (HEDIS)
@@ -73,7 +74,7 @@ public class SSDMeasure extends AbstractHedisMeasure {
 
     @Override
     @Cacheable(value = "hedisMeasures", key = "'SSD-' + #tenantId + '-' + #patientId")
-    public MeasureResult evaluate(String tenantId, String patientId) {
+    public MeasureResult evaluate(String tenantId, UUID patientId) {
         logger.info("Evaluating SSD measure for patient: {}", patientId);
 
         MeasureResult.MeasureResultBuilder resultBuilder = MeasureResult.builder()
@@ -163,7 +164,7 @@ public class SSDMeasure extends AbstractHedisMeasure {
     }
 
     @Override
-    public boolean isEligible(String tenantId, String patientId) {
+    public boolean isEligible(String tenantId, UUID patientId) {
         JsonNode patient = getPatientData(tenantId, patientId);
         if (patient == null) return false;
 

@@ -35,8 +35,8 @@ Deploy the entire stack in under 3 minutes:
 git clone https://github.com/your-org/healthdata-in-motion.git
 cd healthdata-in-motion
 
-# 2. Deploy with Docker
-docker compose up -d
+# 2. Deploy with Docker (core profile)
+docker compose --profile core up -d
 
 # 3. Verify deployment
 ./scripts/health-check.sh
@@ -44,7 +44,7 @@ docker compose up -d
 
 **Access the application:**
 - **Clinical Portal:** http://localhost:4200
-- **API Gateway:** http://localhost:9000
+- **API Gateway:** http://localhost:8080
 - **Health Dashboard:** http://localhost:4200/dashboard
 
 **Default credentials:** See [AUTHENTICATION_GUIDE.md](./AUTHENTICATION_GUIDE.md)

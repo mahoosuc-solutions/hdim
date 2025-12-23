@@ -42,10 +42,12 @@ public class MigrationJobEntity {
     @Column(name = "id", nullable = false)
     private UUID id;
 
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "tenant_id", nullable = false, length = 64)
     private String tenantId;
 
-    @Column(name = "job_name", nullable = false)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "job_name", nullable = false, length = 255)
     private String jobName;
 
     @Column(name = "description", columnDefinition = "text")

@@ -56,7 +56,7 @@ class CareGapAutoClosureUnitTest {
     private ObjectMapper objectMapper;
 
     private static final String TENANT_ID = "test-tenant";
-    private static final String PATIENT_ID = "patient-123";
+    private static final UUID PATIENT_ID = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
 
     @BeforeEach
     void setUp() {
@@ -244,6 +244,163 @@ class CareGapAutoClosureUnitTest {
 
         // ASSERT
         assertThat(matches).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Event consumer should skip when tenant or patient missing")
+    void shouldSkipEventWhenTenantOrPatientMissing() throws Exception {
+        CareGapService careGapServiceMock = mock(CareGapService.class);
+        CareGapMatchingService matchingServiceMock = mock(CareGapMatchingService.class);
+        KafkaTemplate<String, String> kafkaTemplateMock = mock(KafkaTemplate.class);
+        ObjectMapper mapper = mock(ObjectMapper.class);
+
+        CareGapClosureEventConsumer consumer = new CareGapClosureEventConsumer(
+            careGapServiceMock,
+            matchingServiceMock,
+            kafkaTemplateMock,
+            mapper
+        );
+
+        FhirResourceEvent event = FhirResourceEvent.builder()
+            .eventId(UUID.randomUUID().toString())
+            .eventType("fhir.procedures.created")
+            .resourceType("Procedure")
+            .resourceId("Procedure/1")
+            .tenantId(null)
+            .patientId(null)
+            .build();
+        when(mapper.readValue(any(String.class), eq(FhirResourceEvent.class))).thenReturn(event);
+
+        consumer.handleProcedureCreated("{ }");
+
+        verifyNoInteractions(matchingServiceMock);
+        verifyNoInteractions(careGapServiceMock);
+    }
+
+    @Test
+    @DisplayName("Event consumer should skip when no matching gaps")
+    void shouldSkipWhenNoMatchingGaps() throws Exception {
+        CareGapService careGapServiceMock = mock(CareGapService.class);
+        CareGapMatchingService matchingServiceMock = mock(CareGapMatchingService.class);
+        KafkaTemplate<String, String> kafkaTemplateMock = mock(KafkaTemplate.class);
+        ObjectMapper mapper = mock(ObjectMapper.class);
+
+        CareGapClosureEventConsumer consumer = new CareGapClosureEventConsumer(
+            careGapServiceMock,
+            matchingServiceMock,
+            kafkaTemplateMock,
+            mapper
+        );
+
+        FhirResourceEvent event = createProcedureEvent(
+            "Procedure/2",
+            "45378",
+            "http://www.ama-assn.org/go/cpt",
+            "Colonoscopy"
+        );
+        when(mapper.readValue(any(String.class), eq(FhirResourceEvent.class))).thenReturn(event);
+        when(matchingServiceMock.findMatchingCareGaps(
+            TENANT_ID, PATIENT_ID, event)).thenReturn(List.of());
+
+        consumer.handleProcedureCreated("{ }");
+
+        verify(careGapServiceMock, never()).autoCloseCareGap(any(), any(), any(), any(), any());
+        verify(kafkaTemplateMock, never()).send(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Event consumer should swallow publish errors")
+    void shouldSwallowPublishErrors() throws Exception {
+        CareGapService careGapServiceMock = mock(CareGapService.class);
+        CareGapMatchingService matchingServiceMock = mock(CareGapMatchingService.class);
+        KafkaTemplate<String, String> kafkaTemplateMock = mock(KafkaTemplate.class);
+        ObjectMapper mapper = mock(ObjectMapper.class);
+
+        CareGapClosureEventConsumer consumer = new CareGapClosureEventConsumer(
+            careGapServiceMock,
+            matchingServiceMock,
+            kafkaTemplateMock,
+            mapper
+        );
+
+        FhirResourceEvent event = createProcedureEvent(
+            "Procedure/3",
+            "45380",
+            "http://www.ama-assn.org/go/cpt",
+            "Colonoscopy"
+        );
+        CareGapEntity gap = createCareGap(
+            UUID.randomUUID(),
+            "screening-test",
+            CareGapEntity.GapCategory.SCREENING,
+            "Screening Due",
+            "45380"
+        );
+
+        when(mapper.readValue(any(String.class), eq(FhirResourceEvent.class))).thenReturn(event);
+        when(matchingServiceMock.findMatchingCareGaps(
+            TENANT_ID, PATIENT_ID, event)).thenReturn(List.of(gap));
+        when(matchingServiceMock.getMatchingSummary(eq(gap), eq(event))).thenReturn("match");
+        when(mapper.writeValueAsString(any())).thenThrow(new RuntimeException("json fail"));
+
+        consumer.handleProcedureCreated("{ }");
+
+        verify(careGapServiceMock).autoCloseCareGap(
+            eq(TENANT_ID),
+            eq(gap.getId()),
+            eq(event.getResourceType()),
+            eq(event.getResourceId()),
+            eq("match")
+        );
+    }
+
+    @Test
+    @DisplayName("Event consumer should handle observation created events")
+    void shouldHandleObservationCreatedEvents() throws Exception {
+        CareGapService careGapServiceMock = mock(CareGapService.class);
+        CareGapMatchingService matchingServiceMock = mock(CareGapMatchingService.class);
+        KafkaTemplate<String, String> kafkaTemplateMock = mock(KafkaTemplate.class);
+        ObjectMapper mapper = mock(ObjectMapper.class);
+
+        CareGapClosureEventConsumer consumer = new CareGapClosureEventConsumer(
+            careGapServiceMock,
+            matchingServiceMock,
+            kafkaTemplateMock,
+            mapper
+        );
+
+        FhirResourceEvent event = FhirResourceEvent.builder()
+            .eventId(UUID.randomUUID().toString())
+            .eventType("fhir.observations.created")
+            .resourceType("Observation")
+            .resourceId("Observation/1")
+            .tenantId(TENANT_ID)
+            .patientId(PATIENT_ID)
+            .build();
+        CareGapEntity gap = createCareGap(
+            UUID.randomUUID(),
+            "lab-test",
+            CareGapEntity.GapCategory.SCREENING,
+            "Lab Test Due",
+            "82947"
+        );
+
+        when(mapper.readValue(any(String.class), eq(FhirResourceEvent.class))).thenReturn(event);
+        when(matchingServiceMock.findMatchingCareGaps(
+            TENANT_ID, PATIENT_ID, event)).thenReturn(List.of(gap));
+        when(matchingServiceMock.getMatchingSummary(eq(gap), eq(event))).thenReturn("match");
+        when(mapper.writeValueAsString(any())).thenReturn("{\"event\":\"ok\"}");
+
+        consumer.handleObservationCreated("{ }");
+
+        verify(careGapServiceMock).autoCloseCareGap(
+            eq(TENANT_ID),
+            eq(gap.getId()),
+            eq("Observation"),
+            eq("Observation/1"),
+            eq("match")
+        );
+        verify(kafkaTemplateMock).send(anyString(), anyString(), anyString());
     }
 
     @Test

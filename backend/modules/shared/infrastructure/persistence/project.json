@@ -1,0 +1,39 @@
+{
+  "name": "modules-shared-infrastructure-persistence",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "backend/modules/shared/infrastructure/persistence/src",
+  "tags": [
+    "backend",
+    "lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/modules/shared/infrastructure/persistence/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:infrastructure:persistence:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:infrastructure:persistence:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:infrastructure:persistence:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:infrastructure:persistence:test :modules:shared:infrastructure:persistence:jacocoTestReport :modules:shared:infrastructure:persistence:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

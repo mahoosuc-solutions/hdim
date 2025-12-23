@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Request DTO for calculating quality measures
@@ -23,8 +24,8 @@ public class MeasureCalculationRequest {
     @NotBlank(message = "Measure ID is required")
     private String measureId;
 
-    @NotBlank(message = "Patient ID is required")
-    private String patientId;
+    @NotNull(message = "Patient ID is required")
+    private UUID patientId;
 
     @NotNull(message = "Period start date is required")
     private LocalDate periodStart;

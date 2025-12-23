@@ -25,7 +25,7 @@ public interface CdsAcknowledgmentRepository extends JpaRepository<CdsAcknowledg
      */
     List<CdsAcknowledgmentEntity> findByTenantIdAndPatientIdOrderByCreatedAtDesc(
         String tenantId,
-        String patientId
+        UUID patientId
     );
 
     /**
@@ -75,7 +75,7 @@ public interface CdsAcknowledgmentRepository extends JpaRepository<CdsAcknowledg
            "AND a.actionType = :actionType")
     Long countByPatientAndAction(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("actionType") CdsAcknowledgmentEntity.ActionType actionType
     );
 

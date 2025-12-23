@@ -74,6 +74,34 @@ class DiabetesCareCalculatorTest {
     }
 
     @Test
+    @DisplayName("Should exclude when no conditions are available")
+    void shouldExcludeWhenNoConditionsPresent() {
+        MeasureResult result = calculator.calculate(mockPatientData);
+
+        assertFalse(result.isEligible());
+        assertEquals("No conditions found", result.getExclusionReason());
+    }
+
+    @Test
+    @DisplayName("Should exclude when no diabetes diagnosis exists")
+    void shouldExcludeWhenNoDiabetesDiagnosis() {
+        Condition hypertension = new Condition();
+        CodeableConcept code = new CodeableConcept();
+        Coding coding = new Coding();
+        coding.setSystem("http://snomed.info/sct");
+        coding.setCode("38341003");
+        coding.setDisplay("Hypertension");
+        code.addCoding(coding);
+        hypertension.setCode(code);
+        mockPatientData.getConditions().add(hypertension);
+
+        MeasureResult result = calculator.calculate(mockPatientData);
+
+        assertFalse(result.isEligible());
+        assertEquals("No diabetes diagnosis", result.getExclusionReason());
+    }
+
+    @Test
     @DisplayName("Should calculate HbA1c control < 8%")
     void shouldCalculateHbA1cControl() {
         // Add diabetes diagnosis
@@ -108,6 +136,39 @@ class DiabetesCareCalculatorTest {
         assertNotNull(control8, "HbA1c < 8% sub-measure should exist");
         assertTrue(control8.isNumeratorMembership(), "Patient should have HbA1c < 8%");
         assertEquals("7.2%", control8.getValue());
+    }
+
+    @Test
+    @DisplayName("Should treat missing HbA1c values as not in numerator")
+    void shouldHandleMissingHbA1cValue() {
+        addDiabetesDiagnosis(mockPatientData);
+
+        Observation hba1c = createHbA1cObservation(7.5);
+        hba1c.setValue(null);
+        mockPatientData.getObservations().add(hba1c);
+
+        MeasureResult result = calculator.calculate(mockPatientData);
+
+        assertFalse(result.getSubMeasures().get("HbA1c Testing").isNumeratorMembership());
+        assertFalse(result.getSubMeasures().get("HbA1c < 8%").isNumeratorMembership());
+        assertFalse(result.getSubMeasures().get("HbA1c > 9%").isNumeratorMembership());
+    }
+
+    @Test
+    @DisplayName("Should ignore HbA1c observations older than one year")
+    void shouldIgnoreOldHbA1cObservation() {
+        addDiabetesDiagnosis(mockPatientData);
+
+        Observation hba1c = createHbA1cObservation(7.8);
+        DateTimeType effectiveDateTime = new DateTimeType(Date.from(
+            LocalDate.now().minusYears(2).atStartOfDay(ZoneId.systemDefault()).toInstant()
+        ));
+        hba1c.setEffective(effectiveDateTime);
+        mockPatientData.getObservations().add(hba1c);
+
+        MeasureResult result = calculator.calculate(mockPatientData);
+
+        assertFalse(result.getSubMeasures().get("HbA1c Testing").isNumeratorMembership());
     }
 
     @Test
@@ -186,6 +247,28 @@ class DiabetesCareCalculatorTest {
     }
 
     @Test
+    @DisplayName("Should exclude patients receiving palliative care")
+    void shouldExcludePalliativeCarePatients() {
+        addDiabetesDiagnosis(mockPatientData);
+
+        Condition palliative = new Condition();
+        CodeableConcept code = new CodeableConcept();
+        Coding coding = new Coding();
+        coding.setSystem("http://snomed.info/sct");
+        coding.setCode("385763009");
+        coding.setDisplay("Palliative care");
+        code.addCoding(coding);
+        palliative.setCode(code);
+        mockPatientData.getConditions().add(palliative);
+
+        MeasureResult result = calculator.calculate(mockPatientData);
+
+        assertFalse(result.isEligible());
+        assertTrue(result.isDenominatorExclusion());
+        assertEquals("Patient receiving palliative care", result.getExclusionReason());
+    }
+
+    @Test
     @DisplayName("Should exclude patients with gestational diabetes only")
     void shouldExcludeGestationalDiabetesOnly() {
         // Add only gestational diabetes
@@ -240,6 +323,75 @@ class DiabetesCareCalculatorTest {
     }
 
     @Test
+    @DisplayName("Should calculate eye exam compliance via observation")
+    void shouldCalculateEyeExamObservation() {
+        addDiabetesDiagnosis(mockPatientData);
+
+        Observation eyeExam = new Observation();
+        CodeableConcept code = new CodeableConcept();
+        Coding coding = new Coding();
+        coding.setSystem("http://loinc.org");
+        coding.setCode("70939-2");
+        coding.setDisplay("Diabetic eye exam");
+        code.addCoding(coding);
+        eyeExam.setCode(code);
+        eyeExam.setEffective(new DateTimeType(new Date()));
+        mockPatientData.getObservations().add(eyeExam);
+
+        MeasureResult result = calculator.calculate(mockPatientData);
+
+        SubMeasureResult eyeExamResult = result.getSubMeasures().get("Eye Exam");
+        assertTrue(eyeExamResult.isNumeratorMembership());
+        assertEquals("observation", eyeExamResult.getMethod());
+    }
+
+    @Test
+    @DisplayName("Should calculate nephropathy screening via lab observation")
+    void shouldCalculateNephropathyScreening() {
+        addDiabetesDiagnosis(mockPatientData);
+
+        Observation nephropathy = new Observation();
+        CodeableConcept code = new CodeableConcept();
+        Coding coding = new Coding();
+        coding.setSystem("http://loinc.org");
+        coding.setCode("33914-3");
+        coding.setDisplay("Microalbumin Creatinine Ratio");
+        code.addCoding(coding);
+        nephropathy.setCode(code);
+        nephropathy.setEffective(new DateTimeType(new Date()));
+        mockPatientData.getObservations().add(nephropathy);
+
+        MeasureResult result = calculator.calculate(mockPatientData);
+
+        SubMeasureResult nephropathyResult = result.getSubMeasures().get("Nephropathy Screening");
+        assertTrue(nephropathyResult.isNumeratorMembership());
+        assertEquals("screening", nephropathyResult.getMethod());
+    }
+
+    @Test
+    @DisplayName("Should calculate nephropathy screening via ACE/ARB treatment")
+    void shouldCalculateNephropathyViaMedication() {
+        addDiabetesDiagnosis(mockPatientData);
+
+        MedicationStatement med = new MedicationStatement();
+        CodeableConcept medCode = new CodeableConcept();
+        Coding coding = new Coding();
+        coding.setSystem("http://www.nlm.nih.gov/research/umls/rxnorm");
+        coding.setCode("316049");
+        coding.setDisplay("Lisinopril");
+        medCode.addCoding(coding);
+        med.setMedication(medCode);
+        med.setStatus(MedicationStatement.MedicationStatementStatus.ACTIVE);
+        mockPatientData.getMedicationStatements().add(med);
+
+        MeasureResult result = calculator.calculate(mockPatientData);
+
+        SubMeasureResult nephropathyResult = result.getSubMeasures().get("Nephropathy Screening");
+        assertTrue(nephropathyResult.isNumeratorMembership());
+        assertEquals("treatment", nephropathyResult.getMethod());
+    }
+
+    @Test
     @DisplayName("Should calculate blood pressure control")
     void shouldCalculateBPControl() {
         // Add diabetes diagnosis
@@ -280,6 +432,44 @@ class DiabetesCareCalculatorTest {
         // Should have care gap for uncontrolled BP
         assertTrue(result.getCareGaps().stream()
             .anyMatch(g -> "uncontrolled-blood-pressure".equals(g.getType())));
+    }
+
+    @Test
+    @DisplayName("Should flag missing BP reading when components are absent")
+    void shouldDetectMissingBpReading() {
+        addDiabetesDiagnosis(mockPatientData);
+
+        Observation bp = new Observation();
+        CodeableConcept code = new CodeableConcept();
+        Coding coding = new Coding();
+        coding.setSystem("http://loinc.org");
+        coding.setCode("85354-9");
+        coding.setDisplay("Blood pressure panel");
+        code.addCoding(coding);
+        bp.setCode(code);
+        bp.setEffective(new DateTimeType(new Date()));
+        mockPatientData.getObservations().add(bp);
+
+        MeasureResult result = calculator.calculate(mockPatientData);
+
+        assertTrue(result.getCareGaps().stream()
+            .anyMatch(g -> "missing-bp-reading".equals(g.getType())));
+    }
+
+    @Test
+    @DisplayName("Should generate recommendations for moderate control and multiple gaps")
+    void shouldGenerateRecommendationsForModerateControl() {
+        addDiabetesDiagnosis(mockPatientData);
+
+        Observation hba1c = createHbA1cObservation(8.4);
+        mockPatientData.getObservations().add(hba1c);
+
+        MeasureResult result = calculator.calculate(mockPatientData);
+
+        assertTrue(result.getRecommendations().stream()
+            .anyMatch(r -> r.getAction().contains("medication adjustment")));
+        assertTrue(result.getRecommendations().stream()
+            .anyMatch(r -> r.getAction().contains("comprehensive diabetes care visit")));
     }
 
     // ========== Helper Methods ==========

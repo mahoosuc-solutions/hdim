@@ -1,0 +1,39 @@
+{
+  "name": "modules-shared-infrastructure-messaging",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "backend/modules/shared/infrastructure/messaging/src",
+  "tags": [
+    "backend",
+    "lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/modules/shared/infrastructure/messaging/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:infrastructure:messaging:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:infrastructure:messaging:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:infrastructure:messaging:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:infrastructure:messaging:test :modules:shared:infrastructure:messaging:jacocoTestReport :modules:shared:infrastructure:messaging:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

@@ -3,6 +3,83 @@
     <h1 class="page-title">Quality Measure Evaluations</h1>
   </div>
 
+  <!-- Quick Access: Favorites & Recent Measures -->
+  @if (measureFavorites.favoritesCount() > 0 || measureFavorites.hasRecent()) {
+    <mat-card class="quick-access-card">
+      <mat-card-header>
+        <mat-icon class="card-header-icon">bolt</mat-icon>
+        <mat-card-title>Quick Access</mat-card-title>
+        <mat-card-subtitle>Select from your favorites or recently used measures</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <!-- Favorite Measures -->
+        @if (measureFavorites.favoritesCount() > 0) {
+          <div class="quick-access-section">
+            <div class="section-header">
+              <mat-icon class="section-icon favorite-icon">star</mat-icon>
+              <span class="section-title">Favorites</span>
+              <span class="section-count">({{ measureFavorites.favoritesCount() }})</span>
+            </div>
+            <div class="quick-chips">
+              @for (measure of getFavoriteMeasures(); track measure.id) {
+                <button
+                  mat-stroked-button
+                  class="quick-chip favorite-chip"
+                  (click)="quickSelectMeasure(measure)"
+                  [matTooltip]="measure.displayName"
+                  aria-label="Quick select {{ measure.displayName }}">
+                  <mat-icon class="chip-icon">star</mat-icon>
+                  <span class="chip-label">{{ measure.name }}</span>
+                  <button
+                    mat-icon-button
+                    class="chip-remove"
+                    (click)="toggleFavorite(measure, $event)"
+                    matTooltip="Remove from favorites"
+                    aria-label="Remove {{ measure.name }} from favorites">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Recent Measures -->
+        @if (measureFavorites.hasRecent()) {
+          <div class="quick-access-section">
+            <div class="section-header">
+              <mat-icon class="section-icon recent-icon">history</mat-icon>
+              <span class="section-title">Recently Used</span>
+              <button
+                mat-icon-button
+                class="clear-recent-btn"
+                (click)="measureFavorites.clearRecent()"
+                matTooltip="Clear recent history"
+                aria-label="Clear recent measures history">
+                <mat-icon>clear_all</mat-icon>
+              </button>
+            </div>
+            <div class="quick-chips">
+              @for (measure of getRecentMeasures(); track measure.id; let i = $index) {
+                @if (i < 5) {
+                  <button
+                    mat-stroked-button
+                    class="quick-chip recent-chip"
+                    (click)="quickSelectMeasure(measure)"
+                    [matTooltip]="measure.displayName"
+                    aria-label="Quick select {{ measure.displayName }}">
+                    <mat-icon class="chip-icon">schedule</mat-icon>
+                    <span class="chip-label">{{ measure.name }}</span>
+                  </button>
+                }
+              }
+            </div>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+
   <!-- Evaluation Form Card -->
   <mat-card class="evaluation-form-card">
     <mat-card-header>
@@ -53,6 +130,33 @@
           <div class="step-indicator">
             <span class="step-badge" aria-label="Step 1 of 3">Step 1</span>
           </div>
+
+          <!-- Category Filter -->
+          <mat-form-field class="category-filter" appearance="outline">
+            <mat-label>
+              Filter by Category
+              <mat-icon
+                matTooltip="Filter measures by clinical category to narrow down your selection"
+                matTooltipPosition="above"
+                class="help-icon"
+                aria-hidden="true">filter_list</mat-icon>
+            </mat-label>
+            <mat-select
+              [(value)]="selectedCategory"
+              (selectionChange)="onCategoryChange($event.value)"
+              aria-label="Filter measures by category">
+              @for (category of measureCategories; track category.value) {
+                <mat-option [value]="category.value">
+                  {{ category.label }}
+                  @if (getCategoryCount(category.value) > 0) {
+                    <span class="category-count">({{ getCategoryCount(category.value) }})</span>
+                  }
+                </mat-option>
+              }
+            </mat-select>
+            <mat-icon matPrefix aria-hidden="true">category</mat-icon>
+          </mat-form-field>
+
           <!-- Measure Selection -->
           <mat-form-field class="full-width" appearance="outline">
             <mat-label>
@@ -76,17 +180,41 @@
               }
               @for (measure of measures; track measure.id) {
                 <mat-option [value]="measure.name">
-                  {{ measure.displayName }}
+                  <span class="measure-option">
+                    <button
+                      mat-icon-button
+                      class="favorite-toggle"
+                      (click)="toggleFavorite(measure, $event)"
+                      [matTooltip]="isFavorite(measure.id) ? 'Remove from favorites' : 'Add to favorites'"
+                      [attr.aria-label]="isFavorite(measure.id) ? 'Remove ' + measure.name + ' from favorites' : 'Add ' + measure.name + ' to favorites'">
+                      <mat-icon [class.favorited]="isFavorite(measure.id)">
+                        {{ isFavorite(measure.id) ? 'star' : 'star_border' }}
+                      </mat-icon>
+                    </button>
+                    <span class="measure-name">{{ measure.displayName }}</span>
+                    @if (measure.category) {
+                      <span class="measure-category-badge">{{ measure.category }}</span>
+                    }
+                  </span>
                 </mat-option>
               }
               @if (!loadingMeasures && measures.length === 0) {
                 <mat-option value="" disabled>
                   No measures available
+                  @if (selectedCategory) {
+                    in this category
+                  }
                 </mat-option>
               }
             </mat-select>
             <mat-icon matPrefix aria-hidden="true">assessment</mat-icon>
-            <mat-hint id="measure-hint">Select from {{ measures.length }} available HEDIS measures</mat-hint>
+            <mat-hint id="measure-hint">
+              @if (selectedCategory) {
+                Showing {{ measures.length }} measures in {{ selectedCategory }} category
+              } @else {
+                Select from {{ measures.length }} available HEDIS measures
+              }
+            </mat-hint>
           </mat-form-field>
         </div>
 

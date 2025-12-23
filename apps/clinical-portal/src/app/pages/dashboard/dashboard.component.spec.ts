@@ -2,14 +2,17 @@ import { ComponentFixture, TestBed, fakeAsync, flush } from '@angular/core/testi
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { BehaviorSubject, of, throwError } from 'rxjs';
 import { DashboardComponent } from './dashboard.component';
 import { EvaluationService } from '../../services/evaluation.service';
 import { PatientService } from '../../services/patient.service';
 import { MeasureService } from '../../services/measure.service';
+import { AIAssistantService } from '../../services/ai-assistant.service';
 import { EvaluationFactory } from '../../../testing/factories/evaluation.factory';
 import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { CqlLibraryFactory } from '../../../testing/factories/cql-library.factory';
+import { UserRoleService, UserRole } from '../../shared/services/user-role.service';
+import { MeasureFavoritesService } from '../../services/measure-favorites.service';
 
 /**
  * TDD Test Suite for Dashboard Component
@@ -29,6 +32,11 @@ describe('DashboardComponent (TDD)', () => {
   let mockPatientService: jest.Mocked<PatientService>;
   let mockMeasureService: jest.Mocked<MeasureService>;
   let mockRouter: jest.Mocked<Router>;
+  let mockUserRoleService: {
+    currentRole$: BehaviorSubject<UserRole>;
+    getCurrentRole: jest.Mock;
+    setRole: jest.Mock;
+  };
 
   beforeEach(async () => {
     // Create mock services
@@ -59,6 +67,25 @@ describe('DashboardComponent (TDD)', () => {
       navigate: jest.fn(),
     } as any;
 
+    mockUserRoleService = {
+      currentRole$: new BehaviorSubject<UserRole>(UserRole.ADMIN),
+      getCurrentRole: jest.fn().mockReturnValue(UserRole.ADMIN),
+      setRole: jest.fn(),
+    };
+
+    const mockMeasureFavoritesService = {
+      favorites: jest.fn().mockReturnValue([]),
+      recentMeasures: jest.fn().mockReturnValue([]),
+      favoritesCount: jest.fn().mockReturnValue(0),
+      hasRecent: jest.fn().mockReturnValue(false),
+      getMostUsed: jest.fn().mockReturnValue([]),
+      isFavorite: jest.fn().mockReturnValue(false),
+      toggleFavorite: jest.fn(),
+      removeFavorite: jest.fn(),
+      clearRecent: jest.fn(),
+      recordUsage: jest.fn(),
+    };
+
     await TestBed.configureTestingModule({
       imports: [DashboardComponent, NoopAnimationsModule, HttpClientTestingModule],
       providers: [
@@ -66,6 +93,9 @@ describe('DashboardComponent (TDD)', () => {
         { provide: PatientService, useValue: mockPatientService },
         { provide: MeasureService, useValue: mockMeasureService },
         { provide: Router, useValue: mockRouter },
+        { provide: AIAssistantService, useValue: {} },
+        { provide: UserRoleService, useValue: mockUserRoleService },
+        { provide: MeasureFavoritesService, useValue: mockMeasureFavoritesService },
       ],
     }).compileComponents();
 
@@ -94,6 +124,16 @@ describe('DashboardComponent (TDD)', () => {
       component.ngOnInit();
 
       expect(loadDataSpy).toHaveBeenCalled();
+    });
+
+    it('should update role when service emits changes', () => {
+      const loadRoleSpy = jest.spyOn<any, any>(component, 'loadRoleComponent');
+
+      component.ngOnInit();
+      mockUserRoleService.currentRole$.next(UserRole.PROVIDER);
+
+      expect(component.currentRole).toBe(UserRole.PROVIDER);
+      expect(loadRoleSpy).toHaveBeenCalledWith(UserRole.PROVIDER);
     });
 
     it('should initialize with empty state', () => {
@@ -138,6 +178,22 @@ describe('DashboardComponent (TDD)', () => {
       // Error is set when forkJoin fails
       expect(component.error).toContain('Failed to load dashboard data');
     }));
+
+    it('loads role-specific components for non-admin roles', async () => {
+      await (component as any).loadRoleComponent(UserRole.MEDICAL_ASSISTANT);
+      expect(component.roleComponent).toBeTruthy();
+
+      await (component as any).loadRoleComponent(UserRole.REGISTERED_NURSE);
+      expect(component.roleComponent).toBeTruthy();
+
+      await (component as any).loadRoleComponent(UserRole.PROVIDER);
+      expect(component.roleComponent).toBeTruthy();
+    });
+
+    it('clears role component for admin role', async () => {
+      await (component as any).loadRoleComponent(UserRole.ADMIN);
+      expect(component.roleComponent).toBeNull();
+    });
   });
 
   // ============================================================================
@@ -180,6 +236,59 @@ describe('DashboardComponent (TDD)', () => {
       expect(component.statistics.overallCompliance).toBeGreaterThanOrEqual(0);
       expect(component.statistics.overallCompliance).toBeLessThanOrEqual(100);
     }));
+
+    it('sets trend direction based on compliance change', () => {
+      jest.useFakeTimers().setSystemTime(new Date('2025-02-15T00:00:00Z'));
+      component.allPatients = PatientFactory.createSummaryList();
+      component.allEvaluations = [
+        {
+          id: 'eval-prev-1',
+          patientId: component.allPatients[0].id,
+          evaluationDate: '2024-12-20T00:00:00Z',
+          evaluationResult: { InDenominator: true, InNumerator: false },
+        } as any,
+        {
+          id: 'eval-current-1',
+          patientId: component.allPatients[0].id,
+          evaluationDate: '2025-02-10T00:00:00Z',
+          evaluationResult: { InDenominator: true, InNumerator: true },
+        } as any,
+      ];
+
+      (component as any).calculateStatistics();
+      expect(component.trendDirection).toBe('up');
+
+      component.allEvaluations = [
+        {
+          id: 'eval-prev-2',
+          patientId: component.allPatients[0].id,
+          evaluationDate: '2024-12-20T00:00:00Z',
+          evaluationResult: { InDenominator: true, InNumerator: true },
+        } as any,
+        {
+          id: 'eval-current-2',
+          patientId: component.allPatients[0].id,
+          evaluationDate: '2025-02-10T00:00:00Z',
+          evaluationResult: { InDenominator: true, InNumerator: false },
+        } as any,
+      ];
+
+      (component as any).calculateStatistics();
+      expect(component.trendDirection).toBe('down');
+
+      component.allEvaluations = [
+        {
+          id: 'eval-current-3',
+          patientId: component.allPatients[0].id,
+          evaluationDate: '2025-02-10T00:00:00Z',
+          evaluationResult: { InDenominator: false, InNumerator: false },
+        } as any,
+      ];
+
+      (component as any).calculateStatistics();
+      expect(component.trendDirection).toBe('stable');
+      jest.useRealTimers();
+    });
 
     it('should display recent evaluations count (last 30 days)', fakeAsync(() => {
       const recentDate = new Date();
@@ -228,6 +337,112 @@ describe('DashboardComponent (TDD)', () => {
       expect(component.statistics.overallCompliance).toBe(0);
       expect(component.statistics.recentEvaluations).toBe(0);
     }));
+  });
+
+  describe('Recent Activity and Performance', () => {
+    it('generates recent activity outcomes and fallbacks', () => {
+      component.allPatients = PatientFactory.createSummaryList();
+      component.allEvaluations = [
+        {
+          id: 'eval-1',
+          patientId: component.allPatients[0].id,
+          evaluationDate: '2025-01-15T00:00:00Z',
+          evaluationResult: { InDenominator: false, InNumerator: false },
+        } as any,
+        {
+          id: 'eval-2',
+          patientId: component.allPatients[0].id,
+          evaluationDate: '2025-01-16T00:00:00Z',
+          evaluationResult: { InDenominator: true, InNumerator: true },
+        } as any,
+        {
+          id: 'eval-3',
+          patientId: 'missing-patient',
+          evaluationDate: '2025-01-17T00:00:00Z',
+          evaluationResult: { InDenominator: true, InNumerator: false },
+        } as any,
+      ];
+
+      (component as any).generateRecentActivity();
+
+      const outcomes = component.recentActivity.map((activity) => activity.outcome);
+      expect(outcomes).toContain('not-eligible');
+      expect(outcomes).toContain('compliant');
+      expect(component.recentActivity.some((activity) => activity.patientName === 'Unknown Patient')).toBe(true);
+    });
+
+    it('calculates measure performance and chart data', () => {
+      component.allEvaluations = [
+        {
+          id: 'eval-1',
+          patientId: 'p1',
+          evaluationDate: '2025-01-01T00:00:00Z',
+          library: { id: 'lib-1', name: 'Very Long Measure Name That Exceeds Thirty Characters' },
+          evaluationResult: { InDenominator: true, InNumerator: true },
+        } as any,
+        {
+          id: 'eval-2',
+          patientId: 'p1',
+          evaluationDate: '2025-01-02T00:00:00Z',
+          library: {},
+          evaluationResult: { InDenominator: false, InNumerator: false },
+        } as any,
+      ];
+
+      (component as any).calculateMeasurePerformance();
+
+      expect(component.measurePerformance.length).toBe(2);
+      expect(component.measurePerformanceChartData[0].name.endsWith('...')).toBe(true);
+      expect(component.measurePerformanceChartData[0].value).toBeGreaterThanOrEqual(0);
+    });
+
+    it('calculates compliance trends for different periods', () => {
+      component.allEvaluations = [
+        {
+          id: 'eval-1',
+          patientId: 'p1',
+          evaluationDate: '2025-01-05T00:00:00Z',
+          evaluationResult: { InDenominator: true, InNumerator: true },
+        } as any,
+        {
+          id: 'eval-2',
+          patientId: 'p1',
+          evaluationDate: 'invalid-date',
+          evaluationResult: { InDenominator: true, InNumerator: false },
+        } as any,
+      ];
+
+      component.trendPeriod = 'daily';
+      (component as any).calculateComplianceTrends();
+      expect(component.complianceTrends.length).toBe(1);
+
+      component.trendPeriod = 'weekly';
+      (component as any).calculateComplianceTrends();
+      expect(component.complianceTrends.length).toBe(1);
+
+      component.trendPeriod = 'monthly';
+      (component as any).calculateComplianceTrends();
+      expect(component.complianceTrends.length).toBe(1);
+    });
+  });
+
+  describe('Helper Methods', () => {
+    it('returns average compliance of 0 when no measures', () => {
+      component.measurePerformance = [];
+      expect(component.calculateAverageCompliance()).toBe(0);
+    });
+
+    it('formats MRN authority for URLs and strings', () => {
+      expect(component.formatMRNAuthority('http://hospital.example.org/patients')).toBe('hospital.example.org');
+      expect(component.formatMRNAuthority('Not a URL')).toBe('Not a URL');
+    });
+
+    it('returns correct outcome badge classes and default', () => {
+      expect(component.getOutcomeBadgeClass('compliant')).toBe('badge-success');
+      expect(component.getOutcomeBadgeClass('non-compliant')).toBe('badge-warning');
+      expect(component.getOutcomeBadgeClass('not-eligible')).toBe('badge-info');
+      expect(component.getOutcomeBadgeClass('unknown' as any)).toBe('badge-default');
+    });
   });
 
   // ============================================================================
@@ -431,6 +646,27 @@ describe('DashboardComponent (TDD)', () => {
 
       expect(component.dateRange.start).toEqual(startDate);
       expect(component.dateRange.end).toEqual(endDate);
+    });
+
+    it('should ignore invalid evaluation dates in trend calculation', () => {
+      (component as any).allEvaluations = [
+        { ...EvaluationFactory.createCompliantResult(), evaluationDate: 'invalid-date' },
+      ];
+
+      component.setTrendPeriod('daily');
+
+      expect(component.complianceTrends.length).toBe(0);
+    });
+
+    it('should calculate monthly trend buckets', () => {
+      const evalDate = new Date('2024-02-15').toISOString();
+      (component as any).allEvaluations = [
+        { ...EvaluationFactory.createCompliantResult(), evaluationDate: evalDate },
+      ];
+
+      component.setTrendPeriod('monthly');
+
+      expect(component.complianceTrends[0]?.period).toBe('2024-02');
     });
   });
 
@@ -644,6 +880,11 @@ describe('DashboardComponent (TDD)', () => {
       expect(badgeClass).toBe('badge-info');
     });
 
+    it('should map status class based on result string', () => {
+      expect(component.getStatusClass('Compliant')).toBe('status-success');
+      expect(component.getStatusClass('Non-Compliant')).toBe('status-error');
+    });
+
     it('should determine if dashboard is empty', () => {
       component.statistics.totalEvaluations = 0;
       component.statistics.totalPatients = 0;
@@ -656,6 +897,168 @@ describe('DashboardComponent (TDD)', () => {
       component.statistics.totalPatients = 10;
 
       expect(component.isEmpty()).toBe(false);
+    });
+  });
+
+  // ============================================================================
+  // Additional Behaviors
+  // ============================================================================
+  describe('Additional Behaviors', () => {
+    it('should force refresh and invalidate caches', () => {
+      const loadDataSpy = jest.spyOn(component, 'loadDashboardData');
+
+      component.forceRefresh();
+
+      expect(mockPatientService.invalidateCache).toHaveBeenCalled();
+      expect(mockEvaluationService.invalidateAllCaches).toHaveBeenCalled();
+      expect(mockMeasureService.invalidateCache).toHaveBeenCalled();
+      expect(loadDataSpy).toHaveBeenCalled();
+    });
+
+    it('should update quick action state on success', async () => {
+      const action = { ...component.quickActions[0] };
+      const navPromise = Promise.resolve(true);
+      mockRouter.navigate.mockReturnValue(navPromise as any);
+
+      component.onQuickAction(action);
+
+      expect(action.loading).toBe(true);
+      await navPromise;
+
+      expect(action.loading).toBe(false);
+      expect(action.success).toBe(true);
+    });
+
+    it('should reset quick action state on failure', async () => {
+      const action = { ...component.quickActions[0] };
+      const navPromise = Promise.reject(new Error('navigation failed'));
+      mockRouter.navigate.mockReturnValue(navPromise as any);
+
+      component.onQuickAction(action);
+
+      expect(action.loading).toBe(true);
+      await navPromise.catch(() => undefined);
+
+      expect(action.loading).toBe(false);
+      expect(action.success).toBe(false);
+    });
+
+    it('should format MRN authority hostnames', () => {
+      const urlAuthority = component.formatMRNAuthority('http://hospital.example.org/patients');
+      const plainAuthority = component.formatMRNAuthority('facility-123');
+      const emptyAuthority = component.formatMRNAuthority(undefined);
+
+      expect(urlAuthority).toBe('hospital.example.org');
+      expect(plainAuthority).toBe('facility-123');
+      expect(emptyAuthority).toBe('');
+    });
+
+    it('should leave invalid MRN authority unchanged', () => {
+      expect(component.formatMRNAuthority('not a url')).toBe('not a url');
+    });
+
+    it('should calculate care gaps and urgency breakdown', () => {
+      const today = new Date();
+      const overdueHigh = new Date(today);
+      overdueHigh.setDate(today.getDate() - 120);
+      const overdueMedium = new Date(today);
+      overdueMedium.setDate(today.getDate() - 45);
+
+      const evaluations: any[] = [
+        {
+          id: 'eval-1',
+          patientId: 'patient-1',
+          evaluationDate: overdueHigh.toISOString(),
+          library: { id: 'lib-1', name: 'Screening Measure' },
+          evaluationResult: { InDenominator: true, InNumerator: false },
+        },
+        {
+          id: 'eval-2',
+          patientId: 'patient-2',
+          evaluationDate: overdueMedium.toISOString(),
+          library: { id: 'lib-2', name: 'Statin Medication' },
+          evaluationResult: { InDenominator: true, InNumerator: false },
+        },
+      ];
+
+      const patients: any[] = [
+        { id: 'patient-1', fullName: 'Alice Adams', mrn: 'MRN-1' },
+        { id: 'patient-2', fullName: 'Ben Brooks', mrn: 'MRN-2' },
+      ];
+
+      (component as any).allEvaluations = evaluations;
+      (component as any).allPatients = patients;
+
+      (component as any).calculateCareGaps();
+
+      expect(component.careGapSummary?.totalGaps).toBe(2);
+      expect(component.careGapSummary?.highUrgencyCount).toBe(1);
+      expect(component.careGapSummary?.mediumUrgencyCount).toBe(1);
+      expect(component.careGapSummary?.byType.screening).toBe(1);
+      expect(component.careGapSummary?.byType.medication).toBe(1);
+      expect(component.urgentCareGaps[0].urgency).toBe('high');
+    });
+
+    it('should navigate to care gap view', () => {
+      component.viewAllCareGaps();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients'],
+        { queryParams: { filter: 'care-gaps', urgency: 'high' } }
+      );
+    });
+
+    it('should navigate to patient care gap actions', () => {
+      component.viewPatientWithCareGap('patient-1');
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/patients', 'patient-1']);
+
+      component.scheduleAppointment('patient-2');
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients', 'patient-2'],
+        { queryParams: { action: 'schedule' } }
+      );
+
+      component.sendReminder('patient-3');
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients', 'patient-3'],
+        { queryParams: { action: 'remind' } }
+      );
+    });
+
+    it('should navigate to evaluation and compliance views', () => {
+      component.viewAllEvaluations();
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/evaluations']);
+
+      component.viewEvaluationsByStatus('FAILED');
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/evaluations'],
+        { queryParams: { status: 'FAILED' } }
+      );
+
+      component.viewPatientsByStatus('inactive');
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients'],
+        { queryParams: { status: 'inactive' } }
+      );
+
+      component.viewComplianceBreakdown();
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/reports'],
+        { queryParams: { reportType: 'compliance' } }
+      );
+    });
+
+    it('should switch roles through the role service', () => {
+      component.switchRole(UserRole.PROVIDER);
+
+      expect(mockUserRoleService.setRole).toHaveBeenCalledWith(UserRole.PROVIDER);
+      expect(component.currentRole).toBe(UserRole.PROVIDER);
+    });
+
+    it('should clear role component for admin view', async () => {
+      await (component as any).loadRoleComponent(UserRole.ADMIN);
+
+      expect(component.roleComponent).toBeNull();
     });
   });
 });

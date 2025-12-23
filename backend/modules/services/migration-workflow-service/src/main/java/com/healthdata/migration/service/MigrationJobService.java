@@ -88,7 +88,16 @@ public class MigrationJobService {
      */
     @Transactional(readOnly = true)
     public Page<MigrationJobResponse> listJobs(String tenantId, JobStatus status, String nameFilter, Pageable pageable) {
-        Page<MigrationJobEntity> jobs = jobRepository.findByTenantIdWithFilters(tenantId, status, nameFilter, pageable);
+        Page<MigrationJobEntity> jobs;
+        if (nameFilter == null || nameFilter.isBlank()) {
+            if (status == null) {
+                jobs = jobRepository.findByTenantId(tenantId, pageable);
+            } else {
+                jobs = jobRepository.findByTenantIdAndStatus(tenantId, status, pageable);
+            }
+        } else {
+            jobs = jobRepository.findByTenantIdWithFilters(tenantId, status, nameFilter, pageable);
+        }
         return jobs.map(this::toResponse);
     }
 

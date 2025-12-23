@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map, tap, shareReplay } from 'rxjs/operators';
+import { map, tap, shareReplay, catchError, finalize } from 'rxjs/operators';
 import {
   CqlEvaluation,
   EvaluationRequest,
@@ -28,6 +28,7 @@ import {
   buildCqlEngineUrl,
   buildQualityMeasureUrl,
 } from '../config/api.config';
+import { AuditService } from './audit.service';
 
 /**
  * EvaluationService - Handles patient evaluations and quality measure calculations
@@ -47,7 +48,10 @@ export class EvaluationService {
   private readonly EVAL_CACHE_TTL = 3 * 60 * 1000; // 3 minutes (shorter due to frequent updates)
   private readonly RESULTS_CACHE_TTL = 3 * 60 * 1000; // 3 minutes
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private auditService: AuditService
+  ) {}
 
   // ===== CQL Engine Evaluation Endpoints =====
 
@@ -55,14 +59,36 @@ export class EvaluationService {
    * Submit a single patient evaluation
    * Endpoint: POST /api/v1/cql/evaluations?libraryId={uuid}&patientId={id}
    * Automatically invalidates cache on success
+   * Audit logged for HIPAA compliance
    */
   submitEvaluation(libraryId: string, patientId: string, contextData?: Record<string, any>): Observable<CqlEvaluation> {
     const url = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS, {
       libraryId,
       patientId,
     });
+    const startTime = Date.now();
+
     return this.http.post<CqlEvaluation>(url, contextData || {}).pipe(
-      tap(() => this.invalidateEvaluationCache())
+      tap((result) => {
+        this.invalidateEvaluationCache();
+        this.auditService.logEvaluation({
+          evaluationId: result.id,
+          measureId: libraryId,
+          patientIds: [patientId],
+          success: true,
+          durationMs: Date.now() - startTime,
+        });
+      }),
+      catchError((error) => {
+        this.auditService.logEvaluation({
+          measureId: libraryId,
+          patientIds: [patientId],
+          success: false,
+          durationMs: Date.now() - startTime,
+          errorMessage: error.message || 'Evaluation failed',
+        });
+        throw error;
+      })
     );
   }
 
@@ -70,13 +96,47 @@ export class EvaluationService {
    * Batch evaluate multiple patients
    * Endpoint: POST /api/v1/cql/evaluations/batch?libraryId={uuid}
    * Automatically invalidates cache on success
+   * Audit logged for HIPAA compliance
    */
   batchEvaluate(libraryId: string, patientIds: string[]): Observable<BatchEvaluationResponse> {
     const url = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS_BATCH, {
       libraryId,
     });
+    const startTime = Date.now();
+    const jobId = `batch-${Date.now()}`;
+
+    // Log batch start
+    this.auditService.logBatchEvaluationStart({
+      jobId,
+      measureIds: [libraryId],
+      patientCount: patientIds.length,
+    });
+
     return this.http.post<BatchEvaluationResponse>(url, patientIds).pipe(
-      tap(() => this.invalidateEvaluationCache())
+      tap((results) => {
+        this.invalidateEvaluationCache();
+        const successCount = results.filter((e: CqlEvaluation) => e.status === 'SUCCESS').length;
+        this.auditService.logBatchEvaluationComplete({
+          jobId,
+          success: true,
+          totalEvaluations: results.length,
+          successCount,
+          failureCount: results.length - successCount,
+          durationMs: Date.now() - startTime,
+        });
+      }),
+      catchError((error) => {
+        this.auditService.logBatchEvaluationComplete({
+          jobId,
+          success: false,
+          totalEvaluations: patientIds.length,
+          successCount: 0,
+          failureCount: patientIds.length,
+          durationMs: Date.now() - startTime,
+          errorMessage: error.message || 'Batch evaluation failed',
+        });
+        throw error;
+      })
     );
   }
 
@@ -222,6 +282,7 @@ export class EvaluationService {
    * Calculate quality measure for a patient
    * Endpoint: POST /quality-measure/calculate?patient={patientId}&measure={measureId}
    * Automatically invalidates cache on success
+   * Audit logged for HIPAA compliance
    */
   calculateQualityMeasure(
     patientId: string,
@@ -233,8 +294,29 @@ export class EvaluationService {
       measure: measureId,
       createdBy,
     });
+    const startTime = Date.now();
+
     return this.http.post<QualityMeasureResult>(url, {}).pipe(
-      tap(() => this.invalidateAllCaches())
+      tap((result) => {
+        this.invalidateAllCaches();
+        this.auditService.logEvaluation({
+          evaluationId: result.id,
+          measureId,
+          patientIds: [patientId],
+          success: true,
+          durationMs: Date.now() - startTime,
+        });
+      }),
+      catchError((error) => {
+        this.auditService.logEvaluation({
+          measureId,
+          patientIds: [patientId],
+          success: false,
+          durationMs: Date.now() - startTime,
+          errorMessage: error.message || 'Quality measure calculation failed',
+        });
+        throw error;
+      })
     );
   }
 

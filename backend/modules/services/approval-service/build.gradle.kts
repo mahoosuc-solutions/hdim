@@ -54,6 +54,7 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
 
     // Testing
+    testImplementation(libs.testcontainers)
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:junit-jupiter")
@@ -67,4 +68,13 @@ dependencyManagement {
 
 tasks.bootJar {
     archiveFileName.set("approval-service.jar")
+}
+
+tasks.withType<Test> {
+    systemProperty("spring.datasource.url", "jdbc:tc:postgresql:15-alpine:///testdb")
+    systemProperty("spring.datasource.username", "test")
+    systemProperty("spring.datasource.password", "test")
+    systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
+    systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
+    systemProperty("spring.profiles.active", "test")
 }

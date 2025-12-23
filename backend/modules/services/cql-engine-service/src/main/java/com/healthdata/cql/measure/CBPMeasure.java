@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * CBP - Controlling High Blood Pressure (HEDIS)
@@ -43,7 +44,7 @@ public class CBPMeasure extends AbstractHedisMeasure {
 
     @Override
     @Cacheable(value = "hedisMeasures", key = "'CBP-' + #tenantId + '-' + #patientId")
-    public MeasureResult evaluate(String tenantId, String patientId) {
+    public MeasureResult evaluate(String tenantId, UUID patientId) {
         logger.info("Evaluating CBP measure for patient: {}", patientId);
 
         MeasureResult.MeasureResultBuilder resultBuilder = MeasureResult.builder()
@@ -121,7 +122,7 @@ public class CBPMeasure extends AbstractHedisMeasure {
     }
 
     @Override
-    public boolean isEligible(String tenantId, String patientId) {
+    public boolean isEligible(String tenantId, UUID patientId) {
         JsonNode conditions = getConditions(tenantId, patientId, null);
         if (conditions == null) return false;
 

@@ -8,11 +8,15 @@
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "outputPath": "dist/apps/admin-portal",
         "browser": "apps/admin-portal/src/main.ts",
-        "polyfills": ["zone.js"],
+        "polyfills": [
+          "zone.js"
+        ],
         "tsConfig": "apps/admin-portal/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
@@ -21,7 +25,9 @@
             "input": "apps/admin-portal/public"
           }
         ],
-        "styles": ["apps/admin-portal/src/styles.scss"],
+        "styles": [
+          "apps/admin-portal/src/styles.scss"
+        ],
         "server": "apps/admin-portal/src/main.server.ts",
         "ssr": {
           "entry": "apps/admin-portal/src/server.ts"
@@ -76,10 +82,17 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "options": {
         "jestConfig": "apps/admin-portal/jest.config.ts",
         "tsConfig": "apps/admin-portal/tsconfig.spec.json"
+      },
+      "configurations": {
+        "coverage": {
+          "codeCoverage": true
+        }
       }
     },
     "serve-static": {

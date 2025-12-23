@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Alert Routing Service (Phase 5 - Database-Driven)
@@ -117,7 +118,7 @@ public class AlertRoutingService {
     /**
      * Map role names to actual provider IDs from patient's care team
      */
-    private List<String> mapRolesToProviders(String tenantId, String patientId, List<String> roles) {
+    private List<String> mapRolesToProviders(String tenantId, UUID patientId, List<String> roles) {
         Set<String> providerIds = new LinkedHashSet<>();
         LocalDate today = LocalDate.now();
 

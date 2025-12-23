@@ -2,10 +2,14 @@ package com.healthdata.quality.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.quality.persistence.SavedReportEntity;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -110,6 +114,37 @@ class ReportExportServiceTest {
     }
 
     @Test
+    @DisplayName("Should export array fields to CSV format")
+    void shouldExportArrayFieldsToCsv() throws Exception {
+        SavedReportEntity report = createPatientReport();
+        report.setReportData("""
+            {
+              "metrics": ["A", "B", "C"],
+              "counts": [1, 2]
+            }
+            """);
+
+        byte[] csvData = exportService.exportToCsv(report);
+        String csvContent = new String(csvData);
+
+        assertThat(csvContent).contains("metrics[0]");
+        assertThat(csvContent).contains("counts[1]");
+    }
+
+    @Test
+    @DisplayName("Should write raw data when CSV JSON parsing fails")
+    void shouldWriteRawDataWhenCsvParsingFails() throws Exception {
+        SavedReportEntity report = createPatientReport();
+        report.setReportData("not-json");
+
+        byte[] csvData = exportService.exportToCsv(report);
+        String csvContent = new String(csvData);
+
+        assertThat(csvContent).contains("Raw Data");
+        assertThat(csvContent).contains("not-json");
+    }
+
+    @Test
     @DisplayName("Should throw exception when report is null for CSV export")
     void shouldThrowExceptionWhenReportNullForCsv() {
         // Act & Assert
@@ -173,6 +208,42 @@ class ReportExportServiceTest {
         // Assert - verify it's a valid Excel file format
         assertThat(excelData).isNotNull();
         assertThat(excelData.length).isGreaterThan(100); // Should have meaningful content
+    }
+
+    @Test
+    @DisplayName("Should create Excel error row when report data is invalid")
+    void shouldCreateExcelErrorRowWhenInvalidData() throws Exception {
+        SavedReportEntity report = createPatientReport();
+        report.setReportData("invalid-json");
+
+        byte[] excelData = exportService.exportToExcel(report);
+
+        try (Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(excelData))) {
+            Sheet sheet = workbook.getSheet("Report Data");
+            assertThat(sheet).isNotNull();
+            assertThat(sheet.getRow(0).getCell(0).getStringCellValue()).isEqualTo("Error");
+        }
+    }
+
+    @Test
+    @DisplayName("Should export array fields to Excel format")
+    void shouldExportArrayFieldsToExcel() throws Exception {
+        SavedReportEntity report = createPatientReport();
+        report.setReportData("""
+            {
+              "metrics": ["A", "B"],
+              "counts": [1, 2]
+            }
+            """);
+
+        byte[] excelData = exportService.exportToExcel(report);
+
+        try (Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(excelData))) {
+            Sheet sheet = workbook.getSheet("Report Data");
+            assertThat(sheet).isNotNull();
+            assertThat(sheet.getRow(0).getCell(0).getStringCellValue()).isEqualTo("Field");
+            assertThat(sheet.getRow(1).getCell(0).getStringCellValue()).contains("metrics[0]");
+        }
     }
 
     // ===== HELPER METHODS =====

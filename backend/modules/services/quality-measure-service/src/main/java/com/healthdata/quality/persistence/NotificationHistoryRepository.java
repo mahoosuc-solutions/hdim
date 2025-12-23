@@ -28,7 +28,7 @@ public interface NotificationHistoryRepository extends JpaRepository<Notificatio
      * @return Page of notification history records
      */
     Page<NotificationHistoryEntity> findByPatientIdOrderBySentAtDesc(
-            String patientId,
+            UUID patientId,
             Pageable pageable
     );
 
@@ -141,7 +141,7 @@ public interface NotificationHistoryRepository extends JpaRepository<Notificatio
      */
     List<NotificationHistoryEntity> findByTenantIdAndPatientIdAndNotificationTypeAndSentAtAfter(
             String tenantId,
-            String patientId,
+            UUID patientId,
             String notificationType,
             Instant sentAfter
     );

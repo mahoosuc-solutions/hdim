@@ -166,6 +166,53 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
       expect(mockToastService.success).toHaveBeenCalled();
     }));
 
+    it('should check in patient and advance workflow when confirmed', fakeAsync(() => {
+      const task: MATaskItem = {
+        id: '1',
+        patientName: 'Smith, John',
+        patientMRN: 'MRN-001',
+        appointmentTime: '09:00 AM',
+        taskType: 'check-in',
+        status: 'pending',
+        priority: 'normal',
+        room: 'Room 1',
+      };
+
+      component.todaySchedule = [task];
+      mockDialogService.confirm = jest.fn().mockReturnValue(of(true));
+
+      component.checkInPatient(task);
+      tick();
+
+      expect(task.status).toBe('completed');
+      expect(task.taskType).toBe('vitals');
+      expect(component.patientsCheckedIn).toBe(5);
+      expect(mockNotificationService.success).toHaveBeenCalled();
+    }));
+
+    it('should not check in patient when confirmation is declined', fakeAsync(() => {
+      const task: MATaskItem = {
+        id: '1',
+        patientName: 'Smith, John',
+        patientMRN: 'MRN-001',
+        appointmentTime: '09:00 AM',
+        taskType: 'check-in',
+        status: 'pending',
+        priority: 'normal',
+        room: 'Room 1',
+      };
+
+      component.todaySchedule = [task];
+      mockDialogService.confirm = jest.fn().mockReturnValue(of(false));
+
+      component.checkInPatient(task);
+      tick();
+
+      expect(task.status).toBe('pending');
+      expect(task.taskType).toBe('check-in');
+      expect(mockNotificationService.success).not.toHaveBeenCalled();
+    }));
+
     it('should cancel appointment with reason', fakeAsync(() => {
       const task: MATaskItem = {
         id: '1',
@@ -186,6 +233,65 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
       expect(mockDialogService.confirmWarning).toHaveBeenCalled();
       expect(mockToastService.info).toHaveBeenCalled();
     }));
+
+    it('should record vitals navigation and notify', () => {
+      const task: MATaskItem = {
+        id: '1',
+        patientName: 'Smith, John',
+        patientMRN: 'MRN-001',
+        appointmentTime: '09:00 AM',
+        taskType: 'vitals',
+        status: 'pending',
+        priority: 'normal',
+      };
+
+      component.recordVitals(task);
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients', task.id],
+        expect.objectContaining({ queryParams: { action: 'record-vitals' } })
+      );
+      expect(mockNotificationService.info).toHaveBeenCalled();
+    });
+
+    it('should prepare room when confirmed', fakeAsync(() => {
+      const task: MATaskItem = {
+        id: '1',
+        patientName: 'Smith, John',
+        patientMRN: 'MRN-001',
+        appointmentTime: '09:00 AM',
+        taskType: 'prep',
+        status: 'pending',
+        priority: 'normal',
+        room: 'Room 2',
+      };
+
+      component.todaySchedule = [task];
+      mockDialogService.confirm = jest.fn().mockReturnValue(of(true));
+
+      component.prepareRoom(task);
+      tick();
+
+      expect(task.status).toBe('in-progress');
+      expect(component.roomsReady).toBe(3);
+      expect(mockNotificationService.success).toHaveBeenCalled();
+    }));
+
+    it('should navigate to patient detail from schedule', () => {
+      const task: MATaskItem = {
+        id: '1',
+        patientName: 'Smith, John',
+        patientMRN: 'MRN-001',
+        appointmentTime: '09:00 AM',
+        taskType: 'prep',
+        status: 'pending',
+        priority: 'normal',
+      };
+
+      component.viewPatient(task);
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/patient-detail', task.id]);
+    });
 
     it('should filter schedule by status', () => {
       component.todaySchedule = [
@@ -293,6 +399,14 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
       expect(percentage).toBeCloseTo(66.67, 1); // 2 out of 3 = 66.67%
     });
 
+    it('should return zero completion when no pre-visit tasks exist', () => {
+      component.preVisitTasks = [];
+
+      const percentage = component.getPreVisitCompletionRate();
+
+      expect(percentage).toBe(0);
+    });
+
     it('should flag incomplete critical tasks', () => {
       component.preVisitTasks = [
         { id: '1', patientId: 'p1', task: 'Critical task', completed: false, priority: 'high' },
@@ -351,6 +465,17 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
 
       expect(mockCareGapService.getHighPriorityGaps).toHaveBeenCalled();
       expect(component.careGaps.length).toBeGreaterThan(0);
+    }));
+
+    it('should handle care gap load errors', fakeAsync(() => {
+      mockCareGapService.getHighPriorityGaps = jest.fn().mockReturnValue(
+        throwError(() => new Error('load failed'))
+      );
+
+      component.loadCareGaps();
+      tick();
+
+      expect(mockToastService.error).toHaveBeenCalled();
     }));
 
     it('should display gap type, priority, and due date', () => {
@@ -476,6 +601,32 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
       expect(mockDialogService.confirm).toHaveBeenCalled();
       expect(mockCareGapService.assignIntervention).toHaveBeenCalled();
       expect(mockToastService.success).toHaveBeenCalled();
+    }));
+
+    it('should handle intervention assignment errors', fakeAsync(() => {
+      const gap: CareGap = {
+        id: 'gap-1',
+        patientId: 'patient-001',
+        measureId: 'CDC-1',
+        measureName: 'Diabetes Screening',
+        gapType: 'PREVENTIVE_SCREENING' as any,
+        status: CareGapStatus.OPEN,
+        priority: GapPriority.HIGH,
+        priorityScore: 85,
+        description: 'Test',
+        recommendation: 'Test',
+        detectedDate: '2024-01-15',
+      };
+
+      mockDialogService.confirm = jest.fn().mockReturnValue(of(true));
+      mockCareGapService.assignIntervention = jest.fn().mockReturnValue(
+        throwError(() => new Error('assign failed'))
+      );
+
+      component.assignInterventionToGap(gap);
+      tick();
+
+      expect(mockToastService.error).toHaveBeenCalled();
     }));
 
     it('should count open care gaps', () => {
@@ -755,6 +906,51 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
       expect(loadOutreachSpy).toHaveBeenCalled();
     }));
 
+    it('should refresh dashboard via full load', () => {
+      const loadDashboardSpy = jest.spyOn(component as any, 'loadDashboardData');
+
+      component.refreshData();
+
+      expect(loadDashboardSpy).toHaveBeenCalled();
+    });
+
+    it('should navigate to all patients view', () => {
+      component.viewAllPatients();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/patients']);
+    });
+
+    it('should navigate to schedule view', () => {
+      component.viewSchedule();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/dashboard'],
+        expect.objectContaining({ queryParams: { view: 'schedule' } })
+      );
+    });
+
+    it('should map status and type helpers correctly', () => {
+      expect(component.getStatusColor('completed')).toBe('success');
+      expect(component.getStatusColor('in-progress')).toBe('warn');
+      expect(component.getStatusColor('pending')).toBe('primary');
+      expect(component.getStatusColor('unknown')).toBe('');
+
+      expect(component.getPriorityIcon('high')).toBe('priority_high');
+      expect(component.getPriorityIcon('low')).toBe('schedule');
+
+      expect(component.getTaskIcon('check-in')).toBe('how_to_reg');
+      expect(component.getTaskIcon('vitals')).toBe('favorite');
+      expect(component.getTaskIcon('prep')).toBe('meeting_room');
+      expect(component.getTaskIcon('complete')).toBe('check_circle');
+      expect(component.getTaskIcon('other')).toBe('task');
+
+      expect(component.getTaskLabel('check-in')).toBe('Check-in');
+      expect(component.getTaskLabel('vitals')).toBe('Record Vitals');
+      expect(component.getTaskLabel('prep')).toBe('Prep Room');
+      expect(component.getTaskLabel('complete')).toBe('Complete');
+      expect(component.getTaskLabel('other')).toBe('other');
+    });
+
     it('should clean up subscriptions on destroy', () => {
       const destroySpy = jest.spyOn(component['destroy$'], 'next');
       const completeSpy = jest.spyOn(component['destroy$'], 'complete');
@@ -784,6 +980,27 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
       tick(600); // Wait for setTimeout(500) to complete
 
       expect(component.loading).toBe(false);
+    }));
+
+    it('should surface reschedule appointment errors', fakeAsync(() => {
+      const task: MATaskItem = {
+        id: '1',
+        patientName: 'Smith, John',
+        patientMRN: 'MRN-001',
+        appointmentTime: '09:00 AM',
+        taskType: 'check-in',
+        status: 'pending',
+        priority: 'normal',
+      };
+
+      mockDialogService.confirm = jest.fn().mockReturnValue(
+        throwError(() => new Error('dialog failed'))
+      );
+
+      component.rescheduleAppointment(task);
+      tick();
+
+      expect(mockToastService.error).toHaveBeenCalled();
     }));
   });
 });

@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import com.healthdata.fhir.persistence.CoverageEntity;
@@ -110,6 +112,19 @@ class CoverageServiceTest {
         // No beneficiary set
 
         // When/Then
+        assertThatThrownBy(() -> coverageService.createCoverage(TENANT, coverage, "user-1"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("beneficiary");
+    }
+
+    @Test
+    void createCoverageShouldRejectInvalidPatientId() {
+        Coverage coverage = new Coverage();
+        coverage.setId(COVERAGE_ID.toString());
+        coverage.setStatus(Coverage.CoverageStatus.ACTIVE);
+        coverage.setBeneficiary(new Reference("Patient/not-a-uuid"));
+        coverage.addPayor(new Reference("Organization/payor-1"));
+
         assertThatThrownBy(() -> coverageService.createCoverage(TENANT, coverage, "user-1"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("beneficiary");
@@ -255,6 +270,153 @@ class CoverageServiceTest {
 
         // Then
         assertThat(result).isPresent();
+    }
+
+    @Test
+    void searchCoveragesShouldReturnPagedResults() {
+        // Given
+        List<CoverageEntity> entities = List.of(createCoverageEntityWithJson());
+        when(coverageRepository.searchCoverages(
+                eq(TENANT), eq(PATIENT_ID), eq("active"), eq("plan"),
+                eq(SUBSCRIBER_ID), eq("Organization/payor-1"), any(PageRequest.class)))
+                .thenReturn(new org.springframework.data.domain.PageImpl<>(entities));
+
+        // When
+        Page<Coverage> results = coverageService.searchCoverages(
+                TENANT, PATIENT_ID, "active", "plan", SUBSCRIBER_ID, "Organization/payor-1",
+                PageRequest.of(0, 10));
+
+        // Then
+        assertThat(results.getContent()).hasSize(1);
+    }
+
+    @Test
+    void getCoveragesBySubscriberIdShouldReturnList() {
+        // Given
+        List<CoverageEntity> entities = List.of(createCoverageEntityWithJson());
+        when(coverageRepository.findByTenantIdAndSubscriberIdAndDeletedAtIsNull(TENANT, SUBSCRIBER_ID))
+                .thenReturn(entities);
+
+        // When
+        List<Coverage> results = coverageService.getCoveragesBySubscriberId(TENANT, SUBSCRIBER_ID);
+
+        // Then
+        assertThat(results).hasSize(1);
+    }
+
+    @Test
+    void getExpiringCoveragesShouldReturnList() {
+        // Given
+        List<CoverageEntity> entities = List.of(createCoverageEntityWithJson());
+        Instant start = Instant.now();
+        Instant end = start.plusSeconds(3600);
+        when(coverageRepository.findExpiringCoverages(eq(TENANT), eq(start), eq(end)))
+                .thenReturn(entities);
+
+        // When
+        List<Coverage> results = coverageService.getExpiringCoverages(TENANT, start, end);
+
+        // Then
+        assertThat(results).hasSize(1);
+    }
+
+    @Test
+    void createCoverageShouldCaptureDetails() {
+        Coverage coverage = createFhirCoverage();
+        coverage.addClass_()
+                .setType(new CodeableConcept().addCoding(new Coding().setCode("group")))
+                .setValue(GROUP_NUMBER);
+        coverage.setDependent("2");
+        coverage.setRelationship(new CodeableConcept().addCoding(new Coding().setCode("child")));
+        coverage.setOrder(1);
+        coverage.setNetwork("in-network");
+        coverage.setType(new CodeableConcept().addCoding(new Coding().setCode("HMO").setDisplay("HMO Plan")));
+        coverage.setSubscriberId(SUBSCRIBER_ID);
+        coverage.setPayor(List.of(new Reference("Organization/payor-1").setDisplay("Payor One")));
+        coverage.setPeriod(new Period()
+                .setStart(Date.from(Instant.parse("2024-01-01T00:00:00Z")))
+                .setEnd(Date.from(Instant.parse("2024-12-31T00:00:00Z"))));
+
+        when(coverageRepository.save(any(CoverageEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        coverageService.createCoverage(TENANT, coverage, "user-1");
+
+        ArgumentCaptor<CoverageEntity> captor = ArgumentCaptor.forClass(CoverageEntity.class);
+        verify(coverageRepository).save(captor.capture());
+        CoverageEntity entity = captor.getValue();
+        assertThat(entity.getGroupNumber()).isEqualTo(GROUP_NUMBER);
+        assertThat(entity.getDependent()).isEqualTo("2");
+        assertThat(entity.getRelationshipCode()).isEqualTo("child");
+        assertThat(entity.getCoverageOrder()).isEqualTo(1);
+        assertThat(entity.getNetwork()).isEqualTo("in-network");
+        assertThat(entity.getTypeCode()).isEqualTo("HMO");
+        assertThat(entity.getTypeDisplay()).isEqualTo("HMO Plan");
+        assertThat(entity.getPayorReference()).isEqualTo("Organization/payor-1");
+        assertThat(entity.getPayorDisplay()).isEqualTo("Payor One");
+        assertThat(entity.getPeriodStart()).isNotNull();
+        assertThat(entity.getPeriodEnd()).isNotNull();
+    }
+
+    @Test
+    void createCoverageShouldUseSubscriberIdentifierAndTypeText() {
+        Coverage coverage = new Coverage();
+        coverage.setId(COVERAGE_ID.toString());
+        coverage.setStatus(Coverage.CoverageStatus.ACTIVE);
+        coverage.setBeneficiary(new Reference("Patient/" + PATIENT_ID));
+        coverage.setType(new CodeableConcept().setText("PPO"));
+        coverage.addIdentifier(new Identifier()
+                .setType(new CodeableConcept().addCoding(new Coding().setCode("member")))
+                .setValue("MEM-ALT"));
+        coverage.addPayor(new Reference("Organization/payor-2"));
+
+        when(coverageRepository.save(any(CoverageEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        coverageService.createCoverage(TENANT, coverage, "user-1");
+
+        ArgumentCaptor<CoverageEntity> captor = ArgumentCaptor.forClass(CoverageEntity.class);
+        verify(coverageRepository).save(captor.capture());
+        CoverageEntity entity = captor.getValue();
+        assertThat(entity.getSubscriberId()).isEqualTo("MEM-ALT");
+        assertThat(entity.getTypeDisplay()).isEqualTo("PPO");
+    }
+
+    @Test
+    void createCoverageShouldHandleMissingOptionalFields() {
+        Coverage coverage = new Coverage();
+        coverage.setId(COVERAGE_ID.toString());
+        coverage.setStatus(Coverage.CoverageStatus.ACTIVE);
+        coverage.setBeneficiary(new Reference("Patient/" + PATIENT_ID));
+        coverage.addIdentifier(new Identifier()
+                .setType(new CodeableConcept().addCoding(new Coding().setCode("other")))
+                .setValue("OTHER"));
+
+        when(coverageRepository.save(any(CoverageEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        coverageService.createCoverage(TENANT, coverage, "user-1");
+
+        ArgumentCaptor<CoverageEntity> captor = ArgumentCaptor.forClass(CoverageEntity.class);
+        verify(coverageRepository).save(captor.capture());
+        CoverageEntity entity = captor.getValue();
+        assertThat(entity.getSubscriberId()).isNull();
+        assertThat(entity.getGroupNumber()).isNull();
+        assertThat(entity.getPayorReference()).isNull();
+        assertThat(entity.getPayorDisplay()).isNull();
+        assertThat(entity.getPeriodStart()).isNull();
+        assertThat(entity.getPeriodEnd()).isNull();
+        assertThat(entity.getRelationshipCode()).isNull();
+    }
+
+    @Test
+    void createCoverageShouldIgnorePublishFailures() {
+        Coverage coverage = createFhirCoverage();
+        CoverageEntity savedEntity = createCoverageEntity();
+        when(coverageRepository.save(any(CoverageEntity.class))).thenReturn(savedEntity);
+        when(kafkaTemplate.send(any(), any(), any())).thenThrow(new RuntimeException("kafka down"));
+
+        Coverage result = coverageService.createCoverage(TENANT, coverage, "user-1");
+
+        assertThat(result).isNotNull();
+        verify(coverageRepository).save(any(CoverageEntity.class));
     }
 
     // Helper methods

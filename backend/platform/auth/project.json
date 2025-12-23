@@ -1,0 +1,39 @@
+{
+  "name": "platform-auth",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "backend/platform/auth/src",
+  "tags": [
+    "backend",
+    "lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/platform/auth/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:auth:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:auth:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:auth:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:auth:test :platform:auth:jacocoTestReport :platform:auth:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

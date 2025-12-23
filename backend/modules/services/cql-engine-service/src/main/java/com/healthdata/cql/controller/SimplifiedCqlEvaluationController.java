@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.cql.entity.CqlEvaluation;
 import com.healthdata.cql.entity.CqlLibrary;
+import com.healthdata.cql.registry.HedisMeasureRegistry;
 import com.healthdata.cql.repository.CqlLibraryRepository;
 import com.healthdata.cql.service.CqlEvaluationService;
 import org.slf4j.Logger;
@@ -14,8 +15,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Simplified CQL Evaluation Controller
@@ -36,14 +39,17 @@ public class SimplifiedCqlEvaluationController {
 
     private final CqlEvaluationService evaluationService;
     private final CqlLibraryRepository libraryRepository;
+    private final HedisMeasureRegistry measureRegistry;
     private final ObjectMapper objectMapper;
 
     public SimplifiedCqlEvaluationController(
             CqlEvaluationService evaluationService,
             CqlLibraryRepository libraryRepository,
+            HedisMeasureRegistry measureRegistry,
             ObjectMapper objectMapper) {
         this.evaluationService = evaluationService;
         this.libraryRepository = libraryRepository;
+        this.measureRegistry = measureRegistry;
         this.objectMapper = objectMapper;
     }
 
@@ -66,7 +72,7 @@ public class SimplifiedCqlEvaluationController {
     public ResponseEntity<String> evaluateCql(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("library") String libraryName,
-            @RequestParam("patient") String patientId,
+            @RequestParam("patient") UUID patientId,
             @RequestBody(required = false) String parameters) {
 
         logger.info("Simplified evaluation request - tenant: {}, library: {}, patient: {}",
@@ -112,6 +118,92 @@ public class SimplifiedCqlEvaluationController {
             logger.error("Evaluation failed: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body(createErrorResponse(
                     "Evaluation failed: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Get all available HEDIS measures
+     *
+     * Returns a list of all registered Java measure implementations.
+     * This endpoint can be used by the frontend to populate measure dropdowns.
+     *
+     * @return JSON array of available measures
+     */
+    @GetMapping(value = "/measures", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> getAvailableMeasures() {
+        try {
+            logger.info("Fetching available measures from registry");
+
+            List<HedisMeasureRegistry.MeasureInfo> measures = measureRegistry.getMeasureInfoList();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("count", measures.size());
+            response.put("measures", measures);
+
+            logger.info("Returning {} available measures", measures.size());
+            return ResponseEntity.ok(objectMapper.writeValueAsString(response));
+
+        } catch (Exception e) {
+            logger.error("Error fetching available measures: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(createErrorResponse(
+                    "Failed to fetch available measures: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Get measure details by ID
+     *
+     * @param measureId The HEDIS measure ID (e.g., "CDC", "CBP")
+     * @return Measure details or 404 if not found
+     */
+    @GetMapping(value = "/measures/{measureId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> getMeasureDetails(@PathVariable String measureId) {
+        try {
+            logger.info("Fetching measure details for: {}", measureId);
+
+            return measureRegistry.getMeasure(measureId)
+                    .map(measure -> {
+                        try {
+                            Map<String, Object> response = new HashMap<>();
+                            response.put("measureId", measure.getMeasureId());
+                            response.put("measureName", measure.getMeasureName());
+                            response.put("version", measure.getVersion());
+                            response.put("implementationClass", measure.getClass().getName());
+
+                            return ResponseEntity.ok(objectMapper.writeValueAsString(response));
+                        } catch (Exception e) {
+                            return ResponseEntity.status(500).body(createErrorResponse(e.getMessage()));
+                        }
+                    })
+                    .orElseGet(() -> ResponseEntity.status(404).body(createErrorResponse(
+                            "Measure not found: " + measureId)));
+
+        } catch (Exception e) {
+            logger.error("Error fetching measure details: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(createErrorResponse(
+                    "Failed to fetch measure details: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Check if measure is registered
+     *
+     * @param measureId The HEDIS measure ID
+     * @return Boolean indicating if measure exists
+     */
+    @GetMapping(value = "/measures/{measureId}/exists", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> measureExists(@PathVariable String measureId) {
+        try {
+            boolean exists = measureRegistry.hasMeasure(measureId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("measureId", measureId);
+            response.put("exists", exists);
+
+            return ResponseEntity.ok(objectMapper.writeValueAsString(response));
+        } catch (Exception e) {
+            logger.error("Error checking measure existence: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(createErrorResponse(e.getMessage()));
         }
     }
 

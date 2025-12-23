@@ -1,6 +1,7 @@
 package com.healthdata.quality.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,11 +12,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -461,7 +464,8 @@ class HealthScoreWebSocketHandlerTest {
         verify(session1).sendMessage(messageCaptor.capture());
 
         String payload = messageCaptor.getValue().getPayload();
-        Map<String, Object> parsedMessage = objectMapper.readValue(payload, Map.class);
+        Map<String, Object> parsedMessage =
+            objectMapper.readValue(payload, new TypeReference<Map<String, Object>>() {});
 
         assertThat(parsedMessage).containsKey("type");
         assertThat(parsedMessage).containsKey("data");
@@ -519,5 +523,90 @@ class HealthScoreWebSocketHandlerTest {
 
         // Then
         assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should broadcast clinical alert to patient")
+    void testBroadcastClinicalAlertToPatient() throws Exception {
+        Map<String, Object> attributes = createAuthenticatedAttributes("TENANT001", "testuser");
+
+        when(session1.getId()).thenReturn("session-1");
+        when(session1.isOpen()).thenReturn(true);
+        when(session1.getAttributes()).thenReturn(attributes);
+
+        handler.afterConnectionEstablished(session1);
+
+        reset(session1);
+        when(session1.isOpen()).thenReturn(true);
+
+        Map<String, Object> alert = Map.of(
+            "alertType", "MENTAL_HEALTH_CRISIS",
+            "severity", "HIGH",
+            "message", "Alert"
+        );
+
+        boolean result = handler.broadcastClinicalAlertToPatient(
+            alert, "TENANT001", UUID.randomUUID()
+        );
+
+        assertThat(result).isTrue();
+        verify(session1).sendMessage(any(TextMessage.class));
+    }
+
+    @Test
+    @DisplayName("Should return false when no sessions for patient alert")
+    void testBroadcastClinicalAlertToPatientNoSessions() {
+        Map<String, Object> alert = Map.of(
+            "alertType", "MENTAL_HEALTH_CRISIS"
+        );
+
+        boolean result = handler.broadcastClinicalAlertToPatient(
+            alert, "TENANT999", UUID.randomUUID()
+        );
+
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should skip audit logging when user info missing on close")
+    void testConnectionClosedWithoutUserInfo() throws Exception {
+        Map<String, Object> attributes = createAuthenticatedAttributes("TENANT001", "testuser");
+
+        when(session1.getId()).thenReturn("session-1");
+        when(session1.isOpen()).thenReturn(true);
+        when(session1.getAttributes()).thenReturn(attributes);
+
+        handler.afterConnectionEstablished(session1);
+
+        @SuppressWarnings("unchecked")
+        Map<String, String> sessionUsers =
+            (Map<String, String>) ReflectionTestUtils.getField(handler, "sessionUsers");
+        sessionUsers.remove("session-1");
+
+        handler.afterConnectionClosed(session1, CloseStatus.NORMAL);
+
+        verify(auditLoggingInterceptor, never())
+            .logDisconnectEvent(any(), any(), any(), anyLong());
+    }
+
+    @Test
+    @DisplayName("Should extract tenantId from session query")
+    void testExtractTenantIdFromQuery() throws Exception {
+        when(session1.getUri())
+            .thenReturn(new URI("ws://localhost/ws/health-scores?tenantId=TENANT001&x=1"));
+
+        String tenantId = ReflectionTestUtils.invokeMethod(handler, "extractTenantId", session1);
+
+        assertThat(tenantId).isEqualTo("TENANT001");
+    }
+
+    @Test
+    @DisplayName("Should handle tenantId extraction failures")
+    void testExtractTenantIdFailure() {
+        when(session1.getUri()).thenThrow(new RuntimeException("bad uri"));
+
+        String tenantId = ReflectionTestUtils.invokeMethod(handler, "extractTenantId", session1);
+
+        assertThat(tenantId).isNull();
     }
 }

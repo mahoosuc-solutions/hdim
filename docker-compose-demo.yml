@@ -5,7 +5,7 @@ services:
   # Infrastructure Services
   postgres:
     container_name: healthdata-postgres
-    image: postgres:16-alpine
+    image: postgres:15-alpine
     environment:
       POSTGRES_USER: healthdata
       POSTGRES_PASSWORD: healthdata_password
@@ -88,15 +88,21 @@ services:
         condition: service_healthy
       kafka:
         condition: service_started
+      redis:
+        condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: test  # DEMO: No authentication required
+      SPRING_PROFILES_ACTIVE: docker  # DEMO: Use docker profile for proper Redis config
+      JWT_SECRET: demo_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fhir_db
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: healthdata_password
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8081
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       SPRING_LIQUIBASE_ENABLED: "false"  # DEMO: Use Hibernate DDL instead
+      SPRING_FLYWAY_ENABLED: "false"  # DEMO: Disable Flyway migrations
     ports:
       - "8081:8081"
     healthcheck:
@@ -121,16 +127,18 @@ services:
       redis:
         condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: test  # DEMO: No authentication required
+      SPRING_PROFILES_ACTIVE: docker  # DEMO: Use docker profile for proper Redis config
+      JWT_SECRET: demo_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/quality_db
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: healthdata_password
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8087
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       SPRING_LIQUIBASE_ENABLED: "false"  # DEMO: Use Hibernate DDL instead
+      SPRING_FLYWAY_ENABLED: "false"  # DEMO: Disable Flyway migrations
       CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8086
       FHIR_SERVICE_URL: http://fhir-service:8081
     ports:
@@ -154,19 +162,26 @@ services:
         condition: service_healthy
       kafka:
         condition: service_started
+      redis:
+        condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: test  # DEMO: No authentication required
+      SPRING_PROFILES_ACTIVE: docker  # DEMO: Use docker profile for proper Redis config
+      JWT_SECRET: demo_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cql_db
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: healthdata_password
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8086
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       SPRING_LIQUIBASE_ENABLED: "false"  # DEMO: Use Hibernate DDL instead
+      SPRING_FLYWAY_ENABLED: "false"  # DEMO: Disable Flyway migrations
+      FHIR_SERVICE_URL: http://fhir-service:8081
     ports:
       - "8086:8086"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8086/cql-engine/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5

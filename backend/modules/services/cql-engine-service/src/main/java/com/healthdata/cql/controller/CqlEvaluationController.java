@@ -48,7 +48,7 @@ public class CqlEvaluationController {
     public ResponseEntity<CqlEvaluation> createAndExecuteEvaluation(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam UUID libraryId,
-            @RequestParam String patientId) {
+            @RequestParam UUID patientId) {
         logger.info("Creating evaluation for patient: {} with library: {}", patientId, libraryId);
 
         CqlEvaluation evaluation = evaluationService.createEvaluation(tenantId, libraryId, patientId);
@@ -111,7 +111,7 @@ public class CqlEvaluationController {
     @GetMapping("/patient/{patientId}")
     public ResponseEntity<Page<CqlEvaluation>> getEvaluationsForPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @PathVariable String patientId,
+            @PathVariable UUID patientId,
             Pageable pageable) {
         logger.debug("Getting evaluations for patient: {} in tenant: {}", patientId, tenantId);
 
@@ -145,7 +145,7 @@ public class CqlEvaluationController {
     @GetMapping("/patient/{patientId}/library/{libraryId}/latest")
     public ResponseEntity<CqlEvaluation> getLatestEvaluationForPatientAndLibrary(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @PathVariable String patientId,
+            @PathVariable UUID patientId,
             @PathVariable UUID libraryId) {
         logger.debug("Getting latest evaluation for patient: {} and library: {} in tenant: {}",
                 patientId, libraryId, tenantId);
@@ -197,7 +197,7 @@ public class CqlEvaluationController {
     @GetMapping("/patient/{patientId}/date-range")
     public ResponseEntity<List<CqlEvaluation>> getEvaluationsForPatientByDateRange(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @PathVariable String patientId,
+            @PathVariable UUID patientId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant end) {
         logger.debug("Getting evaluations for patient: {} between {} and {} in tenant: {}",
@@ -216,7 +216,7 @@ public class CqlEvaluationController {
     @GetMapping("/patient/{patientId}/successful")
     public ResponseEntity<List<CqlEvaluation>> getSuccessfulEvaluationsForPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @PathVariable String patientId) {
+            @PathVariable UUID patientId) {
         logger.debug("Getting successful evaluations for patient: {} in tenant: {}",
                 patientId, tenantId);
 
@@ -249,7 +249,7 @@ public class CqlEvaluationController {
     public ResponseEntity<List<CqlEvaluation>> batchEvaluate(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam UUID libraryId,
-            @RequestBody List<String> patientIds) {
+            @RequestBody List<UUID> patientIds) {
         // Validate that patient list is not empty
         if (patientIds == null || patientIds.isEmpty()) {
             return ResponseEntity.badRequest().build();
@@ -318,7 +318,7 @@ public class CqlEvaluationController {
     @GetMapping("/count/patient/{patientId}")
     public ResponseEntity<Long> countEvaluationsForPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @PathVariable String patientId) {
+            @PathVariable UUID patientId) {
         logger.debug("Counting evaluations for patient: {} in tenant: {}", patientId, tenantId);
 
         long count = evaluationService.countEvaluationsForPatient(tenantId, patientId);

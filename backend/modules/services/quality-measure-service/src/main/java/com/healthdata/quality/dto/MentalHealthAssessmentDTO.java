@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Response DTO for mental health assessment results
@@ -24,7 +25,7 @@ public class MentalHealthAssessmentDTO {
     /**
      * Patient FHIR ID
      */
-    private String patientId;
+    private UUID patientId;
 
     /**
      * Assessment type enum value (PHQ_9, GAD_7, PHQ_2, etc.)

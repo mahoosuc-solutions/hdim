@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Health Score Service
@@ -57,7 +58,7 @@ public class HealthScoreService {
     @Transactional
     public HealthScoreDTO calculateHealthScore(
         String tenantId,
-        String patientId,
+        UUID patientId,
         HealthScoreComponents components
     ) {
         log.info("Calculating health score for patient: {} in tenant: {}", patientId, tenantId);
@@ -146,7 +147,7 @@ public class HealthScoreService {
             log.info("Received observation event");
 
             String tenantId = (String) event.get("tenantId");
-            String patientId = extractPatientIdFromEvent(event);
+            UUID patientId = extractPatientIdFromEvent(event);
             Map<String, Object> observationData = (Map<String, Object>) event.get("resource");
 
             if (tenantId == null || patientId == null || observationData == null) {
@@ -335,7 +336,7 @@ public class HealthScoreService {
             log.info("Received condition event");
 
             String tenantId = (String) event.get("tenantId");
-            String patientId = extractPatientIdFromEvent(event);
+            UUID patientId = extractPatientIdFromEvent(event);
             Map<String, Object> conditionData = (Map<String, Object>) event.get("resource");
 
             if (tenantId == null || patientId == null || conditionData == null) {
@@ -417,7 +418,7 @@ public class HealthScoreService {
      * Get health score history for a patient
      */
     @Transactional(readOnly = true)
-    public List<HealthScoreDTO> getHealthScoreHistory(String tenantId, String patientId) {
+    public List<HealthScoreDTO> getHealthScoreHistory(String tenantId, UUID patientId) {
         log.debug("Retrieving health score history for patient: {}", patientId);
 
         List<HealthScoreHistoryEntity> history =
@@ -432,7 +433,7 @@ public class HealthScoreService {
      * Get current health score for a patient
      */
     @Transactional(readOnly = true)
-    public Optional<HealthScoreDTO> getCurrentHealthScore(String tenantId, String patientId) {
+    public Optional<HealthScoreDTO> getCurrentHealthScore(String tenantId, UUID patientId) {
         return healthScoreRepository.findLatestByPatientId(tenantId, patientId)
             .map(HealthScoreDTO::fromEntity);
     }
@@ -479,7 +480,7 @@ public class HealthScoreService {
         );
 
         // Publish regular update event to Kafka
-        kafkaTemplate.send("health-score.updated", healthScore.getPatientId(), event);
+        kafkaTemplate.send("health-score.updated", healthScore.getPatientId().toString(), event);
         log.debug("Published health-score.updated event for patient: {}", healthScore.getPatientId());
 
         // Broadcast update via WebSocket for real-time UI updates
@@ -499,7 +500,7 @@ public class HealthScoreService {
             // Publish to Kafka
             kafkaTemplate.send(
                 "health-score.significant-change",
-                healthScore.getPatientId(),
+                healthScore.getPatientId().toString(),
                 significantChangeEvent
             );
             log.info("Published health-score.significant-change event for patient: {} - {}",
@@ -518,7 +519,7 @@ public class HealthScoreService {
     /**
      * Extract patient ID from event object
      */
-    private String extractPatientIdFromEvent(Object event) {
+    private UUID extractPatientIdFromEvent(Object event) {
         if (event == null) {
             return null;
         }
@@ -531,7 +532,7 @@ public class HealthScoreService {
                 // Try direct patientId field first
                 Object patientId = eventMap.get("patientId");
                 if (patientId != null) {
-                    return patientId.toString();
+                    return parsePatientIdValue(patientId);
                 }
 
                 // Try to extract from resource.subject.reference
@@ -545,7 +546,7 @@ public class HealthScoreService {
                         if (reference != null) {
                             // Extract ID from "Patient/123"
                             String refString = reference.toString();
-                            return refString.replace("Patient/", "");
+                            return parsePatientIdString(refString.replace("Patient/", ""));
                         }
                     }
                 }
@@ -555,7 +556,7 @@ public class HealthScoreService {
             try {
                 java.lang.reflect.Method getPatientId = event.getClass().getMethod("getPatientId");
                 Object result = getPatientId.invoke(event);
-                return result != null ? result.toString() : null;
+                return result != null ? parsePatientIdValue(result) : null;
             } catch (Exception e) {
                 log.debug("Could not extract patientId via reflection: {}", e.getMessage());
             }
@@ -563,6 +564,24 @@ public class HealthScoreService {
             return null;
         } catch (Exception e) {
             log.error("Error extracting patient ID from event: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private UUID parsePatientIdValue(Object patientId) {
+        if (patientId instanceof UUID) {
+            return (UUID) patientId;
+        }
+        return parsePatientIdString(patientId.toString());
+    }
+
+    private UUID parsePatientIdString(String patientId) {
+        if (patientId == null) {
+            return null;
+        }
+        try {
+            return UUID.fromString(patientId);
+        } catch (IllegalArgumentException e) {
             return null;
         }
     }
@@ -921,7 +940,7 @@ public class HealthScoreService {
      */
     private void createConditionAlertIfNeeded(
         String tenantId,
-        String patientId,
+        UUID patientId,
         ConditionData condition,
         HealthScoreDTO healthScore
     ) {
@@ -968,7 +987,7 @@ public class HealthScoreService {
                 "healthScore", healthScore.getOverallScore()
             );
 
-            kafkaTemplate.send("condition.alert.needed", patientId, alertEvent);
+            kafkaTemplate.send("condition.alert.needed", patientId.toString(), alertEvent);
         }
     }
 

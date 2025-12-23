@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.cql.audit.DataFlowTracker;
 import com.healthdata.cql.entity.CqlLibrary;
 import com.healthdata.cql.event.*;
+import com.healthdata.cql.measure.HedisMeasure;
 import com.healthdata.cql.measure.MeasureResult;
+import com.healthdata.cql.registry.HedisMeasureRegistry;
 import com.healthdata.cql.repository.CqlLibraryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +53,7 @@ public class MeasureTemplateEngine {
     private final EvaluationEventProducer eventProducer;
     private final ObjectMapper objectMapper;
     private final DataFlowTracker dataFlowTracker;
+    private final HedisMeasureRegistry measureRegistry;
     private final ExecutorService executorService;
 
     @Value("${visualization.batch-progress.emit-interval-seconds:5}")
@@ -65,13 +68,15 @@ public class MeasureTemplateEngine {
             TemplateCacheService cacheService,
             EvaluationEventProducer eventProducer,
             ObjectMapper objectMapper,
-            DataFlowTracker dataFlowTracker) {
+            DataFlowTracker dataFlowTracker,
+            HedisMeasureRegistry measureRegistry) {
         this.libraryRepository = libraryRepository;
         this.dataProvider = dataProvider;
         this.cacheService = cacheService;
         this.eventProducer = eventProducer;
         this.objectMapper = objectMapper;
         this.dataFlowTracker = dataFlowTracker;
+        this.measureRegistry = measureRegistry;
 
         // Thread pool for concurrent evaluation
         int threadCount = Runtime.getRuntime().availableProcessors() * 2;
@@ -97,19 +102,79 @@ public class MeasureTemplateEngine {
      * @param tenantId Tenant identifier
      * @return Measure evaluation result
      */
-    public MeasureResult evaluateMeasure(String measureId, String patientId, String tenantId) {
+    public MeasureResult evaluateMeasure(String measureId, UUID patientId, String tenantId) {
         return evaluateMeasure(measureId, patientId, tenantId, null);
     }
 
     /**
      * Evaluate a measure for a single patient (internal method with batchId support)
      */
-    private MeasureResult evaluateMeasure(String measureId, String patientId, String tenantId, String batchId) {
+    private MeasureResult evaluateMeasure(String measureId, UUID patientId, String tenantId, String batchId) {
         long startTime = System.currentTimeMillis();
         UUID evaluationId = UUID.randomUUID();
 
         try {
             logger.debug("Evaluating measure {} for patient {} / tenant {}", measureId, patientId, tenantId);
+
+            // First, check if we have a registered Java measure implementation
+            Optional<HedisMeasure> registeredMeasure = measureRegistry.getMeasure(measureId);
+            if (registeredMeasure.isPresent()) {
+                HedisMeasure measure = registeredMeasure.get();
+                String measureName = measure.getMeasureName();
+
+                logger.debug("Using registered Java measure {} for evaluation", measure.getClass().getSimpleName());
+
+                // Publish evaluation started event
+                eventProducer.publishEvaluationStarted(
+                        EvaluationStartedEvent.builder()
+                                .evaluationId(evaluationId)
+                                .tenantId(tenantId)
+                                .measureId(measureId)
+                                .measureName(measureName)
+                                .patientId(patientId)
+                                .batchId(batchId)
+                                .build()
+                );
+
+                // Track that we're using a Java measure
+                dataFlowTracker.recordStep(
+                    "Load Measure Implementation",
+                    "LOGIC_DECISION",
+                    String.format("Using Java implementation: %s", measure.getClass().getSimpleName()),
+                    String.format("Registered HEDIS measure found for %s, delegating to Java class", measureId)
+                );
+
+                // Execute measure using the registered Java implementation
+                MeasureResult result = measure.evaluate(tenantId, patientId);
+
+                long duration = System.currentTimeMillis() - startTime;
+                logger.debug("Evaluated measure {} for patient {} using Java impl in {}ms", measureId, patientId, duration);
+
+                // Publish evaluation completed event
+                eventProducer.publishEvaluationCompleted(
+                        EvaluationCompletedEvent.builder()
+                                .evaluationId(evaluationId)
+                                .tenantId(tenantId)
+                                .measureId(measureId)
+                                .measureName(measureName)
+                                .patientId(patientId)
+                                .batchId(batchId)
+                                .inDenominator(result.isInDenominator())
+                                .inNumerator(result.isInNumerator())
+                                .exclusionReason(result.getExclusionReason())
+                                .complianceRate(result.getComplianceRate() != null ? result.getComplianceRate() : 0.0)
+                                .score(result.getScore() != null ? result.getScore() : 0.0)
+                                .durationMs(duration)
+                                .evidence(result.getEvidence())
+                                .careGapCount(result.getCareGaps() != null ? result.getCareGaps().size() : 0)
+                                .build()
+                );
+
+                return result;
+            }
+
+            // Fall back to template-based evaluation
+            logger.debug("No registered Java measure for {}, using template-based evaluation", measureId);
 
             // Load template (from cache or database)
             MeasureTemplate template = loadTemplate(measureId, tenantId);
@@ -208,7 +273,7 @@ public class MeasureTemplateEngine {
      * @param tenantId Tenant identifier
      * @return Map of patient ID to evaluation result
      */
-    public Map<String, MeasureResult> evaluateBatch(String measureId, List<String> patientIds, String tenantId) {
+    public Map<UUID, MeasureResult> evaluateBatch(String measureId, List<UUID> patientIds, String tenantId) {
         long batchStartTime = System.currentTimeMillis();
         String batchId = UUID.randomUUID().toString();
 
@@ -219,8 +284,8 @@ public class MeasureTemplateEngine {
         MeasureTemplate template = loadTemplate(measureId, tenantId);
         if (template == null) {
             logger.error("Template not found for measure {} / tenant {}", measureId, tenantId);
-            Map<String, MeasureResult> results = new ConcurrentHashMap<>();
-            for (String patientId : patientIds) {
+            Map<UUID, MeasureResult> results = new ConcurrentHashMap<>();
+            for (UUID patientId : patientIds) {
                 results.put(patientId, buildErrorResult(measureId, patientId, "Template not found"));
             }
             return results;
@@ -234,7 +299,7 @@ public class MeasureTemplateEngine {
         AtomicInteger numeratorCount = new AtomicInteger(0);
         AtomicLong totalDurationMs = new AtomicLong(0);
 
-        Map<String, MeasureResult> results = new ConcurrentHashMap<>();
+        Map<UUID, MeasureResult> results = new ConcurrentHashMap<>();
 
         // Schedule periodic progress reporting
         ScheduledExecutorService progressReporter = Executors.newSingleThreadScheduledExecutor();
@@ -255,10 +320,10 @@ public class MeasureTemplateEngine {
                 progressEmitIntervalSeconds, progressEmitIntervalSeconds, TimeUnit.SECONDS);
 
         // Create concurrent evaluation tasks
-        List<CompletableFuture<Map.Entry<String, MeasureResult>>> futures = new ArrayList<>();
+        List<CompletableFuture<Map.Entry<UUID, MeasureResult>>> futures = new ArrayList<>();
 
-        for (String patientId : patientIds) {
-            CompletableFuture<Map.Entry<String, MeasureResult>> future = CompletableFuture.supplyAsync(() -> {
+        for (UUID patientId : patientIds) {
+            CompletableFuture<Map.Entry<UUID, MeasureResult>> future = CompletableFuture.supplyAsync(() -> {
                 try {
                     long evalStartTime = System.currentTimeMillis();
                     MeasureResult result = evaluateMeasure(measureId, patientId, tenantId, batchId);
@@ -310,8 +375,8 @@ public class MeasureTemplateEngine {
             allOf.get(5, TimeUnit.MINUTES); // 5 minute timeout for batch
 
             // Collect results
-            for (CompletableFuture<Map.Entry<String, MeasureResult>> future : futures) {
-                Map.Entry<String, MeasureResult> entry = future.get();
+            for (CompletableFuture<Map.Entry<UUID, MeasureResult>> future : futures) {
+                Map.Entry<UUID, MeasureResult> entry = future.get();
                 results.put(entry.getKey(), entry.getValue());
             }
 
@@ -1015,7 +1080,7 @@ public class MeasureTemplateEngine {
         return null;
     }
 
-    private MeasureResult buildErrorResult(String measureId, String patientId, String error) {
+    private MeasureResult buildErrorResult(String measureId, UUID patientId, String error) {
         return MeasureResult.builder()
                 .measureId(measureId)
                 .patientId(patientId)

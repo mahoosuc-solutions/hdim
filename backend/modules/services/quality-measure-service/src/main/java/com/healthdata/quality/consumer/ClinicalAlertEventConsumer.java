@@ -135,9 +135,14 @@ public class ClinicalAlertEventConsumer {
             log.info("Received health-score.significant-change event: {}", event);
 
             String tenantId = (String) event.get("tenantId");
-            String patientId = (String) event.get("patientId");
+            UUID patientId = parsePatientIdValue(event.get("patientId"));
             Integer previousScore = ((Number) event.get("previousScore")).intValue();
             Integer currentScore = ((Number) event.get("currentScore")).intValue();
+
+            if (patientId == null) {
+                log.warn("Missing patientId in health-score.significant-change event");
+                return;
+            }
 
             // Only alert on decline (not improvement)
             if (currentScore >= previousScore) {
@@ -175,10 +180,15 @@ public class ClinicalAlertEventConsumer {
             log.info("Received chronic-disease.deterioration event: {}", event);
 
             String tenantId = (String) event.get("tenantId");
-            String patientId = (String) event.get("patientId");
+            UUID patientId = parsePatientIdValue(event.get("patientId"));
             String condition = (String) event.get("condition");
             String metric = (String) event.get("metric");
             String severity = (String) event.get("severity");
+
+            if (patientId == null) {
+                log.warn("Missing patientId in chronic-disease.deterioration event");
+                return;
+            }
 
             // Evaluate for chronic deterioration alert
             ClinicalAlertDTO alert = clinicalAlertService.evaluateChronicDiseaseDeterioration(
@@ -214,11 +224,16 @@ public class ClinicalAlertEventConsumer {
             log.info("Received clinical-alert.triggered event: {}", event);
 
             String alertId = (String) event.get("alertId");
-            String patientId = (String) event.get("patientId");
+            UUID patientId = parsePatientIdValue(event.get("patientId"));
             String tenantId = (String) event.get("tenantId");
             String alertType = (String) event.get("alertType");
             String severity = (String) event.get("severity");
             String triggeredAt = (String) event.get("triggeredAt");
+
+            if (patientId == null) {
+                log.warn("Missing patientId in clinical-alert.triggered event");
+                return;
+            }
 
             // Log to audit trail
             log.info("AUDIT: Clinical alert triggered - Alert ID: {}, Patient: {}, Type: {}, Severity: {}, Timestamp: {}",
@@ -250,13 +265,27 @@ public class ClinicalAlertEventConsumer {
         }
     }
 
+    private UUID parsePatientIdValue(Object patientId) {
+        if (patientId instanceof UUID) {
+            return (UUID) patientId;
+        }
+        if (patientId == null) {
+            return null;
+        }
+        try {
+            return UUID.fromString(patientId.toString());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     /**
      * Build ClinicalAlertDTO from event map for notification purposes
      */
     private ClinicalAlertDTO buildAlertDTOFromEvent(Map<String, Object> event) {
         return ClinicalAlertDTO.builder()
             .id((String) event.get("alertId"))
-            .patientId((String) event.get("patientId"))
+            .patientId(parsePatientIdValue(event.get("patientId")))
             .tenantId((String) event.get("tenantId"))
             .alertType((String) event.get("alertType"))
             .severity((String) event.get("severity"))

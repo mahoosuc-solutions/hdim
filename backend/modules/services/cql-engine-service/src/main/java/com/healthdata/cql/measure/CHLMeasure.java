@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * CHL - Chlamydia Screening in Women (HEDIS)
@@ -73,7 +74,7 @@ public class CHLMeasure extends AbstractHedisMeasure {
 
     @Override
     @Cacheable(value = "hedisMeasures", key = "'CHL-' + #tenantId + '-' + #patientId")
-    public MeasureResult evaluate(String tenantId, String patientId) {
+    public MeasureResult evaluate(String tenantId, UUID patientId) {
         logger.info("Evaluating CHL measure for patient: {}", patientId);
 
         MeasureResult.MeasureResultBuilder resultBuilder = MeasureResult.builder()
@@ -201,7 +202,7 @@ public class CHLMeasure extends AbstractHedisMeasure {
     }
 
     @Override
-    public boolean isEligible(String tenantId, String patientId) {
+    public boolean isEligible(String tenantId, UUID patientId) {
         JsonNode patient = getPatientData(tenantId, patientId);
         if (patient == null) return false;
 

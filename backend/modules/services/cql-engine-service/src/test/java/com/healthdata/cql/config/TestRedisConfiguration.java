@@ -52,4 +52,16 @@ public class TestRedisConfiguration {
 
         return mockTemplate;
     }
+
+    /**
+     * Provides a mock RedisConnectionFactory to prevent auto-configuration errors
+     */
+    @Bean
+    @Primary
+    public RedisConnectionFactory redisConnectionFactory() {
+        RedisConnectionFactory mockFactory = mock(RedisConnectionFactory.class);
+        RedisConnection mockConnection = mock(RedisConnection.class);
+        when(mockFactory.getConnection()).thenReturn(mockConnection);
+        return mockFactory;
+    }
 }

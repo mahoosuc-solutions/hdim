@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * FVA - Influenza Vaccinations for Adults Ages 18-64 (HEDIS)
@@ -78,7 +79,7 @@ public class FVAMeasure extends AbstractHedisMeasure {
 
     @Override
     @Cacheable(value = "hedisMeasures", key = "'FVA-' + #tenantId + '-' + #patientId")
-    public MeasureResult evaluate(String tenantId, String patientId) {
+    public MeasureResult evaluate(String tenantId, UUID patientId) {
         logger.info("Evaluating FVA measure for patient: {}", patientId);
 
         MeasureResult.MeasureResultBuilder resultBuilder = MeasureResult.builder()
@@ -200,7 +201,7 @@ public class FVAMeasure extends AbstractHedisMeasure {
     }
 
     @Override
-    public boolean isEligible(String tenantId, String patientId) {
+    public boolean isEligible(String tenantId, UUID patientId) {
         JsonNode patient = getPatientData(tenantId, patientId);
         if (patient == null) return false;
 
@@ -216,7 +217,7 @@ public class FVAMeasure extends AbstractHedisMeasure {
     /**
      * Search for immunizations by CVX vaccine codes
      */
-    private JsonNode searchImmunizationsByCVX(String tenantId, String patientId,
+    private JsonNode searchImmunizationsByCVX(String tenantId, UUID patientId,
                                                List<String> cvxCodes, String dateFilter) {
         try {
             // Convert CVX codes to vaccine code parameter for FHIR query

@@ -46,14 +46,15 @@ class DataFlowTrackerTest {
     void shouldRecordDataFetchStepWithAllDetails() {
         // Given
         dataFlowTracker.startTracking("eval-123");
+        String patientId = "11111111-1111-1111-1111-111111111111";
 
         // When
         dataFlowTracker.recordStep(
             "Fetch Patient Demographics",
             "DATA_FETCH",
             List.of("Patient"),
-            "patientId=patient-456",
-            "{\"id\": \"patient-456\", \"age\": 45}",
+            "patientId=" + patientId,
+            "{\"id\": \"" + patientId + "\", \"age\": 45}",
             "Patient age: 45",
             "Retrieved patient resource for age calculation"
         );
@@ -67,8 +68,8 @@ class DataFlowTrackerTest {
         assertThat(step.getStepName()).isEqualTo("Fetch Patient Demographics");
         assertThat(step.getStepType()).isEqualTo("DATA_FETCH");
         assertThat(step.getResourcesAccessed()).containsExactly("Patient");
-        assertThat(step.getInputData()).isEqualTo("patientId=patient-456");
-        assertThat(step.getOutputData()).contains("patient-456");
+        assertThat(step.getInputData()).isEqualTo("patientId=" + patientId);
+        assertThat(step.getOutputData()).contains(patientId);
         assertThat(step.getDecision()).isEqualTo("Patient age: 45");
         assertThat(step.getReasoning()).isEqualTo("Retrieved patient resource for age calculation");
         assertThat(step.getTimestamp()).isNotNull();

@@ -2,10 +2,15 @@
 # All 26 Backend Services with Profiles (including migration-workflow-service)
 #
 # Usage:
+#   docker compose --profile light up -d     # Infrastructure only (Postgres, Redis) - ~1GB RAM
 #   docker compose --profile core up -d      # Infrastructure + 10 core clinical services
 #   docker compose --profile ai up -d        # Infrastructure + 3 AI services
 #   docker compose --profile analytics up -d # Infrastructure + 3 analytics services
 #   docker compose --profile full up -d      # All 22 services
+#
+# For local CI testing with act runner:
+#   docker compose --profile light up -d     # Start minimal infrastructure
+#   act -j build                             # Run GitHub Actions locally
 
 services:
   # ============================================
@@ -14,8 +19,8 @@ services:
 
   postgres:
     container_name: healthdata-postgres
-    image: postgres:16-alpine
-    profiles: ["core", "ai", "analytics", "full"]
+    image: postgres:15-alpine
+    profiles: ["light", "core", "ai", "analytics", "full"]
     environment:
       POSTGRES_USER: healthdata
       POSTGRES_PASSWORD: healthdata_password
@@ -36,7 +41,7 @@ services:
   redis:
     container_name: healthdata-redis
     image: redis:7-alpine
-    profiles: ["core", "ai", "analytics", "full"]
+    profiles: ["light", "core", "ai", "analytics", "full"]
     ports:
       - "6380:6379"
     healthcheck:

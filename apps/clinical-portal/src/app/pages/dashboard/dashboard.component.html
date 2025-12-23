@@ -133,10 +133,11 @@
             </div>
             <button
               mat-raised-button
+              type="button"
               color="primary"
               (click)="viewAllCareGaps()"
               aria-label="View all care gaps">
-              <mat-icon>arrow_forward</mat-icon>
+              <mat-icon aria-hidden="true">arrow_forward</mat-icon>
               View All Care Gaps
             </button>
           </div>
@@ -218,17 +219,17 @@
             </div>
             <div class="gap-action">
               <div class="gap-quick-actions">
-                <button mat-mini-fab color="primary"
+                <button mat-mini-fab type="button" color="primary"
                         matTooltip="Schedule appointment"
                         aria-label="Schedule appointment for this patient"
                         (click)="$event.stopPropagation(); scheduleAppointment(gap.patientId)">
-                  <mat-icon>event</mat-icon>
+                  <mat-icon aria-hidden="true">event</mat-icon>
                 </button>
-                <button mat-mini-fab color="accent"
+                <button mat-mini-fab type="button" color="accent"
                         matTooltip="Send reminder"
                         aria-label="Send reminder to this patient"
                         (click)="$event.stopPropagation(); sendReminder(gap.patientId)">
-                  <mat-icon>notifications</mat-icon>
+                  <mat-icon aria-hidden="true">notifications</mat-icon>
                 </button>
               </div>
               <mat-icon>arrow_forward</mat-icon>
@@ -465,11 +466,12 @@
                   </div>
                   <div class="measure-actions">
                     <button mat-icon-button
+                            type="button"
                             color="warn"
                             matTooltip="Remove from favorites"
                             aria-label="Remove from favorites"
                             (click)="removeFavorite(fav.measureId, $event)">
-                      <mat-icon>star</mat-icon>
+                      <mat-icon aria-hidden="true">star</mat-icon>
                     </button>
                     <mat-icon class="action-arrow">arrow_forward</mat-icon>
                   </div>
@@ -483,8 +485,8 @@
             </div>
           </mat-card-content>
           <mat-card-actions *ngIf="measureFavorites.favorites().length > 0">
-            <button mat-button color="primary" (click)="navigateTo('/evaluations')">
-              <mat-icon>add</mat-icon>
+            <button mat-button type="button" color="primary" (click)="navigateTo('/evaluations')" aria-label="Add more favorite measures">
+              <mat-icon aria-hidden="true">add</mat-icon>
               Add More
             </button>
           </mat-card-actions>
@@ -536,12 +538,12 @@
             </div>
           </mat-card-content>
           <mat-card-actions *ngIf="measureFavorites.recentMeasures().length > 0">
-            <button mat-button color="primary" (click)="navigateTo('/evaluations')">
-              <mat-icon>play_arrow</mat-icon>
+            <button mat-button type="button" color="primary" (click)="navigateTo('/evaluations')" aria-label="Create new evaluation">
+              <mat-icon aria-hidden="true">play_arrow</mat-icon>
               New Evaluation
             </button>
-            <button mat-button color="warn" (click)="clearRecentMeasures()">
-              <mat-icon>clear_all</mat-icon>
+            <button mat-button type="button" color="warn" (click)="clearRecentMeasures()" aria-label="Clear recent measures history">
+              <mat-icon aria-hidden="true">clear_all</mat-icon>
               Clear History
             </button>
           </mat-card-actions>
@@ -683,23 +685,32 @@
           <div class="trend-controls">
             <button
               mat-button
+              type="button"
               [class.active]="trendPeriod === 'daily'"
               (click)="setTrendPeriod('daily')"
-              matTooltip="View daily compliance trends">
+              matTooltip="View daily compliance trends"
+              [attr.aria-pressed]="trendPeriod === 'daily'"
+              aria-label="View daily trends">
               Daily
             </button>
             <button
               mat-button
+              type="button"
               [class.active]="trendPeriod === 'weekly'"
               (click)="setTrendPeriod('weekly')"
-              matTooltip="View weekly compliance trends">
+              matTooltip="View weekly compliance trends"
+              [attr.aria-pressed]="trendPeriod === 'weekly'"
+              aria-label="View weekly trends">
               Weekly
             </button>
             <button
               mat-button
+              type="button"
               [class.active]="trendPeriod === 'monthly'"
               (click)="setTrendPeriod('monthly')"
-              matTooltip="View monthly compliance trends">
+              matTooltip="View monthly compliance trends"
+              [attr.aria-pressed]="trendPeriod === 'monthly'"
+              aria-label="View monthly trends">
               Monthly
             </button>
           </div>

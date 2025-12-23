@@ -146,23 +146,29 @@
           <!-- Detect Duplicates Button -->
           <button
             mat-raised-button
+            type="button"
             color="accent"
             class="detect-duplicates-btn"
             (click)="autoDetectDuplicates()"
             [disabled]="detectingDuplicates || loading"
+            [attr.aria-disabled]="detectingDuplicates || loading"
+            aria-label="Automatically detect and link duplicate patient records"
             matTooltip="Automatically detect and link duplicate patient records">
-            <mat-icon>{{detectingDuplicates ? 'hourglass_empty' : 'find_in_page'}}</mat-icon>
+            <mat-icon aria-hidden="true">{{detectingDuplicates ? 'hourglass_empty' : 'find_in_page'}}</mat-icon>
             {{detectingDuplicates ? 'Detecting...' : 'Detect Duplicates'}}
           </button>
 
           <!-- Clear Links Button (for testing) -->
           <button
             mat-stroked-button
+            type="button"
             class="clear-links-btn"
             (click)="clearDuplicateLinks()"
             [disabled]="detectingDuplicates || loading"
+            [attr.aria-disabled]="detectingDuplicates || loading"
+            aria-label="Clear all duplicate links"
             matTooltip="Clear all duplicate links (for testing)">
-            <mat-icon>link_off</mat-icon>
+            <mat-icon aria-hidden="true">link_off</mat-icon>
             Clear Links
           </button>
 

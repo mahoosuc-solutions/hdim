@@ -5,8 +5,8 @@
     subtitle="Manage patient care recommendations and interventions"
     [breadcrumbs]="breadcrumbs">
     <div class="header-actions">
-      <button mat-button (click)="refreshData()" [disabled]="loading$ | async">
-        <mat-icon>refresh</mat-icon>
+      <button mat-button type="button" (click)="refreshData()" [disabled]="loading$ | async" aria-label="Refresh care recommendations data">
+        <mat-icon aria-hidden="true">refresh</mat-icon>
         Refresh
       </button>
       <mat-button-toggle-group
@@ -53,8 +53,8 @@
             placeholder="Search by name or MRN">
           <mat-icon matPrefix>search</mat-icon>
           @if (searchTerm) {
-            <button matSuffix mat-icon-button (click)="searchTerm = ''; onSearchChange('')">
-              <mat-icon>close</mat-icon>
+            <button matSuffix mat-icon-button type="button" (click)="searchTerm = ''; onSearchChange('')" aria-label="Clear search">
+              <mat-icon aria-hidden="true">close</mat-icon>
             </button>
           }
         </mat-form-field>
@@ -119,8 +119,8 @@
 
         <!-- Clear Filters -->
         @if (hasActiveFilters$ | async) {
-          <button mat-button color="primary" (click)="clearFilters()">
-            <mat-icon>filter_alt_off</mat-icon>
+          <button mat-button type="button" color="primary" (click)="clearFilters()" aria-label="Clear all filters">
+            <mat-icon aria-hidden="true">filter_alt_off</mat-icon>
             Clear Filters
           </button>
         }
@@ -263,8 +263,8 @@
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let row">
-              <button mat-icon-button [matMenuTriggerFor]="actionMenu" (click)="$event.stopPropagation()">
-                <mat-icon>more_vert</mat-icon>
+              <button mat-icon-button type="button" [matMenuTriggerFor]="actionMenu" (click)="$event.stopPropagation()" aria-label="More actions">
+                <mat-icon aria-hidden="true">more_vert</mat-icon>
               </button>
               <mat-menu #actionMenu="matMenu">
                 <button mat-menu-item (click)="acceptRecommendation(row)" [disabled]="row.status !== 'pending'">
@@ -348,10 +348,10 @@
               </div>
             </mat-card-content>
             <mat-card-actions>
-              <button mat-button color="primary" (click)="acceptRecommendation(rec); $event.stopPropagation()" [disabled]="rec.status !== 'pending'">
+              <button mat-button type="button" color="primary" (click)="acceptRecommendation(rec); $event.stopPropagation()" [disabled]="rec.status !== 'pending'" [attr.aria-disabled]="rec.status !== 'pending'" aria-label="Accept recommendation">
                 Accept
               </button>
-              <button mat-button (click)="viewPatient(rec.patientId); $event.stopPropagation()">
+              <button mat-button type="button" (click)="viewPatient(rec.patientId); $event.stopPropagation()" aria-label="View patient details">
                 View Patient
               </button>
             </mat-card-actions>

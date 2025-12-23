@@ -314,8 +314,10 @@
             type="button"
             (click)="resetForm()"
             [disabled]="submitting"
+            [attr.aria-disabled]="submitting"
+            aria-label="Reset evaluation form"
           >
-            <mat-icon>refresh</mat-icon>
+            <mat-icon aria-hidden="true">refresh</mat-icon>
             Reset
           </button>
         </div>
@@ -379,7 +381,7 @@
             </div>
             <div class="result-row">
               <span class="label">Score:</span>
-              <span class="value">{{ evaluationResult.score.toFixed(2) }}</span>
+              <span class="value">{{ evaluationResult.score !== undefined ? evaluationResult.score.toFixed(2) : (evaluationResult.complianceRate !== undefined ? evaluationResult.complianceRate.toFixed(2) : 'N/A') }}</span>
             </div>
             <div class="result-row">
               <span class="label">Calculation Date:</span>

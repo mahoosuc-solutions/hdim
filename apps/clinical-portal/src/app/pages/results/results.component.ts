@@ -15,6 +15,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { SelectionModel } from '@angular/cdk/collections';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
@@ -24,6 +26,8 @@ import { injectDestroy } from '../../shared/utils';
 import { EvaluationService } from '../../services/evaluation.service';
 import { PatientService } from '../../services/patient.service';
 import { AIAssistantService } from '../../services/ai-assistant.service';
+import { QrdaExportService, QrdaExportJob } from '../../services/qrda-export.service';
+import { ReportExportService, ReportOptions } from '../../services/report-export.service';
 import { QualityMeasureResult } from '../../models/quality-result.model';
 import { Patient } from '../../models/patient.model';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
@@ -53,6 +57,8 @@ import { TrackInteraction } from '../../utils/ai-tracking.decorator';
     MatPaginatorModule,
     MatSortModule,
     MatCheckboxModule,
+    MatMenuModule,
+    MatDividerModule,
     NgxChartsModule,
     LoadingButtonComponent,
     LoadingOverlayComponent,
@@ -89,6 +95,14 @@ export class ResultsComponent implements OnInit, AfterViewInit {
   exportCsvSuccess = false;
   exportExcelLoading = false;
   exportExcelSuccess = false;
+  exportPdfLoading = false;
+  exportPdfSuccess = false;
+  exportQrdaLoading = false;
+  exportQrdaSuccess = false;
+
+  // QRDA Export state
+  qrdaExportJob: QrdaExportJob | null = null;
+  qrdaExportError: string | null = null;
 
   // Display columns for table
   displayedColumns: string[] = [
@@ -115,6 +129,8 @@ export class ResultsComponent implements OnInit, AfterViewInit {
   // Chart data for ngx-charts
   outcomeDistributionChartData: any[] = [];
   categoryComplianceChartData: any[] = [];
+  complianceTrendChartData: any[] = [];
+  measurePerformanceChartData: any[] = [];
 
   // Pie chart configuration
   pieChartView: [number, number] = [400, 300];
@@ -139,10 +155,33 @@ export class ResultsComponent implements OnInit, AfterViewInit {
     domain: ['#5AA454', '#A10A28', '#C7B42C']
   };
 
+  // Line chart configuration (compliance trends)
+  lineChartView: [number, number] = [800, 300];
+  lineChartShowXAxis = true;
+  lineChartShowYAxis = true;
+  lineChartGradient = true;
+  lineChartShowLegend = true;
+  lineChartShowXAxisLabel = true;
+  lineChartXAxisLabel = 'Week';
+  lineChartShowYAxisLabel = true;
+  lineChartYAxisLabel = 'Compliance Rate (%)';
+  lineChartColorScheme: any = {
+    domain: ['#1976d2', '#4caf50', '#ff9800']
+  };
+  lineChartCurve = 'curveMonotoneX';
+
+  // Horizontal bar chart for measure performance
+  horizontalBarView: [number, number] = [400, 350];
+  horizontalBarColorScheme: any = {
+    domain: ['#5AA454', '#E44D25', '#CFC0BB', '#7aa3e5', '#a8385d']
+  };
+
   constructor(
     private fb: FormBuilder,
     private evaluationService: EvaluationService,
     private patientService: PatientService,
+    private qrdaExportService: QrdaExportService,
+    private reportExportService: ReportExportService,
     public aiAssistant: AIAssistantService
   ) {
     this.filterForm = this.fb.group({
@@ -588,6 +627,107 @@ export class ResultsComponent implements OnInit, AfterViewInit {
         value: Math.round(complianceRate * 100) / 100
       };
     });
+
+    // Update compliance trend line chart (weekly data)
+    this.complianceTrendChartData = this.calculateWeeklyTrends();
+
+    // Update measure performance chart (top/bottom performers)
+    this.measurePerformanceChartData = this.calculateMeasurePerformance();
+  }
+
+  /**
+   * Calculate weekly compliance trends for line chart
+   */
+  private calculateWeeklyTrends(): any[] {
+    if (this.filteredResults.length === 0) {
+      return [];
+    }
+
+    // Group results by week
+    const weeklyData = new Map<string, { compliant: number; eligible: number }>();
+
+    this.filteredResults.forEach(result => {
+      const date = new Date(result.calculationDate);
+      const weekStart = this.getWeekStart(date);
+      const weekKey = weekStart.toISOString().split('T')[0];
+
+      if (!weeklyData.has(weekKey)) {
+        weeklyData.set(weekKey, { compliant: 0, eligible: 0 });
+      }
+
+      const data = weeklyData.get(weekKey)!;
+      if (result.denominatorEligible) {
+        data.eligible++;
+        if (result.numeratorCompliant) {
+          data.compliant++;
+        }
+      }
+    });
+
+    // Sort by date and calculate compliance rates
+    const sortedWeeks = Array.from(weeklyData.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-12); // Last 12 weeks
+
+    const series = sortedWeeks.map(([week, data]) => {
+      const complianceRate = data.eligible > 0 ? (data.compliant / data.eligible) * 100 : 0;
+      const weekDate = new Date(week);
+      const weekLabel = `${weekDate.getMonth() + 1}/${weekDate.getDate()}`;
+      return {
+        name: weekLabel,
+        value: Math.round(complianceRate * 10) / 10
+      };
+    });
+
+    return [{ name: 'Compliance Rate', series }];
+  }
+
+  /**
+   * Get the start of the week (Monday) for a given date
+   */
+  private getWeekStart(date: Date): Date {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    d.setDate(diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  /**
+   * Calculate measure performance for horizontal bar chart
+   */
+  private calculateMeasurePerformance(): any[] {
+    // Group by measure name
+    const measureMap = new Map<string, { compliant: number; eligible: number }>();
+
+    this.filteredResults.forEach(result => {
+      const measureName = result.measureName || 'Unknown';
+      if (!measureMap.has(measureName)) {
+        measureMap.set(measureName, { compliant: 0, eligible: 0 });
+      }
+
+      const data = measureMap.get(measureName)!;
+      if (result.denominatorEligible) {
+        data.eligible++;
+        if (result.numeratorCompliant) {
+          data.compliant++;
+        }
+      }
+    });
+
+    // Calculate compliance rates and sort
+    const measureRates = Array.from(measureMap.entries())
+      .map(([name, data]) => ({
+        name: name.length > 25 ? name.substring(0, 22) + '...' : name,
+        value: data.eligible > 0 ? Math.round((data.compliant / data.eligible) * 1000) / 10 : 0,
+        extra: { fullName: name, eligible: data.eligible }
+      }))
+      .filter(m => m.extra.eligible >= 3) // Only show measures with enough data
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10); // Top 10 measures
+
+    return measureRates;
   }
 
   // ===== Row Selection Methods =====
@@ -674,5 +814,202 @@ export class ResultsComponent implements OnInit, AfterViewInit {
     const filename = `selected-results-${new Date().toISOString().split('T')[0]}.csv`;
 
     CSVHelper.downloadCSV(filename, csvContent);
+  }
+
+  // ===== PDF Export Methods =====
+
+  /**
+   * Export results to PDF report.
+   * Uses browser's print-to-PDF functionality.
+   */
+  @TrackInteraction('results', 'export-pdf')
+  exportToPDF(): void {
+    this.exportPdfLoading = true;
+    this.exportPdfSuccess = false;
+
+    const dateRange = this.getFilterDateRange();
+    const options: ReportOptions = {
+      title: 'Quality Measure Compliance Report',
+      subtitle: 'Healthcare Data in Motion Platform',
+      dateRange,
+      includeDetails: true,
+      groupByMeasure: true,
+    };
+
+    // Small delay for UX feedback
+    setTimeout(() => {
+      this.reportExportService.generatePDFReport(this.filteredResults, options);
+      this.exportPdfLoading = false;
+      this.exportPdfSuccess = true;
+    }, 300);
+  }
+
+  /**
+   * Export results to downloadable HTML report.
+   */
+  exportToHTML(): void {
+    const dateRange = this.getFilterDateRange();
+    const options: ReportOptions = {
+      title: 'Quality Measure Compliance Report',
+      subtitle: 'Healthcare Data in Motion Platform',
+      dateRange,
+      includeDetails: true,
+    };
+
+    this.reportExportService.downloadHTMLReport(this.filteredResults, options);
+  }
+
+  /**
+   * Get date range from filter form for report.
+   */
+  private getFilterDateRange(): { from: Date; to: Date } | undefined {
+    const { dateFrom, dateTo } = this.filterForm.value;
+    if (dateFrom && dateTo) {
+      return { from: new Date(dateFrom), to: new Date(dateTo) };
+    }
+    return undefined;
+  }
+
+  // ===== QRDA Export Methods =====
+
+  /**
+   * Export results to QRDA Category III format.
+   * This is the CMS standard for aggregate quality measure reporting.
+   */
+  @TrackInteraction('results', 'export-qrda')
+  exportToQrdaIII(): void {
+    this.exportQrdaLoading = true;
+    this.exportQrdaSuccess = false;
+    this.qrdaExportError = null;
+    this.qrdaExportJob = null;
+
+    // Get unique measure IDs from filtered results
+    const measureIds = [...new Set(this.filteredResults.map(r => r.measureName).filter(Boolean))] as string[];
+
+    if (measureIds.length === 0) {
+      this.qrdaExportError = 'No measures found in the current results to export.';
+      this.exportQrdaLoading = false;
+      return;
+    }
+
+    // Calculate date range from results
+    const dates = this.filteredResults
+      .map(r => new Date(r.calculationDate))
+      .filter(d => !isNaN(d.getTime()));
+
+    const periodStart = dates.length > 0
+      ? new Date(Math.min(...dates.map(d => d.getTime()))).toISOString().split('T')[0]
+      : new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
+
+    const periodEnd = dates.length > 0
+      ? new Date(Math.max(...dates.map(d => d.getTime()))).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0];
+
+    const request = {
+      jobType: 'QRDA_III' as const,
+      measureIds,
+      periodStart,
+      periodEnd,
+      validateDocuments: true,
+      includeSupplementalData: true,
+    };
+
+    this.qrdaExportService.generateCategoryIII(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (job) => {
+          this.qrdaExportJob = job;
+          // Poll for completion
+          this.pollQrdaExportJob(job.id);
+        },
+        error: (err) => {
+          console.error('QRDA export failed:', err);
+          this.qrdaExportError = err?.error?.message || 'Failed to initiate QRDA export. Please try again.';
+          this.exportQrdaLoading = false;
+        }
+      });
+  }
+
+  /**
+   * Poll QRDA export job status until completion.
+   */
+  private pollQrdaExportJob(jobId: string): void {
+    this.qrdaExportService.pollJobUntilComplete(jobId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (job) => {
+          this.qrdaExportJob = job;
+
+          if (job.status === 'COMPLETED') {
+            this.exportQrdaLoading = false;
+            this.exportQrdaSuccess = true;
+            // Auto-download the file
+            this.downloadQrdaExport(jobId);
+          } else if (job.status === 'FAILED' || job.status === 'CANCELLED') {
+            this.exportQrdaLoading = false;
+            this.qrdaExportError = job.errorMessage || 'QRDA export failed.';
+          }
+        },
+        error: (err) => {
+          console.error('Error polling QRDA job:', err);
+          this.exportQrdaLoading = false;
+          this.qrdaExportError = 'Failed to check export status. Please try again.';
+        }
+      });
+  }
+
+  /**
+   * Download the completed QRDA export.
+   */
+  downloadQrdaExport(jobId?: string): void {
+    const id = jobId || this.qrdaExportJob?.id;
+    if (!id) {
+      return;
+    }
+
+    this.qrdaExportService.downloadDocument(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob) => {
+          const filename = this.qrdaExportJob
+            ? this.qrdaExportService.getExportFilename(this.qrdaExportJob)
+            : `qrda-export-${new Date().toISOString().split('T')[0]}.xml`;
+          this.qrdaExportService.triggerDownload(blob, filename);
+        },
+        error: (err) => {
+          console.error('Failed to download QRDA export:', err);
+          this.qrdaExportError = 'Failed to download the export file.';
+        }
+      });
+  }
+
+  /**
+   * Cancel a running QRDA export job.
+   */
+  cancelQrdaExport(): void {
+    if (!this.qrdaExportJob?.id) {
+      return;
+    }
+
+    this.qrdaExportService.cancelJob(this.qrdaExportJob.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (job) => {
+          this.qrdaExportJob = job;
+          this.exportQrdaLoading = false;
+        },
+        error: (err) => {
+          console.error('Failed to cancel QRDA export:', err);
+        }
+      });
+  }
+
+  /**
+   * Clear QRDA export state.
+   */
+  clearQrdaExportState(): void {
+    this.qrdaExportJob = null;
+    this.qrdaExportError = null;
+    this.exportQrdaSuccess = false;
   }
 }

@@ -26,6 +26,7 @@ import { PatientService } from '../../services/patient.service';
 import { DialogService } from '../../services/dialog.service';
 import { FilterPersistenceService } from '../../services/filter-persistence.service';
 import { AIAssistantService } from '../../services/ai-assistant.service';
+import { MeasureFavoritesService } from '../../services/measure-favorites.service';
 import { MeasureInfo, MeasureCategory } from '../../models/cql-library.model';
 import { PatientSummary } from '../../models/patient.model';
 import { QualityMeasureResult } from '../../models/quality-result.model';
@@ -137,7 +138,8 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     private patientService: PatientService,
     private dialogService: DialogService,
     private filterPersistence: FilterPersistenceService,
-    public aiAssistant: AIAssistantService
+    public aiAssistant: AIAssistantService,
+    public measureFavorites: MeasureFavoritesService
   ) {
     this.evaluationForm = this.fb.group({
       measureId: ['', Validators.required],
@@ -298,6 +300,12 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
 
     console.log('Submitting evaluation:', { measureId, patientId });
 
+    // Record measure usage for recent tracking
+    const selectedMeasure = this.allMeasures.find(m => m.name === measureId);
+    if (selectedMeasure) {
+      this.measureFavorites.recordUsage(selectedMeasure);
+    }
+
     // Use Quality Measure Service to calculate measure
     this.evaluationService.calculateQualityMeasure(patientId, measureId).pipe(
       takeUntil(this.destroy$),
@@ -315,6 +323,49 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
       }
       this.submitting = false;
     });
+  }
+
+  /**
+   * Toggle favorite status for a measure
+   */
+  toggleFavorite(measure: MeasureInfo, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.measureFavorites.toggleFavorite(measure);
+  }
+
+  /**
+   * Check if a measure is favorited
+   */
+  isFavorite(measureId: string): boolean {
+    return this.measureFavorites.isFavorite(measureId);
+  }
+
+  /**
+   * Get favorite measures from the full measures list
+   */
+  getFavoriteMeasures(): MeasureInfo[] {
+    const favoriteIds = this.measureFavorites.getFavoriteIds();
+    return this.allMeasures.filter(m => favoriteIds.includes(m.id));
+  }
+
+  /**
+   * Get recent measures from the full measures list
+   */
+  getRecentMeasures(): MeasureInfo[] {
+    const recentIds = this.measureFavorites.getRecentIds();
+    return recentIds
+      .map(id => this.allMeasures.find(m => m.id === id))
+      .filter((m): m is MeasureInfo => m !== undefined)
+      .slice(0, 5);
+  }
+
+  /**
+   * Quick select a measure (from favorites or recent)
+   */
+  quickSelectMeasure(measure: MeasureInfo): void {
+    this.evaluationForm.patchValue({ measureId: measure.name });
   }
 
   /**

@@ -101,4 +101,54 @@ public interface CqlLibraryRepository extends JpaRepository<CqlLibrary, UUID> {
     @Query("SELECT l FROM CqlLibrary l WHERE l.tenantId = :tenantId " +
            "AND l.status = 'ACTIVE' AND l.active = true")
     List<CqlLibrary> findActiveLibraries(@Param("tenantId") String tenantId);
+
+    /**
+     * Find libraries by category for a tenant
+     */
+    List<CqlLibrary> findByTenantIdAndCategoryAndActiveTrue(String tenantId, String category);
+
+    /**
+     * Find all libraries with Java measure implementations
+     */
+    @Query("SELECT l FROM CqlLibrary l WHERE l.tenantId = :tenantId " +
+           "AND l.measureClass IS NOT NULL AND l.measureClass != '' " +
+           "AND l.status = 'ACTIVE' AND l.active = true")
+    List<CqlLibrary> findLibrariesWithJavaImplementation(@Param("tenantId") String tenantId);
+
+    /**
+     * Find all HEDIS measures (libraries starting with 'HEDIS-')
+     */
+    @Query("SELECT l FROM CqlLibrary l WHERE l.tenantId = :tenantId " +
+           "AND l.libraryName LIKE 'HEDIS-%' " +
+           "AND l.status = 'ACTIVE' AND l.active = true " +
+           "ORDER BY l.category, l.libraryName")
+    List<CqlLibrary> findHedisMeasures(@Param("tenantId") String tenantId);
+
+    /**
+     * Find libraries by category with pagination
+     */
+    @Query("SELECT l FROM CqlLibrary l WHERE l.tenantId = :tenantId " +
+           "AND l.category = :category " +
+           "AND l.status = 'ACTIVE' AND l.active = true")
+    Page<CqlLibrary> findByTenantIdAndCategory(
+            @Param("tenantId") String tenantId,
+            @Param("category") String category,
+            Pageable pageable);
+
+    /**
+     * Get all unique categories for a tenant
+     */
+    @Query("SELECT DISTINCT l.category FROM CqlLibrary l WHERE l.tenantId = :tenantId " +
+           "AND l.category IS NOT NULL AND l.status = 'ACTIVE' AND l.active = true " +
+           "ORDER BY l.category")
+    List<String> findDistinctCategories(@Param("tenantId") String tenantId);
+
+    /**
+     * Count libraries by category
+     */
+    @Query("SELECT COUNT(l) FROM CqlLibrary l WHERE l.tenantId = :tenantId " +
+           "AND l.category = :category AND l.status = 'ACTIVE' AND l.active = true")
+    long countByTenantIdAndCategory(
+            @Param("tenantId") String tenantId,
+            @Param("category") String category);
 }

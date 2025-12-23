@@ -7,6 +7,7 @@ import lombok.Singular;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Generic Notification Request
@@ -42,7 +43,7 @@ public class GenericNotificationRequest implements NotificationRequest {
     private final String notificationType;
     private final String templateId;
     private final String tenantId;
-    private final String patientId;
+    private final UUID patientId;
     private final String patientName; // Optional - set by caller via PatientNameService
     private final String title;
     private final String message;
@@ -132,7 +133,7 @@ public class GenericNotificationRequest implements NotificationRequest {
      */
     public static GenericNotificationRequest appointmentReminder(
             String tenantId,
-            String patientId,
+            UUID patientId,
             String appointmentId,
             String providerName,
             String appointmentDate,
@@ -171,7 +172,7 @@ public class GenericNotificationRequest implements NotificationRequest {
      */
     public static GenericNotificationRequest medicationReminder(
             String tenantId,
-            String patientId,
+            UUID patientId,
             String medicationName,
             String dosage,
             String frequency,
@@ -207,7 +208,7 @@ public class GenericNotificationRequest implements NotificationRequest {
      */
     public static GenericNotificationRequest labResult(
             String tenantId,
-            String patientId,
+            UUID patientId,
             String labResultId,
             String testName,
             String resultDate,

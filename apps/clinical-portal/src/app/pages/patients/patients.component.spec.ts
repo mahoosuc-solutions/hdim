@@ -7,8 +7,13 @@ import { of, throwError } from 'rxjs';
 import { PatientsComponent } from './patients.component';
 import { PatientService } from '../../services/patient.service';
 import { EvaluationService } from '../../services/evaluation.service';
+import { DialogService } from '../../services/dialog.service';
+import { FilterPersistenceService } from '../../services/filter-persistence.service';
+import { PatientDeduplicationService } from '../../services/patient-deduplication.service';
+import { AIAssistantService } from '../../services/ai-assistant.service';
 import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { EvaluationFactory } from '../../../testing/factories/evaluation.factory';
+import { CSVHelper } from '../../utils/csv-helper';
 
 /**
  * TDD Test Suite for Patients Component
@@ -27,6 +32,10 @@ describe('PatientsComponent (TDD)', () => {
   let fixture: ComponentFixture<PatientsComponent>;
   let mockPatientService: jest.Mocked<PatientService>;
   let mockEvaluationService: jest.Mocked<EvaluationService>;
+  let mockDialogService: jest.Mocked<DialogService>;
+  let mockFilterPersistence: jest.Mocked<FilterPersistenceService>;
+  let mockDeduplicationService: jest.Mocked<PatientDeduplicationService>;
+  let mockAIAssistantService: jest.Mocked<AIAssistantService>;
   let mockRouter: jest.Mocked<Router>;
   let globalConsoleErrorSpy: jest.SpyInstance;
 
@@ -52,6 +61,28 @@ describe('PatientsComponent (TDD)', () => {
     mockEvaluationService.getPatientEvaluations.mockReturnValue(of([]));
     mockEvaluationService.getPatientResults.mockReturnValue(of([]));
 
+    mockDialogService = {
+      confirm: jest.fn(),
+    } as any;
+    mockDialogService.confirm.mockReturnValue(of(true));
+
+    mockFilterPersistence = {
+      loadFilters: jest.fn(),
+      saveFilters: jest.fn(),
+      clearFilters: jest.fn(),
+    } as any;
+    mockFilterPersistence.loadFilters.mockReturnValue(null);
+
+    mockDeduplicationService = {
+      enhancePatientList: jest.fn((patients) => patients),
+      filterMasterRecordsOnly: jest.fn((patients) => patients.filter((p) => p.isMaster)),
+      getStatistics: jest.fn(() => of({ masters: 0, duplicates: 0, links: 0 })),
+      autoDetectAndLinkDuplicates: jest.fn(() => of({ duplicatesLinked: 0, mastersCreated: 0 })),
+      clearAllLinks: jest.fn(),
+    } as any;
+
+    mockAIAssistantService = {} as any;
+
     mockRouter = {
       navigate: jest.fn(),
     } as any;
@@ -62,6 +93,10 @@ describe('PatientsComponent (TDD)', () => {
         provideHttpClient(),
         { provide: PatientService, useValue: mockPatientService },
         { provide: EvaluationService, useValue: mockEvaluationService },
+        { provide: DialogService, useValue: mockDialogService },
+        { provide: FilterPersistenceService, useValue: mockFilterPersistence },
+        { provide: PatientDeduplicationService, useValue: mockDeduplicationService },
+        { provide: AIAssistantService, useValue: mockAIAssistantService },
         { provide: Router, useValue: mockRouter },
       ],
     }).compileComponents();
@@ -243,6 +278,16 @@ describe('PatientsComponent (TDD)', () => {
       expect(component.filteredPatients.every(p => (p.age || 0) >= 40 && (p.age || 0) <= 70)).toBe(true);
     });
 
+    it('should exclude patients above ageTo', () => {
+      component.filterForm.patchValue({
+        ageTo: 40,
+      });
+      component.filterPatients();
+
+      expect(component.filteredPatients.length).toBe(1);
+      expect(component.filteredPatients[0].age).toBe(30);
+    });
+
     it('should filter patients by gender', () => {
       component.filterForm.patchValue({
         gender: 'female',
@@ -261,6 +306,50 @@ describe('PatientsComponent (TDD)', () => {
 
       expect(component.filteredPatients.length).toBe(1);
       expect(component.filteredPatients[0].status).toBe('Inactive');
+    });
+
+    it('should filter patients by date of birth search', () => {
+      component.searchTerm = '1980-01';
+      component.patients = [
+        PatientFactory.createSummary({
+          id: 'patient-001',
+          fullName: 'DOB Match',
+          dateOfBirth: '1980-01-15',
+        }),
+      ];
+      component.filteredPatients = component.patients;
+
+      component.filterPatients();
+
+      expect(component.filteredPatients.length).toBe(1);
+      expect(component.filteredPatients[0].fullName).toBe('DOB Match');
+    });
+
+    it('should return no matches for unmatched search term', () => {
+      component.searchTerm = 'No Match';
+      component.filterPatients();
+
+      expect(component.filteredPatients.length).toBe(0);
+    });
+
+    it('should filter out patients below ageFrom when age is missing/zero', () => {
+      component.filterForm.patchValue({ ageFrom: 1 });
+      component.patients = [
+        {
+          id: 'patient-001',
+          fullName: 'No Age',
+          mrn: 'MRN000',
+          age: 0,
+          gender: 'male',
+          status: 'Active',
+          dateOfBirth: '2000-01-01',
+        } as any,
+      ];
+      component.filteredPatients = component.patients;
+
+      component.filterPatients();
+
+      expect(component.filteredPatients.length).toBe(0);
     });
 
     it('should handle case-insensitive search', () => {
@@ -543,6 +632,15 @@ describe('PatientsComponent (TDD)', () => {
       expect(totalPages).toBe(5); // 50 patients / 10 per page
     });
 
+    it('should return zero pages when page size is zero', () => {
+      component.pageSize = 0;
+      component.filteredPatients = PatientFactory.createMany(5).map(() =>
+        PatientFactory.createSummary()
+      );
+
+      expect(component.getTotalPages()).toBe(0);
+    });
+
     it('should update page size', () => {
       component.pageSize = 10;
       component.currentPage = 2;
@@ -699,6 +797,16 @@ describe('PatientsComponent (TDD)', () => {
     it('should display total patient count', () => {
       expect(component.statistics.totalPatients).toBe(4);
     });
+
+    it('should handle empty statistics safely', () => {
+      component.patients = [];
+      component.calculateStatistics();
+
+      expect(component.statistics.totalPatients).toBe(0);
+      expect(component.statistics.averageAge).toBe(0);
+      expect(component.statistics.activePatients).toBe(0);
+      expect(component.statistics.inactivePatients).toBe(0);
+    });
   });
 
   // ============================================================================
@@ -768,12 +876,26 @@ describe('PatientsComponent (TDD)', () => {
       expect(formatted).toContain('1980');
     });
 
+    it('should return N/A for empty date', () => {
+      expect(component.formatDate(undefined)).toBe('N/A');
+    });
+
     it('should calculate age from birthdate', () => {
       const birthDate = '1980-01-15';
       const age = component.calculateAge(birthDate);
 
       expect(age).toBeGreaterThan(40);
       expect(age).toBeLessThan(50);
+    });
+
+    it('should adjust age when birthday has not occurred yet this year', () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2024-01-10T00:00:00Z'));
+
+      const age = component.calculateAge('2000-12-20');
+      expect(age).toBe(23);
+
+      jest.useRealTimers();
     });
 
     it('should get status badge class for active', () => {
@@ -793,6 +915,11 @@ describe('PatientsComponent (TDD)', () => {
       const formatted = component.formatPhoneNumber(phone);
 
       expect(formatted).toContain('555');
+    });
+
+    it('should return empty string for missing phone and preserve non-10 digits', () => {
+      expect(component.formatPhoneNumber('')).toBe('');
+      expect(component.formatPhoneNumber('555123')).toBe('555123');
     });
 
     it('should format address', () => {
@@ -822,6 +949,352 @@ describe('PatientsComponent (TDD)', () => {
       const badgeClass = component.getOutcomeBadgeClass(compliantResult);
 
       expect(badgeClass).toBe('badge-success');
+    });
+
+    it('should return non-compliant outcome text and badge class', () => {
+      const nonCompliant = {
+        ...EvaluationFactory.createNonCompliantResult(),
+        denominatorEligible: true,
+        numeratorCompliant: false,
+      };
+
+      expect(component.getOutcomeText(nonCompliant)).toBe('Non-Compliant');
+      expect(component.getOutcomeBadgeClass(nonCompliant)).toBe('badge-warning');
+    });
+
+    it('should return not eligible outcome text and badge class', () => {
+      const notEligible = {
+        ...EvaluationFactory.createNonCompliantResult(),
+        denominatorEligible: false,
+        numeratorCompliant: false,
+      };
+
+      expect(component.getOutcomeText(notEligible)).toBe('Not Eligible');
+      expect(component.getOutcomeBadgeClass(notEligible)).toBe('badge-info');
+    });
+  });
+
+  describe('Filtering, sorting, and pagination', () => {
+    it('filters patients by fuzzy name match', () => {
+      const patients = [
+        PatientFactory.createSummary({
+          id: 'patient-1',
+          fullName: 'John Doe',
+          mrn: 'MRN1',
+          age: 40,
+          gender: 'male',
+          status: 'Active',
+        }),
+      ] as any;
+
+      component.patientsWithLinks = patients;
+      component.filteredPatients = patients;
+      component.searchTerm = 'Jahn';
+
+      component.filterPatients();
+
+      expect(component.filteredPatients.length).toBe(1);
+    });
+
+    it('matches fuzzy search on normalized text', () => {
+      expect((component as any).fuzzyMatch('John-Doe', 'johndoe')).toBe(true);
+    });
+
+    it('returns false for short fuzzy queries or empty text', () => {
+      expect((component as any).fuzzyMatch('', 'Jon')).toBe(false);
+      expect((component as any).fuzzyMatch('John Doe', '')).toBe(false);
+      expect((component as any).fuzzyMatch('John Doe', 'xy')).toBe(false);
+    });
+
+    it('filters patients by gender and age range', () => {
+      const patients = [
+        PatientFactory.createSummary({
+          id: 'patient-1',
+          fullName: 'Jane Doe',
+          mrn: 'MRN1',
+          age: 30,
+          gender: 'female',
+          status: 'Active',
+        }),
+        PatientFactory.createSummary({
+          id: 'patient-2',
+          fullName: 'John Doe',
+          mrn: 'MRN2',
+          age: 60,
+          gender: 'male',
+          status: 'Active',
+        }),
+      ] as any;
+
+      component.patientsWithLinks = patients;
+      component.filteredPatients = patients;
+      component.searchTerm = '';
+      component.filterForm.patchValue({ gender: 'female', ageFrom: 20, ageTo: 40 });
+
+      component.filterPatients();
+
+      expect(component.filteredPatients.length).toBe(1);
+      expect(component.filteredPatients[0].gender).toBe('female');
+    });
+
+    it('toggles sort direction and sorts by age', () => {
+      component.filteredPatients = [
+        PatientFactory.createSummary({ id: 'p1', age: 50 }),
+        PatientFactory.createSummary({ id: 'p2', age: 30 }),
+      ] as any;
+
+      component.toggleSort('age');
+      expect(component.sortColumn).toBe('age');
+      expect(component.filteredPatients[0].age).toBe(30);
+
+      component.toggleSort('age');
+      expect(component.sortDirection).toBe('desc');
+      expect(component.filteredPatients[0].age).toBe(50);
+    });
+
+    it('paginates patients', () => {
+      component.filteredPatients = PatientFactory.createSummaryList() as any;
+      component.pageSize = 2;
+      component.currentPage = 0;
+
+      expect(component.getPaginatedPatients().length).toBe(2);
+      component.nextPage();
+      expect(component.currentPage).toBe(1);
+      component.previousPage();
+      expect(component.currentPage).toBe(0);
+    });
+  });
+
+  describe('Selection and exports', () => {
+    it('exports selected patients to CSV', () => {
+      const arraySpy = jest.spyOn(CSVHelper, 'arrayToCSV').mockReturnValue('csv');
+      const downloadSpy = jest.spyOn(CSVHelper, 'downloadCSV').mockImplementation();
+      const patient = PatientFactory.createSummary({ id: 'patient-1' }) as any;
+
+      component.dataSource.data = [patient];
+      component.selection.select(patient);
+
+      component.exportSelectedToCSV();
+
+      expect(arraySpy).toHaveBeenCalled();
+      expect(downloadSpy).toHaveBeenCalled();
+      arraySpy.mockRestore();
+      downloadSpy.mockRestore();
+    });
+
+    it('does not export when nothing selected', () => {
+      const arraySpy = jest.spyOn(CSVHelper, 'arrayToCSV').mockReturnValue('csv');
+      component.exportSelectedToCSV();
+      expect(arraySpy).not.toHaveBeenCalled();
+      arraySpy.mockRestore();
+    });
+
+    it('toggles master selection and checkbox labels', () => {
+      const patients = [
+        PatientFactory.createSummary({ id: 'patient-1' }),
+        PatientFactory.createSummary({ id: 'patient-2' }),
+      ] as any;
+      component.dataSource.data = patients;
+
+      component.masterToggle();
+      expect(component.isAllSelected()).toBe(true);
+      expect(component.checkboxLabel()).toBe('deselect all');
+      expect(component.checkboxLabel(patients[0])).toBe('deselect row patient-1');
+
+      component.masterToggle();
+      expect(component.selection.selected.length).toBe(0);
+      expect(component.checkboxLabel()).toBe('select all');
+    });
+  });
+
+  describe('Delete flows', () => {
+    it('does not delete when confirmation is cancelled', () => {
+      mockDialogService.confirm.mockReturnValue(of(false));
+      const patient = PatientFactory.createSummary({ id: 'patient-1' }) as any;
+      component.dataSource.data = [patient];
+      component.selection.select(patient);
+
+      component.deleteSelected();
+
+      expect(mockPatientService.deletePatient).toBeUndefined();
+    });
+
+    it('performs delete when service is available', () => {
+      const deleteSpy = jest.fn().mockReturnValue(of({}));
+      (mockPatientService as any).deletePatient = deleteSpy;
+      const patient = PatientFactory.createSummary({ id: 'patient-1' }) as any;
+
+      component.patients = [patient];
+      component.filteredPatients = [patient];
+      component.dataSource.data = [patient];
+      component.selection.select(patient);
+
+      component.deleteSelected();
+
+      expect(deleteSpy).toHaveBeenCalledWith('patient-1');
+      expect(component.patients.length).toBe(0);
+    });
+
+    it('sets error message when all deletes fail', () => {
+      mockDialogService.confirm.mockReturnValue(of(true));
+      const deleteSpy = jest.fn().mockReturnValue(throwError(() => new Error('fail')));
+      (mockPatientService as any).deletePatient = deleteSpy;
+      const patient = PatientFactory.createSummary({ id: 'patient-1' }) as any;
+
+      component.patients = [patient];
+      component.filteredPatients = [patient];
+      component.dataSource.data = [patient];
+      component.selection.select(patient);
+
+      component.deleteSelected();
+
+      expect(component.error).toContain('Unable to delete selected patients');
+      expect(component.bulkOperationInProgress).toBe(false);
+    });
+  });
+
+  describe('Details loading and helpers', () => {
+    it('handles missing patient details service', () => {
+      (mockPatientService as any).getPatient = undefined;
+      (component as any).loadPatientDetails('patient-1');
+      expect(component.patientDetails).toBeNull();
+    });
+
+    it('handles non-observable patient details response', () => {
+      (mockPatientService as any).getPatient = jest.fn().mockReturnValue({});
+      (component as any).loadPatientDetails('patient-1');
+      expect(component.patientDetails).toBeNull();
+    });
+
+    it('handles missing evaluation results service', () => {
+      (mockEvaluationService as any).getPatientResults = undefined;
+      (component as any).loadPatientEvaluations('patient-1');
+      expect(component.patientEvaluations).toEqual([]);
+    });
+
+    it('handles evaluation results errors', () => {
+      (mockEvaluationService as any).getPatientResults = jest.fn().mockReturnValue(
+        throwError(() => new Error('boom'))
+      );
+      (component as any).loadPatientEvaluations('patient-1');
+      expect(component.patientEvaluations).toEqual([]);
+    });
+
+    it('sorts evaluations using evaluationDate fallback', () => {
+      const evaluations = [
+        {
+          ...EvaluationFactory.createCompliantResult(),
+          calculationDate: undefined,
+          evaluationDate: '2023-01-01T00:00:00Z',
+        },
+        {
+          ...EvaluationFactory.createCompliantResult(),
+          calculationDate: undefined,
+          evaluationDate: '2024-01-01T00:00:00Z',
+        },
+      ];
+      (mockEvaluationService as any).getPatientResults = jest.fn().mockReturnValue(of(evaluations));
+      (component as any).loadPatientEvaluations('patient-1');
+
+      expect(component.patientEvaluations[0].evaluationDate).toBe('2024-01-01T00:00:00Z');
+      expect(component.patientEvaluations[1].evaluationDate).toBe('2023-01-01T00:00:00Z');
+    });
+
+    it('formats MRN authority', () => {
+      expect(component.formatMRNAuthority('http://hospital.example.org/patients')).toBe('hospital.example.org');
+      expect(component.formatMRNAuthority('not-a-url')).toBe('not-a-url');
+    });
+  });
+
+  describe('Filters and deduplication actions', () => {
+    it('resets filters and clears persistence', () => {
+      component.searchTerm = 'abc';
+      component.filterForm.patchValue({ gender: 'male' });
+      component.patientsWithLinks = PatientFactory.createSummaryList() as any;
+
+      component.resetFilters();
+
+      expect(mockFilterPersistence.clearFilters).toHaveBeenCalledWith('patients');
+      expect(component.searchTerm).toBe('');
+    });
+
+    it('loads persisted filters and master-record flag', () => {
+      mockFilterPersistence.loadFilters.mockReturnValue({
+        searchTerm: 'Jane',
+        gender: 'female',
+        status: 'Active',
+        ageFrom: 20,
+        ageTo: 50,
+        showMasterRecordsOnly: true,
+      });
+
+      component.ngOnInit();
+
+      expect(component.searchTerm).toBe('Jane');
+      expect(component.showMasterRecordsOnly).toBe(true);
+      expect(component.filterForm.get('gender')?.value).toBe('female');
+      expect(component.filterForm.get('status')?.value).toBe('Active');
+      expect(component.filterForm.get('ageFrom')?.value).toBe(20);
+      expect(component.filterForm.get('ageTo')?.value).toBe(50);
+    });
+
+    it('applies master records filter when enabled', () => {
+      const patients = [
+        { ...PatientFactory.createSummary({ id: 'patient-1' }), isMaster: true },
+        { ...PatientFactory.createSummary({ id: 'patient-2' }), isMaster: false },
+      ] as any;
+      component.patientsWithLinks = patients;
+      component.filteredPatients = patients;
+      component.showMasterRecordsOnly = true;
+
+      component.toggleMasterRecordsOnly();
+
+      expect(mockDeduplicationService.filterMasterRecordsOnly).toHaveBeenCalledWith(patients);
+      expect(component.filteredPatients.every((patient) => patient.isMaster)).toBe(true);
+    });
+
+    it('auto-detects duplicates and clears message', () => {
+      jest.useFakeTimers();
+      mockDeduplicationService.autoDetectAndLinkDuplicates.mockReturnValue(
+        of({ duplicatesLinked: 2, mastersCreated: 1 })
+      );
+      component.patients = PatientFactory.createSummaryList() as any;
+
+      component.autoDetectDuplicates();
+
+      expect(component.duplicateDetectionResult).toContain('Success');
+      jest.advanceTimersByTime(10000);
+      expect(component.duplicateDetectionResult).toBeNull();
+      jest.useRealTimers();
+    });
+
+    it('handles duplicate detection errors and clears message', () => {
+      jest.useFakeTimers();
+      mockDeduplicationService.autoDetectAndLinkDuplicates.mockReturnValue(
+        throwError(() => new Error('boom'))
+      );
+      component.patients = PatientFactory.createSummaryList() as any;
+
+      component.autoDetectDuplicates();
+
+      expect(component.detectingDuplicates).toBe(false);
+      expect(component.duplicateDetectionResult).toBe('Error detecting duplicates');
+      jest.advanceTimersByTime(10000);
+      expect(component.duplicateDetectionResult).toBeNull();
+      jest.useRealTimers();
+    });
+
+    it('clears duplicate links and hides message', () => {
+      jest.useFakeTimers();
+      component.patients = PatientFactory.createSummaryList() as any;
+
+      component.clearDuplicateLinks();
+
+      expect(mockDeduplicationService.clearAllLinks).toHaveBeenCalled();
+      expect(component.duplicateDetectionResult).toBe('All duplicate links cleared');
+      jest.advanceTimersByTime(3000);
+      expect(component.duplicateDetectionResult).toBeNull();
+      jest.useRealTimers();
     });
   });
 });

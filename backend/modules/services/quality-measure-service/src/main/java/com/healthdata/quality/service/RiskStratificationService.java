@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Risk Stratification Service
@@ -48,7 +49,7 @@ public class RiskStratificationService {
      * - CareGapEntity (open care gaps)
      */
     @Transactional
-    public RiskAssessmentDTO calculateRiskAssessment(String tenantId, String patientId) {
+    public RiskAssessmentDTO calculateRiskAssessment(String tenantId, UUID patientId) {
         log.info("Calculating risk assessment for patient {}", patientId);
 
         // Fetch and analyze real patient data from FHIR and database
@@ -106,7 +107,7 @@ public class RiskStratificationService {
     /**
      * Get most recent risk assessment for a patient
      */
-    public RiskAssessmentDTO getRiskAssessment(String tenantId, String patientId) {
+    public RiskAssessmentDTO getRiskAssessment(String tenantId, UUID patientId) {
         return repository.findMostRecent(tenantId, patientId)
             .map(this::mapToDTO)
             .orElse(null);
@@ -124,7 +125,7 @@ public class RiskStratificationService {
      * 6. FHIR Encounter resources for high utilization (ED visits, hospitalizations)
      * 7. ChronicDiseaseMonitoringEntity for deteriorating trends
      */
-    private List<RiskFactor> analyzeRiskFactors(String tenantId, String patientId) {
+    private List<RiskFactor> analyzeRiskFactors(String tenantId, UUID patientId) {
         List<RiskFactor> factors = new ArrayList<>();
 
         try {
@@ -161,13 +162,13 @@ public class RiskStratificationService {
     /**
      * Analyze chronic conditions from FHIR Condition resources
      */
-    private List<RiskFactor> analyzeChronicConditions(String patientId) {
+    private List<RiskFactor> analyzeChronicConditions(UUID patientId) {
         List<RiskFactor> factors = new ArrayList<>();
 
         try {
             Bundle conditionBundle = fhirClient.search()
                 .forResource(Condition.class)
-                .where(Condition.PATIENT.hasId(patientId))
+                .where(Condition.PATIENT.hasId(patientId.toString()))
                 .where(Condition.CLINICAL_STATUS.exactly().code("active"))
                 .returnBundle(Bundle.class)
                 .execute();
@@ -265,7 +266,7 @@ public class RiskStratificationService {
     /**
      * Analyze mental health screenings from database
      */
-    private List<RiskFactor> analyzeMentalHealthScreenings(String tenantId, String patientId) {
+    private List<RiskFactor> analyzeMentalHealthScreenings(String tenantId, UUID patientId) {
         List<RiskFactor> factors = new ArrayList<>();
 
         try {
@@ -310,14 +311,14 @@ public class RiskStratificationService {
     /**
      * Analyze uncontrolled vitals from FHIR Observation resources
      */
-    private List<RiskFactor> analyzeUncontrolledVitals(String patientId) {
+    private List<RiskFactor> analyzeUncontrolledVitals(UUID patientId) {
         List<RiskFactor> factors = new ArrayList<>();
 
         try {
             // Query recent observations (last 6 months)
             Bundle observationBundle = fhirClient.search()
                 .forResource(Observation.class)
-                .where(Observation.PATIENT.hasId(patientId))
+                .where(Observation.PATIENT.hasId(patientId.toString()))
                 .returnBundle(Bundle.class)
                 .execute();
 
@@ -454,13 +455,13 @@ public class RiskStratificationService {
     /**
      * Analyze medication adherence from FHIR MedicationStatement
      */
-    private List<RiskFactor> analyzeMedicationAdherence(String patientId) {
+    private List<RiskFactor> analyzeMedicationAdherence(UUID patientId) {
         List<RiskFactor> factors = new ArrayList<>();
 
         try {
             Bundle medBundle = fhirClient.search()
                 .forResource(MedicationStatement.class)
-                .where(MedicationStatement.PATIENT.hasId(patientId))
+                .where(MedicationStatement.PATIENT.hasId(patientId.toString()))
                 .where(MedicationStatement.STATUS.exactly().code("not-taken"))
                 .returnBundle(Bundle.class)
                 .execute();
@@ -485,7 +486,7 @@ public class RiskStratificationService {
     /**
      * Analyze open care gaps from database
      */
-    private List<RiskFactor> analyzeOpenCareGaps(String tenantId, String patientId) {
+    private List<RiskFactor> analyzeOpenCareGaps(String tenantId, UUID patientId) {
         List<RiskFactor> factors = new ArrayList<>();
 
         try {
@@ -525,14 +526,14 @@ public class RiskStratificationService {
     /**
      * Analyze healthcare utilization from FHIR Encounter resources
      */
-    private List<RiskFactor> analyzeHealthcareUtilization(String patientId) {
+    private List<RiskFactor> analyzeHealthcareUtilization(UUID patientId) {
         List<RiskFactor> factors = new ArrayList<>();
 
         try {
             // Query encounters in last 90 days
             Bundle encounterBundle = fhirClient.search()
                 .forResource(Encounter.class)
-                .where(Encounter.PATIENT.hasId(patientId))
+                .where(Encounter.PATIENT.hasId(patientId.toString()))
                 .returnBundle(Bundle.class)
                 .execute();
 
@@ -589,7 +590,7 @@ public class RiskStratificationService {
     /**
      * Analyze deteriorating chronic conditions from database
      */
-    private List<RiskFactor> analyzeDeterioratingConditions(String tenantId, String patientId) {
+    private List<RiskFactor> analyzeDeterioratingConditions(String tenantId, UUID patientId) {
         List<RiskFactor> factors = new ArrayList<>();
 
         try {

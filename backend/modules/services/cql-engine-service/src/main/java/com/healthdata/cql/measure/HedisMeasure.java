@@ -1,5 +1,7 @@
 package com.healthdata.cql.measure;
 
+import java.util.UUID;
+
 /**
  * Interface for HEDIS Quality Measures
  *
@@ -30,7 +32,7 @@ public interface HedisMeasure {
      * @param patientId Patient identifier
      * @return Measure evaluation result
      */
-    MeasureResult evaluate(String tenantId, String patientId);
+    MeasureResult evaluate(String tenantId, UUID patientId);
 
     /**
      * Check if patient is eligible for this measure (denominator)
@@ -39,5 +41,5 @@ public interface HedisMeasure {
      * @param patientId Patient identifier
      * @return true if patient should be evaluated for this measure
      */
-    boolean isEligible(String tenantId, String patientId);
+    boolean isEligible(String tenantId, UUID patientId);
 }

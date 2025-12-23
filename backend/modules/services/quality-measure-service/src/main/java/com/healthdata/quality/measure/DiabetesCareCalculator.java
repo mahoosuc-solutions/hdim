@@ -84,7 +84,9 @@ public class DiabetesCareCalculator implements MeasureCalculator {
         MeasureResult result = MeasureResult.builder()
             .measureId(MEASURE_ID)
             .measureName(MEASURE_NAME)
-            .patientId(patientData.getPatient() != null ? patientData.getPatient().getId() : null)
+            .patientId(patientData.getPatient() != null
+                ? parsePatientId(patientData.getPatient().getId())
+                : null)
             .build();
 
         // Check eligibility (has diabetes diagnosis)
@@ -121,6 +123,17 @@ public class DiabetesCareCalculator implements MeasureCalculator {
         result.setRecommendations(recommendations);
 
         return result;
+    }
+
+    private UUID parsePatientId(String patientId) {
+        if (patientId == null) {
+            return null;
+        }
+        try {
+            return UUID.fromString(patientId);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     /**
@@ -482,6 +495,9 @@ public class DiabetesCareCalculator implements MeasureCalculator {
 
     private Double getNumericValue(Observation obs) {
         if (obs.getValueQuantity() != null) {
+            if (obs.getValueQuantity().getValue() == null) {
+                return null;
+            }
             return obs.getValueQuantity().getValue().doubleValue();
         }
         return null;
@@ -491,8 +507,12 @@ public class DiabetesCareCalculator implements MeasureCalculator {
         if (obs.getComponent() == null) return null;
         return obs.getComponent().stream()
             .filter(comp -> hasCode(comp.getCode(), componentCode))
-            .map(comp -> comp.getValueQuantity() != null ?
-                comp.getValueQuantity().getValue().doubleValue() : null)
+            .map(comp -> {
+                if (comp.getValueQuantity() == null || comp.getValueQuantity().getValue() == null) {
+                    return null;
+                }
+                return comp.getValueQuantity().getValue().doubleValue();
+            })
             .filter(Objects::nonNull)
             .findFirst()
             .orElse(null);

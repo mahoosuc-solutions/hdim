@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.UUID;
 
 /**
  * Patient Health Overview Controller
@@ -44,17 +46,16 @@ public class PatientHealthController {
      * Get comprehensive patient health overview
      *
      * GET /patient-health/overview/{patientId}
-     * Note: patientId can contain slashes (e.g., Patient/123) - use {patientId:.+} pattern
      */
     @PreAuthorize("hasAnyRole('PROVIDER', 'NURSE', 'ADMIN', 'SUPER_ADMIN')")
     @GetMapping(value = "/overview/{patientId:.+}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PatientHealthOverviewDTO> getPatientHealthOverview(
             @RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
-            @PathVariable String patientId
+            @PathVariable UUID patientId
     ) {
         log.info("GET /patient-health/overview/{} - tenant: {}", patientId, tenantId);
-        if (patientId == null || patientId.isBlank()) {
-            throw new IllegalArgumentException("Patient ID cannot be blank");
+        if (patientId == null) {
+            throw new IllegalArgumentException("Patient ID cannot be null");
         }
         PatientHealthOverviewDTO overview = healthService.getPatientHealthOverview(tenantId, patientId);
         return ResponseEntity.ok(overview);
@@ -87,7 +88,7 @@ public class PatientHealthController {
     @GetMapping(value = "/mental-health/assessments/{patientId:.+}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MentalHealthAssessmentDTO>> getPatientAssessments(
             @RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
-            @PathVariable String patientId,
+            @PathVariable UUID patientId,
             @RequestParam(required = false) String type,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(defaultValue = "0") int offset
@@ -109,7 +110,7 @@ public class PatientHealthController {
     @GetMapping(value = "/mental-health/assessments/{patientId:.+}/trend", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MentalHealthAssessmentService.AssessmentTrend> getAssessmentTrend(
             @RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
-            @PathVariable String patientId,
+            @PathVariable UUID patientId,
             @RequestParam @NotBlank String type,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate
@@ -130,7 +131,7 @@ public class PatientHealthController {
     @GetMapping(value = "/care-gaps/{patientId:.+}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapDTO>> getPatientCareGaps(
             @RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
-            @PathVariable String patientId,
+            @PathVariable UUID patientId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String category
     ) {
@@ -171,7 +172,7 @@ public class PatientHealthController {
     @PostMapping(value = "/risk-stratification/{patientId:.+}/calculate", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RiskAssessmentDTO> calculateRiskStratification(
             @RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
-            @PathVariable String patientId
+            @PathVariable UUID patientId
     ) {
         log.info("POST /patient-health/risk-stratification/{}/calculate", patientId);
 
@@ -188,7 +189,7 @@ public class PatientHealthController {
     @GetMapping(value = "/risk-stratification/{patientId:.+}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RiskAssessmentDTO> getRiskStratification(
             @RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
-            @PathVariable String patientId
+            @PathVariable UUID patientId
     ) {
         log.info("GET /patient-health/risk-stratification/{}", patientId);
 
@@ -205,7 +206,7 @@ public class PatientHealthController {
     @GetMapping(value = "/health-score/{patientId:.+}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<HealthScoreDTO> getHealthScore(
             @RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
-            @PathVariable String patientId
+            @PathVariable UUID patientId
     ) {
         log.info("GET /patient-health/health-score/{}", patientId);
 

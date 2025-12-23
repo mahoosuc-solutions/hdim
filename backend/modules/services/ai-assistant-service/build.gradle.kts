@@ -69,7 +69,6 @@ dependencies {
     testImplementation(libs.bundles.testing)
     testImplementation(libs.spring.boot.starter.test)
     testImplementation("org.springframework.security:spring-security-test")
-    testRuntimeOnly("com.h2database:h2:2.2.224")
 
     // Testcontainers
     testImplementation(libs.bundles.testcontainers)
@@ -78,4 +77,13 @@ dependencies {
 
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
+}
+
+tasks.withType<Test> {
+    systemProperty("spring.datasource.url", "jdbc:tc:postgresql:15-alpine:///testdb")
+    systemProperty("spring.datasource.username", "test")
+    systemProperty("spring.datasource.password", "test")
+    systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
+    systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
+    systemProperty("spring.profiles.active", "test")
 }

@@ -123,6 +123,77 @@ class CarePlanServiceTest {
     }
 
     @Test
+    void createCarePlanShouldRejectInvalidPatientReference() {
+        CarePlan carePlan = createFhirCarePlan();
+        carePlan.setSubject(new Reference("Patient/not-a-uuid"));
+
+        assertThatThrownBy(() -> carePlanService.createCarePlan(TENANT, carePlan, "user-1"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("subject");
+    }
+
+    @Test
+    void createCarePlanShouldCaptureOptionalFields() {
+        CarePlan carePlan = createFhirCarePlan();
+        carePlan.setEncounter(new Reference("Encounter/" + ENCOUNTER_ID));
+        carePlan.getCategoryFirstRep().setText("Care plan category");
+        carePlan.addCareTeam(new Reference("CareTeam/team-1"));
+        carePlan.addSupportingInfo(new Reference("DocumentReference/doc-1"));
+        carePlan.addAddresses(new Reference("Condition/" + CONDITION_ID));
+        carePlan.addGoal(new Reference("Goal/" + GOAL_ID));
+        carePlan.addActivity().setDetail(new CarePlan.CarePlanActivityDetailComponent()
+                .setStatus(CarePlan.CarePlanActivityStatus.INPROGRESS));
+        carePlan.addPartOf(new Reference("CarePlan/" + PARENT_CARE_PLAN_ID));
+        carePlan.addReplaces(new Reference("CarePlan/" + UUID.randomUUID()));
+
+        when(carePlanRepository.save(any(CarePlanEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        carePlanService.createCarePlan(TENANT, carePlan, "user-1");
+
+        ArgumentCaptor<CarePlanEntity> captor = ArgumentCaptor.forClass(CarePlanEntity.class);
+        verify(carePlanRepository).save(captor.capture());
+        CarePlanEntity entity = captor.getValue();
+        assertThat(entity.getEncounterId()).isEqualTo(ENCOUNTER_ID);
+        assertThat(entity.getCategoryDisplay()).isEqualTo("Care plan category");
+        assertThat(entity.getCareTeamReferences()).contains("CareTeam/team-1");
+        assertThat(entity.getSupportingInfoReferences()).contains("DocumentReference/doc-1");
+        assertThat(entity.getAddressesReferences()).contains("Condition/" + CONDITION_ID);
+        assertThat(entity.getGoalReferences()).contains("Goal/" + GOAL_ID);
+        assertThat(entity.getActivityCount()).isEqualTo(2);
+        assertThat(entity.getPartOfReference()).contains("CarePlan/" + PARENT_CARE_PLAN_ID);
+        assertThat(entity.getReplacesReference()).contains("CarePlan/");
+    }
+
+    @Test
+    void createCarePlanShouldIgnoreInvalidEncounterReference() {
+        CarePlan carePlan = createFhirCarePlan();
+        carePlan.setEncounter(new Reference("Encounter/not-a-uuid"));
+
+        when(carePlanRepository.save(any(CarePlanEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        carePlanService.createCarePlan(TENANT, carePlan, "user-1");
+
+        ArgumentCaptor<CarePlanEntity> captor = ArgumentCaptor.forClass(CarePlanEntity.class);
+        verify(carePlanRepository).save(captor.capture());
+        assertThat(captor.getValue().getEncounterId()).isNull();
+    }
+
+    @Test
+    void createCarePlanShouldHandlePublishFailure() {
+        CarePlan carePlan = createFhirCarePlan();
+        CarePlanEntity savedEntity = createCarePlanEntity();
+
+        when(carePlanRepository.save(any(CarePlanEntity.class))).thenReturn(savedEntity);
+        doThrow(new RuntimeException("boom"))
+                .when(kafkaTemplate).send(eq("fhir.care-plans.created"), eq(CARE_PLAN_ID.toString()), any());
+
+        CarePlan result = carePlanService.createCarePlan(TENANT, carePlan, "user-1");
+
+        assertThat(result).isNotNull();
+        verify(carePlanRepository).save(any(CarePlanEntity.class));
+    }
+
+    @Test
     void getCarePlanShouldReturnFhirResource() {
         // Given
         CarePlanEntity entity = createCarePlanEntityWithJson();

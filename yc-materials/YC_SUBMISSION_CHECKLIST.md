@@ -24,7 +24,7 @@
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Backend (13 microservices) | Builds | All services compile |
+| Backend (26 microservices) | Builds | All services compile |
 | Frontend (Angular Clinical Portal) | Builds | Agent Builder UI integrated |
 | Docker Deployment | Works | agent-builder-service tested |
 | Demo Environment | Running | Local environment ready |
@@ -310,7 +310,7 @@ Keep these memorized for the application and interview:
 HDIM by the Numbers:
 - 52 HEDIS quality measures (100% coverage)
 - <200ms measure calculation (vs. 24-72 hour batch)
-- 13 microservices architecture
+- 26 microservices architecture
 - 10-40x faster batch processing
 - $80/month starting price (vs. $50K+/month Epic)
 - Days to deploy (vs. 6-12 months legacy)

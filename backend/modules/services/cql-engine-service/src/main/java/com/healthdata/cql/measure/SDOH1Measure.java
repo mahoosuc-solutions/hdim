@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * SDOH-1 - Social Determinants of Health Screening Rate
@@ -109,7 +110,7 @@ public class SDOH1Measure extends AbstractHedisMeasure {
 
     @Override
     @Cacheable(value = "hedisMeasures", key = "'SDOH1-' + #tenantId + '-' + #patientId")
-    public MeasureResult evaluate(String tenantId, String patientId) {
+    public MeasureResult evaluate(String tenantId, UUID patientId) {
         logger.info("Evaluating SDOH-1 measure for patient: {}", patientId);
 
         MeasureResult.MeasureResultBuilder resultBuilder = MeasureResult.builder()
@@ -196,7 +197,7 @@ public class SDOH1Measure extends AbstractHedisMeasure {
     }
 
     @Override
-    public boolean isEligible(String tenantId, String patientId) {
+    public boolean isEligible(String tenantId, UUID patientId) {
         JsonNode patient = getPatientData(tenantId, patientId);
         Integer age = getPatientAge(patient);
         return age != null && age >= 18;
@@ -205,7 +206,7 @@ public class SDOH1Measure extends AbstractHedisMeasure {
     /**
      * Evaluate if a specific HRSN domain has been screened.
      */
-    private boolean evaluateDomainScreening(String tenantId, String patientId,
+    private boolean evaluateDomainScreening(String tenantId, UUID patientId,
                                             List<String> domainCodes, String domainName,
                                             List<MeasureResult.CareGap> careGaps) {
         // Look for screening in last 12 months
@@ -233,7 +234,7 @@ public class SDOH1Measure extends AbstractHedisMeasure {
     /**
      * Check if patient is in hospice care.
      */
-    private boolean isInHospice(String tenantId, String patientId) {
+    private boolean isInHospice(String tenantId, UUID patientId) {
         JsonNode encounters = getEncounters(tenantId, patientId, "183919006", null);
         return !getEntries(encounters).isEmpty();
     }

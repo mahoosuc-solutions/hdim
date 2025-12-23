@@ -35,7 +35,7 @@ public class CareGapEntity {
     private String tenantId;
 
     @Column(name = "patient_id", nullable = false, length = 100)
-    private String patientId;
+    private UUID patientId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "category", nullable = false, length = 50)

@@ -1,7 +1,8 @@
 package com.healthdata.gateway.config;
 
-import com.healthdata.authentication.filter.JwtAuthenticationFilter;
+import com.healthdata.gateway.auth.GatewayAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -22,20 +23,40 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import jakarta.annotation.PostConstruct;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Gateway Security Configuration
  *
  * Central authentication and authorization for all backend services.
- * Issues JWT tokens and routes authenticated requests to backend.
+ * Validates JWT tokens at the gateway and injects trusted headers for downstream services.
+ *
+ * Security Model:
+ * - Gateway validates all incoming JWT tokens
+ * - Valid tokens result in X-Auth-* headers being injected
+ * - Backend services trust these headers (no re-validation needed)
+ * - PublicPathRegistry defines which paths skip authentication
  */
+@Slf4j
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class GatewaySecurityConfig {
 
     private final UserDetailsService userDetailsService;
+    private final GatewayAuthProperties authProperties;
+
+    @PostConstruct
+    public void validateConfiguration() {
+        List<String> errors = authProperties.validateForProduction();
+        if (!errors.isEmpty()) {
+            errors.forEach(error -> log.warn("Security configuration warning: {}", error));
+        }
+        log.info("Gateway security initialized: enabled={}, enforced={}",
+            authProperties.getEnabled(), authProperties.getEnforced());
+    }
 
     /**
      * Password encoder bean
@@ -101,45 +122,47 @@ public class GatewaySecurityConfig {
     }
 
     /**
-     * Production security filter chain with JWT authentication
+     * Production security filter chain with centralized gateway authentication.
+     *
+     * Authentication flow:
+     * 1. GatewayAuthenticationFilter validates JWT and injects trusted headers
+     * 2. Spring Security permits all (actual auth handled by filter)
+     * 3. Filter chain continues to route request to backend services
+     *
+     * The GatewayAuthenticationFilter handles:
+     * - Stripping external X-Auth-* headers (security)
+     * - JWT validation
+     * - Public path checking via PublicPathRegistry
+     * - Injecting trusted headers for downstream services
      */
     @Bean
     @Profile("!test")
     @Order(2)
     public SecurityFilterChain securityFilterChain(
         HttpSecurity http,
-        JwtAuthenticationFilter jwtAuthenticationFilter
+        GatewayAuthenticationFilter gatewayAuthFilter
     ) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints - no authentication required
+                // Public endpoints - handled by PublicPathRegistry in GatewayAuthenticationFilter
                 .requestMatchers("/api/v1/auth/login").permitAll()
                 .requestMatchers("/api/v1/auth/register").permitAll()
                 .requestMatchers("/api/v1/auth/refresh").permitAll()
+                .requestMatchers("/api/v1/auth/logout").permitAll()
                 .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                // Backend service routes (permitAll for demo, authenticate in production)
-                .requestMatchers("/fhir/**").permitAll()
-                .requestMatchers("/cql-engine/**").permitAll()
-                .requestMatchers("/consent/**").permitAll()
-                .requestMatchers("/patient/**").permitAll()
-                .requestMatchers("/care-gap/**").permitAll()
-                .requestMatchers("/quality-measure/**").permitAll()
-                .requestMatchers("/events/**").permitAll()
-
-                // All other API routes require authentication
-                .requestMatchers("/api/**").authenticated()
-
-                // Default deny
-                .anyRequest().authenticated()
+                // All other requests - authentication handled by GatewayAuthenticationFilter
+                // The filter validates JWT and returns 401 for protected paths without valid tokens
+                .anyRequest().permitAll()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            // Add gateway auth filter before UsernamePasswordAuthenticationFilter
+            .addFilterBefore(gatewayAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

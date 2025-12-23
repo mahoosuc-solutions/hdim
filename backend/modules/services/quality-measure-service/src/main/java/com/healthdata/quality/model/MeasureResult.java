@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Result of a HEDIS measure calculation for a single patient.
@@ -30,7 +31,7 @@ public class MeasureResult {
     /**
      * Patient ID (FHIR Patient.id)
      */
-    private String patientId;
+    private UUID patientId;
 
     /**
      * Is patient eligible for this measure?

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Response DTO for risk assessment
@@ -25,7 +26,7 @@ public class RiskAssessmentDTO {
     /**
      * Patient FHIR ID
      */
-    private String patientId;
+    private UUID patientId;
 
     /**
      * Risk category (CARDIOVASCULAR, DIABETES, RESPIRATORY, MENTAL_HEALTH)

@@ -39,18 +39,18 @@ import com.healthdata.quality.persistence.RiskAssessmentRepository;
 @WithMockUser(username = "testuser", roles = {"EVALUATOR", "ADMIN"})
 class RiskAssessmentControllerIT {
 
-    private static final String H2_URL = "jdbc:h2:mem:healthdata_quality_risk;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH";
+    private static final String H2_URL = "jdbc:tc:postgresql:15-alpine:///testdb";
     private static final String TENANT_ID = "tenant-1";
-    private static final String PATIENT_ID = "patient-123";
-    private static final String PATIENT_ID_2 = "patient-456";
+    private static final UUID PATIENT_ID = UUID.fromString("99999999-aaaa-bbbb-cccc-111111111111");
+    private static final UUID PATIENT_ID_2 = UUID.fromString("99999999-aaaa-bbbb-cccc-222222222222");
 
     @DynamicPropertySource
     static void overrideDatasourceProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", () -> H2_URL);
         registry.add("spring.datasource.username", () -> "sa");
         registry.add("spring.datasource.password", () -> "");
-        registry.add("spring.datasource.driver-class-name", () -> "org.h2.Driver");
-        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.H2Dialect");
+        registry.add("spring.datasource.driver-class-name", () -> "org.testcontainers.jdbc.ContainerDatabaseDriver");
+        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
         registry.add("spring.liquibase.enabled", () -> "false");
         registry.add("spring.flyway.enabled", () -> "false");
@@ -92,7 +92,7 @@ class RiskAssessmentControllerIT {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.patientId").value(PATIENT_ID))
+                .andExpect(jsonPath("$.patientId").value(PATIENT_ID.toString()))
                 .andExpect(jsonPath("$.riskScore").value(65))
                 .andExpect(jsonPath("$.riskLevel").value("high"))
                 .andExpect(jsonPath("$.id").exists())
@@ -100,7 +100,7 @@ class RiskAssessmentControllerIT {
 
         String responseBody = result.getResponse().getContentAsString();
         JsonNode response = objectMapper.readTree(responseBody);
-        assertThat(response.get("patientId").asText()).isEqualTo(PATIENT_ID);
+        assertThat(response.get("patientId").asText()).isEqualTo(PATIENT_ID.toString());
         assertThat(response.get("riskScore").asInt()).isEqualTo(65);
     }
 
@@ -200,7 +200,7 @@ class RiskAssessmentControllerIT {
                         .header("X-Tenant-ID", TENANT_ID)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.patientId").value(PATIENT_ID))
+                .andExpect(jsonPath("$.patientId").value(PATIENT_ID.toString()))
                 .andExpect(jsonPath("$.riskScore").value(75))
                 .andExpect(jsonPath("$.riskLevel").value("very-high"))
                 .andExpect(jsonPath("$.riskCategory").value("CARDIOVASCULAR"));
@@ -244,7 +244,7 @@ class RiskAssessmentControllerIT {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.patientId").value(PATIENT_ID))
+                .andExpect(jsonPath("$.patientId").value(PATIENT_ID.toString()))
                 .andExpect(jsonPath("$.riskScore").exists())
                 .andExpect(jsonPath("$.riskLevel").exists())
                 .andExpect(jsonPath("$.id").exists())
@@ -252,7 +252,7 @@ class RiskAssessmentControllerIT {
 
         String responseBody = result.getResponse().getContentAsString();
         JsonNode response = objectMapper.readTree(responseBody);
-        assertThat(response.get("patientId").asText()).isEqualTo(PATIENT_ID);
+        assertThat(response.get("patientId").asText()).isEqualTo(PATIENT_ID.toString());
 
         // Verify a new assessment was created in the database
         List<RiskAssessmentEntity> assessments = riskAssessmentRepository
@@ -295,8 +295,10 @@ class RiskAssessmentControllerIT {
         // Given - Create assessments for multiple patients
         createAndSaveRiskAssessment(PATIENT_ID, 20, RiskAssessmentEntity.RiskLevel.LOW, null);
         createAndSaveRiskAssessment(PATIENT_ID_2, 85, RiskAssessmentEntity.RiskLevel.VERY_HIGH, null);
-        createAndSaveRiskAssessment("patient-789", 40, RiskAssessmentEntity.RiskLevel.MODERATE, null);
-        createAndSaveRiskAssessment("patient-101", 60, RiskAssessmentEntity.RiskLevel.HIGH, null);
+        createAndSaveRiskAssessment(UUID.fromString("99999999-aaaa-bbbb-cccc-333333333333"), 40,
+            RiskAssessmentEntity.RiskLevel.MODERATE, null);
+        createAndSaveRiskAssessment(UUID.fromString("99999999-aaaa-bbbb-cccc-444444444444"), 60,
+            RiskAssessmentEntity.RiskLevel.HIGH, null);
 
         // When / Then
         MvcResult result = mockMvc.perform(get("/api/risk/population-stats")
@@ -395,7 +397,7 @@ class RiskAssessmentControllerIT {
         RiskAssessmentEntity tenant2Assessment = RiskAssessmentEntity.builder()
             .id(UUID.randomUUID())
             .tenantId(tenant2)
-            .patientId("patient-999")
+            .patientId(UUID.fromString("99999999-aaaa-bbbb-cccc-555555555555"))
             .riskScore(80)
             .riskLevel(RiskAssessmentEntity.RiskLevel.VERY_HIGH)
             .riskFactors(new ArrayList<>())
@@ -422,7 +424,7 @@ class RiskAssessmentControllerIT {
 
     // ===== Helper Methods =====
 
-    private RiskAssessmentEntity createAndSaveRiskAssessment(String patientId, int riskScore,
+    private RiskAssessmentEntity createAndSaveRiskAssessment(UUID patientId, int riskScore,
                                                               RiskAssessmentEntity.RiskLevel riskLevel,
                                                               String categoryOrNull) {
         // If categoryOrNull is null, treat as category null
@@ -430,21 +432,21 @@ class RiskAssessmentControllerIT {
             categoryOrNull, Instant.now(), TENANT_ID);
     }
 
-    private RiskAssessmentEntity createAndSaveRiskAssessment(String patientId, int riskScore,
+    private RiskAssessmentEntity createAndSaveRiskAssessment(UUID patientId, int riskScore,
                                                               RiskAssessmentEntity.RiskLevel riskLevel,
                                                               String category, Instant assessmentDate) {
         return createAndSaveRiskAssessmentWithCategoryAndTime(patientId, riskScore, riskLevel,
             category, assessmentDate, TENANT_ID);
     }
 
-    private RiskAssessmentEntity createAndSaveRiskAssessment(String patientId, int riskScore,
+    private RiskAssessmentEntity createAndSaveRiskAssessment(UUID patientId, int riskScore,
                                                               RiskAssessmentEntity.RiskLevel riskLevel,
                                                               String category, String tenantId) {
         return createAndSaveRiskAssessmentWithCategoryAndTime(patientId, riskScore, riskLevel,
             category, Instant.now(), tenantId);
     }
 
-    private RiskAssessmentEntity createAndSaveRiskAssessmentWithCategoryAndTime(String patientId, int riskScore,
+    private RiskAssessmentEntity createAndSaveRiskAssessmentWithCategoryAndTime(UUID patientId, int riskScore,
                                                               RiskAssessmentEntity.RiskLevel riskLevel,
                                                               String category, Instant assessmentDate,
                                                               String tenantId) {

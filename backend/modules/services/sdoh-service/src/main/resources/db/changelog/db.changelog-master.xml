@@ -199,4 +199,164 @@
         </sql>
     </changeSet>
 
+    <changeSet id="005-create-sdoh-extended-tables" author="hdim">
+        <comment>Create SDOH extended domain tables</comment>
+
+        <createTable tableName="community_resources" schemaName="sdoh">
+            <column name="resource_id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="organization_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="address" type="VARCHAR(255)"/>
+            <column name="city" type="VARCHAR(100)"/>
+            <column name="state" type="VARCHAR(50)"/>
+            <column name="zip_code" type="VARCHAR(20)"/>
+            <column name="phone_number" type="VARCHAR(50)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="website" type="VARCHAR(255)"/>
+            <column name="services_provided_json" type="TEXT"/>
+            <column name="eligibility_criteria" type="TEXT"/>
+            <column name="hours_of_operation" type="VARCHAR(255)"/>
+            <column name="latitude" type="DOUBLE PRECISION"/>
+            <column name="longitude" type="DOUBLE PRECISION"/>
+            <column name="accepts_walk_ins" type="BOOLEAN"/>
+            <column name="requires_referral" type="BOOLEAN"/>
+            <column name="language" type="VARCHAR(50)"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="sdoh_assessments" schemaName="sdoh">
+            <column name="assessment_id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assessment_date" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="screening_tool" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="responses_json" type="TEXT"/>
+            <column name="identified_needs_json" type="TEXT"/>
+            <column name="identified_z_codes_json" type="TEXT"/>
+            <column name="risk_score" type="DOUBLE PRECISION"/>
+            <column name="assessed_by" type="VARCHAR(100)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="sdoh_diagnoses" schemaName="sdoh">
+            <column name="diagnosis_id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="z_code" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="z_code_description" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="clinical_note" type="TEXT"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="diagnosis_date" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="diagnosed_by" type="VARCHAR(100)"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="resource_referrals" schemaName="sdoh">
+            <column name="referral_id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referral_reason" type="TEXT"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referred_by" type="VARCHAR(100)"/>
+            <column name="referral_date" type="TIMESTAMP"/>
+            <column name="contact_date" type="TIMESTAMP"/>
+            <column name="outcome" type="TEXT"/>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="sdoh_risk_scores" schemaName="sdoh">
+            <column name="score_id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_score" type="DOUBLE PRECISION">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category_scores_json" type="TEXT"/>
+            <column name="risk_level" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assessment_id" type="VARCHAR(100)"/>
+            <column name="calculated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="TEXT"/>
+        </createTable>
+    </changeSet>
+
 </databaseChangeLog>

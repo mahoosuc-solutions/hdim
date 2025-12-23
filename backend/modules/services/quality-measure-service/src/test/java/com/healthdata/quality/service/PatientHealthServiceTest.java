@@ -1,6 +1,9 @@
 package com.healthdata.quality.service;
 
+import com.healthdata.quality.dto.CareGapDTO;
 import com.healthdata.quality.dto.HealthScoreDTO;
+import com.healthdata.quality.dto.MentalHealthAssessmentDTO;
+import com.healthdata.quality.dto.RiskAssessmentDTO;
 import com.healthdata.quality.persistence.*;
 import org.hl7.fhir.r4.model.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -56,7 +60,7 @@ class PatientHealthServiceTest {
     private PatientHealthService patientHealthService;
 
     private static final String TENANT_ID = "test-tenant";
-    private static final String PATIENT_ID = "patient-123";
+    private static final UUID PATIENT_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     @BeforeEach
     void setUp() {
@@ -118,6 +122,42 @@ class PatientHealthServiceTest {
         HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
 
         // Then: Physical score should be default (50 - unknown)
+        assertThat(score.getPhysicalHealthScore()).isEqualTo(50.0);
+    }
+
+    @Test
+    void testPhysicalHealthScore_UsesMostRecentVital() {
+        stubDefaultsForScore();
+        Observation older = createVitalSignObservation("85714-4", "Heart rate", 70.0, "beats/min");
+        older.setEffective(new DateTimeType(Date.from(Instant.now().minus(20, ChronoUnit.DAYS))));
+        Observation newer = createVitalSignObservation("85714-4", "Heart rate", 120.0, "beats/min");
+        newer.setEffective(new DateTimeType(Date.from(Instant.now().minus(2, ChronoUnit.DAYS))));
+
+        when(patientDataService.fetchPatientObservations(TENANT_ID, PATIENT_ID))
+            .thenReturn(List.of(older, newer));
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getPhysicalHealthScore()).isEqualTo(0.0);
+    }
+
+    @Test
+    void testPhysicalHealthScore_IgnoresObservationWithoutLoinc() {
+        stubDefaultsForScore();
+        Observation observation = new Observation();
+        observation.setStatus(Observation.ObservationStatus.FINAL);
+        observation.setEffective(new DateTimeType(Date.from(Instant.now().minus(5, ChronoUnit.DAYS))));
+        observation.setCode(new CodeableConcept()
+            .addCoding(new Coding().setSystem("http://example.com").setCode("85714-4")));
+        observation.setValue(new Quantity().setValue(80));
+        observation.addCategory(new CodeableConcept()
+            .addCoding(new Coding().setCode("vital-signs")));
+
+        when(patientDataService.fetchPatientObservations(TENANT_ID, PATIENT_ID))
+            .thenReturn(List.of(observation));
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
         assertThat(score.getPhysicalHealthScore()).isEqualTo(50.0);
     }
 
@@ -236,6 +276,22 @@ class PatientHealthServiceTest {
         assertThat(score.getChronicDiseaseScore()).isEqualTo(100.0);
     }
 
+    @Test
+    void testChronicDiseaseScore_NoConditionsWithOpenGaps() {
+        when(patientDataService.fetchPatientConditions(TENANT_ID, PATIENT_ID))
+            .thenReturn(Collections.emptyList());
+        CareGapEntity gap = CareGapEntity.builder()
+            .status(CareGapEntity.Status.OPEN)
+            .build();
+        when(careGapRepository.findByTenantIdAndPatientIdAndCategoryOrderByPriorityAscDueDateAsc(
+            TENANT_ID, PATIENT_ID, CareGapEntity.GapCategory.CHRONIC_DISEASE))
+            .thenReturn(List.of(gap));
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getChronicDiseaseScore()).isLessThan(100.0);
+    }
+
     // ===== PREVENTIVE CARE SCORE TESTS =====
 
     @Test
@@ -249,21 +305,21 @@ class PatientHealthServiceTest {
 
         Patient patient = createPatient(55, Enumerations.AdministrativeGender.FEMALE);
 
-        lenient().when(patientDataService.fetchPatientProcedures(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientProcedures(anyString(), any(UUID.class)))
             .thenReturn(procedures);
-        lenient().when(patientDataService.fetchPatient(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatient(anyString(), any(UUID.class)))
             .thenReturn(patient);
-        lenient().when(patientDataService.fetchPatientObservations(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientObservations(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatientConditions(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientConditions(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
         lenient().when(careGapRepository.findByTenantIdAndPatientIdAndCategoryOrderByPriorityAscDueDateAsc(
-            anyString(), anyString(), any()))
+            anyString(), any(UUID.class), any()))
             .thenReturn(Collections.emptyList());
-        lenient().when(healthScoreHistoryRepository.findRecentScores(anyString(), anyString(), anyInt()))
+        lenient().when(healthScoreHistoryRepository.findRecentScores(anyString(), any(UUID.class), anyInt()))
             .thenReturn(Collections.emptyList());
         lenient().when(mentalHealthRepository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
-            anyString(), anyString(), any(PageRequest.class)))
+            anyString(), any(UUID.class), any(PageRequest.class)))
             .thenReturn(Collections.emptyList());
 
         // When: Calculate preventive care score
@@ -284,21 +340,21 @@ class PatientHealthServiceTest {
 
         Patient patient = createPatient(55, Enumerations.AdministrativeGender.FEMALE);
 
-        lenient().when(patientDataService.fetchPatientProcedures(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientProcedures(anyString(), any(UUID.class)))
             .thenReturn(procedures);
-        lenient().when(patientDataService.fetchPatient(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatient(anyString(), any(UUID.class)))
             .thenReturn(patient);
-        lenient().when(patientDataService.fetchPatientObservations(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientObservations(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatientConditions(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientConditions(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
         lenient().when(careGapRepository.findByTenantIdAndPatientIdAndCategoryOrderByPriorityAscDueDateAsc(
-            anyString(), anyString(), any()))
+            anyString(), any(UUID.class), any()))
             .thenReturn(Collections.emptyList());
-        lenient().when(healthScoreHistoryRepository.findRecentScores(anyString(), anyString(), anyInt()))
+        lenient().when(healthScoreHistoryRepository.findRecentScores(anyString(), any(UUID.class), anyInt()))
             .thenReturn(Collections.emptyList());
         lenient().when(mentalHealthRepository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
-            anyString(), anyString(), any(PageRequest.class)))
+            anyString(), any(UUID.class), any(PageRequest.class)))
             .thenReturn(Collections.emptyList());
 
         // When: Calculate preventive care score
@@ -322,12 +378,12 @@ class PatientHealthServiceTest {
         when(patientDataService.fetchPatientConditions(TENANT_ID, PATIENT_ID))
             .thenReturn(Collections.emptyList());
         when(careGapRepository.findByTenantIdAndPatientIdAndCategoryOrderByPriorityAscDueDateAsc(
-            anyString(), anyString(), any()))
+            anyString(), any(UUID.class), any()))
             .thenReturn(Collections.emptyList());
         when(healthScoreHistoryRepository.findRecentScores(TENANT_ID, PATIENT_ID, 5))
             .thenReturn(Collections.emptyList());
         when(mentalHealthRepository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
-            anyString(), anyString(), any(PageRequest.class)))
+            anyString(), any(UUID.class), any(PageRequest.class)))
             .thenReturn(Collections.emptyList());
 
         // When: Calculate preventive care score
@@ -335,6 +391,393 @@ class PatientHealthServiceTest {
 
         // Then: Score should be low (no screenings)
         assertThat(score.getPreventiveCareScore()).isLessThanOrEqualTo(50.0);
+    }
+
+    @Test
+    void testPreventiveCareScore_NoRecommendedScreenings() {
+        Patient patient = createPatient(20, Enumerations.AdministrativeGender.MALE);
+
+        when(patientDataService.fetchPatient(TENANT_ID, PATIENT_ID))
+            .thenReturn(patient);
+        when(patientDataService.fetchPatientObservations(TENANT_ID, PATIENT_ID))
+            .thenReturn(Collections.emptyList());
+        when(patientDataService.fetchPatientConditions(TENANT_ID, PATIENT_ID))
+            .thenReturn(Collections.emptyList());
+        when(careGapRepository.findByTenantIdAndPatientIdAndCategoryOrderByPriorityAscDueDateAsc(
+            anyString(), any(UUID.class), any()))
+            .thenReturn(Collections.emptyList());
+        when(healthScoreHistoryRepository.findRecentScores(TENANT_ID, PATIENT_ID, 5))
+            .thenReturn(Collections.emptyList());
+        when(mentalHealthRepository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
+            anyString(), any(UUID.class), any(PageRequest.class)))
+            .thenReturn(Collections.emptyList());
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getPreventiveCareScore()).isEqualTo(100.0);
+    }
+
+    @Test
+    void testPreventiveCareScore_NoPatientDemographics() {
+        when(patientDataService.fetchPatient(TENANT_ID, PATIENT_ID))
+            .thenReturn(null);
+        when(patientDataService.fetchPatientObservations(TENANT_ID, PATIENT_ID))
+            .thenReturn(Collections.emptyList());
+        when(patientDataService.fetchPatientConditions(TENANT_ID, PATIENT_ID))
+            .thenReturn(Collections.emptyList());
+        when(careGapRepository.findByTenantIdAndPatientIdAndCategoryOrderByPriorityAscDueDateAsc(
+            anyString(), any(UUID.class), any()))
+            .thenReturn(Collections.emptyList());
+        when(healthScoreHistoryRepository.findRecentScores(TENANT_ID, PATIENT_ID, 5))
+            .thenReturn(Collections.emptyList());
+        when(mentalHealthRepository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
+            anyString(), any(UUID.class), any(PageRequest.class)))
+            .thenReturn(Collections.emptyList());
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getPreventiveCareScore()).isEqualTo(50.0);
+    }
+
+    // ===== MENTAL HEALTH SCORE TESTS =====
+
+    @Test
+    void testMentalHealthScore_NoAssessments() {
+        when(mentalHealthRepository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
+            anyString(), any(UUID.class), any(PageRequest.class)))
+            .thenReturn(Collections.emptyList());
+        stubDefaultsForScore();
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getMentalHealthScore()).isEqualTo(100.0);
+    }
+
+    @Test
+    void testMentalHealthScore_SeverePenaltyApplied() {
+        MentalHealthAssessmentEntity assessment = MentalHealthAssessmentEntity.builder()
+            .score(20)
+            .maxScore(27)
+            .severity("severe")
+            .build();
+
+        when(mentalHealthRepository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
+            anyString(), any(UUID.class), any(PageRequest.class)))
+            .thenReturn(List.of(assessment));
+        stubDefaultsForScore();
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getMentalHealthScore()).isLessThan(60.0);
+    }
+
+    @Test
+    void testMentalHealthScore_ModeratePenaltyApplied() {
+        MentalHealthAssessmentEntity assessment = MentalHealthAssessmentEntity.builder()
+            .score(10)
+            .maxScore(20)
+            .severity("moderate")
+            .build();
+
+        when(mentalHealthRepository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
+            anyString(), any(UUID.class), any(PageRequest.class)))
+            .thenReturn(List.of(assessment));
+        stubDefaultsForScore();
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getMentalHealthScore()).isEqualTo(35.0);
+    }
+
+    // ===== SOCIAL SCORE TESTS =====
+
+    @Test
+    void testSocialScore_WithUnmetAndAddressedNeeds() {
+        List<Observation> observations = List.of(
+            createSocialObservationWithBoolean("Food insecurity", true),
+            createSocialObservationWithCode("LA31994-9", Observation.ObservationStatus.FINAL)
+        );
+
+        stubDefaultsForScore();
+        when(patientDataService.fetchSocialHistoryObservations(TENANT_ID, PATIENT_ID))
+            .thenReturn(observations);
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getSocialDeterminantsScore()).isBetween(80.0, 100.0);
+    }
+
+    @Test
+    void testSocialScore_NoObservations() {
+        stubDefaultsForScore();
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getSocialDeterminantsScore()).isEqualTo(80.0);
+    }
+
+    @Test
+    void testSocialScore_UnmetNeedByCode() {
+        List<Observation> observations = List.of(
+            createSocialObservationWithCode("LA31996-4", Observation.ObservationStatus.FINAL)
+        );
+
+        stubDefaultsForScore();
+        when(patientDataService.fetchSocialHistoryObservations(TENANT_ID, PATIENT_ID))
+            .thenReturn(observations);
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getSocialDeterminantsScore()).isEqualTo(90.0);
+    }
+
+    @Test
+    void testSocialScore_AddressedNeedByBooleanFalse() {
+        List<Observation> observations = List.of(
+            createSocialObservationWithBoolean("Housing stability", false)
+        );
+
+        stubDefaultsForScore();
+        when(patientDataService.fetchSocialHistoryObservations(TENANT_ID, PATIENT_ID))
+            .thenReturn(observations);
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getSocialDeterminantsScore()).isEqualTo(100.0);
+    }
+
+    @Test
+    void testPhysicalHealthScore_ErrorFallsBackToDefault() {
+        stubDefaultsForScore();
+        when(patientDataService.fetchPatientObservations(TENANT_ID, PATIENT_ID))
+            .thenThrow(new RuntimeException("boom"));
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getPhysicalHealthScore()).isEqualTo(50.0);
+    }
+
+    @Test
+    void testPhysicalHealthScore_IgnoresOldOrNonVital() {
+        stubDefaultsForScore();
+        Observation oldObservation = new Observation();
+        oldObservation.setStatus(Observation.ObservationStatus.FINAL);
+        oldObservation.setEffective(new DateTimeType(
+            Date.from(Instant.now().minus(200, ChronoUnit.DAYS))));
+        oldObservation.setCode(new CodeableConcept()
+            .addCoding(new Coding().setSystem("http://loinc.org").setCode("85714-4")));
+        oldObservation.setValue(new Quantity().setValue(80));
+        oldObservation.addCategory(new CodeableConcept()
+            .addCoding(new Coding().setCode("laboratory")));
+
+        when(patientDataService.fetchPatientObservations(TENANT_ID, PATIENT_ID))
+            .thenReturn(List.of(oldObservation));
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getPhysicalHealthScore()).isEqualTo(50.0);
+    }
+
+    @Test
+    void testChronicDiseaseScore_IgnoresInactiveConditions() {
+        stubDefaultsForScore();
+        List<Condition> conditions = List.of(
+            createCondition("44054006", "Type 2 Diabetes Mellitus", "inactive")
+        );
+
+        when(patientDataService.fetchPatientConditions(TENANT_ID, PATIENT_ID))
+            .thenReturn(conditions);
+        when(careGapRepository.findByTenantIdAndPatientIdAndCategoryOrderByPriorityAscDueDateAsc(
+            TENANT_ID, PATIENT_ID, CareGapEntity.GapCategory.CHRONIC_DISEASE))
+            .thenReturn(Collections.emptyList());
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getChronicDiseaseScore()).isEqualTo(100.0);
+    }
+
+    @Test
+    void testPreventiveCareScore_ErrorFallsBackToDefault() {
+        stubDefaultsForScore();
+        when(patientDataService.fetchPatient(TENANT_ID, PATIENT_ID))
+            .thenThrow(new RuntimeException("patient lookup failed"));
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getPreventiveCareScore()).isEqualTo(50.0);
+    }
+
+    @Test
+    void testPhysicalHealthScore_NonQuantityValueIgnored() {
+        stubDefaultsForScore();
+        Observation obs = createVitalSignObservation("85714-4", "Heart rate", 72.0, "beats/min");
+        obs.setValue(new StringType("invalid"));
+
+        when(patientDataService.fetchPatientObservations(TENANT_ID, PATIENT_ID))
+            .thenReturn(List.of(obs));
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getPhysicalHealthScore()).isEqualTo(0.0);
+    }
+
+    @Test
+    void testIsRecentFalseWhenNoDateTime() {
+        Observation obs = new Observation();
+        boolean recent = (boolean) ReflectionTestUtils.invokeMethod(
+            patientHealthService, "isRecent", obs, Instant.now());
+
+        assertThat(recent).isFalse();
+    }
+
+    @Test
+    void testIsMoreRecentTrueWhenNewer() {
+        Observation older = new Observation();
+        older.setEffective(new DateTimeType(Date.from(Instant.now().minus(10, ChronoUnit.DAYS))));
+        Observation newer = new Observation();
+        newer.setEffective(new DateTimeType(Date.from(Instant.now().minus(1, ChronoUnit.DAYS))));
+
+        boolean isMoreRecent = (boolean) ReflectionTestUtils.invokeMethod(
+            patientHealthService, "isMoreRecent", newer, older);
+
+        assertThat(isMoreRecent).isTrue();
+    }
+
+    @Test
+    void testIsInHealthyRangeUnknownCode() {
+        Observation obs = createVitalSignObservation("0000-0", "Unknown", 10.0, "unit");
+        boolean inRange = (boolean) ReflectionTestUtils.invokeMethod(
+            patientHealthService, "isInHealthyRange", "0000-0", obs);
+
+        assertThat(inRange).isFalse();
+    }
+
+    @Test
+    void testIsUnmetSdohNeedForInstabilityDisplay() {
+        Observation observation = createSocialObservationWithBoolean("Housing instability", true);
+
+        boolean unmet = (boolean) ReflectionTestUtils.invokeMethod(
+            patientHealthService, "isUnmetSdohNeed", observation);
+
+        assertThat(unmet).isTrue();
+    }
+
+    @Test
+    void testIsAddressedSdohNeedWithNeverTrueCode() {
+        Observation observation = createSocialObservationWithCode(
+            "LA28398-8", Observation.ObservationStatus.FINAL);
+
+        boolean addressed = (boolean) ReflectionTestUtils.invokeMethod(
+            patientHealthService, "isAddressedSdohNeed", observation);
+
+        assertThat(addressed).isTrue();
+    }
+
+    @Test
+    void testIsAddressedSdohNeedFalseWhenStatusNotFinal() {
+        Observation observation = createSocialObservationWithCode(
+            "LA31994-9", Observation.ObservationStatus.REGISTERED);
+
+        boolean addressed = (boolean) ReflectionTestUtils.invokeMethod(
+            patientHealthService, "isAddressedSdohNeed", observation);
+
+        assertThat(addressed).isFalse();
+    }
+
+    @Test
+    void testHasScreeningCodeReturnsFalseWhenMissingCode() {
+        Procedure procedure = new Procedure();
+
+        boolean hasCode = (boolean) ReflectionTestUtils.invokeMethod(
+            patientHealthService, "hasScreeningCode", procedure, "73761001");
+
+        assertThat(hasCode).isFalse();
+    }
+
+    @Test
+    void testAssessDiseaseControlUnknownWhenNoSnomedCode() {
+        Condition condition = new Condition();
+        condition.setCode(new CodeableConcept()
+            .addCoding(new Coding().setSystem("http://example.com").setCode("123")));
+
+        String controlStatus = (String) ReflectionTestUtils.invokeMethod(
+            patientHealthService, "assessDiseaseControl", condition, Collections.emptyList());
+
+        assertThat(controlStatus).isEqualTo("unknown");
+    }
+
+    @Test
+    void testMentalHealthScore_ModeratelySeverePenalty() {
+        MentalHealthAssessmentEntity assessment = MentalHealthAssessmentEntity.builder()
+            .score(15)
+            .maxScore(27)
+            .severity("moderately-severe")
+            .build();
+
+        when(mentalHealthRepository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
+            anyString(), any(UUID.class), any(PageRequest.class)))
+            .thenReturn(List.of(assessment));
+        stubDefaultsForScore();
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getMentalHealthScore()).isLessThan(60.0);
+    }
+
+    @Test
+    void testSocialScore_ExceptionFallback() {
+        stubDefaultsForScore();
+        when(patientDataService.fetchSocialHistoryObservations(TENANT_ID, PATIENT_ID))
+            .thenThrow(new RuntimeException("sdoh error"));
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getSocialDeterminantsScore()).isEqualTo(80.0);
+    }
+
+    @Test
+    void testPreventiveCareScore_MaleWithColonoscopyOverdue() {
+        Patient patient = createPatient(60, Enumerations.AdministrativeGender.MALE);
+        List<Procedure> procedures = List.of(
+            createScreeningProcedure("73761001", "Colonoscopy", -5000)
+        );
+
+        stubDefaultsForScore();
+        when(patientDataService.fetchPatient(TENANT_ID, PATIENT_ID)).thenReturn(patient);
+        when(patientDataService.fetchPatientProcedures(TENANT_ID, PATIENT_ID)).thenReturn(procedures);
+
+        HealthScoreDTO score = patientHealthService.calculateHealthScore(TENANT_ID, PATIENT_ID);
+
+        assertThat(score.getPreventiveCareScore()).isEqualTo(0.0);
+    }
+
+    // ===== HEALTH OVERVIEW TESTS =====
+
+    @Test
+    void testGetPatientHealthOverview() {
+        List<MentalHealthAssessmentDTO> assessments = List.of(MentalHealthAssessmentDTO.builder().build());
+        List<CareGapDTO> gaps = List.of(CareGapDTO.builder().priority("urgent").build());
+        RiskAssessmentDTO risk = RiskAssessmentDTO.builder().build();
+
+        when(mentalHealthService.getPatientAssessments(TENANT_ID, PATIENT_ID, null, 5, 0))
+            .thenReturn(assessments);
+        when(careGapService.getPatientCareGaps(TENANT_ID, PATIENT_ID, null, null))
+            .thenReturn(gaps);
+        when(riskService.getRiskAssessment(TENANT_ID, PATIENT_ID))
+            .thenReturn(risk);
+        when(mentalHealthRepository.countByTenantIdAndPatientId(TENANT_ID, PATIENT_ID))
+            .thenReturn(3L);
+        when(mentalHealthRepository.findPositiveScreensRequiringFollowup(TENANT_ID, PATIENT_ID))
+            .thenReturn(List.of(MentalHealthAssessmentEntity.builder().build()));
+        stubDefaultsForScore();
+
+        var overview = patientHealthService.getPatientHealthOverview(TENANT_ID, PATIENT_ID);
+
+        assertThat(overview.getRecentMentalHealthAssessments()).hasSize(1);
+        assertThat(overview.getOpenCareGaps()).hasSize(1);
+        assertThat(overview.getSummaryStats().getUrgentCareGaps()).isEqualTo(1);
+        assertThat(overview.getSummaryStats().getTotalMentalHealthAssessments()).isEqualTo(3);
+        assertThat(overview.getSummaryStats().getPositiveScreensRequiringFollowup()).isEqualTo(1);
     }
 
     // ===== HEALTH SCORE TREND TESTS =====
@@ -348,21 +791,21 @@ class PatientHealthServiceTest {
             createHistoryEntry(45.0, -90)  // 90 days ago: 45
         );
 
-        lenient().when(healthScoreHistoryRepository.findRecentScores(anyString(), anyString(), anyInt()))
+        lenient().when(healthScoreHistoryRepository.findRecentScores(anyString(), any(UUID.class), anyInt()))
             .thenReturn(history);
-        lenient().when(patientDataService.fetchPatientObservations(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientObservations(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatientConditions(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientConditions(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatientProcedures(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientProcedures(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatient(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatient(anyString(), any(UUID.class)))
             .thenReturn(null);
         lenient().when(careGapRepository.findByTenantIdAndPatientIdAndCategoryOrderByPriorityAscDueDateAsc(
-            anyString(), anyString(), any()))
+            anyString(), any(UUID.class), any()))
             .thenReturn(Collections.emptyList());
         lenient().when(mentalHealthRepository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
-            anyString(), anyString(), any(PageRequest.class)))
+            anyString(), any(UUID.class), any(PageRequest.class)))
             .thenReturn(Collections.emptyList());
 
         // When: Calculate health score
@@ -381,21 +824,21 @@ class PatientHealthServiceTest {
             createHistoryEntry(95.0, -90)  // 90 days ago: 95
         );
 
-        lenient().when(healthScoreHistoryRepository.findRecentScores(anyString(), anyString(), anyInt()))
+        lenient().when(healthScoreHistoryRepository.findRecentScores(anyString(), any(UUID.class), anyInt()))
             .thenReturn(history);
-        lenient().when(patientDataService.fetchPatientObservations(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientObservations(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatientConditions(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientConditions(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatientProcedures(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientProcedures(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatient(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatient(anyString(), any(UUID.class)))
             .thenReturn(null);
         lenient().when(careGapRepository.findByTenantIdAndPatientIdAndCategoryOrderByPriorityAscDueDateAsc(
-            anyString(), anyString(), any()))
+            anyString(), any(UUID.class), any()))
             .thenReturn(Collections.emptyList());
         lenient().when(mentalHealthRepository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
-            anyString(), anyString(), any(PageRequest.class)))
+            anyString(), any(UUID.class), any(PageRequest.class)))
             .thenReturn(Collections.emptyList());
 
         // When: Calculate health score
@@ -414,21 +857,21 @@ class PatientHealthServiceTest {
             createHistoryEntry(74.0, -90)
         );
 
-        lenient().when(healthScoreHistoryRepository.findRecentScores(anyString(), anyString(), anyInt()))
+        lenient().when(healthScoreHistoryRepository.findRecentScores(anyString(), any(UUID.class), anyInt()))
             .thenReturn(history);
-        lenient().when(patientDataService.fetchPatientObservations(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientObservations(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatientConditions(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientConditions(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatientProcedures(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientProcedures(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatient(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatient(anyString(), any(UUID.class)))
             .thenReturn(null);
         lenient().when(careGapRepository.findByTenantIdAndPatientIdAndCategoryOrderByPriorityAscDueDateAsc(
-            anyString(), anyString(), any()))
+            anyString(), any(UUID.class), any()))
             .thenReturn(Collections.emptyList());
         lenient().when(mentalHealthRepository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
-            anyString(), anyString(), any(PageRequest.class)))
+            anyString(), any(UUID.class), any(PageRequest.class)))
             .thenReturn(Collections.emptyList());
 
         // When: Calculate health score
@@ -446,21 +889,21 @@ class PatientHealthServiceTest {
             createHistoryEntry(75.0, -60)   // Previous: 75 (15 point increase)
         );
 
-        lenient().when(healthScoreHistoryRepository.findRecentScores(anyString(), anyString(), anyInt()))
+        lenient().when(healthScoreHistoryRepository.findRecentScores(anyString(), any(UUID.class), anyInt()))
             .thenReturn(history);
-        lenient().when(patientDataService.fetchPatientObservations(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientObservations(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatientConditions(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientConditions(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatientProcedures(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientProcedures(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatient(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatient(anyString(), any(UUID.class)))
             .thenReturn(null);
         lenient().when(careGapRepository.findByTenantIdAndPatientIdAndCategoryOrderByPriorityAscDueDateAsc(
-            anyString(), anyString(), any()))
+            anyString(), any(UUID.class), any()))
             .thenReturn(Collections.emptyList());
         lenient().when(mentalHealthRepository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
-            anyString(), anyString(), any(PageRequest.class)))
+            anyString(), any(UUID.class), any(PageRequest.class)))
             .thenReturn(Collections.emptyList());
 
         // When: Calculate health score
@@ -474,21 +917,21 @@ class PatientHealthServiceTest {
     @Test
     void testHealthScoreTrend_NoHistory() {
         // Given: No historical scores
-        lenient().when(healthScoreHistoryRepository.findRecentScores(anyString(), anyString(), anyInt()))
+        lenient().when(healthScoreHistoryRepository.findRecentScores(anyString(), any(UUID.class), anyInt()))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatientObservations(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientObservations(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatientConditions(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientConditions(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatientProcedures(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatientProcedures(anyString(), any(UUID.class)))
             .thenReturn(Collections.emptyList());
-        lenient().when(patientDataService.fetchPatient(anyString(), anyString()))
+        lenient().when(patientDataService.fetchPatient(anyString(), any(UUID.class)))
             .thenReturn(null);
         lenient().when(careGapRepository.findByTenantIdAndPatientIdAndCategoryOrderByPriorityAscDueDateAsc(
-            anyString(), anyString(), any()))
+            anyString(), any(UUID.class), any()))
             .thenReturn(Collections.emptyList());
         lenient().when(mentalHealthRepository.findByTenantIdAndPatientIdOrderByAssessmentDateDesc(
-            anyString(), anyString(), any(PageRequest.class)))
+            anyString(), any(UUID.class), any(PageRequest.class)))
             .thenReturn(Collections.emptyList());
 
         // When: Calculate health score
@@ -544,6 +987,53 @@ class PatientHealthServiceTest {
         return obs;
     }
 
+    private Observation createSocialObservationWithBoolean(String display, boolean value) {
+        Observation obs = new Observation();
+        obs.setStatus(Observation.ObservationStatus.FINAL);
+        obs.setEffective(new DateTimeType(Date.from(Instant.now().minus(7, ChronoUnit.DAYS))));
+
+        CodeableConcept code = new CodeableConcept();
+        code.addCoding(new Coding().setDisplay(display));
+        obs.setCode(code);
+        obs.setValue(new BooleanType(value));
+
+        return obs;
+    }
+
+    private Observation createSocialObservationWithCode(String codeValue, Observation.ObservationStatus status) {
+        Observation obs = new Observation();
+        obs.setStatus(status);
+        obs.setEffective(new DateTimeType(Date.from(Instant.now().minus(7, ChronoUnit.DAYS))));
+
+        CodeableConcept code = new CodeableConcept();
+        code.addCoding(new Coding().setDisplay("Housing"));
+        obs.setCode(code);
+
+        CodeableConcept value = new CodeableConcept();
+        value.addCoding(new Coding().setCode(codeValue));
+        obs.setValue(value);
+
+        return obs;
+    }
+
+    private void stubDefaultsForScore() {
+        lenient().when(patientDataService.fetchPatientObservations(anyString(), any(UUID.class)))
+            .thenReturn(Collections.emptyList());
+        lenient().when(patientDataService.fetchPatientConditions(anyString(), any(UUID.class)))
+            .thenReturn(Collections.emptyList());
+        lenient().when(patientDataService.fetchPatientProcedures(anyString(), any(UUID.class)))
+            .thenReturn(Collections.emptyList());
+        lenient().when(patientDataService.fetchPatient(anyString(), any(UUID.class)))
+            .thenReturn(null);
+        lenient().when(patientDataService.fetchSocialHistoryObservations(anyString(), any(UUID.class)))
+            .thenReturn(Collections.emptyList());
+        lenient().when(careGapRepository.findByTenantIdAndPatientIdAndCategoryOrderByPriorityAscDueDateAsc(
+            anyString(), any(UUID.class), any()))
+            .thenReturn(Collections.emptyList());
+        lenient().when(healthScoreHistoryRepository.findRecentScores(anyString(), any(UUID.class), anyInt()))
+            .thenReturn(Collections.emptyList());
+    }
+
     private Condition createCondition(String snomedCode, String display, String clinicalStatus) {
         Condition condition = new Condition();
         condition.setId(UUID.randomUUID().toString());
@@ -585,7 +1075,7 @@ class PatientHealthServiceTest {
 
     private Patient createPatient(int age, Enumerations.AdministrativeGender gender) {
         Patient patient = new Patient();
-        patient.setId(PATIENT_ID);
+        patient.setId(PATIENT_ID.toString());
         patient.setGender(gender);
 
         Date birthDate = Date.from(Instant.now().minus(age * 365L, ChronoUnit.DAYS));

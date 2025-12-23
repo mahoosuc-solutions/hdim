@@ -1,0 +1,39 @@
+{
+  "name": "care-gap-service",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "backend/modules/services/care-gap-service/src",
+  "tags": [
+    "backend",
+    "service"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/modules/services/care-gap-service/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:care-gap-service:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:care-gap-service:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:care-gap-service:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:care-gap-service:test :modules:services:care-gap-service:jacocoTestReport :modules:services:care-gap-service:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

@@ -50,8 +50,8 @@ describe('NavigationComponent (TDD)', () => {
       expect(component.navigationItems.length).toBeGreaterThan(0);
     });
 
-    it('should have exactly 6 navigation items', () => {
-      expect(component.navigationItems).toHaveLength(6);
+    it('should have exactly 7 navigation items', () => {
+      expect(component.navigationItems).toHaveLength(7);
     });
   });
 
@@ -96,6 +96,13 @@ describe('NavigationComponent (TDD)', () => {
       expect(viz).toBeDefined();
       expect(viz?.route).toBe('/visualization');
       expect(viz?.icon).toBe('3d_rotation');
+    });
+
+    it('should have Agent Builder item', () => {
+      const agentBuilder = component.navigationItems.find((item) => item.label === 'Agent Builder');
+      expect(agentBuilder).toBeDefined();
+      expect(agentBuilder?.route).toBe('/agent-builder');
+      expect(agentBuilder?.icon).toBe('smart_toy');
     });
 
     it('should have description for each navigation item', () => {
@@ -254,6 +261,7 @@ describe('NavigationComponent (TDD)', () => {
         'bar_chart',
         'description',
         '3d_rotation',
+        'smart_toy',
       ];
 
       component.navigationItems.forEach((item) => {
@@ -282,7 +290,15 @@ describe('NavigationComponent (TDD)', () => {
     });
 
     it('should handle different route patterns', () => {
-      const routes = ['/', '/patients', '/evaluations', '/results', '/reports', '/visualization'];
+      const routes = [
+        '/',
+        '/patients',
+        '/evaluations',
+        '/results',
+        '/reports',
+        '/visualization',
+        '/agent-builder',
+      ];
 
       routes.forEach((route) => {
         routerUrl = route;

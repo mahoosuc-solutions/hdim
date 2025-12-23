@@ -37,7 +37,7 @@ public class CdsRecommendationEntity {
     private String tenantId;
 
     @Column(name = "patient_id", nullable = false, length = 100)
-    private String patientId;
+    private UUID patientId;
 
     @Column(name = "rule_id")
     private UUID ruleId;

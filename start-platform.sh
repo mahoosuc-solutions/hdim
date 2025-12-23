@@ -16,6 +16,66 @@ info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
+PROFILE="core"
+BUILD_IMAGES=false
+WITH_FRONTEND=false
+FRONTEND_MODE="docker"
+CLEAN=false
+
+usage() {
+    echo "Usage: $0 [--build] [--with-frontend] [--frontend local|docker] [--profile <name>] [--full] [--clean]"
+    echo "  --build            Build backend artifacts and Docker images"
+    echo "  --with-frontend    Start Clinical Portal"
+    echo "  --frontend         Frontend mode: docker (default) or local (Nx dev server)"
+    echo "  --profile          Docker Compose profile (default: core)"
+    echo "  --full             Shortcut for --profile full"
+    echo "  --clean            Remove containers and volumes before starting"
+}
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --build)
+            BUILD_IMAGES=true
+            shift
+            ;;
+        --with-frontend)
+            WITH_FRONTEND=true
+            shift
+            ;;
+        --frontend)
+            FRONTEND_MODE=${2:-docker}
+            WITH_FRONTEND=true
+            shift 2
+            ;;
+        --frontend=*)
+            FRONTEND_MODE="${1#*=}"
+            WITH_FRONTEND=true
+            shift
+            ;;
+        --profile)
+            PROFILE=${2:-core}
+            shift 2
+            ;;
+        --full)
+            PROFILE="full"
+            shift
+            ;;
+        --clean)
+            CLEAN=true
+            shift
+            ;;
+        --help|-h)
+            usage
+            exit 0
+            ;;
+        *)
+            error "Unknown option: $1"
+            usage
+            exit 1
+            ;;
+    esac
+done
+
 # Check if we're in the right directory
 if [ ! -f "docker-compose.yml" ]; then
     error "docker-compose.yml not found. Please run this script from the project root."
@@ -26,25 +86,46 @@ echo "=========================================="
 echo "HealthData in Motion Platform Startup"
 echo "=========================================="
 
-# Step 1: Clean up any existing containers
-info "Cleaning up existing containers..."
-docker compose down -v 2>/dev/null || true
-docker ps -a | grep healthdata | awk '{print $1}' | xargs -r docker rm -f 2>/dev/null || true
+# Step 1: Optional cleanup
+if [ "$CLEAN" = true ]; then
+    info "Cleaning up existing containers..."
+    docker compose down -v 2>/dev/null || true
+    docker ps -a | grep healthdata | awk '{print $1}' | xargs -r docker rm -f 2>/dev/null || true
+fi
 
-# Step 2: Build backend if needed
-if [ "$1" == "--build" ] || [ ! -d "backend/modules/services/quality-measure-service/build" ]; then
-    info "Building backend services..."
-    cd backend
-    ./gradlew build -x test --parallel || {
+# Step 2: Build backend artifacts if needed
+BACKEND_SERVICES=(
+    "gateway-service"
+    "cql-engine-service"
+    "consent-service"
+    "event-processing-service"
+    "patient-service"
+    "fhir-service"
+    "care-gap-service"
+    "quality-measure-service"
+)
+
+missing_artifacts=()
+for service in "${BACKEND_SERVICES[@]}"; do
+    if ! ls "backend/modules/services/${service}/build/libs/"*.jar >/dev/null 2>&1; then
+        missing_artifacts+=("$service")
+    fi
+done
+
+if [ "$BUILD_IMAGES" = true ] || [ ${#missing_artifacts[@]} -gt 0 ]; then
+    if [ ${#missing_artifacts[@]} -gt 0 ]; then
+        warn "Missing build artifacts for: ${missing_artifacts[*]}"
+    fi
+    info "Building backend services with Gradle..."
+    (cd backend && ./gradlew build -x test --parallel) || {
         error "Backend build failed"
         exit 1
     }
-    cd ..
 fi
 
 # Step 3: Start infrastructure services
 info "Starting infrastructure services..."
-docker compose up -d postgres redis zookeeper kafka
+docker compose --profile "$PROFILE" up -d postgres redis zookeeper kafka
 
 # Wait for PostgreSQL
 info "Waiting for PostgreSQL..."
@@ -68,29 +149,41 @@ for i in {1..30}; do
     sleep 2
 done
 
-# Step 4: Build Docker images for services
-info "Building service Docker images..."
-docker compose build fhir-service quality-measure-service cql-engine-service gateway-service patient-service care-gap-service event-processing-service
+# Step 4: Build Docker images for services (optional)
+CORE_SERVICES=(
+    "fhir-service"
+    "cql-engine-service"
+    "consent-service"
+    "event-processing-service"
+    "patient-service"
+    "care-gap-service"
+    "quality-measure-service"
+    "gateway-service"
+)
+
+if [ "$BUILD_IMAGES" = true ]; then
+    info "Building service Docker images..."
+    docker compose --profile "$PROFILE" build "${CORE_SERVICES[@]}"
+fi
 
 # Step 5: Start backend services
 info "Starting backend services..."
-docker compose up -d fhir-service cql-engine-service patient-service care-gap-service event-processing-service
-
-# Give services time to initialize
-sleep 10
-
-# Start quality-measure-service (depends on others)
-docker compose up -d quality-measure-service
-
-# Start gateway last
-sleep 5
-docker compose up -d gateway-service
+docker compose --profile "$PROFILE" up -d "${CORE_SERVICES[@]}"
 
 # Step 6: Health checks
 info "Running health checks..."
 sleep 20
 
-services=("fhir-service:8081" "quality-measure-service:8087" "cql-engine-service:8086" "gateway-service:8080")
+services=(
+    "gateway-service:8080"
+    "cql-engine-service:8081"
+    "consent-service:8082"
+    "event-processing-service:8083"
+    "patient-service:8084"
+    "fhir-service:8085"
+    "care-gap-service:8086"
+    "quality-measure-service:8087"
+)
 
 all_healthy=true
 for service in "${services[@]}"; do
@@ -104,17 +197,15 @@ for service in "${services[@]}"; do
 done
 
 # Step 7: Start frontend (if requested)
-if [ "$2" == "--with-frontend" ]; then
+if [ "$WITH_FRONTEND" = true ]; then
     info "Starting Clinical Portal frontend..."
 
-    # Check if running in Angular dev mode or Docker
-    if [ -d "apps/clinical-portal" ]; then
-        cd apps/clinical-portal
+    if [ "$FRONTEND_MODE" = "local" ]; then
+        info "Starting Nx dev server for Clinical Portal..."
         npm install
-        npx nx serve clinical-portal &
-        cd ../..
+        npm run nx -- serve clinical-portal &
     else
-        docker compose up -d clinical-portal
+        docker compose --profile "$PROFILE" up -d clinical-portal
     fi
 fi
 
@@ -127,9 +218,9 @@ if [ "$all_healthy" = true ]; then
     echo "Services available at:"
     echo "  - Gateway API: http://localhost:8080"
     echo "  - Quality Measure API: http://localhost:8087"
-    echo "  - FHIR API: http://localhost:8081"
-    echo "  - CQL Engine API: http://localhost:8086"
-    [ "$2" == "--with-frontend" ] && echo "  - Clinical Portal: http://localhost:4200"
+    echo "  - FHIR API: http://localhost:8085"
+    echo "  - CQL Engine API: http://localhost:8081"
+    [ "$WITH_FRONTEND" = true ] && echo "  - Clinical Portal: http://localhost:4200"
     echo ""
     echo "View logs: docker compose logs -f [service-name]"
     echo "Stop all: docker compose down"

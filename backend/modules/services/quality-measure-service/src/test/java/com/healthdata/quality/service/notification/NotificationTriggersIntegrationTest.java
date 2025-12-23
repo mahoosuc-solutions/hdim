@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -73,7 +74,7 @@ class NotificationTriggersIntegrationTest {
     private ArgumentCaptor<GenericNotificationRequest> requestCaptor;
 
     private static final String TENANT_ID = "test-tenant";
-    private static final String PATIENT_ID = "Patient/test-123";
+    private static final UUID PATIENT_ID = UUID.fromString("55555555-6666-7777-8888-999999999999");
 
     @BeforeEach
     void setup() {
@@ -92,7 +93,7 @@ class NotificationTriggersIntegrationTest {
                 .thenReturn(successStatus);
 
         // Mock PatientNameService (lenient for all tests)
-        lenient().when(patientNameService.getPatientName(anyString()))
+        lenient().when(patientNameService.getPatientName(any(UUID.class)))
                 .thenReturn("John Doe");
 
         // Mock RecipientResolutionService (lenient for all tests)
@@ -110,7 +111,7 @@ class NotificationTriggersIntegrationTest {
                 .build();
 
         lenient().when(recipientResolutionService.resolveRecipients(
-                anyString(), anyString(), any(NotificationEntity.NotificationChannel.class),
+                anyString(), any(UUID.class), any(NotificationEntity.NotificationChannel.class),
                 any(NotificationEntity.NotificationSeverity.class)))
                 .thenReturn(List.of(mockRecipient));
     }

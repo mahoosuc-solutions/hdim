@@ -91,7 +91,7 @@ Includes the 1-minute demo plus these additional sections:
 **[Screen: Photo of founder or simple text on screen]**
 
 **Voiceover:**
-"I'm Aaron Bentley. I lost my mother to breast cancer at 54. Her cousins shared the same fate.
+"I'm Aaron Bentley. For too long, healthcare has lagged behind much of the world from an IT perspective. Why? It is costly to create complex software to answer hard questions and the sunk cost of existing software prevents people from changing solutions because it is too hard or it won't work like we want. I knew as an architect that if I could figure out to harness the ideas of Replit and Loveable to create enterprise platforms, that this mentiality would change because at that point we would be printing software solutions that work instead of doing development and testing that needed to be developed over months or years. I've proven that is not the case anymore by building out a suite of software solutions using AI and my process to printed enterprise platforms. I lost my mother to breast cancer at 54. Her cousins shared the same fate.
 
 I spent years in public health IT watching organizations struggle to afford tools that might have helped people like her. Epic charges $50,000 a month for quality measurement. That's more than some clinics' entire IT budget.
 

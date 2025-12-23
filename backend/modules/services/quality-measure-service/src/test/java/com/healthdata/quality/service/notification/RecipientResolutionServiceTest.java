@@ -14,6 +14,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,7 +36,7 @@ class RecipientResolutionServiceTest {
     private RecipientResolutionService service;
 
     private static final String TENANT_ID = "tenant-123";
-    private static final String PATIENT_ID = "patient-456";
+    private static final UUID PATIENT_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
     private static final String USER_ID_1 = "user-1";
     private static final String USER_ID_2 = "user-2";
 
@@ -248,6 +249,59 @@ class RecipientResolutionServiceTest {
         NotificationRecipient firstRecipient = recipients.get(0);
         assertThat(firstRecipient.isPrimary()).isTrue();
         assertThat(firstRecipient.getUserId()).isEqualTo(USER_ID_1);
+    }
+
+    @Test
+    void shouldResolveRecipientsForAllChannels() {
+        CareTeamMemberEntity member = createCareTeamMember(USER_ID_1, true);
+        NotificationPreferenceEntity pref = createPreference(USER_ID_1, "user1@example.com", "+15555551111");
+
+        when(careTeamRepository.findActiveByPatientIdAndTenantId(PATIENT_ID, TENANT_ID))
+            .thenReturn(List.of(member));
+        when(preferenceRepository.findByUserIdsAndTenantId(any(), eq(TENANT_ID)))
+            .thenReturn(List.of(pref));
+
+        var result = service.resolveRecipientsForAllChannels(
+            TENANT_ID, PATIENT_ID, NotificationEntity.NotificationSeverity.HIGH
+        );
+
+        assertThat(result).isNotEmpty();
+        assertThat(result.values().stream().allMatch(list -> !list.isEmpty())).isTrue();
+    }
+
+    @Test
+    void shouldSkipRecipientWhenContactMissing() {
+        CareTeamMemberEntity member = createCareTeamMember(USER_ID_1, true);
+        NotificationPreferenceEntity pref = createPreference(USER_ID_1, null, null);
+        pref.setEmailEnabled(true);
+
+        when(careTeamRepository.findActiveByPatientIdAndTenantId(PATIENT_ID, TENANT_ID))
+            .thenReturn(List.of(member));
+        when(preferenceRepository.findByUserIdsAndTenantId(any(), eq(TENANT_ID)))
+            .thenReturn(List.of(pref));
+
+        List<NotificationRecipient> recipients = service.resolveRecipients(
+            TENANT_ID, PATIENT_ID, NotificationEntity.NotificationChannel.EMAIL,
+            NotificationEntity.NotificationSeverity.HIGH
+        );
+
+        assertThat(recipients).isEmpty();
+    }
+
+    @Test
+    void shouldReturnPrimaryCareProviderWhenAvailable() {
+        CareTeamMemberEntity member = createCareTeamMember(USER_ID_1, true);
+        NotificationPreferenceEntity pref = createPreference(USER_ID_1, "primary@example.com", "+15555551111");
+
+        when(careTeamRepository.findPrimaryByPatientIdAndTenantId(PATIENT_ID, TENANT_ID))
+            .thenReturn(Optional.of(member));
+        when(preferenceRepository.findByUserIdAndTenantId(USER_ID_1, TENANT_ID))
+            .thenReturn(Optional.of(pref));
+
+        Optional<NotificationRecipient> recipient = service.getPrimaryCareProvider(TENANT_ID, PATIENT_ID);
+
+        assertThat(recipient).isPresent();
+        assertThat(recipient.get().getUserId()).isEqualTo(USER_ID_1);
     }
 
     private CareTeamMemberEntity createCareTeamMember(String userId, boolean isPrimary) {

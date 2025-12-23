@@ -86,8 +86,9 @@ export class BreadcrumbService {
     const params = route.snapshot.params;
     const queryParams = route.snapshot.queryParams;
 
+    const hasBreadcrumb = Object.prototype.hasOwnProperty.call(data, 'breadcrumb');
     // Get label from route data or use path segment
-    let label = data['breadcrumb'] || this.getLabelFromUrl(url);
+    let label = hasBreadcrumb ? data['breadcrumb'] : this.getLabelFromUrl(url);
 
     // Replace parameter placeholders with actual values
     if (params) {

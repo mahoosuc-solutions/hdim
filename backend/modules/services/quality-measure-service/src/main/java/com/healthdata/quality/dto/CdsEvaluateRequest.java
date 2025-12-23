@@ -1,6 +1,6 @@
 package com.healthdata.quality.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,8 +18,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CdsEvaluateRequest {
 
-    @NotBlank(message = "Patient ID is required")
-    private String patientId;
+    @NotNull(message = "Patient ID is required")
+    private UUID patientId;
 
     /**
      * Optional: Specific rule IDs to evaluate.

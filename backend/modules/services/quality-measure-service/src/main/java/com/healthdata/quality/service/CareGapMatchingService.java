@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Care Gap Matching Service
@@ -33,7 +34,7 @@ public class CareGapMatchingService {
      */
     public List<CareGapEntity> findMatchingCareGaps(
         String tenantId,
-        String patientId,
+        UUID patientId,
         FhirResourceEvent event
     ) {
         log.debug("Finding care gaps matching {} for patient {} in tenant {}",

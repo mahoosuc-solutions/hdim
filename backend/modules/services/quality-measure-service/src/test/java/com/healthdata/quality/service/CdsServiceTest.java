@@ -48,7 +48,7 @@ class CdsServiceTest {
     private CdsService service;
 
     private String tenantId;
-    private String patientId;
+    private UUID patientId;
     private UUID ruleId;
     private UUID recommendationId;
     private CdsRuleEntity testRule;
@@ -57,7 +57,7 @@ class CdsServiceTest {
     @BeforeEach
     void setUp() {
         tenantId = "test-tenant-123";
-        patientId = "patient-456";
+        patientId = UUID.fromString("cdcdcdcd-1111-2222-3333-444444444444");
         ruleId = UUID.randomUUID();
         recommendationId = UUID.randomUUID();
 
@@ -501,7 +501,7 @@ class CdsServiceTest {
         assertThat(response.getRulesEvaluated()).isEqualTo(1);
         assertThat(response.getRecommendationsGenerated()).isEqualTo(0);
         assertThat(response.getExistingRecommendationsSkipped()).isEqualTo(1);
-        verify(cqlEngineClient, never()).evaluateCql(anyString(), anyString(), anyString(), any());
+        verify(cqlEngineClient, never()).evaluateCql(anyString(), anyString(), any(UUID.class), any());
         verify(recommendationRepository, never()).save(any(CdsRecommendationEntity.class));
     }
 
@@ -560,6 +560,33 @@ class CdsServiceTest {
         assertThat(response.getRulesEvaluated()).isEqualTo(1);
         assertThat(response.getRecommendationsGenerated()).isEqualTo(0);
         verify(recommendationRepository, never()).save(any(CdsRecommendationEntity.class));
+    }
+
+    @Test
+    @DisplayName("evaluateRules() - Should treat blank CQL results as not triggered")
+    void evaluateRules_ShouldTreatBlankCqlResultsAsNotTriggered() throws Exception {
+        // Given
+        CdsEvaluateRequest request = CdsEvaluateRequest.builder()
+            .patientId(patientId)
+            .build();
+
+        when(ruleRepository.findByTenantIdAndActiveTrueOrderByPriorityAsc(tenantId))
+            .thenReturn(Collections.singletonList(testRule));
+        when(recommendationRepository.existsActiveRecommendation(eq(tenantId), eq(patientId), any()))
+            .thenReturn(false);
+        when(cqlEngineClient.evaluateCql(eq(tenantId), eq("DiabetesManagement"), eq(patientId), isNull()))
+            .thenReturn("   ");
+        when(recommendationRepository.findActiveRecommendations(tenantId, patientId))
+            .thenReturn(Collections.emptyList());
+
+        // When
+        CdsEvaluateResponse response = service.evaluateRules(tenantId, request);
+
+        // Then
+        assertThat(response.getRecommendationsGenerated()).isEqualTo(0);
+        verify(recommendationRepository, never()).save(any(CdsRecommendationEntity.class));
+        assertThat(response.getEvaluationDetails()).hasSize(1);
+        assertThat(response.getEvaluationDetails().get(0).getResult()).isEqualTo("NOT_TRIGGERED");
     }
 
     @Test
@@ -1134,7 +1161,7 @@ class CdsServiceTest {
 
         // Then
         assertThat(response.getRecommendationsGenerated()).isEqualTo(1); // Uses default evaluation
-        verify(cqlEngineClient, never()).evaluateCql(anyString(), anyString(), anyString(), any());
+        verify(cqlEngineClient, never()).evaluateCql(anyString(), anyString(), any(UUID.class), any());
     }
 
     @Test
@@ -1233,5 +1260,117 @@ class CdsServiceTest {
         assertThat(response.getRecommendationsByUrgency()).isNotNull();
         assertThat(response.getRecommendationsByUrgency()).containsKey("ROUTINE");
         assertThat(response.getRecommendationsByUrgency().get("ROUTINE")).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("getRecommendationCountsByUrgency() - Should return counts for each urgency")
+    void getRecommendationCountsByUrgency_ShouldReturnCounts() {
+        for (CdsRuleEntity.CdsUrgency urgency : CdsRuleEntity.CdsUrgency.values()) {
+            when(recommendationRepository.countActiveByUrgency(tenantId, patientId, urgency))
+                .thenReturn(2L);
+        }
+
+        Map<String, Long> counts = service.getRecommendationCountsByUrgency(tenantId, patientId);
+
+        assertThat(counts).hasSize(CdsRuleEntity.CdsUrgency.values().length);
+        assertThat(counts.get("ROUTINE")).isEqualTo(2L);
+    }
+
+    @Test
+    @DisplayName("getActiveRecommendationCount() - Should return active count")
+    void getActiveRecommendationCount_ShouldReturnCount() {
+        when(recommendationRepository.countActiveRecommendations(tenantId, patientId))
+            .thenReturn(5L);
+
+        Long count = service.getActiveRecommendationCount(tenantId, patientId);
+
+        assertThat(count).isEqualTo(5L);
+    }
+
+    @Test
+    @DisplayName("getOverdueRecommendations() - Should map overdue recommendations")
+    void getOverdueRecommendations_ShouldMapOverdueRecommendations() {
+        when(recommendationRepository.findOverdueRecommendations(eq(tenantId), eq(patientId), any(Instant.class)))
+            .thenReturn(List.of(testRecommendation));
+
+        List<CdsRecommendationDTO> overdue = service.getOverdueRecommendations(tenantId, patientId);
+
+        assertThat(overdue).hasSize(1);
+        assertThat(overdue.get(0).getId()).isEqualTo(testRecommendation.getId());
+    }
+
+    @Test
+    @DisplayName("evaluateRules() - Should ignore invalid categories")
+    void evaluateRules_ShouldIgnoreInvalidCategories() {
+        CdsEvaluateRequest request = CdsEvaluateRequest.builder()
+            .patientId(patientId)
+            .categories(List.of("invalid", "chronic_disease"))
+            .build();
+
+        when(ruleRepository.findByTenantIdAndCategoryAndActiveTrueOrderByPriorityAsc(
+            tenantId, CdsRuleEntity.CdsCategory.CHRONIC_DISEASE))
+            .thenReturn(List.of(testRule));
+        when(recommendationRepository.existsActiveRecommendation(eq(tenantId), eq(patientId), any()))
+            .thenReturn(false);
+        when(cqlEngineClient.evaluateCql(eq(tenantId), eq("DiabetesManagement"), eq(patientId), isNull()))
+            .thenReturn("{\"triggered\":true}");
+        when(recommendationRepository.save(any(CdsRecommendationEntity.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+        when(recommendationRepository.findActiveRecommendations(tenantId, patientId))
+            .thenReturn(Collections.emptyList());
+
+        CdsEvaluateResponse response = service.evaluateRules(tenantId, request);
+
+        assertThat(response.getRulesEvaluated()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("evaluateRules() - Should filter inactive or wrong-tenant rules by ID")
+    void evaluateRules_ShouldFilterInactiveOrWrongTenantRules() {
+        CdsRuleEntity inactiveRule = CdsRuleEntity.builder()
+            .id(UUID.randomUUID())
+            .tenantId(tenantId)
+            .ruleCode("RULE-INACTIVE")
+            .ruleName("Inactive Rule")
+            .category(CdsRuleEntity.CdsCategory.PREVENTIVE)
+            .priority(2)
+            .active(false)
+            .defaultUrgency(CdsRuleEntity.CdsUrgency.ROUTINE)
+            .createdAt(Instant.now())
+            .updatedAt(Instant.now())
+            .build();
+
+        CdsRuleEntity otherTenantRule = CdsRuleEntity.builder()
+            .id(UUID.randomUUID())
+            .tenantId("other-tenant")
+            .ruleCode("RULE-OTHER")
+            .ruleName("Other Tenant Rule")
+            .category(CdsRuleEntity.CdsCategory.PREVENTIVE)
+            .priority(3)
+            .active(true)
+            .defaultUrgency(CdsRuleEntity.CdsUrgency.ROUTINE)
+            .createdAt(Instant.now())
+            .updatedAt(Instant.now())
+            .build();
+
+        CdsEvaluateRequest request = CdsEvaluateRequest.builder()
+            .patientId(patientId)
+            .ruleIds(List.of(testRule.getId(), inactiveRule.getId(), otherTenantRule.getId()))
+            .build();
+
+        when(ruleRepository.findAllById(any()))
+            .thenReturn(List.of(testRule, inactiveRule, otherTenantRule));
+        when(recommendationRepository.existsActiveRecommendation(eq(tenantId), eq(patientId), any()))
+            .thenReturn(false);
+        when(cqlEngineClient.evaluateCql(eq(tenantId), eq("DiabetesManagement"), eq(patientId), isNull()))
+            .thenReturn("{\"triggered\":true}");
+        when(recommendationRepository.save(any(CdsRecommendationEntity.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+        when(recommendationRepository.findActiveRecommendations(tenantId, patientId))
+            .thenReturn(Collections.emptyList());
+
+        CdsEvaluateResponse response = service.evaluateRules(tenantId, request);
+
+        assertThat(response.getRulesEvaluated()).isEqualTo(1);
     }
 }

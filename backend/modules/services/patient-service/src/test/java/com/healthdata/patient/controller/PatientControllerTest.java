@@ -128,6 +128,20 @@ class PatientControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(content().contentTypeCompatibleWith("application/fhir+json"));
         }
+
+        @Test
+        @DisplayName("Should return inactive medications when onlyActive is false")
+        void shouldReturnInactiveMedications() throws Exception {
+            Bundle bundle = createEmptyBundle();
+            when(aggregationService.getMedications(TENANT_ID, PATIENT_ID, false))
+                    .thenReturn(bundle);
+
+            mockMvc.perform(get("/patient/medications")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .param("patient", PATIENT_ID)
+                            .param("onlyActive", "false"))
+                    .andExpect(status().isOk());
+        }
     }
 
     @Nested
@@ -148,6 +162,176 @@ class PatientControllerTest {
                             .param("patient", PATIENT_ID))
                     .andExpect(status().isOk())
                     .andExpect(content().contentTypeCompatibleWith("application/fhir+json"));
+        }
+
+        @Test
+        @DisplayName("Should return inactive conditions when onlyActive is false")
+        void shouldReturnInactiveConditions() throws Exception {
+            Bundle bundle = createEmptyBundle();
+            when(aggregationService.getConditions(TENANT_ID, PATIENT_ID, false))
+                    .thenReturn(bundle);
+
+            mockMvc.perform(get("/patient/conditions")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .param("patient", PATIENT_ID)
+                            .param("onlyActive", "false"))
+                    .andExpect(status().isOk());
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /patient/immunizations Tests")
+    class GetImmunizationsTests {
+
+        @Test
+        @DisplayName("Should return immunizations bundle")
+        void shouldReturnImmunizations() throws Exception {
+            Bundle bundle = createEmptyBundle();
+            when(aggregationService.getImmunizations(TENANT_ID, PATIENT_ID, false))
+                    .thenReturn(bundle);
+
+            mockMvc.perform(get("/patient/immunizations")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .param("patient", PATIENT_ID))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith("application/fhir+json"));
+        }
+
+        @Test
+        @DisplayName("Should return only completed immunizations when requested")
+        void shouldReturnCompletedImmunizations() throws Exception {
+            Bundle bundle = createEmptyBundle();
+            when(aggregationService.getImmunizations(TENANT_ID, PATIENT_ID, true))
+                    .thenReturn(bundle);
+
+            mockMvc.perform(get("/patient/immunizations")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .param("patient", PATIENT_ID)
+                            .param("onlyCompleted", "true"))
+                    .andExpect(status().isOk());
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /patient/procedures Tests")
+    class GetProceduresTests {
+
+        @Test
+        @DisplayName("Should return procedures bundle")
+        void shouldReturnProcedures() throws Exception {
+            Bundle bundle = createEmptyBundle();
+            when(aggregationService.getProcedures(TENANT_ID, PATIENT_ID))
+                    .thenReturn(bundle);
+
+            mockMvc.perform(get("/patient/procedures")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .param("patient", PATIENT_ID))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith("application/fhir+json"));
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /patient/vitals Tests")
+    class GetVitalsTests {
+
+        @Test
+        @DisplayName("Should return vitals bundle")
+        void shouldReturnVitals() throws Exception {
+            Bundle bundle = createEmptyBundle();
+            when(aggregationService.getVitalSigns(TENANT_ID, PATIENT_ID))
+                    .thenReturn(bundle);
+
+            mockMvc.perform(get("/patient/vitals")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .param("patient", PATIENT_ID))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith("application/fhir+json"));
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /patient/labs Tests")
+    class GetLabsTests {
+
+        @Test
+        @DisplayName("Should return labs bundle")
+        void shouldReturnLabs() throws Exception {
+            Bundle bundle = createEmptyBundle();
+            when(aggregationService.getLabResults(TENANT_ID, PATIENT_ID))
+                    .thenReturn(bundle);
+
+            mockMvc.perform(get("/patient/labs")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .param("patient", PATIENT_ID))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith("application/fhir+json"));
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /patient/encounters Tests")
+    class GetEncountersTests {
+
+        @Test
+        @DisplayName("Should return encounters bundle")
+        void shouldReturnEncounters() throws Exception {
+            Bundle bundle = createEmptyBundle();
+            when(aggregationService.getEncounters(TENANT_ID, PATIENT_ID, false))
+                    .thenReturn(bundle);
+
+            mockMvc.perform(get("/patient/encounters")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .param("patient", PATIENT_ID))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith("application/fhir+json"));
+        }
+
+        @Test
+        @DisplayName("Should return only active encounters when requested")
+        void shouldReturnActiveEncounters() throws Exception {
+            Bundle bundle = createEmptyBundle();
+            when(aggregationService.getEncounters(TENANT_ID, PATIENT_ID, true))
+                    .thenReturn(bundle);
+
+            mockMvc.perform(get("/patient/encounters")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .param("patient", PATIENT_ID)
+                            .param("onlyActive", "true"))
+                    .andExpect(status().isOk());
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /patient/care-plans Tests")
+    class GetCarePlansTests {
+
+        @Test
+        @DisplayName("Should return care plans bundle")
+        void shouldReturnCarePlans() throws Exception {
+            Bundle bundle = createEmptyBundle();
+            when(aggregationService.getCarePlans(TENANT_ID, PATIENT_ID, true))
+                    .thenReturn(bundle);
+
+            mockMvc.perform(get("/patient/care-plans")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .param("patient", PATIENT_ID))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith("application/fhir+json"));
+        }
+
+        @Test
+        @DisplayName("Should return inactive care plans when requested")
+        void shouldReturnInactiveCarePlans() throws Exception {
+            Bundle bundle = createEmptyBundle();
+            when(aggregationService.getCarePlans(TENANT_ID, PATIENT_ID, false))
+                    .thenReturn(bundle);
+
+            mockMvc.perform(get("/patient/care-plans")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .param("patient", PATIENT_ID)
+                            .param("onlyActive", "false"))
+                    .andExpect(status().isOk());
         }
     }
 

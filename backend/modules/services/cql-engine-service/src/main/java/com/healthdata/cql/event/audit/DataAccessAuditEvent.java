@@ -7,6 +7,7 @@ import lombok.extern.jackson.Jacksonized;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Audit event for patient data access.
@@ -55,7 +56,7 @@ public class DataAccessAuditEvent implements AuditEvent {
     // Data Access specific fields
 
     @JsonProperty("patientId")
-    String patientId;
+    UUID patientId;
 
     @JsonProperty("fhirResourceType")
     String fhirResourceType; // e.g., "Observation", "Condition"

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -20,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests patient-specific care team assignment queries
  */
 @DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
 @DisplayName("Care Team Assignment Repository Tests")
 class CareTeamAssignmentRepositoryTest {
@@ -28,7 +30,7 @@ class CareTeamAssignmentRepositoryTest {
     private CareTeamAssignmentRepository repository;
 
     private static final String TENANT_ID = "test-tenant";
-    private static final String PATIENT_ID = "patient-123";
+    private static final UUID PATIENT_ID = UUID.fromString("66666666-6666-6666-6666-666666666666");
     private static final String PROVIDER_ID = "provider-456";
 
     @BeforeEach
@@ -312,7 +314,7 @@ class CareTeamAssignmentRepositoryTest {
     void shouldFindAllPatientsAssignedToProvider() {
         // Given: Multiple patients assigned to same provider
         CareTeamAssignmentEntity patient1 = createCareTeamAssignment(
-            "patient-1",
+            UUID.fromString("11111111-1111-1111-1111-111111111111"),
             PROVIDER_ID,
             "primary-care-provider",
             1,
@@ -320,7 +322,7 @@ class CareTeamAssignmentRepositoryTest {
         );
 
         CareTeamAssignmentEntity patient2 = createCareTeamAssignment(
-            "patient-2",
+            UUID.fromString("22222222-2222-2222-2222-222222222222"),
             PROVIDER_ID,
             "primary-care-provider",
             1,
@@ -328,7 +330,7 @@ class CareTeamAssignmentRepositoryTest {
         );
 
         CareTeamAssignmentEntity otherProvider = createCareTeamAssignment(
-            "patient-3",
+            UUID.fromString("33333333-3333-3333-3333-333333333333"),
             "other-provider",
             "primary-care-provider",
             1,
@@ -347,7 +349,10 @@ class CareTeamAssignmentRepositoryTest {
         assertThat(assignments).hasSize(2);
         assertThat(assignments)
             .extracting(CareTeamAssignmentEntity::getPatientId)
-            .containsExactlyInAnyOrder("patient-1", "patient-2");
+            .containsExactlyInAnyOrder(
+                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                UUID.fromString("22222222-2222-2222-2222-222222222222")
+            );
     }
 
     @Test
@@ -355,7 +360,7 @@ class CareTeamAssignmentRepositoryTest {
     void shouldFindPatientsByProviderAndRole() {
         // Given: Provider assigned to patients in different roles
         CareTeamAssignmentEntity primary = createCareTeamAssignment(
-            "patient-1",
+            UUID.fromString("aaaaaaaa-1111-2222-3333-444444444444"),
             PROVIDER_ID,
             "primary-care-provider",
             1,
@@ -363,7 +368,7 @@ class CareTeamAssignmentRepositoryTest {
         );
 
         CareTeamAssignmentEntity specialist = createCareTeamAssignment(
-            "patient-2",
+            UUID.fromString("bbbbbbbb-1111-2222-3333-444444444444"),
             PROVIDER_ID,
             "specialist",
             1,
@@ -384,7 +389,8 @@ class CareTeamAssignmentRepositoryTest {
 
         // Then: Should return only primary care assignments
         assertThat(assignments).hasSize(1);
-        assertThat(assignments.get(0).getPatientId()).isEqualTo("patient-1");
+        assertThat(assignments.get(0).getPatientId())
+            .isEqualTo(UUID.fromString("aaaaaaaa-1111-2222-3333-444444444444"));
     }
 
     @Test
@@ -436,7 +442,7 @@ class CareTeamAssignmentRepositoryTest {
 
     // Helper method
     private CareTeamAssignmentEntity createCareTeamAssignment(
-        String patientId,
+        UUID patientId,
         String providerId,
         String role,
         int contactPriority,

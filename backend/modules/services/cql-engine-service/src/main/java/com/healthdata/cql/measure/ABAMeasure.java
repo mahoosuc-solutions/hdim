@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * ABA - Adult BMI Assessment (HEDIS)
@@ -73,7 +74,7 @@ public class ABAMeasure extends AbstractHedisMeasure {
 
     @Override
     @Cacheable(value = "hedisMeasures", key = "'ABA-' + #tenantId + '-' + #patientId")
-    public MeasureResult evaluate(String tenantId, String patientId) {
+    public MeasureResult evaluate(String tenantId, UUID patientId) {
         logger.info("Evaluating ABA measure for patient: {}", patientId);
 
         MeasureResult.MeasureResultBuilder resultBuilder = MeasureResult.builder()
@@ -208,7 +209,7 @@ public class ABAMeasure extends AbstractHedisMeasure {
     }
 
     @Override
-    public boolean isEligible(String tenantId, String patientId) {
+    public boolean isEligible(String tenantId, UUID patientId) {
         JsonNode patient = getPatientData(tenantId, patientId);
         if (patient == null) return false;
 
@@ -228,7 +229,7 @@ public class ABAMeasure extends AbstractHedisMeasure {
     /**
      * Calculate BMI from weight and height observations if direct BMI not available
      */
-    private Double calculateBMI(String tenantId, String patientId, String dateFilter) {
+    private Double calculateBMI(String tenantId, UUID patientId, String dateFilter) {
         try {
             // Get weight in kg
             JsonNode weightObs = getObservations(tenantId, patientId,

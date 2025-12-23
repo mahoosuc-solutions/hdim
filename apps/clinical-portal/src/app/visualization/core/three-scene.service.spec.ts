@@ -3,14 +3,18 @@ import { NgZone } from '@angular/core';
 import { ThreeSceneService, SceneConfig } from './three-scene.service';
 import * as THREE from 'three';
 
-jest.mock('three/examples/jsm/controls/OrbitControls.js', () => ({
-  OrbitControls: class {
-    enableDamping = false;
-    dampingFactor = 0;
-    update() {}
-    dispose() {}
-  },
-}));
+jest.mock('three/examples/jsm/controls/OrbitControls.js', () => {
+  const THREE = require('three');
+  return {
+    OrbitControls: class {
+      enableDamping = false;
+      dampingFactor = 0;
+      target = new THREE.Vector3();
+      update = jest.fn();
+      dispose = jest.fn();
+    },
+  };
+});
 
 jest.mock('three/examples/jsm/libs/stats.module.js', () => {
   const StatsMock = jest.fn().mockImplementation(() => {
@@ -367,14 +371,31 @@ describe('ThreeSceneService', () => {
 
       const controls = service.getControls();
       if (controls) {
-        jest.spyOn(controls, 'update');
-
         service.startAnimation();
         tick(16);
 
         expect(controls.update).toHaveBeenCalled();
       }
     }));
+
+    it('should stop animation when required objects are missing', () => {
+      const originalRenderer = (service as any).renderer;
+      const originalScene = (service as any).scene;
+      const originalCamera = (service as any).camera;
+
+      (service as any).renderer = undefined;
+      (service as any).scene = undefined;
+      (service as any).camera = undefined;
+      (service as any).isAnimating = true;
+
+      (service as any).animate();
+
+      expect((service as any).isAnimating).toBe(false);
+
+      (service as any).renderer = originalRenderer;
+      (service as any).scene = originalScene;
+      (service as any).camera = originalCamera;
+    });
   });
 
   describe('window resize handling', () => {
@@ -575,6 +596,41 @@ describe('ThreeSceneService', () => {
         service.unregisterAnimationCallback(callback);
       }).not.toThrow();
     });
+
+    it('should not fail resetting camera before init', () => {
+      expect(() => {
+        service.resetCamera();
+      }).not.toThrow();
+    });
+
+    it('should not fail toggling stats before init', () => {
+      expect(() => {
+        service.toggleStats(true);
+      }).not.toThrow();
+    });
+
+    it('should safely ignore resize without a container', () => {
+      (service as any).container = undefined;
+
+      expect(() => {
+        (service as any).onWindowResize();
+      }).not.toThrow();
+    });
+
+    it('should not start animation when renderer is missing', () => {
+      service.initScene(mockContainer);
+      (service as any).renderer = undefined;
+
+      service.startAnimation();
+
+      expect((service as any).isAnimating).toBe(false);
+    });
+
+    it('should stop animation safely when no frame is scheduled', () => {
+      expect(() => {
+        service.stopAnimation();
+      }).not.toThrow();
+    });
   });
 
   describe('NgZone integration', () => {
@@ -632,6 +688,29 @@ describe('ThreeSceneService', () => {
       expect(camera.position.x).toBe(100);
       expect(camera.position.y).toBe(200);
       expect(camera.position.z).toBe(300);
+    });
+
+    it('should reset camera and controls to default position', () => {
+      service.initScene(mockContainer, { enableOrbitControls: true });
+
+      const camera = service.getCamera();
+      camera.position.set(10, 20, 30);
+      const controls = service.getControls();
+      if (controls) {
+        controls.target.set(5, 5, 5);
+      }
+
+      service.resetCamera();
+
+      expect(camera.position.x).toBe(0);
+      expect(camera.position.y).toBe(80);
+      expect(camera.position.z).toBe(150);
+      if (controls) {
+        expect(controls.target.x).toBe(0);
+        expect(controls.target.y).toBe(0);
+        expect(controls.target.z).toBe(0);
+        expect(controls.update).toHaveBeenCalled();
+      }
     });
   });
 
@@ -691,6 +770,21 @@ describe('ThreeSceneService', () => {
 
       expect(directionalLight.shadow.mapSize.width).toBe(2048);
       expect(directionalLight.shadow.mapSize.height).toBe(2048);
+    });
+  });
+
+  describe('stats display', () => {
+    it('should toggle stats visibility', () => {
+      service.initScene(mockContainer, { enableStats: true });
+
+      const statsElement = mockContainer.querySelector('div');
+      expect(statsElement).toBeTruthy();
+
+      service.toggleStats(false);
+      expect(statsElement?.style.display).toBe('none');
+
+      service.toggleStats(true);
+      expect(statsElement?.style.display).toBe('block');
     });
   });
 });

@@ -1,0 +1,150 @@
+package com.healthdata.gateway.controller;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import jakarta.servlet.http.HttpServletRequest;
+import java.net.URI;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestTemplate;
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName("ApiGatewayController")
+class ApiGatewayControllerTest {
+
+    @Mock
+    private RestTemplate restTemplate;
+
+    @Captor
+    private ArgumentCaptor<HttpEntity<String>> entityCaptor;
+
+    @Captor
+    private ArgumentCaptor<URI> uriCaptor;
+
+    private ApiGatewayController controller;
+
+    @BeforeEach
+    void setUp() {
+        controller = new ApiGatewayController(restTemplate);
+        ReflectionTestUtils.setField(controller, "cqlEngineUrl", "http://cql");
+        ReflectionTestUtils.setField(controller, "qualityMeasureUrl", "http://qm");
+        ReflectionTestUtils.setField(controller, "fhirUrl", "http://fhir");
+        ReflectionTestUtils.setField(controller, "patientUrl", "http://patient");
+        ReflectionTestUtils.setField(controller, "careGapUrl", "http://care-gap");
+        ReflectionTestUtils.setField(controller, "agentBuilderUrl", "http://agent-builder");
+        ReflectionTestUtils.setField(controller, "consentUrl", "http://consent");
+        ReflectionTestUtils.setField(controller, "eventsUrl", "http://events");
+        ReflectionTestUtils.setField(controller, "agentRuntimeUrl", "http://agent-runtime");
+        ReflectionTestUtils.setField(controller, "qrdaExportUrl", "http://qrda");
+        ReflectionTestUtils.setField(controller, "hccUrl", "http://hcc");
+        ReflectionTestUtils.setField(controller, "ecrUrl", "http://ecr");
+        ReflectionTestUtils.setField(controller, "priorAuthUrl", "http://prior-auth");
+    }
+
+    @Test
+    @DisplayName("Should forward requests to configured services")
+    void shouldForwardRequests() {
+        when(restTemplate.exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class), eq(String.class)))
+            .thenReturn(ResponseEntity.ok().header("Connection", "close").body("ok"));
+
+        List<ResponseEntity<?>> responses = List.of(
+            controller.routeToCqlEngine(request("/api/cql/test", "GET"), null),
+            controller.routeToCqlEngineDirect(request("/cql-engine/test", "GET"), null),
+            controller.routeToQualityMeasure(request("/api/quality/test", "GET"), null),
+            controller.routeToQualityMeasureDirect(request("/quality-measure/test", "GET"), null),
+            controller.routeToFhir(request("/api/fhir/test", "GET"), null),
+            controller.routeToFhirDirect(request("/fhir/test", "GET"), null),
+            controller.routeToPatient(request("/api/patients/test", "GET"), null),
+            controller.routeToPatientDirect(request("/patient/test", "GET"), null),
+            controller.routeToCareGap(request("/api/care-gaps/test", "GET"), null),
+            controller.routeToCareGapDirect(request("/care-gap/test", "GET"), null),
+            controller.routeToConsent(request("/api/consent/test", "GET"), null),
+            controller.routeToConsentDirect(request("/consent/test", "GET"), null),
+            controller.routeToEvents(request("/api/events/test", "GET"), null),
+            controller.routeToEventsDirect(request("/events/test", "GET"), null),
+            controller.routeToAgentBuilder(request("/api/v1/agent-builder/test", "GET"), null),
+            controller.routeToAgentRuntimeTools(request("/api/v1/tools/test", "GET"), null),
+            controller.routeToAgentRuntimeProviders(request("/api/v1/providers/test", "GET"), null),
+            controller.routeToAgentRuntimeHealth(request("/api/v1/runtime/test", "GET"), null),
+            controller.routeToQrdaExport(request("/api/v1/qrda/test", "GET"), null),
+            controller.routeToHcc(request("/api/v1/hcc/test", "GET"), null),
+            controller.routeToEcr(request("/api/ecr/test", "GET"), null),
+            controller.routeToPriorAuth(request("/api/v1/prior-auth/test", "GET"), null),
+            controller.routeToProviderAccess(request("/api/v1/provider-access/test", "GET"), null)
+        );
+
+        assertThat(responses).allSatisfy(response -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK));
+        verify(restTemplate, times(responses.size()))
+            .exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class), eq(String.class));
+    }
+
+    @Test
+    @DisplayName("Should forward headers and filter hop-by-hop headers")
+    void shouldForwardHeaders() {
+        when(restTemplate.exchange(uriCaptor.capture(), any(HttpMethod.class), entityCaptor.capture(), eq(String.class)))
+            .thenReturn(ResponseEntity.ok()
+                .header("Connection", "close")
+                .header("Content-Type", "application/json")
+                .body("ok"));
+
+        ResponseEntity<?> response = controller.routeToCqlEngine(
+            request("/api/cql/test", "POST"),
+            "payload"
+        );
+
+        HttpHeaders requestHeaders = entityCaptor.getValue().getHeaders();
+        assertThat(requestHeaders.getFirst("Authorization")).isEqualTo("Bearer token");
+        assertThat(requestHeaders.getFirst("X-Tenant-ID")).isEqualTo("tenant-1");
+        assertThat(requestHeaders.getFirst("X-User-ID")).isEqualTo("user-1");
+        assertThat(requestHeaders.getFirst("Content-Type")).isEqualTo("application/json");
+        assertThat(requestHeaders.getFirst("Accept")).isEqualTo("application/json");
+
+        assertThat(uriCaptor.getValue().toString()).isEqualTo("http://cql/test?foo=bar");
+        assertThat(response.getHeaders().containsKey("Connection")).isFalse();
+        assertThat(response.getBody()).isEqualTo("ok");
+    }
+
+    @Test
+    @DisplayName("Should return error response when forwarding fails")
+    void shouldHandleForwardingErrors() {
+        doThrow(new RuntimeException("boom")).when(restTemplate)
+            .exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class), eq(String.class));
+
+        ResponseEntity<?> response = controller.routeToCqlEngine(request("/api/cql/test", "GET"), null);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(response.getBody()).toString().contains("Gateway error");
+    }
+
+    private HttpServletRequest request(String uri, String method) {
+        MockHttpServletRequest request = new MockHttpServletRequest(method, uri);
+        request.setQueryString("foo=bar");
+        request.addHeader("Authorization", "Bearer token");
+        request.addHeader("X-Tenant-ID", "tenant-1");
+        request.addHeader("X-User-ID", "user-1");
+        request.addHeader("Content-Type", "application/json");
+        request.addHeader("Accept", "application/json");
+        request.addHeader("Connection", "keep-alive");
+        return request;
+    }
+}

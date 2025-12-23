@@ -21,7 +21,7 @@ public interface ChronicDiseaseMonitoringRepository extends JpaRepository<Chroni
      */
     Optional<ChronicDiseaseMonitoringEntity> findByTenantIdAndPatientIdAndDiseaseCode(
         String tenantId,
-        String patientId,
+        UUID patientId,
         String diseaseCode
     );
 
@@ -30,7 +30,7 @@ public interface ChronicDiseaseMonitoringRepository extends JpaRepository<Chroni
      */
     List<ChronicDiseaseMonitoringEntity> findByTenantIdAndPatientIdOrderByMonitoredAtDesc(
         String tenantId,
-        String patientId
+        UUID patientId
     );
 
     /**

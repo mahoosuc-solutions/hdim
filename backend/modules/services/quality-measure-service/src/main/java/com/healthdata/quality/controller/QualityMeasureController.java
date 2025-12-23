@@ -9,6 +9,7 @@ import com.healthdata.quality.service.PopulationCalculationService;
 import com.healthdata.quality.service.QualityReportService;
 import com.healthdata.quality.service.ReportExportService;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +47,7 @@ public class QualityMeasureController {
     @PostMapping(value = "/calculate", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<QualityMeasureResultDTO> calculateMeasure(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @RequestParam("patient") @NotBlank(message = "Patient ID is required") String patientId,
+            @RequestParam("patient") @NotNull(message = "Patient ID is required") UUID patientId,
             @RequestParam("measure") @NotBlank(message = "Measure ID is required") String measureId,
             @RequestParam(value = "createdBy", defaultValue = "system") String createdBy
     ) {
@@ -60,11 +61,11 @@ public class QualityMeasureController {
     @GetMapping(value = "/results", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<QualityMeasureResultDTO>> getPatientResults(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @RequestParam(value = "patient", required = false) String patientId,
+            @RequestParam(value = "patient", required = false) UUID patientId,
             @RequestParam(value = "page", required = false, defaultValue = "0") @PositiveOrZero Integer page,
             @RequestParam(value = "size", required = false, defaultValue = "20") @PositiveOrZero Integer size
     ) {
-        if (patientId != null && !patientId.isBlank()) {
+        if (patientId != null) {
             log.info("GET /quality-measure/results - patient: {}", patientId);
             List<QualityMeasureResultEntity> results = calculationService.getPatientMeasureResults(tenantId, patientId);
             List<QualityMeasureResultDTO> dtos = QualityMeasureResultMapper.toDTOList(results);
@@ -81,7 +82,7 @@ public class QualityMeasureController {
     @GetMapping(value = "/score", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MeasureCalculationService.QualityScore> getQualityScore(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @RequestParam("patient") @NotBlank(message = "Patient ID is required") String patientId
+            @RequestParam("patient") @NotNull(message = "Patient ID is required") UUID patientId
     ) {
         log.info("GET /quality-measure/score - patient: {}", patientId);
         return ResponseEntity.ok(calculationService.getQualityScore(tenantId, patientId));
@@ -91,7 +92,7 @@ public class QualityMeasureController {
     @GetMapping(value = "/report/patient", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<QualityReportService.QualityReport> getPatientQualityReport(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @RequestParam("patient") @NotBlank(message = "Patient ID is required") String patientId
+            @RequestParam("patient") @NotNull(message = "Patient ID is required") UUID patientId
     ) {
         log.info("GET /quality-measure/report/patient - patient: {}", patientId);
         return ResponseEntity.ok(reportService.getPatientQualityReport(tenantId, patientId));
@@ -307,7 +308,7 @@ public class QualityMeasureController {
     @PostMapping(value = "/report/patient/save", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SavedReportEntity> savePatientReport(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @RequestParam("patient") @NotBlank(message = "Patient ID is required") String patientId,
+            @RequestParam("patient") @NotNull(message = "Patient ID is required") UUID patientId,
             @RequestParam("name") @NotBlank(message = "Report name is required") String reportName,
             @RequestParam(value = "createdBy", defaultValue = "system") String createdBy
     ) {

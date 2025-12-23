@@ -22,6 +22,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -56,7 +57,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 )
 @Import(NotificationTestConfiguration.class)
 @ActiveProfiles("test")
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @DisplayName("Notification System End-to-End Tests")
 class NotificationEndToEndTest {
 
@@ -69,7 +70,7 @@ class NotificationEndToEndTest {
             .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("test")
-            .withReuse(true); // Reuse container across test runs for speed
+            .withStartupTimeout(Duration.ofMinutes(3));
 
     /**
      * Configure Spring datasource to use the Testcontainers PostgreSQL instance
@@ -120,7 +121,7 @@ class NotificationEndToEndTest {
     private MentalHealthAssessmentRepository mentalHealthAssessmentRepository;
 
     private static final String TENANT_ID = "test-tenant";
-    private static final String PATIENT_ID = "patient-e2e-001";
+    private static final UUID PATIENT_ID = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 
     @BeforeEach
     void setup() {
@@ -204,7 +205,7 @@ class NotificationEndToEndTest {
         // Given: LOW priority care gap due in 30 days
         CareGapEntity careGap = CareGapEntity.builder()
                 .tenantId(TENANT_ID)
-                .patientId("patient-low-priority")
+                .patientId(UUID.randomUUID())
                 .category(CareGapEntity.GapCategory.PREVENTIVE_CARE)
                 .gapType("routine-checkup")
                 .title("Routine Annual Checkup")
@@ -490,7 +491,7 @@ class NotificationEndToEndTest {
             final int index = i;
             threads[i] = new Thread(() -> {
                 MentalHealthAssessmentRequest request = MentalHealthAssessmentRequest.builder()
-                        .patientId("patient-concurrent-" + index)
+                        .patientId(UUID.randomUUID())
                         .assessmentType("PHQ-9")
                         .assessedBy("Dr. Thread-" + index)
                         .assessmentDate(Instant.now())

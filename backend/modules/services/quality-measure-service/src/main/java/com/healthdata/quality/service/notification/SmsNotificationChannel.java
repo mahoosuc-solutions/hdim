@@ -265,9 +265,10 @@ public class SmsNotificationChannel {
         variables.put("alertMessage", alert.getMessage());
 
         // Patient information - fetch from FHIR via PatientNameService
+        String patientId = alert.getPatientId() != null ? alert.getPatientId().toString() : null;
         variables.put("patientName", patientNameService.getPatientName(alert.getPatientId()));
-        variables.put("mrn", alert.getPatientId());
-        variables.put("patientId", alert.getPatientId());
+        variables.put("mrn", patientId);
+        variables.put("patientId", patientId);
 
         // Timestamp (convert Instant to LocalDateTime for formatting)
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -280,7 +281,7 @@ public class SmsNotificationChannel {
         variables.put("facilityName", "HealthData Clinical System");
 
         // Action URL - link to patient detail page
-        variables.put("actionUrl", "https://healthdata-in-motion.com/patients/" + alert.getPatientId());
+        variables.put("actionUrl", "https://healthdata-in-motion.com/patients/" + patientId);
 
         return variables;
     }

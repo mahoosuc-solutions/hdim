@@ -25,7 +25,7 @@ public interface HealthScoreRepository extends JpaRepository<HealthScoreEntity, 
            "ORDER BY h.calculatedAt DESC LIMIT 1")
     Optional<HealthScoreEntity> findLatestByPatientId(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId
+        @Param("patientId") UUID patientId
     );
 
     /**
@@ -35,7 +35,7 @@ public interface HealthScoreRepository extends JpaRepository<HealthScoreEntity, 
            "ORDER BY h.calculatedAt DESC")
     List<HealthScoreEntity> findByPatientIdOrderByCalculatedAtDesc(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId
+        @Param("patientId") UUID patientId
     );
 
     /**
@@ -57,7 +57,7 @@ public interface HealthScoreRepository extends JpaRepository<HealthScoreEntity, 
            "ORDER BY h.calculatedAt DESC")
     List<HealthScoreEntity> findByPatientIdAndDateRange(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("startDate") Instant startDate,
         @Param("endDate") Instant endDate
     );

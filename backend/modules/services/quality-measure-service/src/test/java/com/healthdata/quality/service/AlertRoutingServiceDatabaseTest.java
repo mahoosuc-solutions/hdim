@@ -42,7 +42,7 @@ class AlertRoutingServiceDatabaseTest {
     private CareTeamAssignmentRepository careTeamRepository;
 
     private static final String TENANT_ID = "test-tenant";
-    private static final String PATIENT_ID = "patient-123";
+    private static final UUID PATIENT_ID = UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd");
 
     @BeforeEach
     void setUp() {
@@ -492,7 +492,7 @@ class AlertRoutingServiceDatabaseTest {
     }
 
     private CareTeamAssignmentEntity createCareTeamAssignment(
-        String patientId,
+        UUID patientId,
         String providerId,
         String role,
         String providerName,

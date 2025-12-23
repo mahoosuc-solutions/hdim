@@ -197,6 +197,71 @@ describe('FilterPanelComponent', () => {
     });
   });
 
+  describe('Filter value formatting', () => {
+    beforeEach(() => {
+      component.filters = [
+        {
+          key: 'status',
+          label: 'Status',
+          type: 'select',
+          options: [{ label: 'Active', value: 'active' }]
+        },
+        {
+          key: 'date',
+          label: 'Date Range',
+          type: 'date-range'
+        },
+        {
+          key: 'amount',
+          label: 'Amount',
+          type: 'number-range'
+        }
+      ];
+      component.ngOnInit();
+    });
+
+    it('formats select values and falls back to raw value', () => {
+      component.appliedFilters = { status: 'active' };
+      let chips = component.getActiveFilterChips();
+      expect(chips[0].value).toBe('Active');
+
+      component.appliedFilters = { status: 'unknown' };
+      chips = component.getActiveFilterChips();
+      expect(chips[0].value).toBe('unknown');
+    });
+
+    it('formats date ranges for start and end values', () => {
+      const start = new Date('2024-01-01T00:00:00Z');
+      const end = new Date('2024-02-01T00:00:00Z');
+
+      component.appliedFilters = { date: { start, end } };
+      let chips = component.getActiveFilterChips();
+      expect(chips[0].value).toContain('-');
+
+      component.appliedFilters = { date: { start } };
+      chips = component.getActiveFilterChips();
+      expect(chips[0].value).toContain('From');
+
+      component.appliedFilters = { date: { end } };
+      chips = component.getActiveFilterChips();
+      expect(chips[0].value).toContain('To');
+    });
+
+    it('formats number ranges for min and max values', () => {
+      component.appliedFilters = { amount: { min: 10, max: 20 } };
+      let chips = component.getActiveFilterChips();
+      expect(chips[0].value).toBe('10 - 20');
+
+      component.appliedFilters = { amount: { min: 5 } };
+      chips = component.getActiveFilterChips();
+      expect(chips[0].value).toBe('Min: 5');
+
+      component.appliedFilters = { amount: { max: 30 } };
+      chips = component.getActiveFilterChips();
+      expect(chips[0].value).toBe('Max: 30');
+    });
+  });
+
   describe('Remove chip', () => {
     beforeEach(() => {
       component.filters = mockFilters;
@@ -221,6 +286,10 @@ describe('FilterPanelComponent', () => {
 
       expect(component.filterChange.emit).toHaveBeenCalled();
     });
+  });
+
+  it('tracks filters by key', () => {
+    expect(component.trackByKey(0, mockFilters[0])).toBe('name');
   });
 
   describe('Accessibility', () => {

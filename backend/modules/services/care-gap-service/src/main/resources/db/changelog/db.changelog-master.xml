@@ -9,5 +9,6 @@
     <include file="db/changelog/0002-create-care-gap-recommendations-table.xml"/>
     <include file="db/changelog/0003-create-care-gap-closures-table.xml"/>
     <include file="db/changelog/0004-update-care-gaps-table.xml"/>
+    <include file="db/changelog/0005-add-care-gaps-extended-fields.xml"/>
 
 </databaseChangeLog>

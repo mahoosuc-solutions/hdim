@@ -3,6 +3,7 @@ package com.healthdata.consent.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.consent.persistence.ConsentEntity;
 import com.healthdata.consent.persistence.ConsentRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -12,6 +13,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.time.LocalDate;
@@ -141,6 +145,28 @@ class ConsentServiceTest {
         }
 
         @Test
+        @DisplayName("Should throw when valid from date is missing")
+        void shouldThrowWhenValidFromMissing() {
+            ConsentEntity consent = createValidConsent();
+            consent.setValidFrom(null);
+
+            assertThatThrownBy(() -> consentService.createConsent(TENANT_ID, consent, CREATED_BY))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Valid from");
+        }
+
+        @Test
+        @DisplayName("Should throw when consent date is missing")
+        void shouldThrowWhenConsentDateMissing() {
+            ConsentEntity consent = createValidConsent();
+            consent.setConsentDate(null);
+
+            assertThatThrownBy(() -> consentService.createConsent(TENANT_ID, consent, CREATED_BY))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Consent date");
+        }
+
+        @Test
         @DisplayName("Should publish consent created event")
         void shouldPublishConsentCreatedEvent() {
             // Given
@@ -158,6 +184,38 @@ class ConsentServiceTest {
 
             // Then
             verify(kafkaTemplate).send(eq("consent.created"), anyString(), anyString());
+        }
+
+        @Test
+        @DisplayName("Should swallow serialization errors when publishing events")
+        void shouldSwallowSerializationErrors() throws Exception {
+            ObjectMapper failingMapper = mock(ObjectMapper.class);
+            ConsentService serviceWithFailingMapper = new ConsentService(consentRepository, kafkaTemplate, failingMapper);
+            ConsentEntity consent = createValidConsent();
+            consent.setId(UUID.randomUUID());
+
+            when(consentRepository.save(any(ConsentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(failingMapper.writeValueAsString(any(ConsentEntity.class)))
+                    .thenThrow(new JsonProcessingException("boom") { });
+
+            ConsentEntity result = serviceWithFailingMapper.createConsent(TENANT_ID, consent, CREATED_BY);
+
+            assertThat(result).isNotNull();
+            verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
+        }
+
+        @Test
+        @DisplayName("Should swallow Kafka errors when publishing events")
+        void shouldSwallowKafkaErrors() throws Exception {
+            ConsentEntity consent = createValidConsent();
+            consent.setId(UUID.randomUUID());
+            when(consentRepository.save(any(ConsentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(kafkaTemplate.send(anyString(), anyString(), anyString()))
+                    .thenThrow(new RuntimeException("kafka down"));
+
+            ConsentEntity result = consentService.createConsent(TENANT_ID, consent, CREATED_BY);
+
+            assertThat(result).isNotNull();
         }
     }
 
@@ -373,6 +431,83 @@ class ConsentServiceTest {
             assertThat(result).hasSize(1);
             assertThat(result.get(0).getStatus()).isEqualTo("active");
         }
+
+        @Test
+        @DisplayName("Should return active consents for patient and scope")
+        void shouldReturnActiveConsentsForPatientAndScope() {
+            ConsentEntity activeConsent = createValidConsent();
+            when(consentRepository.findActiveConsentsByPatientAndScope(eq(TENANT_ID), eq(PATIENT_ID), eq("read"), any(LocalDate.class)))
+                    .thenReturn(List.of(activeConsent));
+
+            List<ConsentEntity> result = consentService.getActiveConsentsByPatientAndScope(TENANT_ID, PATIENT_ID, "read");
+
+            assertThat(result).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("Should return active consents for patient and category")
+        void shouldReturnActiveConsentsForPatientAndCategory() {
+            ConsentEntity activeConsent = createValidConsent();
+            when(consentRepository.findActiveConsentsByPatientAndCategory(eq(TENANT_ID), eq(PATIENT_ID), eq("treatment"), any(LocalDate.class)))
+                    .thenReturn(List.of(activeConsent));
+
+            List<ConsentEntity> result = consentService.getActiveConsentsByPatientAndCategory(TENANT_ID, PATIENT_ID, "treatment");
+
+            assertThat(result).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("Should return active consents for patient and data class")
+        void shouldReturnActiveConsentsForPatientAndDataClass() {
+            ConsentEntity activeConsent = createValidConsent();
+            when(consentRepository.findActiveConsentsByPatientAndDataClass(eq(TENANT_ID), eq(PATIENT_ID), eq("mental-health"), any(LocalDate.class)))
+                    .thenReturn(List.of(activeConsent));
+
+            List<ConsentEntity> result = consentService.getActiveConsentsByPatientAndDataClass(TENANT_ID, PATIENT_ID, "mental-health");
+
+            assertThat(result).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("Should return revoked consents for patient")
+        void shouldReturnRevokedConsentsForPatient() {
+            ConsentEntity revokedConsent = createValidConsent();
+            revokedConsent.setStatus("revoked");
+            when(consentRepository.findRevokedConsentsByPatient(eq(TENANT_ID), eq(PATIENT_ID)))
+                    .thenReturn(List.of(revokedConsent));
+
+            List<ConsentEntity> result = consentService.getRevokedConsentsByPatient(TENANT_ID, PATIENT_ID);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).getStatus()).isEqualTo("revoked");
+        }
+
+        @Test
+        @DisplayName("Should return expired consents for patient")
+        void shouldReturnExpiredConsentsForPatient() {
+            ConsentEntity expiredConsent = createValidConsent();
+            expiredConsent.setStatus("expired");
+            when(consentRepository.findExpiredConsentsByPatient(eq(TENANT_ID), eq(PATIENT_ID), any(LocalDate.class)))
+                    .thenReturn(List.of(expiredConsent));
+
+            List<ConsentEntity> result = consentService.getExpiredConsentsByPatient(TENANT_ID, PATIENT_ID);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).getStatus()).isEqualTo("expired");
+        }
+
+        @Test
+        @DisplayName("Should return paginated consents for patient")
+        void shouldReturnPaginatedConsentsForPatient() {
+            ConsentEntity consent = createValidConsent();
+            Page<ConsentEntity> page = new PageImpl<>(List.of(consent));
+            when(consentRepository.findByTenantIdAndPatientIdOrderByConsentDateDesc(eq(TENANT_ID), eq(PATIENT_ID), any(Pageable.class)))
+                    .thenReturn(page);
+
+            Page<ConsentEntity> result = consentService.getConsentsByPatient(TENANT_ID, PATIENT_ID, Pageable.unpaged());
+
+            assertThat(result.getContent()).hasSize(1);
+        }
     }
 
     @Nested
@@ -529,6 +664,76 @@ class ConsentServiceTest {
             // Then
             assertThat(result.isPermitted()).isTrue();
         }
+
+        @Test
+        @DisplayName("Should deny access when scope does not match")
+        void shouldDenyAccessWhenScopeMismatch() {
+            ConsentEntity consent = createValidConsent();
+            consent.setProvisionType("permit");
+            consent.setScope("write");
+            consent.setCategory("treatment");
+
+            when(consentRepository.findActiveConsentsByPatient(eq(TENANT_ID), eq(PATIENT_ID), any(LocalDate.class)))
+                    .thenReturn(List.of(consent));
+
+            ConsentService.ConsentValidationResult result = consentService.validateDataAccess(
+                    TENANT_ID, PATIENT_ID, "read", "treatment", null, null);
+
+            assertThat(result.isPermitted()).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should deny access when category does not match")
+        void shouldDenyAccessWhenCategoryMismatch() {
+            ConsentEntity consent = createValidConsent();
+            consent.setProvisionType("permit");
+            consent.setScope("read");
+            consent.setCategory("research");
+
+            when(consentRepository.findActiveConsentsByPatient(eq(TENANT_ID), eq(PATIENT_ID), any(LocalDate.class)))
+                    .thenReturn(List.of(consent));
+
+            ConsentService.ConsentValidationResult result = consentService.validateDataAccess(
+                    TENANT_ID, PATIENT_ID, "read", "treatment", null, null);
+
+            assertThat(result.isPermitted()).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should deny access when data class does not match")
+        void shouldDenyAccessWhenDataClassMismatch() {
+            ConsentEntity consent = createValidConsent();
+            consent.setProvisionType("permit");
+            consent.setScope("read");
+            consent.setCategory("treatment");
+            consent.setDataClass("mental-health");
+
+            when(consentRepository.findActiveConsentsByPatient(eq(TENANT_ID), eq(PATIENT_ID), any(LocalDate.class)))
+                    .thenReturn(List.of(consent));
+
+            ConsentService.ConsentValidationResult result = consentService.validateDataAccess(
+                    TENANT_ID, PATIENT_ID, "read", "treatment", "hiv", null);
+
+            assertThat(result.isPermitted()).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should deny access when authorized party does not match")
+        void shouldDenyAccessWhenAuthorizedPartyMismatch() {
+            ConsentEntity consent = createValidConsent();
+            consent.setProvisionType("permit");
+            consent.setScope("read");
+            consent.setCategory("treatment");
+            consent.setAuthorizedPartyId("org-123");
+
+            when(consentRepository.findActiveConsentsByPatient(eq(TENANT_ID), eq(PATIENT_ID), any(LocalDate.class)))
+                    .thenReturn(List.of(consent));
+
+            ConsentService.ConsentValidationResult result = consentService.validateDataAccess(
+                    TENANT_ID, PATIENT_ID, "read", "treatment", null, "org-999");
+
+            assertThat(result.isPermitted()).isFalse();
+        }
     }
 
     @Nested
@@ -550,6 +755,31 @@ class ConsentServiceTest {
 
             // Then
             assertThat(result).hasSize(1);
+        }
+    }
+
+    @Nested
+    @DisplayName("Process Expired Consents Tests")
+    class ProcessExpiredConsentsTests {
+
+        @Test
+        @DisplayName("Should expire and publish events for expired consents")
+        void shouldProcessExpiredConsents() {
+            ConsentEntity expired = createValidConsent();
+            expired.setId(UUID.randomUUID());
+            expired.setStatus("active");
+
+            when(consentRepository.findExpiredConsentsByPatient(eq(TENANT_ID), isNull(), any(LocalDate.class)))
+                    .thenReturn(List.of(expired));
+            when(consentRepository.save(any(ConsentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(kafkaTemplate.send(anyString(), anyString(), anyString()))
+                    .thenReturn(CompletableFuture.completedFuture(null));
+
+            int count = consentService.processExpiredConsents(TENANT_ID);
+
+            assertThat(count).isEqualTo(1);
+            assertThat(expired.getStatus()).isEqualTo("expired");
+            verify(kafkaTemplate).send(eq("consent.expired"), anyString(), anyString());
         }
     }
 

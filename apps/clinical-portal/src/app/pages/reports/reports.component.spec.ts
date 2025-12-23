@@ -7,6 +7,7 @@ import { EvaluationService } from '../../services/evaluation.service';
 import { ToastService } from '../../services/toast.service';
 import { SavedReport } from '../../models/quality-result.model';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { CSVHelper } from '../../utils/csv-helper';
 
 describe('ReportsComponent (TDD)', () => {
   let component: ReportsComponent;
@@ -237,6 +238,251 @@ describe('ReportsComponent (TDD)', () => {
 
       component.filterReports(null);
       expect(component.selectedReportType()).toBeNull();
+    });
+  });
+
+  describe('Report Actions', () => {
+    it('generates patient report after patient selection', async () => {
+      const dialogRef = { afterClosed: jest.fn().mockReturnValue(of('patient-123')) };
+      mockDialog.open.mockReturnValue(dialogRef as unknown as MatDialogRef<unknown>);
+      mockEvaluationService.savePatientReport.mockReturnValue(of(mockSavedReports[0]));
+      mockEvaluationService.getSavedReports.mockReturnValue(of([]));
+      jest.spyOn(component, 'loadSavedReports').mockImplementation(() => undefined);
+
+      (component as any).dialog = mockDialog;
+      await component.onGeneratePatientReport();
+
+      expect(mockEvaluationService.savePatientReport).toHaveBeenCalled();
+      expect(mockToast.success).toHaveBeenCalledWith('Patient report generated successfully');
+      expect(component.selectedTabIndex).toBe(1);
+    });
+
+    it('does nothing when patient selection is cancelled', async () => {
+      const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(null)) };
+      mockDialog.open.mockReturnValue(dialogRef as unknown as MatDialogRef<unknown>);
+      (component as any).dialog = mockDialog;
+
+      await component.onGeneratePatientReport();
+
+      expect(mockEvaluationService.savePatientReport).not.toHaveBeenCalled();
+    });
+
+    it('handles patient report generation error', async () => {
+      const dialogRef = { afterClosed: jest.fn().mockReturnValue(of('patient-123')) };
+      mockDialog.open.mockReturnValue(dialogRef as unknown as MatDialogRef<unknown>);
+      mockEvaluationService.savePatientReport.mockReturnValue(
+        throwError(() => new Error('fail'))
+      );
+      (component as any).dialog = mockDialog;
+
+      await component.onGeneratePatientReport();
+
+      expect(mockToast.error).toHaveBeenCalledWith('Failed to generate patient report');
+      expect(component.isGeneratingPatientReport()).toBe(false);
+    });
+
+    it('generates population report after year selection', async () => {
+      const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(2024)) };
+      mockDialog.open.mockReturnValue(dialogRef as unknown as MatDialogRef<unknown>);
+      mockEvaluationService.savePopulationReport.mockReturnValue(of(mockSavedReports[1]));
+      mockEvaluationService.getSavedReports.mockReturnValue(of([]));
+      jest.spyOn(component, 'loadSavedReports').mockImplementation(() => undefined);
+
+      (component as any).dialog = mockDialog;
+      await component.onGeneratePopulationReport();
+
+      expect(mockEvaluationService.savePopulationReport).toHaveBeenCalled();
+      expect(mockToast.success).toHaveBeenCalledWith('Population report generated successfully');
+      expect(component.selectedTabIndex).toBe(1);
+    });
+
+    it('does nothing when year selection is cancelled', async () => {
+      const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(null)) };
+      mockDialog.open.mockReturnValue(dialogRef as unknown as MatDialogRef<unknown>);
+      (component as any).dialog = mockDialog;
+
+      await component.onGeneratePopulationReport();
+
+      expect(mockEvaluationService.savePopulationReport).not.toHaveBeenCalled();
+    });
+
+    it('handles population report generation error', async () => {
+      const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(2024)) };
+      mockDialog.open.mockReturnValue(dialogRef as unknown as MatDialogRef<unknown>);
+      mockEvaluationService.savePopulationReport.mockReturnValue(
+        throwError(() => new Error('fail'))
+      );
+      (component as any).dialog = mockDialog;
+
+      await component.onGeneratePopulationReport();
+
+      expect(mockToast.error).toHaveBeenCalledWith('Failed to generate population report');
+      expect(component.isGeneratingPopulationReport()).toBe(false);
+    });
+
+    it('exports report to CSV and Excel', () => {
+      mockEvaluationService.exportAndDownloadReport.mockReturnValue(of(void 0));
+
+      component.onExportCsv(mockSavedReports[0]);
+      component.onExportExcel(mockSavedReports[0]);
+
+      expect(mockToast.success).toHaveBeenCalledWith('Report exported to CSV');
+      expect(mockToast.success).toHaveBeenCalledWith('Report exported to Excel');
+    });
+
+    it('handles export errors', () => {
+      mockEvaluationService.exportAndDownloadReport.mockReturnValue(
+        throwError(() => new Error('export failed'))
+      );
+
+      component.onExportCsv(mockSavedReports[0]);
+
+      expect(mockToast.error).toHaveBeenCalledWith('Failed to export report to CSV');
+    });
+
+    it('handles Excel export errors', () => {
+      mockEvaluationService.exportAndDownloadReport.mockReturnValue(
+        throwError(() => new Error('export failed'))
+      );
+
+      component.onExportExcel(mockSavedReports[0]);
+
+      expect(mockToast.error).toHaveBeenCalledWith('Failed to export report to Excel');
+    });
+
+    it('deletes a report after confirmation', () => {
+      const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(true)) };
+      mockDialog.open.mockReturnValue(dialogRef as unknown as MatDialogRef<unknown>);
+      mockEvaluationService.deleteSavedReport.mockReturnValue(of(void 0));
+      jest.spyOn(component, 'loadSavedReports').mockImplementation(() => undefined);
+
+      (component as any).dialog = mockDialog;
+      component.onDeleteReport(mockSavedReports[0]);
+
+      expect(mockEvaluationService.deleteSavedReport).toHaveBeenCalledWith('report-1');
+      expect(mockToast.success).toHaveBeenCalledWith('Report deleted successfully');
+    });
+
+    it('does not delete report when confirmation is cancelled', () => {
+      const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(false)) };
+      mockDialog.open.mockReturnValue(dialogRef as unknown as MatDialogRef<unknown>);
+      (component as any).dialog = mockDialog;
+
+      component.onDeleteReport(mockSavedReports[0]);
+
+      expect(mockEvaluationService.deleteSavedReport).not.toHaveBeenCalled();
+    });
+
+    it('handles delete report errors', () => {
+      const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(true)) };
+      mockDialog.open.mockReturnValue(dialogRef as unknown as MatDialogRef<unknown>);
+      mockEvaluationService.deleteSavedReport.mockReturnValue(
+        throwError(() => new Error('fail'))
+      );
+      (component as any).dialog = mockDialog;
+
+      component.onDeleteReport(mockSavedReports[0]);
+
+      expect(mockToast.error).toHaveBeenCalledWith('Failed to delete report');
+    });
+  });
+
+  describe('Selection helpers', () => {
+    beforeEach(() => {
+      component.savedReports.set([...mockSavedReports]);
+      component.dataSource.data = [...mockSavedReports];
+    });
+
+    it('tracks selection and labels', () => {
+      expect(component.isAllSelected()).toBe(false);
+      expect(component.checkboxLabel()).toContain('select');
+
+      component.selection.select(mockSavedReports[0]);
+      expect(component.getSelectionCount()).toBe(1);
+      expect(component.checkboxLabel(mockSavedReports[0])).toContain('deselect');
+    });
+
+    it('toggles master selection', () => {
+      component.masterToggle();
+      expect(component.isAllSelected()).toBe(true);
+
+      component.masterToggle();
+      expect(component.isAllSelected()).toBe(false);
+    });
+
+    it('clears selection', () => {
+      component.selection.select(mockSavedReports[0]);
+      component.clearSelection();
+      expect(component.getSelectionCount()).toBe(0);
+    });
+
+    it('exports selected reports to CSV', () => {
+      const csvSpy = jest.spyOn(CSVHelper, 'downloadCSV').mockImplementation(() => undefined);
+      jest.spyOn(CSVHelper, 'arrayToCSV').mockReturnValue('csv');
+
+      component.selection.select(mockSavedReports[0]);
+      component.exportSelectedToCSV();
+
+      expect(csvSpy).toHaveBeenCalled();
+      expect(mockToast.success).toHaveBeenCalledWith('Exported 1 reports to CSV');
+    });
+
+    it('does not export when no reports are selected', () => {
+      const csvSpy = jest.spyOn(CSVHelper, 'downloadCSV').mockImplementation(() => undefined);
+
+      component.exportSelectedToCSV();
+
+      expect(csvSpy).not.toHaveBeenCalled();
+    });
+
+    it('deletes selected reports after confirmation', () => {
+      const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(true)) };
+      mockDialog.open.mockReturnValue(dialogRef as unknown as MatDialogRef<unknown>);
+      mockEvaluationService.deleteSavedReport.mockReturnValue(of(void 0));
+
+      (component as any).dialog = mockDialog;
+      component.selection.select(mockSavedReports[0]);
+      component.deleteSelected();
+
+      expect(mockEvaluationService.deleteSavedReport).toHaveBeenCalledWith('report-1');
+    });
+
+    it('does not open delete dialog when nothing selected', () => {
+      component.deleteSelected();
+      expect(mockDialog.open).not.toHaveBeenCalled();
+    });
+
+    it('shows failure toast when all deletes fail', () => {
+      const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(true)) };
+      mockDialog.open.mockReturnValue(dialogRef as unknown as MatDialogRef<unknown>);
+      mockEvaluationService.deleteSavedReport.mockReturnValue(
+        throwError(() => new Error('fail'))
+      );
+      (component as any).dialog = mockDialog;
+
+      component.selection.select(mockSavedReports[0]);
+      component.deleteSelected();
+
+      expect(mockToast.error).toHaveBeenCalledWith('Failed to delete reports');
+    });
+
+    it('shows partial failure toast when some deletes fail', () => {
+      const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(true)) };
+      mockDialog.open.mockReturnValue(dialogRef as unknown as MatDialogRef<unknown>);
+      mockEvaluationService.deleteSavedReport.mockImplementation((reportId: string) => {
+        if (reportId === 'report-1') {
+          return of(void 0);
+        }
+        return throwError(() => new Error('fail'));
+      });
+      (component as any).dialog = mockDialog;
+
+      component.savedReports.set([...mockSavedReports]);
+      component.dataSource.data = [...mockSavedReports];
+      component.selection.select(mockSavedReports[0], mockSavedReports[1]);
+      component.deleteSelected();
+
+      expect(mockToast.error).toHaveBeenCalledWith('Deleted 1 report(s), 1 failed');
     });
   });
 

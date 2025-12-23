@@ -13,6 +13,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.utility.DockerImageName;
 
 /**
@@ -37,17 +38,21 @@ import org.testcontainers.utility.DockerImageName;
 @Slf4j
 public class EmbeddedRedisTestConfig {
 
-    private static final RedisContainer REDIS_CONTAINER;
+    private static final RedisContainer REDIS_CONTAINER = new RedisContainer(
+            DockerImageName.parse("redis:7-alpine"))
+            .withExposedPorts(6379);
 
-    static {
-        log.info("Initializing Redis Testcontainer");
-        REDIS_CONTAINER = new RedisContainer(DockerImageName.parse("redis:7-alpine"))
-                .withExposedPorts(6379)
-                .withReuse(true);
-        REDIS_CONTAINER.start();
-        log.info("Redis Testcontainer started on {}:{}",
-                REDIS_CONTAINER.getHost(),
-                REDIS_CONTAINER.getFirstMappedPort());
+    private static void ensureContainerStarted() {
+        if (!DockerClientFactory.instance().isDockerAvailable()) {
+            throw new IllegalStateException("Docker is required for Redis Testcontainers tests.");
+        }
+        if (!REDIS_CONTAINER.isRunning()) {
+            log.info("Initializing Redis Testcontainer");
+            REDIS_CONTAINER.start();
+            log.info("Redis Testcontainer started on {}:{}",
+                    REDIS_CONTAINER.getHost(),
+                    REDIS_CONTAINER.getFirstMappedPort());
+        }
     }
 
     /**
@@ -59,6 +64,7 @@ public class EmbeddedRedisTestConfig {
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         log.info("Configuring Redis connection for tests using Testcontainers");
+        ensureContainerStarted();
 
         // Get connection details from container
         String host = REDIS_CONTAINER.getHost();
@@ -90,6 +96,7 @@ public class EmbeddedRedisTestConfig {
      */
     @Bean
     public RedisTemplate<String, Object> testRedisTemplate(RedisConnectionFactory connectionFactory) {
+        ensureContainerStarted();
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
@@ -112,6 +119,7 @@ public class EmbeddedRedisTestConfig {
     @Bean(destroyMethod = "shutdown")
     @Primary
     public RedisClient lettuceRedisClient() {
+        ensureContainerStarted();
         String host = REDIS_CONTAINER.getHost();
         Integer port = REDIS_CONTAINER.getFirstMappedPort();
 
@@ -130,6 +138,7 @@ public class EmbeddedRedisTestConfig {
      * @return Redis container instance
      */
     public static RedisContainer getRedisContainer() {
+        ensureContainerStarted();
         return REDIS_CONTAINER;
     }
 }

@@ -6,7 +6,7 @@ spring:
     name: prior-auth-service
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:healthdata}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:healthdata_prior_auth}
     username: ${DB_USER:healthdata}
     password: ${DB_PASSWORD:healthdata}
     driver-class-name: org.postgresql.Driver

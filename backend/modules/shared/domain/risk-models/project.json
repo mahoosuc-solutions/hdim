@@ -1,0 +1,39 @@
+{
+  "name": "modules-shared-domain-risk-models",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "backend/modules/shared/domain/risk-models/src",
+  "tags": [
+    "backend",
+    "lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/modules/shared/domain/risk-models/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:domain:risk-models:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:domain:risk-models:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:domain:risk-models:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:domain:risk-models:test :modules:shared:domain:risk-models:jacocoTestReport :modules:shared:domain:risk-models:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

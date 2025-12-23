@@ -9,6 +9,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Service for fetching and formatting patient names from FHIR Patient resources
@@ -32,13 +33,13 @@ public class PatientNameService {
     /**
      * Get formatted patient name from FHIR Patient resource
      *
-     * @param patientId FHIR Patient ID
+     * @param patientId Patient ID (UUID)
      * @return Formatted patient name as "FirstName LastName", or "Patient" as fallback
      */
     @Cacheable(value = "patientNames", key = "#patientId", unless = "#result == null || #result == 'Patient'")
-    public String getPatientName(String patientId) {
+    public String getPatientName(UUID patientId) {
         // Handle null or empty patient ID
-        if (patientId == null || patientId.trim().isEmpty()) {
+        if (patientId == null) {
             log.debug("Patient ID is null or empty, returning fallback name");
             return FALLBACK_NAME;
         }
@@ -49,7 +50,7 @@ public class PatientNameService {
             // Fetch patient from FHIR server
             Patient patient = fhirClient.read()
                 .resource(Patient.class)
-                .withId(patientId)
+                .withId(patientId.toString())
                 .execute();
 
             // Extract and format name

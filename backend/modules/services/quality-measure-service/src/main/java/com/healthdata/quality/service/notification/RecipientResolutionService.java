@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Recipient Resolution Service
@@ -41,7 +42,7 @@ public class RecipientResolutionService {
      */
     public List<NotificationRecipient> resolveRecipients(
             String tenantId,
-            String patientId,
+            UUID patientId,
             NotificationEntity.NotificationChannel channel,
             NotificationEntity.NotificationSeverity severity) {
 
@@ -121,7 +122,7 @@ public class RecipientResolutionService {
      */
     public Map<NotificationEntity.NotificationChannel, List<NotificationRecipient>> resolveRecipientsForAllChannels(
             String tenantId,
-            String patientId,
+            UUID patientId,
             NotificationEntity.NotificationSeverity severity) {
 
         Map<NotificationEntity.NotificationChannel, List<NotificationRecipient>> recipientsByChannel = new HashMap<>();
@@ -186,7 +187,7 @@ public class RecipientResolutionService {
     /**
      * Get primary care provider for a patient
      */
-    public Optional<NotificationRecipient> getPrimaryCareProvider(String tenantId, String patientId) {
+    public Optional<NotificationRecipient> getPrimaryCareProvider(String tenantId, UUID patientId) {
         return careTeamRepository.findPrimaryByPatientIdAndTenantId(patientId, tenantId)
                 .flatMap(member -> {
                     Optional<NotificationPreferenceEntity> preference =

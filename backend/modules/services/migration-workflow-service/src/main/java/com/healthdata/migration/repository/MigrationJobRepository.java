@@ -38,7 +38,7 @@ public interface MigrationJobRepository extends JpaRepository<MigrationJobEntity
     // Find jobs by tenant with optional filters
     @Query("SELECT j FROM MigrationJobEntity j WHERE j.tenantId = :tenantId " +
            "AND (:status IS NULL OR j.status = :status) " +
-           "AND (:jobName IS NULL OR LOWER(j.jobName) LIKE LOWER(CONCAT('%', :jobName, '%')))")
+           "AND (:jobName IS NULL OR j.jobName ILIKE CONCAT('%', :jobName, '%'))")
     Page<MigrationJobEntity> findByTenantIdWithFilters(
             @Param("tenantId") String tenantId,
             @Param("status") JobStatus status,

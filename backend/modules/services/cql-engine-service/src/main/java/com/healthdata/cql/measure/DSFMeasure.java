@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * DSF - Depression Screening and Follow-up for Adolescents and Adults
@@ -133,7 +134,7 @@ public class DSFMeasure extends AbstractHedisMeasure {
 
     @Override
     @Cacheable(value = "hedisMeasures", key = "'DSF-' + #tenantId + '-' + #patientId")
-    public MeasureResult evaluate(String tenantId, String patientId) {
+    public MeasureResult evaluate(String tenantId, UUID patientId) {
         logger.info("Evaluating DSF measure for patient: {}", patientId);
 
         MeasureResult.MeasureResultBuilder resultBuilder = MeasureResult.builder()
@@ -213,7 +214,7 @@ public class DSFMeasure extends AbstractHedisMeasure {
     }
 
     @Override
-    public boolean isEligible(String tenantId, String patientId) {
+    public boolean isEligible(String tenantId, UUID patientId) {
         // Check patient age (must be 12 or older)
         JsonNode patient = getPatientData(tenantId, patientId);
         Integer age = getPatientAge(patient);
@@ -249,7 +250,7 @@ public class DSFMeasure extends AbstractHedisMeasure {
     /**
      * Check for denominator exclusions (active depression or bipolar diagnosis).
      */
-    private String checkDenominatorExclusions(String tenantId, String patientId) {
+    private String checkDenominatorExclusions(String tenantId, UUID patientId) {
         JsonNode conditions = getConditions(tenantId, patientId, null);
         if (conditions == null) {
             return null;
@@ -277,7 +278,7 @@ public class DSFMeasure extends AbstractHedisMeasure {
     /**
      * Evaluate depression screening and follow-up plan.
      */
-    private ScreeningResult evaluateDepressionScreening(String tenantId, String patientId,
+    private ScreeningResult evaluateDepressionScreening(String tenantId, UUID patientId,
                                                          MeasureResult.MeasureResultBuilder resultBuilder) {
         ScreeningResult result = new ScreeningResult();
 
@@ -379,7 +380,7 @@ public class DSFMeasure extends AbstractHedisMeasure {
     /**
      * Check for documented follow-up plan after positive screen.
      */
-    private boolean evaluateFollowUpPlan(String tenantId, String patientId, String screeningDate,
+    private boolean evaluateFollowUpPlan(String tenantId, UUID patientId, String screeningDate,
                                          MeasureResult.MeasureResultBuilder resultBuilder) {
         // Look for follow-up procedures or care plans documented on or after screening date
         String dateFilter = screeningDate != null ? "ge" + screeningDate.substring(0, 10) : null;

@@ -14,7 +14,7 @@ VALUES (
     gen_random_uuid(),
     'test_superadmin',
     'superadmin@test.com',
-    '$2a$10$xZvMEZE8fQ3L3hY5x8vQx7hYu2WqGH9L3h8Y5x8vQx7hYu2WqGH9O',
+    '$2b$10$h8pkIMdAPk.cFG7SCXheJewO/gq4VpnvcDFYXiRXdJ8sAZqFnoPOi',
     'Test',
     'SuperAdmin',
     true,  -- active
@@ -37,7 +37,7 @@ VALUES (
     gen_random_uuid(),
     'test_admin',
     'admin@test.com',
-    '$2a$10$xZvMEZE8fQ3L3hY5x8vQx7hYu2WqGH9L3h8Y5x8vQx7hYu2WqGH9O',
+    '$2b$10$h8pkIMdAPk.cFG7SCXheJewO/gq4VpnvcDFYXiRXdJ8sAZqFnoPOi',
     'Test',
     'Admin',
     true,  -- active
@@ -60,7 +60,7 @@ VALUES (
     gen_random_uuid(),
     'test_evaluator',
     'evaluator@test.com',
-    '$2a$10$xZvMEZE8fQ3L3hY5x8vQx7hYu2WqGH9L3h8Y5x8vQx7hYu2WqGH9O',
+    '$2b$10$h8pkIMdAPk.cFG7SCXheJewO/gq4VpnvcDFYXiRXdJ8sAZqFnoPOi',
     'Test',
     'Evaluator',
     true,  -- active
@@ -83,7 +83,7 @@ VALUES (
     gen_random_uuid(),
     'test_analyst',
     'analyst@test.com',
-    '$2a$10$xZvMEZE8fQ3L3hY5x8vQx7hYu2WqGH9L3h8Y5x8vQx7hYu2WqGH9O',
+    '$2b$10$h8pkIMdAPk.cFG7SCXheJewO/gq4VpnvcDFYXiRXdJ8sAZqFnoPOi',
     'Test',
     'Analyst',
     true,  -- active
@@ -106,7 +106,7 @@ VALUES (
     gen_random_uuid(),
     'test_viewer',
     'viewer@test.com',
-    '$2a$10$xZvMEZE8fQ3L3hY5x8vQx7hYu2WqGH9L3h8Y5x8vQx7hYu2WqGH9O',
+    '$2b$10$h8pkIMdAPk.cFG7SCXheJewO/gq4VpnvcDFYXiRXdJ8sAZqFnoPOi',
     'Test',
     'Viewer',
     true,  -- active
@@ -129,7 +129,7 @@ VALUES (
     gen_random_uuid(),
     'test_multiuser',
     'multi@test.com',
-    '$2a$10$xZvMEZE8fQ3L3hY5x8vQx7hYu2WqGH9L3h8Y5x8vQx7hYu2WqGH9O',
+    '$2b$10$h8pkIMdAPk.cFG7SCXheJewO/gq4VpnvcDFYXiRXdJ8sAZqFnoPOi',
     'Test',
     'MultiRole',
     true,  -- active

@@ -1,0 +1,160 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /cql-engine
+
+spring:
+  application:
+    name: cql-engine-service
+
+  autoconfigure:
+    exclude:
+      - com.healthdata.authentication.config.AuthenticationAutoConfiguration
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_cql}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    # ⚠️ SECURITY: Password MUST be provided via environment variable
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+# FHIR Server Configuration
+fhir:
+  server:
+    url: http://localhost:8085/fhir
+
+# Feign Client Configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 20000
+        loggerLevel: basic
+
+# Redis Cache Configuration
+# ⚠️ CRITICAL HIPAA COMPLIANCE SETTING - DO NOT INCREASE TTL ⚠️
+# TTL reduced from 24 hours to 5 minutes to comply with HIPAA data minimization
+# See: /backend/HIPAA-CACHE-COMPLIANCE.md for full documentation
+spring.cache:
+  type: redis
+  redis:
+    time-to-live: 300000  # 5 minutes in milliseconds (HIPAA compliant for PHI)
+    cache-null-values: false
+
+spring.data.redis:
+  host: localhost
+  port: 6381
+  timeout: 2000ms
+
+# Kafka Configuration
+spring.kafka:
+  bootstrap-servers: localhost:9092
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+# HEDIS Measure Configuration
+# ⚠️ CRITICAL HIPAA COMPLIANCE SETTING - DO NOT INCREASE TTL ⚠️
+hedis:
+  measures:
+    enabled: true
+    cache-ttl-hours: 0.083  # 5 minutes (HIPAA compliant for PHI, reduced from 24 hours)
+
+# Rate Limiting Configuration
+rate-limiting:
+  enabled: true
+  login:
+    per-minute: 5
+    per-hour: 20
+  register:
+    per-hour: 3
+  api:
+    per-minute: 100
+
+# Visualization configuration for real-time data processing monitoring
+visualization:
+  websocket:
+    enabled: true
+    allowed-origins: "http://localhost:4200,http://localhost:3000,http://localhost:5173,http://localhost:8082"
+  kafka:
+    enabled: true  # Enabled for event-driven patient health assessments
+    topics:
+      evaluation-started: "evaluation.started"
+      evaluation-completed: "evaluation.completed"
+      evaluation-failed: "evaluation.failed"
+      batch-progress: "batch.progress"
+      cache-event: "cache.event"
+      template-loaded: "template.loaded"
+  batch-progress:
+    emit-interval-seconds: 5    # Emit progress every 5 seconds
+    emit-every-n-patients: 10   # Or every 10 patients (whichever comes first)
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      fhirService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+  retry:
+    instances:
+      fhirService:
+        maxAttempts: 3
+        waitDuration: 2s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+          - org.springframework.web.client.ResourceAccessException
+  ratelimiter:
+    instances:
+      fhirService:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1s
+        timeoutDuration: 5s
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+    org.opencds.cqf: INFO
+    feign: DEBUG
+    io.github.resilience4j: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

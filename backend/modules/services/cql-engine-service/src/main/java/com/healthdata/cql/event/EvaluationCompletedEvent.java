@@ -18,7 +18,7 @@ public class EvaluationCompletedEvent implements EvaluationEvent {
     private final String tenantId;
     private final String measureId;
     private final String measureName;
-    private final String patientId;
+    private final UUID patientId;
     private final Instant timestamp;
     private final String batchId;
 
@@ -41,7 +41,7 @@ public class EvaluationCompletedEvent implements EvaluationEvent {
             @JsonProperty("tenantId") String tenantId,
             @JsonProperty("measureId") String measureId,
             @JsonProperty("measureName") String measureName,
-            @JsonProperty("patientId") String patientId,
+            @JsonProperty("patientId") UUID patientId,
             @JsonProperty("timestamp") Instant timestamp,
             @JsonProperty("batchId") String batchId,
             @JsonProperty("inDenominator") boolean inDenominator,
@@ -103,7 +103,7 @@ public class EvaluationCompletedEvent implements EvaluationEvent {
         return measureName;
     }
 
-    public String getPatientId() {
+    public UUID getPatientId() {
         return patientId;
     }
 
@@ -153,7 +153,7 @@ public class EvaluationCompletedEvent implements EvaluationEvent {
         private String tenantId;
         private String measureId;
         private String measureName;
-        private String patientId;
+        private UUID patientId;
         private Instant timestamp = Instant.now();
         private String batchId;
         private boolean inDenominator;
@@ -185,7 +185,7 @@ public class EvaluationCompletedEvent implements EvaluationEvent {
             return this;
         }
 
-        public Builder patientId(String patientId) {
+        public Builder patientId(UUID patientId) {
             this.patientId = patientId;
             return this;
         }

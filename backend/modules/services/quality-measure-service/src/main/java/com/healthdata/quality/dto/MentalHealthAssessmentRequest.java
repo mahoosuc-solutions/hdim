@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Request DTO for submitting a mental health assessment
@@ -23,8 +24,8 @@ public class MentalHealthAssessmentRequest {
     /**
      * Patient FHIR ID
      */
-    @NotBlank(message = "Patient ID is required")
-    private String patientId;
+    @NotNull(message = "Patient ID is required")
+    private UUID patientId;
 
     /**
      * Assessment type (phq-9, gad-7, phq-2, etc.)

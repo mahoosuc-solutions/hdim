@@ -37,8 +37,8 @@ public class CqlEvaluation {
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private CqlLibrary library;
 
-    @Column(name = "patient_id", nullable = false, length = 64)
-    private String patientId;
+    @Column(name = "patient_id", nullable = false)
+    private UUID patientId;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "context_data", columnDefinition = "JSON")
@@ -70,7 +70,7 @@ public class CqlEvaluation {
         this.evaluationDate = Instant.now();
     }
 
-    public CqlEvaluation(String tenantId, CqlLibrary library, String patientId) {
+    public CqlEvaluation(String tenantId, CqlLibrary library, UUID patientId) {
         this();
         this.tenantId = tenantId;
         this.library = library;
@@ -110,11 +110,11 @@ public class CqlEvaluation {
         this.library = library;
     }
 
-    public String getPatientId() {
+    public UUID getPatientId() {
         return patientId;
     }
 
-    public void setPatientId(String patientId) {
+    public void setPatientId(UUID patientId) {
         this.patientId = patientId;
     }
 

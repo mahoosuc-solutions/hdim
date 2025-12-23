@@ -1,3 +1,7 @@
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
+import org.gradle.testing.jacoco.tasks.JacocoReport
+import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
+
 plugins {
     alias(libs.plugins.spring.boot) apply false
     alias(libs.plugins.spring.dependency.management) apply false
@@ -22,10 +26,15 @@ allprojects {
 subprojects {
     apply(plugin = "java")
     apply(plugin = "java-library")
+    apply(plugin = "jacoco")
 
     java {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    extensions.configure<JacocoPluginExtension> {
+        toolVersion = "0.8.12"
     }
 
     configurations.configureEach {
@@ -65,6 +74,12 @@ subprojects {
         }
     }
 
+    val mockitoAgent by configurations.creating {
+        isCanBeResolved = true
+        isCanBeConsumed = false
+        isTransitive = false
+    }
+
     tasks.withType<JavaCompile> {
         options.encoding = "UTF-8"
         options.compilerArgs.addAll(listOf(
@@ -77,9 +92,98 @@ subprojects {
     tasks.withType<Test> {
         useJUnitPlatform()
         maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
+        if (project.name == "patient-service") {
+            // Isolate each test class to avoid hung test workers from lingering threads.
+            maxParallelForks = 1
+            forkEvery = 1
+        }
+        // Default timeout prevents a single test from stalling the entire run.
+        systemProperty("junit.jupiter.execution.timeout.default", "2m")
+        systemProperty("junit.jupiter.execution.timeout.mode", "enabled")
+        // Match Docker Desktop's API version to avoid Testcontainers 400s.
+        systemProperty("api.version", "1.52")
+        systemProperty("docker.api.version", "1.52")
+        systemProperty("DOCKER_API_VERSION", "1.52")
+        systemProperty("docker.host", "unix:///var/run/docker.sock")
+        environment("DOCKER_API_VERSION", "1.52")
+        // Ensure test workers see docker-java overrides.
+        jvmArgs(
+            "-Dapi.version=1.52",
+            "-Ddocker.api.version=1.52",
+            "-Ddocker.host=unix:///var/run/docker.sock"
+        )
+        doFirst {
+            if (mockitoAgent.files.isNotEmpty()) {
+                jvmArgs("-javaagent:${mockitoAgent.singleFile}")
+            }
+        }
+        environment("DOCKER_HOST", "unix:///var/run/docker.sock")
+        environment("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", "/var/run/docker.sock")
         testLogging {
-            events("passed", "skipped", "failed")
+            // Emit start/finish signals and stream output to make long-running tests observable.
+            events("started", "passed", "skipped", "failed", "standardOut", "standardError")
             exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+            showStandardStreams = true
+        }
+        addTestListener(object : org.gradle.api.tasks.testing.TestListener {
+            override fun beforeSuite(suite: org.gradle.api.tasks.testing.TestDescriptor) = Unit
+            override fun afterSuite(
+                suite: org.gradle.api.tasks.testing.TestDescriptor,
+                result: org.gradle.api.tasks.testing.TestResult
+            ) {
+                if (suite.parent == null) {
+                    logger.lifecycle(
+                        "Test run complete: {} tests, {} passed, {} failed, {} skipped ({}).",
+                        result.testCount,
+                        result.successfulTestCount,
+                        result.failedTestCount,
+                        result.skippedTestCount,
+                        result.resultType
+                    )
+                }
+            }
+            override fun beforeTest(testDescriptor: org.gradle.api.tasks.testing.TestDescriptor) = Unit
+            override fun afterTest(
+                testDescriptor: org.gradle.api.tasks.testing.TestDescriptor,
+                result: org.gradle.api.tasks.testing.TestResult
+            ) = Unit
+        })
+    }
+
+    tasks.withType<JacocoReport>().configureEach {
+        val execFile = file("$buildDir/jacoco/test.exec")
+        onlyIf { execFile.exists() }
+        dependsOn(tasks.withType<Test>())
+        classDirectories.setFrom(
+            files(classDirectories.files.map {
+                fileTree(it) {
+                    exclude("**/*Application.class")
+                }
+            })
+        )
+        reports {
+            xml.required.set(true)
+            html.required.set(true)
+            csv.required.set(false)
+        }
+    }
+
+    tasks.withType<JacocoCoverageVerification>().configureEach {
+        val execFile = file("$buildDir/jacoco/test.exec")
+        onlyIf { execFile.exists() }
+        classDirectories.setFrom(
+            files(classDirectories.files.map {
+                fileTree(it) {
+                    exclude("**/*Application.class")
+                }
+            })
+        )
+        violationRules {
+            rule {
+                limit {
+                    minimum = "0.95".toBigDecimal()
+                }
+            }
         }
     }
 
@@ -91,9 +195,11 @@ subprojects {
 
         // Testing for all modules
         testImplementation("org.junit.jupiter:junit-jupiter:5.11.2")
-        testImplementation("org.mockito:mockito-core:5.14.1")
-        testImplementation("org.mockito:mockito-junit-jupiter:5.14.1")
+        testImplementation("org.mockito:mockito-core:5.2.0")
+        testImplementation("org.mockito:mockito-junit-jupiter:5.2.0")
+        testImplementation("org.mockito:mockito-inline:5.2.0")
         testImplementation("org.assertj:assertj-core:3.26.3")
+        mockitoAgent("net.bytebuddy:byte-buddy-agent:1.14.10")
     }
 }
 

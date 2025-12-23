@@ -106,8 +106,56 @@ backend:
 # Gateway Feature Flags
 gateway:
   auth:
+    # Enable/disable gateway authentication
     enabled: true
-    enforced: false  # Set to true for production
+    # Enforce authentication for all requests (set to true for production)
+    # When false, requests without tokens are allowed (demo mode - NOT FOR PRODUCTION)
+    enforced: ${GATEWAY_AUTH_ENFORCED:false}
+    # Secret for signing X-Auth-Validated header (min 32 chars for production)
+    # Generate with: openssl rand -base64 32
+    header-signing-secret: ${GATEWAY_AUTH_SIGNING_SECRET:dev-signing-secret-change-in-production}
+    # Signature validity period in seconds
+    signature-validity-seconds: 300
+    # Strip X-Auth-* headers from incoming requests (SECURITY: always true in production)
+    strip-external-auth-headers: true
+    # Log authentication events for audit
+    audit-logging: true
+    # Public paths that don't require authentication
+    public-paths:
+      global:
+        - /api/v1/auth/**
+        - /actuator/health/**
+        - /actuator/info
+        - /v3/api-docs/**
+        - /swagger-ui/**
+      fhir-service:
+        - /fhir/metadata
+        - /fhir/.well-known/**
+      cql-engine-service:
+        - /cql-engine/health
+    # CORS configuration
+    cors:
+      allowed-origins:
+        - http://localhost:4200
+        - http://localhost:4201
+        - http://localhost:4202
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      allowed-headers:
+        - "*"
+      allow-credentials: true
+      max-age: 3600
+    # Rate limiting for auth endpoints
+    rate-limit:
+      enabled: true
+      login-attempts-per-minute: 10
+      refresh-attempts-per-minute: 20
+      block-duration-seconds: 300
   routing:
     enabled: true
   rate-limit:

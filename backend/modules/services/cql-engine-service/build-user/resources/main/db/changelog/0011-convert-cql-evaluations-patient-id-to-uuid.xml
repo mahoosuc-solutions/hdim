@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0011-convert-cql-evaluations-patient-id-to-uuid" author="healthdata-system">
+        <comment>Convert cql_evaluations.patient_id to UUID for consistent identifiers</comment>
+
+        <sql>
+            ALTER TABLE cql_evaluations
+            ALTER COLUMN patient_id TYPE uuid USING patient_id::uuid;
+        </sql>
+
+        <rollback>
+            <sql>
+                ALTER TABLE cql_evaluations
+                ALTER COLUMN patient_id TYPE varchar(64) USING patient_id::text;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

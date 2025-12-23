@@ -13,10 +13,10 @@ export const environment = {
     useApiGateway: false,
 
     // Local development URLs
-    apiGatewayUrl: 'http://localhost:8000',
+    apiGatewayUrl: 'http://localhost:8080',
     cqlEngineUrl: 'http://localhost:8081/cql-engine',
     qualityMeasureUrl: 'http://localhost:8087/quality-measure',
-    fhirServerUrl: 'http://localhost:8083/fhir',
+    fhirServerUrl: 'http://localhost:8085/fhir',
 
     // Tenant configuration
     defaultTenantId: 'default',

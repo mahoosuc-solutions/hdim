@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -118,6 +119,23 @@ class DocumentReferenceServiceTest {
         // No subject set
 
         // When/Then
+        assertThatThrownBy(() -> documentReferenceService.createDocumentReference(TENANT, docRef, "user-1"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("subject");
+    }
+
+    @Test
+    void createDocumentReferenceShouldRejectInvalidPatientId() {
+        DocumentReference docRef = new DocumentReference();
+        docRef.setId(DOC_REF_ID.toString());
+        docRef.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
+        docRef.setSubject(new Reference("Patient/not-a-uuid"));
+        docRef.setType(new CodeableConcept()
+                .addCoding(new Coding()
+                        .setSystem("http://loinc.org")
+                        .setCode(TYPE_CODE)
+                        .setDisplay(TYPE_DISPLAY)));
+
         assertThatThrownBy(() -> documentReferenceService.createDocumentReference(TENANT, docRef, "user-1"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("subject");
@@ -284,6 +302,16 @@ class DocumentReferenceServiceTest {
     }
 
     @Test
+    void getLatestDocumentByTypeShouldReturnEmptyWhenMissing() {
+        when(documentReferenceRepository.findLatestByType(eq(TENANT), eq(PATIENT_ID), eq(TYPE_CODE), any(PageRequest.class)))
+                .thenReturn(List.of());
+
+        Optional<DocumentReference> result = documentReferenceService.getLatestDocumentByType(TENANT, PATIENT_ID, TYPE_CODE);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     void searchDocumentsShouldReturnPagedResults() {
         // Given
         Pageable pageable = PageRequest.of(0, 10);
@@ -332,6 +360,45 @@ class DocumentReferenceServiceTest {
 
         // Then
         assertThat(results).hasSize(1);
+    }
+
+    @Test
+    void createDocumentReferenceShouldMapOptionalFields() {
+        DocumentReference docRef = createFhirDocumentReference();
+        docRef.setContext(new DocumentReference.DocumentReferenceContextComponent()
+                .addEncounter(new Reference("Encounter/" + ENCOUNTER_ID)));
+        docRef.setCustodian(new Reference("Organization/org-1"));
+        docRef.addAuthor(new Reference("Practitioner/author-1"));
+        docRef.addSecurityLabel(new CodeableConcept()
+                .addCoding(new Coding().setCode("R")));
+        docRef.getType().setText("Episode Summary");
+        docRef.getCategoryFirstRep().setText("Clinical note text");
+
+        byte[] hash = new byte[]{1, 2, 3};
+        docRef.getContentFirstRep().setAttachment(docRef.getContentFirstRep().getAttachment()
+                .setHash(hash));
+        docRef.addRelatesTo()
+                .setCode(DocumentReference.DocumentRelationshipType.REPLACES)
+                .setTarget(new Reference("DocumentReference/other"));
+
+        when(documentReferenceRepository.save(any(DocumentReferenceEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        documentReferenceService.createDocumentReference(TENANT, docRef, "user-4");
+
+        ArgumentCaptor<DocumentReferenceEntity> captor = ArgumentCaptor.forClass(DocumentReferenceEntity.class);
+        verify(documentReferenceRepository).save(captor.capture());
+        DocumentReferenceEntity saved = captor.getValue();
+
+        assertThat(saved.getEncounterId()).isEqualTo(ENCOUNTER_ID);
+        assertThat(saved.getCustodianReference()).isEqualTo("Organization/org-1");
+        assertThat(saved.getAuthorReference()).isEqualTo("Practitioner/author-1");
+        assertThat(saved.getSecurityLabels()).isEqualTo("R");
+        assertThat(saved.getTypeDisplay()).isEqualTo("Episode Summary");
+        assertThat(saved.getCategoryDisplay()).isEqualTo("Clinical note text");
+        assertThat(saved.getContentHash()).isEqualTo(Base64.getEncoder().encodeToString(hash));
+        assertThat(saved.getRelatesToCode()).isEqualTo("replaces");
+        assertThat(saved.getRelatesToTarget()).isEqualTo("DocumentReference/other");
     }
 
     // Helper methods

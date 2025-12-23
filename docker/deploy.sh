@@ -21,6 +21,7 @@ IMAGE_PREFIX=${IMAGE_PREFIX:-"hdim"}
 MULTI_PLATFORM=${MULTI_PLATFORM:-"true"}
 SIGN_IMAGE=${SIGN_IMAGE:-"false"}
 BUILD_ONLY=${BUILD_ONLY:-"false"}
+SKIP_GRADLE_BUILD=${SKIP_GRADLE_BUILD:-"false"}
 
 # Services to deploy (all 22 microservices)
 SERVICES=(
@@ -46,6 +47,32 @@ SERVICES=(
     "cdr-processor-service:8099"
     "ehr-connector-service:8100"
 )
+
+SERVICES_OVERRIDE=${SERVICES_OVERRIDE:-""}
+
+if [ -n "$SERVICES_OVERRIDE" ]; then
+    IFS=',' read -r -a requested_services <<< "$SERVICES_OVERRIDE"
+    filtered_services=()
+
+    for requested in "${requested_services[@]}"; do
+        match_found=false
+        for service_info in "${SERVICES[@]}"; do
+            service_name=$(echo "$service_info" | cut -d: -f1)
+            if [ "$service_name" = "$requested" ]; then
+                filtered_services+=("$service_info")
+                match_found=true
+                break
+            fi
+        done
+
+        if [ "$match_found" = false ]; then
+            echo -e "${RED}❌ Unknown service in SERVICES_OVERRIDE: ${requested}${NC}"
+            exit 1
+        fi
+    done
+
+    SERVICES=("${filtered_services[@]}")
+fi
 
 # Architectures to build for
 PLATFORMS="linux/amd64,linux/arm64"
@@ -324,12 +351,39 @@ generate_report() {
     echo ""
 }
 
+# Ensure backend artifacts exist before building images
+prepare_backend_artifacts() {
+    if [ "$SKIP_GRADLE_BUILD" = "true" ]; then
+        echo -e "${YELLOW}⚠️  SKIP_GRADLE_BUILD=true, skipping Gradle build${NC}"
+        return 0
+    fi
+
+    local missing=()
+    for service_info in "${SERVICES[@]}"; do
+        local service_name=$(echo "$service_info" | cut -d: -f1)
+        if ! ls "backend/modules/services/${service_name}/build/libs/"*.jar >/dev/null 2>&1; then
+            missing+=("$service_name")
+        fi
+    done
+
+    if [ ${#missing[@]} -gt 0 ]; then
+        echo -e "${BLUE}🔧 Building backend artifacts with Gradle...${NC}"
+        echo -e "${YELLOW}Missing artifacts for: ${missing[*]}${NC}"
+        (cd backend && ./gradlew build -x test --parallel)
+    else
+        echo -e "${GREEN}✅ Backend artifacts already present${NC}"
+    fi
+}
+
 # Main execution
 main() {
     local start_time=$(date +%s)
 
     # Check prerequisites
     check_prerequisites
+
+    # Build backend artifacts if needed
+    prepare_backend_artifacts
 
     # Authenticate with registry
     if [ "$BUILD_ONLY" != "true" ]; then
@@ -371,6 +425,8 @@ usage() {
     echo "  MULTI_PLATFORM     - Build for multiple platforms (default: true)"
     echo "  SIGN_IMAGE         - Sign images with cosign (default: false)"
     echo "  BUILD_ONLY         - Only build, don't push (default: false)"
+    echo "  SKIP_GRADLE_BUILD  - Skip Gradle build step (default: false)"
+    echo "  SERVICES_OVERRIDE  - Comma-separated service list to build (default: all)"
     echo ""
     echo "Registry-specific variables:"
     echo "  Docker Hub:    DOCKER_USERNAME, DOCKER_PASSWORD"

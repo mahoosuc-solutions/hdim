@@ -103,3 +103,6 @@ Thumbs.db
 # Vault tokens
 .vault-token
 vault-token
+
+# GitHub Actions self-hosted runner
+actions-runner/

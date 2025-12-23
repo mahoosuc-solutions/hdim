@@ -169,7 +169,7 @@ services:
       SERVER_PORT: 8081
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
     ports:
       - "8081:8081"
     healthcheck:
@@ -371,8 +371,8 @@ services:
       SERVER_PORT: 8087
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
-      CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8081
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8081/cql-engine
       FHIR_SERVICE_URL: http://fhir-service:8085
     ports:
       - "8087:8087"

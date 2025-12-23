@@ -3,12 +3,12 @@
   icon="smart_toy"
   [showBackButton]="false">
   <ng-container actions>
-    <button mat-stroked-button (click)="loadAgents()" [disabled]="loading">
-      <mat-icon>refresh</mat-icon>
+    <button mat-stroked-button type="button" (click)="loadAgents()" [disabled]="loading" [attr.aria-disabled]="loading" aria-label="Refresh agents list">
+      <mat-icon aria-hidden="true">refresh</mat-icon>
       Refresh
     </button>
-    <button mat-flat-button color="primary" (click)="openCreateDialog()">
-      <mat-icon>add</mat-icon>
+    <button mat-flat-button type="button" color="primary" (click)="openCreateDialog()" aria-label="Create new agent">
+      <mat-icon aria-hidden="true">add</mat-icon>
       Create Agent
     </button>
   </ng-container>
@@ -103,15 +103,15 @@
     @if (selection.hasValue()) {
       <div class="bulk-actions">
         <span class="selection-count">{{ selection.selected.length }} selected</span>
-        <button mat-stroked-button (click)="publishSelected()" [disabled]="publishLoading">
-          <mat-icon>publish</mat-icon>
+        <button mat-stroked-button type="button" (click)="publishSelected()" [disabled]="publishLoading" [attr.aria-disabled]="publishLoading" aria-label="Publish selected agents">
+          <mat-icon aria-hidden="true">publish</mat-icon>
           Publish Selected
         </button>
-        <button mat-stroked-button color="warn" (click)="deleteSelected()" [disabled]="deleteLoading">
-          <mat-icon>delete</mat-icon>
+        <button mat-stroked-button type="button" color="warn" (click)="deleteSelected()" [disabled]="deleteLoading" [attr.aria-disabled]="deleteLoading" aria-label="Delete selected agents">
+          <mat-icon aria-hidden="true">delete</mat-icon>
           Delete Selected
         </button>
-        <button mat-button (click)="selection.clear()">Clear Selection</button>
+        <button mat-button type="button" (click)="selection.clear()" aria-label="Clear agent selection">Clear Selection</button>
       </div>
     }
 
@@ -267,11 +267,11 @@
         <td class="mat-cell empty-state" [attr.colspan]="displayedColumns.length">
           @if (!loading) {
             <div class="empty-content">
-              <mat-icon>smart_toy</mat-icon>
+              <mat-icon aria-hidden="true">smart_toy</mat-icon>
               <h3>No agents found</h3>
               <p>Create your first AI agent to get started</p>
-              <button mat-flat-button color="primary" (click)="openCreateDialog()">
-                <mat-icon>add</mat-icon>
+              <button mat-flat-button type="button" color="primary" (click)="openCreateDialog()" aria-label="Create your first agent">
+                <mat-icon aria-hidden="true">add</mat-icon>
                 Create Agent
               </button>
             </div>

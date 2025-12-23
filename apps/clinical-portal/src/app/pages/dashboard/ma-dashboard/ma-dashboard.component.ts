@@ -258,7 +258,7 @@ export class MADashboardComponent implements OnInit, OnDestroy {
    * Navigate to patient detail
    */
   viewPatient(task: MATaskItem): void {
-    this.router.navigate(['/patient-detail', task.id]);
+    this.router.navigate(['/patients', task.id]);
   }
 
   /**
@@ -676,7 +676,7 @@ export class MADashboardComponent implements OnInit, OnDestroy {
    */
   @TrackInteraction('ma-dashboard', 'view-patient-from-gap')
   viewPatientFromGap(gap: CareGap): void {
-    this.router.navigate(['/patient-detail', gap.patientId], {
+    this.router.navigate(['/patients', gap.patientId], {
       queryParams: { gapId: gap.id }
     });
   }

@@ -190,7 +190,7 @@ describe('ProviderDashboardComponent', () => {
       component.reviewResult(mockResult);
 
       expect(mockRouter.navigate).toHaveBeenCalledWith(
-        ['/patient-detail', mockResult.id],
+        ['/patients', mockResult.id],
         { queryParams: { action: 'review-results', resultId: mockResult.id } }
       );
     });
@@ -434,7 +434,7 @@ describe('ProviderDashboardComponent', () => {
       component.addressCareGap(gap);
 
       expect(mockRouter.navigate).toHaveBeenCalledWith(
-        ['/patient-detail', gap.id],
+        ['/patients', gap.id],
         { queryParams: { action: 'clinical-review', gapId: gap.id } }
       );
     });
@@ -442,7 +442,7 @@ describe('ProviderDashboardComponent', () => {
     it('should navigate to patient detail by id', () => {
       component.viewPatient('patient-123');
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/patient-detail', 'patient-123']);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/patients', 'patient-123']);
     });
   });
 

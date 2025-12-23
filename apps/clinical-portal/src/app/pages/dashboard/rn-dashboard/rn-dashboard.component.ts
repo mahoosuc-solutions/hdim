@@ -222,7 +222,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
    */
   addressCareGap(gap: CareGapTask): void {
     console.log('Addressing care gap:', gap.gapType);
-    this.router.navigate(['/patient-detail', gap.id], {
+    this.router.navigate(['/patients', gap.id], {
       queryParams: { action: 'address-gap', gapId: gap.id }
     });
   }
@@ -325,7 +325,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
    * View patient details
    */
   viewPatient(id: string): void {
-    this.router.navigate(['/patient-detail', id]);
+    this.router.navigate(['/patients', id]);
   }
 
   /**

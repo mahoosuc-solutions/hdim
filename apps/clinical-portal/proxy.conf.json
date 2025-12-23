@@ -1,11 +1,14 @@
 {
   "/fhir": {
-    "target": "http://localhost:8083",
+    "target": "http://localhost:8081",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug",
     "pathRewrite": {
-      "^/fhir": "/fhir"
+      "^/fhir": "/fhir/fhir"
+    },
+    "headers": {
+      "X-Tenant-ID": "demo-tenant"
     }
   },
   "/quality-measure": {
@@ -14,16 +17,22 @@
     "changeOrigin": true,
     "logLevel": "debug",
     "pathRewrite": {
-      "^/quality-measure": "/quality-measure"
+      "^/quality-measure": "/quality-measure/quality-measure"
+    },
+    "headers": {
+      "X-Tenant-ID": "demo-tenant"
     }
   },
   "/cql-engine": {
-    "target": "http://localhost:8081",
+    "target": "http://localhost:8086",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug",
     "pathRewrite": {
       "^/cql-engine": "/cql-engine"
+    },
+    "headers": {
+      "X-Tenant-ID": "demo-tenant"
     }
   }
 }

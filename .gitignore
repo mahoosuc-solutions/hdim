@@ -106,3 +106,4 @@ vault-token
 
 # GitHub Actions self-hosted runner
 actions-runner/
+build-user/

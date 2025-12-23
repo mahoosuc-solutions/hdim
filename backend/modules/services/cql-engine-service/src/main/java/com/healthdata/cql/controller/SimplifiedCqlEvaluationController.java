@@ -127,20 +127,52 @@ public class SimplifiedCqlEvaluationController {
      * Returns a list of all registered Java measure implementations.
      * This endpoint can be used by the frontend to populate measure dropdowns.
      *
-     * @return JSON array of available measures
+     * Query params:
+     * - evaluableOnly: if true, only return measures that have CQL libraries (default: false)
+     *
+     * @return JSON array of available measures with hasCqlLibrary flag
      */
     @GetMapping(value = "/measures", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> getAvailableMeasures() {
+    public ResponseEntity<String> getAvailableMeasures(
+            @RequestHeader(value = "X-Tenant-ID", defaultValue = "default") String tenantId,
+            @RequestParam(value = "evaluableOnly", defaultValue = "false") boolean evaluableOnly) {
         try {
-            logger.info("Fetching available measures from registry");
+            logger.info("Fetching available measures from registry (tenant: {}, evaluableOnly: {})",
+                    tenantId, evaluableOnly);
 
             List<HedisMeasureRegistry.MeasureInfo> measures = measureRegistry.getMeasureInfoList();
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("count", measures.size());
-            response.put("measures", measures);
+            // Get all CQL library names for this tenant
+            List<String> availableLibraries = libraryRepository.findByTenantIdAndStatusAndActiveTrue(tenantId, "ACTIVE")
+                    .stream()
+                    .map(CqlLibrary::getLibraryName)
+                    .toList();
 
-            logger.info("Returning {} available measures", measures.size());
+            logger.info("Found {} active CQL libraries for tenant {}: {}",
+                    availableLibraries.size(), tenantId, availableLibraries);
+
+            // Enrich measures with hasCqlLibrary flag
+            // Keep original property names expected by frontend: measureId, measureName, version, implementationClass
+            List<Map<String, Object>> enrichedMeasures = measures.stream()
+                    .map(m -> {
+                        Map<String, Object> measureMap = new HashMap<>();
+                        measureMap.put("measureId", m.measureId());
+                        measureMap.put("measureName", m.measureName());
+                        measureMap.put("version", m.version());
+                        measureMap.put("implementationClass", m.implementationClass());
+                        measureMap.put("hasCqlLibrary", availableLibraries.contains(m.measureId()));
+                        return measureMap;
+                    })
+                    .filter(m -> !evaluableOnly || (boolean) m.get("hasCqlLibrary"))
+                    .toList();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("count", enrichedMeasures.size());
+            response.put("measures", enrichedMeasures);
+            response.put("totalMeasures", measures.size());
+            response.put("evaluableMeasures", availableLibraries.size());
+
+            logger.info("Returning {} measures ({} evaluable)", enrichedMeasures.size(), availableLibraries.size());
             return ResponseEntity.ok(objectMapper.writeValueAsString(response));
 
         } catch (Exception e) {
@@ -288,5 +320,45 @@ public class SimplifiedCqlEvaluationController {
         } catch (Exception e) {
             return "{\"error\": \"" + message.replace("\"", "\\\"") + "\"}";
         }
+    }
+
+    /**
+     * Derive category from implementation class name
+     * Maps measure implementation classes to HEDIS categories
+     */
+    private String deriveCategoryFromImplementation(String implementationClass) {
+        if (implementationClass == null) return "OTHER";
+
+        // Map based on measure type patterns in class name
+        String className = implementationClass.toLowerCase();
+
+        if (className.contains("diabetes") || className.contains("cdc") ||
+            className.contains("hba1c") || className.contains("bloodsugar")) {
+            return "CHRONIC_CONDITION";
+        }
+        if (className.contains("cancer") || className.contains("screening") ||
+            className.contains("bcs") || className.contains("ccs") || className.contains("col")) {
+            return "PREVENTIVE";
+        }
+        if (className.contains("blood") && className.contains("pressure") ||
+            className.contains("cbp") || className.contains("hypertension")) {
+            return "CHRONIC_CONDITION";
+        }
+        if (className.contains("medication") || className.contains("amm") ||
+            className.contains("antidepressant") || className.contains("adherence")) {
+            return "MEDICATION";
+        }
+        if (className.contains("mental") || className.contains("depression") ||
+            className.contains("behavioral")) {
+            return "BEHAVIORAL_HEALTH";
+        }
+        if (className.contains("immuniz") || className.contains("vaccin")) {
+            return "IMMUNIZATION";
+        }
+        if (className.contains("access") || className.contains("utilization")) {
+            return "ACCESS";
+        }
+
+        return "OTHER";
     }
 }

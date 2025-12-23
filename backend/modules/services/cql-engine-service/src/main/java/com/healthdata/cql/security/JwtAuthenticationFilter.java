@@ -150,10 +150,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
         // Skip JWT filter for public endpoints that don't need authentication
+        // DEMO MODE: All endpoints are permitted (see CqlSecurityCustomizer)
         return path.startsWith("/actuator") ||
                path.startsWith("/swagger-ui") ||
                path.startsWith("/v3/api-docs") ||
                path.startsWith("/cql-engine/api") ||
+               path.startsWith("/cql-engine/evaluate") ||
+               path.startsWith("/evaluate") ||
                path.startsWith("/api") ||
                path.startsWith("/ws") ||
                path.startsWith("/cql-engine/ws") ||

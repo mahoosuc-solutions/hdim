@@ -53,6 +53,33 @@
           <div class="step-indicator">
             <span class="step-badge" aria-label="Step 1 of 3">Step 1</span>
           </div>
+
+          <!-- Category Filter -->
+          <mat-form-field class="category-filter" appearance="outline">
+            <mat-label>
+              Filter by Category
+              <mat-icon
+                matTooltip="Filter measures by clinical category to narrow down your selection"
+                matTooltipPosition="above"
+                class="help-icon"
+                aria-hidden="true">filter_list</mat-icon>
+            </mat-label>
+            <mat-select
+              [(value)]="selectedCategory"
+              (selectionChange)="onCategoryChange($event.value)"
+              aria-label="Filter measures by category">
+              @for (category of measureCategories; track category.value) {
+                <mat-option [value]="category.value">
+                  {{ category.label }}
+                  @if (getCategoryCount(category.value) > 0) {
+                    <span class="category-count">({{ getCategoryCount(category.value) }})</span>
+                  }
+                </mat-option>
+              }
+            </mat-select>
+            <mat-icon matPrefix aria-hidden="true">category</mat-icon>
+          </mat-form-field>
+
           <!-- Measure Selection -->
           <mat-form-field class="full-width" appearance="outline">
             <mat-label>
@@ -76,17 +103,31 @@
               }
               @for (measure of measures; track measure.id) {
                 <mat-option [value]="measure.name">
-                  {{ measure.displayName }}
+                  <span class="measure-option">
+                    <span class="measure-name">{{ measure.displayName }}</span>
+                    @if (measure.category) {
+                      <span class="measure-category-badge">{{ measure.category }}</span>
+                    }
+                  </span>
                 </mat-option>
               }
               @if (!loadingMeasures && measures.length === 0) {
                 <mat-option value="" disabled>
                   No measures available
+                  @if (selectedCategory) {
+                    in this category
+                  }
                 </mat-option>
               }
             </mat-select>
             <mat-icon matPrefix aria-hidden="true">assessment</mat-icon>
-            <mat-hint id="measure-hint">Select from {{ measures.length }} available HEDIS measures</mat-hint>
+            <mat-hint id="measure-hint">
+              @if (selectedCategory) {
+                Showing {{ measures.length }} measures in {{ selectedCategory }} category
+              } @else {
+                Select from {{ measures.length }} available HEDIS measures
+              }
+            </mat-hint>
           </mat-form-field>
         </div>
 

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -65,12 +66,12 @@ class NotificationIntegrationTest {
     private HealthScoreNotificationTrigger notificationTrigger;
 
     private String tenantId;
-    private String patientId;
+    private UUID patientId;
 
     @BeforeEach
     void setUp() {
         tenantId = "test-tenant";
-        patientId = "Patient/123";
+        patientId = UUID.fromString("abababab-abab-abab-abab-abababababab");
 
         // Setup lenient stubbing for notificationService
         NotificationService.NotificationStatus status = NotificationService.NotificationStatus.builder()

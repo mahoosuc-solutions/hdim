@@ -3,6 +3,8 @@ package com.healthdata.caregap.client;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 /**
  * Feign client for Care Gap Service
  *
@@ -25,7 +27,7 @@ public interface PatientServiceClient {
     @GetMapping(value = "/health-record", produces = "application/fhir+json")
     String getComprehensiveHealthRecord(
         @RequestHeader("X-Tenant-ID") String tenantId,
-        @RequestParam("patient") String patientId
+        @RequestParam("patient") UUID patientId
     );
 
     /**
@@ -39,7 +41,7 @@ public interface PatientServiceClient {
     @GetMapping(value = "/allergies", produces = "application/fhir+json")
     String getAllergies(
         @RequestHeader("X-Tenant-ID") String tenantId,
-        @RequestParam("patient") String patientId,
+        @RequestParam("patient") UUID patientId,
         @RequestParam(value = "onlyCritical", defaultValue = "false") boolean onlyCritical
     );
 
@@ -54,7 +56,7 @@ public interface PatientServiceClient {
     @GetMapping(value = "/immunizations", produces = "application/fhir+json")
     String getImmunizations(
         @RequestHeader("X-Tenant-ID") String tenantId,
-        @RequestParam("patient") String patientId,
+        @RequestParam("patient") UUID patientId,
         @RequestParam(value = "onlyCompleted", defaultValue = "false") boolean onlyCompleted
     );
 
@@ -69,7 +71,7 @@ public interface PatientServiceClient {
     @GetMapping(value = "/medications", produces = "application/fhir+json")
     String getMedications(
         @RequestHeader("X-Tenant-ID") String tenantId,
-        @RequestParam("patient") String patientId,
+        @RequestParam("patient") UUID patientId,
         @RequestParam(value = "onlyActive", defaultValue = "true") boolean onlyActive
     );
 
@@ -84,7 +86,7 @@ public interface PatientServiceClient {
     @GetMapping(value = "/conditions", produces = "application/fhir+json")
     String getConditions(
         @RequestHeader("X-Tenant-ID") String tenantId,
-        @RequestParam("patient") String patientId,
+        @RequestParam("patient") UUID patientId,
         @RequestParam(value = "onlyActive", defaultValue = "true") boolean onlyActive
     );
 
@@ -98,7 +100,7 @@ public interface PatientServiceClient {
     @GetMapping(value = "/procedures", produces = "application/fhir+json")
     String getProcedures(
         @RequestHeader("X-Tenant-ID") String tenantId,
-        @RequestParam("patient") String patientId
+        @RequestParam("patient") UUID patientId
     );
 
     /**
@@ -111,7 +113,7 @@ public interface PatientServiceClient {
     @GetMapping(value = "/vitals", produces = "application/fhir+json")
     String getVitalSigns(
         @RequestHeader("X-Tenant-ID") String tenantId,
-        @RequestParam("patient") String patientId
+        @RequestParam("patient") UUID patientId
     );
 
     /**
@@ -124,7 +126,7 @@ public interface PatientServiceClient {
     @GetMapping(value = "/labs", produces = "application/fhir+json")
     String getLabResults(
         @RequestHeader("X-Tenant-ID") String tenantId,
-        @RequestParam("patient") String patientId
+        @RequestParam("patient") UUID patientId
     );
 
     /**
@@ -138,7 +140,7 @@ public interface PatientServiceClient {
     @GetMapping(value = "/encounters", produces = "application/fhir+json")
     String getEncounters(
         @RequestHeader("X-Tenant-ID") String tenantId,
-        @RequestParam("patient") String patientId,
+        @RequestParam("patient") UUID patientId,
         @RequestParam(value = "onlyActive", defaultValue = "false") boolean onlyActive
     );
 
@@ -152,7 +154,7 @@ public interface PatientServiceClient {
     @GetMapping(value = "/health-status", produces = "application/json")
     String getHealthStatusSummary(
         @RequestHeader("X-Tenant-ID") String tenantId,
-        @RequestParam("patient") String patientId
+        @RequestParam("patient") UUID patientId
     );
 
     /**
@@ -165,7 +167,7 @@ public interface PatientServiceClient {
     @GetMapping(value = "/medication-summary", produces = "application/json")
     String getMedicationSummary(
         @RequestHeader("X-Tenant-ID") String tenantId,
-        @RequestParam("patient") String patientId
+        @RequestParam("patient") UUID patientId
     );
 
     /**
@@ -178,7 +180,7 @@ public interface PatientServiceClient {
     @GetMapping(value = "/immunization-summary", produces = "application/json")
     String getImmunizationSummary(
         @RequestHeader("X-Tenant-ID") String tenantId,
-        @RequestParam("patient") String patientId
+        @RequestParam("patient") UUID patientId
     );
 
     /**

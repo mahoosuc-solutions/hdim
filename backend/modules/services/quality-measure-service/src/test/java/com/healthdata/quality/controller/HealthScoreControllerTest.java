@@ -56,7 +56,7 @@ class HealthScoreControllerTest {
     private MockMvc mockMvc;
 
     private static final String TENANT_ID = "tenant-123";
-    private static final String PATIENT_ID = "Patient/456";
+    private static final UUID PATIENT_ID = UUID.fromString("bbbbbbbb-cccc-dddd-eeee-ffffffffffff");
 
     private HealthScoreDTO sampleHealthScore;
 
@@ -128,27 +128,27 @@ class HealthScoreControllerTest {
     }
 
     @Test
-    @DisplayName("GET current health score - should handle patient IDs with slashes")
-    void getCurrentHealthScore_WithSlashInPatientId_HandlesCorrectly() {
+    @DisplayName("GET current health score - should handle UUID patient IDs")
+    void getCurrentHealthScore_WithUuidPatientId_HandlesCorrectly() {
         // Given
-        String fhirPatientId = "Patient/12345/ABC";
-        HealthScoreDTO scoreForFhirPatient = HealthScoreDTO.builder()
-                .patientId(fhirPatientId)
+        UUID patientId = UUID.fromString("60606060-1111-2222-3333-444444444444");
+        HealthScoreDTO scoreForPatient = HealthScoreDTO.builder()
+                .patientId(patientId)
                 .tenantId(TENANT_ID)
                 .overallScore(85.0)
                 .build();
 
-        when(healthScoreService.getCurrentHealthScore(TENANT_ID, fhirPatientId))
-                .thenReturn(Optional.of(scoreForFhirPatient));
+        when(healthScoreService.getCurrentHealthScore(TENANT_ID, patientId))
+                .thenReturn(Optional.of(scoreForPatient));
 
         // When
         ResponseEntity<HealthScoreDTO> response = healthScoreController.getCurrentHealthScore(
-                TENANT_ID, fhirPatientId
+                TENANT_ID, patientId
         );
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody().getPatientId()).isEqualTo(fhirPatientId);
+        assertThat(response.getBody().getPatientId()).isEqualTo(patientId);
     }
 
     @Test
@@ -276,9 +276,9 @@ class HealthScoreControllerTest {
         int size = 20;
 
         List<HealthScoreDTO> atRiskScores = Arrays.asList(
-                createScoreForPatient("Patient/1", 55.0),
-                createScoreForPatient("Patient/2", 50.0),
-                createScoreForPatient("Patient/3", 45.0)
+                createScoreForPatient(UUID.fromString("10101010-1111-2222-3333-444444444444"), 55.0),
+                createScoreForPatient(UUID.fromString("20202020-1111-2222-3333-444444444444"), 50.0),
+                createScoreForPatient(UUID.fromString("30303030-1111-2222-3333-444444444444"), 45.0)
         );
 
         Page<HealthScoreDTO> pagedResults = new PageImpl<>(
@@ -387,8 +387,8 @@ class HealthScoreControllerTest {
         int size = 20;
 
         List<HealthScoreDTO> significantChanges = Arrays.asList(
-                createSignificantChange("Patient/1", 85.0, 70.0),
-                createSignificantChange("Patient/2", 60.0, 75.0)
+                createSignificantChange(UUID.fromString("40404040-1111-2222-3333-444444444444"), 85.0, 70.0),
+                createSignificantChange(UUID.fromString("50505050-1111-2222-3333-444444444444"), 60.0, 75.0)
         );
 
         Page<HealthScoreDTO> pagedResults = new PageImpl<>(
@@ -497,7 +497,7 @@ class HealthScoreControllerTest {
                 .build();
     }
 
-    private HealthScoreDTO createScoreForPatient(String patientId, double score) {
+    private HealthScoreDTO createScoreForPatient(UUID patientId, double score) {
         return HealthScoreDTO.builder()
                 .id(UUID.randomUUID())
                 .patientId(patientId)
@@ -507,7 +507,7 @@ class HealthScoreControllerTest {
                 .build();
     }
 
-    private HealthScoreDTO createSignificantChange(String patientId, double currentScore, double previousScore) {
+    private HealthScoreDTO createSignificantChange(UUID patientId, double currentScore, double previousScore) {
         return HealthScoreDTO.builder()
                 .id(UUID.randomUUID())
                 .patientId(patientId)

@@ -5,6 +5,7 @@ import com.healthdata.cql.config.TestRedisConfiguration;
 import com.healthdata.cql.dto.ValueSetRequest;
 import com.healthdata.cql.entity.ValueSet;
 import com.healthdata.cql.repository.ValueSetRepository;
+import com.healthdata.cql.test.CqlTestcontainersBase;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -38,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
-public class ValueSetControllerIntegrationTest {
+public class ValueSetControllerIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
     private MockMvc mockMvc;

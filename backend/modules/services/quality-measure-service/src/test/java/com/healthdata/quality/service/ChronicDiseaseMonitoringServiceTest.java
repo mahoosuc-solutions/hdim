@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,7 +48,7 @@ class ChronicDiseaseMonitoringServiceTest {
     private ChronicDiseaseMonitoringService monitoringService;
 
     private static final String TENANT_ID = "test-tenant";
-    private static final String PATIENT_ID = "patient-123";
+    private static final UUID PATIENT_ID = UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
 
     @BeforeEach
     void setUp() {
@@ -467,5 +468,88 @@ class ChronicDiseaseMonitoringServiceTest {
         // Then: Should detect deterioration
         assertThat(result.getTrend()).isEqualTo(ChronicDiseaseMonitoringEntity.Trend.DETERIORATING);
         assertThat(result.isAlertTriggered()).isTrue();
+    }
+
+    @Test
+    void testProcessLabResultWithInvalidObservation() {
+        Map<String, Object> observationData = Map.of("resourceType", "Observation");
+
+        ChronicDiseaseMonitoringEntity result =
+            monitoringService.processLabResult(TENANT_ID, PATIENT_ID, observationData);
+
+        assertThat(result).isNull();
+        verify(monitoringRepository, never()).save(any());
+        verify(kafkaTemplate, never()).send(eq("chronic-disease.deterioration"), any());
+    }
+
+    @Test
+    void testProcessLabResultWithUnknownLoincCode() {
+        Map<String, Object> observationData = Map.of(
+            "resourceType", "Observation",
+            "code", Map.of(
+                "coding", java.util.List.of(Map.of(
+                    "system", "http://loinc.org",
+                    "code", "9999-9",
+                    "display", "Unknown"
+                ))
+            ),
+            "valueQuantity", Map.of("value", 1, "unit", "unit")
+        );
+
+        ChronicDiseaseMonitoringEntity result =
+            monitoringService.processLabResult(TENANT_ID, PATIENT_ID, observationData);
+
+        assertThat(result).isNull();
+        verify(monitoringRepository, never()).save(any());
+    }
+
+    @Test
+    void testStableTrendDoesNotPublishEvent() {
+        when(monitoringRepository.findByTenantIdAndPatientIdAndDiseaseCode(TENANT_ID, PATIENT_ID, "44054006"))
+            .thenReturn(Optional.empty());
+
+        when(diseaseDeteriorationDetector.analyzeTrend(eq("HbA1c"), isNull(), eq(7.0)))
+            .thenReturn(ChronicDiseaseMonitoringEntity.Trend.STABLE);
+
+        when(diseaseDeteriorationDetector.shouldTriggerAlert(eq("HbA1c"), eq(7.0), isNull()))
+            .thenReturn(false);
+
+        Map<String, Object> observationData = Map.of(
+            "resourceType", "Observation",
+            "code", Map.of(
+                "coding", java.util.List.of(Map.of("code", "4548-4", "display", "Hemoglobin A1c"))
+            ),
+            "valueQuantity", Map.of("value", 7.0, "unit", "%")
+        );
+
+        when(monitoringRepository.save(any(ChronicDiseaseMonitoringEntity.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ChronicDiseaseMonitoringEntity result =
+            monitoringService.processLabResult(TENANT_ID, PATIENT_ID, observationData);
+
+        assertThat(result.getTrend()).isEqualTo(ChronicDiseaseMonitoringEntity.Trend.STABLE);
+        assertThat(result.getNextMonitoringDue()).isAfter(Instant.now().plusSeconds(60L * 60 * 24 * 60));
+        verify(kafkaTemplate, never()).send(eq("chronic-disease.deterioration"), any());
+    }
+
+    @Test
+    void testQueryHelpersDelegateToRepository() {
+        List<ChronicDiseaseMonitoringEntity> results = List.of(
+            ChronicDiseaseMonitoringEntity.builder().id(UUID.randomUUID()).build()
+        );
+        when(monitoringRepository.findByTenantIdAndPatientIdOrderByMonitoredAtDesc(TENANT_ID, PATIENT_ID))
+            .thenReturn(results);
+        when(monitoringRepository.findByTenantIdAndTrendOrderByMonitoredAtDesc(
+            TENANT_ID, ChronicDiseaseMonitoringEntity.Trend.DETERIORATING)).thenReturn(results);
+        when(monitoringRepository.findByTenantIdAndAlertTriggeredTrueOrderByMonitoredAtDesc(TENANT_ID))
+            .thenReturn(results);
+        when(monitoringRepository.findDueForMonitoring(eq(TENANT_ID), any(Instant.class)))
+            .thenReturn(results);
+
+        assertThat(monitoringService.getPatientMonitoring(TENANT_ID, PATIENT_ID)).isEqualTo(results);
+        assertThat(monitoringService.getDeterioratingPatients(TENANT_ID)).isEqualTo(results);
+        assertThat(monitoringService.getPatientsWithAlerts(TENANT_ID)).isEqualTo(results);
+        assertThat(monitoringService.getPatientsDueForMonitoring(TENANT_ID)).isEqualTo(results);
     }
 }

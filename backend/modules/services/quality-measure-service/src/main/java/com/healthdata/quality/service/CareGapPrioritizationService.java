@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Care Gap Prioritization Service
@@ -30,7 +31,7 @@ public class CareGapPrioritizationService {
      */
     public CareGapEntity.Priority determinePriority(
         String tenantId,
-        String patientId,
+        UUID patientId,
         String measureId,
         CareGapEntity.GapCategory category
     ) {

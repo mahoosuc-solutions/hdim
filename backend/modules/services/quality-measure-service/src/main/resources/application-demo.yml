@@ -1,0 +1,74 @@
+# Demo profile for Quality Measure Service
+# Use with: --spring.profiles.active=demo
+# Tables are created automatically via Hibernate DDL
+
+server:
+  port: 8087
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5435/quality_db
+    username: healthdata
+    password: healthdata_password
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+    show-sql: false
+
+  # Disable all migration tools - use Hibernate DDL
+  liquibase:
+    enabled: false
+  flyway:
+    enabled: false
+
+  # Exclude Kafka auto-configuration for demo
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+  # Use simple cache instead of Redis
+  cache:
+    type: simple
+
+  # Redis configuration (using local Docker)
+  data:
+    redis:
+      host: localhost
+      port: 6380
+      timeout: 2000ms
+
+# JWT Configuration
+jwt:
+  secret: demo_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+  access-token-expiration: 1h
+  refresh-token-expiration: 1d
+  issuer: healthdata-demo
+  audience: healthdata-api-demo
+
+# Service client URLs for demo (localhost)
+service:
+  cql-engine:
+    base-url: http://localhost:8086
+  fhir:
+    base-url: http://localhost:8085/fhir
+  patient:
+    base-url: http://localhost:8084
+
+# Disable audit for demo
+audit:
+  enabled: false
+
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+    org.hibernate.SQL: DEBUG

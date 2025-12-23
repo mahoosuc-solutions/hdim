@@ -34,7 +34,7 @@ public class CareGapService {
      */
     public List<CareGapDTO> getPatientCareGaps(
         String tenantId,
-        String patientId,
+        UUID patientId,
         String status,
         String category
     ) {

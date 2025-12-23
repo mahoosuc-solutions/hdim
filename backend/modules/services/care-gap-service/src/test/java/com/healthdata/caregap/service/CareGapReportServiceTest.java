@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -31,8 +32,7 @@ class CareGapReportServiceTest {
     private CareGapReportService service;
 
     private static final String TENANT_ID = "tenant-123";
-    private static final String PATIENT_ID = "550e8400-e29b-41d4-a716-446655440000";
-    private static final UUID PATIENT_UUID = UUID.fromString(PATIENT_ID);
+    private static final UUID PATIENT_UUID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
 
     @BeforeEach
     void setUp() {
@@ -70,7 +70,7 @@ class CareGapReportServiceTest {
                     .thenReturn(1L);
 
             // When
-            CareGapReportService.CareGapSummary summary = service.getCareGapSummary(TENANT_ID, PATIENT_ID);
+            CareGapReportService.CareGapSummary summary = service.getCareGapSummary(TENANT_ID, PATIENT_UUID);
 
             // Then
             assertThat(summary.totalGaps()).isEqualTo(5);
@@ -102,7 +102,7 @@ class CareGapReportServiceTest {
                     .thenReturn(0L);
 
             // When
-            CareGapReportService.CareGapSummary summary = service.getCareGapSummary(TENANT_ID, PATIENT_ID);
+            CareGapReportService.CareGapSummary summary = service.getCareGapSummary(TENANT_ID, PATIENT_UUID);
 
             // Then
             assertThat(summary.closureRate()).isEqualTo(100.0);
@@ -124,7 +124,7 @@ class CareGapReportServiceTest {
                     .thenReturn(0L);
 
             // When
-            CareGapReportService.CareGapSummary summary = service.getCareGapSummary(TENANT_ID, PATIENT_ID);
+            CareGapReportService.CareGapSummary summary = service.getCareGapSummary(TENANT_ID, PATIENT_UUID);
 
             // Then
             assertThat(summary.totalGaps()).isZero();
@@ -154,7 +154,7 @@ class CareGapReportServiceTest {
                     .thenReturn(0L);
 
             // When
-            CareGapReportService.CareGapSummary summary = service.getCareGapSummary(TENANT_ID, PATIENT_ID);
+            CareGapReportService.CareGapSummary summary = service.getCareGapSummary(TENANT_ID, PATIENT_UUID);
 
             // Then
             assertThat(summary.measureCategories()).containsExactly("CMS", "HEDIS"); // Sorted
@@ -179,7 +179,7 @@ class CareGapReportServiceTest {
             when(careGapRepository.findOpenGapsByPatient(TENANT_ID, PATIENT_UUID)).thenReturn(gaps);
 
             // When
-            Map<String, Long> result = service.getGapsByMeasureCategory(TENANT_ID, PATIENT_ID);
+            Map<String, Long> result = service.getGapsByMeasureCategory(TENANT_ID, PATIENT_UUID);
 
             // Then
             assertThat(result).hasSize(3);
@@ -196,7 +196,7 @@ class CareGapReportServiceTest {
                     .thenReturn(List.of());
 
             // When
-            Map<String, Long> result = service.getGapsByMeasureCategory(TENANT_ID, PATIENT_ID);
+            Map<String, Long> result = service.getGapsByMeasureCategory(TENANT_ID, PATIENT_UUID);
 
             // Then
             assertThat(result).isEmpty();
@@ -222,7 +222,7 @@ class CareGapReportServiceTest {
             when(careGapRepository.findOpenGapsByPatient(TENANT_ID, PATIENT_UUID)).thenReturn(gaps);
 
             // When
-            Map<String, Long> result = service.getGapsByPriority(TENANT_ID, PATIENT_ID);
+            Map<String, Long> result = service.getGapsByPriority(TENANT_ID, PATIENT_UUID);
 
             // Then
             assertThat(result).hasSize(4);
@@ -250,7 +250,7 @@ class CareGapReportServiceTest {
                     .thenReturn(List.of(overdue1, overdue2, notOverdue, noDueDate));
 
             // When
-            List<CareGapEntity> result = service.getOverdueGaps(TENANT_ID, PATIENT_ID);
+            List<CareGapEntity> result = service.getOverdueGaps(TENANT_ID, PATIENT_UUID);
 
             // Then
             assertThat(result).hasSize(2);
@@ -268,7 +268,7 @@ class CareGapReportServiceTest {
                     .thenReturn(List.of(futureGap));
 
             // When
-            List<CareGapEntity> result = service.getOverdueGaps(TENANT_ID, PATIENT_ID);
+            List<CareGapEntity> result = service.getOverdueGaps(TENANT_ID, PATIENT_UUID);
 
             // Then
             assertThat(result).isEmpty();
@@ -293,7 +293,7 @@ class CareGapReportServiceTest {
                     .thenReturn(upcomingGaps);
 
             // When
-            List<CareGapEntity> result = service.getUpcomingGaps(TENANT_ID, PATIENT_ID, 30);
+            List<CareGapEntity> result = service.getUpcomingGaps(TENANT_ID, PATIENT_UUID, 30);
 
             // Then
             assertThat(result).hasSize(2);
@@ -412,10 +412,10 @@ class CareGapReportServiceTest {
                 .patientId(PATIENT_UUID)
                 .measureId(measureId)
                 .measureName(measureId + " Measure")
-                .measureCategory(category)
+                .gapCategory(category)
                 .gapStatus(status)
                 .priority(priority)
-                .identifiedDate(LocalDate.now())
+                .identifiedDate(Instant.now())
                 .build();
     }
 
@@ -432,10 +432,10 @@ class CareGapReportServiceTest {
                 .patientId(patientId)
                 .measureId(measureId)
                 .measureName(measureId + " Measure")
-                .measureCategory(category)
+                .gapCategory(category)
                 .gapStatus("open")
                 .priority(priority)
-                .identifiedDate(LocalDate.now())
+                .identifiedDate(Instant.now())
                 .build();
     }
 

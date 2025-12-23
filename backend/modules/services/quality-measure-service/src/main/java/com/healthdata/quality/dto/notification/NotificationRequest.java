@@ -2,6 +2,7 @@ package com.healthdata.quality.dto.notification;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Notification Request Abstraction
@@ -41,9 +42,9 @@ public interface NotificationRequest {
 
     /**
      * Get the patient ID (optional - null for non-patient-specific notifications)
-     * @return Patient FHIR ID or null
+     * @return Patient ID (UUID) or null
      */
-    String getPatientId();
+    UUID getPatientId();
 
     /**
      * Get the notification title

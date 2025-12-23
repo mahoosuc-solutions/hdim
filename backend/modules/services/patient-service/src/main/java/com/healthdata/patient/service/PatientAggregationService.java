@@ -11,6 +11,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -114,11 +115,11 @@ public class PatientAggregationService {
     public Bundle getAllergies(String tenantId, String patientId, boolean onlyCritical) {
         log.info("Fetching {} allergies for patient: {}", onlyCritical ? "critical" : "all", patientId);
 
-        String response = onlyCritical ?
-                fhirServiceClient.getCriticalAllergies(tenantId, patientId) :
-                fhirServiceClient.getAllergyIntolerances(tenantId, patientId);
-
-        return parseBundle(response);
+        return fetchBundleSafely("allergies", patientId, () ->
+                onlyCritical ?
+                        fhirServiceClient.getCriticalAllergies(tenantId, patientId) :
+                        fhirServiceClient.getAllergyIntolerances(tenantId, patientId)
+        );
     }
 
     /**
@@ -142,11 +143,11 @@ public class PatientAggregationService {
     public Bundle getMedications(String tenantId, String patientId, boolean onlyActive) {
         log.info("Fetching {} medications for patient: {}", onlyActive ? "active" : "all", patientId);
 
-        String response = onlyActive ?
-                fhirServiceClient.getActiveMedications(tenantId, patientId) :
-                fhirServiceClient.getMedicationRequests(tenantId, patientId);
-
-        return parseBundle(response);
+        return fetchBundleSafely("medications", patientId, () ->
+                onlyActive ?
+                        fhirServiceClient.getActiveMedications(tenantId, patientId) :
+                        fhirServiceClient.getMedicationRequests(tenantId, patientId)
+        );
     }
 
     /**
@@ -273,6 +274,15 @@ public class PatientAggregationService {
             return jsonParser.parseResource(Bundle.class, json);
         } catch (Exception e) {
             log.error("Error parsing FHIR bundle: {}", e.getMessage());
+            return createEmptyBundle();
+        }
+    }
+
+    private Bundle fetchBundleSafely(String resourceType, String patientId, Supplier<String> fetcher) {
+        try {
+            return parseBundle(fetcher.get());
+        } catch (Exception e) {
+            log.error("Error fetching {} for patient {}: {}", resourceType, patientId, e.getMessage());
             return createEmptyBundle();
         }
     }

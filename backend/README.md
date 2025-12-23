@@ -149,6 +149,11 @@ curl -v http://localhost:8084/patient/api/patients \
   -H "X-Tenant-ID: tenant1" | grep -i cache-control
 ```
 
+#### Testcontainers
+
+- Integration tests that use Testcontainers require Docker to be running.
+- Redis-specific integration tests activate the `test-redis` profile to provision a Redis container.
+
 ## Security
 
 ### Multi-Tenancy

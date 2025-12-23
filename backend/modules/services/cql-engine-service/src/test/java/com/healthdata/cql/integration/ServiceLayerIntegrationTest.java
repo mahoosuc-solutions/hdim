@@ -7,6 +7,7 @@ import com.healthdata.cql.entity.ValueSet;
 import com.healthdata.cql.service.CqlEvaluationService;
 import com.healthdata.cql.service.CqlLibraryService;
 import com.healthdata.cql.service.ValueSetService;
+import com.healthdata.cql.test.CqlTestcontainersBase;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,6 +22,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
-public class ServiceLayerIntegrationTest {
+public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
     private CqlLibraryService libraryService;
@@ -151,7 +153,7 @@ public class ServiceLayerIntegrationTest {
     void testEvaluationServiceCreateAndExecute() {
         CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "EvalTest", "1.0.0"));
 
-        CqlEvaluation evaluation = evaluationService.createEvaluation(TENANT_ID, library.getId(), "patient-123");
+        CqlEvaluation evaluation = evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
         assertNotNull(evaluation.getId());
         assertEquals("PENDING", evaluation.getStatus());
 
@@ -167,7 +169,7 @@ public class ServiceLayerIntegrationTest {
         CqlLibrary library = libraryService.createLibrary(new CqlLibrary("tenant-1", "TenantTest", "1.0.0"));
 
         assertThrows(IllegalArgumentException.class, () -> {
-            evaluationService.createEvaluation("tenant-2", library.getId(), "patient-123");
+            evaluationService.createEvaluation("tenant-2", library.getId(), UUID.randomUUID());
         });
     }
 
@@ -176,33 +178,35 @@ public class ServiceLayerIntegrationTest {
     @DisplayName("Should get evaluations for patient")
     void testGetEvaluationsForPatient() {
         CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "PatientEvalTest", "1.0.0"));
+        UUID patientId = UUID.randomUUID();
 
-        evaluationService.createEvaluation(TENANT_ID, library.getId(), "patient-abc");
-        evaluationService.createEvaluation(TENANT_ID, library.getId(), "patient-abc");
-        evaluationService.createEvaluation(TENANT_ID, library.getId(), "patient-xyz");
+        evaluationService.createEvaluation(TENANT_ID, library.getId(), patientId);
+        evaluationService.createEvaluation(TENANT_ID, library.getId(), patientId);
+        evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
 
-        List<CqlEvaluation> evaluations = evaluationService.getEvaluationsForPatient(TENANT_ID, "patient-abc");
+        List<CqlEvaluation> evaluations = evaluationService.getEvaluationsForPatient(TENANT_ID, patientId);
         assertTrue(evaluations.size() >= 2);
-        assertTrue(evaluations.stream().allMatch(eval -> eval.getPatientId().equals("patient-abc")));
+        assertTrue(evaluations.stream().allMatch(eval -> eval.getPatientId().equals(patientId)));
     }
 
     @Test
     @Order(10)
-    @DisplayName("Should get latest evaluation for patient and library")
+        @DisplayName("Should get latest evaluation for patient and library")
     void testGetLatestEvaluation() {
         CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "LatestEvalTest", "1.0.0"));
+        UUID patientId = UUID.randomUUID();
 
-        CqlEvaluation older = evaluationService.createEvaluation(TENANT_ID, library.getId(), "patient-latest");
+        CqlEvaluation older = evaluationService.createEvaluation(TENANT_ID, library.getId(), patientId);
         try {
             Thread.sleep(100); // Ensure different timestamps
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
 
-        CqlEvaluation newer = evaluationService.createEvaluation(TENANT_ID, library.getId(), "patient-latest");
+        CqlEvaluation newer = evaluationService.createEvaluation(TENANT_ID, library.getId(), patientId);
 
         Optional<CqlEvaluation> latest = evaluationService.getLatestEvaluationForPatientAndLibrary(
-                TENANT_ID, "patient-latest", library.getId());
+                TENANT_ID, patientId, library.getId());
 
         assertTrue(latest.isPresent());
         assertEquals(newer.getId(), latest.get().getId());
@@ -214,7 +218,7 @@ public class ServiceLayerIntegrationTest {
     void testGetEvaluationsByStatus() {
         CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "StatusTest", "1.0.0"));
 
-        CqlEvaluation eval1 = evaluationService.createEvaluation(TENANT_ID, library.getId(), "patient-1");
+        CqlEvaluation eval1 = evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
         CqlEvaluation executedEval = evaluationService.executeEvaluation(eval1.getId(), TENANT_ID);
         final String expectedStatus = executedEval.getStatus();
 
@@ -225,11 +229,11 @@ public class ServiceLayerIntegrationTest {
 
     @Test
     @Order(12)
-    @DisplayName("Should batch evaluate multiple patients")
+        @DisplayName("Should batch evaluate multiple patients")
     void testBatchEvaluate() {
         CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "BatchTest", "1.0.0"));
 
-        List<String> patientIds = Arrays.asList("batch-p1", "batch-p2", "batch-p3");
+        List<UUID> patientIds = Arrays.asList(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
         List<CqlEvaluation> evaluations = evaluationService.batchEvaluate(TENANT_ID, library.getId(), patientIds);
 
         assertEquals(3, evaluations.size());
@@ -238,11 +242,11 @@ public class ServiceLayerIntegrationTest {
 
     @Test
     @Order(13)
-    @DisplayName("Should retry failed evaluation")
+        @DisplayName("Should retry failed evaluation")
     void testRetryEvaluation() {
         CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "RetryTest", "1.0.0"));
 
-        CqlEvaluation evaluation = evaluationService.createEvaluation(TENANT_ID, library.getId(), "retry-patient");
+        CqlEvaluation evaluation = evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
         evaluation = evaluationService.updateEvaluationResult(
                 evaluation.getId(), TENANT_ID, null, "FAILED");
 
@@ -257,9 +261,9 @@ public class ServiceLayerIntegrationTest {
         CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "DateRangeTest", "1.0.0"));
 
         Instant now = Instant.now();
-        evaluationService.createEvaluation(TENANT_ID, library.getId(), "date-patient-1");
+        evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
         Thread.sleep(100);
-        evaluationService.createEvaluation(TENANT_ID, library.getId(), "date-patient-2");
+        evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
 
         Instant start = now.minus(1, ChronoUnit.HOURS);
         Instant end = now.plus(1, ChronoUnit.HOURS);
@@ -274,10 +278,10 @@ public class ServiceLayerIntegrationTest {
     void testAverageDuration() {
         CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "DurationTest", "1.0.0"));
 
-        CqlEvaluation eval1 = evaluationService.createEvaluation(TENANT_ID, library.getId(), "duration-p1");
+        CqlEvaluation eval1 = evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
         evaluationService.updateEvaluationResult(eval1.getId(), TENANT_ID, "{}", "SUCCESS");
 
-        CqlEvaluation eval2 = evaluationService.createEvaluation(TENANT_ID, library.getId(), "duration-p2");
+        CqlEvaluation eval2 = evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
         evaluationService.updateEvaluationResult(eval2.getId(), TENANT_ID, "{}", "SUCCESS");
 
         Double avgDuration = evaluationService.getAverageDurationForLibrary(TENANT_ID, library.getId());

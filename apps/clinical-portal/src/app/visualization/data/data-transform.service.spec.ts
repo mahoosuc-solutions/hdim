@@ -608,6 +608,39 @@ describe('DataTransformService', () => {
       expect(positions[0].y).toBeGreaterThanOrEqual(0);
       expect(positions[0].y).toBeLessThanOrEqual(50);
     });
+
+    it('should fallback to zero for non-numeric metrics', () => {
+      const results: QualityMeasureResult[] = [
+        {
+          id: 'result-1',
+          tenantId: 'tenant-1',
+          patientId: 'patient-1',
+          measureId: 'CDC-A1C9',
+          measureName: 'Test',
+          measureCategory: 'HEDIS',
+          measureYear: 2024,
+          numeratorCompliant: true,
+          denominatorEligible: true,
+          complianceRate: undefined as any,
+          score: undefined as any,
+          calculationDate: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          createdBy: 'system',
+          version: 1,
+        },
+      ];
+
+      const positions = service.createScatterPlotPositions(
+        results,
+        'complianceRate',
+        'score',
+        'measureYear'
+      );
+
+      expect(positions[0].x).toBeDefined();
+      expect(positions[0].y).toBeDefined();
+      expect(positions[0].z).toBeDefined();
+    });
   });
 
   describe('createRadialLayout', () => {
@@ -697,6 +730,11 @@ describe('DataTransformService', () => {
       expect(avgX).toBeCloseTo(0, 0);
       expect(avgZ).toBeCloseTo(0, 0);
     });
+
+    it('should return empty grid layout for zero count', () => {
+      const positions = service.createGridLayout(0, 5);
+      expect(positions).toEqual([]);
+    });
   });
 
   describe('createSpiralLayout', () => {
@@ -727,6 +765,11 @@ describe('DataTransformService', () => {
 
       expect(positions[5].y).toBeGreaterThan(positions[0].y);
       expect(positions[9].y).toBeGreaterThan(positions[5].y);
+    });
+
+    it('should return empty spiral layout for zero count', () => {
+      const positions = service.createSpiralLayout(0, 2, 0.5);
+      expect(positions).toEqual([]);
     });
   });
 

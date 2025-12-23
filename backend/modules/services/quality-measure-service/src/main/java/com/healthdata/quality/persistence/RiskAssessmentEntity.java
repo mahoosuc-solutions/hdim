@@ -37,7 +37,7 @@ public class RiskAssessmentEntity {
     private String tenantId;
 
     @Column(name = "patient_id", nullable = false, length = 100)
-    private String patientId;
+    private UUID patientId;
 
     @Column(name = "risk_category", length = 50)
     private String riskCategory; // CARDIOVASCULAR, DIABETES, RESPIRATORY, MENTAL_HEALTH

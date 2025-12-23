@@ -16,10 +16,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.lenient;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * Tests for ClinicalAlertNotificationTrigger
@@ -40,7 +43,7 @@ class ClinicalAlertNotificationTriggerTest {
     private ClinicalAlertNotificationTrigger trigger;
 
     private static final String TENANT_ID = "tenant-123";
-    private static final String PATIENT_ID = "patient-456";
+    private static final UUID PATIENT_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
     private static final String ALERT_ID = "alert-789";
 
     @BeforeEach
@@ -49,7 +52,7 @@ class ClinicalAlertNotificationTriggerTest {
             .allSuccessful(true)
             .build();
         lenient().when(notificationService.sendNotification(any())).thenReturn(status);
-        lenient().when(patientNameService.getPatientName(anyString())).thenReturn("John Doe");
+        lenient().when(patientNameService.getPatientName(any(UUID.class))).thenReturn("John Doe");
     }
 
     @Test
@@ -152,6 +155,84 @@ class ClinicalAlertNotificationTriggerTest {
         // Then
         verify(notificationService, never()).sendNotification(any());
         verify(recipientResolutionService, never()).resolveRecipients(any(), any(), any(), any());
+    }
+
+    @Test
+    void shouldHandlePartialFailureOnAlertTriggered() {
+        ClinicalAlertDTO alert = createClinicalAlert("HIGH");
+
+        NotificationService.NotificationStatus status = NotificationService.NotificationStatus.builder()
+            .channelStatus(java.util.Map.of("websocket", true, "email", false))
+            .allSuccessful(false)
+            .build();
+        when(notificationService.sendNotification(any())).thenReturn(status);
+
+        trigger.onAlertTriggered(TENANT_ID, alert);
+
+        verify(notificationService).sendNotification(any());
+    }
+
+    @Test
+    void shouldHandleExceptionOnAlertTriggered() {
+        ClinicalAlertDTO alert = createClinicalAlert("HIGH");
+        when(notificationService.sendNotification(any()))
+            .thenThrow(new RuntimeException("notify failed"));
+
+        trigger.onAlertTriggered(TENANT_ID, alert);
+
+        verify(notificationService).sendNotification(any());
+    }
+
+    @Test
+    void shouldHandlePartialFailureOnAlertAcknowledged() {
+        ClinicalAlertDTO alert = createClinicalAlert("HIGH");
+        alert.setStatus("ACKNOWLEDGED");
+        alert.setAcknowledgedBy("Dr. Casey");
+        alert.setAcknowledgedAt(Instant.now());
+
+        NotificationService.NotificationStatus status = NotificationService.NotificationStatus.builder()
+            .channelStatus(java.util.Map.of("websocket", true, "email", false))
+            .allSuccessful(false)
+            .build();
+        when(notificationService.sendNotification(any())).thenReturn(status);
+
+        trigger.onAlertAcknowledged(TENANT_ID, alert);
+
+        verify(notificationService).sendNotification(any());
+    }
+
+    @Test
+    void shouldHandleExceptionOnAlertAcknowledged() {
+        ClinicalAlertDTO alert = createClinicalAlert("HIGH");
+        alert.setStatus("ACKNOWLEDGED");
+        when(notificationService.sendNotification(any()))
+            .thenThrow(new RuntimeException("notify failed"));
+
+        trigger.onAlertAcknowledged(TENANT_ID, alert);
+
+        verify(notificationService).sendNotification(any());
+    }
+
+    @Test
+    void shouldBuildTemplateVariablesWithEscalationFields() {
+        ClinicalAlertDTO alert = createClinicalAlert("CRITICAL");
+        alert.setEscalated(true);
+        alert.setEscalatedAt(Instant.now());
+
+        @SuppressWarnings("unchecked")
+        var variables = (java.util.Map<String, Object>) ReflectionTestUtils.invokeMethod(
+            trigger, "buildAlertTemplateVariables", alert);
+
+        assertThat(variables).containsEntry("requiresImmediateAction", true);
+        assertThat(variables.get("escalatedAt")).isNotNull();
+    }
+
+    @Test
+    void shouldMapUnknownSeverityToMediumNotification() {
+        String severity = (String) ReflectionTestUtils.invokeMethod(
+            trigger, "mapAlertSeverityToNotificationSeverity", "UNKNOWN");
+
+        assertThat(severity).isEqualTo("MEDIUM");
     }
 
     private ClinicalAlertDTO createClinicalAlert(String severity) {

@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Population Calculation Service - Optimized with Parallel Processing
@@ -80,7 +81,7 @@ public class PopulationCalculationService {
             job.updateStatus(JobStatus.FETCHING_PATIENTS);
             publishProgress(jobId, "Fetching patients from FHIR server...", 0);
 
-            List<String> patientIds = fetchAllPatientIds(fhirServerUrl, tenantId);
+            List<UUID> patientIds = fetchAllPatientIds(fhirServerUrl, tenantId);
             job.setTotalPatients(patientIds.size());
             log.info("Found {} patients for calculation", patientIds.size());
 
@@ -102,19 +103,19 @@ public class PopulationCalculationService {
             AtomicInteger failed = new AtomicInteger(0);
 
             // Process patients in chunks to manage memory
-            List<List<String>> patientChunks = chunkList(patientIds, CHUNK_SIZE);
+            List<List<UUID>> patientChunks = chunkList(patientIds, CHUNK_SIZE);
             log.info("Processing {} patients in {} chunks of max {} patients each",
                 patientIds.size(), patientChunks.size(), CHUNK_SIZE);
 
             for (int chunkIndex = 0; chunkIndex < patientChunks.size(); chunkIndex++) {
-                List<String> chunk = patientChunks.get(chunkIndex);
+                List<UUID> chunk = patientChunks.get(chunkIndex);
                 log.info("Processing chunk {}/{} with {} patients",
                     chunkIndex + 1, patientChunks.size(), chunk.size());
 
                 // Create parallel calculation tasks for this chunk
                 List<CompletableFuture<Void>> chunkFutures = new ArrayList<>();
 
-                for (String patientId : chunk) {
+                for (UUID patientId : chunk) {
                     for (String measureId : measureIds) {
                         CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                             try {
@@ -211,8 +212,8 @@ public class PopulationCalculationService {
     /**
      * Fetch all patient IDs from FHIR server
      */
-    private List<String> fetchAllPatientIds(String fhirServerUrl, String tenantId) {
-        List<String> patientIds = new ArrayList<>();
+    private List<UUID> fetchAllPatientIds(String fhirServerUrl, String tenantId) {
+        List<UUID> patientIds = new ArrayList<>();
 
         try {
             // Query FHIR server for all patients
@@ -230,7 +231,7 @@ public class PopulationCalculationService {
                 for (Map<String, Object> entry : entries) {
                     Map<String, Object> resource = (Map<String, Object>) entry.get("resource");
                     if (resource != null && resource.containsKey("id")) {
-                        patientIds.add(resource.get("id").toString());
+                        patientIds.add(UUID.fromString(resource.get("id").toString()));
                     }
                 }
             }

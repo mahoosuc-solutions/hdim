@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * IMA - Immunization for Adolescents (HEDIS)
@@ -55,7 +56,7 @@ public class IMAMeasure extends AbstractHedisMeasure {
 
     @Override
     @Cacheable(value = "hedisMeasures", key = "'IMA-' + #tenantId + '-' + #patientId")
-    public MeasureResult evaluate(String tenantId, String patientId) {
+    public MeasureResult evaluate(String tenantId, UUID patientId) {
         logger.info("Evaluating IMA measure for patient: {}", patientId);
 
         MeasureResult.MeasureResultBuilder resultBuilder = MeasureResult.builder()
@@ -152,7 +153,7 @@ public class IMAMeasure extends AbstractHedisMeasure {
     }
 
     @Override
-    public boolean isEligible(String tenantId, String patientId) {
+    public boolean isEligible(String tenantId, UUID patientId) {
         JsonNode patient = getPatientData(tenantId, patientId);
         if (patient == null) return false;
 
@@ -164,7 +165,7 @@ public class IMAMeasure extends AbstractHedisMeasure {
     /**
      * Search immunizations by CVX codes
      */
-    private JsonNode searchImmunizationsByCVX(String tenantId, String patientId, List<String> cvxCodes) {
+    private JsonNode searchImmunizationsByCVX(String tenantId, UUID patientId, List<String> cvxCodes) {
         try {
             // Build vaccine-code parameter with CVX codes
             String vaccineCodeParam = cvxCodes.stream()

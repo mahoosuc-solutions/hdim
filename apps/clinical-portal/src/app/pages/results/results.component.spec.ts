@@ -7,6 +7,7 @@ import { EvaluationService } from '../../services/evaluation.service';
 import { PatientService } from '../../services/patient.service';
 import { EvaluationFactory } from '../../../testing/factories/evaluation.factory';
 import { PatientFactory } from '../../../testing/factories/patient.factory';
+import { CSVHelper } from '../../utils/csv-helper';
 
 /**
  * TDD Test Suite for Results Management Component
@@ -380,6 +381,40 @@ describe('ResultsComponent (TDD)', () => {
       component.filteredResults = mockResults;
     });
 
+    it('should export results to CSV and update loading flags', () => {
+      jest.useFakeTimers();
+      const downloadSpy = jest.spyOn(CSVHelper, 'downloadCSV').mockImplementation(() => undefined);
+
+      component.exportToCSV();
+      expect(component.exportCsvLoading).toBe(true);
+
+      jest.advanceTimersByTime(500);
+
+      expect(component.exportCsvLoading).toBe(false);
+      expect(component.exportCsvSuccess).toBe(true);
+      expect(downloadSpy).toHaveBeenCalled();
+
+      downloadSpy.mockRestore();
+      jest.useRealTimers();
+    });
+
+    it('should export results to Excel and update loading flags', () => {
+      jest.useFakeTimers();
+      const downloadSpy = jest.spyOn(CSVHelper, 'downloadCSV').mockImplementation(() => undefined);
+
+      component.exportToExcel();
+      expect(component.exportExcelLoading).toBe(true);
+
+      jest.advanceTimersByTime(500);
+
+      expect(component.exportExcelLoading).toBe(false);
+      expect(component.exportExcelSuccess).toBe(true);
+      expect(downloadSpy).toHaveBeenCalled();
+
+      downloadSpy.mockRestore();
+      jest.useRealTimers();
+    });
+
     it('should export results to CSV', () => {
       const exportSpy = jest.spyOn(component, 'exportToCSV');
 
@@ -411,6 +446,27 @@ describe('ResultsComponent (TDD)', () => {
       expect(headers).toContain('Evaluation Date');
       expect(headers).toContain('Outcome');
       expect(headers).toContain('Compliance Rate');
+    });
+
+    it('should export only selected rows when selection exists', () => {
+      const downloadSpy = jest.spyOn(CSVHelper, 'downloadCSV').mockImplementation(() => undefined);
+      component.dataSource.data = component.filteredResults;
+      component.selection.select(component.filteredResults[0]);
+
+      component.exportSelectedToCSV();
+
+      expect(downloadSpy).toHaveBeenCalled();
+      downloadSpy.mockRestore();
+    });
+
+    it('should skip export when no rows are selected', () => {
+      const downloadSpy = jest.spyOn(CSVHelper, 'downloadCSV').mockImplementation(() => undefined);
+      component.selection.clear();
+
+      component.exportSelectedToCSV();
+
+      expect(downloadSpy).not.toHaveBeenCalled();
+      downloadSpy.mockRestore();
     });
   });
 
@@ -456,9 +512,36 @@ describe('ResultsComponent (TDD)', () => {
       expect(groupedResults).toHaveProperty('HEDIS');
       expect(groupedResults['HEDIS'].length).toBeGreaterThan(0);
     });
+
+    it('should return zero overall compliance when no results', () => {
+      component.filteredResults = [];
+
+      expect(component.calculateOverallCompliance()).toBe(0);
+    });
+
+    it('should return compliance stats bundle', () => {
+      const stats = component.getComplianceStats();
+
+      expect(stats).toHaveProperty('compliant');
+      expect(stats).toHaveProperty('nonCompliant');
+      expect(stats).toHaveProperty('notEligible');
+      expect(stats).toHaveProperty('overallRate');
+    });
   });
 
   describe('Status Badges and UI Helpers', () => {
+    it('should return correct outcome text', () => {
+      expect(component.getOutcomeText(EvaluationFactory.createCompliantResult())).toBe('Compliant');
+      expect(component.getOutcomeText(EvaluationFactory.createNonCompliantResult())).toBe('Non-Compliant');
+      expect(component.getOutcomeText(EvaluationFactory.createNotEligibleResult())).toBe('Not Eligible');
+    });
+
+    it('should return correct status class', () => {
+      expect(component.getStatusClass(EvaluationFactory.createCompliantResult())).toBe('status-compliant');
+      expect(component.getStatusClass(EvaluationFactory.createNonCompliantResult())).toBe('status-non-compliant');
+      expect(component.getStatusClass(EvaluationFactory.createNotEligibleResult())).toBe('status-not-eligible');
+    });
+
     it('should return correct badge class for compliant result', () => {
       const result = EvaluationFactory.createCompliantResult();
 
@@ -497,6 +580,57 @@ describe('ResultsComponent (TDD)', () => {
       const percentage = component.formatPercentage(85.5);
 
       expect(percentage).toBe('85.5%');
+    });
+  });
+
+  describe('Chart and Selection Helpers', () => {
+    it('should update chart data based on filtered results', () => {
+      component.filteredResults = [
+        EvaluationFactory.createCompliantResult(),
+        EvaluationFactory.createNonCompliantResult(),
+        EvaluationFactory.createNotEligibleResult(),
+      ];
+
+      component.updateChartData();
+
+      expect(component.outcomeDistributionChartData.length).toBe(3);
+      expect(component.categoryComplianceChartData.length).toBeGreaterThan(0);
+    });
+
+    it('should handle total pages when page size is zero', () => {
+      component.pageSize = 0;
+      component.filteredResults = [EvaluationFactory.createCompliantResult()];
+
+      expect(component.getTotalPages()).toBe(0);
+    });
+
+    it('should toggle selection for all rows', () => {
+      const row = EvaluationFactory.createCompliantResult();
+      component.dataSource.data = [row];
+
+      expect(component.isAllSelected()).toBe(false);
+      component.masterToggle();
+      expect(component.isAllSelected()).toBe(true);
+      component.masterToggle();
+      expect(component.isAllSelected()).toBe(false);
+    });
+
+    it('should provide checkbox labels for rows and header', () => {
+      const row = EvaluationFactory.createCompliantResult();
+      component.dataSource.data = [row];
+
+      expect(component.checkboxLabel()).toContain('select all');
+      component.selection.select(row);
+      expect(component.checkboxLabel(row)).toContain(`deselect row ${row.id}`);
+    });
+
+    it('should clear selection and report selection count', () => {
+      const row = EvaluationFactory.createCompliantResult();
+      component.selection.select(row);
+
+      expect(component.getSelectionCount()).toBe(1);
+      component.clearSelection();
+      expect(component.getSelectionCount()).toBe(0);
     });
   });
 });

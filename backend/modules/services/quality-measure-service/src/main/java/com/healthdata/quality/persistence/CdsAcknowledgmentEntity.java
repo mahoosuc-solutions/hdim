@@ -39,7 +39,7 @@ public class CdsAcknowledgmentEntity {
     private UUID recommendationId;
 
     @Column(name = "patient_id", nullable = false, length = 100)
-    private String patientId;
+    private UUID patientId;
 
     @Column(name = "user_id", nullable = false, length = 255)
     private String userId;

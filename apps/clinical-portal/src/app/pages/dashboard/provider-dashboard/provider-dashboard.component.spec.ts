@@ -141,6 +141,38 @@ describe('ProviderDashboardComponent', () => {
       expect(mockNotificationService.success).toHaveBeenCalledWith('Successfully signed 3 results');
     });
 
+    it('should warn when there are no unsigned results for bulk signing', () => {
+      const results: PendingResult[] = [
+        { ...mockResult, id: '1', requiresReview: false },
+        { ...mockResult, id: '2', requiresReview: false },
+      ];
+
+      component.signMultipleResults(results);
+
+      expect(mockDialogService.confirm).not.toHaveBeenCalled();
+      expect(mockNotificationService.warning).toHaveBeenCalledWith('No unsigned results to sign');
+    });
+
+    it('should use warning styling when bulk signing has abnormal results', () => {
+      const results: PendingResult[] = [
+        { ...mockResult, id: '1', abnormal: true, requiresReview: true },
+        { ...mockResult, id: '2', abnormal: false, requiresReview: true },
+      ];
+      mockDialogService.confirm.mockReturnValue(of(true));
+      component.resultsToReview = 2;
+
+      component.signMultipleResults(results);
+
+      expect(mockDialogService.confirm).toHaveBeenCalledWith(
+        'Sign Multiple Results',
+        expect.stringContaining('2 results'),
+        'Sign All',
+        'Cancel',
+        'warn'
+      );
+      expect(component.resultsToReview).toBe(0);
+    });
+
     it('should filter unsigned results only for bulk signing', () => {
       const results: PendingResult[] = [
         { ...mockResult, id: '1', requiresReview: true },
@@ -162,6 +194,15 @@ describe('ProviderDashboardComponent', () => {
         { queryParams: { action: 'review-results', resultId: mockResult.id } }
       );
     });
+
+    it('should not decrement results below zero when signing', () => {
+      mockDialogService.confirm.mockReturnValue(of(true));
+      component.resultsToReview = 0;
+
+      component.signResult(mockResult);
+
+      expect(component.resultsToReview).toBe(0);
+    });
   });
 
   describe('Schedule Management Workflow', () => {
@@ -170,6 +211,12 @@ describe('ProviderDashboardComponent', () => {
 
       expect(mockSchedule).toBeDefined();
       expect(Array.isArray(mockSchedule)).toBe(true);
+    });
+
+    it('should return empty schedule for non-today dates', async () => {
+      const schedule = await component.loadProviderSchedule(new Date('2024-01-01'));
+
+      expect(schedule).toEqual([]);
     });
 
     it('should view today schedule with correct date', () => {
@@ -203,14 +250,26 @@ describe('ProviderDashboardComponent', () => {
 
     it('should filter appointments by date range', () => {
       const startDate = new Date('2025-12-01');
-      const endDate = new Date('2025-12-01'); // Same day to avoid infinite loop
+      const endDate = new Date('2025-12-02');
 
-      jest.spyOn(component, 'loadProviderSchedule').mockReturnValue([]);
+      jest.spyOn(component, 'loadProviderSchedule').mockImplementation((date: Date) => ([
+        {
+          id: `appt-${date.toISOString().split('T')[0]}`,
+          patientName: 'Test Patient',
+          patientMRN: 'MRN-001',
+          startTime: '09:00',
+          endTime: '09:30',
+          date: date.toISOString().split('T')[0],
+          type: 'Follow-up',
+          status: 'scheduled'
+        }
+      ]));
 
       const appointments = component.getAppointmentsByDateRange(startDate, endDate);
 
       expect(appointments).toBeDefined();
       expect(Array.isArray(appointments)).toBe(true);
+      expect(appointments.length).toBe(2);
     });
 
     it('should get upcoming appointments count', () => {
@@ -261,6 +320,12 @@ describe('ProviderDashboardComponent', () => {
       expect(hasConflict).toBe(true); // Should conflict with existing appointment
     });
 
+    it('should return false when appointment data is incomplete', () => {
+      const hasConflict = component.checkScheduleConflict({ id: '1' });
+
+      expect(hasConflict).toBe(false);
+    });
+
     it('should block time slot for provider', () => {
       mockDialogService.confirm.mockReturnValue(of(true));
 
@@ -283,6 +348,19 @@ describe('ProviderDashboardComponent', () => {
       expect(mockNotificationService.success).toHaveBeenCalledWith('Time slot blocked successfully');
     });
 
+    it('should not block time slot when cancelled', () => {
+      mockDialogService.confirm.mockReturnValue(of(false));
+
+      component.blockTimeSlot({
+        date: '2025-12-10',
+        startTime: '14:00',
+        endTime: '15:00',
+        reason: 'Admin'
+      });
+
+      expect(mockNotificationService.success).not.toHaveBeenCalled();
+    });
+
     it('should cancel blocked time slot', () => {
       mockDialogService.confirm.mockReturnValue(of(true));
 
@@ -292,9 +370,31 @@ describe('ProviderDashboardComponent', () => {
       expect(mockDialogService.confirm).toHaveBeenCalled();
       expect(mockNotificationService.success).toHaveBeenCalledWith('Blocked time slot cancelled');
     });
+
+    it('should keep blocked time slot when cancellation declined', () => {
+      mockDialogService.confirm.mockReturnValue(of(false));
+
+      component.cancelBlockedSlot('block-456');
+
+      expect(mockNotificationService.success).not.toHaveBeenCalled();
+    });
   });
 
   describe('Dashboard Data Loading', () => {
+    it('should populate data after dashboard load', () => {
+      jest.useFakeTimers();
+
+      (component as any).loadDashboardData();
+      jest.advanceTimersByTime(500);
+
+      expect(component.highPriorityCareGaps.length).toBeGreaterThan(0);
+      expect(component.qualityMeasures.length).toBeGreaterThan(0);
+      expect(component.pendingResults.length).toBeGreaterThan(0);
+      expect(component.loading).toBe(false);
+
+      jest.useRealTimers();
+    });
+
     it('should load all dashboard data on init', () => {
       jest.spyOn<any, any>(component, 'loadHighPriorityCareGaps');
       jest.spyOn<any, any>(component, 'loadQualityMeasures');
@@ -338,6 +438,12 @@ describe('ProviderDashboardComponent', () => {
         { queryParams: { action: 'clinical-review', gapId: gap.id } }
       );
     });
+
+    it('should navigate to patient detail by id', () => {
+      component.viewPatient('patient-123');
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/patient-detail', 'patient-123']);
+    });
   });
 
   describe('Quality Measures', () => {
@@ -364,12 +470,99 @@ describe('ProviderDashboardComponent', () => {
       expect(component.getRiskColor('critical')).toBe('#d32f2f');
       expect(component.getRiskColor('high')).toBe('#f57c00');
       expect(component.getRiskColor('moderate')).toBe('#fbc02d');
+      expect(component.getRiskColor('unknown')).toBe('#757575');
+    });
+
+    it('should return correct risk icons', () => {
+      expect(component.getRiskIcon('critical')).toBe('error');
+      expect(component.getRiskIcon('high')).toBe('warning');
+      expect(component.getRiskIcon('moderate')).toBe('info');
+      expect(component.getRiskIcon('other')).toBe('help');
     });
 
     it('should return correct performance colors', () => {
       expect(component.getPerformanceColor(80, 80)).toBe('#4caf50'); // At target
       expect(component.getPerformanceColor(75, 80)).toBe('#ff9800'); // Above 90% of target
       expect(component.getPerformanceColor(60, 80)).toBe('#f44336'); // Below 90% of target
+    });
+
+    it('should return correct trend icons and colors', () => {
+      expect(component.getTrendIcon('up')).toBe('trending_up');
+      expect(component.getTrendIcon('down')).toBe('trending_down');
+      expect(component.getTrendIcon('stable')).toBe('trending_flat');
+      expect(component.getTrendIcon('other')).toBe('remove');
+
+      expect(component.getTrendColor('up')).toBe('#4caf50');
+      expect(component.getTrendColor('down')).toBe('#f44336');
+      expect(component.getTrendColor('stable')).toBe('#757575');
+      expect(component.getTrendColor('other')).toBe('#757575');
+    });
+  });
+
+  describe('Dashboard Navigation', () => {
+    it('should navigate to all results', () => {
+      component.viewAllResults();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/results']);
+    });
+
+    it('should navigate to all evaluations', () => {
+      component.viewAllEvaluations();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/evaluations']);
+    });
+
+    it('should navigate to all patients', () => {
+      component.viewAllPatients();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/patients']);
+    });
+
+    it('should navigate to compliant patients', () => {
+      component.viewCompliantPatients();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients'],
+        { queryParams: { compliance: 'compliant' } }
+      );
+    });
+
+    it('should navigate to non-compliant patients', () => {
+      component.viewNonCompliantPatients();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients'],
+        { queryParams: { compliance: 'non-compliant' } }
+      );
+    });
+
+    it('should navigate to recent evaluations', () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2025-12-15T12:00:00Z'));
+
+      component.viewRecentEvaluations();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/evaluations'],
+        { queryParams: { startDate: '2025-11-15' } }
+      );
+
+      jest.useRealTimers();
+    });
+
+    it('should navigate to high urgency care gaps', () => {
+      component.viewAllCareGaps();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients'],
+        { queryParams: { filter: 'care-gaps', urgency: 'high' } }
+      );
+    });
+
+    it('should navigate to reports', () => {
+      component.viewReports();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/reports']);
     });
   });
 

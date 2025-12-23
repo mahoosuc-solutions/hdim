@@ -50,7 +50,7 @@ public class CareTeamAssignmentEntity {
      * Patient FHIR ID
      */
     @Column(name = "patient_id", nullable = false, length = 100)
-    private String patientId;
+    private UUID patientId;
 
     /**
      * Provider/care team member ID

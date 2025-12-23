@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <include file="db/changelog/0001-create-cql-libraries-table.xml"/>
+    <include file="db/changelog/0002-create-cql-evaluations-table.xml"/>
+    <include file="db/changelog/0003-create-value-sets-table.xml"/>
+    <!-- Shared auth tables for Gateway + services -->
+    <include file="db/changelog/0004-create-users-tables.xml"/>
+    <include file="db/changelog/0005-add-tenant-id-to-value-sets.xml"/>
+    <include file="db/changelog/0006-fix-cql-libraries-table.xml"/>
+    <include file="db/changelog/0007-fix-cql-evaluations-table.xml"/>
+    <include file="db/changelog/0008-fix-value-sets-table.xml"/>
+    <include file="db/changelog/0009-fix-evaluation-result-nullable.xml"/>
+    <include file="db/changelog/0010-convert-to-jsonb-and-add-indexes.xml"/>
+    <include file="db/changelog/0011-convert-cql-evaluations-patient-id-to-uuid.xml"/>
+    <include file="db/changelog/0012-seed-hedis-measures.xml"/>
+
+</databaseChangeLog>

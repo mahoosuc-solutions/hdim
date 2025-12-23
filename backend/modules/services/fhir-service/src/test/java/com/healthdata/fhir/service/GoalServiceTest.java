@@ -119,6 +119,18 @@ class GoalServiceTest {
     }
 
     @Test
+    void createGoalShouldRejectInvalidPatientReference() {
+        Goal goal = new Goal();
+        goal.setId(GOAL_ID.toString());
+        goal.setLifecycleStatus(Goal.GoalLifecycleStatus.ACTIVE);
+        goal.setSubject(new Reference("Patient/not-a-uuid"));
+
+        assertThatThrownBy(() -> goalService.createGoal(TENANT, goal, "user-1"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("subject");
+    }
+
+    @Test
     void getGoalShouldReturnFhirResource() {
         // Given
         GoalEntity entity = createGoalEntityWithJson();
@@ -216,6 +228,80 @@ class GoalServiceTest {
 
         // Then
         assertThat(results).hasSize(2);
+    }
+
+    @Test
+    void createGoalShouldCaptureDetails() {
+        Goal goal = new Goal();
+        goal.setId(GOAL_ID.toString());
+        goal.setLifecycleStatus(Goal.GoalLifecycleStatus.ACTIVE);
+        goal.setAchievementStatus(new CodeableConcept().addCoding(new Coding().setCode("in-progress")));
+        goal.setPriority(new CodeableConcept().addCoding(new Coding().setCode("high-priority")));
+        goal.setDescription(new CodeableConcept().setText("Lower A1C"));
+        goal.addCategory(new CodeableConcept().addCoding(new Coding().setCode("dietary").setDisplay("Dietary")));
+        goal.setSubject(new Reference("Patient/" + PATIENT_ID));
+        goal.setStart(new DateType("2024-01-01"));
+        goal.addTarget(new Goal.GoalTargetComponent().setDue(new DateType("2024-06-01")));
+        goal.setStatusDateElement(new DateType("2024-01-15"));
+        goal.addAddresses(new Reference("Condition/" + CONDITION_ID));
+        goal.setExpressedBy(new Reference("Practitioner/123"));
+
+        when(goalRepository.save(any(GoalEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        goalService.createGoal(TENANT, goal, "user-1");
+
+        ArgumentCaptor<GoalEntity> captor = ArgumentCaptor.forClass(GoalEntity.class);
+        verify(goalRepository).save(captor.capture());
+        GoalEntity entity = captor.getValue();
+        assertThat(entity.getAchievementStatus()).isEqualTo("in-progress");
+        assertThat(entity.getPriorityCode()).isEqualTo("high-priority");
+        assertThat(entity.getDescriptionText()).isEqualTo("Lower A1C");
+        assertThat(entity.getCategoryCode()).isEqualTo("dietary");
+        assertThat(entity.getCategoryDisplay()).isEqualTo("Dietary");
+        assertThat(entity.getStartDate()).isEqualTo(LocalDate.parse("2024-01-01"));
+        assertThat(entity.getTargetDate()).isEqualTo(LocalDate.parse("2024-06-01"));
+        assertThat(entity.getStatusDate()).isEqualTo(LocalDate.parse("2024-01-15"));
+        assertThat(entity.getAddressesConditionId()).isEqualTo(CONDITION_ID);
+        assertThat(entity.getExpressedByReference()).isEqualTo("Practitioner/123");
+    }
+
+    @Test
+    void createGoalShouldHandleMissingFields() {
+        Goal goal = new Goal();
+        goal.setId(GOAL_ID.toString());
+        goal.setLifecycleStatus(Goal.GoalLifecycleStatus.ACTIVE);
+        goal.setAchievementStatus(new CodeableConcept().setText("in-progress"));
+        goal.setPriority(new CodeableConcept());
+        goal.setDescription(new CodeableConcept().addCoding(new Coding().setDisplay("Fallback description")));
+        goal.addCategory(new CodeableConcept().setText("Lifestyle"));
+        goal.setSubject(new Reference("Patient/" + PATIENT_ID));
+        goal.addAddresses(new Reference("Condition/not-a-uuid"));
+
+        when(goalRepository.save(any(GoalEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        goalService.createGoal(TENANT, goal, "user-1");
+
+        ArgumentCaptor<GoalEntity> captor = ArgumentCaptor.forClass(GoalEntity.class);
+        verify(goalRepository).save(captor.capture());
+        GoalEntity entity = captor.getValue();
+        assertThat(entity.getAchievementStatus()).isNull();
+        assertThat(entity.getPriorityCode()).isNull();
+        assertThat(entity.getDescriptionText()).isEqualTo("Fallback description");
+        assertThat(entity.getCategoryDisplay()).isEqualTo("Lifestyle");
+        assertThat(entity.getAddressesConditionId()).isNull();
+    }
+
+    @Test
+    void createGoalShouldIgnoreEventPublishFailures() {
+        Goal goal = createFhirGoal();
+        GoalEntity savedEntity = createGoalEntity();
+        when(goalRepository.save(any(GoalEntity.class))).thenReturn(savedEntity);
+        when(kafkaTemplate.send(any(), any(), any())).thenThrow(new RuntimeException("kafka down"));
+
+        Goal result = goalService.createGoal(TENANT, goal, "user-1");
+
+        assertThat(result).isNotNull();
+        verify(goalRepository).save(any(GoalEntity.class));
     }
 
     @Test

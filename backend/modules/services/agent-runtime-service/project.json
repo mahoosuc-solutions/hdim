@@ -1,0 +1,39 @@
+{
+  "name": "agent-runtime-service",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "backend/modules/services/agent-runtime-service/src",
+  "tags": [
+    "backend",
+    "service"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/modules/services/agent-runtime-service/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:agent-runtime-service:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:agent-runtime-service:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:agent-runtime-service:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:agent-runtime-service:test :modules:services:agent-runtime-service:jacocoTestReport :modules:services:agent-runtime-service:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

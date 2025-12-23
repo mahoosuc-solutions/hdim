@@ -106,6 +106,28 @@ describe('WebSocketVisualizationService', () => {
       (window as any).WebSocket = originalWebSocket;
     }));
 
+    it('should skip connect when existing socket is connecting', () => {
+      const originalWebSocket = window.WebSocket;
+      const webSocketSpy = jest.fn();
+      (webSocketSpy as any).OPEN = (originalWebSocket as any)?.OPEN ?? 1;
+      (webSocketSpy as any).CONNECTING = (originalWebSocket as any)?.CONNECTING ?? 0;
+      (window as any).WebSocket = webSocketSpy;
+      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+      (service as any).socket = {
+        readyState: (webSocketSpy as any).CONNECTING,
+        close: jest.fn(),
+      };
+
+      service.connect();
+
+      expect(webSocketSpy).not.toHaveBeenCalled();
+      expect(logSpy).toHaveBeenCalledWith('WebSocket connection in progress');
+
+      logSpy.mockRestore();
+      (window as any).WebSocket = originalWebSocket;
+    });
+
     it('should set status to CONNECTED on open', fakeAsync(() => {
       const originalWebSocket = window.WebSocket;
       (window as any).WebSocket = function (url: string) {
@@ -147,7 +169,7 @@ describe('WebSocketVisualizationService', () => {
       expect(mockWebSocket.send).toHaveBeenCalledWith(
         JSON.stringify({
           type: 'subscribe',
-          events: ['batch_progress', 'evaluation_progress'],
+          events: ['batch_progress', 'evaluation_progress', 'care_gap_notification'],
         })
       );
 
@@ -422,6 +444,17 @@ describe('WebSocketVisualizationService', () => {
 
       (window as any).WebSocket = originalWebSocket;
     }));
+
+    it('should warn on unknown message type', () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+      (service as any).onMessage(
+        new MessageEvent('message', { data: JSON.stringify({ type: 'unknown' }) })
+      );
+
+      expect(warnSpy).toHaveBeenCalled();
+      warnSpy.mockRestore();
+    });
   });
 
   describe('error handling', () => {
@@ -633,6 +666,14 @@ describe('WebSocketVisualizationService', () => {
       (window as any).WebSocket = originalWebSocket;
     }));
 
+    it('should set ERROR status when max attempts reached', () => {
+      (service as any).reconnectAttempts = (service as any).maxReconnectAttempts;
+
+      (service as any).scheduleReconnect();
+
+      expect(service.getStatus()).toBe(WebSocketStatus.ERROR);
+    });
+
     it('should reset reconnect attempts on successful connection', fakeAsync(() => {
       const originalWebSocket = window.WebSocket;
       let connectAttempts = 0;
@@ -702,6 +743,36 @@ describe('WebSocketVisualizationService', () => {
       (window as any).WebSocket = function (url: string) {
         mockWebSocket.readyState = WebSocket.OPEN;
         mockWebSocket.send.and.throwError('Send failed');
+        setTimeout(() => {
+          if (mockWebSocket.onopen) {
+            mockWebSocket.onopen(new Event('open'));
+          }
+        }, 0);
+        return mockWebSocket;
+      };
+
+      let receivedError: Error | null = null;
+      service.error$.subscribe((error) => {
+        receivedError = error;
+      });
+
+      service.connect();
+      tick(100);
+
+      (service as any).sendMessage({ test: 'data' });
+
+      expect(receivedError).not.toBeNull();
+
+      (window as any).WebSocket = originalWebSocket;
+    }));
+
+    it('should emit error when send throws', fakeAsync(() => {
+      const originalWebSocket = window.WebSocket;
+      (window as any).WebSocket = function (url: string) {
+        mockWebSocket.readyState = WebSocket.OPEN;
+        mockWebSocket.send = jest.fn(() => {
+          throw new Error('Send failed');
+        }) as any;
         setTimeout(() => {
           if (mockWebSocket.onopen) {
             mockWebSocket.onopen(new Event('open'));

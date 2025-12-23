@@ -55,7 +55,7 @@ import com.healthdata.migration.repository.MigrationJobRepository;
 @Transactional
 class MigrationJobControllerIT {
 
-    private static final String H2_URL = "jdbc:h2:mem:migration_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH";
+    private static final String H2_URL = "jdbc:tc:postgresql:15-alpine:///testdb";
     private static final String TENANT_ID = "test-tenant";
     private static final String CONTENT_TYPE = MediaType.APPLICATION_JSON_VALUE;
 
@@ -64,8 +64,8 @@ class MigrationJobControllerIT {
         registry.add("spring.datasource.url", () -> H2_URL);
         registry.add("spring.datasource.username", () -> "sa");
         registry.add("spring.datasource.password", () -> "");
-        registry.add("spring.datasource.driver-class-name", () -> "org.h2.Driver");
-        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.H2Dialect");
+        registry.add("spring.datasource.driver-class-name", () -> "org.testcontainers.jdbc.ContainerDatabaseDriver");
+        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
     }
 
     @Autowired

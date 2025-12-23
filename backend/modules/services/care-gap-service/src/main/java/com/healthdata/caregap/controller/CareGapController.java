@@ -60,7 +60,7 @@ public class CareGapController {
     @PostMapping(value = "/identify", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> identifyAllCareGaps(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam("patient") String patientId,
+            @RequestParam("patient") UUID patientId,
             @RequestParam(value = "createdBy", defaultValue = "system") String createdBy
     ) {
         log.info("POST /care-gap/identify - tenant: {}, patient: {}", tenantId, patientId);
@@ -84,7 +84,7 @@ public class CareGapController {
     @PostMapping(value = "/identify/{library}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> identifyCareGapsForLibrary(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam("patient") String patientId,
+            @RequestParam("patient") UUID patientId,
             @PathVariable("library") String library,
             @RequestParam(value = "createdBy", defaultValue = "system") String createdBy
     ) {
@@ -108,7 +108,7 @@ public class CareGapController {
     @PostMapping(value = "/refresh", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> refreshCareGaps(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam("patient") String patientId,
+            @RequestParam("patient") UUID patientId,
             @RequestParam(value = "createdBy", defaultValue = "system") String createdBy
     ) {
         log.info("POST /care-gap/refresh - patient: {}", patientId);
@@ -164,7 +164,7 @@ public class CareGapController {
     @GetMapping(value = "/open", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> getOpenCareGaps(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam("patient") String patientId
+            @RequestParam("patient") UUID patientId
     ) {
         log.info("GET /care-gap/open - patient: {}", patientId);
 
@@ -184,7 +184,7 @@ public class CareGapController {
     @GetMapping(value = "/high-priority", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> getHighPriorityCareGaps(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam("patient") String patientId
+            @RequestParam("patient") UUID patientId
     ) {
         log.info("GET /care-gap/high-priority - patient: {}", patientId);
 
@@ -204,7 +204,7 @@ public class CareGapController {
     @GetMapping(value = "/overdue", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> getOverdueGaps(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam("patient") String patientId
+            @RequestParam("patient") UUID patientId
     ) {
         log.info("GET /care-gap/overdue - patient: {}", patientId);
 
@@ -225,7 +225,7 @@ public class CareGapController {
     @GetMapping(value = "/upcoming", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> getUpcomingGaps(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam("patient") String patientId,
+            @RequestParam("patient") UUID patientId,
             @RequestParam(value = "days", defaultValue = "30") int days
     ) {
         log.info("GET /care-gap/upcoming - patient: {}, days: {}", patientId, days);
@@ -248,7 +248,7 @@ public class CareGapController {
     @GetMapping(value = "/stats", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CareGapIdentificationService.CareGapStats> getCareGapStats(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam("patient") String patientId
+            @RequestParam("patient") UUID patientId
     ) {
         log.info("GET /care-gap/stats - patient: {}", patientId);
 
@@ -269,7 +269,7 @@ public class CareGapController {
     @GetMapping(value = "/summary", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CareGapReportService.CareGapSummary> getCareGapSummary(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam("patient") String patientId
+            @RequestParam("patient") UUID patientId
     ) {
         log.info("GET /care-gap/summary - patient: {}", patientId);
 
@@ -290,7 +290,7 @@ public class CareGapController {
     @GetMapping(value = "/by-category", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Long>> getGapsByCategory(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam("patient") String patientId
+            @RequestParam("patient") UUID patientId
     ) {
         log.info("GET /care-gap/by-category - patient: {}", patientId);
 
@@ -310,7 +310,7 @@ public class CareGapController {
     @GetMapping(value = "/by-priority", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Long>> getGapsByPriority(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam("patient") String patientId
+            @RequestParam("patient") UUID patientId
     ) {
         log.info("GET /care-gap/by-priority - patient: {}", patientId);
 

@@ -276,6 +276,36 @@ class DataQualityServiceTest {
                 .anyMatch(issue -> issue.getField().equals("Overall"));
             assertThat(hasOverallFailureIssue).isTrue();
         }
+
+        @Test
+        @DisplayName("Should include mapping, code, and duplicate issues and sort by severity")
+        void shouldIncludeAdditionalIssueTypes() {
+            // Given
+            MigrationJobEntity job = createJobEntity();
+            job.setTotalRecords(100L);
+            job.setFailureCount(25L);
+
+            List<Object[]> errorCounts = java.util.Arrays.<Object[]>asList(
+                new Object[]{MigrationErrorCategory.MAPPING_ERROR, 5L},
+                new Object[]{MigrationErrorCategory.INVALID_CODE, 4L},
+                new Object[]{MigrationErrorCategory.DUPLICATE_RECORD, 3L},
+                new Object[]{MigrationErrorCategory.PARSE_ERROR, 30L}
+            );
+
+            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
+            when(errorRepository.countByJobIdGroupByCategory(JOB_ID)).thenReturn(errorCounts);
+            when(errorRepository.findTopErrorsByJobId(eq(JOB_ID), any(PageRequest.class)))
+                .thenReturn(List.of());
+
+            // When
+            DataQualityReport report = service.generateReport(JOB_ID);
+
+            // Then
+            assertThat(report.getDataQualityIssues()).isNotEmpty();
+            assertThat(report.getDataQualityIssues().get(0).getSeverity())
+                .isIn(DataQualityReport.DataQualityIssue.Severity.ERROR,
+                      DataQualityReport.DataQualityIssue.Severity.CRITICAL);
+        }
     }
 
     @Nested
@@ -399,6 +429,27 @@ class DataQualityServiceTest {
         }
 
         @Test
+        @DisplayName("Should page through errors when exporting CSV")
+        void shouldPageThroughErrorsWhenExportingCsv() throws Exception {
+            List<MigrationErrorEntity> errors = List.of(
+                createErrorEntity("Page 1 Error")
+            );
+            Page<MigrationErrorEntity> page1 = new PageImpl<>(
+                errors, PageRequest.of(0, 1), 2);
+            Page<MigrationErrorEntity> page2 = new PageImpl<>(
+                List.of(), PageRequest.of(1, 1), 2);
+
+            when(errorRepository.findByJobId(eq(JOB_ID), eq(PageRequest.of(0, 1000))))
+                .thenReturn(page1);
+            when(errorRepository.findByJobId(eq(JOB_ID), eq(PageRequest.of(1, 1000))))
+                .thenReturn(page2);
+
+            String csv = service.exportErrorsToCsv(JOB_ID);
+
+            assertThat(csv).contains("Page 1 Error");
+        }
+
+        @Test
         @DisplayName("Should export quality report to CSV")
         void shouldExportQualityReportToCsv() {
             // Given
@@ -425,6 +476,33 @@ class DataQualityServiceTest {
         }
 
         @Test
+        @DisplayName("Should include non-zero error categories and FHIR resources in CSV")
+        void shouldIncludeNonZeroErrorsAndFhirResourcesInCsv() {
+            MigrationJobEntity job = createJobEntity();
+            job.setTotalRecords(100L);
+            job.setSuccessCount(95L);
+            job.setFailureCount(5L);
+            job.setFhirResourcesCreated(Map.of("Patient", 2L));
+
+            List<Object[]> errorCounts = java.util.Arrays.<Object[]>asList(
+                new Object[]{MigrationErrorCategory.PARSE_ERROR, 5L},
+                new Object[]{MigrationErrorCategory.MAPPING_ERROR, 0L}
+            );
+
+            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
+            when(errorRepository.countByJobIdGroupByCategory(JOB_ID)).thenReturn(errorCounts);
+            when(errorRepository.findTopErrorsByJobId(eq(JOB_ID), any(PageRequest.class)))
+                .thenReturn(List.of());
+
+            String csv = service.exportReportToCsv(JOB_ID);
+
+            assertThat(csv).contains("FHIR Resources Created");
+            assertThat(csv).contains("Patient,2");
+            assertThat(csv).contains("PARSE_ERROR,5");
+            assertThat(csv).doesNotContain("MAPPING_ERROR,0");
+        }
+
+        @Test
         @DisplayName("Should escape CSV special characters")
         void shouldEscapeCsvSpecialCharacters() throws Exception {
             // Given
@@ -441,6 +519,39 @@ class DataQualityServiceTest {
             // Then
             assertThat(csv).contains("\"ID,with,commas\"");
             assertThat(csv).contains("\"Error with, comma and \"\"quote\"\"\"");
+        }
+
+        @Test
+        @DisplayName("Should include top errors with samples and truncate long messages")
+        void shouldIncludeTopErrorsWithSamples() {
+            // Given
+            MigrationJobEntity job = createJobEntity();
+            String longMessage = "X".repeat(250);
+            List<Object[]> topErrors = java.util.Arrays.<Object[]>asList(
+                new Object[]{MigrationErrorCategory.PARSE_ERROR, longMessage, 5L}
+            );
+
+            MigrationErrorEntity sample = createErrorEntity("Sample Error");
+            sample.setRecordIdentifier("rec-1");
+            sample.setSourceFile("file1");
+
+            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
+            when(errorRepository.countByJobIdGroupByCategory(JOB_ID)).thenReturn(List.of());
+            when(errorRepository.findTopErrorsByJobId(eq(JOB_ID), any(PageRequest.class)))
+                .thenReturn(topErrors);
+            when(errorRepository.findByJobIdWithFilters(eq(JOB_ID), eq(MigrationErrorCategory.PARSE_ERROR),
+                    eq(longMessage), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(sample)));
+
+            // When
+            DataQualityReport report = service.generateReport(JOB_ID);
+
+            // Then
+            assertThat(report.getTopErrors()).hasSize(1);
+            DataQualityReport.ErrorSample errorSample = report.getTopErrors().get(0);
+            assertThat(errorSample.getSampleRecordId()).isEqualTo("rec-1");
+            assertThat(errorSample.getSampleSourceFile()).isEqualTo("file1");
+            assertThat(errorSample.getErrorMessage()).endsWith("...");
         }
     }
 
@@ -515,6 +626,46 @@ class DataQualityServiceTest {
             assertThat(report).isNotNull();
             assertThat(report.getSummary().getSuccessRate()).isEqualTo(0.0);
         }
+
+        @Test
+        @DisplayName("Should set average processing time to zero when no records processed")
+        void shouldSetAvgProcessingTimeToZeroWhenNoProcessed() {
+            MigrationJobEntity job = createJobEntity();
+            job.setTotalRecords(10L);
+            job.setProcessedCount(0L);
+            job.setSuccessCount(0L);
+            job.setFailureCount(0L);
+            job.setStartedAt(Instant.now().minusSeconds(5));
+            job.setCompletedAt(Instant.now());
+
+            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
+            when(errorRepository.countByJobIdGroupByCategory(JOB_ID)).thenReturn(List.of());
+            when(errorRepository.findTopErrorsByJobId(eq(JOB_ID), any(PageRequest.class)))
+                .thenReturn(List.of());
+
+            DataQualityReport report = service.generateReport(JOB_ID);
+
+            assertThat(report.getSummary().getAvgProcessingTimeMs()).isEqualTo(0.0);
+        }
+    }
+
+    @Test
+    @DisplayName("Should handle missing start time in summary")
+    void shouldHandleMissingStartTime() {
+        MigrationJobEntity job = createJobEntity();
+        job.setStartedAt(null);
+        job.setCompletedAt(Instant.now());
+        job.setTotalRecords(10L);
+
+        when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
+        when(errorRepository.countByJobIdGroupByCategory(JOB_ID)).thenReturn(List.of());
+        when(errorRepository.findTopErrorsByJobId(eq(JOB_ID), any(PageRequest.class)))
+            .thenReturn(List.of());
+
+        DataQualityReport report = service.generateReport(JOB_ID);
+
+        assertThat(report.getSummary().getProcessingTimeMs()).isEqualTo(0L);
+        assertThat(report.getSummary().getAvgProcessingTimeMs()).isEqualTo(0.0);
     }
 
     @Nested

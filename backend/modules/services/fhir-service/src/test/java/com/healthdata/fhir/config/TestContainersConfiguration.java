@@ -2,9 +2,8 @@ package com.healthdata.fhir.config;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -49,45 +48,35 @@ import com.redis.testcontainers.RedisContainer;
 @TestConfiguration
 public class TestContainersConfiguration {
 
+    private static final boolean DOCKER_AVAILABLE = isDockerAvailable();
+
     /**
      * PostgreSQL container for database integration tests.
      * Uses PostgreSQL 16 with optimized settings for test performance.
      * The container is started once and reused across all tests.
      */
-    @Container
     private static final PostgreSQLContainer<?> POSTGRES_CONTAINER = new PostgreSQLContainer<>(
             DockerImageName.parse("postgres:16-alpine"))
             .withDatabaseName("healthdata_fhir")
             .withUsername("healthdata")
-            .withPassword("healthdata_test")
-            .withReuse(true);
+            .withPassword("healthdata_test");
 
     /**
      * Redis container for caching and session management tests.
      * Uses Redis 7 (latest stable version).
      * The container is started once and reused across all tests.
      */
-    @Container
     private static final RedisContainer REDIS_CONTAINER = new RedisContainer(
-            DockerImageName.parse("redis:7-alpine"))
-            .withReuse(true);
+            DockerImageName.parse("redis:7-alpine"));
 
     /**
      * Kafka container for message broker integration tests.
      * Uses Confluent Platform 7.6.0 which includes Kafka 3.6.
      * The container is started once and reused across all tests.
      */
-    @Container
     private static final KafkaContainer KAFKA_CONTAINER = new KafkaContainer(
             DockerImageName.parse("confluentinc/cp-kafka:7.6.0")
-                    .asCompatibleSubstituteFor("apache/kafka"))
-            .withReuse(true);
-
-    static {
-        // Start PostgreSQL container eagerly - required for most tests
-        POSTGRES_CONTAINER.start();
-        // Redis and Kafka are started lazily when first accessed
-    }
+                    .asCompatibleSubstituteFor("apache/kafka"));
 
     /**
      * Exposes the PostgreSQL container as a Spring bean.
@@ -147,6 +136,10 @@ public class TestContainersConfiguration {
      * @param registry the dynamic property registry
      */
     public static void configurePostgres(org.springframework.test.context.DynamicPropertyRegistry registry) {
+        ensureDockerAvailable();
+        if (!POSTGRES_CONTAINER.isRunning()) {
+            POSTGRES_CONTAINER.start();
+        }
         registry.add("spring.datasource.url", POSTGRES_CONTAINER::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES_CONTAINER::getUsername);
         registry.add("spring.datasource.password", POSTGRES_CONTAINER::getPassword);
@@ -172,6 +165,7 @@ public class TestContainersConfiguration {
      * @param registry the dynamic property registry
      */
     public static void configureRedis(org.springframework.test.context.DynamicPropertyRegistry registry) {
+        ensureDockerAvailable();
         if (!REDIS_CONTAINER.isRunning()) {
             REDIS_CONTAINER.start();
         }
@@ -197,6 +191,7 @@ public class TestContainersConfiguration {
      * @param registry the dynamic property registry
      */
     public static void configureKafka(org.springframework.test.context.DynamicPropertyRegistry registry) {
+        ensureDockerAvailable();
         if (!KAFKA_CONTAINER.isRunning()) {
             KAFKA_CONTAINER.start();
         }
@@ -212,6 +207,10 @@ public class TestContainersConfiguration {
      * @return the PostgreSQL container
      */
     public static PostgreSQLContainer<?> getPostgresContainer() {
+        ensureDockerAvailable();
+        if (!POSTGRES_CONTAINER.isRunning()) {
+            POSTGRES_CONTAINER.start();
+        }
         return POSTGRES_CONTAINER;
     }
 
@@ -222,6 +221,10 @@ public class TestContainersConfiguration {
      * @return the Redis container
      */
     public static RedisContainer getRedisContainer() {
+        ensureDockerAvailable();
+        if (!REDIS_CONTAINER.isRunning()) {
+            REDIS_CONTAINER.start();
+        }
         return REDIS_CONTAINER;
     }
 
@@ -232,6 +235,24 @@ public class TestContainersConfiguration {
      * @return the Kafka container
      */
     public static KafkaContainer getKafkaContainer() {
+        ensureDockerAvailable();
+        if (!KAFKA_CONTAINER.isRunning()) {
+            KAFKA_CONTAINER.start();
+        }
         return KAFKA_CONTAINER;
+    }
+
+    private static boolean isDockerAvailable() {
+        try {
+            return DockerClientFactory.instance().isDockerAvailable();
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    private static void ensureDockerAvailable() {
+        if (!DOCKER_AVAILABLE) {
+            throw new IllegalStateException("Docker is required for Testcontainers tests.");
+        }
     }
 }

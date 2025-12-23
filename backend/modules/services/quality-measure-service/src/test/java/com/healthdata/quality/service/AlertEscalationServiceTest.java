@@ -51,7 +51,7 @@ class AlertEscalationServiceTest {
     private AlertEscalationService escalationService;
 
     private static final String TENANT_ID = "test-tenant";
-    private static final String PATIENT_ID = "patient-123";
+    private static final UUID PATIENT_ID = UUID.fromString("11111111-2222-3333-4444-555555555555");
 
     @BeforeEach
     void setUp() {
@@ -304,6 +304,40 @@ class AlertEscalationServiceTest {
         assertThat(escalated).isEqualTo(3);
         verify(alertRepository, times(3)).save(any(ClinicalAlertEntity.class));
         verify(kafkaTemplate, times(3)).send(eq("clinical-alert.escalated"), any());
+    }
+
+    @Test
+    @DisplayName("Should return zero when escalation processing fails")
+    void shouldReturnZeroWhenEscalationProcessingFails() {
+        when(alertRepository.findUnacknowledgedAlerts(any(Instant.class)))
+            .thenThrow(new RuntimeException("db error"));
+
+        int escalated = escalationService.processEscalations();
+
+        assertThat(escalated).isEqualTo(0);
+        verifyNoInteractions(alertRoutingService, notificationService, kafkaTemplate);
+    }
+
+    @Test
+    @DisplayName("Should publish escalation event even if notification fails")
+    void shouldPublishEventEvenIfNotificationFails() {
+        ClinicalAlertEntity alert = createAlertEntity(
+            "CRITICAL",
+            "ACTIVE",
+            Instant.now().minus(20, ChronoUnit.MINUTES),
+            null,
+            false
+        );
+
+        when(alertRepository.save(any(ClinicalAlertEntity.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+        when(alertRoutingService.getEscalationRecipients(eq(TENANT_ID), any(ClinicalAlertDTO.class)))
+            .thenReturn(List.of("on-call-provider"));
+        doThrow(new RuntimeException("notify down")).when(notificationService).sendNotification(any());
+
+        escalationService.escalateAlert(alert);
+
+        verify(kafkaTemplate).send(eq("clinical-alert.escalated"), any(Map.class));
     }
 
     // Helper methods

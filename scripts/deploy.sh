@@ -17,6 +17,7 @@ NC='\033[0m' # No Color
 # Parse arguments
 BUILD_FLAG=""
 MONITORING_FLAG=""
+PROFILE_FLAG="--profile core"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -90,9 +91,9 @@ echo ""
 echo -e "${BLUE}Step 4: Starting containers...${NC}"
 if [ -n "$MONITORING_FLAG" ]; then
     echo -e "${BLUE}Including monitoring services (Prometheus + Grafana)${NC}"
-    docker compose $MONITORING_FLAG up -d
+    docker compose $PROFILE_FLAG $MONITORING_FLAG up -d
 else
-    docker compose up -d
+    docker compose $PROFILE_FLAG up -d
 fi
 echo -e "${GREEN}✓ Containers started${NC}"
 echo ""
@@ -146,10 +147,10 @@ echo "    Admin API:          http://localhost:8001"
 echo "    Admin UI:           http://localhost:8002"
 echo ""
 echo -e "  ${GREEN}Backend Services (Direct):${NC}"
-echo "    CQL Engine:         http://localhost:8081/cql-engine/actuator/health"
-echo "    Quality Measure:    http://localhost:8087/quality-measure/actuator/health"
-echo "    Gateway Service:    http://localhost:9000/actuator/health"
-echo "    FHIR Server:        http://localhost:8083/fhir/metadata"
+echo "    CQL Engine:         http://localhost:8081/actuator/health"
+echo "    Quality Measure:    http://localhost:8087/actuator/health"
+echo "    Gateway Service:    http://localhost:8080/actuator/health"
+echo "    FHIR Service:       http://localhost:8085/actuator/health"
 echo ""
 echo -e "  ${GREEN}Infrastructure:${NC}"
 echo "    PostgreSQL:         localhost:5435"

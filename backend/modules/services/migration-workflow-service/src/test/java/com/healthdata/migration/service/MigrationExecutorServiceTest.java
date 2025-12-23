@@ -1,29 +1,26 @@
 package com.healthdata.migration.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
-import java.util.HashMap;
+import java.time.Instant;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.healthdata.migration.client.CdrProcessingResult;
@@ -33,481 +30,323 @@ import com.healthdata.migration.connector.SourceConnectorFactory;
 import com.healthdata.migration.dto.DataType;
 import com.healthdata.migration.dto.JobStatus;
 import com.healthdata.migration.dto.SourceConfig;
-import com.healthdata.migration.dto.SourceRecord;
-import com.healthdata.migration.dto.SourceType;
+import com.healthdata.migration.persistence.MigrationCheckpointEntity;
+import com.healthdata.migration.persistence.MigrationErrorEntity;
 import com.healthdata.migration.persistence.MigrationJobEntity;
 import com.healthdata.migration.repository.MigrationErrorRepository;
 import com.healthdata.migration.repository.MigrationJobRepository;
 import com.healthdata.migration.websocket.MigrationProgressPublisher;
 
-/**
- * Unit tests for MigrationExecutorService
- */
-@ExtendWith(MockitoExtension.class)
 @DisplayName("MigrationExecutorService")
 class MigrationExecutorServiceTest {
 
-    @Mock
-    private MigrationJobRepository jobRepository;
+    @Test
+    @DisplayName("Should execute job, save checkpoints, and publish progress")
+    void shouldExecuteJobAndPublishProgress() throws Exception {
+        UUID jobId = UUID.randomUUID();
+        MigrationJobEntity job = baseJob(jobId).toBuilder()
+                .status(JobStatus.RUNNING)
+                .batchSize(1)
+                .build();
 
-    @Mock
-    private MigrationErrorRepository errorRepository;
+        MigrationJobRepository jobRepository = mock(MigrationJobRepository.class);
+        MigrationErrorRepository errorRepository = mock(MigrationErrorRepository.class);
+        MigrationJobService jobService = mock(MigrationJobService.class);
+        SourceConnectorFactory connectorFactory = mock(SourceConnectorFactory.class);
+        MigrationProgressPublisher publisher = mock(MigrationProgressPublisher.class);
+        CdrProcessorClient cdrProcessorClient = mock(CdrProcessorClient.class);
 
-    @Mock
-    private MigrationJobService jobService;
+        SourceConnector connector = mock(SourceConnector.class);
+        when(jobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        when(connectorFactory.createAndConnect(eq(job.getSourceConfig()))).thenReturn(connector);
+        when(connector.countRecords()).thenReturn(2L);
+        when(connector.getCheckpointData()).thenReturn(Map.of("position", 1L));
+        when(connector.getCurrentFile()).thenReturn("file1.hl7");
+        when(connector.getCurrentPosition()).thenReturn(1L);
 
-    @Mock
-    private SourceConnectorFactory connectorFactory;
+        Iterator<com.healthdata.migration.dto.SourceRecord> iterator = List.of(
+                com.healthdata.migration.dto.SourceRecord.of("MSH|^~\\&|", DataType.HL7V2, "file1.hl7", 0),
+                com.healthdata.migration.dto.SourceRecord.of("MSH|^~\\&|", DataType.HL7V2, "file1.hl7", 1)
+        ).iterator();
+        when(connector.readRecords(eq(1))).thenReturn(iterator);
 
-    @Mock
-    private MigrationProgressPublisher progressPublisher;
+        when(cdrProcessorClient.processRecord(any(), any(), any()))
+                .thenReturn(CdrProcessingResult.success("Patient", 1));
+        when(jobService.getLatestCheckpoint(jobId)).thenReturn(null);
 
-    @Mock
-    private CdrProcessorClient cdrProcessorClient;
+        MigrationExecutorService service = new MigrationExecutorService(
+                jobRepository,
+                errorRepository,
+                jobService,
+                connectorFactory,
+                publisher,
+                cdrProcessorClient
+        );
+        ReflectionTestUtils.setField(service, "checkpointInterval", 1);
+        ReflectionTestUtils.setField(service, "progressUpdateInterval", 0);
 
-    private MigrationExecutorService service;
+        CompletableFuture<Void> future = service.executeJob(jobId);
 
-    private static final UUID JOB_ID = UUID.randomUUID();
-    private static final String TENANT_ID = "test-tenant";
+        assertThat(future).isNotNull();
+        assertThat(future.isCompletedExceptionally()).isFalse();
+        verify(jobRepository, atLeastOnce()).save(eq(job));
+        verify(jobService, atLeastOnce()).saveCheckpoint(eq(jobId), any(), any(), any());
+        verify(publisher, atLeastOnce()).publishProgress(eq(jobId), any());
+    }
 
-    @BeforeEach
-    void setUp() {
-        service = new MigrationExecutorService(
-            jobRepository,
-            errorRepository,
-            jobService,
-            connectorFactory,
-            progressPublisher,
-            cdrProcessorClient
+    @Test
+    @DisplayName("Should restore from checkpoint when resumable")
+    void shouldRestoreFromCheckpointWhenResumable() throws Exception {
+        UUID jobId = UUID.randomUUID();
+        MigrationJobEntity job = baseJob(jobId).toBuilder()
+                .status(JobStatus.RUNNING)
+                .resumable(true)
+                .build();
+
+        MigrationJobRepository jobRepository = mock(MigrationJobRepository.class);
+        MigrationErrorRepository errorRepository = mock(MigrationErrorRepository.class);
+        MigrationJobService jobService = mock(MigrationJobService.class);
+        SourceConnectorFactory connectorFactory = mock(SourceConnectorFactory.class);
+        MigrationProgressPublisher publisher = mock(MigrationProgressPublisher.class);
+        CdrProcessorClient cdrProcessorClient = mock(CdrProcessorClient.class);
+
+        SourceConnector connector = mock(SourceConnector.class);
+        when(jobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        when(connectorFactory.createAndConnect(eq(job.getSourceConfig()))).thenReturn(connector);
+        when(connector.countRecords()).thenReturn(0L);
+        when(connector.readRecords(eq(job.getBatchSize()))).thenReturn(List.<com.healthdata.migration.dto.SourceRecord>of().iterator());
+
+        MigrationCheckpointEntity checkpoint = MigrationCheckpointEntity.builder()
+                .job(job)
+                .checkpointData(Map.of("position", 7L))
+                .recordsProcessed(7L)
+                .build();
+        when(jobService.getLatestCheckpoint(jobId)).thenReturn(checkpoint);
+
+        MigrationExecutorService service = new MigrationExecutorService(
+                jobRepository,
+                errorRepository,
+                jobService,
+                connectorFactory,
+                publisher,
+                cdrProcessorClient
         );
 
-        // Set the configuration values
-        ReflectionTestUtils.setField(service, "checkpointInterval", 500);
-        ReflectionTestUtils.setField(service, "progressUpdateInterval", 1000);
+        service.executeJob(jobId);
 
-        // Default mock behavior for CDR processor - return success
-        org.mockito.Mockito.lenient()
-            .when(cdrProcessorClient.processRecord(any(String.class), any(DataType.class), any(String.class)))
-            .thenReturn(CdrProcessingResult.success("Patient", 1));
+        verify(connector).restoreFromCheckpoint(eq(checkpoint.getCheckpointData()));
     }
 
-    @Nested
-    @DisplayName("Job Execution")
-    class JobExecutionTests {
+    @Test
+    @DisplayName("Should mark job failed when processing fails and continueOnError is false")
+    void shouldMarkFailedWhenProcessingFails() throws Exception {
+        UUID jobId = UUID.randomUUID();
+        MigrationJobEntity job = baseJob(jobId).toBuilder()
+                .status(JobStatus.RUNNING)
+                .continueOnError(false)
+                .batchSize(1)
+                .build();
 
-        @Test
-        @DisplayName("Should execute job successfully")
-        void shouldExecuteJobSuccessfully() throws Exception {
-            // Given
-            MigrationJobEntity job = createJobEntity();
-            SourceConnector connector = mock(SourceConnector.class);
+        MigrationJobRepository jobRepository = mock(MigrationJobRepository.class);
+        MigrationErrorRepository errorRepository = mock(MigrationErrorRepository.class);
+        MigrationJobService jobService = mock(MigrationJobService.class);
+        SourceConnectorFactory connectorFactory = mock(SourceConnectorFactory.class);
+        MigrationProgressPublisher publisher = mock(MigrationProgressPublisher.class);
+        CdrProcessorClient cdrProcessorClient = mock(CdrProcessorClient.class);
 
-            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
-            when(connectorFactory.createAndConnect(any(SourceConfig.class))).thenReturn(connector);
-            when(connector.countRecords()).thenReturn(10L);
-            when(connector.readRecords(any(Integer.class))).thenReturn(Collections.emptyIterator());
-            when(connector.getCurrentFile()).thenReturn("test.hl7");
-            when(connector.getCurrentPosition()).thenReturn(0L);
-            org.mockito.Mockito.lenient().when(connector.getCheckpointData()).thenReturn(new HashMap<>());
-            when(jobRepository.save(any(MigrationJobEntity.class)))
+        SourceConnector connector = mock(SourceConnector.class);
+        when(jobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        when(connectorFactory.createAndConnect(eq(job.getSourceConfig()))).thenReturn(connector);
+        when(connector.countRecords()).thenReturn(1L);
+        when(connector.getCurrentFile()).thenReturn("file1.hl7");
+        when(connector.getCurrentPosition()).thenReturn(0L);
+
+        Iterator<com.healthdata.migration.dto.SourceRecord> iterator = List.of(
+                com.healthdata.migration.dto.SourceRecord.of("MSH|^~\\&|", DataType.HL7V2, "file1.hl7", 0)
+        ).iterator();
+        when(connector.readRecords(eq(1))).thenReturn(iterator);
+        when(cdrProcessorClient.processRecord(any(), any(), any()))
+                .thenReturn(CdrProcessingResult.failure("boom"));
+        when(errorRepository.save(any(MigrationErrorEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-            doNothing().when(connector).close();
 
-            // When
-            service.executeJob(JOB_ID).get();
+        MigrationExecutorService service = new MigrationExecutorService(
+                jobRepository,
+                errorRepository,
+                jobService,
+                connectorFactory,
+                publisher,
+                cdrProcessorClient
+        );
+        ReflectionTestUtils.setField(service, "checkpointInterval", 10);
+        ReflectionTestUtils.setField(service, "progressUpdateInterval", 10);
 
-            // Then
-            verify(jobRepository).findById(JOB_ID);
-            verify(connectorFactory).createAndConnect(any(SourceConfig.class));
-            verify(connector).countRecords();
-            verify(connector).close();
-        }
+        assertThatThrownBy(() -> service.executeJob(jobId).join())
+                .isInstanceOf(RuntimeException.class);
 
-        @Test
-        @DisplayName("Should handle job not found")
-        void shouldHandleJobNotFound() {
-            // Given
-            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.empty());
-
-            // When / Then
-            try {
-                service.executeJob(JOB_ID).get();
-                org.junit.jupiter.api.Assertions.fail("Should have thrown an exception");
-            } catch (java.util.concurrent.ExecutionException e) {
-                // ExecutionException wraps the actual exception from async execution
-                assertThat(e.getCause()).isNotNull();
-                assertThat(e.getCause()).isInstanceOf(IllegalArgumentException.class);
-                assertThat(e.getCause().getMessage()).contains("Job not found");
-            } catch (IllegalArgumentException e) {
-                // Or thrown directly if not async in test context
-                assertThat(e.getMessage()).contains("Job not found");
-            } catch (Exception e) {
-                org.junit.jupiter.api.Assertions.fail("Unexpected exception type: " + e.getClass().getName() + " - " + e.getMessage());
-            }
-        }
-
-        @Test
-        @DisplayName("Should resume from checkpoint")
-        void shouldResumeFromCheckpoint() throws Exception {
-            // Given
-            MigrationJobEntity job = createJobEntity();
-            job.setResumable(true);
-            SourceConnector connector = mock(SourceConnector.class);
-            Map<String, Object> checkpointData = new HashMap<>();
-            checkpointData.put("offset", 1000L);
-
-            var checkpoint = mock(com.healthdata.migration.persistence.MigrationCheckpointEntity.class);
-            when(checkpoint.getCheckpointData()).thenReturn(checkpointData);
-
-            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
-            when(connectorFactory.createAndConnect(any(SourceConfig.class))).thenReturn(connector);
-            when(connector.countRecords()).thenReturn(10L);
-            when(jobService.getLatestCheckpoint(JOB_ID)).thenReturn(checkpoint);
-            when(connector.readRecords(any(Integer.class))).thenReturn(Collections.emptyIterator());
-            when(connector.getCurrentFile()).thenReturn("test.hl7");
-            when(connector.getCurrentPosition()).thenReturn(0L);
-            when(jobRepository.save(any(MigrationJobEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-            doNothing().when(connector).close();
-
-            // When
-            service.executeJob(JOB_ID).get();
-
-            // Then
-            verify(jobService).getLatestCheckpoint(JOB_ID);
-            verify(connector).restoreFromCheckpoint(checkpointData);
-        }
-
-        @Test
-        @DisplayName("Should mark job as failed on exception")
-        void shouldMarkJobAsFailedOnException() throws Exception {
-            // Given
-            MigrationJobEntity job = createJobEntity();
-            SourceConnector connector = mock(SourceConnector.class);
-
-            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
-            when(connectorFactory.createAndConnect(any(SourceConfig.class))).thenReturn(connector);
-            when(connector.countRecords()).thenThrow(new RuntimeException("Connection failed"));
-
-            // When
-            try {
-                service.executeJob(JOB_ID).get();
-            } catch (Exception e) {
-                // Expected
-            }
-
-            // Then
-            verify(jobService).markFailed(eq(JOB_ID), any(String.class));
-        }
+        verify(errorRepository, atLeastOnce()).save(any(MigrationErrorEntity.class));
+        verify(jobService, atLeastOnce()).markFailed(eq(jobId), any());
     }
 
-    @Nested
-    @DisplayName("Record Processing")
-    class RecordProcessingTests {
+    @Test
+    @DisplayName("Should report running jobs and allow cancellation")
+    void shouldReportRunningJobsAndCancel() {
+        MigrationExecutorService service = new MigrationExecutorService(
+                mock(MigrationJobRepository.class),
+                mock(MigrationErrorRepository.class),
+                mock(MigrationJobService.class),
+                mock(SourceConnectorFactory.class),
+                mock(MigrationProgressPublisher.class),
+                mock(CdrProcessorClient.class)
+        );
 
-        @Test
-        @DisplayName("Should process valid HL7v2 record")
-        void shouldProcessValidHl7Record() throws Exception {
-            // Given
-            MigrationJobEntity job = createJobEntity();
-            SourceConnector connector = mock(SourceConnector.class);
-            SourceRecord record = createSourceRecord("MSH|^~\\&|...", DataType.HL7V2);
+        @SuppressWarnings("unchecked")
+        Map<UUID, AtomicBoolean> runningJobs =
+                (Map<UUID, AtomicBoolean>) ReflectionTestUtils.getField(service, "runningJobs");
+        UUID jobId = UUID.randomUUID();
+        AtomicBoolean token = new AtomicBoolean(true);
+        runningJobs.put(jobId, token);
 
-            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
-            when(connectorFactory.createAndConnect(any(SourceConfig.class))).thenReturn(connector);
-            when(connector.countRecords()).thenReturn(1L);
-            when(connector.readRecords(any(Integer.class))).thenReturn(java.util.Collections.singletonList(record).iterator());
-            when(connector.getCurrentFile()).thenReturn("test.hl7");
-            when(connector.getCurrentPosition()).thenReturn(0L);
-            org.mockito.Mockito.lenient().when(connector.getCheckpointData()).thenReturn(new HashMap<>());
-            when(jobRepository.save(any(MigrationJobEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-            doNothing().when(connector).close();
+        assertThat(service.isJobRunning(jobId)).isTrue();
 
-            // When
-            service.executeJob(JOB_ID).get();
+        service.requestCancellation(jobId);
 
-            // Then - verify job was completed successfully
-            verify(jobRepository, org.mockito.Mockito.atLeastOnce()).save(any(MigrationJobEntity.class));
-            verify(errorRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("Should skip empty records")
-        void shouldSkipEmptyRecords() throws Exception {
-            // Given
-            MigrationJobEntity job = createJobEntity();
-            SourceConnector connector = mock(SourceConnector.class);
-            SourceRecord record = createSourceRecord("", DataType.HL7V2);
-
-            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
-            when(connectorFactory.createAndConnect(any(SourceConfig.class))).thenReturn(connector);
-            when(connector.countRecords()).thenReturn(1L);
-            when(connector.readRecords(any(Integer.class))).thenReturn(java.util.Collections.singletonList(record).iterator());
-            when(connector.getCurrentFile()).thenReturn("test.hl7");
-            when(connector.getCurrentPosition()).thenReturn(0L);
-            org.mockito.Mockito.lenient().when(connector.getCheckpointData()).thenReturn(new HashMap<>());
-            when(jobRepository.save(any(MigrationJobEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-            doNothing().when(connector).close();
-
-            // When
-            service.executeJob(JOB_ID).get();
-
-            // Then - verify record was skipped, no errors
-            verify(jobRepository, org.mockito.Mockito.atLeastOnce()).save(any(MigrationJobEntity.class));
-            verify(errorRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("Should handle record processing errors")
-        void shouldHandleRecordProcessingErrors() throws Exception {
-            // Given
-            MigrationJobEntity job = createJobEntity();
-            job.setContinueOnError(true);
-            SourceConnector connector = mock(SourceConnector.class);
-            SourceRecord record = createSourceRecord("INVALID", DataType.HL7V2);
-
-            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
-            when(connectorFactory.createAndConnect(any(SourceConfig.class))).thenReturn(connector);
-            when(connector.countRecords()).thenReturn(1L);
-            when(connector.readRecords(any(Integer.class))).thenReturn(java.util.Collections.singletonList(record).iterator());
-            when(connector.getCurrentFile()).thenReturn("test.hl7");
-            when(connector.getCurrentPosition()).thenReturn(0L);
-            org.mockito.Mockito.lenient().when(connector.getCheckpointData()).thenReturn(new HashMap<>());
-            when(jobRepository.save(any(MigrationJobEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-            doNothing().when(connector).close();
-
-            // When
-            service.executeJob(JOB_ID).get();
-
-            // Then
-            verify(errorRepository).save(any());
-        }
-
-        @Test
-        @DisplayName("Should validate CDA documents")
-        void shouldValidateCdaDocuments() throws Exception {
-            // Given
-            MigrationJobEntity job = createJobEntity();
-            job.setDataType(DataType.CDA);
-            SourceConnector connector = mock(SourceConnector.class);
-            SourceRecord record = createSourceRecord("<ClinicalDocument>...</ClinicalDocument>", DataType.CDA);
-
-            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
-            when(connectorFactory.createAndConnect(any(SourceConfig.class))).thenReturn(connector);
-            when(connector.countRecords()).thenReturn(1L);
-            when(connector.readRecords(any(Integer.class))).thenReturn(java.util.Collections.singletonList(record).iterator());
-            when(connector.getCurrentFile()).thenReturn("test.xml");
-            when(connector.getCurrentPosition()).thenReturn(0L);
-            org.mockito.Mockito.lenient().when(connector.getCheckpointData()).thenReturn(new HashMap<>());
-            when(jobRepository.save(any(MigrationJobEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-            doNothing().when(connector).close();
-
-            // When
-            service.executeJob(JOB_ID).get();
-
-            // Then - verify CDA document was validated and processed
-            verify(jobRepository, org.mockito.Mockito.atLeastOnce()).save(any(MigrationJobEntity.class));
-            verify(errorRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("Should validate FHIR bundles")
-        void shouldValidateFhirBundles() throws Exception {
-            // Given
-            MigrationJobEntity job = createJobEntity();
-            job.setDataType(DataType.FHIR_BUNDLE);
-            SourceConnector connector = mock(SourceConnector.class);
-            SourceRecord record = createSourceRecord("{\"resourceType\":\"Bundle\"}", DataType.FHIR_BUNDLE);
-
-            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
-            when(connectorFactory.createAndConnect(any(SourceConfig.class))).thenReturn(connector);
-            when(connector.countRecords()).thenReturn(1L);
-            when(connector.readRecords(any(Integer.class))).thenReturn(java.util.Collections.singletonList(record).iterator());
-            when(connector.getCurrentFile()).thenReturn("test.json");
-            when(connector.getCurrentPosition()).thenReturn(0L);
-            org.mockito.Mockito.lenient().when(connector.getCheckpointData()).thenReturn(new HashMap<>());
-            when(jobRepository.save(any(MigrationJobEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-            doNothing().when(connector).close();
-
-            // When
-            service.executeJob(JOB_ID).get();
-
-            // Then - verify FHIR bundle was validated and processed
-            verify(jobRepository, org.mockito.Mockito.atLeastOnce()).save(any(MigrationJobEntity.class));
-            verify(errorRepository, never()).save(any());
-        }
+        assertThat(token.get()).isFalse();
+        assertThat(service.isJobRunning(jobId)).isTrue();
+        runningJobs.remove(jobId);
+        assertThat(service.isJobRunning(jobId)).isFalse();
     }
 
-    @Nested
-    @DisplayName("Job Control")
-    class JobControlTests {
+    @Test
+    @DisplayName("Should continue on errors and categorize failures")
+    void shouldContinueOnErrorsAndCategorizeFailures() throws Exception {
+        UUID jobId = UUID.randomUUID();
+        MigrationJobEntity job = baseJob(jobId).toBuilder()
+                .status(JobStatus.RUNNING)
+                .continueOnError(true)
+                .batchSize(1)
+                .build();
 
-        @Test
-        @DisplayName("Should track running jobs")
-        void shouldTrackRunningJobs() throws Exception {
-            // Given
-            MigrationJobEntity job = createJobEntity();
-            SourceConnector connector = mock(SourceConnector.class);
+        MigrationJobRepository jobRepository = mock(MigrationJobRepository.class);
+        MigrationErrorRepository errorRepository = mock(MigrationErrorRepository.class);
+        MigrationJobService jobService = mock(MigrationJobService.class);
+        SourceConnectorFactory connectorFactory = mock(SourceConnectorFactory.class);
+        MigrationProgressPublisher publisher = mock(MigrationProgressPublisher.class);
+        CdrProcessorClient cdrProcessorClient = mock(CdrProcessorClient.class);
 
-            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
-            when(connectorFactory.createAndConnect(any(SourceConfig.class))).thenReturn(connector);
-            when(connector.countRecords()).thenReturn(0L);
-            when(connector.readRecords(any(Integer.class))).thenReturn(Collections.emptyIterator());
-            when(connector.getCurrentFile()).thenReturn("test.hl7");
-            when(connector.getCurrentPosition()).thenReturn(0L);
-            org.mockito.Mockito.lenient().when(connector.getCheckpointData()).thenReturn(new HashMap<>());
-            when(jobRepository.save(any(MigrationJobEntity.class)))
+        SourceConnector connector = mock(SourceConnector.class);
+        when(jobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        when(connectorFactory.createAndConnect(eq(job.getSourceConfig()))).thenReturn(connector);
+        when(connector.countRecords()).thenReturn(3L);
+        when(connector.getCurrentFile()).thenReturn("file1.hl7");
+        when(connector.getCurrentPosition()).thenReturn(0L);
+
+        List<com.healthdata.migration.dto.SourceRecord> records = List.of(
+                com.healthdata.migration.dto.SourceRecord.of("BAD", DataType.HL7V2, "file1.hl7", 0),
+                com.healthdata.migration.dto.SourceRecord.of("MSH|^~\\&|", DataType.HL7V2, "file1.hl7", 1),
+                com.healthdata.migration.dto.SourceRecord.of("{\"resourceType\":\"Bundle\"}", DataType.FHIR_BUNDLE, "file1.hl7", 2)
+        );
+        when(connector.readRecords(eq(1))).thenReturn(records.iterator());
+
+        when(cdrProcessorClient.processRecord(any(), any(), any()))
+                .thenThrow(new RuntimeException("mapping failed"))
+                .thenThrow(new RuntimeException("fhir validation failed"));
+        when(errorRepository.save(any(MigrationErrorEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-            doNothing().when(connector).close();
 
-            // When
-            assertThat(service.isJobRunning(JOB_ID)).isFalse();
-            service.executeJob(JOB_ID).get();
-            assertThat(service.isJobRunning(JOB_ID)).isFalse(); // Completed
+        MigrationExecutorService service = new MigrationExecutorService(
+                jobRepository,
+                errorRepository,
+                jobService,
+                connectorFactory,
+                publisher,
+                cdrProcessorClient
+        );
+        ReflectionTestUtils.setField(service, "checkpointInterval", 10);
+        ReflectionTestUtils.setField(service, "progressUpdateInterval", 10);
 
-            // Then - Job was tracked during execution
-        }
+        service.executeJob(jobId);
 
-        @Test
-        @DisplayName("Should request cancellation")
-        void shouldRequestCancellation() {
-            // When
-            service.requestCancellation(JOB_ID);
+        org.mockito.ArgumentCaptor<MigrationErrorEntity> captor =
+                org.mockito.ArgumentCaptor.forClass(MigrationErrorEntity.class);
+        verify(errorRepository, atLeastOnce()).save(captor.capture());
 
-            // Then - No exception, cancellation flag set
-            // In real execution, this would stop the processing loop
-        }
-
-        @Test
-        @DisplayName("Should handle pause during execution")
-        void shouldHandlePauseDuringExecution() throws Exception {
-            // Given
-            MigrationJobEntity job = createJobEntity();
-            job.setStatus(JobStatus.PAUSED); // Simulate pause
-            SourceConnector connector = mock(SourceConnector.class);
-            SourceRecord record = createSourceRecord("MSH|^~\\&|...", DataType.HL7V2);
-
-            // Allow multiple calls to findById
-            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
-            when(connectorFactory.createAndConnect(any(SourceConfig.class))).thenReturn(connector);
-            when(connector.countRecords()).thenReturn(1L);
-            when(connector.readRecords(any(Integer.class))).thenReturn(java.util.Collections.singletonList(record).iterator());
-            when(connector.getCurrentFile()).thenReturn("test.hl7");
-            when(connector.getCurrentPosition()).thenReturn(0L);
-            org.mockito.Mockito.lenient().when(connector.getCheckpointData()).thenReturn(new HashMap<>());
-            when(jobRepository.save(any(MigrationJobEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-            doNothing().when(connector).close();
-
-            // When
-            service.executeJob(JOB_ID).get();
-
-            // Then - Job should detect pause and stop (verify at least one call)
-            verify(jobRepository, org.mockito.Mockito.atLeastOnce()).findById(JOB_ID);
-        }
+        assertThat(captor.getAllValues())
+                .extracting(MigrationErrorEntity::getErrorCategory)
+                .contains(
+                        com.healthdata.migration.dto.MigrationErrorCategory.PARSE_ERROR,
+                        com.healthdata.migration.dto.MigrationErrorCategory.MAPPING_ERROR,
+                        com.healthdata.migration.dto.MigrationErrorCategory.VALIDATION_ERROR
+                );
     }
 
-    @Nested
-    @DisplayName("Progress Publishing")
-    class ProgressPublishingTests {
+    @Test
+    @DisplayName("Should skip empty content records")
+    void shouldSkipEmptyContentRecords() throws Exception {
+        MigrationExecutorService service = new MigrationExecutorService(
+                mock(MigrationJobRepository.class),
+                mock(MigrationErrorRepository.class),
+                mock(MigrationJobService.class),
+                mock(SourceConnectorFactory.class),
+                mock(MigrationProgressPublisher.class),
+                mock(CdrProcessorClient.class)
+        );
 
-        @Test
-        @DisplayName("Should publish progress updates")
-        void shouldPublishProgressUpdates() throws Exception {
-            // Given
-            MigrationJobEntity job = createJobEntity();
-            job.setTotalRecords(10L);
-            SourceConnector connector = mock(SourceConnector.class);
+        MigrationJobEntity job = baseJob(UUID.randomUUID());
+        com.healthdata.migration.dto.SourceRecord record =
+                com.healthdata.migration.dto.SourceRecord.of("  ", DataType.HL7V2, "file.hl7", 0);
 
-            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
-            when(connectorFactory.createAndConnect(any(SourceConfig.class))).thenReturn(connector);
-            when(connector.countRecords()).thenReturn(10L);
-            when(connector.readRecords(any(Integer.class))).thenReturn(Collections.emptyIterator());
-            when(connector.getCurrentFile()).thenReturn("test.hl7");
-            when(connector.getCurrentPosition()).thenReturn(0L);
-            org.mockito.Mockito.lenient().when(connector.getCheckpointData()).thenReturn(new HashMap<>());
-            when(jobRepository.save(any(MigrationJobEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-            doNothing().when(connector).close();
+        Boolean result = ReflectionTestUtils.invokeMethod(service, "processRecord", job, record);
 
-            // When
-            service.executeJob(JOB_ID).get();
-
-            // Then
-            verify(progressPublisher).publishProgress(eq(JOB_ID), any());
-        }
+        assertThat(result).isFalse();
     }
 
-    @Nested
-    @DisplayName("Error Categorization")
-    class ErrorCategorizationTests {
+    @Test
+    @DisplayName("Should categorize errors based on message")
+    void shouldCategorizeErrors() {
+        MigrationExecutorService service = new MigrationExecutorService(
+                mock(MigrationJobRepository.class),
+                mock(MigrationErrorRepository.class),
+                mock(MigrationJobService.class),
+                mock(SourceConnectorFactory.class),
+                mock(MigrationProgressPublisher.class),
+                mock(CdrProcessorClient.class)
+        );
 
-        @Test
-        @DisplayName("Should categorize parse errors")
-        void shouldCategorizeParseErrors() throws Exception {
-            // Given
-            MigrationJobEntity job = createJobEntity();
-            job.setContinueOnError(true);
-            SourceConnector connector = mock(SourceConnector.class);
-            SourceRecord record = createSourceRecord("INVALID_HL7", DataType.HL7V2);
-
-            when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
-            when(connectorFactory.createAndConnect(any(SourceConfig.class))).thenReturn(connector);
-            when(connector.countRecords()).thenReturn(1L);
-            when(connector.readRecords(any(Integer.class))).thenReturn(java.util.Collections.singletonList(record).iterator());
-            when(connector.getCurrentFile()).thenReturn("test.hl7");
-            when(connector.getCurrentPosition()).thenReturn(0L);
-            org.mockito.Mockito.lenient().when(connector.getCheckpointData()).thenReturn(new HashMap<>());
-            when(jobRepository.save(any(MigrationJobEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-            doNothing().when(connector).close();
-
-            // When
-            service.executeJob(JOB_ID).get();
-
-            // Then
-            verify(errorRepository).save(any());
-        }
+        assertThat(categorize(service, "parse failure")).isEqualTo(
+                com.healthdata.migration.dto.MigrationErrorCategory.PARSE_ERROR);
+        assertThat(categorize(service, "fhir validation failed")).isEqualTo(
+                com.healthdata.migration.dto.MigrationErrorCategory.VALIDATION_ERROR);
+        assertThat(categorize(service, "mapping error")).isEqualTo(
+                com.healthdata.migration.dto.MigrationErrorCategory.MAPPING_ERROR);
+        assertThat(categorize(service, "duplicate record")).isEqualTo(
+                com.healthdata.migration.dto.MigrationErrorCategory.DUPLICATE_RECORD);
+        assertThat(categorize(service, "missing required field")).isEqualTo(
+                com.healthdata.migration.dto.MigrationErrorCategory.MISSING_REQUIRED);
+        assertThat(categorize(service, "loinc mismatch")).isEqualTo(
+                com.healthdata.migration.dto.MigrationErrorCategory.INVALID_CODE);
+        assertThat(categorize(service, "connection timeout")).isEqualTo(
+                com.healthdata.migration.dto.MigrationErrorCategory.CONNECTIVITY_ERROR);
+        assertThat(categorize(service, "other error")).isEqualTo(
+                com.healthdata.migration.dto.MigrationErrorCategory.SYSTEM_ERROR);
     }
 
-    // Helper methods
-    private MigrationJobEntity createJobEntity() {
-        SourceConfig sourceConfig = SourceConfig.builder()
-            .sourceType(SourceType.FILE)
-            .path("/data/hl7")
-            .build();
+    private com.healthdata.migration.dto.MigrationErrorCategory categorize(
+            MigrationExecutorService service, String message) {
+        return ReflectionTestUtils.invokeMethod(service, "categorizeError",
+                new RuntimeException(message));
+    }
 
+    private MigrationJobEntity baseJob(UUID jobId) {
         return MigrationJobEntity.builder()
-            .id(JOB_ID)
-            .tenantId(TENANT_ID)
-            .jobName("Test Job")
-            .status(JobStatus.RUNNING)
-            .sourceType(SourceType.FILE)
-            .sourceConfig(sourceConfig)
-            .dataType(DataType.HL7V2)
-            .batchSize(100)
-            .continueOnError(true)
-            .resumable(true)
-            .totalRecords(0L)
-            .processedCount(0L)
-            .successCount(0L)
-            .failureCount(0L)
-            .skippedCount(0L)
-            .build();
-    }
-
-    private SourceRecord createSourceRecord(String content, DataType dataType) {
-        return SourceRecord.builder()
-            .recordId("record-1")
-            .sourceFile("test.hl7")
-            .offset(0L)
-            .content(content)
-            .dataType(dataType)
-            .build();
+                .id(jobId)
+                .tenantId("tenant-1")
+                .jobName("Test Job")
+                .sourceType(com.healthdata.migration.dto.SourceType.FILE)
+                .sourceConfig(SourceConfig.forFile("/tmp/file.hl7", "*.hl7", false))
+                .dataType(DataType.HL7V2)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
     }
 }

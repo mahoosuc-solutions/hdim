@@ -10,6 +10,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Health Score Notification Request
@@ -27,7 +28,7 @@ public class HealthScoreNotificationRequest implements NotificationRequest {
 
     private final HealthScoreDTO healthScore;
     private final String tenantId;
-    private final String patientId;
+    private final UUID patientId;
     private final Double previousScore;
     private final Double newScore;
     private final Double changeAmount;

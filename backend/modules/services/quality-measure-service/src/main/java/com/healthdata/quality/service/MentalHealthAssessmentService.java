@@ -21,6 +21,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Mental Health Assessment Service
@@ -84,7 +85,7 @@ public class MentalHealthAssessmentService {
      */
     public List<MentalHealthAssessmentDTO> getPatientAssessments(
         String tenantId,
-        String patientId,
+        UUID patientId,
         String type,
         int limit,
         int offset
@@ -112,7 +113,7 @@ public class MentalHealthAssessmentService {
      */
     public AssessmentTrend getAssessmentTrend(
         String tenantId,
-        String patientId,
+        UUID patientId,
         String type,
         String startDateStr,
         String endDateStr
@@ -571,7 +572,7 @@ public class MentalHealthAssessmentService {
      * Build trend data from assessments
      */
     private AssessmentTrend buildTrend(
-        String patientId,
+        UUID patientId,
         AssessmentType type,
         List<MentalHealthAssessmentEntity> assessments
     ) {
@@ -678,7 +679,7 @@ public class MentalHealthAssessmentService {
     @Data
     @Builder
     public static class AssessmentTrend {
-        private String patientId;
+        private UUID patientId;
         private String assessmentType;
         private String trend; // improving, stable, declining, unknown
         private List<DataPoint> dataPoints;

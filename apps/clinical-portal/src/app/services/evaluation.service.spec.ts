@@ -3,6 +3,7 @@ import {
   HttpClientTestingModule,
   HttpTestingController,
 } from '@angular/common/http/testing';
+import { of } from 'rxjs';
 import { EvaluationService } from './evaluation.service';
 import { EvaluationFactory } from '../../testing/factories/evaluation.factory';
 import {
@@ -212,6 +213,38 @@ describe('EvaluationService', () => {
         req.flush(evaluations);
       });
 
+      it('should map Spring Data REST responses with content', () => {
+        const evaluations = [
+          EvaluationFactory.createCqlEvaluation(),
+          EvaluationFactory.createCqlEvaluation(),
+        ];
+        const expectedUrl = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS, {
+          page: '0',
+          size: '1000',
+        });
+
+        service.getAllEvaluations().subscribe((results) => {
+          expect(results).toEqual(evaluations);
+        });
+
+        const req = httpMock.expectOne(expectedUrl);
+        req.flush({ content: evaluations });
+      });
+
+      it('should return empty array for unexpected response', () => {
+        const expectedUrl = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS, {
+          page: '0',
+          size: '1000',
+        });
+
+        service.getAllEvaluations().subscribe((results) => {
+          expect(results).toEqual([]);
+        });
+
+        const req = httpMock.expectOne(expectedUrl);
+        req.flush({ message: 'unexpected' });
+      });
+
       it('should fetch evaluations with custom pagination', () => {
         const evaluations = Array.from({ length: 10 }, () =>
           EvaluationFactory.createCqlEvaluation()
@@ -264,6 +297,67 @@ describe('EvaluationService', () => {
         );
         expect(req.request.body).toEqual(params);
         req.flush({});
+      });
+    });
+
+    describe('cached evaluations', () => {
+      it('should cache evaluations within TTL', () => {
+        const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1000);
+        const evaluations = [EvaluationFactory.createCqlEvaluation()];
+        const expectedUrl = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS, {
+          page: '0',
+          size: '1000',
+        });
+
+        service.getAllEvaluationsCached().subscribe((results) => {
+          expect(results.length).toBe(1);
+        });
+
+        const req = httpMock.expectOne(expectedUrl);
+        req.flush(evaluations);
+
+        service.getAllEvaluationsCached().subscribe((results) => {
+          expect(results.length).toBe(1);
+        });
+
+        httpMock.expectNone(expectedUrl);
+        nowSpy.mockRestore();
+      });
+
+      it('should filter recent evaluations and limit results', () => {
+        const recent = new Date();
+        const old = new Date();
+        old.setDate(old.getDate() - 40);
+
+        const evaluations = [
+          { ...EvaluationFactory.createCqlEvaluation(), createdAt: recent.toISOString() },
+          { ...EvaluationFactory.createCqlEvaluation(), createdAt: old.toISOString() },
+        ];
+
+        const cacheSpy = jest
+          .spyOn(service, 'getAllEvaluationsCached')
+          .mockReturnValue(of(evaluations));
+
+        service.getRecentEvaluations(30, 1).subscribe((results) => {
+          expect(results.length).toBe(1);
+          expect(new Date(results[0].createdAt).getTime()).toBeGreaterThanOrEqual(
+            old.getTime()
+          );
+        });
+
+        cacheSpy.mockRestore();
+      });
+
+      it('should calculate evaluation stats with empty data', () => {
+        const cacheSpy = jest.spyOn(service, 'getAllEvaluationsCached').mockReturnValue(of([]));
+
+        service.getEvaluationStats().subscribe((stats) => {
+          expect(stats.total).toBe(0);
+          expect(stats.last30Days).toBe(0);
+          expect(stats.successRate).toBe(0);
+        });
+
+        cacheSpy.mockRestore();
       });
     });
   });
@@ -360,6 +454,19 @@ describe('EvaluationService', () => {
         expect(req.request.method).toBe('GET');
         req.flush(results);
       });
+
+      it('should fetch all results without patient filter', () => {
+        const expectedUrl = buildQualityMeasureUrl(
+          QUALITY_MEASURE_ENDPOINTS.RESULTS_BY_PATIENT,
+          { page: '1', size: '25' }
+        );
+
+        service.getPatientResults(null, 1, 25).subscribe();
+
+        const req = httpMock.expectOne(expectedUrl);
+        expect(req.request.method).toBe('GET');
+        req.flush([]);
+      });
     });
 
     describe('getQualityScore', () => {
@@ -431,6 +538,55 @@ describe('EvaluationService', () => {
         const req = httpMock.expectOne(expectedUrl);
         expect(req.request.method).toBe('GET');
         req.flush(healthResponse);
+      });
+    });
+  });
+
+  describe('Saved Reports', () => {
+    it('should fetch saved reports with and without type', () => {
+      service.getSavedReports().subscribe();
+      service.getSavedReports('PATIENT' as any).subscribe();
+
+      const allReq = httpMock.expectOne(
+        buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.SAVED_REPORTS, undefined)
+      );
+      allReq.flush([]);
+
+      const typeReq = httpMock.expectOne(
+        buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.SAVED_REPORTS, { type: 'PATIENT' })
+      );
+      typeReq.flush([]);
+    });
+
+    it('should export and download report as CSV', (done) => {
+      const blob = new Blob(['csv']);
+      const exportSpy = jest.spyOn(service, 'exportReportToCsv').mockReturnValue(of(blob));
+      const downloadSpy = jest.spyOn(service, 'downloadReport').mockImplementation(() => undefined);
+
+      service.exportAndDownloadReport('report-1', 'report-name', 'csv').subscribe({
+        next: () => {
+          expect(downloadSpy).toHaveBeenCalledWith(blob, 'report-name.csv');
+          exportSpy.mockRestore();
+          downloadSpy.mockRestore();
+          done();
+        },
+        error: done.fail,
+      });
+    });
+
+    it('should export and download report as Excel', (done) => {
+      const blob = new Blob(['xlsx']);
+      const exportSpy = jest.spyOn(service, 'exportReportToExcel').mockReturnValue(of(blob));
+      const downloadSpy = jest.spyOn(service, 'downloadReport').mockImplementation(() => undefined);
+
+      service.exportAndDownloadReport('report-2', 'report-name', 'xlsx').subscribe({
+        next: () => {
+          expect(downloadSpy).toHaveBeenCalledWith(blob, 'report-name.xlsx');
+          exportSpy.mockRestore();
+          downloadSpy.mockRestore();
+          done();
+        },
+        error: done.fail,
       });
     });
   });

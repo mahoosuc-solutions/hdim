@@ -245,6 +245,10 @@ describe('PatientHealthOverviewComponent', () => {
   });
 
   describe('Health Score Color Mapping', () => {
+    it('should return gray when score is undefined', () => {
+      expect(component.getHealthScoreColor(undefined)).toBe('#9e9e9e');
+    });
+
     it('should return green for excellent score (≥85)', () => {
       expect(component.getHealthScoreColor(90)).toBe('#4caf50');
       expect(component.getHealthScoreColor(85)).toBe('#4caf50');
@@ -403,6 +407,7 @@ describe('PatientHealthOverviewComponent', () => {
           { id: '1', category: 'treatment', title: 'Low', description: '', priority: 'low', evidence: '', rationale: '' },
           { id: '2', category: 'treatment', title: 'High', description: '', priority: 'high', evidence: '', rationale: '' },
           { id: '3', category: 'treatment', title: 'Medium', description: '', priority: 'medium', evidence: '', rationale: '' },
+          { id: '4', category: 'treatment', title: 'Default', description: '', evidence: '', rationale: '' },
         ],
       };
 
@@ -411,6 +416,7 @@ describe('PatientHealthOverviewComponent', () => {
       expect(sorted[0].priority).toBe('high');
       expect(sorted[1].priority).toBe('medium');
       expect(sorted[2].priority).toBe('low');
+      expect(sorted[3].priority).toBeUndefined();
     });
 
     it('should count urgent care gaps correctly', () => {
@@ -436,6 +442,175 @@ describe('PatientHealthOverviewComponent', () => {
       expect(formatted).toContain('Nov');
       expect(formatted).toContain('20');
       expect(formatted).toContain('2025');
+    });
+  });
+
+  describe('Critical Alerts', () => {
+    it('generates alerts for high-risk scenarios', () => {
+      const overview: PatientHealthOverview = {
+        ...mockHealthOverview,
+        mentalHealth: {
+          ...mockHealthOverview.mentalHealth,
+          suicideRisk: {
+            level: 'critical' as RiskLevel,
+            factors: [{ factor: 'Recent attempt' } as any],
+            protectiveFactors: [],
+            requiresIntervention: true,
+            lastAssessed: new Date('2025-11-01'),
+          },
+          substanceUse: {
+            hasSubstanceUse: true,
+            substances: [
+              { substance: 'Alcohol', severity: 'severe', inTreatment: false } as any,
+            ],
+            overallRisk: 'high' as RiskLevel,
+          },
+        },
+        careGaps: [
+          {
+            id: 'gap-urgent',
+            category: 'preventive',
+            title: 'Urgent Gap',
+            description: 'Urgent gap',
+            priority: 'urgent',
+            overdueDays: 200,
+            recommendedActions: [],
+          },
+        ],
+        physicalHealth: {
+          ...mockHealthOverview.physicalHealth,
+          vitals: {
+            bloodPressure: {
+              value: '200/110',
+              unit: 'mmHg',
+              date: new Date('2025-11-15'),
+              status: 'critical',
+              referenceRange: { low: 90, high: 120 },
+            },
+          },
+          labs: [
+            {
+              code: { text: 'Troponin', coding: [{ code: 'TROP' }] },
+              value: 9.2,
+              unit: 'ng/mL',
+              date: new Date('2025-11-10'),
+              status: 'critical',
+            } as any,
+          ],
+        },
+      };
+
+      mockHealthService.getPatientHealthOverview.mockReturnValue(of(overview));
+      component.patientId = 'test-patient-123';
+
+      component.ngOnInit();
+
+      expect(component.criticalAlerts.length).toBeGreaterThan(0);
+      expect(component.criticalAlerts.some((alert) => alert.type === 'suicide-risk')).toBe(true);
+      expect(component.criticalAlerts.some((alert) => alert.type === 'substance-use')).toBe(true);
+      expect(component.criticalAlerts.some((alert) => alert.type === 'care-gap')).toBe(true);
+      expect(component.criticalAlerts.some((alert) => alert.type === 'vital-sign')).toBe(true);
+      expect(component.criticalAlerts.some((alert) => alert.type === 'lab-result')).toBe(true);
+    });
+
+    it('creates suicide risk alert with unknown last assessed details', () => {
+      const overview: PatientHealthOverview = {
+        ...mockHealthOverview,
+        mentalHealth: {
+          ...mockHealthOverview.mentalHealth,
+          suicideRisk: {
+            level: 'high' as RiskLevel,
+            factors: [],
+            protectiveFactors: [],
+            requiresIntervention: true,
+          },
+        },
+      };
+
+      component.criticalAlerts = [];
+      (component as any).generateCriticalAlerts(overview);
+
+      const alert = component.criticalAlerts.find((entry) => entry.type === 'suicide-risk');
+      expect(alert?.severity).toBe('high');
+      expect(alert?.description).not.toContain('Risk factors');
+      expect(alert?.metadata?.['Last Assessed']).toBe('Unknown');
+      expect(alert?.metadata?.['Risk Factors']).toBe(0);
+    });
+
+    it('creates alerts with care gap and lab fallbacks', () => {
+      const overview: PatientHealthOverview = {
+        ...mockHealthOverview,
+        mentalHealth: {
+          ...mockHealthOverview.mentalHealth,
+          substanceUse: {
+            hasSubstanceUse: true,
+            substances: [{ substance: 'Opioids', severity: 'moderate', inTreatment: false } as any],
+            overallRisk: 'critical' as RiskLevel,
+          },
+        },
+        careGaps: [
+          {
+            id: 'gap-urgent',
+            category: 'screening',
+            title: 'Urgent Gap',
+            priority: 'urgent',
+            overdueDays: 181,
+            recommendedActions: [],
+          },
+        ],
+        physicalHealth: {
+          ...mockHealthOverview.physicalHealth,
+          vitals: {
+            heartRate: { value: 150, status: 'critical', date: new Date() } as any,
+            temperature: { value: 104, status: 'critical', date: new Date() } as any,
+          },
+          labs: [
+            {
+              code: { coding: [{ display: 'Creatinine', code: 'CREAT' }] },
+              value: 9.2,
+              unit: 'mg/dL',
+              date: new Date('2025-11-10'),
+              status: 'critical',
+              referenceRange: { low: 0.6, high: 1.2 },
+            } as any,
+          ],
+        },
+      };
+
+      component.criticalAlerts = [];
+      (component as any).generateCriticalAlerts(overview);
+
+      const careGapAlert = component.criticalAlerts.find((entry) => entry.type === 'care-gap');
+      expect(careGapAlert?.description).toContain('Urgent Gap');
+      expect(careGapAlert?.description).toContain('181 days overdue');
+
+      const vitalAlert = component.criticalAlerts.find((entry) => entry.type === 'vital-sign');
+      expect(vitalAlert?.description).toContain('HR: 150');
+      expect(vitalAlert?.description).toContain('Temp: 104');
+
+      const labAlert = component.criticalAlerts.find((entry) => entry.type === 'lab-result');
+      expect(labAlert?.title).toContain('Creatinine');
+      expect(labAlert?.description).toContain('Normal: 0.6-1.2');
+    });
+
+    it('handles alert actions and dismissals', () => {
+      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      component.criticalAlerts = [
+        { id: 'alert-1', type: 'care-gap', severity: 'high', title: 'Alert', description: '' },
+      ] as any;
+
+      component.onAlertAction(component.criticalAlerts[0]);
+      expect(logSpy).toHaveBeenCalled();
+
+      component.onAlertDismiss(component.criticalAlerts[0]);
+      expect(component.criticalAlerts.length).toBe(0);
+      logSpy.mockRestore();
+    });
+  });
+
+  describe('Category Formatting', () => {
+    it('replaces hyphens with spaces', () => {
+      expect(component.formatCategory('food-insecurity')).toBe('food insecurity');
     });
   });
 

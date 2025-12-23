@@ -1,6 +1,7 @@
 package com.healthdata.migration.connector;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Iterator;
@@ -10,6 +11,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.healthdata.migration.dto.DataType;
@@ -32,6 +34,8 @@ public class MllpSourceConnector extends AbstractSourceConnector {
     private AtomicBoolean running;
     private AtomicLong messagesReceived;
     private Thread listenerThread;
+    private AtomicInteger activeConnections;
+    private int maxConnections;
 
     @Override
     public SourceType getType() {
@@ -47,9 +51,12 @@ public class MllpSourceConnector extends AbstractSourceConnector {
         messageQueue = new LinkedBlockingQueue<>(bufferSize);
         running = new AtomicBoolean(true);
         messagesReceived = new AtomicLong(0);
+        activeConnections = new AtomicInteger(0);
+        maxConnections = config.getMaxConnections() != null ? config.getMaxConnections() : 10;
 
-        serverSocket = new ServerSocket(port);
+        serverSocket = new ServerSocket();
         serverSocket.setReuseAddress(true);
+        serverSocket.bind(new InetSocketAddress(bindAddress, port));
 
         // Start listener thread
         listenerThread = new Thread(this::runListener, "mllp-listener");
@@ -60,12 +67,18 @@ public class MllpSourceConnector extends AbstractSourceConnector {
     }
 
     private void runListener() {
-        int maxConnections = config.getMaxConnections() != null ? config.getMaxConnections() : 10;
-
         while (running.get()) {
             try {
                 Socket clientSocket = serverSocket.accept();
                 log.debug("MLLP connection from {}", clientSocket.getRemoteSocketAddress());
+
+                if (maxConnections > 0 && activeConnections.get() >= maxConnections) {
+                    log.warn("MLLP connection rejected: maxConnections exceeded");
+                    clientSocket.close();
+                    continue;
+                }
+
+                activeConnections.incrementAndGet();
 
                 // Handle connection in a new thread
                 new Thread(() -> handleConnection(clientSocket), "mllp-handler").start();
@@ -109,6 +122,9 @@ public class MllpSourceConnector extends AbstractSourceConnector {
         } catch (IOException e) {
             log.debug("MLLP connection closed: {}", e.getMessage());
         } finally {
+            if (activeConnections != null) {
+                activeConnections.decrementAndGet();
+            }
             try {
                 socket.close();
             } catch (IOException e) {

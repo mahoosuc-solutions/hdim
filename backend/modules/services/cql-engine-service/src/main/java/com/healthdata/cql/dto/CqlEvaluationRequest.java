@@ -1,6 +1,5 @@
 package com.healthdata.cql.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
@@ -14,8 +13,8 @@ public class CqlEvaluationRequest {
     @NotNull(message = "Library ID is required")
     private UUID libraryId;
 
-    @NotBlank(message = "Patient ID is required")
-    private String patientId;
+    @NotNull(message = "Patient ID is required")
+    private UUID patientId;
 
     // Optional fields - no validation required
     private String contextData;
@@ -26,7 +25,7 @@ public class CqlEvaluationRequest {
     public CqlEvaluationRequest() {
     }
 
-    public CqlEvaluationRequest(UUID libraryId, String patientId) {
+    public CqlEvaluationRequest(UUID libraryId, UUID patientId) {
         this.libraryId = libraryId;
         this.patientId = patientId;
     }
@@ -40,11 +39,11 @@ public class CqlEvaluationRequest {
         this.libraryId = libraryId;
     }
 
-    public String getPatientId() {
+    public UUID getPatientId() {
         return patientId;
     }
 
-    public void setPatientId(String patientId) {
+    public void setPatientId(UUID patientId) {
         this.patientId = patientId;
     }
 

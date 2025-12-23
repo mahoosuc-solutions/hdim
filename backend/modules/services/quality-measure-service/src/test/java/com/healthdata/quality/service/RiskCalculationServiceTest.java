@@ -45,7 +45,7 @@ class RiskCalculationServiceTest {
     private RiskCalculationService riskCalculationService;
 
     private static final String TENANT_ID = "test-tenant";
-    private static final String PATIENT_ID = "patient-123";
+    private static final UUID PATIENT_ID = UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff");
 
     @BeforeEach
     void setUp() {
@@ -492,5 +492,94 @@ class RiskCalculationServiceTest {
 
         // Verify the result is LOW risk
         assertThat(result.getRiskLevel()).isEqualTo("low");
+    }
+
+    @Test
+    void testObservationDefaultsAndScoreCap() {
+        RiskAssessmentEntity previousAssessment = RiskAssessmentEntity.builder()
+            .id(UUID.randomUUID())
+            .tenantId(TENANT_ID)
+            .patientId(PATIENT_ID)
+            .riskScore(98)
+            .riskLevel(RiskAssessmentEntity.RiskLevel.HIGH)
+            .chronicConditionCount(2)
+            .riskFactors(List.of())
+            .predictedOutcomes(List.of())
+            .recommendations(List.of())
+            .assessmentDate(Instant.now().minusSeconds(3600))
+            .build();
+
+        when(riskAssessmentRepository.findLatestByTenantIdAndPatientId(TENANT_ID, PATIENT_ID))
+            .thenReturn(Optional.of(previousAssessment));
+
+        Map<String, Object> observationData = Map.of(
+            "resourceType", "Observation",
+            "code", Map.of(
+                "coding", List.of(Map.of(
+                    "system", "http://loinc.org",
+                    "code", "9999-9",
+                    "display", "Custom Lab"
+                ))
+            ),
+            "valueQuantity", Map.of(
+                "value", 123.4,
+                "unit", "mg/dL"
+            )
+        );
+
+        when(riskAssessmentRepository.save(any(RiskAssessmentEntity.class)))
+            .thenAnswer(invocation -> {
+                RiskAssessmentEntity entity = invocation.getArgument(0);
+                if (entity.getId() == null) {
+                    entity.setId(UUID.randomUUID());
+                }
+                return entity;
+            });
+
+        RiskAssessmentDTO result = riskCalculationService.recalculateRiskOnObservation(
+            TENANT_ID, PATIENT_ID, observationData);
+
+        assertThat(result.getRiskScore()).isEqualTo(100);
+        assertThat(result.getRiskLevel()).isEqualTo("very-high");
+        assertThat(result.getRiskFactors().get(0).getEvidence()).contains("Custom Lab");
+    }
+
+    @Test
+    void testConditionWeightForMildSeverity() {
+        Map<String, Object> conditionData = Map.of(
+            "resourceType", "Condition",
+            "code", Map.of(
+                "coding", List.of(Map.of(
+                    "system", "http://snomed.info/sct",
+                    "code", "123",
+                    "display", "Unknown Condition"
+                ))
+            ),
+            "severity", Map.of(
+                "coding", List.of(Map.of(
+                    "code", "mild",
+                    "display", "Mild"
+                ))
+            )
+        );
+
+        when(riskAssessmentRepository.findLatestByTenantIdAndPatientId(TENANT_ID, PATIENT_ID))
+            .thenReturn(Optional.empty());
+
+        when(riskAssessmentRepository.save(any(RiskAssessmentEntity.class)))
+            .thenAnswer(invocation -> {
+                RiskAssessmentEntity entity = invocation.getArgument(0);
+                if (entity.getId() == null) {
+                    entity.setId(UUID.randomUUID());
+                }
+                return entity;
+            });
+
+        RiskAssessmentDTO result = riskCalculationService.recalculateRiskOnCondition(
+            TENANT_ID, PATIENT_ID, conditionData);
+
+        assertThat(result.getRiskFactors()).hasSize(1);
+        assertThat(result.getRiskFactors().get(0).getFactor()).isEqualTo("Unknown Condition");
+        assertThat(result.getRiskFactors().get(0).getWeight()).isEqualTo(10);
     }
 }

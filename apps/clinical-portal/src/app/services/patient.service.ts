@@ -15,7 +15,7 @@ import {
 
 /**
  * PatientService - Handles FHIR Patient resource operations
- * Communicates with FHIR Mock Server (port 8083)
+ * Communicates with FHIR Service (port 8085)
  *
  * Implements caching with 5-minute TTL and automatic invalidation on mutations
  */

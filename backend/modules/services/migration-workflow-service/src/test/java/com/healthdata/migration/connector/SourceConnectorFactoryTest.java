@@ -1,165 +1,136 @@
 package com.healthdata.migration.connector;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.jupiter.api.BeforeEach;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 import com.healthdata.migration.dto.SourceConfig;
 import com.healthdata.migration.dto.SourceType;
 
-/**
- * Unit tests for SourceConnectorFactory
- */
-@ExtendWith(MockitoExtension.class)
 @DisplayName("SourceConnectorFactory")
 class SourceConnectorFactoryTest {
 
-    @InjectMocks
-    private SourceConnectorFactory factory;
+    @TempDir
+    Path tempDir;
 
-    @Nested
-    @DisplayName("Connector Creation")
-    class ConnectorCreationTests {
+    @Test
+    @DisplayName("Should create connector types")
+    void shouldCreateConnectorTypes() {
+        SourceConnectorFactory factory = new SourceConnectorFactory();
 
-        @Test
-        @DisplayName("Should create FileSourceConnector for FILE type")
-        void shouldCreateFileConnector() {
-            // When
-            SourceConnector connector = factory.create(SourceType.FILE);
+        assertThat(factory.create(SourceType.FILE)).isInstanceOf(FileSourceConnector.class);
+        assertThat(factory.create(SourceType.SFTP)).isInstanceOf(SftpSourceConnector.class);
+        assertThat(factory.create(SourceType.MLLP)).isInstanceOf(MllpSourceConnector.class);
+    }
 
-            // Then
-            assertThat(connector).isNotNull();
-            assertThat(connector).isInstanceOf(FileSourceConnector.class);
-            assertThat(connector.getType()).isEqualTo(SourceType.FILE);
-        }
+    @Test
+    @DisplayName("Should create and connect file connector")
+    void shouldCreateAndConnectFileConnector() throws Exception {
+        Path file = tempDir.resolve("test.hl7");
+        Files.writeString(file, "MSH|^~\\&|");
 
-        @Test
-        @DisplayName("Should create SftpSourceConnector for SFTP type")
-        void shouldCreateSftpConnector() {
-            // When
-            SourceConnector connector = factory.create(SourceType.SFTP);
+        SourceConfig config = SourceConfig.forFile(file.toString(), "*.hl7", false);
+        SourceConnectorFactory factory = new SourceConnectorFactory();
 
-            // Then
-            assertThat(connector).isNotNull();
-            assertThat(connector).isInstanceOf(SftpSourceConnector.class);
-            assertThat(connector.getType()).isEqualTo(SourceType.SFTP);
-        }
-
-        @Test
-        @DisplayName("Should create MllpSourceConnector for MLLP type")
-        void shouldCreateMllpConnector() {
-            // When
-            SourceConnector connector = factory.create(SourceType.MLLP);
-
-            // Then
-            assertThat(connector).isNotNull();
-            assertThat(connector).isInstanceOf(MllpSourceConnector.class);
-            assertThat(connector.getType()).isEqualTo(SourceType.MLLP);
-        }
-
-        @Test
-        @DisplayName("Should create different instances for each call")
-        void shouldCreateDifferentInstances() {
-            // When
-            SourceConnector connector1 = factory.create(SourceType.FILE);
-            SourceConnector connector2 = factory.create(SourceType.FILE);
-
-            // Then
-            assertThat(connector1).isNotSameAs(connector2);
+        SourceConnector connector = factory.createAndConnect(config);
+        try {
+            assertThat(connector.isConnected()).isTrue();
+            assertThat(connector.testConnection()).isTrue();
+        } finally {
+            connector.disconnect();
         }
     }
 
-    @Nested
-    @DisplayName("Create and Connect")
-    class CreateAndConnectTests {
+    @Test
+    @DisplayName("Should return false when connection fails")
+    void shouldReturnFalseWhenConnectionFails() {
+        SourceConfig config = SourceConfig.forFile("/missing/path.hl7", "*.hl7", false);
+        SourceConnectorFactory factory = new SourceConnectorFactory();
 
-        @Test
-        @DisplayName("Should throw exception when config is null")
-        void shouldThrowWhenConfigIsNull() {
-            // When/Then
-            assertThatThrownBy(() -> factory.createAndConnect(null))
-                    .isInstanceOf(NullPointerException.class);
-        }
-
-        @Test
-        @DisplayName("Should not be connected initially after create")
-        void shouldNotBeConnectedInitially() {
-            // When
-            SourceConnector connector = factory.create(SourceType.FILE);
-
-            // Then
-            assertThat(connector.isConnected()).isFalse();
-        }
+        assertThat(factory.testConnection(config)).isFalse();
     }
 
-    @Nested
-    @DisplayName("Test Connection")
-    class TestConnectionTests {
+    @Test
+    @DisplayName("Should return true when connection succeeds")
+    void shouldReturnTrueWhenConnectionSucceeds() throws Exception {
+        Path file = tempDir.resolve("ok.hl7");
+        Files.writeString(file, "MSH|^~\\&|");
 
-        @Test
-        @DisplayName("Should return false for invalid file path")
-        void shouldReturnFalseForInvalidPath() {
-            // Given
-            SourceConfig config = SourceConfig.forFile("/non/existent/path", "*.hl7", false);
+        SourceConfig config = SourceConfig.forFile(file.toString(), "*.hl7", false);
+        SourceConnectorFactory factory = new SourceConnectorFactory();
 
-            // When
-            boolean result = factory.testConnection(config);
-
-            // Then
-            assertThat(result).isFalse();
-        }
-
-        @Test
-        @DisplayName("Should handle null config gracefully")
-        void shouldHandleNullConfig() {
-            // When
-            boolean result = factory.testConnection(null);
-
-            // Then - factory handles exceptions and returns false
-            assertThat(result).isFalse();
-        }
+        assertThat(factory.testConnection(config)).isTrue();
     }
 
-    @Nested
-    @DisplayName("Factory Method Integration")
-    class FactoryMethodTests {
-
-        @Test
-        @DisplayName("Should create connectors for all source types")
-        void shouldCreateConnectorsForAllTypes() {
-            // When/Then
-            for (SourceType type : SourceType.values()) {
-                SourceConnector connector = factory.create(type);
-                assertThat(connector).isNotNull();
-                assertThat(connector.getType()).isEqualTo(type);
+    @Test
+    @DisplayName("Should close default connector")
+    void shouldCloseDefaultConnector() throws Exception {
+        java.util.concurrent.atomic.AtomicBoolean disconnected = new java.util.concurrent.atomic.AtomicBoolean(false);
+        SourceConnector connector = new SourceConnector() {
+            @Override
+            public void connect(SourceConfig config) throws IOException {
+                // no-op
             }
-        }
 
-        @Test
-        @DisplayName("Should create correct connector type based on config")
-        void shouldCreateCorrectConnectorFromConfig() {
-            // Given
-            SourceConfig fileConfig = SourceConfig.forFile("/data/test", "*.hl7", false);
-            SourceConfig sftpConfig = SourceConfig.forSftpPassword(
-                    "sftp.example.com", 22, "user", "pass", "/remote/path");
-            SourceConfig mllpConfig = SourceConfig.forMllp(2575, false);
+            @Override
+            public void disconnect() {
+                disconnected.set(true);
+            }
 
-            // When
-            SourceConnector fileConnector = factory.create(fileConfig.getSourceType());
-            SourceConnector sftpConnector = factory.create(sftpConfig.getSourceType());
-            SourceConnector mllpConnector = factory.create(mllpConfig.getSourceType());
+            @Override
+            public boolean testConnection() {
+                return true;
+            }
 
-            // Then
-            assertThat(fileConnector).isInstanceOf(FileSourceConnector.class);
-            assertThat(sftpConnector).isInstanceOf(SftpSourceConnector.class);
-            assertThat(mllpConnector).isInstanceOf(MllpSourceConnector.class);
-        }
+            @Override
+            public boolean isConnected() {
+                return true;
+            }
+
+            @Override
+            public long countRecords() {
+                return 0;
+            }
+
+            @Override
+            public java.util.Iterator<com.healthdata.migration.dto.SourceRecord> readRecords(int batchSize) {
+                return java.util.List.<com.healthdata.migration.dto.SourceRecord>of().iterator();
+            }
+
+            @Override
+            public void seek(long offset) {
+                // no-op
+            }
+
+            @Override
+            public long getCurrentPosition() {
+                return 0;
+            }
+
+            @Override
+            public java.util.Map<String, Object> getCheckpointData() {
+                return java.util.Map.of();
+            }
+
+            @Override
+            public void restoreFromCheckpoint(java.util.Map<String, Object> checkpointData) {
+                // no-op
+            }
+
+            @Override
+            public SourceType getType() {
+                return SourceType.FILE;
+            }
+        };
+
+        assertThat(connector.getCurrentFile()).isNull();
+        connector.close();
+        assertThat(disconnected.get()).isTrue();
     }
 }

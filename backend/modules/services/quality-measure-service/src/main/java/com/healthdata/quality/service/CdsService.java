@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Clinical Decision Support Service
@@ -85,7 +86,7 @@ public class CdsService {
     /**
      * Get active recommendations for a patient
      */
-    public List<CdsRecommendationDTO> getActiveRecommendations(String tenantId, String patientId) {
+    public List<CdsRecommendationDTO> getActiveRecommendations(String tenantId, UUID patientId) {
         log.debug("Getting active CDS recommendations for patient: {}", patientId);
         return recommendationRepository.findActiveRecommendations(tenantId, patientId)
             .stream()
@@ -96,7 +97,7 @@ public class CdsService {
     /**
      * Get urgent recommendations for a patient
      */
-    public List<CdsRecommendationDTO> getUrgentRecommendations(String tenantId, String patientId) {
+    public List<CdsRecommendationDTO> getUrgentRecommendations(String tenantId, UUID patientId) {
         return recommendationRepository.findUrgentRecommendations(tenantId, patientId)
             .stream()
             .map(CdsRecommendationDTO::fromEntity)
@@ -106,7 +107,7 @@ public class CdsService {
     /**
      * Get recommendation count by urgency
      */
-    public Map<String, Long> getRecommendationCountsByUrgency(String tenantId, String patientId) {
+    public Map<String, Long> getRecommendationCountsByUrgency(String tenantId, UUID patientId) {
         Map<String, Long> counts = new HashMap<>();
         for (CdsRuleEntity.CdsUrgency urgency : CdsRuleEntity.CdsUrgency.values()) {
             counts.put(urgency.name(), recommendationRepository.countActiveByUrgency(tenantId, patientId, urgency));
@@ -117,14 +118,14 @@ public class CdsService {
     /**
      * Get total active recommendation count
      */
-    public Long getActiveRecommendationCount(String tenantId, String patientId) {
+    public Long getActiveRecommendationCount(String tenantId, UUID patientId) {
         return recommendationRepository.countActiveRecommendations(tenantId, patientId);
     }
 
     /**
      * Get overdue recommendations
      */
-    public List<CdsRecommendationDTO> getOverdueRecommendations(String tenantId, String patientId) {
+    public List<CdsRecommendationDTO> getOverdueRecommendations(String tenantId, UUID patientId) {
         return recommendationRepository.findOverdueRecommendations(tenantId, patientId, Instant.now())
             .stream()
             .map(CdsRecommendationDTO::fromEntity)
@@ -237,7 +238,7 @@ public class CdsService {
         return ruleRepository.findByTenantIdAndActiveTrueOrderByPriorityAsc(tenantId);
     }
 
-    private boolean evaluateRule(String tenantId, CdsRuleEntity rule, String patientId) {
+    private boolean evaluateRule(String tenantId, CdsRuleEntity rule, UUID patientId) {
         if (rule.getCqlLibraryName() == null || rule.getCqlExpression() == null) {
             log.warn("Rule {} has no CQL configuration - using default evaluation", rule.getRuleCode());
             return performDefaultEvaluation(rule, patientId);
@@ -259,7 +260,7 @@ public class CdsService {
         }
     }
 
-    private boolean performDefaultEvaluation(CdsRuleEntity rule, String patientId) {
+    private boolean performDefaultEvaluation(CdsRuleEntity rule, UUID patientId) {
         // Default evaluation logic when CQL is not available
         // In production, this could use rule-specific conditions
         return true; // For demo purposes, all rules trigger
@@ -277,7 +278,7 @@ public class CdsService {
         }
     }
 
-    private CdsRecommendationEntity createRecommendation(String tenantId, CdsRuleEntity rule, String patientId) {
+    private CdsRecommendationEntity createRecommendation(String tenantId, CdsRuleEntity rule, UUID patientId) {
         CdsRecommendationEntity recommendation = CdsRecommendationEntity.builder()
             .tenantId(tenantId)
             .patientId(patientId)

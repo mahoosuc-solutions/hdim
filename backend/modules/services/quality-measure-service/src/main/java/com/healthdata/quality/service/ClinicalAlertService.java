@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Clinical Alert Service
@@ -102,7 +103,7 @@ public class ClinicalAlertService {
     @Transactional
     public ClinicalAlertDTO evaluateHealthScoreChange(
         String tenantId,
-        String patientId,
+        UUID patientId,
         int previousScore,
         int currentScore
     ) {
@@ -127,7 +128,7 @@ public class ClinicalAlertService {
     @Transactional
     public ClinicalAlertDTO evaluateChronicDiseaseDeterioration(
         String tenantId,
-        String patientId,
+        UUID patientId,
         String condition,
         String metric,
         String severity
@@ -156,7 +157,7 @@ public class ClinicalAlertService {
     /**
      * Get active alerts for a patient (sorted by severity and time)
      */
-    public List<ClinicalAlertDTO> getActiveAlerts(String tenantId, String patientId) {
+    public List<ClinicalAlertDTO> getActiveAlerts(String tenantId, UUID patientId) {
         List<ClinicalAlertEntity> alerts = alertRepository.findActiveAlertsForPatient(
             tenantId, patientId
         );
@@ -451,7 +452,7 @@ public class ClinicalAlertService {
      */
     private ClinicalAlertDTO createHealthScoreDeclineAlert(
         String tenantId,
-        String patientId,
+        UUID patientId,
         int previousScore,
         int currentScore,
         int decline
@@ -506,7 +507,7 @@ public class ClinicalAlertService {
      */
     private ClinicalAlertDTO createChronicDeteriorationAlert(
         String tenantId,
-        String patientId,
+        UUID patientId,
         String condition,
         String metric,
         String severity,
@@ -577,7 +578,7 @@ public class ClinicalAlertService {
      */
     private boolean isDuplicate(
         String tenantId,
-        String patientId,
+        UUID patientId,
         ClinicalAlertEntity.AlertType alertType
     ) {
         Instant since = Instant.now().minus(DEDUPLICATION_WINDOW_HOURS, ChronoUnit.HOURS);

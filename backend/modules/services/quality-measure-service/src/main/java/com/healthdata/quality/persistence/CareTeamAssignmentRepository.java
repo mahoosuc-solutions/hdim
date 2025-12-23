@@ -29,7 +29,7 @@ public interface CareTeamAssignmentRepository extends JpaRepository<CareTeamAssi
      */
     List<CareTeamAssignmentEntity> findByTenantIdAndPatientIdAndActiveOrderByContactPriorityAsc(
         String tenantId,
-        String patientId,
+        UUID patientId,
         boolean active
     );
 
@@ -44,7 +44,7 @@ public interface CareTeamAssignmentRepository extends JpaRepository<CareTeamAssi
      */
     List<CareTeamAssignmentEntity> findByTenantIdAndPatientIdAndRoleAndActiveOrderByContactPriorityAsc(
         String tenantId,
-        String patientId,
+        UUID patientId,
         String role,
         boolean active
     );
@@ -61,7 +61,7 @@ public interface CareTeamAssignmentRepository extends JpaRepository<CareTeamAssi
      */
     Optional<CareTeamAssignmentEntity> findFirstByTenantIdAndPatientIdAndRoleAndActiveAndIsPrimaryOrderByContactPriorityAsc(
         String tenantId,
-        String patientId,
+        UUID patientId,
         String role,
         boolean active,
         boolean isPrimary
@@ -99,7 +99,7 @@ public interface CareTeamAssignmentRepository extends JpaRepository<CareTeamAssi
         """)
     List<CareTeamAssignmentEntity> findActiveAssignmentsOnDate(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("effectiveDate") LocalDate effectiveDate,
         @Param("active") boolean active
     );
@@ -126,7 +126,7 @@ public interface CareTeamAssignmentRepository extends JpaRepository<CareTeamAssi
         """)
     List<CareTeamAssignmentEntity> findActiveAssignmentsByRoleOnDate(
         @Param("tenantId") String tenantId,
-        @Param("patientId") String patientId,
+        @Param("patientId") UUID patientId,
         @Param("role") String role,
         @Param("effectiveDate") LocalDate effectiveDate,
         @Param("active") boolean active
@@ -143,7 +143,7 @@ public interface CareTeamAssignmentRepository extends JpaRepository<CareTeamAssi
      */
     boolean existsByTenantIdAndPatientIdAndRoleAndActive(
         String tenantId,
-        String patientId,
+        UUID patientId,
         String role,
         boolean active
     );

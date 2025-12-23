@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "nx": "NX_ISOLATE_PLUGINS=false NX_SOCKET_DIR=.nx/socket NX_DAEMON_SOCKET_DIR=.nx/socket NX_DAEMON=false nx",
     "e2e:clinical-portal": "nx e2e clinical-portal-e2e",
     "e2e:clinical-portal:cli": "node node_modules/@playwright/test/cli.js test --config apps/clinical-portal-e2e/playwright.config.ts"
   },

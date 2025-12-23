@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Patient Health Summary Repository (CQRS Read Model)
@@ -20,7 +21,7 @@ public interface PatientHealthSummaryRepository extends JpaRepository<PatientHea
     /**
      * Find summary by tenant and patient ID
      */
-    Optional<PatientHealthSummaryEntity> findByTenantIdAndPatientId(String tenantId, String patientId);
+    Optional<PatientHealthSummaryEntity> findByTenantIdAndPatientId(String tenantId, UUID patientId);
 
     /**
      * Find all summaries for a tenant
@@ -121,5 +122,5 @@ public interface PatientHealthSummaryRepository extends JpaRepository<PatientHea
      */
     @Query("SELECT DISTINCT phs.patientId FROM PatientHealthSummaryEntity phs " +
            "WHERE phs.tenantId = :tenantId")
-    List<String> findDistinctPatientIdsByTenantId(@Param("tenantId") String tenantId);
+    List<UUID> findDistinctPatientIdsByTenantId(@Param("tenantId") String tenantId);
 }

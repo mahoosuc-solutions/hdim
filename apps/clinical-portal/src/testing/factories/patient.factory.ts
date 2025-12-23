@@ -203,7 +203,7 @@ export class PatientFactory {
       type: 'searchset',
       total: patients.length,
       entry: patients.map((patient) => ({
-        fullUrl: `http://localhost:8083/Patient/${patient.id}`,
+        fullUrl: `http://localhost:8085/Patient/${patient.id}`,
         resource: patient,
       })),
     };

@@ -243,6 +243,7 @@ class MigrationProgressPublisherTest {
             // Then
             verify(openSession).sendMessage(any(TextMessage.class));
             verify(closedSession, never()).sendMessage(any(TextMessage.class));
+            assertThat(publisher.getSubscriberCount(jobId)).isEqualTo(1);
         }
 
         @Test
@@ -264,6 +265,26 @@ class MigrationProgressPublisherTest {
             // When/Then - should not throw
             assertThatCode(() -> publisher.publishProgress(jobId, progress))
                     .doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("Should remove session when progress send fails")
+        void shouldRemoveSessionOnProgressSendFailure() throws Exception {
+            WebSocketSession failingSession = createMockSession("failing");
+            when(failingSession.isOpen()).thenReturn(true);
+            doThrow(new IOException("Connection lost")).when(failingSession).sendMessage(any(TextMessage.class));
+
+            publisher.subscribe(jobId, failingSession);
+
+            MigrationProgress progress = MigrationProgress.builder()
+                    .jobId(jobId)
+                    .totalRecords(100L)
+                    .processedCount(10L)
+                    .build();
+
+            publisher.publishProgress(jobId, progress);
+
+            assertThat(publisher.getSubscriberCount(jobId)).isZero();
         }
     }
 
@@ -311,6 +332,19 @@ class MigrationProgressPublisherTest {
             assertThatCode(() -> publisher.publishError(jobId, "Test error"))
                     .doesNotThrowAnyException();
         }
+
+        @Test
+        @DisplayName("Should handle error publishing failure")
+        void shouldHandleErrorPublishingFailure() throws Exception {
+            WebSocketSession session = createMockSession("session1");
+            when(session.isOpen()).thenReturn(true);
+            doThrow(new IOException("Send failed")).when(session).sendMessage(any(TextMessage.class));
+
+            publisher.subscribe(jobId, session);
+
+            assertThatCode(() -> publisher.publishError(jobId, "Error"))
+                    .doesNotThrowAnyException();
+        }
     }
 
     @Nested
@@ -351,6 +385,19 @@ class MigrationProgressPublisherTest {
             // Then
             verify(session1).sendMessage(any(TextMessage.class));
             verify(session2).sendMessage(any(TextMessage.class));
+        }
+
+        @Test
+        @DisplayName("Should handle status change send failure")
+        void shouldHandleStatusChangeSendFailure() throws Exception {
+            WebSocketSession session = createMockSession("session1");
+            when(session.isOpen()).thenReturn(true);
+            doThrow(new IOException("Send failed")).when(session).sendMessage(any(TextMessage.class));
+
+            publisher.subscribe(jobId, session);
+
+            assertThatCode(() -> publisher.publishStatusChange(jobId, "RUNNING"))
+                    .doesNotThrowAnyException();
         }
     }
 
@@ -408,6 +455,19 @@ class MigrationProgressPublisherTest {
 
             // When/Then
             assertThatCode(() -> publisher.publishJobCompleted(unknownJobId, Map.of()))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("Should handle completion send failure")
+        void shouldHandleCompletionSendFailure() throws Exception {
+            WebSocketSession session = createMockSession("session1");
+            when(session.isOpen()).thenReturn(true);
+            doThrow(new IOException("Send failed")).when(session).sendMessage(any(TextMessage.class));
+
+            publisher.subscribe(jobId, session);
+
+            assertThatCode(() -> publisher.publishJobCompleted(jobId, Map.of("status", "done")))
                     .doesNotThrowAnyException();
         }
     }
@@ -495,6 +555,26 @@ class MigrationProgressPublisherTest {
             // Then
             verify(session).sendMessage(any(TextMessage.class));
             // Timestamp should be between before and after
+        }
+
+        @Test
+        @DisplayName("Should handle serialization failures gracefully")
+        void shouldHandleSerializationFailures() throws Exception {
+            WebSocketSession session = createMockSession("session1");
+            when(session.isOpen()).thenReturn(true);
+            publisher.subscribe(jobId, session);
+
+            ObjectMapper mapper = mock(ObjectMapper.class);
+            when(mapper.writeValueAsString(any())).thenThrow(new com.fasterxml.jackson.core.JsonProcessingException("boom") {});
+            org.springframework.test.util.ReflectionTestUtils.setField(publisher, "objectMapper", mapper);
+
+            MigrationProgress progress = MigrationProgress.builder()
+                    .jobId(jobId)
+                    .processedCount(1L)
+                    .build();
+
+            assertThatCode(() -> publisher.publishProgress(jobId, progress))
+                    .doesNotThrowAnyException();
         }
     }
 

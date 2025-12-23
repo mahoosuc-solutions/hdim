@@ -2,6 +2,7 @@ package com.healthdata.quality.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
+import java.util.UUID;
 
 /**
  * Feign client for Care Gap Service
@@ -13,19 +14,19 @@ public interface CareGapServiceClient {
     @GetMapping(value = "/stats", produces = "application/json")
     String getCareGapStats(
         @RequestHeader("X-Tenant-ID") String tenantId,
-        @RequestParam("patient") String patientId
+        @RequestParam("patient") UUID patientId
     );
 
     @GetMapping(value = "/summary", produces = "application/json")
     String getCareGapSummary(
         @RequestHeader("X-Tenant-ID") String tenantId,
-        @RequestParam("patient") String patientId
+        @RequestParam("patient") UUID patientId
     );
 
     @GetMapping(value = "/by-category", produces = "application/json")
     String getGapsByCategory(
         @RequestHeader("X-Tenant-ID") String tenantId,
-        @RequestParam("patient") String patientId
+        @RequestParam("patient") UUID patientId
     );
 
     @GetMapping(value = "/_health", produces = "application/json")

@@ -403,7 +403,7 @@ class PatientAggregationServiceTest {
         void shouldHandleFhirServiceErrorsForAllergies() {
             // Given
             when(fhirServiceClient.getAllergyIntolerances(TENANT_ID, PATIENT_ID))
-                .thenThrow(mock(FeignException.InternalServerError.class));
+                .thenThrow(new RuntimeException("FHIR service error"));
 
             // When
             Bundle result = aggregationService.getAllergies(TENANT_ID, PATIENT_ID, false);
@@ -516,7 +516,7 @@ class PatientAggregationServiceTest {
         void shouldHandleFhirServiceErrorsForMedications() {
             // Given
             when(fhirServiceClient.getMedicationRequests(TENANT_ID, PATIENT_ID))
-                .thenThrow(mock(FeignException.BadGateway.class));
+                .thenThrow(new RuntimeException("FHIR service error"));
 
             // When
             Bundle result = aggregationService.getMedications(TENANT_ID, PATIENT_ID, false);

@@ -14,10 +14,10 @@ spring:
     name: migration-workflow-service-test
 
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    url: jdbc:tc:postgresql:15-alpine:///testdb
     username: sa
     password:
-    driver-class-name: org.h2.Driver
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
     routing:
       enabled: false
 
@@ -26,18 +26,18 @@ datasource:
   routing:
     enabled: false
   primary:
-    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    url: jdbc:tc:postgresql:15-alpine:///testdb
     username: sa
     password:
-    driver-class-name: org.h2.Driver
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
 
 healthdata:
   persistence:
     primary:
-      url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+      url: jdbc:tc:postgresql:15-alpine:///testdb
       username: sa
       password:
-      driver-class-name: org.h2.Driver
+      driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
       pool-name: test-pool
       maximum-pool-size: 5
       minimum-idle: 1
@@ -47,7 +47,7 @@ healthdata:
       ddl-auto: create-drop
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
         # Disable hibernate-types to avoid UUID array issues with H2
         type.contributors: none

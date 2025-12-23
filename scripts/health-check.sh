@@ -95,15 +95,15 @@ if [ -n "$1" ]; then
             exit $?
             ;;
         gateway)
-            check_http_health "Gateway Service" "http://localhost:9000/actuator/health"
+            check_http_health "Gateway Service" "http://localhost:8080/actuator/health"
             exit $?
             ;;
         cql-engine|cql)
-            check_http_health "CQL Engine" "http://localhost:8081/cql-engine/actuator/health"
+            check_http_health "CQL Engine" "http://localhost:8081/actuator/health"
             exit $?
             ;;
         quality-measure|quality)
-            check_http_health "Quality Measure" "http://localhost:8087/quality-measure/actuator/health"
+            check_http_health "Quality Measure" "http://localhost:8087/actuator/health"
             exit $?
             ;;
         postgres|db)
@@ -119,7 +119,23 @@ if [ -n "$1" ]; then
             exit $?
             ;;
         fhir)
-            check_http_health "FHIR Server" "http://localhost:8083/fhir/metadata"
+            check_http_health "FHIR Service" "http://localhost:8085/actuator/health"
+            exit $?
+            ;;
+        consent)
+            check_http_health "Consent Service" "http://localhost:8082/actuator/health"
+            exit $?
+            ;;
+        event-processing|events)
+            check_http_health "Event Processing Service" "http://localhost:8083/actuator/health"
+            exit $?
+            ;;
+        patient)
+            check_http_health "Patient Service" "http://localhost:8084/actuator/health"
+            exit $?
+            ;;
+        care-gap)
+            check_http_health "Care Gap Service" "http://localhost:8086/actuator/health"
             exit $?
             ;;
         prometheus)
@@ -132,7 +148,7 @@ if [ -n "$1" ]; then
             ;;
         *)
             echo -e "${RED}Unknown service: $SERVICE${NC}"
-            echo "Available services: clinical-portal, gateway, cql-engine, quality-measure, postgres, redis, kafka, fhir, prometheus, grafana"
+            echo "Available services: clinical-portal, gateway, cql-engine, quality-measure, postgres, redis, kafka, fhir, consent, event-processing, patient, care-gap, prometheus, grafana"
             exit 1
             ;;
     esac
@@ -182,25 +198,49 @@ echo ""
 
 # Gateway Service
 total=$((total + 1))
-if check_http_health "Gateway Service" "http://localhost:9000/actuator/health"; then
+if check_http_health "Gateway Service" "http://localhost:8080/actuator/health"; then
     passed=$((passed + 1))
 fi
 
 # CQL Engine
 total=$((total + 1))
-if check_http_health "CQL Engine" "http://localhost:8081/cql-engine/actuator/health"; then
+if check_http_health "CQL Engine" "http://localhost:8081/actuator/health"; then
     passed=$((passed + 1))
 fi
 
 # Quality Measure Service
 total=$((total + 1))
-if check_http_health "Quality Measure" "http://localhost:8087/quality-measure/actuator/health"; then
+if check_http_health "Quality Measure" "http://localhost:8087/actuator/health"; then
     passed=$((passed + 1))
 fi
 
-# FHIR Server
+# Consent Service
 total=$((total + 1))
-if check_http_health "FHIR Server" "http://localhost:8083/fhir/metadata"; then
+if check_http_health "Consent Service" "http://localhost:8082/actuator/health"; then
+    passed=$((passed + 1))
+fi
+
+# Event Processing Service
+total=$((total + 1))
+if check_http_health "Event Processing Service" "http://localhost:8083/actuator/health"; then
+    passed=$((passed + 1))
+fi
+
+# Patient Service
+total=$((total + 1))
+if check_http_health "Patient Service" "http://localhost:8084/actuator/health"; then
+    passed=$((passed + 1))
+fi
+
+# FHIR Service
+total=$((total + 1))
+if check_http_health "FHIR Service" "http://localhost:8085/actuator/health"; then
+    passed=$((passed + 1))
+fi
+
+# Care Gap Service
+total=$((total + 1))
+if check_http_health "Care Gap Service" "http://localhost:8086/actuator/health"; then
     passed=$((passed + 1))
 fi
 

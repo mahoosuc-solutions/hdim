@@ -1,0 +1,39 @@
+{
+  "name": "quality-measure-service",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "backend/modules/services/quality-measure-service/src",
+  "tags": [
+    "backend",
+    "service"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/modules/services/quality-measure-service/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:quality-measure-service:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:quality-measure-service:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:quality-measure-service:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:quality-measure-service:test :modules:services:quality-measure-service:jacocoTestReport :modules:services:quality-measure-service:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

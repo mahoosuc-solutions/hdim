@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Care Gap Closure Event DTO
@@ -20,7 +21,7 @@ public class CareGapClosureEvent {
     private String eventId;
     private String eventType; // "care-gap.auto-closed"
     private String tenantId;
-    private String patientId;
+    private UUID patientId;
     private String careGapId;
     private String gapType;
     private String category;

@@ -4,13 +4,18 @@
 
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { of, throwError } from 'rxjs';
 import { PatientHealthService } from './patient-health.service';
 import { MentalHealthAssessmentType } from '../models/patient-health.model';
 import { API_CONFIG } from '../config/api.config';
+import { MedicationAdherenceService } from './medication-adherence.service';
+import { ProcedureHistoryService } from './procedure-history.service';
 
 describe('PatientHealthService', () => {
   let service: PatientHealthService;
   let httpMock: HttpTestingController;
+  let medicationAdherenceService: MedicationAdherenceService;
+  let procedureHistoryService: ProcedureHistoryService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -19,6 +24,8 @@ describe('PatientHealthService', () => {
     });
     service = TestBed.inject(PatientHealthService);
     httpMock = TestBed.inject(HttpTestingController);
+    medicationAdherenceService = TestBed.inject(MedicationAdherenceService);
+    procedureHistoryService = TestBed.inject(ProcedureHistoryService);
   });
 
   afterEach(() => {
@@ -468,6 +475,82 @@ describe('PatientHealthService', () => {
         done();
       });
       triggerOverviewFallback('test-patient-123');
+    });
+
+    it('uses response healthScore and assessmentType fallback on success path', (done) => {
+      const patientId = 'patient-success';
+      const healthScore = { score: 91, status: 'excellent' } as any;
+      const physicalHealth = {
+        status: 'good',
+        vitals: {},
+        labs: [],
+        chronicConditions: [],
+        medicationAdherence: { overallRate: 90, status: 'excellent', problematicMedications: [] },
+        functionalStatus: { adlScore: 6, iadlScore: 8, mobility: 'independent', painLevel: 0 },
+      } as any;
+
+      const physicalSpy = jest.spyOn(service, 'getPhysicalHealthSummary').mockReturnValue(of(physicalHealth));
+      const healthScoreSpy = jest.spyOn(service as any, 'getHealthScore');
+
+      service.getPatientHealthOverview(patientId).subscribe((overview) => {
+        expect(overview.overallHealthScore).toBe(healthScore);
+        expect(overview.lastUpdated).toBeInstanceOf(Date);
+        expect(overview.mentalHealth.assessments[0].type).toBe('GAD_7');
+        expect(overview.mentalHealth.assessments[0].name).toBe('Custom Assessment');
+        expect(overview.riskStratification).toEqual({ overallRisk: 'low' });
+        expect(healthScoreSpy).not.toHaveBeenCalled();
+        physicalSpy.mockRestore();
+        healthScoreSpy.mockRestore();
+        done();
+      });
+
+      const req = httpMock.expectOne((request) => request.url.includes(`/patient-health/overview/${patientId}`));
+      req.flush({
+        patientId,
+        healthScore,
+        riskAssessment: { overallRisk: 'low' },
+        recentMentalHealthAssessments: [
+          {
+            assessmentType: 'GAD_7',
+            name: 'Custom Assessment',
+            score: 5,
+            maxScore: 21,
+            severity: 'mild',
+            date: '2025-01-01T00:00:00Z',
+            positiveScreen: false,
+            requiresFollowup: false,
+          },
+        ],
+        openCareGaps: [],
+      });
+    });
+
+    it('fetches health score when missing from response', (done) => {
+      const patientId = 'patient-no-score';
+      const physicalHealth = {
+        status: 'good',
+        vitals: {},
+        labs: [],
+        chronicConditions: [],
+        medicationAdherence: { overallRate: 90, status: 'excellent', problematicMedications: [] },
+        functionalStatus: { adlScore: 6, iadlScore: 8, mobility: 'independent', painLevel: 0 },
+      } as any;
+
+      jest.spyOn(service, 'getPhysicalHealthSummary').mockReturnValue(of(physicalHealth));
+      const scoreSpy = jest.spyOn(service as any, 'getHealthScore').mockReturnValue(of({ score: 55 } as any));
+
+      service.getPatientHealthOverview(patientId).subscribe((overview) => {
+        expect(overview.overallHealthScore.score).toBe(55);
+        expect(scoreSpy).toHaveBeenCalledWith(patientId);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) => request.url.includes(`/patient-health/overview/${patientId}`));
+      req.flush({
+        patientId,
+        recentMentalHealthAssessments: [],
+        openCareGaps: [],
+      });
     });
   });
 
@@ -1344,6 +1427,40 @@ describe('PatientHealthService', () => {
           done();
         });
       });
+
+      it('should map category from linkId and patient reference', (done) => {
+        const fhirResponse = {
+          resourceType: 'QuestionnaireResponse',
+          authored: '2025-10-15T14:30:00Z',
+          subject: { reference: 'Patient/patient-999' },
+          item: [
+            {
+              linkId: 'housing-instability',
+              text: 'Housing Screening',
+              answer: [{ valueString: 'No' }],
+            },
+          ],
+        };
+
+        service.mapQuestionnaireResponseToSDOH(fhirResponse).subscribe((result) => {
+          expect(result.category).toBe('housing-instability');
+          expect(result.patientId).toBe('patient-999');
+          done();
+        });
+      });
+
+      it('uses defaults when QuestionnaireResponse has no items', (done) => {
+        const fhirResponse = {
+          resourceType: 'QuestionnaireResponse',
+          subject: { reference: 'Patient/patient-1000' },
+        };
+
+        service.mapQuestionnaireResponseToSDOH(fhirResponse).subscribe((result) => {
+          expect(result.category).toBe('food-insecurity');
+          expect(result.severity).toBe('moderate');
+          done();
+        });
+      });
     });
 
     describe('Categorizing SDOH Factors', () => {
@@ -1455,6 +1572,33 @@ describe('PatientHealthService', () => {
           done();
         });
       });
+
+      it('sorts SDOH needs by severity order', () => {
+        const sorted = (service as any).sortSDOHNeedsBySeverity([
+          { severity: 'mild' },
+          { severity: 'severe' },
+          { severity: 'moderate' },
+          { severity: 'none' },
+        ]);
+
+        expect(sorted[0].severity).toBe('severe');
+        expect(sorted[1].severity).toBe('moderate');
+        expect(sorted[2].severity).toBe('mild');
+        expect(sorted[3].severity).toBe('none');
+      });
+
+      it('calculates SDOH risk using addressed and unaddressed weights', (done) => {
+        const needs = [
+          { category: 'food-insecurity' as any, severity: 'severe' as any, addressed: false },
+          { category: 'housing-instability' as any, severity: 'moderate' as any, addressed: true },
+          { category: 'transportation' as any, severity: 'mild' as any, addressed: false },
+        ];
+
+        service.calculateSDOHRiskFromNeeds(needs).subscribe((risk) => {
+          expect(risk).toMatch(/low|moderate|high|critical/);
+          done();
+        });
+      });
     });
 
     describe('Identifying Patients Needing SDOH Interventions', () => {
@@ -1499,6 +1643,32 @@ describe('PatientHealthService', () => {
         });
 
         flushSdohFhirRequests();
+      });
+
+      it('assigns intervention priority based on severity', (done) => {
+        const summary = {
+          patientId: 'test-patient-123',
+          screeningDate: new Date(),
+          questionnaireType: 'custom',
+          needs: [
+            { category: 'food-insecurity', severity: 'severe', addressed: false, description: 'Severe need' },
+            { category: 'transportation', severity: 'moderate', addressed: false, description: 'Moderate need' },
+            { category: 'housing-instability', severity: 'mild', addressed: false, description: 'Mild need' },
+          ],
+          overallRisk: 'high',
+          activeReferrals: [],
+          zCodes: [],
+        } as any;
+
+        jest.spyOn(service, 'getSDOHSummary').mockReturnValue(of(summary));
+
+        service.identifySDOHInterventionNeeds('test-patient-123').subscribe((interventions) => {
+          const priorities = interventions.map((i) => i.priority);
+          expect(priorities).toContain('urgent');
+          expect(priorities).toContain('high');
+          expect(priorities).toContain('medium');
+          done();
+        });
       });
     });
   });
@@ -1553,14 +1723,30 @@ describe('PatientHealthService', () => {
         mockRiskStratificationResponse('test-patient-123');
       });
 
-      it('should incorporate mental health risk from assessments', (done) => {
-        service.getRiskStratification('test-patient-123').subscribe((risk) => {
-          expect(risk.scores.mentalHealthRisk).toBeDefined();
-          expect(risk.scores.mentalHealthRisk).toBeGreaterThanOrEqual(0);
-          expect(risk.scores.mentalHealthRisk).toBeLessThanOrEqual(100);
+    it('should incorporate mental health risk from assessments', (done) => {
+      service.getRiskStratification('test-patient-123').subscribe((risk) => {
+        expect(risk.scores.mentalHealthRisk).toBeDefined();
+        expect(risk.scores.mentalHealthRisk).toBeGreaterThanOrEqual(0);
+        expect(risk.scores.mentalHealthRisk).toBeLessThanOrEqual(100);
           done();
         });
         mockRiskStratificationResponse('test-patient-123');
+      });
+    });
+
+    it('uses defaults when risk stratification response omits fields', (done) => {
+      service.getRiskStratification('test-patient-456').subscribe((risk) => {
+        expect(risk.scores.clinicalComplexity).toBe(0);
+        expect(risk.predictions.hospitalizationRisk30Day).toBe(0);
+        expect(risk.categories).toEqual({});
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes(`/patient-health/risk-stratification/test-patient-456`)
+      );
+      req.flush({
+        riskLevel: 'LOW',
       });
     });
 
@@ -4433,6 +4619,46 @@ describe('PatientHealthService', () => {
         );
         req.flush(mockBundle);
       });
+
+      it('calculates high overall risk for severe SDOH needs', (done) => {
+        const mockBundle = {
+          resourceType: 'Bundle',
+          type: 'searchset',
+          total: 1,
+          entry: [
+            {
+              resource: {
+                resourceType: 'QuestionnaireResponse',
+                questionnaire: 'http://hl7.org/fhir/us/sdoh-clinicalcare/Questionnaire/AHC-HRSN',
+                status: 'completed',
+                authored: '2025-11-01T10:00:00Z',
+                item: []
+              }
+            }
+          ]
+        };
+        const needs = [
+          { category: 'food-insecurity', severity: 'severe', zCode: 'Z59.4' },
+          { category: 'housing-instability', severity: 'severe', zCode: 'Z59.0' },
+          { category: 'transportation', severity: 'moderate', zCode: 'Z59.82' },
+        ] as any;
+        const needsSpy = jest.spyOn(service, 'parseQuestionnaireResponseToSDOHNeeds').mockReturnValue(needs);
+        const sortSpy = jest.spyOn(service as any, 'sortSDOHNeedsBySeverity').mockReturnValue(needs);
+
+        service.getSDOHScreeningFromFhir(testPatientId).subscribe((result) => {
+          expect(result.questionnaireType).toBe('AHC-HRSN');
+          expect(result.overallRisk).toBe('high');
+          expect(result.zCodes?.length).toBe(3);
+          needsSpy.mockRestore();
+          sortSpy.mockRestore();
+          done();
+        });
+
+        const req = httpMock.expectOne((request) =>
+          request.url.includes('/fhir/QuestionnaireResponse')
+        );
+        req.flush(mockBundle);
+      });
     });
 
     describe('Response Parsing Tests', () => {
@@ -4598,6 +4824,77 @@ describe('PatientHealthService', () => {
         const needs = service.parseQuestionnaireResponseToSDOHNeeds(mockResponse);
         expect(needs).toBeDefined();
         expect(Array.isArray(needs)).toBe(true);
+      });
+
+      it('infers categories from question text and boolean answers', () => {
+        const mockResponse: any = {
+          resourceType: 'QuestionnaireResponse',
+          questionnaire: 'http://hl7.org/fhir/us/sdoh-clinicalcare/Questionnaire/PRAPARE',
+          status: 'completed',
+          authored: '2025-10-15T10:00:00Z',
+          item: [
+            {
+              linkId: 'unknown-text',
+              text: 'Do you feel lonely or isolated?',
+              answer: [{ valueBoolean: true }]
+            },
+            {
+              linkId: 'unknown-text-2',
+              text: 'Have you felt unsafe at home?',
+              answer: [{ valueString: 'Yes' }]
+            }
+          ]
+        };
+
+        const needs = service.parseQuestionnaireResponseToSDOHNeeds(mockResponse);
+        expect(needs.some((n: any) => n.category === 'social')).toBe(true);
+        expect(needs.some((n: any) => n.category === 'safety')).toBe(true);
+      });
+
+      it('uses coding code when display is missing', () => {
+        const mockResponse: any = {
+          resourceType: 'QuestionnaireResponse',
+          questionnaire: 'http://hl7.org/fhir/us/sdoh-clinicalcare/Questionnaire/PRAPARE',
+          status: 'completed',
+          authored: '2025-10-15T10:00:00Z',
+          item: [
+            {
+              linkId: '82589-3',
+              text: 'Highest level of education',
+              answer: [
+                {
+                  valueCoding: {
+                    system: 'http://loinc.org',
+                    code: 'HS'
+                  }
+                }
+              ]
+            }
+          ]
+        };
+
+        const needs = service.parseQuestionnaireResponseToSDOHNeeds(mockResponse);
+        expect(needs.length).toBeGreaterThan(0);
+        expect(needs[0].response).toBe('HS');
+      });
+
+      it('skips unknown questions without category matches', () => {
+        const mockResponse: any = {
+          resourceType: 'QuestionnaireResponse',
+          questionnaire: 'http://hl7.org/fhir/us/sdoh-clinicalcare/Questionnaire/PRAPARE',
+          status: 'completed',
+          authored: '2025-10-15T10:00:00Z',
+          item: [
+            {
+              linkId: 'unknown',
+              text: 'Random question without category',
+              answer: [{ valueString: 'No' }]
+            }
+          ]
+        };
+
+        const needs = service.parseQuestionnaireResponseToSDOHNeeds(mockResponse);
+        expect(needs.length).toBe(0);
       });
     });
 
@@ -6348,6 +6645,35 @@ describe('PatientHealthService', () => {
         );
         req.flush(mockRecommendations);
       });
+
+      it('should handle missing optional recommendation fields', (done) => {
+        const mockRecommendations = [
+          {
+            id: 'rec-4',
+            patientId: testPatientId,
+            title: 'Follow-up Visit',
+            description: 'Schedule follow-up',
+            urgency: 'routine',
+            category: 'preventive',
+            evidenceSource: 'Guidelines',
+            status: 'pending',
+            createdDate: new Date().toISOString()
+          }
+        ];
+
+        service.getCareRecommendations(testPatientId).subscribe((recommendations) => {
+          expect(recommendations[0].actionItems).toEqual([]);
+          expect(recommendations[0].dueDate).toBeUndefined();
+          expect(recommendations[0].completedDate).toBeUndefined();
+          expect(recommendations[0].outcome).toBeUndefined();
+          done();
+        });
+
+        const req = httpMock.expectOne((request) =>
+          request.url.includes(`/patient-health/recommendations/${testPatientId}`)
+        );
+        req.flush(mockRecommendations);
+      });
     });
 
     describe('generateRecommendations()', () => {
@@ -6463,6 +6789,35 @@ describe('PatientHealthService', () => {
           expect(recommendations.length).toBe(1);
           expect(recommendations[0].evidenceSource).toBeDefined();
           expect(recommendations[0].evidenceSource).not.toBe('');
+          done();
+        });
+
+        const req = httpMock.expectOne((request) =>
+          request.url.includes(`/patient-health/recommendations/${testPatientId}/generate`)
+        );
+        req.flush(mockGeneratedRecs);
+      });
+
+      it('maps generated recommendations with missing optional fields', (done) => {
+        const mockGeneratedRecs = [
+          {
+            id: 'rec-new-2',
+            patientId: testPatientId,
+            title: 'Lifestyle Coaching',
+            description: 'Enroll in program',
+            urgency: 'routine',
+            category: 'lifestyle',
+            evidenceSource: 'Guidelines',
+            status: 'pending',
+            createdDate: new Date().toISOString()
+          }
+        ];
+
+        service.generateRecommendations(testPatientId).subscribe((recommendations) => {
+          expect(recommendations[0].actionItems).toEqual([]);
+          expect(recommendations[0].dueDate).toBeUndefined();
+          expect(recommendations[0].completedDate).toBeUndefined();
+          expect(recommendations[0].outcome).toBeUndefined();
           done();
         });
 
@@ -7397,6 +7752,1637 @@ describe('PatientHealthService', () => {
           successfulOutcomeRate: 83.3,
           byCategory: {}
         });
+      });
+    });
+  });
+
+  describe('Helper methods', () => {
+    it('returns cached mental health summary without HTTP call', (done) => {
+      const cached = (service as any).getMockMentalHealth('patient-1');
+      (service as any).mentalHealthCache.set('patient-1', {
+        data: cached,
+        timestamp: Date.now(),
+      });
+
+      service.getMentalHealthSummary('patient-1').subscribe((summary) => {
+        expect(summary).toEqual(cached);
+        done();
+      });
+    });
+
+    it('falls back to mock mental health summary on error', (done) => {
+      service.getMentalHealthSummary('patient-1').subscribe((summary) => {
+        expect(summary.assessments.length).toBeGreaterThan(0);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/patient-health/mental-health/patient-1')
+      );
+      req.flush('Server error', { status: 500, statusText: 'Internal Server Error' });
+    });
+
+    it('maps and caches mental health summary on success', (done) => {
+      service.getMentalHealthSummary('patient-2').subscribe((summary) => {
+        expect(summary.assessments).toHaveLength(1);
+        expect(summary.assessments[0].type).toBe('PHQ-9');
+        expect((service as any).mentalHealthCache.get('patient-2')).toBeTruthy();
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/patient-health/mental-health/patient-2')
+      );
+      req.flush({
+        assessments: [
+          {
+            type: 'PHQ-9',
+            name: 'PHQ-9',
+            score: 5,
+            maxScore: 27,
+            severity: 'mild',
+            date: '2024-01-01T00:00:00Z',
+            interpretation: '',
+            positiveScreen: false,
+            thresholdScore: 10,
+            requiresFollowup: false,
+            trend: 'improving',
+          },
+        ],
+        diagnoses: ['Depression'],
+        substanceUse: { hasSubstanceUse: true, substances: ['alcohol'], overallRisk: 'moderate' },
+        suicideRisk: {
+          level: 'low',
+          factors: [],
+          protectiveFactors: [],
+          lastAssessed: '2024-01-01T00:00:00Z',
+          requiresIntervention: false,
+        },
+        socialSupport: {
+          level: 'strong',
+          hasCaregiver: true,
+          livesAlone: false,
+          socialIsolation: false,
+        },
+        treatmentEngagement: { inTherapy: true, lastPsychVisit: '2024-01-05T00:00:00Z' },
+      });
+    });
+
+    it('returns cached physical health summary without FHIR calls', (done) => {
+      const cached = (service as any).getMockPhysicalHealth('patient-1');
+      (service as any).physicalHealthCache.set('patient-1', {
+        data: cached,
+        timestamp: Date.now(),
+      });
+
+      service.getPhysicalHealthSummary('patient-1').subscribe((summary) => {
+        expect(summary).toEqual(cached);
+        done();
+      });
+    });
+
+    it('returns health overview using backend health score', (done) => {
+      jest
+        .spyOn(service as any, 'getPhysicalHealthSummary')
+        .mockReturnValue(of((service as any).getMockPhysicalHealth('patient-1')));
+
+      service.getPatientHealthOverview('patient-1').subscribe((overview) => {
+        expect(overview.patientId).toBe('patient-1');
+        expect(overview.overallHealthScore).toBeTruthy();
+        expect(overview.careGaps.length).toBe(1);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/patient-health/overview/patient-1')
+      );
+      req.flush({
+        patientId: 'patient-1',
+        lastUpdated: '2025-01-01T00:00:00Z',
+        healthScore: { score: 75 },
+        recentMentalHealthAssessments: [],
+        openCareGaps: [
+          {
+            id: 'gap-1',
+            category: 'SCREENING',
+            title: 'Test',
+            description: 'Desc',
+            priority: 'HIGH',
+            dueDate: '2025-01-01T00:00:00Z',
+            qualityMeasure: 'CMS1',
+            recommendation: 'Call',
+          },
+        ],
+      });
+    });
+
+    it('falls back to overview mock on error', (done) => {
+      jest
+        .spyOn(service as any, 'getPatientHealthOverviewMock')
+        .mockReturnValue(
+          of({
+            patientId: 'patient-1',
+            lastUpdated: new Date(),
+            overallHealthScore: { score: 50 },
+            physicalHealth: {} as any,
+            mentalHealth: {} as any,
+            socialDeterminants: {} as any,
+            riskStratification: {} as any,
+            careGaps: [],
+            recommendations: [],
+            qualityMeasures: {} as any,
+          })
+        );
+
+      service.getPatientHealthOverview('patient-1').subscribe((overview) => {
+        expect(overview.overallHealthScore.score).toBe(50);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/patient-health/overview/patient-1')
+      );
+      req.flush('Server error', { status: 500, statusText: 'Internal Server Error' });
+    });
+
+    it('calculates SDOH risk scores and interventions', (done) => {
+      const summary = {
+        needs: [
+          {
+            category: 'food-insecurity',
+            description: 'Food access issues',
+            severity: 'severe',
+            addressed: false,
+          },
+          {
+            category: 'transportation',
+            description: 'No transport',
+            severity: 'mild',
+            addressed: true,
+          },
+        ],
+      };
+
+      jest.spyOn(service, 'getSDOHSummary').mockReturnValue(of(summary as any));
+
+      service.calculateSDOHRiskScore('patient-1').subscribe((risk) => {
+        expect(risk.score).toBeGreaterThan(0);
+        expect(risk.overallRisk).toBeTruthy();
+
+        service.identifySDOHInterventionNeeds('patient-1').subscribe((interventions) => {
+          expect(interventions.length).toBe(1);
+          expect(interventions[0].recommendedActions.length).toBeGreaterThan(0);
+          done();
+        });
+      });
+    });
+
+    it('calculates SDOH risk from needs list', (done) => {
+      const needs = [
+        { severity: 'moderate', addressed: false },
+        { severity: 'mild', addressed: true },
+      ];
+
+      service.calculateSDOHRiskFromNeeds(needs).subscribe((risk) => {
+        expect(risk).toBeTruthy();
+        done();
+      });
+    });
+
+    it('determines SDOH severity from responses', () => {
+      const severe = (service as any).determineSeverityFromResponse('Always true');
+      const moderate = (service as any).determineSeverityFromResponse('Often');
+      const mild = (service as any).determineSeverityFromResponse('Sometimes');
+      const none = (service as any).determineSeverityFromResponse('No');
+
+      expect(severe).toBe('severe');
+      expect(moderate).toBe('moderate');
+      expect(mild).toBe('mild');
+      expect(none).toBe('none');
+    });
+
+    it('returns recommended actions for SDOH categories', () => {
+      const actions = (service as any).getSDOHRecommendedActions('food-insecurity');
+      const fallback = (service as any).getSDOHRecommendedActions('other');
+
+      expect(actions.length).toBeGreaterThan(0);
+      expect(fallback.length).toBeGreaterThan(0);
+    });
+
+    it('transforms mental health assessments and calculates risk', () => {
+      const result = (service as any).transformMentalHealthSummary([
+        {
+          type: 'PHQ_9',
+          score: 15,
+          maxScore: 27,
+          severity: 'severe',
+          assessmentDate: '2025-01-01T00:00:00Z',
+          positiveScreen: true,
+          requiresFollowup: true,
+        },
+      ]);
+
+      expect(result.status).toBe('fair');
+      expect(result.riskLevel).toBe('critical');
+      expect(result.assessments.length).toBe(1);
+      expect(result.assessments[0].name).toContain('Patient Health Questionnaire');
+    });
+
+    it('uses assessment name when provided in mental health summary', () => {
+      const result = (service as any).transformMentalHealthSummary([
+        {
+          type: 'PHQ_9',
+          name: 'Custom Assessment Name',
+          score: 2,
+          maxScore: 9,
+          severity: 'mild',
+          date: '2025-01-01T00:00:00Z',
+          positiveScreen: false,
+          requiresFollowup: false,
+        },
+      ]);
+
+      expect(result.assessments[0].name).toBe('Custom Assessment Name');
+      expect(result.status).toBe('good');
+    });
+
+    it('uses assessmentType when type is missing in mental health summary', () => {
+      const result = (service as any).transformMentalHealthSummary([
+        {
+          assessmentType: 'PHQ_2',
+          score: 1,
+          maxScore: 2,
+          severity: 'mild',
+          date: '2025-01-01T00:00:00Z',
+          positiveScreen: false,
+          requiresFollowup: false,
+        },
+      ]);
+
+      expect(result.assessments[0].type).toBe('PHQ_2');
+      expect(result.assessments[0].name).toBe('Patient Health Questionnaire-2');
+    });
+
+    it('returns mock mental health summary when no assessments', () => {
+      const result = (service as any).transformMentalHealthSummary([]);
+      expect(result.assessments.length).toBeGreaterThan(0);
+      expect(result.status).toBe('fair');
+    });
+
+    it('maps care gap categories and calculates overdue days', () => {
+      jest.useFakeTimers().setSystemTime(new Date('2025-01-10'));
+      const mapped = (service as any).transformCareGaps([
+        {
+          id: 'gap-1',
+          category: 'SCREENING',
+          title: 'Test',
+          description: 'Desc',
+          priority: 'HIGH',
+          dueDate: '2025-01-01T00:00:00Z',
+          qualityMeasure: 'CMS1',
+          recommendation: 'Call',
+        },
+      ]);
+
+      expect(mapped[0].category).toBe('screening');
+      expect(mapped[0].overdueDays).toBeGreaterThan(0);
+      jest.useRealTimers();
+    });
+
+    it('defaults care gap priority and due date when absent', () => {
+      const mapped = (service as any).transformCareGaps([
+        {
+          id: 'gap-2',
+          category: 'PREVENTIVE_CARE',
+          title: 'Test Gap',
+          description: 'Test Desc',
+        },
+      ]);
+
+      expect(mapped[0].priority).toBe('medium');
+      expect(mapped[0].dueDate).toBeUndefined();
+      expect(mapped[0].overdueDays).toBeUndefined();
+    });
+
+    it('maps unknown care gap category to preventive', () => {
+      const category = (service as any).mapCareGapCategory('UNKNOWN');
+      expect(category).toBe('preventive');
+    });
+
+    it('maps interpretation codes with fallback', () => {
+      const known = service.mapFhirInterpretationCode('H');
+      expect(known.display).toBe('High');
+      const unknown = service.mapFhirInterpretationCode('XYZ');
+      expect(unknown.severity).toBe('unknown');
+    });
+
+    it('maps SDOH category to Z-code with default', () => {
+      expect(service.mapSDOHCategoryToZCode('food')).toBe('Z59.4');
+      expect(service.mapSDOHCategoryToZCode('unknown' as any)).toBe('Z59.9');
+    });
+
+    it('calculates overall and weighted health scores', () => {
+      const physical = (service as any).getMockPhysicalHealth('p1');
+      const mental = (service as any).getMockMentalHealth('p1');
+      const social = (service as any).getMockSDOHSummary('p1');
+      const quality = (service as any).getMockQualityPerformance('p1');
+
+      const overall = (service as any).calculateOverallHealthScore('p1', physical, mental, social, quality);
+      expect(overall.score).toBeGreaterThan(0);
+
+      const weighted = service.calculateWeightedHealthScore({
+        physical: 80,
+        mental: 70,
+        social: 60,
+        preventive: 90,
+      });
+      expect(weighted).toBeGreaterThan(0);
+    });
+
+    it('calculates health score trend', () => {
+      const trend = service.calculateHealthScoreTrend([
+        { date: new Date('2025-01-01'), score: 70 },
+        { date: new Date('2025-02-01'), score: 80 },
+      ]);
+      expect(trend.direction).toBe('improving');
+    });
+
+    it('determines health status buckets', () => {
+      expect(service.determineHealthStatus(85)).toBe('excellent');
+      expect(service.determineHealthStatus(70)).toBe('good');
+      expect(service.determineHealthStatus(50)).toBe('fair');
+      expect(service.determineHealthStatus(20)).toBe('poor');
+    });
+
+    it('invalidates health score cache entries', () => {
+      (service as any).healthScoreCache.set('patient-1', {
+        data: { score: 20 },
+        timestamp: Date.now(),
+      });
+      service.invalidateHealthScoreCache('patient-1');
+      expect((service as any).healthScoreCache.has('patient-1')).toBe(false);
+    });
+
+    it('returns mock data helpers', () => {
+      expect((service as any).getMockPhysicalHealth('p1').status).toBe('good');
+      expect((service as any).getMockMentalHealth('p1').riskLevel).toBe('moderate');
+      expect((service as any).getMockSDOHSummary('p1').needs.length).toBeGreaterThan(0);
+      expect((service as any).getMockRiskStratification('p1').overallRisk).toBe('moderate');
+      expect((service as any).getMockCareGaps('p1').length).toBeGreaterThan(0);
+      expect((service as any).getMockCareRecommendations('p1').length).toBeGreaterThan(0);
+      expect((service as any).getMockQualityPerformance('p1').overallCompliance).toBeGreaterThan(0);
+    });
+
+    it('calculates mental health risk levels', () => {
+      const critical = (service as any).calculateMentalHealthRiskLevel([{ severity: 'severe' }]);
+      const high = (service as any).calculateMentalHealthRiskLevel([{ severity: 'moderately-severe' }]);
+      const moderate = (service as any).calculateMentalHealthRiskLevel([{ severity: 'moderate' }]);
+      const low = (service as any).calculateMentalHealthRiskLevel([{ severity: 'mild' }]);
+
+      expect(critical).toBe('critical');
+      expect(high).toBe('high');
+      expect(moderate).toBe('moderate');
+      expect(low).toBe('low');
+    });
+
+    it('maps assessment names with fallback', () => {
+      expect((service as any).getAssessmentName('PHQ_9')).toBe('Patient Health Questionnaire-9');
+      expect((service as any).getAssessmentName('GAD-7')).toBe('Generalized Anxiety Disorder-7');
+      expect((service as any).getAssessmentName('Custom')).toBe('Custom');
+    });
+
+    it('caches mental health summary responses', (done) => {
+      const cached = {
+        status: 'good',
+        riskLevel: 'low',
+        assessments: [],
+        diagnoses: [],
+        substanceUse: { hasSubstanceUse: false, substances: [], overallRisk: 'low' },
+        suicideRisk: { level: 'low', factors: [], protectiveFactors: [], lastAssessed: new Date(), requiresIntervention: false },
+        socialSupport: { level: 'moderate', hasCaregiver: false, livesAlone: false, socialIsolation: false },
+        treatmentEngagement: { inTherapy: false, lastPsychVisit: undefined },
+      } as any;
+      (service as any).mentalHealthCache.set('cached-patient', { data: cached, timestamp: Date.now() });
+
+      service.getMentalHealthSummary('cached-patient').subscribe((summary) => {
+        expect(summary).toEqual(cached);
+        done();
+      });
+
+      httpMock.expectNone((req) => req.url.includes('/patient-health/mental-health/'));
+    });
+
+    it('maps mental health responses with defaults', () => {
+      const response = {
+        assessments: [
+          {
+            type: 'PHQ-9',
+            score: 10,
+            maxScore: 27,
+            severity: 'moderate',
+            date: '2025-02-01T00:00:00Z',
+            positiveScreen: true,
+            requiresFollowup: true,
+          },
+        ],
+      };
+
+      const summary = (service as any).mapMentalHealthResponse(response);
+
+      expect(summary.status).toBe('fair');
+      expect(summary.riskLevel).toBe('moderate');
+      expect(summary.assessments[0].name).toContain('Patient Health Questionnaire');
+      expect(summary.suicideRisk.level).toBe('low');
+    });
+
+    it('maps mental health responses with explicit fields', () => {
+      const response = {
+        assessments: [
+          {
+            type: 'GAD-7',
+            name: 'Provided Name',
+            score: 5,
+            maxScore: 21,
+            severity: 'mild',
+            date: '2025-02-01T00:00:00Z',
+            positiveScreen: false,
+            requiresFollowup: false,
+            trend: 'declining',
+          },
+        ],
+        diagnoses: [{ code: 'F32', name: 'Depressive episode' }],
+        substanceUse: { hasSubstanceUse: true, substances: ['Alcohol'], overallRisk: 'high' },
+        suicideRisk: { level: 'moderate', factors: ['history'], protectiveFactors: [], requiresIntervention: false },
+        socialSupport: { level: 'low', hasCaregiver: false, livesAlone: true, socialIsolation: true },
+        treatmentEngagement: { inTherapy: true, lastPsychVisit: '2025-01-01' },
+      };
+
+      const summary = (service as any).mapMentalHealthResponse(response);
+
+      expect(summary.assessments[0].name).toBe('Provided Name');
+      expect(summary.assessments[0].trend).toBe('declining');
+      expect(summary.substanceUse.hasSubstanceUse).toBe(true);
+      expect(summary.suicideRisk.level).toBe('moderate');
+      expect(summary.treatmentEngagement.inTherapy).toBe(true);
+    });
+
+    it('handles mental health response without assessments', () => {
+      const summary = (service as any).mapMentalHealthResponse({});
+
+      expect(summary.assessments.length).toBe(0);
+      expect(summary.status).toBe('good');
+      expect(summary.riskLevel).toBe('low');
+    });
+
+    it('calculates mental health trend from history', () => {
+      const improving = service.calculateMentalHealthTrend([
+        { assessedAt: new Date('2025-01-01'), score: 12 },
+        { assessedAt: new Date('2025-02-01'), score: 6 },
+      ] as any);
+      const declining = service.calculateMentalHealthTrend([
+        { assessedAt: new Date('2025-01-01'), score: 3 },
+        { assessedAt: new Date('2025-02-01'), score: 9 },
+      ] as any);
+      const stable = service.calculateMentalHealthTrend([
+        { assessedAt: new Date('2025-01-01'), score: 6 },
+        { assessedAt: new Date('2025-02-01'), score: 7 },
+      ] as any);
+
+      expect(improving).toBe('improving');
+      expect(declining).toBe('declining');
+      expect(stable).toBe('stable');
+    });
+
+    it('returns stable mental health trend with insufficient history', () => {
+      const trend = service.calculateMentalHealthTrend([
+        { assessedAt: new Date('2025-01-01'), score: 5 },
+      ] as any);
+
+      expect(trend).toBe('stable');
+    });
+
+    it('fetches assessment history and converts dates', (done) => {
+      service.getAssessmentHistory('patient-1', 'PHQ-9').subscribe((history) => {
+        expect(history[0].assessedAt).toBeInstanceOf(Date);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/patient-health/assessments/patient-1/PHQ-9/history')
+      );
+      req.flush([{ assessedAt: '2025-01-01T00:00:00Z', score: 4 }]);
+    });
+
+    it('parses SDOH questionnaire data with PRAPARE responses', () => {
+      const bundle = {
+        entry: [
+          {
+            resource: {
+              questionnaire: 'http://example.org/Questionnaire/PRAPARE',
+              authored: '2025-03-01T00:00:00Z',
+              item: [
+                { linkId: 'housing', text: 'Are you worried about losing housing?', answer: [{ valueString: 'Yes' }] },
+                { linkId: 'food', text: 'Food security', answer: [{ valueString: 'Often true' }] },
+                { linkId: 'transport', text: 'Transportation', answer: [{ valueString: 'No' }] },
+                { linkId: 'employment', text: 'Employment status', answer: [{ valueString: 'Unemployed' }] },
+                { linkId: 'social', text: 'How often do you see or talk to people?', answer: [{ valueString: 'Less than once a week' }] },
+              ],
+            },
+          },
+        ],
+      } as any;
+
+      const parsed = (service as any).parseSDOHQuestionnaire(bundle, 'patient-1');
+
+      expect(parsed.questionnaireType).toBe('PRAPARE');
+      expect(parsed.housingStatus.stable).toBe(false);
+      expect(parsed.foodSecurity.secure).toBe(false);
+      expect(parsed.transportation.adequate).toBe(false);
+      expect(parsed.employment.status).toBe('Unemployed');
+      expect(parsed.socialSupport.level).toBe('weak');
+    });
+
+    it('returns defaults when SDOH questionnaire bundle is empty', () => {
+      const parsed = (service as any).parseSDOHQuestionnaire({ entry: [] } as any, 'patient-1');
+
+      expect(parsed.questionnaireType).toBe('custom');
+      expect(parsed.housingStatus.stable).toBe(true);
+      expect(parsed.foodSecurity.secure).toBe(true);
+      expect(parsed.socialSupport.level).toBe('Unknown');
+    });
+
+    it('returns defaults when no SDOH questionnaires are present', () => {
+      const bundle = {
+        entry: [
+          { resource: { questionnaire: 'http://example.org/Questionnaire/Other', authored: '2025-01-01' } },
+        ],
+      } as any;
+
+      const parsed = (service as any).parseSDOHQuestionnaire(bundle, 'patient-1');
+
+      expect(parsed.questionnaireType).toBe('custom');
+      expect(parsed.transportation.adequate).toBe(true);
+    });
+
+    it('parses social support levels with strong frequency', () => {
+      const socialSupport = (service as any).parseSocialSupport([
+        { linkId: 'social', text: 'How often do you see or talk to people?', answer: [{ valueString: 'Daily' }] },
+      ]);
+
+      expect(socialSupport.level).toBe('strong');
+    });
+
+    it('parses AHC-HRSN questionnaire data and defaults missing answers', () => {
+      const bundle = {
+        entry: [
+          {
+            resource: {
+              questionnaire: 'http://example.org/Questionnaire/AHC-HRSN',
+              authored: '2025-03-02T00:00:00Z',
+              item: [
+                { linkId: 'housing', text: 'Housing status', answer: [] },
+                { linkId: 'food', text: 'Food security', answer: [{ valueString: '' }] },
+                { linkId: 'transport', text: 'Transportation', answer: [{ valueString: 'Yes' }] },
+              ],
+            },
+          },
+        ],
+      } as any;
+
+      const parsed = (service as any).parseSDOHQuestionnaire(bundle, 'patient-1');
+
+      expect(parsed.questionnaireType).toBe('AHC-HRSN');
+      expect(parsed.housingStatus.stable).toBe(true);
+      expect(parsed.foodSecurity.secure).toBe(true);
+      expect(parsed.transportation.adequate).toBe(true);
+    });
+
+    it('parses questionnaire entries tagged as sdoh', () => {
+      const bundle = {
+        entry: [
+          {
+            resource: {
+              questionnaire: 'http://example.org/Questionnaire/sdoh',
+              authored: '2025-03-03T00:00:00Z',
+              item: [
+                { linkId: 'food', text: 'Food question', answer: [{ valueString: 'Often true' }] },
+              ],
+            },
+          },
+        ],
+      } as any;
+
+      const parsed = (service as any).parseSDOHQuestionnaire(bundle, 'patient-1');
+
+      expect(parsed.questionnaireType).toBe('custom');
+      expect(parsed.foodSecurity.secure).toBe(false);
+    });
+
+    it('parses transportation and employment details with fallbacks', () => {
+      const transport = (service as any).parseTransportation([
+        { linkId: 'transport', text: 'Transportation', answer: [{ valueString: 'No, lack access' }] },
+      ]);
+      const employment = (service as any).parseEmployment([
+        { linkId: 'employment', text: 'Employment', answer: [] },
+      ]);
+
+      expect(transport.adequate).toBe(false);
+      expect(employment.status).toBe('Unknown');
+    });
+
+    it('parses housing and food status from text-only items', () => {
+      const housing = (service as any).parseHousingStatus([
+        { text: 'Current housing situation', answer: [{ valueString: 'Stable housing' }] },
+      ]);
+      const food = (service as any).parseFoodSecurity([
+        { text: 'Food security question', answer: [{ valueString: 'Never true' }] },
+      ]);
+
+      expect(housing.stable).toBe(true);
+      expect(food.secure).toBe(true);
+    });
+
+    it('parses transportation as adequate when answer is yes', () => {
+      const transport = (service as any).parseTransportation([
+        { linkId: 'transport', text: 'Transportation', answer: [{ valueString: 'Yes' }] },
+      ]);
+
+      expect(transport.adequate).toBe(true);
+    });
+
+    it('parses employment status with provided answer', () => {
+      const employment = (service as any).parseEmployment([
+        { linkId: 'employment', text: 'Employment status', answer: [{ valueString: 'Employed' }] },
+      ]);
+
+      expect(employment.status).toBe('Employed');
+      expect(employment.details).toBe('Employed');
+    });
+
+    it('parses social support as moderate when no strong or weak cues', () => {
+      const socialSupport = (service as any).parseSocialSupport([
+        { linkId: 'social', text: 'How often do you see or talk to people?', answer: [{ valueString: 'Weekly' }] },
+      ]);
+
+      expect(socialSupport.level).toBe('moderate');
+    });
+
+    it('parses SDOH risk factors from observations', () => {
+      const bundle = {
+        entry: [
+          {
+            resource: {
+              code: { coding: [{ code: 'food', display: 'Food insecurity' }] },
+              valueCodeableConcept: { text: 'Severe' },
+              effectiveDateTime: '2025-01-01T00:00:00Z',
+            },
+          },
+        ],
+      } as any;
+
+      const factors = (service as any).parseSDOHRiskFactors(bundle);
+
+      expect(factors[0].category).toBe('food-insecurity');
+      expect(factors[0].severity).toBe('severe');
+      expect(factors[0].zCode).toBe('Z59.4');
+    });
+
+    it('parses SDOH risk factors with valueString and display fallbacks', () => {
+      const bundle = {
+        entry: [
+          {
+            resource: {
+              code: { text: 'Transportation issue' },
+              valueString: 'At risk',
+              effectiveDateTime: '2025-01-01T00:00:00Z',
+            },
+          },
+          {
+            resource: {
+              code: { coding: [{ display: 'Utility assistance' }] },
+              valueCodeableConcept: { coding: [{ display: 'Some concern' }] },
+              effectiveDateTime: '2025-01-02T00:00:00Z',
+            },
+          },
+        ],
+      } as any;
+
+      const factors = (service as any).parseSDOHRiskFactors(bundle);
+
+      expect(factors[0].category).toBe('transportation');
+      expect(factors[0].severity).toBe('moderate');
+      expect(factors[1].category).toBe('utility-assistance');
+      expect(factors[1].severity).toBe('mild');
+    });
+
+    it('determines SDOH categories and severity from text', () => {
+      expect((service as any).determineSdohCategory('edu', 'Education risk')).toBe('education');
+      expect((service as any).determineSdohCategory('', 'Utility shutoff')).toBe('utility-assistance');
+      expect((service as any).determineSdohCategory('', 'Financial strain')).toBe('financial-strain');
+      expect((service as any).determineSdohCategory('', 'Social isolation')).toBe('social-isolation');
+      expect((service as any).determineSdohCategory('', 'Safety concerns')).toBe('interpersonal-safety');
+
+      expect((service as any).determineSdohSeverity('Critical', '')).toBe('severe');
+      expect((service as any).determineSdohSeverity('At risk', '')).toBe('moderate');
+      expect((service as any).determineSdohSeverity('Some concern', '')).toBe('mild');
+      expect((service as any).determineSdohSeverity('None', '')).toBe('moderate');
+    });
+
+    it('parses SDOH service referrals', () => {
+      const bundle = {
+        entry: [
+          {
+            resource: {
+              resourceType: 'ServiceRequest',
+              id: 'sr-1',
+              category: [{ coding: [{ code: 'food', display: 'Food support' }] }],
+              code: { text: 'Food pantry referral' },
+              performer: [{ display: 'Community Org' }],
+              status: 'active',
+              priority: 'routine',
+              authoredOn: '2025-02-01T00:00:00Z',
+              note: [{ text: 'urgent' }],
+            },
+          },
+        ],
+      } as any;
+
+      const referrals = (service as any).parseServiceReferrals(bundle);
+
+      expect(referrals[0].category).toBe('food-insecurity');
+      expect(referrals[0].organization).toBe('Community Org');
+      expect(referrals[0].status).toBe('active');
+    });
+
+    it('handles empty service referrals bundle', () => {
+      const referrals = (service as any).parseServiceReferrals({ entry: [] } as any);
+      expect(referrals).toEqual([]);
+    });
+
+    it('parses service referrals with fallbacks and occurrence date', () => {
+      const bundle = {
+        entry: [
+          {
+            resource: {
+              resourceType: 'ServiceRequest',
+              id: 'sr-2',
+              status: undefined,
+              priority: undefined,
+              authoredOn: undefined,
+              occurrenceDateTime: '2025-03-01T00:00:00Z',
+            },
+          },
+        ],
+      } as any;
+
+      const referrals = (service as any).parseServiceReferrals(bundle);
+
+      expect(referrals[0].service).toBe('Unknown service');
+      expect(referrals[0].organization).toBe('Unknown organization');
+      expect(referrals[0].status).toBe('unknown');
+      expect(referrals[0].priority).toBe('routine');
+      expect(referrals[0].occurrenceDate).toBeInstanceOf(Date);
+    });
+
+    it('determines SDOH categories from service request text', () => {
+      const education = (service as any).determineSdohCategoryFromServiceRequest({
+        category: [{ coding: [{ code: 'education' }] }],
+        code: { text: 'Education resources' },
+      });
+      const utility = (service as any).determineSdohCategoryFromServiceRequest({
+        category: [{ coding: [{ display: 'Utility' }] }],
+        code: { text: 'Utility assistance' },
+      });
+
+      expect(education).toBe('education');
+      expect(utility).toBe('utility-assistance');
+    });
+
+    it('determines SDOH categories and severity from text', () => {
+      const categoryHousing = (service as any).determineSdohCategory('housing', '');
+      const categorySafety = (service as any).determineSdohCategory('', 'violence risk');
+      const categoryUtility = (service as any).determineSdohCategory('', 'utility assistance');
+      const categoryDefault = (service as any).determineSdohCategory('', 'other');
+
+      const severe = (service as any).determineSdohSeverity('critical homeless', '');
+      const mild = (service as any).determineSdohSeverity('some concern', '');
+      const fallback = (service as any).determineSdohSeverity('unclear', '');
+
+      expect(categoryHousing).toBe('housing-instability');
+      expect(categorySafety).toBe('interpersonal-safety');
+      expect(categoryUtility).toBe('utility-assistance');
+      expect(categoryDefault).toBe('social');
+      expect(severe).toBe('severe');
+      expect(mild).toBe('mild');
+      expect(fallback).toBe('moderate');
+    });
+
+    it('infers SDOH needs from question text and boolean answers', () => {
+      const response = {
+        item: [
+          {
+            linkId: 'custom-1',
+            text: 'Have you felt unsafe at home?',
+            answer: [{ valueBoolean: true }],
+          },
+          {
+            linkId: 'custom-2',
+            text: 'Random unrelated question',
+            answer: [{ valueBoolean: false }],
+          },
+        ],
+      } as any;
+
+      const needs = service.parseQuestionnaireResponseToSDOHNeeds(response);
+
+      expect(needs.length).toBe(1);
+      expect(needs[0].category).toBe('safety');
+      expect(needs[0].severity).toBe('moderate');
+    });
+
+    it('parses PHQ-9 and GAD-7 scores from questionnaire responses', () => {
+      const responses = [
+        {
+          questionnaire: 'http://example.org/PHQ-9',
+          authored: '2025-01-01T00:00:00Z',
+          item: [{ linkId: 'score', answer: [{ valueInteger: 12 }] }],
+        },
+        {
+          questionnaire: 'http://example.org/GAD-7',
+          authored: '2025-02-01T00:00:00Z',
+          item: [{ linkId: 'score', answer: [{ valueInteger: 6 }] }],
+        },
+      ] as any;
+
+      const phq9 = (service as any).parsePHQ9Score(responses);
+      const gad7 = (service as any).parseGAD7Score(responses);
+
+      expect(phq9.score).toBe(12);
+      expect(phq9.severity).toBe('moderate');
+      expect(gad7.score).toBe(6);
+      expect(gad7.severity).toBe('mild');
+    });
+
+    it('builds assessment history and determines status/risk', () => {
+      const responses = [
+        {
+          id: 'resp-1',
+          questionnaire: 'http://example.org/PHQ-9',
+          authored: '2025-01-01T00:00:00Z',
+          item: [{ linkId: 'score', answer: [{ valueInteger: 4 }] }],
+        },
+        {
+          id: 'resp-2',
+          questionnaire: 'http://example.org/GAD-7',
+          authored: '2025-02-01T00:00:00Z',
+          item: [{ linkId: 'score', answer: [{ valueInteger: 16 }] }],
+        },
+      ] as any;
+
+      const history = (service as any).buildAssessmentHistory(responses);
+      const status = (service as any).calculateMentalHealthStatus(
+        { score: 4, severity: 'minimal', date: new Date('2025-01-01') },
+        { score: 16, severity: 'severe', date: new Date('2025-02-01') }
+      );
+      const risk = (service as any).calculateMentalHealthRisk(
+        { score: 4, severity: 'minimal', date: new Date('2025-01-01') },
+        { score: 16, severity: 'severe', date: new Date('2025-02-01') }
+      );
+
+      expect(history.length).toBe(2);
+      expect(history[0].type).toBe('PHQ-9');
+      expect(history[1].type).toBe('GAD-7');
+      expect(status).toBe('poor');
+      expect(risk).toBe('critical');
+    });
+
+    it('calculates comorbidity scores from conditions', () => {
+      const score = (service as any).calculateComorbidityScore([
+        { display: 'Cancer' },
+        { display: 'Kidney failure' },
+        { display: 'Diabetes' },
+      ]);
+
+      expect(score).toBeGreaterThan(0);
+      expect(score).toBe(13);
+    });
+
+    it('maps FHIR conditions to mental health diagnoses', () => {
+      const mood = (service as any).mapFhirConditionToMentalHealthCondition({
+        code: { coding: [{ code: 'F32', display: 'Depressive episode' }] },
+        clinicalStatus: { coding: [{ code: 'active' }] },
+      });
+      const trauma = (service as any).mapFhirConditionToMentalHealthCondition({
+        code: { coding: [{ code: 'F43', display: 'Trauma' }] },
+        clinicalStatus: { coding: [{ code: 'active' }] },
+      });
+      const invalid = (service as any).mapFhirConditionToMentalHealthCondition({ code: {} });
+
+      expect(mood.category).toBe('mood');
+      expect(trauma.category).toBe('anxiety');
+      expect(invalid).toBeNull();
+    });
+
+    it('detects critical alerts and determines physical health status', () => {
+      const vitals: any = {
+        bloodPressure: { value: '190/130', status: 'normal' },
+        heartRate: { value: 160, status: 'normal' },
+        temperature: { value: 104, status: 'normal' },
+        oxygenSaturation: { value: 85, status: 'normal' },
+      };
+      const labs: any[] = [
+        { loincCode: '2339-0', value: 500 },
+      ];
+
+      (service as any).detectCriticalAlerts(vitals, labs);
+
+      const status = (service as any).determinePhysicalHealthStatus({
+        vitals,
+        labs,
+        conditions: [{ severity: 'severe', controlled: false }],
+        medications: { status: 'poor' },
+        functional: { adlScore: 3, painLevel: 8 },
+      });
+
+      expect(vitals.bloodPressure.status).toBe('critical');
+      expect(vitals.heartRate.status).toBe('critical');
+      expect(vitals.temperature.status).toBe('critical');
+      expect(vitals.oxygenSaturation.status).toBe('critical');
+      expect(labs[0].status).toBe('critical');
+      expect(status).toBe('poor');
+    });
+
+    it('returns cached physical health summaries', (done) => {
+      const cached = { status: 'good' } as any;
+      (service as any).physicalHealthCache.set('cached-physical', {
+        data: cached,
+        timestamp: Date.now(),
+      });
+
+      service.getPhysicalHealthSummary('cached-physical').subscribe((summary) => {
+        expect(summary).toBe(cached);
+        done();
+      });
+    });
+
+    it('determines medication adherence status', () => {
+      expect((service as any).determineMedicationAdherenceStatus(85)).toBe('excellent');
+      expect((service as any).determineMedicationAdherenceStatus(70)).toBe('good');
+      expect((service as any).determineMedicationAdherenceStatus(20)).toBe('poor');
+      expect((service as any).determineMedicationAdherenceStatus(0)).toBe('unknown');
+    });
+
+    it('returns zero overdue days for future due dates', () => {
+      jest.useFakeTimers().setSystemTime(new Date('2025-01-01'));
+      const overdue = (service as any).calculateOverdueDays(new Date('2025-02-01'));
+      expect(overdue).toBe(0);
+      jest.useRealTimers();
+    });
+
+    it('determines SDOH categories from service requests', () => {
+      const food = (service as any).determineSdohCategoryFromServiceRequest({
+        category: [{ coding: [{ code: 'food' }] }],
+        code: { text: 'Food pantry' },
+      });
+      const transport = (service as any).determineSdohCategoryFromServiceRequest({
+        category: [{ coding: [{ display: 'Transportation' }] }],
+        code: { text: 'Bus vouchers' },
+      });
+      const fallback = (service as any).determineSdohCategoryFromServiceRequest({
+        category: [],
+        code: { text: 'Other' },
+      });
+
+      expect(food).toBe('food-insecurity');
+      expect(transport).toBe('transportation');
+      expect(fallback).toBe('social');
+    });
+
+    it('calculates risk level from needs', () => {
+      const critical = (service as any).calculateRiskLevelFromNeeds([
+        { severity: 'severe', addressed: false },
+        { severity: 'severe', addressed: false },
+      ]);
+      const high = (service as any).calculateRiskLevelFromNeeds([
+        { severity: 'severe', addressed: false },
+        { severity: 'mild', addressed: false },
+      ]);
+      const moderate = (service as any).calculateRiskLevelFromNeeds([
+        { severity: 'moderate', addressed: false },
+      ]);
+      const low = (service as any).calculateRiskLevelFromNeeds([
+        { severity: 'moderate', addressed: true },
+      ]);
+
+      expect(critical).toBe('critical');
+      expect(high).toBe('high');
+      expect(moderate).toBe('moderate');
+      expect(low).toBe('low');
+    });
+
+    it('maps lab interpretations when present', () => {
+      const lab = (service as any).mapFhirObservationToLabResultWithInterpretation({
+        id: 'obs-1',
+        code: { coding: [{ system: 'http://loinc.org', code: '2339-0' }], text: 'Glucose' },
+        valueQuantity: { value: 150, unit: 'mg/dL' },
+        interpretation: [{ coding: [{ code: 'H' }] }],
+      });
+
+      expect(lab.loincCode).toBe('2339-0');
+      expect(lab.interpretation?.display).toBe('High');
+    });
+
+    it('returns undefined interpretation when absent', () => {
+      const lab = (service as any).mapFhirObservationToLabResultWithInterpretation({
+        id: 'obs-2',
+        code: { coding: [{ system: 'http://loinc.org', code: '2093-3' }], text: 'Cholesterol' },
+        valueQuantity: { value: 180, unit: 'mg/dL' },
+      });
+
+      expect(lab.interpretation).toBeUndefined();
+    });
+
+    it('derives health status from scores', () => {
+      expect((service as any).deriveStatusFromScore(85)).toBe('excellent');
+      expect((service as any).deriveStatusFromScore(70)).toBe('good');
+      expect((service as any).deriveStatusFromScore(50)).toBe('fair');
+      expect((service as any).deriveStatusFromScore(30)).toBe('poor');
+    });
+
+    it('fetches mental health conditions from FHIR', (done) => {
+      (service as any).getMentalHealthConditionsFromFhir('patient-1').subscribe((conditions: any[]) => {
+        expect(conditions.length).toBe(1);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/fhir/Condition') && request.params.get('category') === 'mental-health'
+      );
+      req.flush({
+        entry: [
+          {
+            resource: {
+              code: { coding: [{ code: 'F32', display: 'Depressive episode' }] },
+              clinicalStatus: { coding: [{ code: 'active' }] },
+            },
+          },
+        ],
+      });
+    });
+
+    it('returns empty mental health conditions for empty bundle', (done) => {
+      (service as any).getMentalHealthConditionsFromFhir('patient-1').subscribe((conditions: any[]) => {
+        expect(conditions).toEqual([]);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/fhir/Condition') && request.params.get('category') === 'mental-health'
+      );
+      req.flush({ entry: [] });
+    });
+
+    it('fetches psychiatric medications from FHIR', (done) => {
+      (service as any).getPsychMedicationsFromFhir('patient-1').subscribe((medications: any[]) => {
+        expect(medications.length).toBe(1);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/fhir/MedicationStatement') && request.params.get('status') === 'active'
+      );
+      req.flush({
+        entry: [
+          {
+            resource: {
+              medicationCodeableConcept: { coding: [{ code: 'RX123', display: 'Medication' }] },
+              status: 'active',
+            },
+          },
+        ],
+      });
+    });
+
+    it('returns empty psychiatric medications for empty bundle', (done) => {
+      (service as any).getPsychMedicationsFromFhir('patient-1').subscribe((medications: any[]) => {
+        expect(medications).toEqual([]);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/fhir/MedicationStatement') && request.params.get('status') === 'active'
+      );
+      req.flush({ entry: [] });
+    });
+
+    it('calculates mental health crisis risk for suicide ideation', (done) => {
+      const phq9Bundle = {
+        entry: [
+          {
+            resource: {
+              item: [
+                { linkId: 'PHQ-9-Total', answer: [{ valueInteger: 22 }] },
+                { linkId: 'PHQ-9-Q9', answer: [{ valueInteger: 1 }] },
+              ],
+            },
+          },
+        ],
+      };
+      const gad7Bundle = { entry: [] };
+
+      const spy = jest.spyOn(service as any, 'getQuestionnaireResponsesByType')
+        .mockImplementation((_: string, type: string) => of(type === 'PHQ-9' ? phq9Bundle : gad7Bundle));
+
+      service.calculateMentalHealthCrisisRisk('patient-1').subscribe((risk) => {
+        expect(risk.riskLevel).toBe('critical');
+        spy.mockRestore();
+        done();
+      });
+    });
+
+    it('calculates mental health crisis risk for severe symptoms', (done) => {
+      const phq9Bundle = {
+        entry: [
+          {
+            resource: {
+              item: [{ linkId: 'PHQ-9-Total', answer: [{ valueInteger: 20 }] }],
+            },
+          },
+        ],
+      };
+      const gad7Bundle = {
+        entry: [
+          {
+            resource: {
+              item: [{ linkId: 'GAD-7-Total', answer: [{ valueInteger: 15 }] }],
+            },
+          },
+        ],
+      };
+
+      const spy = jest.spyOn(service as any, 'getQuestionnaireResponsesByType')
+        .mockImplementation((_: string, type: string) => of(type === 'PHQ-9' ? phq9Bundle : gad7Bundle));
+
+      service.calculateMentalHealthCrisisRisk('patient-1').subscribe((risk) => {
+        expect(risk.riskLevel).toBe('high');
+        spy.mockRestore();
+        done();
+      });
+    });
+
+    it('calculates mental health crisis risk for moderate symptoms', (done) => {
+      const phq9Bundle = {
+        entry: [
+          {
+            resource: {
+              item: [{ linkId: 'PHQ-9-Total', answer: [{ valueInteger: 12 }] }],
+            },
+          },
+        ],
+      };
+      const gad7Bundle = {
+        entry: [
+          {
+            resource: {
+              item: [{ linkId: 'GAD-7-Total', answer: [{ valueInteger: 8 }] }],
+            },
+          },
+        ],
+      };
+
+      const spy = jest.spyOn(service as any, 'getQuestionnaireResponsesByType')
+        .mockImplementation((_: string, type: string) => of(type === 'PHQ-9' ? phq9Bundle : gad7Bundle));
+
+      service.calculateMentalHealthCrisisRisk('patient-1').subscribe((risk) => {
+        expect(risk.riskLevel).toBe('moderate');
+        spy.mockRestore();
+        done();
+      });
+    });
+
+    it('calculates mental health crisis risk for low symptoms', (done) => {
+      const phq9Bundle = {
+        entry: [
+          {
+            resource: {
+              item: [{ linkId: 'PHQ-9-Total', answer: [{ valueInteger: 2 }] }],
+            },
+          },
+        ],
+      };
+      const gad7Bundle = {
+        entry: [
+          {
+            resource: {
+              item: [{ linkId: 'GAD-7-Total', answer: [{ valueInteger: 1 }] }],
+            },
+          },
+        ],
+      };
+
+      const spy = jest.spyOn(service as any, 'getQuestionnaireResponsesByType')
+        .mockImplementation((_: string, type: string) => of(type === 'PHQ-9' ? phq9Bundle : gad7Bundle));
+
+      service.calculateMentalHealthCrisisRisk('patient-1').subscribe((risk) => {
+        expect(risk.riskLevel).toBe('low');
+        spy.mockRestore();
+        done();
+      });
+    });
+
+    it('calculates cardiovascular risk for high risk', (done) => {
+      jest.spyOn(service as any, 'getObservations')
+        .mockImplementation((_: string, code: string) => of({
+          entry: code === '85354-9'
+            ? [{ resource: { component: [{ code: { coding: [{ code: '8480-6' }] }, valueQuantity: { value: 160 } }, { code: { coding: [{ code: '8462-4' }] }, valueQuantity: { value: 95 } }] } }]
+            : [{ resource: { valueQuantity: { value: 250 } } }],
+        }));
+      jest.spyOn(service as any, 'getConditions').mockReturnValue(of({
+        entry: [{ resource: { code: { coding: [{ code: 'cardiovascular' }] } } }],
+      }));
+
+      service.calculateCardiovascularRisk('patient-1').subscribe((risk) => {
+        expect(risk.riskLevel).toBe('high');
+        done();
+      });
+
+      const req = httpMock.expectOne((request) => request.url.includes('/fhir/Patient/patient-1'));
+      req.flush({ birthDate: '1950-01-01' });
+    });
+
+    it('calculates cardiovascular risk for low risk', (done) => {
+      jest.spyOn(service as any, 'getObservations')
+        .mockImplementation((_: string) => of({ entry: [] }));
+      jest.spyOn(service as any, 'getConditions').mockReturnValue(of({ entry: [] }));
+
+      service.calculateCardiovascularRisk('patient-1').subscribe((risk) => {
+        expect(risk.riskLevel).toBe('low');
+        done();
+      });
+
+      const req = httpMock.expectOne((request) => request.url.includes('/fhir/Patient/patient-1'));
+      req.flush({ birthDate: '1995-01-01' });
+    });
+
+    it('calculates respiratory risk with no issues', (done) => {
+      jest.spyOn(service as any, 'getObservations')
+        .mockImplementation((_: string) => of({ entry: [] }));
+      jest.spyOn(service as any, 'getConditions').mockReturnValue(of({ entry: [] }));
+
+      service.calculateRespiratoryRisk('patient-1').subscribe((risk) => {
+        expect(risk.factors[0]).toContain('No respiratory conditions');
+        done();
+      });
+    });
+
+    it('maps lab interpretation only when code exists', () => {
+      const lab = (service as any).mapFhirObservationToLabResultWithInterpretation({
+        id: 'obs-3',
+        code: { coding: [{ system: 'http://loinc.org', code: '2093-3' }], text: 'Cholesterol' },
+        valueQuantity: { value: 180, unit: 'mg/dL' },
+        interpretation: [{ coding: [{}] }],
+      });
+
+      expect(lab.interpretation).toBeUndefined();
+    });
+
+    it('handles mental health conditions FHIR errors', (done) => {
+      (service as any).getMentalHealthConditionsFromFhir('patient-1').subscribe((conditions: any[]) => {
+        expect(conditions).toEqual([]);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/fhir/Condition') && request.params.get('category') === 'mental-health'
+      );
+      req.flush('fail', { status: 500, statusText: 'Server Error' });
+    });
+
+    it('handles psych medication FHIR errors', (done) => {
+      (service as any).getPsychMedicationsFromFhir('patient-1').subscribe((medications: any[]) => {
+        expect(medications).toEqual([]);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/fhir/MedicationStatement') && request.params.get('status') === 'active'
+      );
+      req.flush('fail', { status: 500, statusText: 'Server Error' });
+    });
+
+    it('calculates cardiovascular risk for moderate risk', (done) => {
+      jest.spyOn(service as any, 'getObservations')
+        .mockImplementation((_: string, code: string) => of({
+          entry: code === '85354-9'
+            ? [{ resource: { component: [{ code: { coding: [{ code: '8480-6' }] }, valueQuantity: { value: 132 } }, { code: { coding: [{ code: '8462-4' }] }, valueQuantity: { value: 82 } }] } }]
+            : [{ resource: { valueQuantity: { value: 210 } } }],
+        }));
+      jest.spyOn(service as any, 'getConditions').mockReturnValue(of({
+        entry: [{ resource: { code: { coding: [{ code: 'cardiovascular' }] } } }],
+      }));
+
+      service.calculateCardiovascularRisk('patient-1').subscribe((risk) => {
+        expect(risk.riskLevel).toBe('moderate');
+        done();
+      });
+
+      const req = httpMock.expectOne((request) => request.url.includes('/fhir/Patient/patient-1'));
+      req.flush({ birthDate: '1970-01-01' });
+    });
+
+    it('calculates respiratory risk for asthma with borderline oxygen', (done) => {
+      jest.spyOn(service as any, 'getObservations')
+        .mockImplementation((_: string) => of({
+          entry: [{ resource: { valueQuantity: { value: 92 } } }],
+        }));
+      jest.spyOn(service as any, 'getConditions').mockReturnValue(of({
+        entry: [{ resource: { code: { coding: [{ code: '195967001' }] } } }],
+      }));
+
+      service.calculateRespiratoryRisk('patient-1').subscribe((risk) => {
+        expect(risk.riskLevel).toBe('moderate');
+        done();
+      });
+    });
+
+    it('calculates respiratory risk for COPD with low oxygen', (done) => {
+      jest.spyOn(service as any, 'getObservations')
+        .mockImplementation((_: string) => of({
+          entry: [{ resource: { valueQuantity: { value: 85 } } }],
+        }));
+      jest.spyOn(service as any, 'getConditions').mockReturnValue(of({
+        entry: [{ resource: { code: { coding: [{ code: '13645005' }] } } }],
+      }));
+
+      service.calculateRespiratoryRisk('patient-1').subscribe((risk) => {
+        expect(risk.riskLevel).toBe('high');
+        done();
+      });
+    });
+
+    it('handles assessment history errors', (done) => {
+      service.getAssessmentHistory('patient-1', 'PHQ-9').subscribe((history) => {
+        expect(history).toEqual([]);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/patient-health/assessments/patient-1/PHQ-9/history')
+      );
+      req.flush('fail', { status: 500, statusText: 'Server Error' });
+    });
+
+    it('falls back to mock SDOH summary on screening errors', (done) => {
+      const screeningSpy = jest.spyOn(service as any, 'getSDOHScreeningFromFhir')
+        .mockReturnValue(throwError(() => new Error('fail')));
+
+      service.getSDOHSummary('patient-1').subscribe((summary) => {
+        expect(summary.needs.length).toBeGreaterThan(0);
+        screeningSpy.mockRestore();
+        done();
+      });
+    });
+
+    it('builds social determinants from FHIR bundles', (done) => {
+      service.getSocialDeterminants('patient-1').subscribe((sdoh) => {
+        expect(sdoh.patientId).toBe('patient-1');
+        expect(sdoh.riskFactors.length).toBe(1);
+        expect(sdoh.activeReferrals.length).toBe(1);
+        done();
+      });
+
+      const questionnaireReq = httpMock.expectOne((request) =>
+        request.url.includes('/fhir/QuestionnaireResponse')
+      );
+      questionnaireReq.flush({
+        entry: [
+          {
+            resource: {
+              questionnaire: 'http://example.org/Questionnaire/PRAPARE',
+              authored: '2025-01-01T00:00:00Z',
+              item: [
+                { linkId: 'housing', text: 'Housing', answer: [{ valueString: 'Yes' }] },
+              ],
+            },
+          },
+        ],
+      });
+
+      const observationsReq = httpMock.expectOne((request) =>
+        request.url.includes('/fhir/Observation') && request.params.get('category') === 'sdoh'
+      );
+      observationsReq.flush({
+        entry: [
+          {
+            resource: {
+              code: { coding: [{ code: 'food', display: 'Food' }] },
+              valueString: 'severe',
+            },
+          },
+        ],
+      });
+
+      const serviceReq = httpMock.expectOne((request) =>
+        request.url.includes('/fhir/ServiceRequest')
+      );
+      serviceReq.flush({
+        entry: [
+          {
+            resource: {
+              resourceType: 'ServiceRequest',
+              id: 'sr-1',
+              category: [{ coding: [{ code: 'food' }] }],
+              code: { text: 'Food support' },
+              performer: [{ display: 'Community Org' }],
+              status: 'active',
+              priority: 'routine',
+              authoredOn: '2025-01-02T00:00:00Z',
+            },
+          },
+        ],
+      });
+    });
+
+    it('returns default physical health summary when data sources fail', (done) => {
+      jest.spyOn(service as any, 'getVitalSignsFromFhir')
+        .mockReturnValue(throwError(() => new Error('fail')));
+      jest.spyOn(service as any, 'getLabResultsFromFhir')
+        .mockReturnValue(throwError(() => new Error('fail')));
+      jest.spyOn(service as any, 'getConditionsFromFhir')
+        .mockReturnValue(throwError(() => new Error('fail')));
+      jest.spyOn(medicationAdherenceService, 'calculateOverallAdherence')
+        .mockReturnValue(throwError(() => new Error('fail')) as any);
+      jest.spyOn(procedureHistoryService, 'getRecentProcedures')
+        .mockReturnValue(throwError(() => new Error('fail')) as any);
+      jest.spyOn(service as any, 'getFunctionalStatusFromFhir')
+        .mockReturnValue(throwError(() => new Error('fail')));
+
+      service.getPhysicalHealthSummary('patient-1').subscribe((summary) => {
+        expect(summary.medicationAdherence.overallRate).toBe(0);
+        expect(summary.functionalStatus.adlScore).toBe(6);
+        done();
+      });
+    });
+
+    it('falls back to mock physical health summary when build fails', (done) => {
+      jest.spyOn(service as any, 'getVitalSignsFromFhir')
+        .mockReturnValue(of({}));
+      jest.spyOn(service as any, 'getLabResultsFromFhir')
+        .mockReturnValue(of([]));
+      jest.spyOn(service as any, 'getConditionsFromFhir')
+        .mockReturnValue(of([]));
+      jest.spyOn(medicationAdherenceService, 'calculateOverallAdherence')
+        .mockReturnValue(of({ overallPDC: 80, adherentCount: 1, totalMedications: 1, problematicMedications: [] }) as any);
+      jest.spyOn(procedureHistoryService, 'getRecentProcedures')
+        .mockReturnValue(of([]) as any);
+      jest.spyOn(service as any, 'getFunctionalStatusFromFhir')
+        .mockReturnValue(of({ adlScore: 6, iadlScore: 8, mobilityScore: 100, painLevel: 0, fatigueLevel: 0 }));
+      jest.spyOn(service as any, 'buildPhysicalHealthSummary')
+        .mockImplementation(() => { throw new Error('fail'); });
+
+      service.getPhysicalHealthSummary('patient-1').subscribe((summary) => {
+        expect(summary.status).toBe('good');
+        done();
+      });
+    });
+
+    it('maps condition severity and controlled status', () => {
+      expect((service as any).mapFhirSeverityToLocal({ coding: [{ code: '24484000', display: 'Severe' }] })).toBe('severe');
+      expect((service as any).mapFhirSeverityToLocal({ coding: [{ code: '255604002', display: 'Mild' }] })).toBe('mild');
+      expect((service as any).mapFhirSeverityToLocal(undefined)).toBe('moderate');
+
+      const uncontrolled = (service as any).determineConditionControlledStatus({
+        note: [{ text: 'Uncontrolled and remains elevated' }],
+      });
+      const controlled = (service as any).determineConditionControlledStatus({
+        note: [{ text: 'Well-controlled and stable' }],
+      });
+      const defaultControlled = (service as any).determineConditionControlledStatus({});
+
+      expect(uncontrolled).toBe(false);
+      expect(controlled).toBe(true);
+      expect(defaultControlled).toBe(true);
+    });
+
+    it('fetches and maps conditions from FHIR', (done) => {
+      (service as any).getConditionsFromFhir('patient-1').subscribe((conditions: any[]) => {
+        expect(conditions.length).toBe(1);
+        expect(conditions[0].controlled).toBe(false);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/fhir/Condition') && request.params.get('patient') === 'patient-1'
+      );
+      req.flush({
+        entry: [
+          {
+            resource: {
+              clinicalStatus: { coding: [{ code: 'inactive' }] },
+              code: { text: 'Inactive' },
+            },
+          },
+          {
+            resource: {
+              clinicalStatus: { coding: [{ code: 'active' }] },
+              severity: { coding: [{ code: '24484000' }] },
+              code: { text: 'Diabetes', coding: [{ system: 'http://hl7.org/fhir/sid/icd-10', code: 'E11' }] },
+              note: [{ text: 'Uncontrolled' }],
+            },
+          },
+        ],
+      });
+    });
+
+    it('calculates functional status from questionnaires', (done) => {
+      service.getFunctionalStatusFromFhir('patient-1').subscribe((status) => {
+        expect(status.adlScore).toBeGreaterThan(0);
+        expect(status.iadlScore).toBeGreaterThan(0);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/QuestionnaireResponse') && request.params.get('patient') === 'patient-1'
+      );
+      req.flush({
+        entry: [
+          {
+            resource: {
+              questionnaire: 'adl',
+              item: [{ answer: [{ valueCoding: { code: 'independent' } }] }],
+            },
+          },
+          {
+            resource: {
+              questionnaire: 'iadl',
+              item: [{ answer: [{ valueCoding: { code: 'independent' } }] }],
+            },
+          },
+        ],
+      });
+    });
+
+    it('returns defaults when functional status FHIR fails', (done) => {
+      service.getFunctionalStatusFromFhir('patient-1').subscribe((status) => {
+        expect(status.adlScore).toBe(6);
+        expect(status.iadlScore).toBe(8);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/QuestionnaireResponse') && request.params.get('patient') === 'patient-1'
+      );
+      req.flush('fail', { status: 500, statusText: 'Server Error' });
+    });
+
+    it('calculates ADL and IADL scores', () => {
+      const adl = (service as any).calculateADLScore([
+        { answer: [{ valueCoding: { code: 'independent' } }] },
+        { answer: [{ valueCoding: { code: 'dependent' } }] },
+      ]);
+      const iadl = (service as any).calculateIADLScore([
+        { answer: [{ valueCoding: { code: 'independent' } }] },
+        { answer: [{ valueCoding: { code: 'independent' } }] },
+      ]);
+
+      expect(adl).toBe(1);
+      expect(iadl).toBe(2);
+    });
+
+    it('returns medication adherence mock data', (done) => {
+      service.getMedicationAdherenceData('patient-1').subscribe((adherence) => {
+        expect(adherence.overallRate).toBe(85);
+        expect(adherence.status).toBe('good');
+        done();
+      });
+    });
+
+    it('falls back to default risks when category calculations fail', (done) => {
+      jest.spyOn(service, 'calculateDiabetesRisk').mockReturnValue(throwError(() => new Error('fail')) as any);
+      jest.spyOn(service, 'calculateCardiovascularRisk').mockReturnValue(throwError(() => new Error('fail')) as any);
+      jest.spyOn(service, 'calculateMentalHealthCrisisRisk').mockReturnValue(throwError(() => new Error('fail')) as any);
+      jest.spyOn(service, 'calculateRespiratoryRisk').mockReturnValue(throwError(() => new Error('fail')) as any);
+
+      service.getCategoryRiskAssessments('patient-1').subscribe((assessments) => {
+        expect(assessments.every((a) => a.score === 0)).toBe(true);
+        done();
+      });
+    });
+
+    it('returns category risk assessments in order', (done) => {
+      jest.spyOn(service, 'calculateDiabetesRisk').mockReturnValue(of({ category: 'diabetes' } as any));
+      jest.spyOn(service, 'calculateCardiovascularRisk').mockReturnValue(of({ category: 'cardiovascular' } as any));
+      jest.spyOn(service, 'calculateMentalHealthCrisisRisk').mockReturnValue(of({ category: 'mental-health' } as any));
+      jest.spyOn(service, 'calculateRespiratoryRisk').mockReturnValue(of({ category: 'respiratory' } as any));
+
+      service.getCategoryRiskAssessments('patient-1').subscribe((assessments) => {
+        expect(assessments.map((a) => a.category)).toEqual([
+          'diabetes',
+          'cardiovascular',
+          'mental-health',
+          'respiratory',
+        ]);
+        done();
       });
     });
   });

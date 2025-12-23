@@ -71,6 +71,11 @@ export const CQL_ENGINE_ENDPOINTS = {
   EVALUATIONS_BY_LIBRARY: (libraryId: string) =>
     `/api/v1/cql/evaluations/library/${libraryId}`,
   EVALUATE_SIMPLE: '/evaluate', // Simplified endpoint
+
+  // HEDIS Measure Discovery Endpoints (Phase 1)
+  HEDIS_MEASURES: '/evaluate/measures', // List all registered HEDIS measures
+  HEDIS_MEASURE_BY_ID: (measureId: string) => `/evaluate/measures/${measureId}`,
+  HEDIS_MEASURE_EXISTS: (measureId: string) => `/evaluate/measures/${measureId}/exists`,
 };
 
 /**

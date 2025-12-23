@@ -645,7 +645,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   navigateToPatientDetail(patient: PatientSummary): void {
     // Navigate to patient detail page
-    this.router.navigate(['/patient-detail', patient.id]);
+    this.router.navigate(['/patients', patient.id]);
   }
 
   /**

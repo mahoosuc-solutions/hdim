@@ -290,7 +290,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
    */
   addressCareGap(gap: HighPriorityCareGap): void {
     console.log('Addressing care gap:', gap.gapType);
-    this.router.navigate(['/patient-detail', gap.id], {
+    this.router.navigate(['/patients', gap.id], {
       queryParams: { action: 'clinical-review', gapId: gap.id }
     });
   }
@@ -300,7 +300,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
    */
   reviewResult(result: PendingResult): void {
     console.log('Reviewing result:', result.resultType);
-    this.router.navigate(['/patient-detail', result.id], {
+    this.router.navigate(['/patients', result.id], {
       queryParams: { action: 'review-results', resultId: result.id }
     });
   }
@@ -335,7 +335,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
    * View patient details
    */
   viewPatient(id: string): void {
-    this.router.navigate(['/patient-detail', id]);
+    this.router.navigate(['/patients', id]);
   }
 
   /**

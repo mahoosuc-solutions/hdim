@@ -290,7 +290,7 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
 
       component.viewPatient(task);
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/patient-detail', task.id]);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/patients', task.id]);
     });
 
     it('should filter schedule by status', () => {
@@ -682,7 +682,7 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
       component.viewPatientFromGap(gap);
 
       expect(mockRouter.navigate).toHaveBeenCalledWith(
-        ['/patient-detail', gap.patientId],
+        ['/patients', gap.patientId],
         expect.objectContaining({ queryParams: { gapId: gap.id } })
       );
     });

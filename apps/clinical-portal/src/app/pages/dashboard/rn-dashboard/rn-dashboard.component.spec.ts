@@ -336,7 +336,7 @@ describe('RNDashboardComponent (TDD - Phase 6.2)', () => {
       component.addressCareGap(gap);
 
       expect(mockRouter.navigate).toHaveBeenCalledWith(
-        ['/patient-detail', gap.id],
+        ['/patients', gap.id],
         expect.objectContaining({
           queryParams: { action: 'address-gap', gapId: gap.id }
         })
@@ -441,7 +441,7 @@ describe('RNDashboardComponent (TDD - Phase 6.2)', () => {
 
     it('supports navigation helpers and color helpers', () => {
       component.viewPatient('patient-1');
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/patient-detail', 'patient-1']);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/patients', 'patient-1']);
 
       expect(component.getPriorityColor('high')).toBe('warn');
       expect(component.getPriorityColor('medium')).toBe('accent');

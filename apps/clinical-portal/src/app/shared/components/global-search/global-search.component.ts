@@ -210,7 +210,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
           subtitle: `MRN: ${this.getPatientMRN(patient) || 'N/A'}`,
           description: `${patient.gender || 'Unknown'} • DOB: ${patient.birthDate || 'Unknown'}`,
           icon: 'person',
-          route: ['/patient-detail', patient.id],
+          route: ['/patients', patient.id],
           metadata: { patient },
         }));
         results.push(...patientResults);

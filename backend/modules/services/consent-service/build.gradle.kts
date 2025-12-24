@@ -11,13 +11,12 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:audit"))
     implementation(project(":modules:shared:infrastructure:persistence"))
     implementation(project(":modules:shared:infrastructure:messaging"))
+    implementation(project(":modules:shared:infrastructure:tracing"))
+    implementation(project(":modules:shared:infrastructure:api-docs"))
 
     // Spring Boot
     implementation(libs.bundles.spring.boot.web)
     implementation(libs.bundles.spring.boot.data)
-
-    // OpenAPI/Swagger documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)

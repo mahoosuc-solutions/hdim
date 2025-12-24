@@ -108,9 +108,9 @@ gateway:
   auth:
     # Enable/disable gateway authentication
     enabled: true
-    # Enforce authentication for all requests (set to true for production)
-    # When false, requests without tokens are allowed (demo mode - NOT FOR PRODUCTION)
-    enforced: ${GATEWAY_AUTH_ENFORCED:false}
+    # Enforce authentication for all requests (default: true for security)
+    # Set GATEWAY_AUTH_ENFORCED=false only for local development/demo mode
+    enforced: ${GATEWAY_AUTH_ENFORCED:true}
     # Secret for signing X-Auth-Validated header (min 32 chars for production)
     # Generate with: openssl rand -base64 32
     header-signing-secret: ${GATEWAY_AUTH_SIGNING_SECRET:dev-signing-secret-change-in-production}

@@ -11,44 +11,43 @@ import { LoggerService, ContextualLogger } from './logger.service';
  *
  * Features:
  * - User login/logout
- * - JWT token management (HttpOnly cookies + localStorage fallback)
- * - Token refresh
+ * - JWT token management via HttpOnly cookies (XSS protected)
+ * - Automatic token refresh
  * - Role-based authorization
  * - Permission checking
  * - Auto-logout on token expiration
  * - Authentication state management
  *
  * SECURITY IMPLEMENTATION (HIPAA Compliant):
- * The backend now sets HttpOnly cookies with JWT tokens for XSS protection:
+ * JWT tokens are stored in HttpOnly cookies to prevent XSS attacks:
  * - hdim_access_token: Access token (HttpOnly, Secure, SameSite=Strict)
  * - hdim_refresh_token: Refresh token (HttpOnly, Secure, SameSite=Strict)
- *
- * Token Storage Priority:
- * 1. HttpOnly cookies (primary - XSS protected, HIPAA compliant)
- * 2. localStorage (fallback for legacy clients and demo mode)
  *
  * The API service is configured with withCredentials: true to send cookies
  * automatically with all requests. This provides seamless authentication
  * without exposing tokens to JavaScript.
  *
- * NOTE: Direct token access methods (getToken, setToken) are kept for:
- * - Backwards compatibility with existing code
- * - Demo mode functionality
- * - Token expiration checking (parsing JWT claims)
+ * Authentication Flow:
+ * 1. Login → Backend sets HttpOnly cookies + returns user info
+ * 2. Subsequent requests → Browser automatically includes cookies
+ * 3. 401 response → Trigger refresh (backend reads cookie, sets new one)
+ * 4. Logout → Backend clears cookies
+ *
+ * NOTE: localStorage is only used for user profile data, NOT tokens.
  */
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly AUTH_TOKEN_KEY = 'healthdata_auth_token';
-  private readonly REFRESH_TOKEN_KEY = 'healthdata_refresh_token';
+  // NOTE: Tokens are now stored in HttpOnly cookies, not localStorage
+  // Only user profile is stored in localStorage
   private readonly USER_KEY = 'healthdata_user';
   private readonly TOKEN_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
   private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasValidToken());
+  private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasValidSession());
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
   private tokenRefreshSubscription: any;
@@ -61,7 +60,7 @@ export class AuthService {
     private logger: LoggerService
   ) {
     this.log = this.logger.withContext('AuthService');
-    // Start token refresh timer if user is logged in
+    // Start token refresh timer if user session exists
     if (this.isAuthenticated()) {
       this.startTokenRefreshTimer();
     }
@@ -159,9 +158,18 @@ export class AuthService {
 
   /**
    * Logout the current user
+   * Calls backend to clear HttpOnly cookies and clears local user data
    */
   logout(): void {
     this.stopTokenRefreshTimer();
+
+    // Call backend to clear HttpOnly cookies
+    this.apiService.post('/auth/logout', {}).subscribe({
+      next: () => this.log.info('Logout successful - cookies cleared'),
+      error: (err) => this.log.warn('Logout API call failed', err),
+    });
+
+    // Clear local state regardless of API result
     this.clearAuthData();
     this.currentUserSubject.next(null);
     this.isAuthenticatedSubject.next(false);
@@ -170,22 +178,20 @@ export class AuthService {
 
   /**
    * Refresh the authentication token
+   * Refresh token is sent via HttpOnly cookie automatically
+   * New tokens are set as HttpOnly cookies by the backend
    */
   refreshToken(): Observable<TokenResponse> {
-    const refreshToken = this.getRefreshToken();
-    if (!refreshToken) {
-      return throwError(() => new Error('No refresh token available'));
-    }
-
     const url = '/auth/refresh';
-    const body = { refreshToken };
 
-    return this.apiService.post<TokenResponse>(url, body).pipe(
+    // No body needed - refresh token is in HttpOnly cookie
+    // Backend reads cookie and sets new cookies in response
+    return this.apiService.post<TokenResponse>(url, {}).pipe(
       tap((response) => {
-        this.setToken(response.accessToken);
-        if (response.refreshToken) {
-          this.setRefreshToken(response.refreshToken);
-        }
+        // Tokens are set as HttpOnly cookies by backend
+        // Just update auth state based on successful refresh
+        this.isAuthenticatedSubject.next(true);
+        this.log.info('Token refreshed successfully');
       }),
       catchError((error) => {
         this.log.error('Token refresh failed', error);
@@ -219,9 +225,11 @@ export class AuthService {
 
   /**
    * Check if user is authenticated
+   * With HttpOnly cookies, we check for user session presence
+   * Actual token validity is verified by the backend on each request
    */
   isAuthenticated(): boolean {
-    return this.hasValidToken();
+    return this.hasValidSession();
   }
 
   /**
@@ -288,44 +296,59 @@ export class AuthService {
 
   /**
    * Get the authentication token
+   * @deprecated Tokens are now stored in HttpOnly cookies (XSS protected)
+   * This method returns null - authentication is handled via cookies
    */
   getToken(): string | null {
-    return localStorage.getItem(this.AUTH_TOKEN_KEY);
+    // Tokens are in HttpOnly cookies - not accessible from JavaScript
+    // This is intentional for XSS protection
+    return null;
   }
 
   /**
    * Get the refresh token
+   * @deprecated Tokens are now stored in HttpOnly cookies (XSS protected)
+   * This method returns null - refresh is handled via cookies
    */
   getRefreshToken(): string | null {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    // Refresh tokens are in HttpOnly cookies - not accessible from JavaScript
+    return null;
   }
 
   /**
    * Set the authentication token
+   * @deprecated Tokens are now set by the backend as HttpOnly cookies
+   * This method is a no-op for backwards compatibility
    */
-  setToken(token: string): void {
-    localStorage.setItem(this.AUTH_TOKEN_KEY, token);
+  setToken(_token: string): void {
+    // No-op: Tokens are set by backend as HttpOnly cookies
   }
 
   /**
    * Set the refresh token
+   * @deprecated Tokens are now set by the backend as HttpOnly cookies
+   * This method is a no-op for backwards compatibility
    */
-  setRefreshToken(token: string): void {
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, token);
+  setRefreshToken(_token: string): void {
+    // No-op: Tokens are set by backend as HttpOnly cookies
   }
 
   /**
    * Remove the authentication token
+   * @deprecated Token removal is handled by backend cookie clearing
+   * This method is a no-op - call logout() to clear cookies
    */
   removeToken(): void {
-    localStorage.removeItem(this.AUTH_TOKEN_KEY);
+    // No-op: Cookies are cleared by backend on logout
   }
 
   /**
    * Remove the refresh token
+   * @deprecated Token removal is handled by backend cookie clearing
+   * This method is a no-op - call logout() to clear cookies
    */
   removeRefreshToken(): void {
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+    // No-op: Cookies are cleared by backend on logout
   }
 
   /**
@@ -357,63 +380,41 @@ export class AuthService {
   }
 
   /**
-   * Check if token is valid (not expired)
-   * Supports both real JWT tokens and demo tokens
+   * Check if user session is valid
+   * With HttpOnly cookies, we check for user presence in storage
+   * Actual token validity is verified by backend on each request
+   * If the token is expired, the backend returns 401 and we trigger refresh
    */
-  private hasValidToken(): boolean {
-    const token = this.getToken();
-    if (!token) return false;
-
-    // Check for demo token (starts with 'demo-')
-    if (token.startsWith('demo-')) {
-      // Demo tokens are always valid if user exists
-      return this.getUserFromStorage() !== null;
-    }
-
-    try {
-      const payload = this.parseJwt(token);
-      const now = Date.now() / 1000;
-      return payload.exp > now;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Parse JWT token
-   */
-  private parseJwt(token: string): JwtPayload {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    return JSON.parse(jsonPayload);
+  private hasValidSession(): boolean {
+    // With HttpOnly cookies, we can't check token expiration directly
+    // We rely on user presence in storage as session indicator
+    // Backend validates actual token validity on each request
+    const user = this.getUserFromStorage();
+    return user !== null;
   }
 
   /**
    * Handle successful login
+   * Tokens are set as HttpOnly cookies by the backend
+   * We only store user profile data in localStorage
    */
   private handleLoginSuccess(response: LoginResponse): void {
-    this.setToken(response.accessToken);
-    if (response.refreshToken) {
-      this.setRefreshToken(response.refreshToken);
-    }
+    // Tokens are set as HttpOnly cookies by backend - no localStorage storage needed
+    // Just store user profile for UI display and permission checks
     this.setUser(response.user);
     this.currentUserSubject.next(response.user);
     this.isAuthenticatedSubject.next(true);
     this.startTokenRefreshTimer();
+    this.log.info('Login successful', { username: response.user.username });
   }
 
   /**
    * Clear all authentication data
+   * Note: HttpOnly cookies are cleared by the backend on logout
    */
   private clearAuthData(): void {
-    this.removeToken();
-    this.removeRefreshToken();
+    // Only clear user profile from localStorage
+    // HttpOnly cookies are cleared by backend via Set-Cookie with Max-Age=0
     this.removeUser();
   }
 
@@ -527,12 +528,4 @@ export interface TokenResponse {
   refreshToken?: string;
   tokenType: string;
   expiresIn: number;
-}
-
-interface JwtPayload {
-  sub: string;
-  exp: number;
-  iat: number;
-  roles?: string[];
-  tenantId?: string;
 }

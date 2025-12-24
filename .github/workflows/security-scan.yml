@@ -105,14 +105,40 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 6  # Limit parallel jobs to avoid resource exhaustion
       matrix:
         service:
+          # Core Services (6 original)
           - cql-engine-service
           - gateway-service
           - fhir-service
           - quality-measure-service
           - patient-service
           - care-gap-service
+          # AI/Agent Services
+          - agent-builder-service
+          - agent-runtime-service
+          - ai-assistant-service
+          # Analytics & Processing
+          - analytics-service
+          - predictive-analytics-service
+          - cdr-processor-service
+          - data-enrichment-service
+          - event-processing-service
+          - event-router-service
+          # Clinical & Compliance
+          - consent-service
+          - documentation-service
+          - ecr-service
+          - hcc-service
+          - sdoh-service
+          # Integration & Workflow
+          - approval-service
+          - ehr-connector-service
+          - migration-workflow-service
+          - payer-workflows-service
+          - prior-auth-service
+          - qrda-export-service
 
     steps:
       - name: Checkout code

@@ -49,8 +49,8 @@ dependencies {
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)
 
-    // Distributed Tracing
-    implementation(libs.bundles.tracing)
+    // Distributed Tracing (uses shared module for W3C + B3 context propagation)
+    implementation(project(":modules:shared:infrastructure:tracing"))
 
     // Resilience4j for circuit breaker, retry, and rate limiting
     implementation("io.github.resilience4j:resilience4j-spring-boot3:2.1.0")

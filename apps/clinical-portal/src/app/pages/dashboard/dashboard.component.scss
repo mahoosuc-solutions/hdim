@@ -1071,12 +1071,12 @@
 
       &.rank-1 {
         background: linear-gradient(135deg, #ffd700 0%, #ffb700 100%);
-        color: #333;
+        color: #1a1a1a; // Dark text for gold background contrast
       }
 
       &.rank-2 {
         background: linear-gradient(135deg, #c0c0c0 0%, #a0a0a0 100%);
-        color: #333;
+        color: #1a1a1a; // Dark text for silver background contrast
       }
 
       &.rank-3 {

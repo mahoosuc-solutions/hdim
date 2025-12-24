@@ -68,11 +68,11 @@ import {
             <div class="mfa-info">
               <div class="info-item">
                 <mat-icon>schedule</mat-icon>
-                <span>Enabled: {{ mfaStatus.enabledAt | date:'medium' }}</span>
+                <span>Enabled: {{ mfaStatus?.enabledAt | date:'medium' }}</span>
               </div>
               <div class="info-item">
                 <mat-icon>vpn_key</mat-icon>
-                <span>Recovery codes remaining: {{ mfaStatus.remainingRecoveryCodes }}</span>
+                <span>Recovery codes remaining: {{ mfaStatus?.remainingRecoveryCodes }}</span>
               </div>
             </div>
 

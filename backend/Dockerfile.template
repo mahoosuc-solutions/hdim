@@ -1,16 +1,88 @@
-FROM openjdk:17-jdk-slim
+# ============================================================================
+# HDIM Healthcare Platform - Optimized Dockerfile Template
+# ============================================================================
+# This template provides a standardized, optimized Docker build pattern for
+# all HDIM backend microservices.
+#
+# Usage:
+#   1. Copy this template to your service directory as Dockerfile
+#   2. Replace {{SERVICE_NAME}} with your service name (e.g., care-gap-service)
+#   3. Replace {{SERVICE_PORT}} with your service port (e.g., 8086)
+#   4. Replace {{SERVICE_DESCRIPTION}} with your service description
+#
+# Optimization Features:
+#   - Multi-stage build (reduces image size by ~40-50%)
+#   - JRE instead of JDK in runtime (~100MB savings)
+#   - Layer caching for Gradle dependencies
+#   - Non-root user for security (HIPAA compliant)
+#   - Container-aware JVM settings
+#   - Built-in health checks
+#   - Metadata labels
+# ============================================================================
+
+# Stage 1: Build
+FROM gradle:8.5-jdk21 AS builder
 
 WORKDIR /app
 
-# Add required tools
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Copy Gradle configuration first (for layer caching)
+# Changes to source code won't invalidate dependency cache
+COPY settings.gradle.kts build.gradle.kts gradle.properties ./
+COPY gradle ./gradle
 
-# Copy the JAR file
-ARG JAR_FILE
-COPY ${JAR_FILE} app.jar
+# Copy shared modules (these change less frequently)
+COPY modules/shared ./modules/shared
 
-# JVM options for production
-ENV JAVA_OPTS="-Xmx512m -Xms256m"
+# Copy platform modules
+COPY platform ./platform
 
-# Run the application
+# Copy service source (changes most frequently - last for best caching)
+COPY modules/services/{{SERVICE_NAME}} ./modules/services/{{SERVICE_NAME}}
+
+# Build the service (skip tests - they run in CI)
+RUN gradle :modules:services:{{SERVICE_NAME}}:bootJar --no-daemon -x test
+
+# Stage 2: Runtime
+FROM eclipse-temurin:21-jre-alpine
+
+LABEL maintainer="HDIM Platform Team"
+LABEL service="{{SERVICE_NAME}}"
+LABEL description="{{SERVICE_DESCRIPTION}}"
+
+WORKDIR /app
+
+# Create non-root user for security (HIPAA requirement)
+RUN addgroup -g 1001 -S healthdata && \
+    adduser -u 1001 -S healthdata -G healthdata -h /app
+
+# Install wget for health checks (minimal footprint)
+RUN apk add --no-cache wget
+
+# Copy the built JAR from builder stage
+COPY --from=builder /app/modules/services/{{SERVICE_NAME}}/build/libs/*.jar app.jar
+
+# Set ownership to non-root user
+RUN chown -R healthdata:healthdata /app
+
+# Switch to non-root user
+USER healthdata
+
+# JVM configuration optimized for containers
+# - UseContainerSupport: Respect container memory limits
+# - MaxRAMPercentage: Use 75% of container memory for heap
+# - G1GC: Low-latency garbage collector
+# - UseStringDeduplication: Reduce memory for duplicate strings
+# - urandom: Faster startup (non-blocking random)
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:+UseG1GC \
+    -XX:+UseStringDeduplication \
+    -Djava.security.egd=file:/dev/./urandom"
+
+EXPOSE {{SERVICE_PORT}}
+
+# Health check for orchestration (Kubernetes, Docker Compose)
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:{{SERVICE_PORT}}/actuator/health || exit 1
+
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

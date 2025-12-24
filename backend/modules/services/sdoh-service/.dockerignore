@@ -1,0 +1,59 @@
+# Gradle build artifacts
+.gradle/
+build/
+!build/libs/*.jar
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Logs
+*.log
+logs/
+
+# Test files
+src/test/
+**/test/
+*.test.java
+*Test.java
+*Tests.java
+
+# Documentation
+*.md
+docs/
+README*
+CHANGELOG*
+LICENSE*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Local configuration
+*.local
+.env*
+!.env.example
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+Jenkinsfile

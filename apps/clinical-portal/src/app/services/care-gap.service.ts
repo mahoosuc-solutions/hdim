@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
 import { map, catchError, tap, shareReplay } from 'rxjs/operators';
 import { ApiService } from './api.service';
+import { LoggerService, ContextualLogger } from './logger.service';
 import {
   API_CONFIG,
   QUALITY_MEASURE_ENDPOINTS,
@@ -26,6 +27,7 @@ export class CareGapService {
   private readonly baseUrl = API_CONFIG.QUALITY_MEASURE_URL;
   private gapUpdatesSubject = new BehaviorSubject<CareGapUpdate | null>(null);
   public gapUpdates$ = this.gapUpdatesSubject.asObservable();
+  private readonly logger: ContextualLogger;
 
   // Cache for patient care gaps
   private patientGapsCache = new Map<string, { data: CareGap[]; timestamp: number }>();
@@ -33,8 +35,11 @@ export class CareGapService {
 
   constructor(
     private http: HttpClient,
-    private apiService: ApiService
-  ) {}
+    private apiService: ApiService,
+    loggerService: LoggerService
+  ) {
+    this.logger = loggerService.withContext('CareGapService');
+  }
 
   /**
    * Get all care gaps for a specific patient
@@ -56,7 +61,7 @@ export class CareGapService {
       tap((gaps) => this.cachePatientGaps(patientId, gaps)),
       shareReplay(1),
       catchError((error) => {
-        console.error(`Error fetching care gaps for patient ${patientId}:`, error);
+        this.logger.error('Error fetching care gaps for patient', { patientId, error });
         return throwError(() => error);
       })
     );
@@ -80,7 +85,7 @@ export class CareGapService {
         });
       }),
       catchError((error) => {
-        console.error(`Error detecting care gaps for patient ${patientId}:`, error);
+        this.logger.error('Error detecting care gaps for patient', { patientId, error });
         return throwError(() => error);
       })
     );
@@ -108,7 +113,7 @@ export class CareGapService {
         });
       }),
       catchError((error) => {
-        console.error('Error detecting care gaps in batch:', error);
+        this.logger.error('Error detecting care gaps in batch', error);
         return throwError(() => error);
       })
     );
@@ -133,7 +138,7 @@ export class CareGapService {
         });
       }),
       catchError((error) => {
-        console.error(`Error closing care gap ${gapId}:`, error);
+        this.logger.error('Error closing care gap', { gapId, error });
         return throwError(() => error);
       })
     );
@@ -160,7 +165,7 @@ export class CareGapService {
         });
       }),
       catchError((error) => {
-        console.error('Error bulk closing care gaps:', error);
+        this.logger.error('Error bulk closing care gaps', error);
         return throwError(() => error);
       })
     );
@@ -184,7 +189,7 @@ export class CareGapService {
         });
       }),
       catchError((error) => {
-        console.error(`Error assigning intervention to gap ${gapId}:`, error);
+        this.logger.error('Error assigning intervention to gap', { gapId, error });
         return throwError(() => error);
       })
     );
@@ -198,7 +203,7 @@ export class CareGapService {
 
     return this.apiService.get<GapPriorityScore>(url).pipe(
       catchError((error) => {
-        console.error(`Error getting priority score for gap ${gapId}:`, error);
+        this.logger.error('Error getting priority score for gap', { gapId, error });
         return throwError(() => error);
       })
     );
@@ -215,7 +220,7 @@ export class CareGapService {
 
     return this.apiService.get<CareGap[]>(url, params).pipe(
       catchError((error) => {
-        console.error(`Error getting care gaps by status ${status}:`, error);
+        this.logger.error('Error getting care gaps by status', { status, error });
         return throwError(() => error);
       })
     );
@@ -230,7 +235,7 @@ export class CareGapService {
 
     return this.apiService.get<CareGap[]>(url, params).pipe(
       catchError((error) => {
-        console.error('Error getting high priority care gaps:', error);
+        this.logger.error('Error getting high priority care gaps', error);
         return throwError(() => error);
       })
     );

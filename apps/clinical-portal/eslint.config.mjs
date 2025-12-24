@@ -24,6 +24,9 @@ export default [
           style: 'kebab-case',
         },
       ],
+      // Security: Prevent console statements in production code
+      // Use LoggerService instead for proper log handling
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
   {

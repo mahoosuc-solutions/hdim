@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
 import { map, catchError, tap, shareReplay } from 'rxjs/operators';
 import { ApiService } from './api.service';
+import { LoggerService, ContextualLogger } from './logger.service';
 import {
   API_CONFIG,
   QUALITY_MEASURE_ENDPOINTS,
@@ -55,6 +56,7 @@ export interface RecommendationUpdate {
 })
 export class CareRecommendationService {
   private readonly baseUrl = API_CONFIG.QUALITY_MEASURE_URL;
+  private readonly logger: ContextualLogger;
 
   // Update notifications
   private updateSubject = new BehaviorSubject<RecommendationUpdate | null>(
@@ -72,8 +74,11 @@ export class CareRecommendationService {
 
   constructor(
     private http: HttpClient,
-    private apiService: ApiService
-  ) {}
+    private apiService: ApiService,
+    loggerService: LoggerService
+  ) {
+    this.logger = loggerService.withContext('CareRecommendationService');
+  }
 
   /**
    * Get all dashboard recommendations
@@ -107,7 +112,7 @@ export class CareRecommendationService {
       }),
       shareReplay(1),
       catchError((error) => {
-        console.error('Error fetching dashboard recommendations:', error);
+        this.logger.error('Error fetching dashboard recommendations', error);
         return of([]);
       })
     );
@@ -156,7 +161,7 @@ export class CareRecommendationService {
         });
       }),
       catchError((error) => {
-        console.error('Error fetching filtered recommendations:', error);
+        this.logger.error('Error fetching filtered recommendations', error);
         return of([]);
       })
     );
@@ -175,10 +180,7 @@ export class CareRecommendationService {
     return this.apiService.get<DashboardRecommendation[]>(url).pipe(
       map((recommendations) => this.transformRecommendations(recommendations)),
       catchError((error) => {
-        console.error(
-          `Error fetching recommendations for patient ${patientId}:`,
-          error
-        );
+        this.logger.error('Error fetching recommendations for patient', { patientId, error });
         return of([]);
       })
     );

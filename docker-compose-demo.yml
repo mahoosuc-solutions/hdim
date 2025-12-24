@@ -1,5 +1,15 @@
-# Docker Compose for DEMO environment (no authentication required)
-# Usage: docker compose -f docker-compose-demo.yml up -d
+# Docker Compose for DEMO environment
+# Complete demo with frontend, gateway, and all core services
+# Usage: docker compose -f docker-compose-demo.yml up -d --build
+#
+# Demo Credentials:
+#   Username: admin
+#   Password: admin123
+#
+# Access URLs:
+#   Clinical Portal: http://localhost:4202
+#   Gateway API:     http://localhost:9000
+#   API Docs:        http://localhost:9000/swagger-ui.html
 
 services:
   # Infrastructure Services
@@ -186,6 +196,144 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Gateway Service - API Gateway with Authentication
+  gateway-service:
+    container_name: healthdata-gateway
+    build:
+      context: ./backend
+      dockerfile: modules/services/gateway-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker,demo
+      JWT_SECRET: demo_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SERVER_PORT: 9000
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_FLYWAY_ENABLED: "false"
+      # Service URLs for routing
+      FHIR_SERVICE_URL: http://fhir-service:8081
+      CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8086
+      QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087
+      PATIENT_SERVICE_URL: http://patient-service:8084
+      CARE_GAP_SERVICE_URL: http://care-gap-service:8085
+      # CORS for demo
+      GATEWAY_CORS_ALLOWED_ORIGINS: http://localhost:4202,http://localhost:4200
+    ports:
+      - "9000:9000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Patient Service
+  patient-service:
+    container_name: healthdata-patient-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/patient-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      JWT_SECRET: demo_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patient_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SERVER_PORT: 8084
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_FLYWAY_ENABLED: "false"
+      FHIR_SERVICE_URL: http://fhir-service:8081
+    ports:
+      - "8084:8084"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Care Gap Service
+  care-gap-service:
+    container_name: healthdata-care-gap-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/care-gap-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      JWT_SECRET: demo_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/caregap_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SERVER_PORT: 8085
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_FLYWAY_ENABLED: "false"
+      CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8086
+      QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Clinical Portal - Angular Frontend
+  clinical-portal:
+    container_name: healthdata-clinical-portal
+    build:
+      context: .
+      dockerfile: apps/clinical-portal/Dockerfile
+    depends_on:
+      - gateway-service
+    ports:
+      - "4202:80"
+    environment:
+      # Angular environment variables (if needed for runtime config)
+      API_URL: http://localhost:9000
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - healthdata-network
 

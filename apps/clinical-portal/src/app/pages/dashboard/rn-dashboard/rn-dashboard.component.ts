@@ -28,6 +28,7 @@ import { NotificationService } from '../../../services/notification.service';
 import { CareGapService, InterventionType } from '../../../services/care-gap.service';
 import { ToastService } from '../../../services/toast.service';
 import { TrackInteraction } from '../../../utils/ai-tracking.decorator';
+import { LoggerService, ContextualLogger } from '../../../services/logger.service';
 
 export interface CareGapTask {
   id: string;
@@ -86,14 +87,18 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   patientEducationDue = 0;
 
   private destroy$ = new Subject<void>();
+  private log: ContextualLogger;
 
   constructor(
     private router: Router,
     private dialogService: DialogService,
     private notificationService: NotificationService,
     private careGapService: CareGapService,
-    private toastService: ToastService
-  ) {}
+    private toastService: ToastService,
+    private logger: LoggerService
+  ) {
+    this.log = this.logger.withContext('RNDashboardComponent');
+  }
 
   ngOnInit(): void {
     this.loadDashboardData();
@@ -221,7 +226,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
    * Address care gap
    */
   addressCareGap(gap: CareGapTask): void {
-    console.log('Addressing care gap:', gap.gapType);
+    this.log.debug('Addressing care gap:', gap.gapType);
     this.router.navigate(['/patients', gap.id], {
       queryParams: { action: 'address-gap', gapId: gap.id }
     });
@@ -456,7 +461,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
               this.toastService.success(`Education session scheduled for ${gap.patientName}`);
             },
             error: (error) => {
-              console.error('Failed to schedule education session:', error);
+              this.log.error('Failed to schedule education session:', error);
               this.toastService.error('Failed to schedule education session. Please try again.');
             }
           });
@@ -491,7 +496,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
               this.toastService.success(`Education session documented for ${gap.patientName}`);
             },
             error: (error) => {
-              console.error('Failed to document education session:', error);
+              this.log.error('Failed to document education session:', error);
               this.toastService.error('Failed to document education session. Please try again.');
             }
           });
@@ -505,7 +510,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'track-education-materials')
   trackEducationMaterials(gap: CareGapTask, materials: string[]): void {
     // In a real implementation, this would save to the backend
-    console.log('Tracking education materials:', { gap, materials });
+    this.log.debug('Tracking education materials:', { gap, materials });
     this.toastService.success(
       `Education materials tracked for ${gap.patientName}: ${materials.length} items`
     );
@@ -559,7 +564,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'record-comprehension-assessment')
   recordComprehensionAssessment(gap: CareGapTask, assessment: any): void {
     // In a real implementation, this would save assessment to backend
-    console.log('Recording comprehension assessment:', { gap, assessment });
+    this.log.debug('Recording comprehension assessment:', { gap, assessment });
     this.toastService.success(
       `Comprehension assessment recorded for ${gap.patientName}`
     );
@@ -575,7 +580,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'create-coordination-task')
   createCoordinationTask(task: any): void {
     // In a real implementation, this would save task to backend
-    console.log('Creating care coordination task:', task);
+    this.log.debug('Creating care coordination task:', task);
     this.toastService.success('Care coordination task created successfully');
   }
 
@@ -619,7 +624,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
               this.toastService.success(`Specialist referral scheduled for ${gap.patientName}`);
             },
             error: (error) => {
-              console.error('Failed to schedule referral:', error);
+              this.log.error('Failed to schedule referral:', error);
               this.toastService.error('Failed to schedule specialist referral. Please try again.');
             }
           });
@@ -633,7 +638,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'log-care-team-communication')
   logCareTeamCommunication(communication: any): void {
     // In a real implementation, this would save communication to backend
-    console.log('Logging care team communication:', communication);
+    this.log.debug('Logging care team communication:', communication);
     this.toastService.success('Communication logged successfully');
   }
 
@@ -711,7 +716,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
               this.toastService.success(`Follow-up appointment scheduled for ${gap.patientName}`);
             },
             error: (error) => {
-              console.error('Failed to schedule appointment:', error);
+              this.log.error('Failed to schedule appointment:', error);
               this.toastService.error('Failed to schedule follow-up appointment. Please try again.');
             }
           });
@@ -771,7 +776,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   completeFollowUpTask(outreach: PatientOutreach, outcome: any): void {
     outreach.status = 'completed';
     // In a real implementation, this would save outcome to backend
-    console.log('Follow-up task completed:', { outreach, outcome });
+    this.log.debug('Follow-up task completed:', { outreach, outcome });
     this.toastService.success(`Follow-up task completed for ${outreach.patientName}`);
   }
 
@@ -791,7 +796,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'create-recurring-follow-up')
   createRecurringFollowUp(gap: CareGapTask, schedule: any): void {
     // In a real implementation, this would create recurring schedule
-    console.log('Creating recurring follow-up:', { gap, schedule });
+    this.log.debug('Creating recurring follow-up:', { gap, schedule });
     this.toastService.success(
       `Recurring follow-up schedule created for ${gap.patientName} (${schedule.frequency})`
     );
@@ -851,7 +856,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'document-coaching-goals')
   documentCoachingGoals(coachingGoals: any): void {
     // In a real implementation, this would save goals to backend
-    console.log('Documenting coaching goals:', coachingGoals);
+    this.log.debug('Documenting coaching goals:', coachingGoals);
     this.toastService.success(
       `Coaching goals documented for patient (${coachingGoals.goals.length} goals)`
     );
@@ -863,7 +868,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'update-goal-progress')
   updateGoalProgress(goalProgress: any): void {
     // In a real implementation, this would update progress in backend
-    console.log('Updating goal progress:', goalProgress);
+    this.log.debug('Updating goal progress:', goalProgress);
     this.toastService.success(
       `Goal progress updated: ${goalProgress.progress}% complete`
     );
@@ -875,7 +880,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'schedule-coaching-call')
   scheduleCoachingCall(patientId: string, scheduledDate: string): void {
     // In a real implementation, this would schedule call in backend
-    console.log('Scheduling coaching call:', { patientId, scheduledDate });
+    this.log.debug('Scheduling coaching call:', { patientId, scheduledDate });
     this.toastService.success('Coaching call scheduled successfully');
   }
 
@@ -895,7 +900,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'record-coaching-milestone')
   recordCoachingMilestone(milestone: any): void {
     // In a real implementation, this would save milestone to backend
-    console.log('Recording coaching milestone:', milestone);
+    this.log.debug('Recording coaching milestone:', milestone);
     this.toastService.success(
       `Coaching milestone recorded: ${milestone.description}`
     );
@@ -927,7 +932,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'adjust-coaching-plan')
   adjustCoachingPlan(adjustment: any): void {
     // In a real implementation, this would update plan in backend
-    console.log('Adjusting coaching plan:', adjustment);
+    this.log.debug('Adjusting coaching plan:', adjustment);
     this.toastService.success(
       'Coaching plan adjusted successfully'
     );

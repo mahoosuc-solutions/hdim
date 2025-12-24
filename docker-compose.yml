@@ -118,6 +118,35 @@ services:
     networks:
       - healthdata-network
 
+  # PostgreSQL Backup Service
+  # Runs scheduled backups with configurable retention
+  # Manual backup: docker exec healthdata-backup /usr/local/bin/backup.sh
+  # List backups:  docker exec healthdata-backup /usr/local/bin/restore.sh --list
+  postgres-backup:
+    container_name: healthdata-backup
+    build:
+      context: ./docker/postgres/backup
+      dockerfile: Dockerfile
+    profiles: ["core", "ai", "analytics", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: healthdata
+      PGPASSWORD: healthdata_password
+      BACKUP_RETENTION_DAYS: 7
+      BACKUP_OUTPUT_DIR: /backups
+      BACKUP_CRON: "0 2 * * *"  # Daily at 2 AM
+      BACKUP_ON_STARTUP: "false"
+      # SLACK_WEBHOOK_URL: ""  # Optional: Slack notifications
+      # BACKUP_ENCRYPTION_KEY: ""  # Optional: GPG key for encryption
+    volumes:
+      - postgres_backups:/backups
+    networks:
+      - healthdata-network
+
   # ============================================
   # CORE CLINICAL SERVICES (8080-8087)
   # ============================================
@@ -1137,3 +1166,4 @@ networks:
 
 volumes:
   postgres_data:
+  postgres_backups:

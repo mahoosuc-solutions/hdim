@@ -598,6 +598,45 @@ Track in HDIM dashboard:
 
 ---
 
+## Importable Workflow Templates
+
+Ready-to-use n8n workflow JSON files are available in the [n8n-workflows](../n8n-workflows/) directory:
+
+### Common Workflows
+
+| Workflow | File | Description |
+|----------|------|-------------|
+| HDIM API Auth | [hdim-api-auth.workflow.json](../n8n-workflows/common/hdim-api-auth.workflow.json) | Reusable OAuth 2.0 authentication sub-workflow |
+
+### FQHC Workflows
+
+| Workflow | File | Description |
+|----------|------|-------------|
+| Quest Lab Import | [quest-lab-import.workflow.json](../n8n-workflows/fqhc/quest-lab-import.workflow.json) | SFTP-based Quest Diagnostics lab import with LOINC mapping |
+
+### Rural Hospital Workflows
+
+| Workflow | File | Description |
+|----------|------|-------------|
+| Meditech Daily Sync | [meditech-daily-sync.workflow.json](../n8n-workflows/rural-hospital/meditech-daily-sync.workflow.json) | Multi-resource daily sync from Meditech Expanse |
+
+### IPA Workflows
+
+| Workflow | File | Description |
+|----------|------|-------------|
+| athena FHIR Sync | [athena-fhir-sync.workflow.json](../n8n-workflows/ipa/athena-fhir-sync.workflow.json) | Multi-practice FHIR R4 sync from athenahealth |
+| Universal CSV Import | [universal-csv-import.workflow.json](../n8n-workflows/ipa/universal-csv-import.workflow.json) | Multi-EHR CSV import (DrChrono, Practice Fusion, Kareo, Elation) |
+
+### How to Import
+
+1. **n8n UI**: Workflows → Import from File → Select `.workflow.json`
+2. **n8n CLI**: `n8n import:workflow --input=workflow.json`
+3. **n8n API**: POST to `/api/v1/workflows` with JSON body
+
+See [n8n-workflows/README.md](../n8n-workflows/README.md) for complete documentation.
+
+---
+
 ## Pricing
 
 | Component | Cost |

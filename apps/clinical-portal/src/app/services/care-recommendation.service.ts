@@ -201,7 +201,7 @@ export class CareRecommendationService {
     return this.apiService.get<RecommendationDashboardStats>(url).pipe(
       tap((stats) => this.statsCache$.next(stats)),
       catchError((error) => {
-        console.error('Error fetching dashboard stats:', error);
+        this.logger.error('Error fetching dashboard stats:', error);
         return of(this.getEmptyStats());
       })
     );
@@ -221,7 +221,7 @@ export class CareRecommendationService {
     return this.apiService.get<DashboardRecommendation[]>(url, params).pipe(
       map((recommendations) => this.transformRecommendations(recommendations)),
       catchError((error) => {
-        console.error('Error fetching high priority recommendations:', error);
+        this.logger.error('Error fetching high priority recommendations:', error);
         return of([]);
       })
     );
@@ -256,7 +256,7 @@ export class CareRecommendationService {
           });
         }),
         catchError((error) => {
-          console.error(`Error accepting recommendation ${id}:`, error);
+          this.logger.error(`Error accepting recommendation ${id}:`, error);
           return throwError(() => error);
         })
       );
@@ -293,7 +293,7 @@ export class CareRecommendationService {
           });
         }),
         catchError((error) => {
-          console.error(`Error declining recommendation ${id}:`, error);
+          this.logger.error(`Error declining recommendation ${id}:`, error);
           return throwError(() => error);
         })
       );
@@ -330,7 +330,7 @@ export class CareRecommendationService {
           });
         }),
         catchError((error) => {
-          console.error(`Error completing recommendation ${id}:`, error);
+          this.logger.error(`Error completing recommendation ${id}:`, error);
           return throwError(() => error);
         })
       );
@@ -354,7 +354,7 @@ export class CareRecommendationService {
         });
       }),
       catchError((error) => {
-        console.error('Error performing bulk action:', error);
+        this.logger.error('Error performing bulk action:', error);
         return throwError(() => error);
       })
     );
@@ -370,7 +370,7 @@ export class CareRecommendationService {
 
     return this.apiService.get<PatientRiskSummary[]>(url).pipe(
       catchError((error) => {
-        console.error('Error fetching patient risk summaries:', error);
+        this.logger.error('Error fetching patient risk summaries:', error);
         return of([]);
       })
     );
@@ -390,7 +390,7 @@ export class CareRecommendationService {
       map((recommendations) => this.transformRecommendations(recommendations)),
       tap(() => this.invalidateCache()),
       catchError((error) => {
-        console.error(
+        this.logger.error(
           `Error generating recommendations for patient ${patientId}:`,
           error
         );

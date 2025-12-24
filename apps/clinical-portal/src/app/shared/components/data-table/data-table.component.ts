@@ -40,8 +40,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 /**
  * Column definition interface
+ * @template T The row data type
  */
-export interface ColumnDefinition {
+export interface ColumnDefinition<T = Record<string, unknown>> {
   /** Unique column identifier */
   key: string;
   /** Display header text */
@@ -55,17 +56,18 @@ export interface ColumnDefinition {
   /** Column width (CSS value) */
   width?: string;
   /** Custom formatter function */
-  formatter?: (value: any, row: any) => string;
+  formatter?: (value: unknown, row: T) => string;
   /** Custom template reference (for advanced usage) */
-  template?: any;
+  template?: unknown;
   /** CSS classes for the column */
   cssClass?: string;
 }
 
 /**
  * Action button configuration
+ * @template T The row data type
  */
-export interface TableAction {
+export interface TableAction<T = Record<string, unknown>> {
   /** Action identifier */
   id: string;
   /** Display label */
@@ -75,17 +77,18 @@ export interface TableAction {
   /** Action color */
   color?: 'primary' | 'accent' | 'warn';
   /** Is action disabled for row */
-  disabled?: (row: any) => boolean;
+  disabled?: (row: T) => boolean;
   /** Show condition for row */
-  show?: (row: any) => boolean;
+  show?: (row: T) => boolean;
 }
 
 /**
  * Action click event data
+ * @template T The row data type
  */
-export interface ActionClickEvent {
-  action: TableAction;
-  row: any;
+export interface ActionClickEvent<T = Record<string, unknown>> {
+  action: TableAction<T>;
+  row: T;
 }
 
 @Component({
@@ -338,15 +341,15 @@ export interface ActionClickEvent {
     }
   `]
 })
-export class DataTableComponent implements OnInit, OnChanges, AfterViewInit {
+export class DataTableComponent<T extends Record<string, unknown> = Record<string, unknown>> implements OnInit, OnChanges, AfterViewInit {
   /** Table data array */
-  @Input() data: any[] = [];
+  @Input() data: T[] = [];
 
   /** Column definitions */
-  @Input() columns: ColumnDefinition[] = [];
+  @Input() columns: ColumnDefinition<T>[] = [];
 
   /** Action buttons for each row */
-  @Input() actions: TableAction[] = [];
+  @Input() actions: TableAction<T>[] = [];
 
   /** Is table loading */
   @Input() loading: boolean = false;
@@ -376,19 +379,19 @@ export class DataTableComponent implements OnInit, OnChanges, AfterViewInit {
   @Input() emptyMessage: string = 'No data available';
 
   /** Row selected event */
-  @Output() rowSelected = new EventEmitter<any>();
+  @Output() rowSelected = new EventEmitter<T>();
 
   /** Action clicked event */
-  @Output() actionClicked = new EventEmitter<ActionClickEvent>();
+  @Output() actionClicked = new EventEmitter<ActionClickEvent<T>>();
 
   /** Selection changed event */
-  @Output() selectionChanged = new EventEmitter<any[]>();
+  @Output() selectionChanged = new EventEmitter<T[]>();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  dataSource = new MatTableDataSource<any>([]);
-  selection = new SelectionModel<any>(true, []);
+  dataSource = new MatTableDataSource<T>([]);
+  selection = new SelectionModel<T>(true, []);
 
   ngOnInit(): void {
     this.initializeDataSource();
@@ -413,7 +416,7 @@ export class DataTableComponent implements OnInit, OnChanges, AfterViewInit {
     this.dataSource.data = this.data || [];
   }
 
-  get visibleColumns(): ColumnDefinition[] {
+  get visibleColumns(): ColumnDefinition<T>[] {
     return this.columns.filter(col => col.visible !== false);
   }
 
@@ -425,7 +428,7 @@ export class DataTableComponent implements OnInit, OnChanges, AfterViewInit {
     return columns;
   }
 
-  formatCellValue(value: any, type?: string): string {
+  formatCellValue(value: unknown, type?: string): string {
     if (value === null || value === undefined) return '';
 
     switch (type) {
@@ -440,28 +443,28 @@ export class DataTableComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
-  getVisibleActions(row: any): TableAction[] {
+  getVisibleActions(row: T): TableAction<T>[] {
     return this.actions.filter(action =>
       !action.show || action.show(row)
     );
   }
 
-  isActionDisabled(action: TableAction, row: any): boolean {
+  isActionDisabled(action: TableAction<T>, row: T): boolean {
     return action.disabled ? action.disabled(row) : false;
   }
 
-  onRowClick(row: any): void {
+  onRowClick(row: T): void {
     if (this.hoverable) {
       this.rowSelected.emit(row);
     }
   }
 
-  onActionClick(action: TableAction, row: any, event: Event): void {
+  onActionClick(action: TableAction<T>, row: T, event: Event): void {
     event.stopPropagation();
     this.actionClicked.emit({ action, row });
   }
 
-  onSortChange(event: any): void {
+  onSortChange(event: { active: string; direction: string }): void {
     // Sort change handled automatically by MatSort
   }
 
@@ -481,7 +484,7 @@ export class DataTableComponent implements OnInit, OnChanges, AfterViewInit {
     this.selectionChanged.emit(this.selection.selected);
   }
 
-  getSelectedRows(): any[] {
+  getSelectedRows(): T[] {
     return this.selection.selected;
   }
 

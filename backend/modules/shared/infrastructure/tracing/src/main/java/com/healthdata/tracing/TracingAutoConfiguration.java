@@ -3,8 +3,11 @@ package com.healthdata.tracing;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
+import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
@@ -118,15 +121,31 @@ public class TracingAutoConfiguration {
     }
 
     /**
+     * Context propagators for distributed trace correlation.
+     * Supports both W3C Trace Context (standard) and B3 (Zipkin compatibility).
+     */
+    @Bean
+    @ConditionalOnMissingBean(ContextPropagators.class)
+    public ContextPropagators contextPropagators() {
+        // W3C Trace Context is the standard, B3 for Zipkin/legacy compatibility
+        TextMapPropagator compositePropagator = TextMapPropagator.composite(
+            W3CTraceContextPropagator.getInstance(),
+            B3Propagator.injectingMultiHeaders()
+        );
+        logger.info("Configured trace propagators: W3C Trace Context, B3 Multi-Header");
+        return ContextPropagators.create(compositePropagator);
+    }
+
+    /**
      * OpenTelemetry SDK instance.
      * Provides the central OpenTelemetry API for the application.
      */
     @Bean
     @ConditionalOnMissingBean(OpenTelemetry.class)
-    public OpenTelemetry openTelemetry(SdkTracerProvider tracerProvider) {
+    public OpenTelemetry openTelemetry(SdkTracerProvider tracerProvider, ContextPropagators contextPropagators) {
         return OpenTelemetrySdk.builder()
             .setTracerProvider(tracerProvider)
-            .setPropagators(ContextPropagators.noop())
+            .setPropagators(contextPropagators)
             .build();
     }
 

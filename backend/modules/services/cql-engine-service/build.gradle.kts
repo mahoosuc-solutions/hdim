@@ -93,8 +93,8 @@ dependencies {
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)
 
-    // Distributed Tracing
-    implementation(libs.bundles.tracing)
+    // Distributed Tracing (uses shared module for W3C + B3 context propagation)
+    implementation(project(":modules:shared:infrastructure:tracing"))
 
     // Testing
     testImplementation(libs.bundles.testing)

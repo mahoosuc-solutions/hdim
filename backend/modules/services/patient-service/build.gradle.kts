@@ -33,8 +33,8 @@ dependencies {
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)
 
-    // Distributed Tracing
-    implementation(libs.bundles.tracing)
+    // Distributed Tracing (uses shared module for W3C + B3 context propagation)
+    implementation(project(":modules:shared:infrastructure:tracing"))
 
     // HAPI FHIR Client (for FHIR resource parsing and integration)
     implementation(libs.bundles.hapi.fhir.client)

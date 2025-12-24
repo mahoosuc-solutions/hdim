@@ -92,6 +92,29 @@ export interface ComplianceTrendPoint {
 }
 
 /**
+ * NgxCharts Data Point
+ */
+export interface ChartDataPoint {
+  name: string;
+  value: number;
+}
+
+/**
+ * NgxCharts Series Data (for line/area charts)
+ */
+export interface ChartSeriesData {
+  name: string;
+  series: ChartDataPoint[];
+}
+
+/**
+ * NgxCharts Color Scheme
+ */
+export interface ChartColorScheme {
+  domain: string[];
+}
+
+/**
  * Dashboard Component
  * Provides overview statistics, recent activity, and quick actions
  */
@@ -127,7 +150,7 @@ export class DashboardComponent implements OnInit {
   UserRole = UserRole; // Expose enum for template use
 
   // Dynamic component loading
-  roleComponent: any = null;
+  roleComponent: unknown = null;
   loadingRoleComponent = false;
   // Data properties
   statistics: DashboardStatistics = {
@@ -145,8 +168,8 @@ export class DashboardComponent implements OnInit {
   urgentCareGaps: CareGapAlert[] = [];
 
   // Chart data for ngx-charts
-  complianceTrendChartData: any[] = [];
-  measurePerformanceChartData: any[] = [];
+  complianceTrendChartData: ChartSeriesData[] = [];
+  measurePerformanceChartData: ChartDataPoint[] = [];
 
   // Chart configuration
   // Line chart config
@@ -159,7 +182,7 @@ export class DashboardComponent implements OnInit {
   lineChartXAxisLabel = 'Period';
   lineChartShowYAxisLabel = true;
   lineChartYAxisLabel = 'Compliance Rate (%)';
-  lineChartColorScheme: any = {
+  lineChartColorScheme: ChartColorScheme = {
     domain: ['#5AA454', '#E44D25', '#CFC0BB', '#7aa3e5', '#a8385d', '#aae3f5']
   };
 
@@ -173,7 +196,7 @@ export class DashboardComponent implements OnInit {
   barChartXAxisLabel = 'Measure';
   barChartShowYAxisLabel = true;
   barChartYAxisLabel = 'Compliance Rate (%)';
-  barChartColorScheme: any = {
+  barChartColorScheme: ChartColorScheme = {
     domain: ['#5AA454', '#A10A28', '#C7B42C', '#AAAAAA']
   };
 

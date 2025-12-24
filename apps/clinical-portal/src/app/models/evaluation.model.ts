@@ -10,8 +10,8 @@ export interface CqlEvaluation {
     version: string;
   };
   patientId: string;
-  contextData?: Record<string, any>; // JSON
-  evaluationResult?: Record<string, any>; // JSON
+  contextData?: Record<string, unknown>; // JSON
+  evaluationResult?: Record<string, unknown>; // JSON
   status: EvaluationStatus;
   errorMessage?: string;
   durationMs?: number;
@@ -27,7 +27,7 @@ export type EvaluationStatus = 'SUCCESS' | 'FAILED' | 'PENDING';
 export interface EvaluationRequest {
   libraryId: string; // UUID
   patientId: string;
-  contextData?: Record<string, any>;
+  contextData?: Record<string, unknown>;
 }
 
 /**
@@ -36,7 +36,7 @@ export interface EvaluationRequest {
 export interface BatchEvaluationRequest {
   libraryId: string; // UUID
   patientIds: string[];
-  contextData?: Record<string, any>;
+  contextData?: Record<string, unknown>;
 }
 
 /**
@@ -45,7 +45,7 @@ export interface BatchEvaluationRequest {
 export interface EvaluationResponse {
   evaluationId: string;
   status: EvaluationStatus;
-  result?: any;
+  result?: unknown;
   error?: string;
   durationMs?: number;
 }

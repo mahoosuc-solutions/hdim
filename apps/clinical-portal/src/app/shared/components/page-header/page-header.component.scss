@@ -1,10 +1,11 @@
 .page-header {
-  background: white;
-  color: rgba(0, 0, 0, 0.87);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  background: var(--card-background, #ffffff);
+  color: var(--text-primary, rgba(0, 0, 0, 0.87));
+  border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
   padding: 16px 24px;
   height: auto;
   min-height: 64px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 
   // Override Material toolbar default padding
   ::ng-deep .mat-toolbar-row {
@@ -58,19 +59,19 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--text-secondary, rgba(0, 0, 0, 0.6));
   text-decoration: none;
-  transition: color 200ms;
+  transition: color 200ms, background-color 200ms;
   padding: 2px 4px;
   border-radius: 4px;
 
   &:hover {
-    color: rgba(0, 0, 0, 0.87);
-    background-color: rgba(0, 0, 0, 0.04);
+    color: var(--text-primary, rgba(0, 0, 0, 0.87));
+    background-color: var(--bg-hover, rgba(0, 0, 0, 0.04));
   }
 
   &:focus {
-    outline: 2px solid #3f51b5;
+    outline: 2px solid var(--primary-color, #3f51b5);
     outline-offset: 2px;
   }
 }
@@ -79,12 +80,12 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--text-secondary, rgba(0, 0, 0, 0.6));
 }
 
 .breadcrumb-current {
   .breadcrumb-text {
-    color: rgba(0, 0, 0, 0.87);
+    color: var(--text-primary, rgba(0, 0, 0, 0.87));
     font-weight: 500;
   }
 }
@@ -96,7 +97,7 @@
 }
 
 .breadcrumb-separator {
-  color: rgba(0, 0, 0, 0.38);
+  color: var(--text-disabled, rgba(0, 0, 0, 0.38));
   user-select: none;
 }
 
@@ -112,14 +113,14 @@
   font-size: 28px;
   font-weight: 500;
   line-height: 1.2;
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--text-primary, rgba(0, 0, 0, 0.87));
 }
 
 .page-subtitle {
   margin: 0;
   font-size: 14px;
   font-weight: 400;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--text-secondary, rgba(0, 0, 0, 0.6));
   line-height: 1.4;
 }
 
@@ -193,42 +194,14 @@
   }
 }
 
-// Dark theme support
+// Dark theme support - CSS variables handle this automatically via themes.scss
+// Keeping media query as fallback for system preference when no explicit theme is set
 @media (prefers-color-scheme: dark) {
-  .page-header {
-    background: #303030;
-    color: rgba(255, 255, 255, 0.87);
-    border-bottom-color: rgba(255, 255, 255, 0.12);
-  }
-
-  .page-title {
-    color: rgba(255, 255, 255, 0.95);
-  }
-
-  .page-subtitle {
-    color: rgba(255, 255, 255, 0.7);
-  }
-
-  .breadcrumb-link {
-    color: rgba(255, 255, 255, 0.7);
-
-    &:hover {
-      color: rgba(255, 255, 255, 0.95);
-      background-color: rgba(255, 255, 255, 0.08);
+  :host-context(body:not(.light-theme):not(.dark-theme)) {
+    .page-header {
+      background: var(--card-background, #303030);
+      color: var(--text-primary, rgba(255, 255, 255, 0.87));
+      border-bottom-color: var(--border-color, rgba(255, 255, 255, 0.12));
     }
-  }
-
-  .breadcrumb-text {
-    color: rgba(255, 255, 255, 0.7);
-  }
-
-  .breadcrumb-current {
-    .breadcrumb-text {
-      color: rgba(255, 255, 255, 0.95);
-    }
-  }
-
-  .breadcrumb-separator {
-    color: rgba(255, 255, 255, 0.5);
   }
 }

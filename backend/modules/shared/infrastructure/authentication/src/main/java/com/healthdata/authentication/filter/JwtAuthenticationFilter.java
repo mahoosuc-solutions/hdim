@@ -1,5 +1,6 @@
 package com.healthdata.authentication.filter;
 
+import com.healthdata.authentication.service.CookieService;
 import com.healthdata.authentication.service.JwtTokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
  * JWT Authentication Filter for validating and processing JWT tokens.
  *
  * This filter intercepts all HTTP requests and:
- * 1. Extracts JWT token from Authorization header (Bearer scheme)
+ * 1. Extracts JWT token from Authorization header (Bearer scheme) OR HttpOnly cookie
  * 2. Validates the token using JwtTokenService
  * 3. Extracts user information and authorities from token claims
  * 4. Creates Spring Security Authentication object
@@ -37,11 +38,13 @@ import java.util.stream.Collectors;
  * - Does not block the filter chain on token failure
  * - Logs all authentication attempts for audit
  *
- * Token Format:
- * Authorization: Bearer <jwt_token>
+ * Token Sources (in priority order):
+ * 1. Authorization: Bearer <jwt_token>  (for API clients)
+ * 2. HttpOnly Cookie: hdim_access_token (for browser clients - XSS protected)
  *
  * Security Considerations:
  * - Token validation is delegated to JwtTokenService
+ * - HttpOnly cookies provide XSS protection for browser-based clients
  * - Failed authentication does not block request (allows fallback to Basic Auth)
  * - SecurityContext is only set for valid tokens
  * - All exceptions are caught and logged
@@ -57,6 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final int BEARER_PREFIX_LENGTH = 7;
 
     private final JwtTokenService jwtTokenService;
+    private final CookieService cookieService;
 
     /**
      * Filter internal implementation.
@@ -97,20 +101,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Extract JWT token from Authorization header.
-     * Expects header format: "Authorization: Bearer <token>"
+     * Extract JWT token from request.
+     *
+     * Priority:
+     * 1. Authorization header: "Bearer <token>" (for API clients)
+     * 2. HttpOnly cookie: hdim_access_token (for browser clients)
      *
      * @param request HTTP request
      * @return JWT token string, or null if not found
      */
     private String extractJwtFromRequest(HttpServletRequest request) {
+        // First check Authorization header (higher priority for API clients)
         String authHeader = request.getHeader(AUTHORIZATION_HEADER);
 
         if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
+            log.trace("JWT found in Authorization header");
             return authHeader.substring(BEARER_PREFIX_LENGTH);
         }
 
-        return null;
+        // Fall back to HttpOnly cookie (for browser clients with XSS protection)
+        return cookieService.getAccessTokenFromCookie(request)
+            .map(token -> {
+                log.trace("JWT found in HttpOnly cookie");
+                return token;
+            })
+            .orElse(null);
     }
 
     /**

@@ -14,8 +14,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -57,6 +63,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TrustedHeaderAuthFilter extends OncePerRequestFilter {
 
+    private static final String HMAC_ALGORITHM = "HmacSHA256";
+    private static final long DEFAULT_SIGNATURE_VALIDITY_SECONDS = 300; // 5 minutes
+
     /**
      * Configuration for controlling filter behavior.
      */
@@ -76,11 +85,22 @@ public class TrustedHeaderAuthFilter extends OncePerRequestFilter {
         try {
             // Check if request has the validated header from gateway
             String validatedHeader = request.getHeader(AuthHeaderConstants.HEADER_VALIDATED);
+            String userId = request.getHeader(AuthHeaderConstants.HEADER_USER_ID);
 
-            if (validatedHeader != null && isValidSignature(validatedHeader)) {
+            if (validatedHeader != null && isValidSignature(validatedHeader, userId)) {
                 processAuthHeaders(request);
             } else if (validatedHeader != null) {
-                log.warn("Invalid gateway validation signature: {}", maskSignature(validatedHeader));
+                log.warn("Invalid gateway validation signature for request to {}: {}",
+                    request.getRequestURI(), maskSignature(validatedHeader));
+                // In strict mode, reject the request
+                if (config.isStrictMode()) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write(
+                        "{\"error\":\"unauthorized\",\"message\":\"Invalid gateway signature\"}"
+                    );
+                    return;
+                }
             } else {
                 log.trace("No gateway validation header found, skipping trusted header auth");
             }
@@ -155,44 +175,131 @@ public class TrustedHeaderAuthFilter extends OncePerRequestFilter {
      *
      * The signature format is: gateway-{timestamp}-{hmac}
      * This ensures headers were injected by the gateway and not forged.
+     *
+     * @param signature the X-Auth-Validated header value
+     * @param userId the user ID from X-Auth-User-Id header (used in HMAC computation)
+     * @return true if signature is valid
      */
-    private boolean isValidSignature(String signature) {
+    private boolean isValidSignature(String signature, String userId) {
         if (signature == null || !signature.startsWith(AuthHeaderConstants.VALIDATED_SIGNATURE_PREFIX)) {
+            log.debug("Signature missing or invalid prefix");
             return false;
         }
 
         // In development/test mode, accept simple signatures
         if (config.isDevelopmentMode()) {
+            log.trace("Development mode: accepting signature with valid prefix");
             return signature.startsWith(AuthHeaderConstants.VALIDATED_SIGNATURE_PREFIX);
         }
 
         // Production: Validate HMAC signature
         // Format: gateway-{timestamp}-{hmac}
-        String[] parts = signature.split("-");
+        String[] parts = signature.split("-", 3);
         if (parts.length < 3) {
+            log.warn("Invalid signature format: expected gateway-{timestamp}-{hmac}");
             return false;
         }
 
         try {
             long timestamp = Long.parseLong(parts[1]);
+            String providedHmac = parts[2];
             long now = System.currentTimeMillis() / 1000;
+            long validitySeconds = config.getSignatureValiditySeconds();
 
-            // Reject if signature is older than 5 minutes
-            if (Math.abs(now - timestamp) > 300) {
-                log.warn("Gateway signature expired: {} seconds old", now - timestamp);
+            // Reject if signature is expired
+            if (Math.abs(now - timestamp) > validitySeconds) {
+                log.warn("Gateway signature expired: {} seconds old (max: {})",
+                    now - timestamp, validitySeconds);
                 return false;
             }
 
-            // TODO: Validate HMAC using shared secret
-            // String expectedHmac = computeHmac(timestamp, config.getSharedSecret());
-            // return parts[2].equals(expectedHmac);
+            // Validate HMAC
+            String sharedSecret = config.getSharedSecret();
+            if (sharedSecret == null || sharedSecret.isBlank()) {
+                log.error("SECURITY: Shared secret not configured for HMAC validation");
+                return false;
+            }
 
+            if (userId == null || userId.isBlank()) {
+                log.warn("User ID missing, cannot validate HMAC");
+                return false;
+            }
+
+            // Compute expected HMAC (same algorithm as gateway)
+            String expectedHmac = computeHmac(userId, timestamp, sharedSecret);
+            if (expectedHmac == null) {
+                log.error("Failed to compute HMAC for validation");
+                return false;
+            }
+
+            // Constant-time comparison to prevent timing attacks
+            if (!constantTimeEquals(expectedHmac, providedHmac)) {
+                log.warn("HMAC validation failed for user: {}", maskUserId(userId));
+                return false;
+            }
+
+            log.trace("HMAC validation successful for user: {}", maskUserId(userId));
             return true;
 
         } catch (NumberFormatException e) {
             log.warn("Invalid timestamp in gateway signature");
             return false;
         }
+    }
+
+    /**
+     * Compute HMAC using the same algorithm as the gateway.
+     *
+     * @param userId the user ID
+     * @param timestamp the signature timestamp
+     * @param secret the shared secret
+     * @return Base64-encoded HMAC or null on error
+     */
+    private String computeHmac(String userId, long timestamp, String secret) {
+        try {
+            String data = userId + ":" + timestamp;
+            Mac mac = Mac.getInstance(HMAC_ALGORITHM);
+            SecretKeySpec secretKeySpec = new SecretKeySpec(
+                secret.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM
+            );
+            mac.init(secretKeySpec);
+            byte[] hmacBytes = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hmacBytes);
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            log.error("Error computing HMAC: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Constant-time string comparison to prevent timing attacks.
+     */
+    private boolean constantTimeEquals(String a, String b) {
+        if (a == null || b == null) {
+            return false;
+        }
+        byte[] aBytes = a.getBytes(StandardCharsets.UTF_8);
+        byte[] bBytes = b.getBytes(StandardCharsets.UTF_8);
+
+        if (aBytes.length != bBytes.length) {
+            return false;
+        }
+
+        int result = 0;
+        for (int i = 0; i < aBytes.length; i++) {
+            result |= aBytes[i] ^ bBytes[i];
+        }
+        return result == 0;
+    }
+
+    /**
+     * Mask user ID for safe logging.
+     */
+    private String maskUserId(String userId) {
+        if (userId == null || userId.length() < 8) {
+            return "***";
+        }
+        return userId.substring(0, 8) + "***";
     }
 
     /**
@@ -228,10 +335,18 @@ public class TrustedHeaderAuthFilter extends OncePerRequestFilter {
 
     /**
      * Configuration class for TrustedHeaderAuthFilter.
+     *
+     * Security Configuration:
+     * - developmentMode: When true, accepts any signature with valid prefix (for local dev only)
+     * - strictMode: When true, rejects requests with invalid signatures (production default)
+     * - sharedSecret: HMAC secret shared with gateway (must match GATEWAY_AUTH_SIGNING_SECRET)
+     * - signatureValiditySeconds: Max age of signature before rejection (default 300 = 5 min)
      */
     public static class TrustedHeaderAuthConfig {
         private boolean developmentMode = false;
+        private boolean strictMode = false;
         private String sharedSecret;
+        private long signatureValiditySeconds = 300; // 5 minutes
 
         public boolean isDevelopmentMode() {
             return developmentMode;
@@ -239,6 +354,14 @@ public class TrustedHeaderAuthFilter extends OncePerRequestFilter {
 
         public void setDevelopmentMode(boolean developmentMode) {
             this.developmentMode = developmentMode;
+        }
+
+        public boolean isStrictMode() {
+            return strictMode;
+        }
+
+        public void setStrictMode(boolean strictMode) {
+            this.strictMode = strictMode;
         }
 
         public String getSharedSecret() {
@@ -249,17 +372,72 @@ public class TrustedHeaderAuthFilter extends OncePerRequestFilter {
             this.sharedSecret = sharedSecret;
         }
 
+        public long getSignatureValiditySeconds() {
+            return signatureValiditySeconds;
+        }
+
+        public void setSignatureValiditySeconds(long signatureValiditySeconds) {
+            this.signatureValiditySeconds = signatureValiditySeconds;
+        }
+
+        /**
+         * Create development mode configuration (for local development only).
+         * WARNING: Never use in production - bypasses HMAC validation.
+         */
         public static TrustedHeaderAuthConfig development() {
             TrustedHeaderAuthConfig config = new TrustedHeaderAuthConfig();
             config.setDevelopmentMode(true);
+            config.setStrictMode(false);
             return config;
         }
 
+        /**
+         * Create production configuration with HMAC validation.
+         *
+         * @param sharedSecret the HMAC secret (must match gateway's GATEWAY_AUTH_SIGNING_SECRET)
+         * @return production configuration
+         */
         public static TrustedHeaderAuthConfig production(String sharedSecret) {
             TrustedHeaderAuthConfig config = new TrustedHeaderAuthConfig();
             config.setDevelopmentMode(false);
+            config.setStrictMode(true);
             config.setSharedSecret(sharedSecret);
             return config;
+        }
+
+        /**
+         * Create production configuration with custom validity period.
+         *
+         * @param sharedSecret the HMAC secret (must match gateway's GATEWAY_AUTH_SIGNING_SECRET)
+         * @param signatureValiditySeconds max age of signature in seconds
+         * @return production configuration
+         */
+        public static TrustedHeaderAuthConfig production(String sharedSecret, long signatureValiditySeconds) {
+            TrustedHeaderAuthConfig config = production(sharedSecret);
+            config.setSignatureValiditySeconds(signatureValiditySeconds);
+            return config;
+        }
+
+        /**
+         * Validate configuration for production use.
+         * @throws IllegalStateException if configuration is invalid for production
+         */
+        public void validateForProduction() {
+            if (developmentMode) {
+                throw new IllegalStateException(
+                    "Development mode is enabled - not safe for production"
+                );
+            }
+            if (sharedSecret == null || sharedSecret.isBlank()) {
+                throw new IllegalStateException(
+                    "Shared secret is required for production HMAC validation"
+                );
+            }
+            if (sharedSecret.length() < 32) {
+                throw new IllegalStateException(
+                    "Shared secret must be at least 32 characters for production"
+                );
+            }
         }
     }
 }

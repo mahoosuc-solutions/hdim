@@ -131,6 +131,9 @@ export class ApiService {
 
   /**
    * Build request options with headers and params
+   *
+   * SECURITY: withCredentials is set to true by default to support HttpOnly cookies.
+   * This is required for HIPAA-compliant JWT storage that protects against XSS attacks.
    */
   private buildRequestOptions(
     params?: HttpParams | { [param: string]: string | string[] },
@@ -140,6 +143,7 @@ export class ApiService {
     params?: HttpParams | { [param: string]: string | string[] };
     observe?: 'body';
     responseType?: 'json';
+    withCredentials: boolean;
   } {
     let headers = options.headers || new HttpHeaders();
 
@@ -158,6 +162,9 @@ export class ApiService {
       params,
       observe: 'body',
       responseType: 'json',
+      // SECURITY: Enable credentials for HttpOnly cookie support
+      // Required for HIPAA-compliant JWT storage that prevents XSS token theft
+      withCredentials: options.withCredentials !== false,
     };
   }
 
@@ -299,4 +306,10 @@ export interface RequestOptions {
   maxRetries?: number;
   apiVersion?: string;
   skipAuth?: boolean;
+  /**
+   * Include credentials (cookies) with the request.
+   * Default: true (for HttpOnly cookie authentication support)
+   * Set to false only for cross-origin requests that shouldn't send cookies.
+   */
+  withCredentials?: boolean;
 }

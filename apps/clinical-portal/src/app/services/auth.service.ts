@@ -10,22 +10,30 @@ import { ApiService } from './api.service';
  *
  * Features:
  * - User login/logout
- * - JWT token management
+ * - JWT token management (HttpOnly cookies + localStorage fallback)
  * - Token refresh
  * - Role-based authorization
  * - Permission checking
  * - Auto-logout on token expiration
  * - Authentication state management
  *
- * SECURITY NOTE: Current implementation stores JWT in localStorage which is
- * vulnerable to XSS attacks. Production deployments should migrate to HttpOnly
- * cookies with the following changes:
- * 1. Backend login endpoint sets HttpOnly, Secure, SameSite=Strict cookies
- * 2. Backend JWT filter reads token from cookies instead of Authorization header
- * 3. Frontend uses withCredentials: true for all authenticated requests
- * 4. Frontend removes direct token access - authentication state only
+ * SECURITY IMPLEMENTATION (HIPAA Compliant):
+ * The backend now sets HttpOnly cookies with JWT tokens for XSS protection:
+ * - hdim_access_token: Access token (HttpOnly, Secure, SameSite=Strict)
+ * - hdim_refresh_token: Refresh token (HttpOnly, Secure, SameSite=Strict)
  *
- * TODO: Implement HttpOnly cookie-based JWT storage (HIGH PRIORITY for HIPAA)
+ * Token Storage Priority:
+ * 1. HttpOnly cookies (primary - XSS protected, HIPAA compliant)
+ * 2. localStorage (fallback for legacy clients and demo mode)
+ *
+ * The API service is configured with withCredentials: true to send cookies
+ * automatically with all requests. This provides seamless authentication
+ * without exposing tokens to JavaScript.
+ *
+ * NOTE: Direct token access methods (getToken, setToken) are kept for:
+ * - Backwards compatibility with existing code
+ * - Demo mode functionality
+ * - Token expiration checking (parsing JWT claims)
  */
 @Injectable({
   providedIn: 'root',

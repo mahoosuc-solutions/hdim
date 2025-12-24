@@ -4,6 +4,7 @@ import { Observable, BehaviorSubject, throwError, of, timer } from 'rxjs';
 import { map, catchError, tap, switchMap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ApiService } from './api.service';
+import { LoggerService, ContextualLogger } from './logger.service';
 
 /**
  * Authentication Service - Handles user authentication and authorization
@@ -51,12 +52,15 @@ export class AuthService {
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
   private tokenRefreshSubscription: any;
+  private log: ContextualLogger;
 
   constructor(
     private http: HttpClient,
     private apiService: ApiService,
-    private router: Router
+    private router: Router,
+    private logger: LoggerService
   ) {
+    this.log = this.logger.withContext('AuthService');
     // Start token refresh timer if user is logged in
     if (this.isAuthenticated()) {
       this.startTokenRefreshTimer();
@@ -82,7 +86,7 @@ export class AuthService {
         this.handleLoginSuccess(response as LoginResponse);
       }),
       catchError((error) => {
-        console.error('Login error:', error);
+        this.log.error('Login failed', error);
         return throwError(() => error);
       })
     );
@@ -100,7 +104,7 @@ export class AuthService {
         this.handleLoginSuccess(response);
       }),
       catchError((error) => {
-        console.error('MFA verification error:', error);
+        this.log.error('MFA verification failed', error);
         return throwError(() => error);
       })
     );
@@ -184,7 +188,7 @@ export class AuthService {
         }
       }),
       catchError((error) => {
-        console.error('Token refresh error:', error);
+        this.log.error('Token refresh failed', error);
         this.logout();
         return throwError(() => error);
       })
@@ -207,7 +211,7 @@ export class AuthService {
         this.currentUserSubject.next(user);
       }),
       catchError((error) => {
-        console.error('Get current user error:', error);
+        this.log.error('Failed to get current user', error);
         return throwError(() => error);
       })
     );
@@ -425,7 +429,7 @@ export class AuthService {
       .pipe(switchMap(() => this.refreshToken()))
       .subscribe({
         error: (error) => {
-          console.error('Token refresh timer error:', error);
+          this.log.error('Token refresh timer failed', error);
           this.logout();
         },
       });

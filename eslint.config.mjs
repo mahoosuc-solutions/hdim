@@ -37,6 +37,24 @@ export default [
       '**/*.mjs',
     ],
     // Override or add rules here
-    rules: {},
+    rules: {
+      // SECURITY: Prevent console statements in production code
+      // Use LoggerService instead for proper log level control and PHI filtering
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
+  },
+  // Allow console in test files and logger service
+  {
+    files: [
+      '**/*.spec.ts',
+      '**/*.test.ts',
+      '**/e2e/**/*.ts',
+      '**/*-e2e/**/*.ts',
+      '**/logger.service.ts',
+      '**/api.service.ts', // Temporary - uses conditional logging
+    ],
+    rules: {
+      'no-console': 'off',
+    },
   },
 ];

@@ -10,6 +10,8 @@ dependencies {
     implementation(project(":modules:shared:domain:common"))
     implementation(project(":modules:shared:infrastructure:audit"))
     implementation(project(":modules:shared:infrastructure:persistence"))
+    implementation(project(":modules:shared:infrastructure:tracing"))
+    implementation(project(":modules:shared:infrastructure:api-docs"))
 
     // Spring Boot
     implementation("org.springframework.boot:spring-boot-starter-web")

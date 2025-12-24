@@ -12,6 +12,8 @@ dependencies {
     implementation(project(":modules:shared:domain:common"))
     implementation(project(":modules:shared:infrastructure:audit"))
     implementation(project(":modules:shared:infrastructure:persistence"))
+    implementation(project(":modules:shared:infrastructure:tracing"))
+    implementation(project(":modules:shared:infrastructure:api-docs"))
 
     // Spring Boot
     // Note: No spring-security or oauth2-resource-server - gateway handles auth

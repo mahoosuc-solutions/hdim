@@ -30,6 +30,8 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:audit"))
     implementation(project(":modules:shared:infrastructure:messaging"))
     implementation(project(":modules:shared:api-contracts:events"))
+    implementation(project(":modules:shared:infrastructure:tracing"))
+    implementation(project(":modules:shared:infrastructure:api-docs"))
 
     // Spring Boot
     implementation(libs.bundles.spring.boot.web)

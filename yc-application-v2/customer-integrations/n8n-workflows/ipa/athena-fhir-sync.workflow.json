@@ -1,0 +1,349 @@
+{
+  "name": "IPA athenahealth FHIR Sync",
+  "meta": {
+    "description": "Daily FHIR R4 sync from athenahealth practices to HDIM for IPA quality management",
+    "templateId": "hdim-ipa-athena-fhir-v1",
+    "customer": "Valley Physicians Network",
+    "practices": 18,
+    "version": "1.0.0"
+  },
+  "nodes": [
+    {
+      "id": "daily-trigger",
+      "name": "Daily Trigger 2AM PT",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "cronExpression": "0 2 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "get-practice-list",
+      "name": "Get Practice Configuration",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Practice configuration for 18 athenahealth practices\n// In production, this would come from a database or config service\nconst practices = [\n  { id: 'VPN-001', name: 'Valley Family Medicine', athenaId: 'practice-12345', providers: 2 },\n  { id: 'VPN-002', name: 'Encino Internal Medicine', athenaId: 'practice-12346', providers: 3 },\n  { id: 'VPN-003', name: 'Sherman Oaks Primary', athenaId: 'practice-12347', providers: 2 },\n  { id: 'VPN-004', name: 'Tarzana Medical Group', athenaId: 'practice-12348', providers: 4 },\n  { id: 'VPN-005', name: 'Woodland Hills Family', athenaId: 'practice-12349', providers: 2 },\n  { id: 'VPN-006', name: 'Reseda Primary Care', athenaId: 'practice-12350', providers: 1 },\n  { id: 'VPN-007', name: 'Van Nuys Medical', athenaId: 'practice-12351', providers: 3 },\n  { id: 'VPN-008', name: 'Panorama City Health', athenaId: 'practice-12352', providers: 2 },\n  { id: 'VPN-009', name: 'North Hills Primary', athenaId: 'practice-12353', providers: 2 },\n  { id: 'VPN-010', name: 'Granada Hills Family', athenaId: 'practice-12354', providers: 2 },\n  { id: 'VPN-011', name: 'Northridge Medical', athenaId: 'practice-12355', providers: 3 },\n  { id: 'VPN-012', name: 'Chatsworth Primary', athenaId: 'practice-12356', providers: 1 },\n  { id: 'VPN-013', name: 'Canoga Park Health', athenaId: 'practice-12357', providers: 2 },\n  { id: 'VPN-014', name: 'West Hills Medical', athenaId: 'practice-12358', providers: 2 },\n  { id: 'VPN-015', name: 'Calabasas Primary', athenaId: 'practice-12359', providers: 3 },\n  { id: 'VPN-016', name: 'Agoura Hills Family', athenaId: 'practice-12360', providers: 2 },\n  { id: 'VPN-017', name: 'Thousand Oaks Med', athenaId: 'practice-12361', providers: 2 },\n  { id: 'VPN-018', name: 'Simi Valley Primary', athenaId: 'practice-12362', providers: 2 }\n];\n\nreturn practices.map(p => ({ json: p }));"
+      }
+    },
+    {
+      "id": "process-practices",
+      "name": "Process Each Practice",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [650, 300],
+      "parameters": {
+        "batchSize": 1,
+        "options": {
+          "reset": false
+        }
+      }
+    },
+    {
+      "id": "get-oauth-token",
+      "name": "Get athena OAuth Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.platform.athenahealth.com/oauth2/v1/token",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/x-www-form-urlencoded" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "grant_type=client_credentials&scope=athena/service/Athenanet.MDP.*"
+      },
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "athena-api-credentials",
+          "name": "athenahealth API"
+        }
+      }
+    },
+    {
+      "id": "fetch-patients",
+      "name": "Fetch Patient List",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.platform.athenahealth.com/fhir/r4/Patient",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $('Get athena OAuth Token').item.json.access_token }}" },
+            { "name": "Accept", "value": "application/fhir+json" }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "_count", "value": "100" },
+            { "name": "_lastUpdated", "value": "=ge{{ $now.minus(1, 'day').toISO().split('T')[0] }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-conditions",
+      "name": "Fetch Conditions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 350],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.platform.athenahealth.com/fhir/r4/Condition",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $('Get athena OAuth Token').item.json.access_token }}" },
+            { "name": "Accept", "value": "application/fhir+json" }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "_count", "value": "100" },
+            { "name": "clinical-status", "value": "active" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-observations",
+      "name": "Fetch Observations",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 500],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.platform.athenahealth.com/fhir/r4/Observation",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $('Get athena OAuth Token').item.json.access_token }}" },
+            { "name": "Accept", "value": "application/fhir+json" }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "_count", "value": "100" },
+            { "name": "category", "value": "laboratory,vital-signs" },
+            { "name": "date", "value": "=ge{{ $now.minus(30, 'day').toISO().split('T')[0] }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "paginate-results",
+      "name": "Handle Pagination",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 350],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Collect all resources from paginated responses\nconst allResources = [];\n\nfor (const item of $input.all()) {\n  const bundle = item.json;\n  if (bundle.entry) {\n    bundle.entry.forEach(entry => {\n      if (entry.resource) {\n        allResources.push(entry.resource);\n      }\n    });\n  }\n}\n\n// Return as individual items for processing\nreturn allResources.map(resource => ({ json: resource }));"
+      }
+    },
+    {
+      "id": "add-practice-context",
+      "name": "Add Practice Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 350],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const resource = $input.item.json;\nconst practice = $('Process Each Practice').item.json;\n\n// Add IPA-specific metadata\nresource.meta = resource.meta || {};\nresource.meta.tag = resource.meta.tag || [];\nresource.meta.tag.push({\n  system: 'http://vpn.example.com/practice',\n  code: practice.id,\n  display: practice.name\n});\n\n// Prefix resource ID with practice ID for uniqueness across IPA\nresource.id = `${practice.id}-${resource.id}`;\n\n// Add extension for practice attribution\nresource.extension = resource.extension || [];\nresource.extension.push({\n  url: 'http://hdim.com/fhir/StructureDefinition/attributed-practice',\n  valueReference: {\n    reference: `Organization/${practice.id}`,\n    display: practice.name\n  }\n});\n\nreturn { json: resource };"
+      }
+    },
+    {
+      "id": "create-bundle",
+      "name": "Create FHIR Bundle",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1700, 350],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const resources = $input.all().map(item => item.json);\nconst practice = $('Process Each Practice').item.json;\n\n// Split into batches of 100\nconst BATCH_SIZE = 100;\nconst batches = [];\n\nfor (let i = 0; i < resources.length; i += BATCH_SIZE) {\n  const batchResources = resources.slice(i, i + BATCH_SIZE);\n  \n  const bundle = {\n    resourceType: 'Bundle',\n    type: 'batch',\n    timestamp: new Date().toISOString(),\n    meta: {\n      tag: [{\n        system: 'http://vpn.example.com/sync',\n        code: 'athena-fhir',\n        display: `athenahealth sync for ${practice.name}`\n      }]\n    },\n    entry: batchResources.map(resource => ({\n      fullUrl: `urn:uuid:${resource.id}`,\n      resource: resource,\n      request: {\n        method: 'PUT',\n        url: `${resource.resourceType}/${resource.id}`\n      }\n    }))\n  };\n  \n  batches.push({ json: bundle });\n}\n\nconsole.log(`Practice ${practice.id}: Created ${batches.length} bundles from ${resources.length} resources`);\nreturn batches;"
+      }
+    },
+    {
+      "id": "upload-to-hdim",
+      "name": "Upload to HDIM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1900, 350],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.healthdatainmotion.com/v1/fhir",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/fhir+json" },
+            { "name": "X-Tenant-ID", "value": "={{ $env.HDIM_TENANT_ID }}" },
+            { "name": "X-Practice-ID", "value": "={{ $('Process Each Practice').item.json.id }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "timeout": 60000,
+          "retry": { "enabled": true, "maxRetries": 3 }
+        }
+      },
+      "credentials": {
+        "oAuth2Api": {
+          "id": "hdim-oauth-credentials",
+          "name": "HDIM API"
+        }
+      }
+    },
+    {
+      "id": "log-practice-sync",
+      "name": "Log Practice Sync",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2100, 350],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const practice = $('Process Each Practice').item.json;\nconst uploadResults = $input.all();\n\nconst logEntry = {\n  timestamp: new Date().toISOString(),\n  workflow: 'IPA athena FHIR Sync',\n  practiceId: practice.id,\n  practiceName: practice.name,\n  bundlesUploaded: uploadResults.length,\n  status: 'SUCCESS'\n};\n\nconsole.log(JSON.stringify(logEntry));\n\n// Continue to next practice in batch\nreturn [{ json: logEntry }];"
+      }
+    },
+    {
+      "id": "continue-to-next",
+      "name": "Continue to Next Practice",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2300, 350],
+      "parameters": {}
+    },
+    {
+      "id": "aggregate-results",
+      "name": "Aggregate All Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2500, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const allLogs = $input.all().map(item => item.json);\n\nconst summary = {\n  timestamp: new Date().toISOString(),\n  workflow: 'IPA athena FHIR Sync',\n  ehr: 'athenahealth',\n  totalPractices: allLogs.length,\n  successfulPractices: allLogs.filter(l => l.status === 'SUCCESS').length,\n  failedPractices: allLogs.filter(l => l.status === 'ERROR').length,\n  totalBundles: allLogs.reduce((sum, l) => sum + (l.bundlesUploaded || 0), 0),\n  practices: allLogs\n};\n\nreturn [{ json: summary }];"
+      }
+    },
+    {
+      "id": "send-summary-report",
+      "name": "Send Summary Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2700, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.healthdatainmotion.com/v1/sync/report",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Tenant-ID", "value": "={{ $env.HDIM_TENANT_ID }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}"
+      },
+      "credentials": {
+        "oAuth2Api": {
+          "id": "hdim-oauth-credentials",
+          "name": "HDIM API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "daily-trigger": {
+      "main": [[{ "node": "get-practice-list", "type": "main", "index": 0 }]]
+    },
+    "get-practice-list": {
+      "main": [[{ "node": "process-practices", "type": "main", "index": 0 }]]
+    },
+    "process-practices": {
+      "main": [[{ "node": "get-oauth-token", "type": "main", "index": 0 }]]
+    },
+    "get-oauth-token": {
+      "main": [
+        [{ "node": "fetch-patients", "type": "main", "index": 0 }],
+        [{ "node": "fetch-conditions", "type": "main", "index": 0 }],
+        [{ "node": "fetch-observations", "type": "main", "index": 0 }]
+      ]
+    },
+    "fetch-patients": {
+      "main": [[{ "node": "paginate-results", "type": "main", "index": 0 }]]
+    },
+    "fetch-conditions": {
+      "main": [[{ "node": "paginate-results", "type": "main", "index": 0 }]]
+    },
+    "fetch-observations": {
+      "main": [[{ "node": "paginate-results", "type": "main", "index": 0 }]]
+    },
+    "paginate-results": {
+      "main": [[{ "node": "add-practice-context", "type": "main", "index": 0 }]]
+    },
+    "add-practice-context": {
+      "main": [[{ "node": "create-bundle", "type": "main", "index": 0 }]]
+    },
+    "create-bundle": {
+      "main": [[{ "node": "upload-to-hdim", "type": "main", "index": 0 }]]
+    },
+    "upload-to-hdim": {
+      "main": [[{ "node": "log-practice-sync", "type": "main", "index": 0 }]]
+    },
+    "log-practice-sync": {
+      "main": [[{ "node": "continue-to-next", "type": "main", "index": 0 }]]
+    },
+    "continue-to-next": {
+      "main": [[{ "node": "process-practices", "type": "main", "index": 0 }]]
+    },
+    "process-practices": {
+      "main": [
+        [],
+        [{ "node": "aggregate-results", "type": "main", "index": 0 }]
+      ]
+    },
+    "aggregate-results": {
+      "main": [[{ "node": "send-summary-report", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "timezone": "America/Los_Angeles"
+  },
+  "tags": ["hdim", "ipa", "athenahealth", "fhir", "multi-practice"]
+}

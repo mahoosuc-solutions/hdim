@@ -151,6 +151,7 @@ public class GatewaySecurityConfig {
                 .requestMatchers("/api/v1/auth/register").permitAll()
                 .requestMatchers("/api/v1/auth/refresh").permitAll()
                 .requestMatchers("/api/v1/auth/logout").permitAll()
+                .requestMatchers("/api/v1/auth/mfa/verify").permitAll()  // MFA verification
                 .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 

@@ -35,6 +35,9 @@ dependencies {
     implementation(libs.jjwt.impl)
     implementation(libs.jjwt.jackson)
 
+    // TOTP MFA (Time-based One-Time Password)
+    api("dev.samstevens.totp:totp:1.7.1")
+
     // Lombok
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)

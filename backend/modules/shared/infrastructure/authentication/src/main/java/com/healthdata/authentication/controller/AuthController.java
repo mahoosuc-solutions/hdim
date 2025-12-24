@@ -7,6 +7,8 @@ import com.healthdata.authentication.entity.RefreshToken;
 import com.healthdata.authentication.repository.UserRepository;
 import com.healthdata.authentication.service.JwtTokenService;
 import com.healthdata.authentication.service.LogoutService;
+import com.healthdata.authentication.service.MfaService;
+import com.healthdata.authentication.service.MfaTokenService;
 import com.healthdata.authentication.service.RefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -68,18 +70,20 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final LogoutService logoutService;
     private final JwtConfig jwtConfig;
+    private final MfaService mfaService;
+    private final MfaTokenService mfaTokenService;
 
     /**
      * Authenticate user with username/password.
-     * Returns JWT access and refresh tokens.
+     * Returns JWT access and refresh tokens, or MFA challenge if MFA is enabled.
      *
      * @param loginRequest Login credentials
      * @param httpRequest HTTP request for IP tracking
-     * @return JwtAuthenticationResponse with tokens and user details
+     * @return JwtAuthenticationResponse with tokens, or MfaRequiredResponse if MFA is enabled
      * @throws ResponseStatusException 401 if credentials are invalid or account is locked/disabled
      */
     @PostMapping("/login")
-    public ResponseEntity<JwtAuthenticationResponse> login(
+    public ResponseEntity<?> login(
         @Valid @RequestBody LoginRequest loginRequest,
         HttpServletRequest httpRequest
     ) {
@@ -108,6 +112,25 @@ public class AuthController {
             user.resetFailedLoginAttempts();
             userRepository.save(user);
 
+            // Check if MFA is enabled
+            if (user.isMfaConfigured()) {
+                log.info("MFA required for user: {}", user.getUsername());
+
+                // Generate MFA token (short-lived, proves password auth succeeded)
+                String mfaToken = mfaTokenService.generateMfaToken(user.getId(), user.getUsername());
+
+                // Clear security context (user not fully authenticated yet)
+                SecurityContextHolder.clearContext();
+
+                MfaRequiredResponse mfaResponse = MfaRequiredResponse.builder()
+                    .mfaRequired(true)
+                    .mfaToken(mfaToken)
+                    .message("MFA verification required. Please provide your authenticator code.")
+                    .build();
+
+                return ResponseEntity.ok(mfaResponse);
+            }
+
             log.info("Login successful for user: {} (ID: {})", user.getUsername(), user.getId());
 
             // Generate JWT tokens
@@ -117,7 +140,6 @@ public class AuthController {
             // Store refresh token in database
             refreshTokenService.createRefreshToken(user, refreshToken, httpRequest);
 
-            // TODO: Async audit logging will be implemented via Kafka events
             log.info("Authentication successful for user {} from IP: {}",
                 user.getUsername(), extractIpAddress(httpRequest));
 
@@ -131,6 +153,7 @@ public class AuthController {
                 .email(user.getEmail())
                 .roles(user.getRoles())
                 .tenantIds(user.getTenantIds())
+                .mfaEnabled(false)
                 .message("Login successful")
                 .build();
 

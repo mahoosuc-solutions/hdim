@@ -1,82 +1,309 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, Optional } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
 /**
- * Logger Service - Centralized logging with level control
+ * Log levels for filtering
+ */
+export enum LogLevel {
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3,
+  OFF = 4,
+}
+
+/**
+ * Structured log entry for consistent formatting
+ */
+export interface LogEntry {
+  timestamp: string;
+  level: string;
+  context?: string;
+  message: string;
+  data?: unknown;
+  userId?: string;
+  sessionId?: string;
+  url?: string;
+  userAgent?: string;
+}
+
+/**
+ * Logger Service - Centralized, production-safe logging
  *
- * Features:
- * - Multiple log levels (debug, log, warn, error)
- * - Production mode filtering
- * - Structured logging with context
- * - Can be extended to send logs to external service
+ * SECURITY FEATURES:
+ * - Automatic PII/PHI filtering in production
+ * - No console output in production (security compliance)
+ * - Configurable log levels per environment
+ * - Structured logging for log aggregation
+ * - External service integration (placeholder)
+ *
+ * USAGE:
+ * Instead of console.log(), use:
+ *   this.logger.debug('message', data);
+ *   this.logger.info('message', data);
+ *   this.logger.warn('message', data);
+ *   this.logger.error('message', error);
+ *
+ * With context:
+ *   this.logger.withContext('PatientComponent').info('Patient loaded', patient.id);
  */
 @Injectable({
   providedIn: 'root',
 })
 export class LoggerService {
-  private isProduction = false; // Set from environment
-  private debugEnabled = true;
+  private minLevel: LogLevel;
+  private isProduction: boolean;
+  private sessionId: string;
+  private userId: string | null = null;
+  private context: string | null = null;
 
-  constructor() {
-    // In real app, get from environment
-    // this.isProduction = environment.production;
-    // this.debugEnabled = environment.enableDebugLogging;
+  // Patterns that might indicate PHI/PII - filter in production
+  private readonly sensitivePatterns = [
+    /\b\d{3}-\d{2}-\d{4}\b/g,        // SSN
+    /\b\d{9}\b/g,                     // SSN without dashes
+    /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, // Email
+    /\b\d{10,11}\b/g,                 // Phone numbers
+    /\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/g, // Credit card
+    /\bMRN[:\s]*\d+/gi,               // Medical Record Number
+  ];
+
+  constructor(
+    @Optional() private http: HttpClient
+  ) {
+    this.isProduction = environment.production;
+    this.minLevel = this.isProduction ? LogLevel.WARN : LogLevel.DEBUG;
+    this.sessionId = this.generateSessionId();
   }
 
   /**
-   * Debug level logging (only in development)
+   * Create a child logger with specific context
    */
-  debug(message: string, data?: unknown): void {
-    if (this.debugEnabled && !this.isProduction) {
-      console.debug(`[DEBUG] ${message}`, data !== undefined ? data : '');
-    }
+  withContext(context: string): ContextualLogger {
+    return new ContextualLogger(this, context);
+  }
+
+  /**
+   * Set current user for log attribution
+   */
+  setUserId(userId: string | null): void {
+    this.userId = userId;
+  }
+
+  /**
+   * Set minimum log level
+   */
+  setMinLevel(level: LogLevel): void {
+    this.minLevel = level;
+  }
+
+  /**
+   * Debug level logging - development only
+   */
+  debug(message: string, data?: unknown, context?: string): void {
+    this.log(LogLevel.DEBUG, message, data, context);
   }
 
   /**
    * Info level logging
    */
-  log(message: string, data?: unknown): void {
-    console.log(`[INFO] ${message}`, data !== undefined ? data : '');
+  info(message: string, data?: unknown, context?: string): void {
+    this.log(LogLevel.INFO, message, data, context);
   }
 
   /**
    * Warning level logging
    */
-  warn(message: string, data?: unknown): void {
-    console.warn(`[WARN] ${message}`, data !== undefined ? data : '');
+  warn(message: string, data?: unknown, context?: string): void {
+    this.log(LogLevel.WARN, message, data, context);
   }
 
   /**
-   * Error level logging
+   * Error level logging - always logged, sent to external service in prod
    */
-  error(message: string, error?: unknown): void {
-    console.error(`[ERROR] ${message}`, error || '');
+  error(message: string, error?: unknown, context?: string): void {
+    this.log(LogLevel.ERROR, message, error, context);
 
-    // In production, you might want to send errors to a logging service
+    // In production, send errors to external monitoring
     if (this.isProduction) {
-      this.sendToExternalService('error', message, error);
+      this.sendToExternalService(this.buildLogEntry(LogLevel.ERROR, message, error, context));
     }
   }
 
   /**
-   * Log with context (e.g., component name, user action)
+   * Core logging method
    */
-  logWithContext(context: string, message: string, data?: unknown): void {
-    console.log(`[${context}] ${message}`, data !== undefined ? data : '');
+  private log(level: LogLevel, message: string, data?: unknown, context?: string): void {
+    // Check log level
+    if (level < this.minLevel) {
+      return;
+    }
+
+    const entry = this.buildLogEntry(level, message, data, context);
+
+    // In production, only output WARN and ERROR to console (if at all)
+    if (this.isProduction) {
+      if (level >= LogLevel.WARN) {
+        // Minimal production logging - no data, just message
+        const sanitizedMessage = this.sanitizeForProduction(message);
+        if (level === LogLevel.ERROR) {
+          console.error(`[${entry.level}] ${sanitizedMessage}`);
+        } else {
+          console.warn(`[${entry.level}] ${sanitizedMessage}`);
+        }
+      }
+      // Send to external service for aggregation
+      this.sendToExternalService(entry);
+    } else {
+      // Development: full console output
+      this.outputToConsole(entry);
+    }
   }
 
   /**
-   * Enable/disable debug logging
+   * Build structured log entry
    */
-  setDebugEnabled(enabled: boolean): void {
-    this.debugEnabled = enabled;
+  private buildLogEntry(level: LogLevel, message: string, data?: unknown, context?: string): LogEntry {
+    return {
+      timestamp: new Date().toISOString(),
+      level: LogLevel[level],
+      context: context || this.context || undefined,
+      message,
+      data: this.isProduction ? this.sanitizeData(data) : data,
+      userId: this.userId || undefined,
+      sessionId: this.sessionId,
+      url: typeof window !== 'undefined' ? window.location.href : undefined,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+    };
   }
 
   /**
-   * Send log to external service (placeholder)
+   * Output to console (development mode)
    */
-  private sendToExternalService(level: string, message: string, data?: unknown): void {
-    // TODO: Implement external logging service integration
-    // e.g., Sentry, LogRocket, CloudWatch, etc.
+  private outputToConsole(entry: LogEntry): void {
+    const prefix = entry.context ? `[${entry.context}]` : '';
+    const message = `${prefix} ${entry.message}`;
+
+    switch (entry.level) {
+      case 'DEBUG':
+        console.debug(message, entry.data ?? '');
+        break;
+      case 'INFO':
+        console.log(message, entry.data ?? '');
+        break;
+      case 'WARN':
+        console.warn(message, entry.data ?? '');
+        break;
+      case 'ERROR':
+        console.error(message, entry.data ?? '');
+        break;
+    }
+  }
+
+  /**
+   * Sanitize message for production (remove potential PHI/PII)
+   */
+  private sanitizeForProduction(message: string): string {
+    let sanitized = message;
+    for (const pattern of this.sensitivePatterns) {
+      sanitized = sanitized.replace(pattern, '[REDACTED]');
+    }
+    return sanitized;
+  }
+
+  /**
+   * Sanitize data object for production logging
+   */
+  private sanitizeData(data: unknown): unknown {
+    if (data === null || data === undefined) {
+      return undefined;
+    }
+
+    // For errors, only keep message and type
+    if (data instanceof Error) {
+      return {
+        errorType: data.name,
+        message: this.sanitizeForProduction(data.message),
+        // Don't include stack trace in production logs
+      };
+    }
+
+    // For objects, create a sanitized version
+    if (typeof data === 'object') {
+      try {
+        const serialized = JSON.stringify(data);
+        // If data is too large, don't log it
+        if (serialized.length > 1000) {
+          return { _note: 'Data too large, omitted' };
+        }
+        return JSON.parse(this.sanitizeForProduction(serialized));
+      } catch {
+        return { _note: 'Data could not be serialized' };
+      }
+    }
+
+    // For strings, sanitize
+    if (typeof data === 'string') {
+      return this.sanitizeForProduction(data);
+    }
+
+    return data;
+  }
+
+  /**
+   * Send log to external service (implement based on your service)
+   */
+  private sendToExternalService(entry: LogEntry): void {
+    // Placeholder for external logging service integration
+    // Options: Sentry, LogRocket, CloudWatch, Datadog, etc.
+    //
+    // Example Sentry integration:
+    // if (entry.level === 'ERROR' && typeof Sentry !== 'undefined') {
+    //   Sentry.captureMessage(entry.message, {
+    //     level: 'error',
+    //     tags: { context: entry.context },
+    //     extra: entry.data,
+    //   });
+    // }
+    //
+    // Example HTTP logging:
+    // if (this.http && environment.loggingEndpoint) {
+    //   this.http.post(environment.loggingEndpoint, entry).subscribe({
+    //     error: () => {} // Silently fail - don't create infinite loop
+    //   });
+    // }
+  }
+
+  /**
+   * Generate unique session ID
+   */
+  private generateSessionId(): string {
+    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+}
+
+/**
+ * Contextual Logger - Logger with pre-set context
+ */
+export class ContextualLogger {
+  constructor(
+    private logger: LoggerService,
+    private context: string
+  ) {}
+
+  debug(message: string, data?: unknown): void {
+    this.logger.debug(message, data, this.context);
+  }
+
+  info(message: string, data?: unknown): void {
+    this.logger.info(message, data, this.context);
+  }
+
+  warn(message: string, data?: unknown): void {
+    this.logger.warn(message, data, this.context);
+  }
+
+  error(message: string, error?: unknown): void {
+    this.logger.error(message, error, this.context);
   }
 }

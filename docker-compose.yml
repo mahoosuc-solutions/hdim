@@ -52,6 +52,28 @@ services:
     networks:
       - healthdata-network
 
+  # Jaeger - Distributed Tracing Backend
+  # Access UI at http://localhost:16686
+  jaeger:
+    container_name: healthdata-jaeger
+    image: jaegertracing/all-in-one:1.52
+    profiles: ["core", "ai", "analytics", "full"]
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+      - "14250:14250"   # Model used by Jaeger
+      - "6831:6831/udp" # Thrift compact
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - healthdata-network
+
   zookeeper:
     container_name: healthdata-zookeeper
     image: confluentinc/cp-zookeeper:7.5.0

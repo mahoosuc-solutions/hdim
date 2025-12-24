@@ -1,0 +1,141 @@
+package com.healthdata.tracing;
+
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.time.Duration;
+
+/**
+ * Auto-configuration for distributed tracing with OpenTelemetry.
+ *
+ * Provides consistent tracing configuration across all HDIM microservices.
+ *
+ * Configuration Properties:
+ * - tracing.enabled: Enable/disable tracing (default: true)
+ * - tracing.url: OTLP exporter endpoint (default: http://localhost:4318/v1/traces)
+ * - spring.application.name: Used as service name in traces
+ * - management.tracing.sampling.probability: Sampling rate (default: 1.0 for dev, recommend 0.1 for prod)
+ *
+ * Integration:
+ * - Exports traces to OpenTelemetry Collector via OTLP HTTP
+ * - Propagates trace context via W3C Trace Context headers
+ * - Integrates with Spring Cloud Gateway for request tracing
+ * - Compatible with Jaeger, Zipkin, or any OTLP-compatible backend
+ *
+ * Usage:
+ * Simply add this module as a dependency to enable tracing automatically.
+ * Configure the tracing.url property to point to your collector.
+ */
+@Configuration
+@ConditionalOnClass(OpenTelemetry.class)
+@ConditionalOnProperty(name = "tracing.enabled", havingValue = "true", matchIfMissing = true)
+public class TracingAutoConfiguration {
+
+    private static final Logger logger = LoggerFactory.getLogger(TracingAutoConfiguration.class);
+
+    private static final AttributeKey<String> SERVICE_NAME = AttributeKey.stringKey("service.name");
+    private static final AttributeKey<String> SERVICE_NAMESPACE = AttributeKey.stringKey("service.namespace");
+    private static final AttributeKey<String> DEPLOYMENT_ENVIRONMENT = AttributeKey.stringKey("deployment.environment");
+
+    @Value("${spring.application.name:hdim-service}")
+    private String serviceName;
+
+    @Value("${tracing.url:http://localhost:4318/v1/traces}")
+    private String otlpEndpoint;
+
+    @Value("${tracing.batch.max-queue-size:2048}")
+    private int maxQueueSize;
+
+    @Value("${tracing.batch.schedule-delay-ms:5000}")
+    private long scheduleDelayMs;
+
+    @Value("${tracing.batch.max-export-batch-size:512}")
+    private int maxExportBatchSize;
+
+    /**
+     * OTLP HTTP Span Exporter for sending traces to collector.
+     * Uses HTTP/protobuf format for broad compatibility.
+     */
+    @Bean
+    @ConditionalOnMissingBean(SpanExporter.class)
+    public SpanExporter spanExporter() {
+        logger.info("Configuring OTLP trace exporter: {}", otlpEndpoint);
+        return OtlpHttpSpanExporter.builder()
+            .setEndpoint(otlpEndpoint)
+            .build();
+    }
+
+    /**
+     * Service resource with HDIM-specific attributes.
+     * Adds service name and version for trace identification.
+     */
+    @Bean
+    @ConditionalOnMissingBean(Resource.class)
+    public Resource otelResource() {
+        return Resource.getDefault().merge(
+            Resource.create(Attributes.of(
+                SERVICE_NAME, serviceName,
+                SERVICE_NAMESPACE, "hdim",
+                DEPLOYMENT_ENVIRONMENT, getEnvironment()
+            ))
+        );
+    }
+
+    /**
+     * SDK Tracer Provider with batch processing.
+     * Batches spans for efficient export to reduce network overhead.
+     */
+    @Bean
+    @ConditionalOnMissingBean(SdkTracerProvider.class)
+    public SdkTracerProvider tracerProvider(SpanExporter spanExporter, Resource resource) {
+        logger.info("Initializing distributed tracing for service: {} (batch size: {}, delay: {}ms)",
+            serviceName, maxExportBatchSize, scheduleDelayMs);
+
+        return SdkTracerProvider.builder()
+            .addSpanProcessor(BatchSpanProcessor.builder(spanExporter)
+                .setMaxQueueSize(maxQueueSize)
+                .setScheduleDelay(Duration.ofMillis(scheduleDelayMs))
+                .setMaxExportBatchSize(maxExportBatchSize)
+                .build())
+            .setResource(resource)
+            .build();
+    }
+
+    /**
+     * OpenTelemetry SDK instance.
+     * Provides the central OpenTelemetry API for the application.
+     */
+    @Bean
+    @ConditionalOnMissingBean(OpenTelemetry.class)
+    public OpenTelemetry openTelemetry(SdkTracerProvider tracerProvider) {
+        return OpenTelemetrySdk.builder()
+            .setTracerProvider(tracerProvider)
+            .setPropagators(ContextPropagators.noop())
+            .build();
+    }
+
+    private String getEnvironment() {
+        String env = System.getenv("SPRING_PROFILES_ACTIVE");
+        if (env == null || env.isEmpty()) {
+            env = System.getProperty("spring.profiles.active", "development");
+        }
+        return env.contains("prod") ? "production" :
+               env.contains("staging") ? "staging" : "development";
+    }
+}

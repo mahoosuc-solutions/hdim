@@ -815,7 +815,26 @@ HDIM provides integration monitoring:
 | **AI-Powered Matching** | Q4 2026 | Improved patient matching |
 | **IoT/Remote Monitoring** | 2027 | Device data integration |
 
-### 11.2 Customer Requests
+### 11.2 Legacy Protocol Support (Backlog)
+
+For customers with legacy systems that cannot support FHIR or n8n workflows, we maintain a backlog for traditional healthcare messaging protocols:
+
+| Protocol | Status | Timeline | Use Case |
+|----------|--------|----------|----------|
+| **HL7v2** | Backlog | TBD (demand-driven) | ADT, ORM, ORU messages from legacy EHRs |
+| **HL7v3/CDA** | Backlog | TBD (demand-driven) | C-CDA document exchange |
+| **X12 837/835** | Backlog | TBD (demand-driven) | Claims-based quality measures |
+| **CCDA** | Backlog | TBD (demand-driven) | Continuity of Care Documents |
+
+**Current Recommendation:** For legacy system integration needs, we recommend using n8n workflows (Section 4.5) which can:
+- Parse HL7v2 messages and transform to FHIR
+- Handle file-based batch imports
+- Connect to SFTP/FTP endpoints
+- Process custom CSV/Excel formats
+
+This approach provides faster implementation (days vs. months) while we evaluate demand for native protocol support.
+
+### 11.3 Customer Requests
 
 We prioritize integrations based on customer demand. To request an EHR integration:
 

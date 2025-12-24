@@ -82,6 +82,12 @@ public class JwtAuthenticationResponse {
     private Set<String> tenantIds;
 
     /**
+     * Whether MFA is enabled for this user.
+     */
+    @Builder.Default
+    private Boolean mfaEnabled = false;
+
+    /**
      * Additional message or information.
      */
     private String message;

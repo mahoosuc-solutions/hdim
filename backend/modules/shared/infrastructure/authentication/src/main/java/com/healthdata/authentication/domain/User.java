@@ -109,6 +109,36 @@ public class User {
     @Column(length = 255)
     private String oauthProviderId;
 
+    /**
+     * MFA enabled flag.
+     * When true, users must provide TOTP code after password authentication.
+     */
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean mfaEnabled = false;
+
+    /**
+     * Encrypted TOTP secret key for MFA.
+     * Generated when MFA is first enabled.
+     */
+    @JsonIgnore
+    @Column(length = 255)
+    private String mfaSecret;
+
+    /**
+     * MFA recovery codes (comma-separated, encrypted).
+     * Used when user loses access to authenticator app.
+     */
+    @JsonIgnore
+    @Column(length = 1000)
+    private String mfaRecoveryCodes;
+
+    /**
+     * Timestamp when MFA was enabled.
+     */
+    @Column
+    private Instant mfaEnabledAt;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -162,6 +192,13 @@ public class User {
      */
     public boolean hasAccessToTenant(String tenantId) {
         return tenantIds != null && tenantIds.contains(tenantId);
+    }
+
+    /**
+     * Check if MFA is enabled and configured for this user.
+     */
+    public boolean isMfaConfigured() {
+        return Boolean.TRUE.equals(mfaEnabled) && mfaSecret != null && !mfaSecret.isBlank();
     }
 
     /**

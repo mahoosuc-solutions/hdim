@@ -49,8 +49,8 @@ HDIM is built on FHIR R4, the modern healthcare interoperability standard. Our i
 │   │                    INTEGRATION HUB                                  │   │
 │   │                                                                     │   │
 │   │   ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐       │   │
-│   │   │   FHIR    │  │   HL7v2   │  │   CSV/    │  │  Custom   │       │   │
-│   │   │   R4      │  │  (Future) │  │   Excel   │  │   API     │       │   │
+│   │   │   FHIR    │  │   n8n     │  │   CSV/    │  │  Custom   │       │   │
+│   │   │   R4      │  │  Workflows│  │   Excel   │  │   API     │       │   │
 │   │   └───────────┘  └───────────┘  └───────────┘  └───────────┘       │   │
 │   │                                                                     │   │
 │   └─────────────────────────────────────────────────────────────────────┘   │
@@ -247,7 +247,7 @@ Q1        Q2        Q3        Q4        Q1        Q2        Q3        Q4
 **Integration Approach:**
 - eCW FHIR APIs
 - eCW proprietary APIs (where needed)
-- HL7v2 interfaces (legacy option)
+- n8n workflow automation (custom/legacy)
 
 ---
 
@@ -369,7 +369,7 @@ For organizations without API access:
 | **Excel** | ✅ | Complex data with multiple sheets |
 | **FHIR Bundle (JSON)** | ✅ | Standard FHIR export files |
 | **CCDA (XML)** | ✅ | Clinical document exchange |
-| **HL7v2** | 🔄 Planned | Legacy interfaces |
+| **n8n Workflows** | ✅ Available | Custom/legacy integrations |
 
 **CSV Templates Available:**
 - Patient demographics
@@ -418,6 +418,84 @@ For customers with existing data warehouses:
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+### 4.5 n8n Workflow Automation (Custom/Legacy)
+
+For customers with legacy systems, custom requirements, or non-standard data sources, we use **n8n** — an open-source workflow automation platform — to build rapid, custom integrations.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      n8n WORKFLOW INTEGRATION                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │                     LEGACY / CUSTOM SOURCES                         │   │
+│   │                                                                     │   │
+│   │   ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐   │   │
+│   │   │  HL7v2  │  │  SFTP   │  │ Custom  │  │  Email  │  │  Legacy │   │   │
+│   │   │ Feeds   │  │  Files  │  │  APIs   │  │  Reports│  │   DB    │   │   │
+│   │   └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘   │   │
+│   │        │            │            │            │            │        │   │
+│   └────────┼────────────┼────────────┼────────────┼────────────┼────────┘   │
+│            │            │            │            │            │            │
+│            └────────────┴─────┬──────┴────────────┴────────────┘            │
+│                               ▼                                             │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │                        n8n WORKFLOW ENGINE                          │   │
+│   │                                                                     │   │
+│   │   ┌───────────┐    ┌───────────┐    ┌───────────┐                   │   │
+│   │   │  Extract  │───►│ Transform │───►│   Load    │                   │   │
+│   │   │  (Parse)  │    │ (Map to   │    │ (FHIR to  │                   │   │
+│   │   │           │    │  FHIR)    │    │  HDIM)    │                   │   │
+│   │   └───────────┘    └───────────┘    └───────────┘                   │   │
+│   │                                                                     │   │
+│   │   • Scheduled or real-time triggers                                 │   │
+│   │   • Data validation and error handling                              │   │
+│   │   • Audit logging                                                   │   │
+│   │   • Retry logic                                                     │   │
+│   │                                                                     │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                               │                                             │
+│                               ▼                                             │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │                    HDIM FHIR API                                    │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Why n8n:**
+- Open-source, no vendor lock-in
+- 400+ pre-built connectors
+- Visual workflow builder (rapid development)
+- Can run on-premise or cloud
+- Per-customer customization without code changes to HDIM
+
+**Deployment Options:**
+
+| Option | Description | Best For |
+|--------|-------------|----------|
+| **HDIM-Managed Cloud** | We host n8n, build and maintain workflows | Most customers |
+| **Customer On-Premise** | n8n runs in customer datacenter | Strict data requirements |
+| **Hybrid** | n8n on-prem, connects to HDIM cloud | Balanced approach |
+
+**Common Use Cases:**
+
+| Source | Workflow | Frequency |
+|--------|----------|-----------|
+| HL7v2 ADT feeds | Parse → Map to Patient/Encounter → HDIM | Real-time |
+| Lab result files (CSV/HL7) | Parse → Map to Observation → HDIM | Hourly |
+| Claims clearinghouse | Fetch → Map to Claim → HDIM | Nightly |
+| Legacy EHR exports | SFTP pickup → Transform → HDIM | Scheduled |
+| Custom data warehouse | SQL query → FHIR mapping → HDIM | On-demand |
+
+**Typical Implementation:**
+- 3-5 days for standard workflows
+- Customer provides sample data and documentation
+- HDIM builds, tests, and deploys workflow
+- Ongoing monitoring and maintenance included
 
 ---
 
@@ -676,7 +754,7 @@ HDIM only requests the minimum data needed for quality measurement:
 |-----------|------|-------|
 | **Standard FHIR Integration** | Included | Epic, Cerner, athena (when available) |
 | **Custom Integration Setup** | $2,500 one-time | Non-standard EHRs |
-| **HL7v2 Interface** | $5,000 one-time | Legacy systems |
+| **n8n Custom Workflow** | $1,500-5,000 | Per-customer automation |
 | **HIE Connection** | $2,500-5,000 | Depends on HIE |
 | **Custom Development** | $150/hour | Beyond standard scope |
 

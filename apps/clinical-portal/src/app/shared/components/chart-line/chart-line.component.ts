@@ -186,17 +186,8 @@ export class ChartLineComponent implements OnInit, OnChanges, AfterViewInit, OnD
   }
 
   private async loadChartJS(): Promise<void> {
-    try {
-      // Note: In a real implementation, you would:
-      // 1. Install: npm install chart.js
-      // 2. Import: import { Chart, registerables } from 'chart.js';
-      // 3. Register: Chart.register(...registerables);
-
-      // For this implementation, we'll use a placeholder
-      console.log('Chart.js would be loaded here');
-    } catch (error) {
-      console.error('Failed to load Chart.js:', error);
-    }
+    // Chart.js integration placeholder
+    // To enable: npm install chart.js, then import and register Chart
   }
 
   private renderChart(): void {
@@ -211,12 +202,9 @@ export class ChartLineComponent implements OnInit, OnChanges, AfterViewInit, OnD
 
     const chartConfig = this.buildChartConfig();
 
-    // Placeholder: In real implementation, create Chart.js instance
-    console.log('Chart configuration:', chartConfig);
-
-    // Simulate chart rendering
+    // Draw placeholder visualization until Chart.js is integrated
     this.drawPlaceholderChart(ctx);
-    this.chartInstance = { /* Chart.js instance */ };
+    this.chartInstance = { config: chartConfig };
   }
 
   private buildChartConfig(): any {

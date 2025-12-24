@@ -185,7 +185,6 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
       this.allMeasures = measures;
       this.measures = measures;
       this.loadingMeasures = false;
-      console.log(`Loaded ${measures.length} HEDIS measures:`, measures);
     });
   }
 
@@ -204,7 +203,6 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     if (currentMeasureId && !this.measures.some(m => m.name === currentMeasureId)) {
       this.evaluationForm.patchValue({ measureId: '' });
     }
-    console.log(`Filtered to ${this.measures.length} measures in category: ${category || 'All'}`);
   }
 
   /**
@@ -234,7 +232,6 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     ).subscribe((patients) => {
       this.patients = patients;
       this.loadingPatients = false;
-      console.log('Loaded patients:', patients);
     });
   }
 
@@ -279,7 +276,6 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
    */
   onPatientSelected(patient: PatientSummary): void {
     this.selectedPatient = patient;
-    console.log('Selected patient:', patient);
   }
 
   /**
@@ -297,8 +293,6 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
 
     const measureId = this.evaluationForm.value.measureId;
     const patientId = this.selectedPatient.id;
-
-    console.log('Submitting evaluation:', { measureId, patientId });
 
     // Record measure usage for recent tracking
     const selectedMeasure = this.allMeasures.find(m => m.name === measureId);
@@ -319,7 +313,6 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     ).subscribe((result) => {
       if (result) {
         this.evaluationResult = result;
-        console.log('Evaluation result:', result);
       }
       this.submitting = false;
     });
@@ -591,9 +584,5 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     });
 
     this.bulkOperationInProgress = false;
-
-    // In a real implementation, you would call a service method here
-    // For now, we just update the UI
-    console.log(`Deleted ${deletedCount} evaluations`);
   }
 }

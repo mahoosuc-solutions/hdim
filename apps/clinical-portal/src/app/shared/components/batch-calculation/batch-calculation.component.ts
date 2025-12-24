@@ -73,7 +73,6 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          console.log('Batch calculation started:', response);
           this.isCalculating = true;
           this.isLoading = false;
 
@@ -130,8 +129,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
       .cancelJob(this.activeJob.jobId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
-          console.log('Job cancelled:', response);
+        next: () => {
           this.isCalculating = false;
           this.loadJobHistory();
         },

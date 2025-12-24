@@ -18,5 +18,7 @@
     <include file="db/changelog/0010-convert-to-jsonb-and-add-indexes.xml"/>
     <include file="db/changelog/0011-convert-cql-evaluations-patient-id-to-uuid.xml"/>
     <include file="db/changelog/0012-seed-hedis-measures.xml"/>
+    <!-- MFA (Multi-Factor Authentication) support -->
+    <include file="db/changelog/0013-add-mfa-columns-to-users.xml"/>
 
 </databaseChangeLog>

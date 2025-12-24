@@ -3,16 +3,20 @@ import { inject } from '@angular/core';
 import { catchError, throwError, switchMap } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
-import { HTTP_HEADERS } from '../config/api.config';
 
 /**
- * JWT Interceptor - Adds JWT token to requests and handles 401 errors
+ * JWT Interceptor - Handles 401 errors with automatic token refresh
+ *
+ * SECURITY (HIPAA Compliant):
+ * - JWT tokens are stored in HttpOnly cookies (XSS protected)
+ * - Cookies are automatically sent with requests via withCredentials: true
+ * - No explicit Authorization header needed - browser handles cookie transmission
+ * - On 401, refreshToken() is called which sets new HttpOnly cookies
  *
  * Features:
- * - Adds Authorization header with JWT token
- * - Handles 401 Unauthorized responses with token refresh
+ * - Handles 401 Unauthorized responses with automatic token refresh
  * - Redirects to login on authentication failure
- * - Skips authentication for public endpoints
+ * - Skips refresh logic for public endpoints
  */
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
@@ -33,46 +37,28 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
-  // Get the JWT token
-  const token = authService.getToken();
+  // Pass request through - JWT auth is handled via HttpOnly cookies
+  // Cookies are automatically sent with withCredentials: true (set in api.service.ts)
+  return next(req).pipe(
+    catchError((error: HttpErrorResponse) => {
+      if (error.status === 401) {
+        // Token expired or invalid, try to refresh
+        // refreshToken() will get new HttpOnly cookies from the server
+        return authService.refreshToken().pipe(
+          switchMap(() => {
+            // Retry the request - new cookies are automatically included
+            return next(req);
+          }),
+          catchError((refreshError) => {
+            // Refresh failed, logout and redirect to login
+            authService.logout();
+            router.navigate(['/login']);
+            return throwError(() => refreshError);
+          })
+        );
+      }
 
-  if (token) {
-    // Clone the request and add the Authorization header
-    const clonedRequest = req.clone({
-      setHeaders: {
-        [HTTP_HEADERS.AUTHORIZATION]: `Bearer ${token}`,
-      },
-    });
-
-    return next(clonedRequest).pipe(
-      catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          // Token expired or invalid, try to refresh
-          return authService.refreshToken().pipe(
-            switchMap((tokenResponse) => {
-              // Retry the request with new token
-              const retryRequest = req.clone({
-                setHeaders: {
-                  [HTTP_HEADERS.AUTHORIZATION]: `Bearer ${tokenResponse.accessToken}`,
-                },
-              });
-              return next(retryRequest);
-            }),
-            catchError((refreshError) => {
-              // Refresh failed, logout and redirect to login
-              console.error('Token refresh failed:', refreshError);
-              authService.logout();
-              router.navigate(['/login']);
-              return throwError(() => refreshError);
-            })
-          );
-        }
-
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // No token available, pass the request as is
-  return next(req);
+      return throwError(() => error);
+    })
+  );
 };

@@ -5,22 +5,21 @@ import { AuthService } from '../services/auth.service';
 
 /**
  * Auth Interceptor
- * Adds JWT Bearer token authentication to backend service requests
+ * Adds tenant context to backend service requests.
  *
- * SECURITY: Credentials are no longer hardcoded. Authentication is handled via:
- * 1. JWT tokens obtained through the AuthService login flow
- * 2. Tokens are stored securely (HttpOnly cookies in production)
- * 3. Service-to-service auth is handled by the API Gateway
+ * SECURITY (HIPAA Compliant):
+ * - JWT tokens are stored in HttpOnly cookies (XSS protected)
+ * - Cookies are automatically sent with requests via withCredentials: true
+ * - No explicit Authorization header needed - cookies handle auth
+ * - Tenant ID header is still added for multi-tenancy support
  *
- * For backend services without user context (scheduled jobs, etc.),
- * the API Gateway uses mTLS or service account tokens configured via
- * environment variables (never hardcoded).
+ * The API Gateway validates JWT from cookies and injects trusted headers
+ * for downstream services.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
 
-  // Get the JWT token from auth service
-  const token = authService.getToken();
+  // Get tenant context (still needed for multi-tenancy)
   const tenantId = authService.getTenantId();
 
   // Check if request is to backend services
@@ -29,25 +28,19 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     req.url.includes(API_CONFIG.QUALITY_MEASURE_URL) ||
     req.url.includes(API_CONFIG.FHIR_SERVER_URL);
 
-  if (isBackendService && token) {
-    // Add JWT Bearer token for authenticated requests
-    const headers: { [key: string]: string } = {
-      [HTTP_HEADERS.AUTHORIZATION]: `Bearer ${token}`,
-    };
-
-    // Add tenant context if available
-    if (tenantId) {
-      headers[HTTP_HEADERS.TENANT_ID] = tenantId;
-    }
-
+  if (isBackendService && tenantId) {
+    // Add tenant context header
+    // JWT auth is handled via HttpOnly cookies (withCredentials: true in api.service.ts)
     const clonedRequest = req.clone({
-      setHeaders: headers,
+      setHeaders: {
+        [HTTP_HEADERS.TENANT_ID]: tenantId,
+      },
     });
 
     return next(clonedRequest);
   }
 
-  // For unauthenticated requests or public endpoints, pass through
-  // The API Gateway will handle service-to-service authentication
+  // For requests without tenant context, pass through
+  // Cookies with JWT token are automatically included via withCredentials
   return next(req);
 };

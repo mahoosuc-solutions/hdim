@@ -57,20 +57,92 @@ export class AuthService {
 
   /**
    * Login with username and password
+   * Returns either LoginResponse or MfaRequiredResponse
    */
-  login(username: string, password: string): Observable<LoginResponse> {
+  login(username: string, password: string): Observable<LoginResponse | MfaRequiredResponse> {
     const url = '/auth/login';
     const body: LoginRequest = { username, password };
 
-    return this.apiService.post<LoginResponse>(url, body).pipe(
+    return this.apiService.post<LoginResponse | MfaRequiredResponse>(url, body).pipe(
       tap((response) => {
-        this.handleLoginSuccess(response);
+        // Check if MFA is required
+        if ('mfaRequired' in response && response.mfaRequired) {
+          // Don't handle login success yet - MFA verification needed
+          return;
+        }
+        // Normal login success
+        this.handleLoginSuccess(response as LoginResponse);
       }),
       catchError((error) => {
         console.error('Login error:', error);
         return throwError(() => error);
       })
     );
+  }
+
+  /**
+   * Verify MFA code and complete login
+   */
+  verifyMfa(mfaToken: string, code: string, useRecoveryCode = false): Observable<LoginResponse> {
+    const url = '/auth/mfa/verify';
+    const body: MfaVerifyRequest = { mfaToken, code, useRecoveryCode };
+
+    return this.apiService.post<LoginResponse>(url, body).pipe(
+      tap((response) => {
+        this.handleLoginSuccess(response);
+      }),
+      catchError((error) => {
+        console.error('MFA verification error:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Initialize MFA setup - returns QR code
+   */
+  setupMfa(): Observable<MfaSetupResponse> {
+    const url = '/auth/mfa/setup';
+    return this.apiService.post<MfaSetupResponse>(url, {});
+  }
+
+  /**
+   * Confirm MFA setup with TOTP code
+   */
+  confirmMfaSetup(code: string): Observable<MfaRecoveryCodesResponse> {
+    const url = '/auth/mfa/confirm';
+    return this.apiService.post<MfaRecoveryCodesResponse>(url, { code });
+  }
+
+  /**
+   * Disable MFA
+   */
+  disableMfa(code: string): Observable<void> {
+    const url = '/auth/mfa/disable';
+    return this.apiService.post<void>(url, { code });
+  }
+
+  /**
+   * Get MFA status
+   */
+  getMfaStatus(): Observable<MfaStatusResponse> {
+    const url = '/auth/mfa/status';
+    return this.apiService.get<MfaStatusResponse>(url);
+  }
+
+  /**
+   * Regenerate recovery codes
+   */
+  regenerateRecoveryCodes(code: string): Observable<MfaRecoveryCodesResponse> {
+    const url = '/auth/mfa/recovery-codes';
+    return this.apiService.post<MfaRecoveryCodesResponse>(url, { code });
+  }
+
+  /**
+   * Check if response indicates MFA is required
+   */
+  isMfaRequired(response: LoginResponse | MfaRequiredResponse): response is MfaRequiredResponse {
+    return 'mfaRequired' in response && response.mfaRequired === true;
   }
 
   /**
@@ -405,6 +477,37 @@ export interface LoginResponse {
   tokenType: string;
   expiresIn: number;
   user: User;
+  mfaEnabled?: boolean;
+}
+
+export interface MfaRequiredResponse {
+  mfaRequired: boolean;
+  mfaToken: string;
+  message: string;
+}
+
+export interface MfaVerifyRequest {
+  mfaToken: string;
+  code: string;
+  useRecoveryCode?: boolean;
+}
+
+export interface MfaSetupResponse {
+  secret: string;
+  qrCodeDataUri: string;
+  issuer: string;
+  username: string;
+}
+
+export interface MfaStatusResponse {
+  mfaEnabled: boolean;
+  enabledAt?: string;
+  remainingRecoveryCodes?: number;
+}
+
+export interface MfaRecoveryCodesResponse {
+  recoveryCodes: string[];
+  message: string;
 }
 
 export interface TokenResponse {

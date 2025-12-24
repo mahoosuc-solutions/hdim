@@ -63,7 +63,7 @@ export interface AppError {
   userMessage: string;
   severity: ErrorSeverity;
   timestamp: Date;
-  details?: any;
+  details?: Record<string, unknown>;
   stack?: string;
   requestId?: string;
 }
@@ -75,7 +75,7 @@ export class ErrorFactory {
   /**
    * Create a network error
    */
-  static createNetworkError(details?: any): AppError {
+  static createNetworkError(details?: Record<string, unknown>): AppError {
     return {
       code: ErrorCode.NETWORK_ERROR,
       message: 'Network request failed',
@@ -89,7 +89,7 @@ export class ErrorFactory {
   /**
    * Create a timeout error
    */
-  static createTimeoutError(details?: any): AppError {
+  static createTimeoutError(details?: Record<string, unknown>): AppError {
     return {
       code: ErrorCode.TIMEOUT_ERROR,
       message: 'Request timed out',
@@ -103,7 +103,7 @@ export class ErrorFactory {
   /**
    * Create an unauthorized error
    */
-  static createUnauthorizedError(details?: any): AppError {
+  static createUnauthorizedError(details?: Record<string, unknown>): AppError {
     return {
       code: ErrorCode.UNAUTHORIZED,
       message: 'User not authenticated',
@@ -145,7 +145,7 @@ export class ErrorFactory {
   /**
    * Create a FHIR service error
    */
-  static createFhirServiceError(operation: string, details?: any): AppError {
+  static createFhirServiceError(operation: string, details?: Record<string, unknown>): AppError {
     return {
       code: ErrorCode.FHIR_SERVICE_ERROR,
       message: `FHIR service error during ${operation}`,
@@ -159,7 +159,7 @@ export class ErrorFactory {
   /**
    * Create a CQL engine error
    */
-  static createCqlEngineError(operation: string, details?: any): AppError {
+  static createCqlEngineError(operation: string, details?: Record<string, unknown>): AppError {
     return {
       code: ErrorCode.CQL_ENGINE_ERROR,
       message: `CQL engine error during ${operation}`,
@@ -173,7 +173,7 @@ export class ErrorFactory {
   /**
    * Create an evaluation error
    */
-  static createEvaluationError(patientId: string, measureId: string, details?: any): AppError {
+  static createEvaluationError(patientId: string, measureId: string, details?: Record<string, unknown>): AppError {
     return {
       code: ErrorCode.EVALUATION_ERROR,
       message: `Evaluation failed for patient ${patientId} and measure ${measureId}`,
@@ -187,7 +187,7 @@ export class ErrorFactory {
   /**
    * Create a data loading error
    */
-  static createDataLoadingError(dataType: string, details?: any): AppError {
+  static createDataLoadingError(dataType: string, details?: Record<string, unknown>): AppError {
     return {
       code: ErrorCode.DATA_LOADING_ERROR,
       message: `Failed to load ${dataType}`,
@@ -201,7 +201,7 @@ export class ErrorFactory {
   /**
    * Create a data save error
    */
-  static createDataSaveError(dataType: string, details?: any): AppError {
+  static createDataSaveError(dataType: string, details?: Record<string, unknown>): AppError {
     return {
       code: ErrorCode.DATA_SAVE_ERROR,
       message: `Failed to save ${dataType}`,
@@ -215,7 +215,7 @@ export class ErrorFactory {
   /**
    * Create a data delete error
    */
-  static createDataDeleteError(dataType: string, itemId: string, details?: any): AppError {
+  static createDataDeleteError(dataType: string, itemId: string, details?: Record<string, unknown>): AppError {
     return {
       code: ErrorCode.DATA_DELETE_ERROR,
       message: `Failed to delete ${dataType}: ${itemId}`,
@@ -229,7 +229,7 @@ export class ErrorFactory {
   /**
    * Create an export error
    */
-  static createExportError(format: string, details?: any): AppError {
+  static createExportError(format: string, details?: Record<string, unknown>): AppError {
     return {
       code: ErrorCode.EXPORT_ERROR,
       message: `Failed to export data to ${format}`,
@@ -243,26 +243,28 @@ export class ErrorFactory {
   /**
    * Create a generic error from an unknown error
    */
-  static createFromError(error: any): AppError {
+  static createFromError(error: unknown): AppError {
     if (error && typeof error === 'object' && 'code' in error) {
       return error as AppError;
     }
 
+    const errorObj = error as { message?: string; stack?: string };
+
     return {
       code: ErrorCode.UNKNOWN_ERROR,
-      message: error?.message || 'An unknown error occurred',
+      message: errorObj?.message || 'An unknown error occurred',
       userMessage: 'An unexpected error occurred. Please try again or contact support if the problem persists.',
       severity: ErrorSeverity.ERROR,
       timestamp: new Date(),
-      details: error,
-      stack: error?.stack,
+      details: error ? { originalError: String(error) } : undefined,
+      stack: errorObj?.stack,
     };
   }
 
   /**
    * Convert HTTP status code to appropriate error
    */
-  static createFromHttpError(status: number, statusText: string, details?: any): AppError {
+  static createFromHttpError(status: number, statusText: string, details?: Record<string, unknown>): AppError {
     switch (status) {
       case 401:
         return this.createUnauthorizedError(details);

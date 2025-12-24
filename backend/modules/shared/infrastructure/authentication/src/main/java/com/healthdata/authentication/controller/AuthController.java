@@ -5,12 +5,14 @@ import com.healthdata.authentication.domain.User;
 import com.healthdata.authentication.dto.*;
 import com.healthdata.authentication.entity.RefreshToken;
 import com.healthdata.authentication.repository.UserRepository;
+import com.healthdata.authentication.service.CookieService;
 import com.healthdata.authentication.service.JwtTokenService;
 import com.healthdata.authentication.service.LogoutService;
 import com.healthdata.authentication.service.MfaService;
 import com.healthdata.authentication.service.MfaTokenService;
 import com.healthdata.authentication.service.RefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,20 +74,27 @@ public class AuthController {
     private final JwtConfig jwtConfig;
     private final MfaService mfaService;
     private final MfaTokenService mfaTokenService;
+    private final CookieService cookieService;
 
     /**
      * Authenticate user with username/password.
      * Returns JWT access and refresh tokens, or MFA challenge if MFA is enabled.
      *
+     * SECURITY: Tokens are also set as HttpOnly cookies for XSS protection.
+     * Clients can use either the response body tokens (legacy) or cookies.
+     * For maximum security, use HttpOnly cookies with withCredentials: true.
+     *
      * @param loginRequest Login credentials
      * @param httpRequest HTTP request for IP tracking
+     * @param httpResponse HTTP response for setting cookies
      * @return JwtAuthenticationResponse with tokens, or MfaRequiredResponse if MFA is enabled
      * @throws ResponseStatusException 401 if credentials are invalid or account is locked/disabled
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(
         @Valid @RequestBody LoginRequest loginRequest,
-        HttpServletRequest httpRequest
+        HttpServletRequest httpRequest,
+        HttpServletResponse httpResponse
     ) {
         log.info("Login attempt for user: {}", loginRequest.getUsername());
 
@@ -143,7 +152,12 @@ public class AuthController {
             log.info("Authentication successful for user {} from IP: {}",
                 user.getUsername(), extractIpAddress(httpRequest));
 
-            // Build JWT response
+            // SECURITY: Set tokens as HttpOnly cookies for XSS protection
+            cookieService.setAccessTokenCookie(httpResponse, accessToken);
+            cookieService.setRefreshTokenCookie(httpResponse, refreshToken);
+            log.debug("Set HttpOnly cookies for user: {}", user.getUsername());
+
+            // Build JWT response (tokens also included for legacy client support)
             JwtAuthenticationResponse response = JwtAuthenticationResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -269,24 +283,41 @@ public class AuthController {
     /**
      * Refresh access token using refresh token.
      *
-     * @param request Refresh token request
-     * @param httpRequest HTTP request for IP tracking
+     * Supports both:
+     * - Cookie-based refresh: Reads refresh token from HttpOnly cookie
+     * - Body-based refresh: Reads refresh token from request body (legacy)
+     *
+     * @param request Refresh token request (optional if using cookies)
+     * @param httpRequest HTTP request for IP tracking and cookie reading
+     * @param httpResponse HTTP response for setting new cookies
      * @return New JWT access token (and optionally rotated refresh token)
      * @throws ResponseStatusException 401 if refresh token is invalid
      */
     @PostMapping("/refresh")
     public ResponseEntity<JwtAuthenticationResponse> refreshToken(
-        @Valid @RequestBody RefreshTokenRequest request,
-        HttpServletRequest httpRequest
+        @RequestBody(required = false) RefreshTokenRequest request,
+        HttpServletRequest httpRequest,
+        HttpServletResponse httpResponse
     ) {
         log.info("Token refresh attempt");
 
         try {
+            // Get refresh token from cookie first, then fall back to body
+            String refreshToken = cookieService.getRefreshTokenFromCookie(httpRequest)
+                .orElse(request != null ? request.getRefreshToken() : null);
+
+            if (refreshToken == null || refreshToken.isBlank()) {
+                log.warn("No refresh token provided");
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No refresh token provided");
+            }
+
             // Validate refresh token and get user
-            Optional<User> userOpt = refreshTokenService.getUserFromRefreshToken(request.getRefreshToken());
+            Optional<User> userOpt = refreshTokenService.getUserFromRefreshToken(refreshToken);
 
             if (userOpt.isEmpty()) {
                 log.warn("Invalid or expired refresh token");
+                // Clear cookies if invalid
+                cookieService.clearAuthCookies(httpResponse);
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
             }
 
@@ -295,6 +326,7 @@ public class AuthController {
             // Verify user account is still active
             if (!user.isAccountActive()) {
                 log.warn("Inactive account attempted token refresh: {}", user.getUsername());
+                cookieService.clearAuthCookies(httpResponse);
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Account is inactive");
             }
 
@@ -307,10 +339,14 @@ public class AuthController {
             String newRefreshToken = jwtTokenService.generateRefreshToken(user);
 
             // Revoke old refresh token
-            refreshTokenService.revokeRefreshToken(request.getRefreshToken());
+            refreshTokenService.revokeRefreshToken(refreshToken);
 
             // Store new refresh token
             refreshTokenService.createRefreshToken(user, newRefreshToken, httpRequest);
+
+            // SECURITY: Set new tokens as HttpOnly cookies
+            cookieService.setAccessTokenCookie(httpResponse, newAccessToken);
+            cookieService.setRefreshTokenCookie(httpResponse, newRefreshToken);
 
             // Build response
             JwtAuthenticationResponse response = JwtAuthenticationResponse.builder()
@@ -337,17 +373,20 @@ public class AuthController {
 
     /**
      * Logout current user.
-     * Revokes the refresh token to invalidate the session.
+     * Revokes the refresh token and clears HttpOnly cookies.
      *
-     * @param request Refresh token request (optional in body)
+     * @param request Refresh token request (optional if using cookies)
      * @param authentication Current authentication
+     * @param httpRequest HTTP request for reading cookies
+     * @param httpResponse HTTP response for clearing cookies
      * @return Empty response with 200 OK
      */
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
         @RequestBody(required = false) RefreshTokenRequest request,
         Authentication authentication,
-        HttpServletRequest httpRequest
+        HttpServletRequest httpRequest,
+        HttpServletResponse httpResponse
     ) {
         if (authentication != null && authentication.isAuthenticated()) {
             String username = authentication.getName();
@@ -360,14 +399,20 @@ public class AuthController {
             // See: /backend/HIPAA-CACHE-COMPLIANCE.md
             logoutService.performLogout(username);
 
-            // Revoke refresh token if provided
-            if (request != null && request.getRefreshToken() != null) {
-                refreshTokenService.revokeRefreshToken(request.getRefreshToken());
+            // Revoke refresh token from cookie first, then fall back to body
+            String refreshToken = cookieService.getRefreshTokenFromCookie(httpRequest)
+                .orElse(request != null ? request.getRefreshToken() : null);
+
+            if (refreshToken != null && !refreshToken.isBlank()) {
+                refreshTokenService.revokeRefreshToken(refreshToken);
             }
 
             // Clear security context
             SecurityContextHolder.clearContext();
         }
+
+        // SECURITY: Always clear cookies on logout (even if not authenticated)
+        cookieService.clearAuthCookies(httpResponse);
 
         return ResponseEntity.ok().build();
     }

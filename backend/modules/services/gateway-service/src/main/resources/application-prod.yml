@@ -87,12 +87,31 @@ backend:
 # Gateway Feature Flags
 gateway:
   auth:
-    enforced: ${AUTH_ENFORCED:true}
+    # ⚠️ SECURITY: Authentication MUST be enabled and enforced in production
+    enabled: true
+    enforced: true  # CRITICAL: Must be true - prevents demo mode bypass
+    # ⚠️ SECURITY: MUST be provided via GATEWAY_AUTH_SIGNING_SECRET env var
+    # Generate with: openssl rand -base64 32
+    header-signing-secret: ${GATEWAY_AUTH_SIGNING_SECRET:}
+    signature-validity-seconds: 300
+    # ⚠️ SECURITY: Must be true to prevent header injection attacks
+    strip-external-auth-headers: true
+    # Required for HIPAA compliance
+    audit-logging: true
+    # Rate limiting to prevent brute force attacks
+    rate-limit:
+      enabled: true
+      login-attempts-per-minute: 5
+      refresh-attempts-per-minute: 10
+      block-duration-seconds: 600  # 10 minutes
   cors:
     enabled: true
-    allowed-origins: ${CORS_ORIGINS:http://localhost:4200,http://localhost:4201,http://localhost:4202}
+    # ⚠️ SECURITY: Configure allowed origins for your production domains
+    allowed-origins: ${CORS_ORIGINS:}
   rate-limit:
-    enabled: false
+    enabled: true
+    requests-per-second: 50
+    burst-capacity: 100
 
 # Actuator Endpoints
 management:

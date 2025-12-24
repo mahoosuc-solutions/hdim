@@ -317,7 +317,6 @@ public class CqlEvaluationControllerIntegrationTest extends CqlTestcontainersBas
     @Test
     @Order(17)
     @DisplayName("Should perform batch evaluation")
-    @org.junit.jupiter.api.Disabled("TODO: Fix template engine/security setup - currently returns 400")
     void testBatchEvaluate() throws Exception {
         List<UUID> patientIds = Arrays.asList(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
         String requestBody = objectMapper.writeValueAsString(patientIds);

@@ -58,6 +58,39 @@ export interface ProblematicMedication {
 }
 
 /**
+ * FHIR Timing resource (simplified)
+ */
+export interface FhirTiming {
+  repeat?: {
+    boundsPeriod?: {
+      start?: string;
+      end?: string;
+    };
+    count?: number;
+    countMax?: number;
+    duration?: number;
+    durationMax?: number;
+    durationUnit?: 's' | 'min' | 'h' | 'd' | 'wk' | 'mo' | 'a';
+    frequency?: number;
+    frequencyMax?: number;
+    period?: number;
+    periodMax?: number;
+    periodUnit?: 's' | 'min' | 'h' | 'd' | 'wk' | 'mo' | 'a';
+    dayOfWeek?: string[];
+    timeOfDay?: string[];
+    when?: string[];
+  };
+  code?: {
+    coding?: Array<{
+      system?: string;
+      code?: string;
+      display?: string;
+    }>;
+    text?: string;
+  };
+}
+
+/**
  * FHIR MedicationRequest resource (simplified)
  */
 export interface MedicationRequest {
@@ -73,7 +106,7 @@ export interface MedicationRequest {
   };
   dosageInstruction?: Array<{
     text?: string;
-    timing?: any;
+    timing?: FhirTiming;
   }>;
   dispenseRequest?: {
     expectedSupplyDuration?: {

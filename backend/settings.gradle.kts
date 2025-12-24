@@ -26,7 +26,8 @@ include(
     "modules:shared:infrastructure:persistence",
     "modules:shared:infrastructure:authentication",
     "modules:shared:infrastructure:api-docs",
-    "modules:shared:infrastructure:tracing"
+    "modules:shared:infrastructure:tracing",
+    "modules:shared:infrastructure:metrics"
 )
 
 // Shared API Contracts

@@ -12,12 +12,16 @@
 
 This risk assessment identifies, analyzes, and prioritizes information security risks to HDIM's systems and data. It provides the foundation for risk-based security decisions and control implementation.
 
-**Overall Risk Level:** MODERATE
+**Overall Risk Level:** MODERATE (Improving)
 
 **Key Findings:**
-- 3 High risks identified (requiring immediate attention)
-- 8 Medium risks identified (requiring near-term attention)
+- ~~3~~ 1 High risk identified (requiring immediate attention)
+- ~~8~~ 10 Medium risks identified (2 reduced from Critical)
 - 12 Low risks identified (acceptable with monitoring)
+
+**Recently Resolved:**
+- ✅ RISK-001: MFA implemented (commit c6c2e9d)
+- ✅ RISK-002: Vulnerability scanning added to CI/CD (commit 61e4388)
 
 ---
 
@@ -71,14 +75,14 @@ Risk = Likelihood × Impact
 | **Category** | Access Control |
 | **Threat** | Account compromise via stolen credentials |
 | **Vulnerability** | Single-factor authentication |
-| **Likelihood** | High (4) |
+| **Likelihood** | Low (2) |
 | **Impact** | High (4) |
-| **Risk Score** | **16 (Critical)** |
-| **Current Controls** | Strong passwords, account lockout |
-| **Recommended Controls** | Implement TOTP-based MFA |
+| **Risk Score** | **8 (Medium)** (Residual after MFA) |
+| **Current Controls** | Strong passwords, account lockout, **TOTP-based MFA** |
+| **Recommended Controls** | ~~Implement TOTP-based MFA~~ **IMPLEMENTED** |
 | **Owner** | Engineering |
 | **Target Date** | 30 days |
-| **Status** | Open |
+| **Status** | **RESOLVED** - MFA implemented (commit c6c2e9d) |
 
 #### RISK-002: No Automated Vulnerability Scanning
 
@@ -87,14 +91,14 @@ Risk = Likelihood × Impact
 | **Category** | System Operations |
 | **Threat** | Exploitation of known vulnerabilities |
 | **Vulnerability** | No continuous vulnerability detection |
-| **Likelihood** | Medium (3) |
-| **Impact** | Critical (5) |
-| **Risk Score** | **15 (Critical)** |
-| **Current Controls** | Manual reviews, dependency updates |
-| **Recommended Controls** | Implement Snyk/Trivy in CI/CD |
+| **Likelihood** | Low (2) |
+| **Impact** | High (4) |
+| **Risk Score** | **8 (Medium)** (Residual after scanning) |
+| **Current Controls** | **Trivy container scanning, OWASP Dependency Check, CodeQL SAST, Gitleaks secret detection, Dependabot automated updates** |
+| **Recommended Controls** | ~~Implement Snyk/Trivy in CI/CD~~ **IMPLEMENTED** |
 | **Owner** | Engineering |
 | **Target Date** | 14 days |
-| **Status** | Open |
+| **Status** | **RESOLVED** - Security scanning added to CI/CD (commit 61e4388) |
 
 #### RISK-003: No Formal Incident Response Testing
 

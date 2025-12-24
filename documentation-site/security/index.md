@@ -80,6 +80,49 @@ launch/patient     - Patient launch context
 launch/encounter   - Encounter launch context
 ```
 
+### Multi-Factor Authentication (MFA)
+
+HDIM supports TOTP-based MFA using standard authenticator apps.
+
+| Property | Value |
+|----------|-------|
+| Algorithm | TOTP (RFC 6238) |
+| Hash | HMAC-SHA1 |
+| Digits | 6 |
+| Period | 30 seconds |
+| Recovery Codes | 8 single-use codes |
+
+**Supported Authenticator Apps:**
+- Google Authenticator
+- Authy
+- Microsoft Authenticator
+- 1Password
+- Any TOTP-compatible app
+
+**MFA Flow:**
+```
+1. User enters username/password
+2. If MFA enabled, server returns mfaToken (5-min TTL)
+3. User enters TOTP code from authenticator
+4. Server validates code and returns JWT tokens
+```
+
+**MFA API Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/auth/mfa/setup` | POST | Initialize MFA (returns QR code) |
+| `/api/v1/auth/mfa/confirm` | POST | Confirm setup with TOTP code |
+| `/api/v1/auth/mfa/verify` | POST | Complete login with MFA code |
+| `/api/v1/auth/mfa/disable` | POST | Disable MFA (requires code) |
+| `/api/v1/auth/mfa/status` | GET | Check MFA status |
+| `/api/v1/auth/mfa/recovery-codes` | POST | Regenerate recovery codes |
+
+**Recovery Codes:**
+- 8 single-use codes generated at setup
+- Can be regenerated (invalidates old codes)
+- Used when authenticator is unavailable
+- Each code can only be used once
+
 ### Centralized Gateway Authentication
 
 All requests authenticate at the API Gateway, which:
@@ -88,6 +131,7 @@ All requests authenticate at the API Gateway, which:
 2. Extracts user identity and permissions
 3. Injects secure headers for downstream services
 4. Strips external auth headers (prevents injection)
+5. **Validates MFA tokens during two-factor login**
 
 **Injected Headers:**
 | Header | Purpose |
@@ -316,7 +360,7 @@ Retry-After: 60
 | §164.312(a)(2)(iii) Automatic Logoff | 15-min session timeout |
 | §164.312(b) Audit Controls | Comprehensive audit logging |
 | §164.312(c)(1) Integrity Controls | Input validation, checksums |
-| §164.312(d) Authentication | JWT, OAuth 2.0 |
+| §164.312(d) Authentication | JWT, OAuth 2.0, **TOTP MFA** |
 | §164.312(e)(1) Transmission Security | TLS 1.3 |
 | §164.312(e)(2)(ii) Encryption | AES-256-GCM |
 

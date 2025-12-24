@@ -12,7 +12,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, MfaRequiredResponse } from '../../services/auth.service';
+import { MfaVerifyComponent } from './mfa-verify.component';
 
 /**
  * Login Component - Handles user authentication
@@ -40,6 +41,7 @@ import { AuthService } from '../../services/auth.service';
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatCheckboxModule,
+    MfaVerifyComponent,
   ],
   template: `
     <div class="login-container">
@@ -52,6 +54,16 @@ import { AuthService } from '../../services/auth.service';
         </mat-card-header>
 
         <mat-card-content>
+          <!-- MFA Verification Step -->
+          @if (showMfaVerify) {
+            <app-mfa-verify
+              [isLoading]="isLoading"
+              [errorMessage]="mfaErrorMessage"
+              (verify)="onMfaVerify($event)"
+              (cancel)="onMfaCancelled()"
+            ></app-mfa-verify>
+          } @else {
+          <!-- Login Form -->
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Username</mat-label>
@@ -132,6 +144,7 @@ import { AuthService } from '../../services/auth.service';
               <mat-icon>science</mat-icon>
               <span>Demo Login</span>
             </button>
+          }
           }
         </mat-card-content>
 
@@ -294,6 +307,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   isDemoMode = true; // Enable demo mode for development
   returnUrl = '/dashboard';
 
+  // MFA state
+  showMfaVerify = false;
+  mfaToken = '';
+  mfaErrorMessage = '';
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -337,7 +355,17 @@ export class LoginComponent implements OnInit, OnDestroy {
       .login(username, password)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
+        next: (response) => {
+          // Check if MFA is required
+          if (this.authService.isMfaRequired(response)) {
+            this.isLoading = false;
+            this.mfaToken = (response as MfaRequiredResponse).mfaToken;
+            this.showMfaVerify = true;
+            this.mfaErrorMessage = '';
+            return;
+          }
+
+          // Normal login success
           this.snackBar.open('Login successful!', 'Close', {
             duration: 3000,
             panelClass: ['success-snackbar'],
@@ -362,6 +390,45 @@ export class LoginComponent implements OnInit, OnDestroy {
           });
         },
       });
+  }
+
+  /**
+   * Handle MFA verification
+   */
+  onMfaVerify(event: { code: string; useRecoveryCode: boolean }): void {
+    this.isLoading = true;
+    this.mfaErrorMessage = '';
+
+    this.authService
+      .verifyMfa(this.mfaToken, event.code, event.useRecoveryCode)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.snackBar.open('Login successful!', 'Close', {
+            duration: 3000,
+            panelClass: ['success-snackbar'],
+          });
+          this.router.navigate([this.returnUrl]);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          if (error.status === 401) {
+            this.mfaErrorMessage = 'Invalid code. Please try again.';
+          } else {
+            this.mfaErrorMessage = 'Verification failed. Please try again.';
+          }
+        },
+      });
+  }
+
+  /**
+   * Handle MFA cancellation - go back to login form
+   */
+  onMfaCancelled(): void {
+    this.showMfaVerify = false;
+    this.mfaToken = '';
+    this.mfaErrorMessage = '';
+    this.loginForm.reset();
   }
 
   demoLogin(): void {

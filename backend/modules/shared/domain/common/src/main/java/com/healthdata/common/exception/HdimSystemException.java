@@ -35,6 +35,10 @@ public class HdimSystemException extends HdimException {
         super(errorCode, message, correlationId);
     }
 
+    public HdimSystemException(String errorCode, String message, String correlationId, Throwable cause) {
+        super(errorCode, message, correlationId, cause);
+    }
+
     @Override
     public int getHttpStatus() {
         return 500;

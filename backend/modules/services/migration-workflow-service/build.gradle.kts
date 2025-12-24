@@ -41,6 +41,8 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:audit"))
     implementation(project(":modules:shared:infrastructure:messaging"))
     implementation(project(":modules:shared:infrastructure:persistence"))
+    implementation(project(":modules:shared:infrastructure:tracing"))
+    implementation(project(":modules:shared:infrastructure:api-docs"))
 
     // CDR Processor for HL7/CDA parsing
     implementation(project(":modules:services:cdr-processor-service"))

@@ -12,8 +12,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +36,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/evaluate")
+@Validated
 public class SimplifiedCqlEvaluationController {
 
     private static final Logger logger = LoggerFactory.getLogger(SimplifiedCqlEvaluationController.class);
@@ -70,9 +74,9 @@ public class SimplifiedCqlEvaluationController {
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> evaluateCql(
-            @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam("library") String libraryName,
-            @RequestParam("patient") UUID patientId,
+            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @RequestParam("library") @NotBlank(message = "Library name is required") String libraryName,
+            @RequestParam("patient") @NotNull(message = "Patient ID is required") UUID patientId,
             @RequestBody(required = false) String parameters) {
 
         logger.info("Simplified evaluation request - tenant: {}, library: {}, patient: {}",
@@ -189,7 +193,8 @@ public class SimplifiedCqlEvaluationController {
      * @return Measure details or 404 if not found
      */
     @GetMapping(value = "/measures/{measureId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> getMeasureDetails(@PathVariable String measureId) {
+    public ResponseEntity<String> getMeasureDetails(
+            @PathVariable @NotBlank(message = "Measure ID is required") String measureId) {
         try {
             logger.info("Fetching measure details for: {}", measureId);
 
@@ -224,7 +229,8 @@ public class SimplifiedCqlEvaluationController {
      * @return Boolean indicating if measure exists
      */
     @GetMapping(value = "/measures/{measureId}/exists", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> measureExists(@PathVariable String measureId) {
+    public ResponseEntity<String> measureExists(
+            @PathVariable @NotBlank(message = "Measure ID is required") String measureId) {
         try {
             boolean exists = measureRegistry.hasMeasure(measureId);
 

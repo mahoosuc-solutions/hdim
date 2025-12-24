@@ -35,7 +35,7 @@ public class CustomMeasureController {
     @PostMapping
     public ResponseEntity<CustomMeasureEntity> createDraft(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @RequestBody CreateCustomMeasureRequest request
+            @Valid @RequestBody CreateCustomMeasureRequest request
     ) {
         log.info("POST /quality-measure/custom-measures - tenant {}", tenantId);
         CustomMeasureEntity saved = customMeasureService.createDraft(
@@ -72,7 +72,7 @@ public class CustomMeasureController {
     public ResponseEntity<CustomMeasureEntity> updateDraft(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
             @PathVariable("id") UUID id,
-            @RequestBody UpdateCustomMeasureRequest request
+            @Valid @RequestBody UpdateCustomMeasureRequest request
     ) {
         return ResponseEntity.ok(customMeasureService.updateDraft(
                 tenantId,
@@ -179,6 +179,7 @@ public class CustomMeasureController {
 
     // Request/Response DTOs
     public record CreateCustomMeasureRequest(
+            @NotBlank(message = "Measure name is required")
             String name,
             String description,
             String category,

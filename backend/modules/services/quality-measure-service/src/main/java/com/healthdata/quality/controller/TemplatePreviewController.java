@@ -1,11 +1,13 @@
 package com.healthdata.quality.controller;
 
 import com.healthdata.quality.service.notification.TemplateRenderer;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -29,6 +31,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/templates")
 @RequiredArgsConstructor
+@Validated
 public class TemplatePreviewController {
 
     private final TemplateRenderer templateRenderer;
@@ -42,7 +45,7 @@ public class TemplatePreviewController {
      */
     @GetMapping(value = "/preview/{templateId}", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> previewTemplateWithDefaults(
-            @PathVariable String templateId,
+            @PathVariable @NotBlank(message = "Template ID is required") String templateId,
             @RequestParam(defaultValue = "EMAIL") String channel) {
 
         log.info("Previewing template '{}' for channel '{}'", templateId, channel);
@@ -68,7 +71,7 @@ public class TemplatePreviewController {
      */
     @PostMapping(value = "/preview/{templateId}", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> previewTemplateWithCustomData(
-            @PathVariable String templateId,
+            @PathVariable @NotBlank(message = "Template ID is required") String templateId,
             @RequestBody Map<String, Object> variables) {
 
         log.info("Previewing template '{}' with {} custom variables", templateId, variables.size());
@@ -95,7 +98,8 @@ public class TemplatePreviewController {
      * @return Status indicating if template exists
      */
     @GetMapping("/exists/{templateId}")
-    public ResponseEntity<Map<String, Object>> checkTemplateExists(@PathVariable String templateId) {
+    public ResponseEntity<Map<String, Object>> checkTemplateExists(
+            @PathVariable @NotBlank(message = "Template ID is required") String templateId) {
         boolean exists = templateRenderer.templateExists(templateId);
 
         Map<String, Object> response = new HashMap<>();
@@ -137,7 +141,8 @@ public class TemplatePreviewController {
      * @return Sample data structure for the template
      */
     @GetMapping("/sample-data/{templateId}")
-    public ResponseEntity<Map<String, Object>> getSampleDataStructure(@PathVariable String templateId) {
+    public ResponseEntity<Map<String, Object>> getSampleDataStructure(
+            @PathVariable @NotBlank(message = "Template ID is required") String templateId) {
         Map<String, Object> sampleData = createSampleData(templateId, "EMAIL");
         return ResponseEntity.ok(sampleData);
     }

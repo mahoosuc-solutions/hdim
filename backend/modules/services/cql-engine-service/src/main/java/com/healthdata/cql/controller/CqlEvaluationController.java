@@ -10,8 +10,14 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -29,6 +35,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/cql/evaluations")
+@Validated
 public class CqlEvaluationController {
 
     private static final Logger logger = LoggerFactory.getLogger(CqlEvaluationController.class);
@@ -46,9 +53,9 @@ public class CqlEvaluationController {
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @PostMapping
     public ResponseEntity<CqlEvaluation> createAndExecuteEvaluation(
-            @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam UUID libraryId,
-            @RequestParam UUID patientId) {
+            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @RequestParam @NotNull(message = "Library ID is required") UUID libraryId,
+            @RequestParam @NotNull(message = "Patient ID is required") UUID patientId) {
         logger.info("Creating evaluation for patient: {} with library: {}", patientId, libraryId);
 
         CqlEvaluation evaluation = evaluationService.createEvaluation(tenantId, libraryId, patientId);
@@ -64,8 +71,8 @@ public class CqlEvaluationController {
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @PostMapping("/{id}/execute")
     public ResponseEntity<CqlEvaluation> executeEvaluation(
-            @RequestHeader("X-Tenant-ID") String tenantId,
-            @PathVariable UUID id) {
+            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @PathVariable @NotNull(message = "Evaluation ID is required") UUID id) {
         logger.info("Executing evaluation: {}", id);
 
         CqlEvaluation executed = evaluationService.executeEvaluation(id, tenantId);
@@ -162,8 +169,8 @@ public class CqlEvaluationController {
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @GetMapping("/by-status/{status}")
     public ResponseEntity<Page<CqlEvaluation>> getEvaluationsByStatus(
-            @RequestHeader("X-Tenant-ID") String tenantId,
-            @PathVariable String status,
+            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @PathVariable @NotBlank(message = "Status is required") String status,
             Pageable pageable) {
         logger.debug("Getting evaluations with status: {} for tenant: {}", status, tenantId);
 
@@ -247,13 +254,9 @@ public class CqlEvaluationController {
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @PostMapping("/batch")
     public ResponseEntity<List<CqlEvaluation>> batchEvaluate(
-            @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam UUID libraryId,
-            @RequestBody List<UUID> patientIds) {
-        // Validate that patient list is not empty
-        if (patientIds == null || patientIds.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
+            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @RequestParam @NotNull(message = "Library ID is required") UUID libraryId,
+            @RequestBody @NotEmpty(message = "Patient IDs list cannot be empty") List<@NotNull UUID> patientIds) {
 
         logger.info("Starting batch evaluation for {} patients with library: {}",
                 patientIds.size(), libraryId);
@@ -270,8 +273,8 @@ public class CqlEvaluationController {
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @GetMapping("/failed-for-retry")
     public ResponseEntity<List<CqlEvaluation>> getFailedEvaluationsForRetry(
-            @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam(defaultValue = "24") int hoursBack) {
+            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @RequestParam(defaultValue = "24") @Min(value = 1, message = "Hours must be at least 1") int hoursBack) {
         logger.debug("Getting failed evaluations for retry (last {} hours) for tenant: {}",
                 hoursBack, tenantId);
 
@@ -347,8 +350,8 @@ public class CqlEvaluationController {
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @DeleteMapping("/old")
     public ResponseEntity<Void> deleteOldEvaluations(
-            @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam(defaultValue = "90") int daysToRetain) {
+            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @RequestParam(defaultValue = "90") @Min(value = 1, message = "Days to retain must be at least 1") int daysToRetain) {
         logger.info("Deleting evaluations older than {} days for tenant: {}", daysToRetain, tenantId);
 
         evaluationService.deleteOldEvaluations(tenantId, daysToRetain);

@@ -2,6 +2,7 @@ package com.healthdata.sales.service;
 
 import com.healthdata.sales.dto.*;
 import com.healthdata.sales.entity.*;
+import com.healthdata.sales.exception.*;
 import com.healthdata.sales.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,14 +40,14 @@ public class EmailSequenceService {
     @Transactional(readOnly = true)
     public EmailSequenceDTO findSequenceById(UUID tenantId, UUID id) {
         EmailSequence sequence = sequenceRepository.findByIdAndTenantId(id, tenantId)
-            .orElseThrow(() -> new RuntimeException("Sequence not found: " + id));
+            .orElseThrow(() -> new SequenceNotFoundException(id));
         return toSequenceDTO(sequence);
     }
 
     @Transactional
     public EmailSequenceDTO createSequence(UUID tenantId, EmailSequenceDTO dto) {
         if (sequenceRepository.existsByNameAndTenantId(dto.getName(), tenantId)) {
-            throw new RuntimeException("Sequence with name '" + dto.getName() + "' already exists");
+            throw new DuplicateResourceException("Email sequence", dto.getName());
         }
 
         EmailSequence sequence = new EmailSequence();
@@ -62,7 +63,7 @@ public class EmailSequenceService {
     @Transactional
     public EmailSequenceDTO updateSequence(UUID tenantId, UUID id, EmailSequenceDTO dto) {
         EmailSequence sequence = sequenceRepository.findByIdAndTenantId(id, tenantId)
-            .orElseThrow(() -> new RuntimeException("Sequence not found: " + id));
+            .orElseThrow(() -> new SequenceNotFoundException(id));
 
         updateSequenceFromDTO(sequence, dto);
         sequence = sequenceRepository.save(sequence);
@@ -73,12 +74,12 @@ public class EmailSequenceService {
     @Transactional
     public void deleteSequence(UUID tenantId, UUID id) {
         EmailSequence sequence = sequenceRepository.findByIdAndTenantId(id, tenantId)
-            .orElseThrow(() -> new RuntimeException("Sequence not found: " + id));
+            .orElseThrow(() -> new SequenceNotFoundException(id));
 
         // Check for active enrollments
         Long activeCount = enrollmentRepository.countBySequenceIdAndStatus(id, EnrollmentStatus.ACTIVE);
         if (activeCount > 0) {
-            throw new RuntimeException("Cannot delete sequence with " + activeCount + " active enrollments");
+            throw new InvalidStageTransitionException("Cannot delete sequence with " + activeCount + " active enrollments");
         }
 
         sequenceRepository.delete(sequence);
@@ -88,7 +89,7 @@ public class EmailSequenceService {
     @Transactional
     public EmailSequenceDTO activateSequence(UUID tenantId, UUID id) {
         EmailSequence sequence = sequenceRepository.findByIdAndTenantId(id, tenantId)
-            .orElseThrow(() -> new RuntimeException("Sequence not found: " + id));
+            .orElseThrow(() -> new SequenceNotFoundException(id));
 
         sequence.setActive(true);
         sequence = sequenceRepository.save(sequence);
@@ -99,7 +100,7 @@ public class EmailSequenceService {
     @Transactional
     public EmailSequenceDTO deactivateSequence(UUID tenantId, UUID id) {
         EmailSequence sequence = sequenceRepository.findByIdAndTenantId(id, tenantId)
-            .orElseThrow(() -> new RuntimeException("Sequence not found: " + id));
+            .orElseThrow(() -> new SequenceNotFoundException(id));
 
         sequence.setActive(false);
         sequence = sequenceRepository.save(sequence);
@@ -112,7 +113,7 @@ public class EmailSequenceService {
     @Transactional
     public EmailSequenceDTO addStep(UUID tenantId, UUID sequenceId, EmailSequenceStepDTO stepDto) {
         EmailSequence sequence = sequenceRepository.findByIdAndTenantId(sequenceId, tenantId)
-            .orElseThrow(() -> new RuntimeException("Sequence not found: " + sequenceId));
+            .orElseThrow(() -> new SequenceNotFoundException(sequenceId));
 
         EmailSequenceStep step = new EmailSequenceStep();
         step.setId(UUID.randomUUID());
@@ -132,12 +133,12 @@ public class EmailSequenceService {
     @Transactional
     public EmailSequenceDTO updateStep(UUID tenantId, UUID sequenceId, UUID stepId, EmailSequenceStepDTO stepDto) {
         EmailSequence sequence = sequenceRepository.findByIdAndTenantId(sequenceId, tenantId)
-            .orElseThrow(() -> new RuntimeException("Sequence not found: " + sequenceId));
+            .orElseThrow(() -> new SequenceNotFoundException(sequenceId));
 
         EmailSequenceStep step = sequence.getSteps().stream()
             .filter(s -> s.getId().equals(stepId))
             .findFirst()
-            .orElseThrow(() -> new RuntimeException("Step not found: " + stepId));
+            .orElseThrow(() -> new SalesException("Step not found: " + stepId, org.springframework.http.HttpStatus.NOT_FOUND));
 
         updateStepFromDTO(step, stepDto);
         sequence = sequenceRepository.save(sequence);
@@ -148,12 +149,12 @@ public class EmailSequenceService {
     @Transactional
     public EmailSequenceDTO deleteStep(UUID tenantId, UUID sequenceId, UUID stepId) {
         EmailSequence sequence = sequenceRepository.findByIdAndTenantId(sequenceId, tenantId)
-            .orElseThrow(() -> new RuntimeException("Sequence not found: " + sequenceId));
+            .orElseThrow(() -> new SequenceNotFoundException(sequenceId));
 
         EmailSequenceStep step = sequence.getSteps().stream()
             .filter(s -> s.getId().equals(stepId))
             .findFirst()
-            .orElseThrow(() -> new RuntimeException("Step not found: " + stepId));
+            .orElseThrow(() -> new SalesException("Step not found: " + stepId, org.springframework.http.HttpStatus.NOT_FOUND));
 
         sequence.removeStep(step);
 
@@ -173,23 +174,23 @@ public class EmailSequenceService {
     @Transactional
     public SequenceEnrollmentDTO enrollLead(UUID tenantId, UUID leadId, UUID sequenceId, UUID enrolledByUserId) {
         Lead lead = leadRepository.findByIdAndTenantId(leadId, tenantId)
-            .orElseThrow(() -> new RuntimeException("Lead not found: " + leadId));
+            .orElseThrow(() -> new LeadNotFoundException(leadId));
 
         EmailSequence sequence = sequenceRepository.findByIdAndTenantId(sequenceId, tenantId)
-            .orElseThrow(() -> new RuntimeException("Sequence not found: " + sequenceId));
+            .orElseThrow(() -> new SequenceNotFoundException(sequenceId));
 
         if (!sequence.getActive()) {
-            throw new RuntimeException("Cannot enroll in inactive sequence");
+            throw new InvalidStageTransitionException("Cannot enroll in inactive sequence");
         }
 
         if (sequence.getTargetType() == TargetType.CONTACT) {
-            throw new RuntimeException("Sequence is for contacts only");
+            throw new InvalidStageTransitionException("Sequence is for contacts only");
         }
 
         // Check for existing enrollment
         enrollmentRepository.findExistingEnrollment(sequenceId, leadId, null)
             .ifPresent(e -> {
-                throw new RuntimeException("Lead is already enrolled in this sequence");
+                throw new DuplicateResourceException("Lead is already enrolled in this sequence");
             });
 
         SequenceEnrollment enrollment = createEnrollment(tenantId, sequence, lead.getEmail(),
@@ -204,23 +205,23 @@ public class EmailSequenceService {
     @Transactional
     public SequenceEnrollmentDTO enrollContact(UUID tenantId, UUID contactId, UUID sequenceId, UUID enrolledByUserId) {
         Contact contact = contactRepository.findByIdAndTenantId(contactId, tenantId)
-            .orElseThrow(() -> new RuntimeException("Contact not found: " + contactId));
+            .orElseThrow(() -> new ContactNotFoundException(contactId));
 
         EmailSequence sequence = sequenceRepository.findByIdAndTenantId(sequenceId, tenantId)
-            .orElseThrow(() -> new RuntimeException("Sequence not found: " + sequenceId));
+            .orElseThrow(() -> new SequenceNotFoundException(sequenceId));
 
         if (!sequence.getActive()) {
-            throw new RuntimeException("Cannot enroll in inactive sequence");
+            throw new InvalidStageTransitionException("Cannot enroll in inactive sequence");
         }
 
         if (sequence.getTargetType() == TargetType.LEAD) {
-            throw new RuntimeException("Sequence is for leads only");
+            throw new InvalidStageTransitionException("Sequence is for leads only");
         }
 
         // Check for existing enrollment
         enrollmentRepository.findExistingEnrollment(sequenceId, null, contactId)
             .ifPresent(e -> {
-                throw new RuntimeException("Contact is already enrolled in this sequence");
+                throw new DuplicateResourceException("Contact is already enrolled in this sequence");
             });
 
         SequenceEnrollment enrollment = createEnrollment(tenantId, sequence, contact.getEmail(),
@@ -258,7 +259,7 @@ public class EmailSequenceService {
     @Transactional
     public SequenceEnrollmentDTO pauseEnrollment(UUID tenantId, UUID enrollmentId, String reason) {
         SequenceEnrollment enrollment = enrollmentRepository.findByIdAndTenantId(enrollmentId, tenantId)
-            .orElseThrow(() -> new RuntimeException("Enrollment not found: " + enrollmentId));
+            .orElseThrow(() -> new EnrollmentNotFoundException(enrollmentId));
 
         enrollment.pause(reason);
         enrollment = enrollmentRepository.save(enrollment);
@@ -269,7 +270,7 @@ public class EmailSequenceService {
     @Transactional
     public SequenceEnrollmentDTO resumeEnrollment(UUID tenantId, UUID enrollmentId) {
         SequenceEnrollment enrollment = enrollmentRepository.findByIdAndTenantId(enrollmentId, tenantId)
-            .orElseThrow(() -> new RuntimeException("Enrollment not found: " + enrollmentId));
+            .orElseThrow(() -> new EnrollmentNotFoundException(enrollmentId));
 
         enrollment.resume();
 
@@ -288,7 +289,7 @@ public class EmailSequenceService {
     @Transactional
     public void unenroll(UUID tenantId, UUID enrollmentId) {
         SequenceEnrollment enrollment = enrollmentRepository.findByIdAndTenantId(enrollmentId, tenantId)
-            .orElseThrow(() -> new RuntimeException("Enrollment not found: " + enrollmentId));
+            .orElseThrow(() -> new EnrollmentNotFoundException(enrollmentId));
 
         enrollment.setStatus(EnrollmentStatus.CANCELLED);
         enrollment.setNextEmailAt(null);

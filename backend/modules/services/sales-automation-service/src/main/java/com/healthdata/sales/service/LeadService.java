@@ -1,17 +1,21 @@
 package com.healthdata.sales.service;
 
+import com.healthdata.sales.client.ZohoClient;
 import com.healthdata.sales.dto.*;
 import com.healthdata.sales.entity.*;
+import com.healthdata.sales.exception.*;
 import com.healthdata.sales.mapper.LeadMapper;
 import com.healthdata.sales.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -24,6 +28,9 @@ public class LeadService {
     private final ContactRepository contactRepository;
     private final OpportunityRepository opportunityRepository;
     private final LeadMapper leadMapper;
+    private final ZohoClient zohoClient;
+    private final EmailSequenceService emailSequenceService;
+    private final EmailSequenceRepository emailSequenceRepository;
 
     @Transactional(readOnly = true)
     public Page<LeadDTO> findAll(UUID tenantId, Pageable pageable) {
@@ -34,7 +41,7 @@ public class LeadService {
     @Transactional(readOnly = true)
     public LeadDTO findById(UUID tenantId, UUID id) {
         Lead lead = leadRepository.findByIdAndTenantId(id, tenantId)
-            .orElseThrow(() -> new RuntimeException("Lead not found: " + id));
+            .orElseThrow(() -> new LeadNotFoundException(id));
         return leadMapper.toDTO(lead);
     }
 
@@ -72,8 +79,11 @@ public class LeadService {
         log.info("Captured new lead {} from source {} for tenant {}",
             lead.getId(), lead.getSource(), tenantId);
 
-        // TODO: Trigger Zoho sync event
-        // TODO: Trigger email sequence enrollment
+        // Trigger Zoho sync (async to not block response)
+        triggerZohoSync(lead);
+
+        // Auto-enroll in welcome sequence if available
+        autoEnrollInWelcomeSequence(tenantId, lead);
 
         return leadMapper.toDTO(lead);
     }
@@ -81,7 +91,7 @@ public class LeadService {
     @Transactional
     public LeadDTO update(UUID tenantId, UUID id, LeadDTO dto) {
         Lead lead = leadRepository.findByIdAndTenantId(id, tenantId)
-            .orElseThrow(() -> new RuntimeException("Lead not found: " + id));
+            .orElseThrow(() -> new LeadNotFoundException(id));
 
         leadMapper.updateEntity(lead, dto);
         lead.calculateScore();
@@ -93,7 +103,7 @@ public class LeadService {
     @Transactional
     public void delete(UUID tenantId, UUID id) {
         Lead lead = leadRepository.findByIdAndTenantId(id, tenantId)
-            .orElseThrow(() -> new RuntimeException("Lead not found: " + id));
+            .orElseThrow(() -> new LeadNotFoundException(id));
         leadRepository.delete(lead);
         log.info("Deleted lead {}", id);
     }
@@ -101,17 +111,17 @@ public class LeadService {
     @Transactional
     public LeadDTO convertLead(UUID tenantId, UUID leadId, LeadConversionRequest request) {
         Lead lead = leadRepository.findByIdAndTenantId(leadId, tenantId)
-            .orElseThrow(() -> new RuntimeException("Lead not found: " + leadId));
+            .orElseThrow(() -> new LeadNotFoundException(leadId));
 
         if (lead.getStatus() == LeadStatus.CONVERTED) {
-            throw new RuntimeException("Lead is already converted");
+            throw new InvalidStageTransitionException("Lead is already converted");
         }
 
         // Create or use existing account
         Account account;
         if (request.getExistingAccountId() != null) {
             account = accountRepository.findByIdAndTenantId(request.getExistingAccountId(), tenantId)
-                .orElseThrow(() -> new RuntimeException("Account not found: " + request.getExistingAccountId()));
+                .orElseThrow(() -> new AccountNotFoundException(request.getExistingAccountId()));
         } else {
             account = new Account();
             account.setId(UUID.randomUUID());
@@ -193,5 +203,69 @@ public class LeadService {
     public Page<LeadDTO> findHighScoreLeads(UUID tenantId, Integer minScore, Pageable pageable) {
         return leadRepository.findByTenantIdAndMinScore(tenantId, minScore, pageable)
             .map(leadMapper::toDTO);
+    }
+
+    // ==================== Private Helper Methods ====================
+
+    /**
+     * Trigger async Zoho CRM sync for the lead
+     */
+    @Async
+    protected void triggerZohoSync(Lead lead) {
+        try {
+            ZohoClient.ZohoSyncResult result = zohoClient.syncLead(lead);
+            if (result.isSuccess()) {
+                log.info("Successfully synced lead {} to Zoho with ID {}",
+                    lead.getId(), result.getZohoId());
+                // Update lead with Zoho ID (requires new transaction)
+                leadRepository.findById(lead.getId()).ifPresent(l -> {
+                    l.setZohoLeadId(result.getZohoId());
+                    leadRepository.save(l);
+                });
+            } else if (!result.isSkipped()) {
+                log.warn("Failed to sync lead {} to Zoho: {}",
+                    lead.getId(), result.getErrorMessage());
+            }
+        } catch (Exception e) {
+            log.error("Error during Zoho sync for lead {}: {}", lead.getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * Auto-enroll lead in a WELCOME type sequence if available
+     */
+    private void autoEnrollInWelcomeSequence(UUID tenantId, Lead lead) {
+        try {
+            // Find active sequences for leads
+            List<EmailSequence> sequences = emailSequenceRepository
+                .findActiveSequencesForTargetType(tenantId, TargetType.LEAD);
+
+            // Look for a WELCOME sequence first, then any NURTURE sequence
+            EmailSequence welcomeSequence = sequences.stream()
+                .filter(s -> s.getSequenceType() == SequenceType.WELCOME)
+                .findFirst()
+                .orElseGet(() -> sequences.stream()
+                    .filter(s -> s.getSequenceType() == SequenceType.NURTURE)
+                    .findFirst()
+                    .orElse(null));
+
+            if (welcomeSequence != null) {
+                emailSequenceService.enrollLead(
+                    tenantId,
+                    lead.getId(),
+                    welcomeSequence.getId(),
+                    lead.getAssignedToUserId()
+                );
+                log.info("Auto-enrolled lead {} in sequence {}",
+                    lead.getId(), welcomeSequence.getName());
+            } else {
+                log.debug("No welcome sequence available for lead auto-enrollment in tenant {}",
+                    tenantId);
+            }
+        } catch (Exception e) {
+            // Don't fail lead capture if sequence enrollment fails
+            log.warn("Failed to auto-enroll lead {} in sequence: {}",
+                lead.getId(), e.getMessage());
+        }
     }
 }

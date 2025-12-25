@@ -11,7 +11,15 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "e2e": "playwright test --config=e2e/playwright.config.ts",
+    "e2e:headed": "playwright test --config=e2e/playwright.config.ts --headed",
+    "e2e:ui": "playwright test --config=e2e/playwright.config.ts --ui",
+    "e2e:debug": "playwright test --config=e2e/playwright.config.ts --debug",
+    "e2e:report": "playwright show-report e2e/playwright-report",
+    "e2e:chromium": "playwright test --config=e2e/playwright.config.ts --project=chromium",
+    "e2e:firefox": "playwright test --config=e2e/playwright.config.ts --project=firefox",
+    "e2e:webkit": "playwright test --config=e2e/playwright.config.ts --project=webkit"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -32,6 +40,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@playwright/test": "^1.57.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",

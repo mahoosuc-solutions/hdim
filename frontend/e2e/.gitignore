@@ -1,0 +1,4 @@
+# Playwright generated files
+playwright-report/
+test-results/
+.playwright/

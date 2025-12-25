@@ -22,7 +22,9 @@ import type {
   SalesFilters,
 } from '../types/sales';
 
-const API_BASE_URL = import.meta.env.VITE_SALES_API_URL || 'http://localhost:8106';
+// Use relative URL by default to enable Vite proxy in development
+// For production, set VITE_SALES_API_URL to the actual backend URL
+const API_BASE_URL = import.meta.env.VITE_SALES_API_URL || '';
 
 interface ApiOptions {
   tenantId: string;
@@ -488,7 +490,30 @@ class SalesService {
       throw new Error(`Failed to fetch dashboard: ${response.statusText}`);
     }
 
-    return response.json();
+    // Transform nested API response to flat frontend structure
+    const data = await response.json();
+    return {
+      totalLeads: data.leads?.totalLeads ?? 0,
+      newLeadsThisMonth: data.leads?.newLeadsThisMonth ?? 0,
+      qualifiedLeads: data.leads?.qualifiedLeads ?? 0,
+      conversionRate: data.leads?.conversionRate ?? 0,
+      totalOpportunities: data.pipeline?.totalOpenOpportunities ?? 0,
+      pipelineValue: data.pipeline?.totalPipelineValue ?? 0,
+      weightedPipelineValue: data.pipeline?.weightedPipelineValue ?? 0,
+      avgDealSize: data.pipeline?.averageDealSize ?? 0,
+      closedWonThisMonth: data.pipeline?.wonThisMonth ?? 0,
+      closedWonValue: data.pipeline?.wonValueThisMonth ?? 0,
+      closedLostThisMonth: data.pipeline?.lostThisMonth ?? 0,
+      winRate: data.pipeline?.winRate ?? 0,
+      avgSalesCycleInDays: data.pipeline?.averageSalesCycleDays ?? 0,
+      activitiesThisWeek: (data.activities?.callsThisWeek ?? 0) +
+                          (data.activities?.emailsThisWeek ?? 0) +
+                          (data.activities?.meetingsThisWeek ?? 0),
+      overdueActivities: data.activities?.overdueActivities ?? 0,
+      leadsBySource: data.leads?.leadsBySource ?? {},
+      opportunitiesByStage: data.pipeline?.opportunitiesByStage ?? {},
+      revenueByMonth: {},
+    };
   }
 
   // ==================== Email Sequences ====================

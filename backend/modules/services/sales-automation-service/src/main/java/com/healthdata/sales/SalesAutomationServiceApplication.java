@@ -33,8 +33,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         AuthenticationControllerAutoConfiguration.class
     }
 )
-@EntityScan(basePackages = "com.healthdata.sales.entity")
-@EnableJpaRepositories(basePackages = "com.healthdata.sales.repository")
+@EntityScan(basePackages = {"com.healthdata.sales.entity", "com.healthdata.sales.audit"})
+@EnableJpaRepositories(basePackages = {"com.healthdata.sales.repository", "com.healthdata.sales.audit"})
 @EnableFeignClients
 @EnableJpaAuditing
 @EnableAsync

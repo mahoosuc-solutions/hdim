@@ -1,13 +1,10 @@
 package com.healthdata.authentication.config;
 
-import com.healthdata.authentication.config.JwtConfig;
-import com.healthdata.authentication.filter.JwtAuthenticationFilter;
-import com.healthdata.authentication.service.JwtTokenService;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -37,13 +34,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * @EnableJpaRepositories is explicitly defined anywhere in the application.
  */
 @AutoConfiguration
-// Only register JWT validation pieces; gateway owns the full auth stack
-@Import({
-    JwtAuthenticationFilter.class,
-    JwtTokenService.class,
-    JwtConfig.class
+@ComponentScan(basePackages = {
+    "com.healthdata.authentication.filter",
+    "com.healthdata.authentication.service",
+    "com.healthdata.authentication.config",
+    "com.healthdata.cache"
 })
-@EntityScan(basePackages = "com.healthdata.authentication.domain")
+@EntityScan(basePackages = {
+    "com.healthdata.authentication.domain",
+    "com.healthdata.authentication.entity"
+})
 public class AuthenticationAutoConfiguration {
 
     @Bean

@@ -153,7 +153,7 @@ export class PatientHealthFacade {
     patientId: string,
     loincCode?: string,
     limit?: number
-  ): Observable<VitalSign[]> {
+  ): Observable<VitalSign<number | string>[]> {
     return this.physicalHealth.getVitalSignHistory(patientId, loincCode, limit);
   }
 

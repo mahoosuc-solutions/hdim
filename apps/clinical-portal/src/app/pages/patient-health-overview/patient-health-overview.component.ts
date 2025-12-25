@@ -219,8 +219,8 @@ export class PatientHealthOverviewComponent implements OnInit, OnDestroy {
 
       if (criticalLabs.length > 0) {
         const topLab = criticalLabs[0];
-        const labName = topLab.code.text || topLab.code.coding?.[0]?.display || 'Unknown Lab';
-        const labCode = topLab.code.coding?.[0]?.code || 'unknown';
+        const labName = topLab.name || topLab.code || 'Unknown Lab';
+        const labCode = topLab.code || 'unknown';
         const refRange = topLab.referenceRange?.text ||
           (topLab.referenceRange?.low && topLab.referenceRange?.high
             ? `${topLab.referenceRange.low}-${topLab.referenceRange.high}`

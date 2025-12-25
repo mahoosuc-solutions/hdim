@@ -433,9 +433,9 @@ export class DataTableComponent<T extends Record<string, unknown> = Record<strin
 
     switch (type) {
       case 'date':
-        return value instanceof Date ? value.toLocaleDateString() : value;
+        return value instanceof Date ? value.toLocaleDateString() : String(value);
       case 'number':
-        return typeof value === 'number' ? value.toLocaleString() : value;
+        return typeof value === 'number' ? value.toLocaleString() : String(value);
       case 'boolean':
         return value ? 'Yes' : 'No';
       default:

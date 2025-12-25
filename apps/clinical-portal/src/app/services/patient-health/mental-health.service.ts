@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { CacheableService } from '../shared/cacheable.service';
+import { CacheableService, getCodeFromConcept, conceptCodeStartsWith } from '../shared';
 import { LoggerService, ContextualLogger } from '../logger.service';
 import { FhirQuestionnaireService, ParsedQuestionnaireResponse } from '../fhir/fhir-questionnaire.service';
 import { FhirConditionService } from '../fhir/fhir-condition.service';
@@ -17,7 +17,7 @@ import {
   MentalHealthAssessment,
   MentalHealthAssessmentType,
   MentalHealthTrend,
-  MentalHealthDiagnosisFhir,
+  MentalHealthDiagnosis,
   MentalHealthCondition,
   AssessmentHistory,
   AssessmentHistoryEntry,
@@ -191,7 +191,9 @@ export class MentalHealthService extends CacheableService {
   ): Observable<AssessmentHistory[]> {
     return this.fhirQuestionnaire.getMentalHealthAssessments(patientId, type).pipe(
       map((assessments) =>
-        assessments.map((a) => ({
+        assessments.map((a, index) => ({
+          assessmentId: a.id || `${type}-${patientId}-${index}`,
+          type: type as 'PHQ-9' | 'GAD-7' | 'PHQ-2',
           assessedAt: a.authoredDate,
           score: a.totalScore || 0,
           severity: this.getSeverityFromScore(type, a.totalScore || 0),
@@ -358,18 +360,23 @@ export class MentalHealthService extends CacheableService {
   /**
    * Get mental health diagnoses from FHIR (ICD-10 F-codes)
    */
-  getMentalHealthDiagnoses(patientId: string): Observable<MentalHealthDiagnosisFhir[]> {
+  getMentalHealthDiagnoses(patientId: string): Observable<MentalHealthDiagnosis[]> {
     return this.fhirCondition.getMentalHealthConditions(patientId).pipe(
       map((conditions) =>
         conditions
-          .filter((c) => c.code.startsWith('F'))
-          .map((condition) => ({
-            code: condition.code,
-            display: condition.name,
-            severity: condition.severity,
-            onsetDate: condition.onsetDate,
-            clinicalStatus: condition.status,
-          }))
+          .filter((c) => conceptCodeStartsWith(c.code, 'F'))
+          .map((condition) => {
+            const codeStr = getCodeFromConcept(condition.code);
+            return {
+              code: { coding: [{ code: codeStr, display: condition.name || '' }] },
+              display: condition.name || '',
+              category: this.inferMentalHealthCategory(codeStr),
+              severity: condition.severity || 'moderate',
+              onsetDate: condition.onsetDate,
+              inRemission: condition.status === 'remission' || condition.status === 'inactive',
+              lastReview: condition.lastAssessment,
+            };
+          })
       ),
       catchError((error) => {
         this.log.error('Error fetching mental health diagnoses:', error);
@@ -676,16 +683,43 @@ export class MentalHealthService extends CacheableService {
   /**
    * Map conditions to diagnoses
    */
-  private mapConditionsToDiagnoses(conditions: any[]): MentalHealthDiagnosisFhir[] {
+  private mapConditionsToDiagnoses(conditions: any[]): MentalHealthDiagnosis[] {
     return conditions
-      .filter((c) => c.code && c.code.startsWith('F'))
-      .map((c) => ({
-        code: c.code,
-        display: c.name,
-        severity: c.severity,
-        onsetDate: c.onsetDate,
-        clinicalStatus: c.status,
-      }));
+      .filter((c) => c.code && conceptCodeStartsWith(c.code, 'F'))
+      .map((c) => {
+        const codeStr = getCodeFromConcept(c.code);
+        return {
+          code: { coding: [{ code: codeStr, display: c.name || '' }] },
+          display: c.name || '',
+          category: this.inferMentalHealthCategory(codeStr),
+          severity: c.severity || 'moderate',
+          onsetDate: c.onsetDate,
+          inRemission: c.status === 'remission' || c.status === 'inactive',
+          lastReview: c.lastAssessment,
+        };
+      });
+  }
+
+  /**
+   * Infer mental health category from ICD-10 code
+   */
+  private inferMentalHealthCategory(code: string): 'mood' | 'anxiety' | 'psychotic' | 'substance' | 'trauma' | 'other' {
+    if (code.startsWith('F30') || code.startsWith('F31') || code.startsWith('F32') || code.startsWith('F33')) {
+      return 'mood';
+    }
+    if (code.startsWith('F40') || code.startsWith('F41')) {
+      return 'anxiety';
+    }
+    if (code.startsWith('F20') || code.startsWith('F21') || code.startsWith('F22')) {
+      return 'psychotic';
+    }
+    if (code.startsWith('F10') || code.startsWith('F11') || code.startsWith('F12') || code.startsWith('F13')) {
+      return 'substance';
+    }
+    if (code.startsWith('F43')) {
+      return 'trauma';
+    }
+    return 'other';
   }
 
   /**

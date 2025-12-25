@@ -1041,7 +1041,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
             error: (err: unknown) => {
               errorCount++;
               this.bulkOperationProgress++;
-              const appError = ErrorFactory.createDataDeleteError('patient', patient.id, err);
+              const appError = ErrorFactory.createDataDeleteError('patient', patient.id, { error: err });
               console.error(`[${appError.code}] Error deleting patient ${patient.fullName}:`, err);
 
               // Show summary after all attempts

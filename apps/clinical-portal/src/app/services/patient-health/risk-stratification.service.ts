@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { CacheableService } from '../shared/cacheable.service';
+import { CacheableService, getCodeFromConcept, conceptCodeIncludes } from '../shared';
 import { LoggerService, ContextualLogger } from '../logger.service';
 import { PhysicalHealthService } from './physical-health.service';
 import { MentalHealthService } from './mental-health.service';
@@ -68,14 +68,25 @@ export class RiskStratificationService extends CacheableService {
       map((multiFactorScore) => {
         const stratification: RiskStratification = {
           overallRisk: multiFactorScore.overallRisk,
-          score: multiFactorScore.overallScore,
-          factors: this.extractRiskFactors(multiFactorScore),
-          trend: 'stable',
-          lastAssessed: multiFactorScore.calculatedAt,
+          scores: {
+            clinicalComplexity: multiFactorScore.components.clinicalComplexity,
+            socialComplexity: multiFactorScore.components.sdohRisk,
+            mentalHealthRisk: multiFactorScore.components.mentalHealthRisk,
+            utilizationRisk: 0,
+            costRisk: 0,
+          },
           predictions: {
-            hospitalization: this.estimateHospitalizationRisk(multiFactorScore),
-            edVisit: this.estimateEDVisitRisk(multiFactorScore),
-            readmission: this.estimateReadmissionRisk(multiFactorScore),
+            hospitalizationRisk30Day: this.estimateHospitalizationRisk(multiFactorScore),
+            hospitalizationRisk90Day: this.estimateHospitalizationRisk(multiFactorScore) * 0.7,
+            edVisitRisk30Day: this.estimateEDVisitRisk(multiFactorScore),
+            readmissionRisk: this.estimateReadmissionRisk(multiFactorScore),
+          },
+          categories: {
+            diabetes: this.getRiskLevelFromScore(multiFactorScore.components.clinicalComplexity),
+            cardiovascular: this.getRiskLevelFromScore(multiFactorScore.components.clinicalComplexity),
+            respiratory: 'low',
+            mentalHealth: this.getRiskLevelFromScore(multiFactorScore.components.mentalHealthRisk),
+            fallRisk: 'low',
           },
         };
 
@@ -241,8 +252,8 @@ export class RiskStratificationService extends CacheableService {
         const diabetesConditions = physical.chronicConditions.filter(
           (c) =>
             c.name?.toLowerCase().includes('diabetes') ||
-            c.code?.includes('E11') ||
-            c.code?.includes('E10')
+            conceptCodeIncludes(c.code, 'E11') ||
+            conceptCodeIncludes(c.code, 'E10')
         );
 
         if (diabetesConditions.length > 0) {
@@ -263,7 +274,7 @@ export class RiskStratificationService extends CacheableService {
 
         // Check HbA1c from labs
         const hba1cLab = physical.labs?.find(
-          (l) => l.code === '4548-4' || l.name?.toLowerCase().includes('hba1c')
+          (l) => getCodeFromConcept(l.code) === '4548-4' || l.name?.toLowerCase().includes('hba1c')
         );
         if (hba1cLab && typeof hba1cLab.value === 'number') {
           if (hba1cLab.value >= 9) {
@@ -333,7 +344,7 @@ export class RiskStratificationService extends CacheableService {
         const htConditions = physical.chronicConditions.filter(
           (c) =>
             c.name?.toLowerCase().includes('hypertension') ||
-            c.code?.includes('I10')
+            conceptCodeIncludes(c.code, 'I10')
         );
         if (htConditions.length > 0) {
           const uncontrolled = htConditions.some((c) => !c.isControlled);
@@ -345,7 +356,7 @@ export class RiskStratificationService extends CacheableService {
 
         // Check cholesterol
         const ldlLab = physical.labs?.find(
-          (l) => l.code === '2089-1' || l.name?.toLowerCase().includes('ldl')
+          (l) => getCodeFromConcept(l.code) === '2089-1' || l.name?.toLowerCase().includes('ldl')
         );
         if (ldlLab && typeof ldlLab.value === 'number' && ldlLab.value > 160) {
           score += 15;
@@ -435,7 +446,7 @@ export class RiskStratificationService extends CacheableService {
         }
 
         return {
-          category: 'mental-health-crisis' as const,
+          category: 'mental-health' as const,
           riskLevel,
           score,
           factors,
@@ -445,7 +456,7 @@ export class RiskStratificationService extends CacheableService {
       }),
       catchError(() =>
         of({
-          category: 'mental-health-crisis' as const,
+          category: 'mental-health' as const,
           riskLevel: 'low' as const,
           score: 0,
           factors: ['Unable to retrieve mental health data'],
@@ -698,14 +709,25 @@ export class RiskStratificationService extends CacheableService {
   private getDefaultRiskStratification(): RiskStratification {
     return {
       overallRisk: 'low',
-      score: 0,
-      factors: [],
-      trend: 'stable',
-      lastAssessed: new Date(),
+      scores: {
+        clinicalComplexity: 0,
+        socialComplexity: 0,
+        mentalHealthRisk: 0,
+        utilizationRisk: 0,
+        costRisk: 0,
+      },
       predictions: {
-        hospitalization: 0,
-        edVisit: 0,
-        readmission: 0,
+        hospitalizationRisk30Day: 0,
+        hospitalizationRisk90Day: 0,
+        edVisitRisk30Day: 0,
+        readmissionRisk: 0,
+      },
+      categories: {
+        diabetes: 'low',
+        cardiovascular: 'low',
+        respiratory: 'low',
+        mentalHealth: 'low',
+        fallRisk: 'low',
       },
     };
   }

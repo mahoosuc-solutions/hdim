@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { CacheableService } from '../shared/cacheable.service';
+import { CacheableService, getCodeFromConcept, conceptCodeIncludes, conceptContainsAnyCode } from '../shared';
 import { LoggerService, ContextualLogger } from '../logger.service';
 import { FhirObservationService } from '../fhir/fhir-observation.service';
 import { FhirConditionService } from '../fhir/fhir-condition.service';
@@ -160,7 +160,7 @@ export class PhysicalHealthService extends CacheableService {
   analyzeLabTrend(results: LabResult[]): LabTrendAnalysis {
     if (results.length < 2) {
       return {
-        loincCode: results[0]?.code || '',
+        loincCode: getCodeFromConcept(results[0]?.code),
         testName: results[0]?.name || 'Unknown',
         trend: 'stable',
         percentChange: 0,
@@ -182,7 +182,7 @@ export class PhysicalHealthService extends CacheableService {
 
     if (values.length < 2) {
       return {
-        loincCode: sortedResults[0]?.code || '',
+        loincCode: getCodeFromConcept(sortedResults[0]?.code),
         testName: sortedResults[0]?.name || 'Unknown',
         trend: 'stable',
         percentChange: 0,
@@ -220,7 +220,7 @@ export class PhysicalHealthService extends CacheableService {
     }
 
     return {
-      loincCode: sortedResults[0]?.code || '',
+      loincCode: getCodeFromConcept(sortedResults[0]?.code),
       testName: sortedResults[0]?.name || 'Unknown',
       trend,
       percentChange,
@@ -275,7 +275,7 @@ export class PhysicalHealthService extends CacheableService {
     patientId: string,
     loincCode?: string,
     limit: number = 30
-  ): Observable<VitalSign[]> {
+  ): Observable<VitalSign<number | string>[]> {
     return this.fhirObservation.getVitalSignHistory(patientId, loincCode, limit);
   }
 
@@ -407,14 +407,16 @@ export class PhysicalHealthService extends CacheableService {
     resultsByDate.forEach((dateResults, dateKey) => {
       panelDefinitions.forEach((panelDef) => {
         const panelResults = dateResults.filter(
-          (r) =>
-            r.code &&
-            (panelDef.components as readonly string[]).includes(r.code) &&
-            !usedResults.has(`${r.code}-${dateKey}`)
+          (r) => {
+            const codeStr = getCodeFromConcept(r.code);
+            return codeStr &&
+              (panelDef.components as readonly string[]).includes(codeStr) &&
+              !usedResults.has(`${codeStr}-${dateKey}`);
+          }
         );
 
         if (panelResults.length >= 2) {
-          panelResults.forEach((r) => usedResults.add(`${r.code}-${dateKey}`));
+          panelResults.forEach((r) => usedResults.add(`${getCodeFromConcept(r.code)}-${dateKey}`));
 
           // Determine panel status
           let panelStatus: 'normal' | 'abnormal' | 'critical' = 'normal';
@@ -544,7 +546,7 @@ export class PhysicalHealthService extends CacheableService {
         if (systolic > 180 || diastolic > 120) {
           vitals.bloodPressure.status = 'critical';
         } else if (systolic > 140 || diastolic > 90) {
-          vitals.bloodPressure.status = 'warning';
+          vitals.bloodPressure.status = 'abnormal';
         }
       }
     }
@@ -556,7 +558,7 @@ export class PhysicalHealthService extends CacheableService {
         if (hr < 40 || hr > 150) {
           vitals.heartRate.status = 'critical';
         } else if (hr < 60 || hr > 100) {
-          vitals.heartRate.status = 'warning';
+          vitals.heartRate.status = 'abnormal';
         }
       }
     }
@@ -568,7 +570,7 @@ export class PhysicalHealthService extends CacheableService {
         if (temp > 103 || temp < 95) {
           vitals.temperature.status = 'critical';
         } else if (temp > 100.4 || temp < 96) {
-          vitals.temperature.status = 'warning';
+          vitals.temperature.status = 'abnormal';
         }
       }
     }
@@ -580,7 +582,7 @@ export class PhysicalHealthService extends CacheableService {
         if (o2 < 90) {
           vitals.oxygenSaturation.status = 'critical';
         } else if (o2 < 95) {
-          vitals.oxygenSaturation.status = 'warning';
+          vitals.oxygenSaturation.status = 'abnormal';
         }
       }
     }
@@ -622,7 +624,7 @@ export class PhysicalHealthService extends CacheableService {
       (v) => v && v.status === 'critical'
     ).length;
     const abnormalVitals = vitalValues.filter(
-      (v) => v && (v.status === 'warning' || v.status === 'abnormal')
+      (v) => v && v.status === 'abnormal'
     ).length;
 
     if (criticalVitals > 0) score -= 30;
@@ -672,7 +674,7 @@ export class PhysicalHealthService extends CacheableService {
           value: '128/82',
           unit: 'mmHg',
           date: new Date(),
-          status: 'warning',
+          status: 'abnormal',
           trend: 'stable',
         },
         heartRate: {
@@ -695,7 +697,7 @@ export class PhysicalHealthService extends CacheableService {
           value: 28.5,
           unit: 'kg/m²',
           date: new Date(),
-          status: 'warning',
+          status: 'abnormal',
         },
       },
       labs: [],

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, of, EMPTY } from 'rxjs';
 import { map, catchError, expand, reduce } from 'rxjs/operators';
-import { CacheableService } from '../shared/cacheable.service';
+import { CacheableService, getCodeFromConcept } from '../shared';
 import { LoggerService, ContextualLogger } from '../logger.service';
 import {
   API_CONFIG,
@@ -199,9 +199,9 @@ export class FhirObservationService extends CacheableService {
     patientId: string,
     loincCode?: string,
     limit: number = 30
-  ): Observable<VitalSign[]> {
+  ): Observable<VitalSign<number | string>[]> {
     const cacheKey = `vital-history:${patientId}:${loincCode || 'all'}:${limit}`;
-    const cached = this.getCached<VitalSign[]>(cacheKey);
+    const cached = this.getCached<VitalSign<number | string>[]>(cacheKey);
     if (cached) return of(cached);
 
     const url = buildFhirUrl(FHIR_ENDPOINTS.OBSERVATION);
@@ -339,7 +339,7 @@ export class FhirObservationService extends CacheableService {
       switch (loincCode) {
         case LOINC_VITAL_SIGNS.HEART_RATE:
           if (obs.valueQuantity?.value !== undefined) {
-            vitals.heartRate = this.mapObservationToVitalSign(obs, obs.valueQuantity.value);
+            vitals.heartRate = this.mapObservationToNumericVitalSign(obs, obs.valueQuantity.value);
           }
           break;
 
@@ -354,27 +354,26 @@ export class FhirObservationService extends CacheableService {
 
             if (systolic?.valueQuantity && diastolic?.valueQuantity) {
               const bpValue = `${systolic.valueQuantity.value}/${diastolic.valueQuantity.value}`;
-              vitals.bloodPressure = this.mapObservationToVitalSign(obs, bpValue);
-              vitals.bloodPressure.unit = 'mmHg';
+              vitals.bloodPressure = this.mapObservationToStringVitalSign(obs, bpValue, 'mmHg');
             }
           }
           break;
 
         case LOINC_VITAL_SIGNS.BODY_WEIGHT:
           if (obs.valueQuantity?.value !== undefined) {
-            vitals.weight = this.mapObservationToVitalSign(obs, obs.valueQuantity.value);
+            vitals.weight = this.mapObservationToNumericVitalSign(obs, obs.valueQuantity.value);
           }
           break;
 
         case LOINC_VITAL_SIGNS.BMI:
           if (obs.valueQuantity?.value !== undefined) {
-            vitals.bmi = this.mapObservationToVitalSign(obs, obs.valueQuantity.value);
+            vitals.bmi = this.mapObservationToNumericVitalSign(obs, obs.valueQuantity.value);
           }
           break;
 
         case LOINC_VITAL_SIGNS.RESPIRATORY_RATE:
           if (obs.valueQuantity?.value !== undefined) {
-            vitals.respiratoryRate = this.mapObservationToVitalSign(
+            vitals.respiratoryRate = this.mapObservationToNumericVitalSign(
               obs,
               obs.valueQuantity.value
             );
@@ -383,7 +382,7 @@ export class FhirObservationService extends CacheableService {
 
         case LOINC_VITAL_SIGNS.OXYGEN_SATURATION:
           if (obs.valueQuantity?.value !== undefined) {
-            vitals.oxygenSaturation = this.mapObservationToVitalSign(
+            vitals.oxygenSaturation = this.mapObservationToNumericVitalSign(
               obs,
               obs.valueQuantity.value
             );
@@ -392,7 +391,7 @@ export class FhirObservationService extends CacheableService {
 
         case LOINC_VITAL_SIGNS.BODY_TEMPERATURE:
           if (obs.valueQuantity?.value !== undefined) {
-            vitals.temperature = this.mapObservationToVitalSign(
+            vitals.temperature = this.mapObservationToNumericVitalSign(
               obs,
               obs.valueQuantity.value
             );
@@ -405,13 +404,41 @@ export class FhirObservationService extends CacheableService {
   }
 
   /**
-   * Map a single FHIR Observation to VitalSign
+   * Map a single FHIR Observation to VitalSign (generic version for history)
    */
-  private mapObservationToVitalSign(obs: FhirObservation, value?: any): VitalSign {
+  private mapObservationToVitalSign(obs: FhirObservation, value?: number | string): VitalSign<number | string> {
     return {
       name: obs.code.text || obs.code.coding?.[0]?.display || 'Unknown',
       value: value ?? obs.valueQuantity?.value ?? 0,
       unit: obs.valueQuantity?.unit || '',
+      date: obs.effectiveDateTime ? new Date(obs.effectiveDateTime) : new Date(),
+      status: this.determineVitalStatus(obs),
+      trend: 'stable',
+    };
+  }
+
+  /**
+   * Map a FHIR Observation to numeric VitalSign
+   */
+  private mapObservationToNumericVitalSign(obs: FhirObservation, value: number): VitalSign<number> {
+    return {
+      name: obs.code.text || obs.code.coding?.[0]?.display || 'Unknown',
+      value,
+      unit: obs.valueQuantity?.unit || '',
+      date: obs.effectiveDateTime ? new Date(obs.effectiveDateTime) : new Date(),
+      status: this.determineVitalStatus(obs),
+      trend: 'stable',
+    };
+  }
+
+  /**
+   * Map a FHIR Observation to string VitalSign (e.g., blood pressure)
+   */
+  private mapObservationToStringVitalSign(obs: FhirObservation, value: string, unit: string): VitalSign<string> {
+    return {
+      name: obs.code.text || obs.code.coding?.[0]?.display || 'Unknown',
+      value,
+      unit,
       date: obs.effectiveDateTime ? new Date(obs.effectiveDateTime) : new Date(),
       status: this.determineVitalStatus(obs),
       trend: 'stable',
@@ -425,6 +452,7 @@ export class FhirObservationService extends CacheableService {
     const interpretation = this.mapFhirInterpretationCode(
       obs.interpretation?.[0]?.coding?.[0]?.code
     );
+    const status = this.determineLabStatus(obs);
 
     return {
       id: obs.id || '',
@@ -435,45 +463,65 @@ export class FhirObservationService extends CacheableService {
       referenceRange: this.formatReferenceRange(obs.referenceRange),
       date: obs.effectiveDateTime ? new Date(obs.effectiveDateTime) : new Date(),
       interpretation,
-      status: obs.status || 'final',
+      status,
     };
+  }
+
+  /**
+   * Determine lab result status based on interpretation
+   */
+  private determineLabStatus(obs: FhirObservation): 'normal' | 'abnormal' | 'critical' {
+    const code = obs.interpretation?.[0]?.coding?.[0]?.code;
+    if (!code) return 'normal';
+
+    switch (code) {
+      case 'N':
+        return 'normal';
+      case 'H':
+      case 'L':
+      case 'A':
+        return 'abnormal';
+      case 'HH':
+      case 'LL':
+      case 'AA':
+        return 'critical';
+      default:
+        return 'normal';
+    }
   }
 
   /**
    * Format reference range from FHIR
    */
-  private formatReferenceRange(range?: FhirObservation['referenceRange']): string {
-    if (!range || range.length === 0) return '';
+  private formatReferenceRange(range?: FhirObservation['referenceRange']): { low?: number; high?: number; text?: string } | undefined {
+    if (!range || range.length === 0) return undefined;
 
     const first = range[0];
-    if (first.low && first.high) {
-      return `${first.low.value}-${first.high.value} ${first.low.unit || ''}`.trim();
-    }
-    if (first.low) {
-      return `>${first.low.value} ${first.low.unit || ''}`.trim();
-    }
-    if (first.high) {
-      return `<${first.high.value} ${first.high.unit || ''}`.trim();
-    }
-    return first.text || '';
+    return {
+      low: first.low?.value,
+      high: first.high?.value,
+      text: first.text,
+    };
   }
 
   /**
    * Determine vital sign status based on observation
    */
-  private determineVitalStatus(obs: FhirObservation): 'normal' | 'warning' | 'critical' {
+  private determineVitalStatus(obs: FhirObservation): 'normal' | 'abnormal' | 'critical' {
     const interpretation = obs.interpretation?.[0]?.coding?.[0]?.code;
 
     if (!interpretation) return 'normal';
 
     switch (interpretation) {
-      case FHIR_INTERPRETATION_CODES.NORMAL:
+      case 'N':
         return 'normal';
-      case FHIR_INTERPRETATION_CODES.HIGH:
-      case FHIR_INTERPRETATION_CODES.LOW:
-        return 'warning';
-      case FHIR_INTERPRETATION_CODES.CRITICAL_HIGH:
-      case FHIR_INTERPRETATION_CODES.CRITICAL_LOW:
+      case 'H':
+      case 'L':
+      case 'A':
+        return 'abnormal';
+      case 'HH':
+      case 'LL':
+      case 'AA':
         return 'critical';
       default:
         return 'normal';
@@ -484,23 +532,19 @@ export class FhirObservationService extends CacheableService {
    * Map FHIR interpretation code to LabInterpretation
    */
   private mapFhirInterpretationCode(code?: string): LabInterpretation {
-    if (!code) return 'normal';
+    const interpretations: Record<string, LabInterpretation> = {
+      'N': { code: 'N', display: 'Normal', severity: 'normal' },
+      'H': { code: 'H', display: 'High', severity: 'abnormal' },
+      'L': { code: 'L', display: 'Low', severity: 'abnormal' },
+      'HH': { code: 'HH', display: 'Critical High', severity: 'critical' },
+      'LL': { code: 'LL', display: 'Critical Low', severity: 'critical' },
+      'A': { code: 'A', display: 'Abnormal', severity: 'abnormal' },
+    };
 
-    switch (code) {
-      case FHIR_INTERPRETATION_CODES.NORMAL:
-        return 'normal';
-      case FHIR_INTERPRETATION_CODES.HIGH:
-        return 'high';
-      case FHIR_INTERPRETATION_CODES.LOW:
-        return 'low';
-      case FHIR_INTERPRETATION_CODES.CRITICAL_HIGH:
-        return 'critical-high';
-      case FHIR_INTERPRETATION_CODES.CRITICAL_LOW:
-        return 'critical-low';
-      case FHIR_INTERPRETATION_CODES.ABNORMAL:
-        return 'abnormal';
-      default:
-        return 'normal';
+    if (code && interpretations[code]) {
+      return interpretations[code];
     }
+
+    return { code: 'N', display: 'Normal', severity: 'normal' };
   }
 }

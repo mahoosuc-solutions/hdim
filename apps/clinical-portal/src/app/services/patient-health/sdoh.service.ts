@@ -365,7 +365,7 @@ export class SDOHService extends CacheableService {
         headers: this.getHeaders(),
         params,
       })
-      .pipe(catchError(() => of({ entry: [] } as FhirBundle<FhirObservation>)));
+      .pipe(catchError(() => of({ resourceType: 'Bundle' as const, type: 'searchset' as const, entry: [] })));
   }
 
   /**
@@ -383,7 +383,7 @@ export class SDOHService extends CacheableService {
         headers: this.getHeaders(),
         params,
       })
-      .pipe(catchError(() => of({ entry: [] } as FhirBundle<any>)));
+      .pipe(catchError(() => of({ resourceType: 'Bundle' as const, type: 'searchset' as const, entry: [] })));
   }
 
   /**
@@ -667,7 +667,6 @@ export class SDOHService extends CacheableService {
           response: String(item.answer),
           severity,
           zCode: this.SDOH_CATEGORY_ZCODES[category] || 'Z59.9',
-          loincCode: '',
         });
       }
     }
@@ -805,6 +804,7 @@ export class SDOHService extends CacheableService {
       severe: 0,
       moderate: 1,
       mild: 2,
+      none: 3,
     };
 
     return [...needs].sort(

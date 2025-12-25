@@ -198,7 +198,7 @@
               <div class="labs-list">
                 <div class="lab-item" *ngFor="let lab of healthOverview.physicalHealth.labs">
                   <div class="lab-header">
-                    <span class="lab-name">{{ lab.code.text }}</span>
+                    <span class="lab-name">{{ lab.name || lab.code }}</span>
                     <mat-chip [style.background-color]="getVitalStatus(lab.status).color" class="lab-status">
                       {{ lab.status | titlecase }}
                     </mat-chip>
@@ -225,7 +225,7 @@
                 <div class="condition-item" *ngFor="let condition of healthOverview.physicalHealth.chronicConditions">
                   <div class="condition-header">
                     <mat-icon class="condition-icon">
-                      {{ getChronicConditionIcon(condition.display) }}
+                      {{ getChronicConditionIcon(condition.display || condition.name || '') }}
                     </mat-icon>
                     <span class="condition-name">{{ condition.display }}</span>
                     <mat-chip [class]="'severity-' + condition.severity">

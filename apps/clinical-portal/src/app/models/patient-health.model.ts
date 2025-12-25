@@ -180,6 +180,7 @@ export interface PhysicalHealthSummary {
     height?: VitalSign<number>;
     bmi?: VitalSign<number>;
     oxygenSaturation?: VitalSign<number>;
+    respiratoryRate?: VitalSign<number>;
   };
 
   // Lab Results (recent significant values)
@@ -203,6 +204,7 @@ export interface PhysicalHealthSummary {
  * Vital Sign with Trend
  */
 export interface VitalSign<T> {
+  name?: string;
   value: T;
   unit: string;
   date: Date;
@@ -218,7 +220,10 @@ export interface VitalSign<T> {
  * Lab Result
  */
 export interface LabResult {
-  code: CodeableConcept;
+  id?: string;
+  name?: string;
+  code: string;
+  loincCode?: string;
   value: number | string;
   unit?: string;
   date: Date;
@@ -229,7 +234,7 @@ export interface LabResult {
     text?: string;
   };
   interpretation?: LabInterpretation;
-  loincCode?: string;
+  trend?: 'improving' | 'stable' | 'worsening';
 }
 
 /**
@@ -269,13 +274,21 @@ export interface LabTrendAnalysis {
  * Chronic Condition
  */
 export interface ChronicCondition {
-  code: CodeableConcept;
-  display: string;
+  id?: string;
+  name?: string;
+  code: string;
+  system?: string;
+  display?: string;
   severity: 'mild' | 'moderate' | 'severe';
   onsetDate?: Date;
-  controlled: boolean;
+  status?: 'active' | 'inactive' | 'resolved' | 'remission' | 'recurrence' | 'relapse';
+  controlled?: boolean;
+  isControlled?: boolean;
   lastReview?: Date;
+  lastAssessment?: Date;
+  riskLevel?: RiskLevel;
   complications?: string[];
+  clinicalStatus?: string;
 }
 
 /**

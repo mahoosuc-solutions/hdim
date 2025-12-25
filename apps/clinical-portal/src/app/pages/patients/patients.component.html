@@ -250,6 +250,77 @@
     </mat-card>
   }
 
+  <!-- Recent Patients Section -->
+  @if (!loading && !error && recentPatients.length > 0) {
+    <mat-card class="recent-patients-card">
+      <mat-card-header>
+        <mat-card-title class="recent-header">
+          <div class="recent-title">
+            <mat-icon>history</mat-icon>
+            <span>Recently Accessed Patients</span>
+          </div>
+          <div class="recent-actions">
+            <button
+              mat-icon-button
+              (click)="toggleRecentPatients()"
+              [matTooltip]="showRecentPatients ? 'Collapse' : 'Expand'"
+              aria-label="Toggle recent patients visibility">
+              <mat-icon>{{ showRecentPatients ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              (click)="clearRecentPatients()"
+              matTooltip="Clear recent patients"
+              aria-label="Clear all recent patients">
+              <mat-icon>clear_all</mat-icon>
+            </button>
+          </div>
+        </mat-card-title>
+      </mat-card-header>
+      @if (showRecentPatients) {
+        <mat-card-content>
+          <div class="recent-patients-grid">
+            @for (patient of recentPatients; track patient.patientId) {
+              <div
+                class="recent-patient-chip"
+                (click)="viewRecentPatient(patient)"
+                (keydown.enter)="viewRecentPatient(patient)"
+                tabindex="0"
+                role="button"
+                [attr.aria-label]="'View patient ' + patient.fullName">
+                <div class="patient-avatar">
+                  <mat-icon>person</mat-icon>
+                </div>
+                <div class="patient-info">
+                  <span class="patient-name">{{ patient.fullName }}</span>
+                  <span class="patient-details">
+                    @if (patient.mrn) {
+                      <span class="mrn">MRN: {{ patient.mrn }}</span>
+                    }
+                    @if (patient.accessCount > 1) {
+                      <span class="access-count">
+                        <mat-icon class="access-icon">visibility</mat-icon>
+                        {{ patient.accessCount }}
+                      </span>
+                    }
+                  </span>
+                </div>
+                <button
+                  mat-icon-button
+                  class="remove-btn"
+                  (click)="removeFromRecent(patient.patientId, $event)"
+                  matTooltip="Remove from recent"
+                  aria-label="Remove from recent patients">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      }
+    </mat-card>
+  }
+
   <!-- Empty State -->
   @if (!loading && !error && isEmpty()) {
     <mat-card class="empty-state-card">

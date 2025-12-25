@@ -723,3 +723,75 @@
 .full-width {
   width: 100%;
 }
+
+// Measure Filter Section
+.measure-filter-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--bg-tertiary, #f8f9fa);
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #e0e0e0);
+
+  .measure-search-field {
+    flex: 1;
+    min-width: 250px;
+    max-width: 400px;
+  }
+
+  .category-filter {
+    min-width: 200px;
+    max-width: 250px;
+  }
+
+  .filter-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #e3f2fd;
+    border-radius: 20px;
+    font-size: 13px;
+    color: #1565c0;
+    flex-wrap: wrap;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #1976d2;
+    }
+
+    span {
+      font-weight: 500;
+    }
+
+    button {
+      font-size: 12px;
+      height: 28px;
+      line-height: 28px;
+      padding: 0 12px;
+    }
+  }
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .measure-filter-section {
+    flex-direction: column;
+
+    .measure-search-field,
+    .category-filter {
+      min-width: 100%;
+      max-width: 100%;
+    }
+
+    .filter-status {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}

@@ -65,3 +65,9 @@ export * from './live-transaction-feed/live-transaction-feed.component';
 export * from './live-metrics-panel/live-metrics-panel.component';
 export * from './data-flow-pipeline/data-flow-pipeline.component';
 export * from './system-activity-section/system-activity-section.component';
+
+// Care Gap Components
+export * from './care-gap-trend/care-gap-trend.component';
+
+// Risk Analysis Components
+export * from './risk-trend-chart/risk-trend-chart.component';

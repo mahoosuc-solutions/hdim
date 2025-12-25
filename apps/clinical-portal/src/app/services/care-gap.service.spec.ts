@@ -2,6 +2,20 @@ import { BehaviorSubject, firstValueFrom, of, throwError } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
 import { CareGapService, CareGapStatus, CareGapType, GapPriority } from './care-gap.service';
 import { ApiService } from './api.service';
+import { LoggerService } from './logger.service';
+
+const mockLoggerService = {
+  withContext: jest.fn().mockReturnValue({
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  }),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
 
 const createGap = () => ({
   id: 'gap-1',
@@ -26,7 +40,8 @@ describe('CareGapService', () => {
       get: jest.fn(),
       post: jest.fn(),
     } as unknown as ApiService;
-    service = new CareGapService({} as any, apiService);
+    const mockHttpClient = {} as any;
+    service = new CareGapService(mockHttpClient, apiService, mockLoggerService as unknown as LoggerService);
   });
 
   it('caches patient gaps and returns cached results', async () => {

@@ -1,6 +1,7 @@
 import { firstValueFrom, of, throwError } from 'rxjs';
 import { SDOHReferralService } from './sdoh-referral.service';
 import { ApiService } from './api.service';
+import { LoggerService } from './logger.service';
 import { SDOHReferralRequest } from '../models/sdoh-referral.model';
 
 const createApiService = () => ({
@@ -8,13 +9,27 @@ const createApiService = () => ({
   post: jest.fn(),
 }) as unknown as ApiService;
 
+const mockLoggerService = {
+  withContext: jest.fn().mockReturnValue({
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  }),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
+
 describe('SDOHReferralService', () => {
   let apiService: ApiService;
   let service: SDOHReferralService;
 
   beforeEach(() => {
     apiService = createApiService();
-    service = new SDOHReferralService({} as any, apiService);
+    const mockHttpClient = {} as any;
+    service = new SDOHReferralService(mockHttpClient, apiService, mockLoggerService as unknown as LoggerService);
   });
 
   it('returns staff list and fallback on error', (done) => {

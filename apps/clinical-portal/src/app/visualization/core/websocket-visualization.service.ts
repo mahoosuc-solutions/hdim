@@ -192,7 +192,9 @@ export class WebSocketVisualizationService {
 
     // Close socket
     if (this.socket) {
-      this.socket.close(1000, 'Client disconnect');
+      if (typeof this.socket.close === 'function') {
+        this.socket.close(1000, 'Client disconnect');
+      }
       this.socket = undefined;
     }
 

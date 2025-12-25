@@ -4,6 +4,10 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    // Polyfill for sockjs-client which expects Node.js global object
+    global: 'globalThis',
+  },
   server: {
     port: 3000,
     host: true, // Listen on all addresses
@@ -19,6 +23,12 @@ export default defineConfig({
         target: 'http://localhost:8087',
         changeOrigin: true,
         secure: false,
+      },
+      '/api/sales': {
+        target: 'http://localhost:8106',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => `/sales-automation${path}`,
       }
     }
   },

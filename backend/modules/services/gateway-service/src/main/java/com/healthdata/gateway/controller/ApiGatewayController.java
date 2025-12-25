@@ -66,6 +66,9 @@ public class ApiGatewayController {
     @Value("${backend.services.prior-auth.url}")
     private String priorAuthUrl;
 
+    @Value("${backend.services.sales-automation.url}")
+    private String salesAutomationUrl;
+
     /**
      * HTTP hop-by-hop headers that should not be forwarded by proxies.
      * RFC 2616 Section 13.5.1 defines these as connection-specific headers.
@@ -330,6 +333,30 @@ public class ApiGatewayController {
         @RequestBody(required = false) String body
     ) {
         return forwardRequest(request, body, priorAuthUrl, "/api/v1/provider-access");
+    }
+
+    // ==================== SALES & CRM SERVICES ====================
+
+    /**
+     * Route to Sales Automation Service - Lead, Contact, Account, Opportunity management
+     */
+    @RequestMapping(value = "/api/sales/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToSalesAutomation(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, salesAutomationUrl, "/api/sales");
+    }
+
+    /**
+     * Route to Sales Automation Service - Direct path
+     */
+    @RequestMapping(value = "/sales-automation/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToSalesAutomationDirect(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, salesAutomationUrl, "/sales-automation");
     }
 
     /**

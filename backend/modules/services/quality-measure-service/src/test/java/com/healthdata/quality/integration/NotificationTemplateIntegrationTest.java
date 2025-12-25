@@ -1,11 +1,14 @@
 package com.healthdata.quality.integration;
 
 import com.healthdata.quality.QualityMeasureServiceApplication;
+import com.healthdata.quality.config.TestMessagingConfiguration;
+import com.healthdata.quality.config.TestWebSocketConfiguration;
 import com.healthdata.quality.service.notification.TemplateRenderer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
@@ -26,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @SpringBootTest(classes = QualityMeasureServiceApplication.class)
 @ActiveProfiles("test")
+@Import({TestMessagingConfiguration.class, TestWebSocketConfiguration.class})
 @DisplayName("Notification Template Integration Tests")
 class NotificationTemplateIntegrationTest {
 

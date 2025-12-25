@@ -1,5 +1,7 @@
 package com.healthdata.quality.integration;
 
+import com.healthdata.quality.config.TestMessagingConfiguration;
+import com.healthdata.quality.config.TestWebSocketConfiguration;
 import com.healthdata.quality.persistence.QualityMeasureResultEntity;
 import com.healthdata.quality.persistence.QualityMeasureResultRepository;
 import com.healthdata.quality.persistence.SavedReportEntity;
@@ -11,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -31,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@Import({TestMessagingConfiguration.class, TestWebSocketConfiguration.class})
 @DisplayName("Saved Reports API Integration Tests")
 class SavedReportsApiIntegrationTest {
 

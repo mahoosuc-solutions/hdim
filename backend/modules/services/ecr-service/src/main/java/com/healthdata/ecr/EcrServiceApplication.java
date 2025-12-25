@@ -35,18 +35,22 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @see <a href="https://ecr.aimsplatform.org/">AIMS Platform</a>
  * @see <a href="https://rctc.cdc.gov/">RCTC Value Sets</a>
  */
-@SpringBootApplication(scanBasePackages = {
-    "com.healthdata.ecr",
-    "com.healthdata.audit"
-})
+@SpringBootApplication
 @Import({JwtAuthenticationFilter.class, JwtTokenService.class, JwtConfig.class})
 @EnableFeignClients
 @EnableCaching
 @EnableScheduling
 @EnableAsync
 @EnableKafka
-@EnableJpaRepositories(basePackages = {"com.healthdata.ecr.persistence"})
-@EntityScan(basePackages = {"com.healthdata.ecr.persistence"})
+@EnableJpaRepositories(basePackages = {
+    "com.healthdata.ecr.persistence",
+    "com.healthdata.authentication.repository"
+})
+@EntityScan(basePackages = {
+    "com.healthdata.ecr.persistence",
+    "com.healthdata.authentication.domain",
+    "com.healthdata.authentication.entity"
+})
 public class EcrServiceApplication {
 
     public static void main(String[] args) {

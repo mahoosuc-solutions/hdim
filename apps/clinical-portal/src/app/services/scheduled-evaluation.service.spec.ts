@@ -165,22 +165,28 @@ describe('ScheduledEvaluationService', () => {
   describe('deleteSchedule()', () => {
     it('should remove schedule from list', fakeAsync(() => {
       let scheduleId: string;
+      let currentSchedules: any[] = [];
 
+      // Subscribe to schedules to track changes
+      service.getSchedules().subscribe((schedules) => {
+        currentSchedules = schedules;
+      });
+
+      // Create the schedule
       service.createSchedule('To Delete', ['BCS'], 'daily').subscribe((s) => {
         scheduleId = s.id;
       });
       tick();
 
-      service.getSchedules().subscribe((schedules) => {
-        expect(schedules.length).toBe(1);
-      });
+      // Should have 1 schedule after creation
+      expect(currentSchedules.length).toBe(1);
 
+      // Delete the schedule
       service.deleteSchedule(scheduleId!).subscribe();
       tick();
 
-      service.getSchedules().subscribe((schedules) => {
-        expect(schedules.length).toBe(0);
-      });
+      // Should have 0 schedules after deletion
+      expect(currentSchedules.length).toBe(0);
 
       discardPeriodicTasks();
     }));

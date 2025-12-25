@@ -33,6 +33,7 @@ describe('LoginComponent', () => {
     const authServiceMock = {
       login: jest.fn(),
       isAuthenticated: jest.fn().mockReturnValue(false),
+      isMfaRequired: jest.fn().mockReturnValue(false),
     };
 
     await TestBed.configureTestingModule({

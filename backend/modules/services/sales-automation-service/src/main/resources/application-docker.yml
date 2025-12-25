@@ -17,7 +17,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
+      ddl-auto: update
 
   liquibase:
     enabled: ${SPRING_LIQUIBASE_ENABLED:true}

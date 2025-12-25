@@ -131,31 +131,81 @@
             <span class="step-badge" aria-label="Step 1 of 3">Step 1</span>
           </div>
 
-          <!-- Category Filter -->
-          <mat-form-field class="category-filter" appearance="outline">
-            <mat-label>
-              Filter by Category
-              <mat-icon
-                matTooltip="Filter measures by clinical category to narrow down your selection"
-                matTooltipPosition="above"
-                class="help-icon"
-                aria-hidden="true">filter_list</mat-icon>
-            </mat-label>
-            <mat-select
-              [(value)]="selectedCategory"
-              (selectionChange)="onCategoryChange($event.value)"
-              aria-label="Filter measures by category">
-              @for (category of measureCategories; track category.value) {
-                <mat-option [value]="category.value">
-                  {{ category.label }}
-                  @if (getCategoryCount(category.value) > 0) {
-                    <span class="category-count">({{ getCategoryCount(category.value) }})</span>
-                  }
-                </mat-option>
+          <!-- Measure Filter Section -->
+          <div class="measure-filter-section">
+            <!-- Measure Search Input -->
+            <mat-form-field class="measure-search-field" appearance="outline">
+              <mat-label>
+                Search Measures
+                <mat-icon
+                  matTooltip="Search by measure name, display name, or description"
+                  matTooltipPosition="above"
+                  class="help-icon"
+                  aria-hidden="true">search</mat-icon>
+              </mat-label>
+              <input
+                matInput
+                [(ngModel)]="measureSearchTerm"
+                [ngModelOptions]="{standalone: true}"
+                (ngModelChange)="onMeasureSearchChange($event)"
+                placeholder="Type to search measures..."
+                aria-label="Search measures by name or description"
+                type="search"
+              />
+              <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+              @if (measureSearchTerm) {
+                <button
+                  mat-icon-button
+                  matSuffix
+                  (click)="clearMeasureSearch()"
+                  matTooltip="Clear search"
+                  aria-label="Clear measure search">
+                  <mat-icon>close</mat-icon>
+                </button>
               }
-            </mat-select>
-            <mat-icon matPrefix aria-hidden="true">category</mat-icon>
-          </mat-form-field>
+            </mat-form-field>
+
+            <!-- Category Filter -->
+            <mat-form-field class="category-filter" appearance="outline">
+              <mat-label>
+                Filter by Category
+                <mat-icon
+                  matTooltip="Filter measures by clinical category to narrow down your selection"
+                  matTooltipPosition="above"
+                  class="help-icon"
+                  aria-hidden="true">filter_list</mat-icon>
+              </mat-label>
+              <mat-select
+                [(value)]="selectedCategory"
+                (selectionChange)="onCategoryChange($event.value)"
+                aria-label="Filter measures by category">
+                @for (category of measureCategories; track category.value) {
+                  <mat-option [value]="category.value">
+                    {{ category.label }}
+                    @if (getCategoryCount(category.value) > 0) {
+                      <span class="category-count">({{ getCategoryCount(category.value) }})</span>
+                    }
+                  </mat-option>
+                }
+              </mat-select>
+              <mat-icon matPrefix aria-hidden="true">category</mat-icon>
+            </mat-form-field>
+
+            <!-- Filter Status -->
+            @if (measureSearchTerm || selectedCategory) {
+              <div class="filter-status">
+                <mat-icon>filter_alt</mat-icon>
+                <span>Showing {{ getFilteredMeasureCount() }} of {{ allMeasures.length }} measures</span>
+                <button
+                  mat-button
+                  color="primary"
+                  (click)="clearAllMeasureFilters()"
+                  aria-label="Clear all filters">
+                  Clear Filters
+                </button>
+              </div>
+            }
+          </div>
 
           <!-- Measure Selection -->
           <mat-form-field class="full-width" appearance="outline">

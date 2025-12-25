@@ -80,6 +80,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
 
   // Category filtering
   selectedCategory: string = '';
+  measureSearchTerm: string = '';
   measureCategories: { value: string; label: string }[] = [
     { value: '', label: 'All Categories' },
     { value: 'PREVENTIVE', label: 'Preventive Care' },
@@ -193,11 +194,48 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
    */
   onCategoryChange(category: string): void {
     this.selectedCategory = category;
-    if (!category) {
-      this.measures = this.allMeasures;
-    } else {
-      this.measures = this.allMeasures.filter(m => m.category === category);
+    this.filterMeasures();
+  }
+
+  /**
+   * Filter measures by search term
+   */
+  onMeasureSearchChange(searchTerm: string): void {
+    this.measureSearchTerm = searchTerm;
+    this.filterMeasures();
+  }
+
+  /**
+   * Clear measure search
+   */
+  clearMeasureSearch(): void {
+    this.measureSearchTerm = '';
+    this.filterMeasures();
+  }
+
+  /**
+   * Apply all measure filters (category + search)
+   */
+  private filterMeasures(): void {
+    let filtered = [...this.allMeasures];
+
+    // Apply category filter
+    if (this.selectedCategory) {
+      filtered = filtered.filter(m => m.category === this.selectedCategory);
     }
+
+    // Apply search filter
+    if (this.measureSearchTerm) {
+      const searchLower = this.measureSearchTerm.toLowerCase();
+      filtered = filtered.filter(m =>
+        m.name.toLowerCase().includes(searchLower) ||
+        m.displayName.toLowerCase().includes(searchLower) ||
+        (m.description && m.description.toLowerCase().includes(searchLower))
+      );
+    }
+
+    this.measures = filtered;
+
     // Clear measure selection if current selection is not in filtered list
     const currentMeasureId = this.evaluationForm.get('measureId')?.value;
     if (currentMeasureId && !this.measures.some(m => m.name === currentMeasureId)) {
@@ -206,11 +244,38 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * Get count of measures in a category
+   * Get count of measures in a category (respects search filter)
    */
   getCategoryCount(category: string): number {
-    if (!category) return this.allMeasures.length;
-    return this.allMeasures.filter(m => m.category === category).length;
+    if (!this.measureSearchTerm) {
+      if (!category) return this.allMeasures.length;
+      return this.allMeasures.filter(m => m.category === category).length;
+    }
+    // When there's a search term, show counts for matching measures only
+    const searchLower = this.measureSearchTerm.toLowerCase();
+    const matchingMeasures = this.allMeasures.filter(m =>
+      m.name.toLowerCase().includes(searchLower) ||
+      m.displayName.toLowerCase().includes(searchLower) ||
+      (m.description && m.description.toLowerCase().includes(searchLower))
+    );
+    if (!category) return matchingMeasures.length;
+    return matchingMeasures.filter(m => m.category === category).length;
+  }
+
+  /**
+   * Get total filtered count for display
+   */
+  getFilteredMeasureCount(): number {
+    return this.measures.length;
+  }
+
+  /**
+   * Clear all measure filters (search and category)
+   */
+  clearAllMeasureFilters(): void {
+    this.measureSearchTerm = '';
+    this.selectedCategory = '';
+    this.filterMeasures();
   }
 
   /**

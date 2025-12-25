@@ -1,5 +1,7 @@
 package com.healthdata.quality.integration;
 
+import com.healthdata.quality.config.TestMessagingConfiguration;
+import com.healthdata.quality.config.TestWebSocketConfiguration;
 import com.healthdata.quality.persistence.QualityMeasureResultEntity;
 import com.healthdata.quality.persistence.QualityMeasureResultRepository;
 import com.healthdata.quality.service.MeasureCalculationService;
@@ -11,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@Import({TestMessagingConfiguration.class, TestWebSocketConfiguration.class})
 @DisplayName("Caching Behavior Integration Tests")
 class CachingBehaviorIntegrationTest {
 

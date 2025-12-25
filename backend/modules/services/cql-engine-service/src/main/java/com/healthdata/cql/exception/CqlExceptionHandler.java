@@ -3,11 +3,15 @@ package com.healthdata.cql.exception;
 import com.healthdata.common.exception.HdimErrorResponse;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Exception handler for CQL Engine Service.
@@ -69,7 +73,37 @@ public class CqlExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
-    // All other exceptions (MethodArgumentNotValidException, ConstraintViolationException,
-    // AccessDeniedException, ResponseStatusException, etc.) are handled by
-    // HdimGlobalExceptionHandler which has highest precedence via @Order annotation.
+    /**
+     * Handle @Validated constraint violations - returns 400 Bad Request.
+     * This catches Bean Validation constraint violations.
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<HdimErrorResponse> handleConstraintViolation(
+            ConstraintViolationException ex,
+            HttpServletRequest request) {
+
+        Map<String, String> fieldErrors = ex.getConstraintViolations().stream()
+                .collect(Collectors.toMap(
+                        v -> v.getPropertyPath().toString(),
+                        v -> v.getMessage(),
+                        (v1, v2) -> v1
+                ));
+
+        log.warn("Constraint violation at {}: {}", request.getRequestURI(), fieldErrors);
+
+        String message = fieldErrors.values().stream()
+                .findFirst()
+                .orElse("Validation failed");
+
+        HdimErrorResponse response = HdimErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Bad Request")
+                .errorCode("HDIM-CQL-VAL-400")
+                .message(message)
+                .path(request.getRequestURI())
+                .fieldErrors(fieldErrors)
+                .build();
+
+        return ResponseEntity.badRequest().body(response);
+    }
 }

@@ -820,3 +820,180 @@
     }
   }
 }
+
+// ============================================================
+// Recent Patients Section
+// ============================================================
+
+.recent-patients-card {
+  margin-bottom: 24px;
+  border-left: 4px solid #1976d2;
+
+  .recent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+
+    .recent-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 500;
+      color: #1976d2;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    .recent-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      button {
+        color: var(--text-secondary, #666);
+
+        &:hover {
+          color: var(--primary-color, #1976d2);
+        }
+      }
+    }
+  }
+
+  .recent-patients-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 8px 0;
+  }
+
+  .recent-patient-chip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: var(--bg-hover, #f5f5f5);
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 220px;
+    max-width: 320px;
+    flex: 1;
+
+    &:hover {
+      background-color: #e3f2fd;
+      border-color: #1976d2;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(25, 118, 210, 0.15);
+    }
+
+    &:focus {
+      outline: 2px solid #1976d2;
+      outline-offset: 2px;
+    }
+
+    .patient-avatar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background-color: #1976d2;
+      border-radius: 50%;
+      color: white;
+      flex-shrink: 0;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    .patient-info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+
+      .patient-name {
+        font-weight: 500;
+        color: var(--text-primary, #333);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .patient-details {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--text-secondary, #666);
+        margin-top: 2px;
+
+        .mrn {
+          font-family: monospace;
+        }
+
+        .access-count {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          padding: 2px 6px;
+          background-color: rgba(25, 118, 210, 0.1);
+          border-radius: 10px;
+          font-weight: 500;
+          color: #1976d2;
+
+          .access-icon {
+            font-size: 12px;
+            width: 12px;
+            height: 12px;
+          }
+        }
+      }
+    }
+
+    .remove-btn {
+      opacity: 0;
+      transition: opacity 0.2s;
+      flex-shrink: 0;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    &:hover .remove-btn {
+      opacity: 1;
+    }
+  }
+}
+
+// Mobile adjustments for recent patients
+@media (max-width: 768px) {
+  .recent-patients-card {
+    .recent-patients-grid {
+      flex-direction: column;
+    }
+
+    .recent-patient-chip {
+      max-width: 100%;
+      min-width: 100%;
+
+      .remove-btn {
+        opacity: 1;
+      }
+    }
+  }
+}

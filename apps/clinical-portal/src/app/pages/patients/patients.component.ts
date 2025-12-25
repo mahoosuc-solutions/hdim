@@ -26,6 +26,7 @@ import { DialogService } from '../../services/dialog.service';
 import { FilterPersistenceService } from '../../services/filter-persistence.service';
 import { PatientDeduplicationService } from '../../services/patient-deduplication.service';
 import { AIAssistantService } from '../../services/ai-assistant.service';
+import { RecentPatientsService, RecentPatientEntry } from '../../services/recent-patients.service';
 import { PatientSummary, Patient, Address } from '../../models/patient.model';
 import { PatientSummaryWithLinks, DeduplicationStatistics } from '../../models/patient-link.model';
 import { QualityMeasureResult } from '../../models/quality-result.model';
@@ -113,6 +114,10 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
   bulkOperationTotal = 0;
   bulkOperationMessage = '';
 
+  // Recent patients
+  recentPatients: RecentPatientEntry[] = [];
+  showRecentPatients = true;
+
   // Filter form
   filterForm: FormGroup;
 
@@ -152,6 +157,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
     private dialogService: DialogService,
     private filterPersistence: FilterPersistenceService,
     private deduplicationService: PatientDeduplicationService,
+    private recentPatientsService: RecentPatientsService,
     private router: Router,
     private fb: FormBuilder,
     public aiAssistant: AIAssistantService
@@ -169,6 +175,14 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
     this.loadPersistedFilters();
     this.loadPatients();
     this.setupSearchDebounce();
+    this.loadRecentPatients();
+
+    // Subscribe to recent patients updates
+    this.recentPatientsService.recentPatients$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((patients) => {
+        this.recentPatients = patients.slice(0, 5);
+      });
 
     // Save filters on change
     this.filterForm.valueChanges.pipe(
@@ -177,6 +191,13 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
     ).subscribe(() => {
       this.saveFilters();
     });
+  }
+
+  /**
+   * Load recent patients from service
+   */
+  private loadRecentPatients(): void {
+    this.recentPatients = this.recentPatientsService.getMostRecentPatients(5);
   }
 
   ngAfterViewInit(): void {
@@ -525,7 +546,44 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
    * Navigate to patient detail page with full FHIR data
    */
   viewPatientDetail(patient: PatientSummaryWithLinks): void {
+    // Record patient access for recent patients list
+    this.recentPatientsService.recordPatientAccess({
+      id: patient.id,
+      fullName: patient.fullName,
+      mrn: patient.mrn,
+      dateOfBirth: patient.dateOfBirth,
+      gender: patient.gender,
+    });
     this.router.navigate(['/patients', patient.id]);
+  }
+
+  /**
+   * Navigate to a recent patient detail page
+   */
+  viewRecentPatient(recentPatient: RecentPatientEntry): void {
+    this.router.navigate(['/patients', recentPatient.patientId]);
+  }
+
+  /**
+   * Remove a patient from recent list
+   */
+  removeFromRecent(patientId: string, event: Event): void {
+    event.stopPropagation();
+    this.recentPatientsService.removePatient(patientId);
+  }
+
+  /**
+   * Toggle recent patients section visibility
+   */
+  toggleRecentPatients(): void {
+    this.showRecentPatients = !this.showRecentPatients;
+  }
+
+  /**
+   * Clear all recent patients
+   */
+  clearRecentPatients(): void {
+    this.recentPatientsService.clearRecentPatients();
   }
 
   selectPatient(patient: PatientSummaryWithLinks): void {

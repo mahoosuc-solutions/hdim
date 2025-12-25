@@ -2,8 +2,9 @@ package com.healthdata.gateway.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import com.healthdata.authentication.filter.JwtAuthenticationFilter;
+import com.healthdata.gateway.auth.GatewayAuthenticationFilter;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -28,11 +29,19 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @DisplayName("GatewaySecurityConfig")
 class GatewaySecurityConfigTest {
 
+    private GatewayAuthProperties createMockAuthProperties() {
+        GatewayAuthProperties props = mock(GatewayAuthProperties.class);
+        when(props.getEnabled()).thenReturn(true);
+        when(props.getEnforced()).thenReturn(true);
+        when(props.validateForProduction()).thenReturn(java.util.Collections.emptyList());
+        return props;
+    }
+
     @Test
     @DisplayName("Should provide password encoder and authentication provider")
     void shouldProvideAuthBeans() {
         UserDetailsService userDetailsService = mock(UserDetailsService.class);
-        GatewaySecurityConfig config = new GatewaySecurityConfig(userDetailsService);
+        GatewaySecurityConfig config = new GatewaySecurityConfig(userDetailsService, createMockAuthProperties());
 
         PasswordEncoder encoder = config.passwordEncoder();
         assertThat(encoder).isNotNull();
@@ -45,7 +54,7 @@ class GatewaySecurityConfigTest {
     @Test
     @DisplayName("Should configure CORS settings")
     void shouldConfigureCors() {
-        GatewaySecurityConfig config = new GatewaySecurityConfig(mock(UserDetailsService.class));
+        GatewaySecurityConfig config = new GatewaySecurityConfig(mock(UserDetailsService.class), createMockAuthProperties());
         CorsConfigurationSource source = config.corsConfigurationSource();
 
         CorsConfiguration cors = source.getCorsConfiguration(new MockHttpServletRequest("GET", "/api"));
@@ -60,7 +69,7 @@ class GatewaySecurityConfigTest {
     @Test
     @DisplayName("Should build test security filter chain")
     void shouldBuildTestSecurityFilterChain() throws Exception {
-        GatewaySecurityConfig config = new GatewaySecurityConfig(mock(UserDetailsService.class));
+        GatewaySecurityConfig config = new GatewaySecurityConfig(mock(UserDetailsService.class), createMockAuthProperties());
 
         SecurityFilterChain chain = config.testSecurityFilterChain(httpSecurity());
 
@@ -70,8 +79,8 @@ class GatewaySecurityConfigTest {
     @Test
     @DisplayName("Should build production security filter chain")
     void shouldBuildProductionSecurityFilterChain() throws Exception {
-        GatewaySecurityConfig config = new GatewaySecurityConfig(mock(UserDetailsService.class));
-        JwtAuthenticationFilter filter = mock(JwtAuthenticationFilter.class);
+        GatewaySecurityConfig config = new GatewaySecurityConfig(mock(UserDetailsService.class), createMockAuthProperties());
+        GatewayAuthenticationFilter filter = mock(GatewayAuthenticationFilter.class);
 
         SecurityFilterChain chain = config.securityFilterChain(httpSecurity(), filter);
 

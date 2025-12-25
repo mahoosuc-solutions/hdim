@@ -1,5 +1,7 @@
 package com.healthdata.quality.integration;
 
+import com.healthdata.quality.config.TestMessagingConfiguration;
+import com.healthdata.quality.config.TestWebSocketConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.*;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.context.EmbeddedKafka;
@@ -55,6 +58,7 @@ import static org.awaitility.Awaitility.await;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 @ActiveProfiles("test")
+@Import({TestMessagingConfiguration.class, TestWebSocketConfiguration.class})
 @DisplayName("End-to-End Integration Tests")
 @Disabled("Requires full platform deployment - run manually with artillery or after docker compose up")
 public class EndToEndIntegrationTest {

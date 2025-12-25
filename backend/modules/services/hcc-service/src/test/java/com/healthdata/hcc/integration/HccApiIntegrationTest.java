@@ -70,6 +70,12 @@ class HccApiIntegrationTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+        // Also configure the HDIM persistence module properties
+        registry.add("healthdata.persistence.primary.url", postgres::getJdbcUrl);
+        registry.add("healthdata.persistence.primary.username", postgres::getUsername);
+        registry.add("healthdata.persistence.primary.password", postgres::getPassword);
+        registry.add("healthdata.persistence.primary.driver-class-name", () -> "org.postgresql.Driver");
     }
 
     @MockBean

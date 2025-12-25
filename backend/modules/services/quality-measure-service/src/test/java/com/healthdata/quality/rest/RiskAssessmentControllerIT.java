@@ -8,12 +8,15 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import com.healthdata.quality.config.TestMessagingConfiguration;
+import com.healthdata.quality.config.TestWebSocketConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -36,6 +39,7 @@ import com.healthdata.quality.persistence.RiskAssessmentRepository;
 @AutoConfigureMockMvc(addFilters = false)
 @ExtendWith(SpringExtension.class)
 @Transactional
+@Import({TestMessagingConfiguration.class, TestWebSocketConfiguration.class})
 @WithMockUser(username = "testuser", roles = {"EVALUATOR", "ADMIN"})
 class RiskAssessmentControllerIT {
 

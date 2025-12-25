@@ -1,5 +1,7 @@
 package com.healthdata.quality.service;
 
+import com.healthdata.quality.config.TestMessagingConfiguration;
+import com.healthdata.quality.config.TestWebSocketConfiguration;
 import com.healthdata.quality.dto.ClinicalAlertDTO;
 import com.healthdata.quality.persistence.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@Import({TestMessagingConfiguration.class, TestWebSocketConfiguration.class})
 @DisplayName("Alert Routing Service Database Integration Tests")
 class AlertRoutingServiceDatabaseTest {
 

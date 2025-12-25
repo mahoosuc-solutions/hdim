@@ -224,7 +224,7 @@ services:
     ports:
       - "8081:8081"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/actuator/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/cql-engine/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -257,7 +257,7 @@ services:
     ports:
       - "8082:8082"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8082/actuator/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8082/consent/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -290,7 +290,7 @@ services:
     ports:
       - "8083:8083"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8083/actuator/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8083/events/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -323,7 +323,7 @@ services:
     ports:
       - "8084:8084"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8084/actuator/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8084/patient/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -356,7 +356,7 @@ services:
     ports:
       - "8085:8085"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8085/actuator/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8085/fhir/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -389,7 +389,7 @@ services:
     ports:
       - "8086:8086"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8086/actuator/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8086/care-gap/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -428,7 +428,7 @@ services:
     ports:
       - "8087:8087"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8087/actuator/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8087/quality-measure/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -599,7 +599,7 @@ services:
     ports:
       - "8092:8092"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8092/actuator/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8092/analytics/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -1022,7 +1022,7 @@ services:
     ports:
       - "8104:8104"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8104/actuator/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8104/qrda-export/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -1063,7 +1063,7 @@ services:
     ports:
       - "8105:8105"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8105/actuator/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8105/hcc/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5

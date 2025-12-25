@@ -1,0 +1,137 @@
+server:
+  port: 8106
+  servlet:
+    context-path: /sales-automation
+
+spring:
+  application:
+    name: sales-automation-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sales_automation_db
+    username: healthdata
+    password: healthdata_password
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+    open-in-view: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: sales-automation-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.healthdata.sales
+
+  mail:
+    host: ${MAIL_HOST:smtp.zoho.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# Zoho CRM Integration
+zoho:
+  api:
+    base-url: https://www.zohoapis.com/crm/v3
+    accounts-url: https://accounts.zoho.com
+  oauth:
+    client-id: ${ZOHO_CLIENT_ID:}
+    client-secret: ${ZOHO_CLIENT_SECRET:}
+    refresh-token: ${ZOHO_REFRESH_TOKEN:}
+    scope: ZohoCRM.modules.ALL,ZohoCRM.settings.ALL
+  sync:
+    enabled: ${ZOHO_SYNC_ENABLED:false}
+    interval-minutes: 15
+  webhook:
+    enabled: ${ZOHO_WEBHOOK_ENABLED:false}
+    secret: ${ZOHO_WEBHOOK_SECRET:}
+
+# Security
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456}
+  expiration: 86400000
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: true
+
+# OpenAPI/Swagger
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+# Resilience4j
+resilience4j:
+  circuitbreaker:
+    instances:
+      zohoService:
+        registerHealthIndicator: true
+        slidingWindowSize: 100
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+  retry:
+    instances:
+      zohoService:
+        maxAttempts: 3
+        waitDuration: 1000
+  ratelimiter:
+    instances:
+      zohoService:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1m
+        timeoutDuration: 0
+
+# Logging
+logging:
+  level:
+    com.healthdata.sales: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG

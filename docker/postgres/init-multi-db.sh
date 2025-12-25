@@ -37,6 +37,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE payer_db;
     CREATE DATABASE migration_db;
 
+    -- Sales & CRM Services
+    CREATE DATABASE sales_automation_db;
+
     -- Integration Services
     CREATE DATABASE ehr_connector_db;
 
@@ -66,6 +69,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE migration_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE ehr_connector_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE docs_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE sales_automation_db TO "$POSTGRES_USER";
 EOSQL
 
 echo "All HDIM databases created successfully!"

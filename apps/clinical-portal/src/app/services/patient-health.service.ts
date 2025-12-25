@@ -3617,9 +3617,8 @@ export class PatientHealthService {
     }
 
     const labResult: LabResult = {
-      code: {
-        text: obs.code.text || obs.code.coding?.[0]?.display || 'Unknown',
-      },
+      code: obs.code.coding?.[0]?.code || loincCode || '',
+      name: obs.code.text || obs.code.coding?.[0]?.display || 'Unknown',
       value: obs.valueQuantity?.value || obs.valueString || '',
       unit: obs.valueQuantity?.unit,
       date,
@@ -3775,7 +3774,8 @@ export class PatientHealthService {
       },
       labs: [
         {
-          code: { text: 'HbA1c' },
+          code: '4548-4',
+          name: 'HbA1c',
           value: 7.2,
           unit: '%',
           date: new Date('2025-11-10'),
@@ -3783,7 +3783,8 @@ export class PatientHealthService {
           referenceRange: { low: 4, high: 6, text: '<7% for diabetics' },
         },
         {
-          code: { text: 'LDL Cholesterol' },
+          code: '18262-6',
+          name: 'LDL Cholesterol',
           value: 145,
           unit: 'mg/dL',
           date: new Date('2025-11-10'),
@@ -3793,7 +3794,8 @@ export class PatientHealthService {
       ],
       chronicConditions: [
         {
-          code: { text: 'Type 2 Diabetes' },
+          code: 'E11',
+          name: 'Type 2 Diabetes',
           display: 'Type 2 Diabetes Mellitus',
           severity: 'moderate',
           onsetDate: new Date('2020-03-15'),
@@ -3801,7 +3803,8 @@ export class PatientHealthService {
           lastReview: new Date('2025-11-10'),
         },
         {
-          code: { text: 'Hypertension' },
+          code: 'I10',
+          name: 'Hypertension',
           display: 'Essential Hypertension',
           severity: 'mild',
           onsetDate: new Date('2019-06-20'),
@@ -4342,7 +4345,7 @@ export class PatientHealthService {
     if (results.length < 2) {
       return {
         loincCode: '',
-        testName: results[0]?.code.text || 'Unknown',
+        testName: results[0]?.name || results[0]?.code || 'Unknown',
         trend: 'stable',
         percentChange: 0,
         dataPoints: results
@@ -4360,7 +4363,7 @@ export class PatientHealthService {
     if (values.length < 2) {
       return {
         loincCode: sortedResults[0]?.loincCode || '',
-        testName: sortedResults[0]?.code.text || 'Unknown',
+        testName: sortedResults[0]?.name || sortedResults[0]?.code || 'Unknown',
         trend: 'stable',
         percentChange: 0,
         dataPoints: results
@@ -4386,7 +4389,7 @@ export class PatientHealthService {
     // Generate recommendation for concerning trends
     let recommendation: string | undefined;
     if (trend === 'worsening' || newestValue > oldestValue * 1.2) {
-      const testName = sortedResults[0]?.code.text || 'Lab value';
+      const testName = sortedResults[0]?.name || sortedResults[0]?.code || 'Lab value';
       recommendation = `${testName} has increased by ${Math.abs(percentChange).toFixed(1)}%. ` +
         'Consider reviewing treatment plan and patient adherence. ' +
         'May require medication adjustment or lifestyle intervention.';
@@ -4396,7 +4399,7 @@ export class PatientHealthService {
 
     return {
       loincCode: sortedResults[0]?.loincCode || '',
-      testName: sortedResults[0]?.code.text || 'Unknown',
+      testName: sortedResults[0]?.name || sortedResults[0]?.code || 'Unknown',
       trend,
       percentChange,
       dataPoints: results,
@@ -4699,9 +4702,8 @@ export class PatientHealthService {
 
           // Map to ChronicCondition interface
           const condition: ChronicCondition = {
-            code: {
-              text: fhirCondition.code?.text || fhirCondition.code?.coding?.[0]?.display || 'Unknown'
-            },
+            code: fhirCondition.code?.coding?.[0]?.code || '',
+            name: fhirCondition.code?.text || fhirCondition.code?.coding?.[0]?.display || 'Unknown',
             display: fhirCondition.code?.coding?.[0]?.display || fhirCondition.code?.text || 'Unknown',
             severity: this.mapFhirSeverityToLocal(fhirCondition.severity),
             onsetDate: fhirCondition.onsetDateTime ? new Date(fhirCondition.onsetDateTime) : undefined,

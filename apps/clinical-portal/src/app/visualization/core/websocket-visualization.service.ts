@@ -279,7 +279,7 @@ export class WebSocketVisualizationService {
    * Handle WebSocket close event
    */
   private onClose(event: CloseEvent): void {
-    this.log.debug('WebSocket closed:', event.code, event.reason);
+    this.log.debug(`WebSocket closed: ${event.code} ${event.reason}`);
     this.statusSubject.next(WebSocketStatus.DISCONNECTED);
     this.socket = undefined;
 

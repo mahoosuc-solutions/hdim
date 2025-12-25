@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { CacheableService } from '../shared/cacheable.service';
+import { CacheableService, conceptContainsAnyCode } from '../shared';
 import { LoggerService, ContextualLogger } from '../logger.service';
 import {
   API_CONFIG,
@@ -176,7 +176,7 @@ export class FhirConditionService extends CacheableService {
   ): Observable<ChronicCondition[]> {
     return this.getActiveConditions(patientId).pipe(
       map((conditions) =>
-        conditions.filter((c) => snomedCodes.includes(c.code))
+        conditions.filter((c) => conceptContainsAnyCode(c.code, snomedCodes))
       )
     );
   }
@@ -305,13 +305,19 @@ export class FhirConditionService extends CacheableService {
    * Check if condition is a chronic disease
    */
   private isChronicCondition(code: string): boolean {
-    return this.CHRONIC_DISEASE_SNOMED_CODES.includes(code);
+    if (!code) return false;
+    return this.CHRONIC_DISEASE_SNOMED_CODES.some(chronicCode =>
+      code === chronicCode || code.includes(chronicCode)
+    );
   }
 
   /**
    * Check if condition is mental health related
    */
   private isMentalHealthCondition(code: string): boolean {
-    return this.MENTAL_HEALTH_SNOMED_CODES.includes(code);
+    if (!code) return false;
+    return this.MENTAL_HEALTH_SNOMED_CODES.some(mhCode =>
+      code === mhCode || code.includes(mhCode)
+    );
   }
 }

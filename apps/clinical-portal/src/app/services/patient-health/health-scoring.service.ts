@@ -320,15 +320,13 @@ export class HealthScoringService extends CacheableService {
     let score = 100;
 
     // Deduct points for abnormal vitals
-    if (physical.vitals?.bloodPressure?.status === 'abnormal' ||
-        physical.vitals?.bloodPressure?.status === 'warning') {
+    if (physical.vitals?.bloodPressure?.status === 'abnormal') {
       score -= 10;
     }
     if (physical.vitals?.bloodPressure?.status === 'critical') {
       score -= 20;
     }
-    if (physical.vitals?.bmi?.status === 'abnormal' ||
-        physical.vitals?.bmi?.status === 'warning') {
+    if (physical.vitals?.bmi?.status === 'abnormal') {
       score -= 5;
     }
 

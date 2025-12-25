@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Type } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -10,7 +10,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { NgxChartsModule } from '@swimlane/ngx-charts';
+import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import { forkJoin, catchError, of, finalize, takeUntil } from 'rxjs';
 import { injectDestroy } from '../../shared/utils';
 import { EvaluationService } from '../../services/evaluation.service';
@@ -109,10 +109,9 @@ export interface ChartSeriesData {
 
 /**
  * NgxCharts Color Scheme
+ * Uses the Color type from @swimlane/ngx-charts
  */
-export interface ChartColorScheme {
-  domain: string[];
-}
+export type ChartColorScheme = Color;
 
 /**
  * Dashboard Component
@@ -150,7 +149,7 @@ export class DashboardComponent implements OnInit {
   UserRole = UserRole; // Expose enum for template use
 
   // Dynamic component loading
-  roleComponent: unknown = null;
+  roleComponent: Type<unknown> | null = null;
   loadingRoleComponent = false;
   // Data properties
   statistics: DashboardStatistics = {
@@ -183,6 +182,9 @@ export class DashboardComponent implements OnInit {
   lineChartShowYAxisLabel = true;
   lineChartYAxisLabel = 'Compliance Rate (%)';
   lineChartColorScheme: ChartColorScheme = {
+    name: 'Compliance',
+    selectable: true,
+    group: ScaleType.Ordinal,
     domain: ['#5AA454', '#E44D25', '#CFC0BB', '#7aa3e5', '#a8385d', '#aae3f5']
   };
 
@@ -197,6 +199,9 @@ export class DashboardComponent implements OnInit {
   barChartShowYAxisLabel = true;
   barChartYAxisLabel = 'Compliance Rate (%)';
   barChartColorScheme: ChartColorScheme = {
+    name: 'Performance',
+    selectable: true,
+    group: ScaleType.Ordinal,
     domain: ['#5AA454', '#A10A28', '#C7B42C', '#AAAAAA']
   };
 

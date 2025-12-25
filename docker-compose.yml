@@ -1158,8 +1158,8 @@ services:
       SPRING_REDIS_PORT: 6379
       SERVER_PORT: 8106
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
-      SPRING_LIQUIBASE_ENABLED: "true"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
       # Zoho CRM Integration
       ZOHO_CLIENT_ID: ${ZOHO_CLIENT_ID:-}
       ZOHO_CLIENT_SECRET: ${ZOHO_CLIENT_SECRET:-}

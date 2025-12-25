@@ -28,7 +28,7 @@ public interface ContactRepository extends JpaRepository<Contact, UUID> {
 
     List<Contact> findByAccountId(UUID accountId);
 
-    @Query("SELECT c FROM Contact c WHERE c.accountId = :accountId AND c.isPrimary = true")
+    @Query("SELECT c FROM Contact c WHERE c.accountId = :accountId AND c.primary = true")
     Optional<Contact> findPrimaryContactByAccountId(@Param("accountId") UUID accountId);
 
     Page<Contact> findByTenantIdAndContactType(UUID tenantId, ContactType type, Pageable pageable);

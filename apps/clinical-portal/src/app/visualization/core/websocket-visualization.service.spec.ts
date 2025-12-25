@@ -6,6 +6,20 @@ import {
   BatchProgressEvent,
 } from './websocket-visualization.service';
 import { EvaluationProgressEvent } from '../data/data-transform.service';
+import { LoggerService } from '../../services/logger.service';
+
+const mockLoggerService = {
+  withContext: jest.fn().mockReturnValue({
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  }),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
 
 describe('WebSocketVisualizationService', () => {
   let service: WebSocketVisualizationService;
@@ -13,6 +27,15 @@ describe('WebSocketVisualizationService', () => {
   let mockWebSocket: jest.Mocked<WebSocket>;
 
   beforeEach(() => {
+    // Reset the mock
+    jest.clearAllMocks();
+    mockLoggerService.withContext.mockReturnValue({
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    });
+
     // Mock WebSocket
     mockWebSocket = {
       send: jest.fn(),
@@ -21,7 +44,10 @@ describe('WebSocketVisualizationService', () => {
     } as unknown as jest.Mocked<WebSocket>;
 
     TestBed.configureTestingModule({
-      providers: [WebSocketVisualizationService],
+      providers: [
+        WebSocketVisualizationService,
+        { provide: LoggerService, useValue: mockLoggerService },
+      ],
     });
 
     service = TestBed.inject(WebSocketVisualizationService);
@@ -112,7 +138,9 @@ describe('WebSocketVisualizationService', () => {
       (webSocketSpy as any).OPEN = (originalWebSocket as any)?.OPEN ?? 1;
       (webSocketSpy as any).CONNECTING = (originalWebSocket as any)?.CONNECTING ?? 0;
       (window as any).WebSocket = webSocketSpy;
-      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+      // Get the mock logger that was injected
+      const mockLogger = mockLoggerService.withContext('WebSocketVisualizationService');
 
       (service as any).socket = {
         readyState: (webSocketSpy as any).CONNECTING,
@@ -122,9 +150,9 @@ describe('WebSocketVisualizationService', () => {
       service.connect();
 
       expect(webSocketSpy).not.toHaveBeenCalled();
-      expect(logSpy).toHaveBeenCalledWith('WebSocket connection in progress');
+      // The service uses LoggerService.debug() instead of console.log
+      expect(mockLogger.debug).toHaveBeenCalledWith('WebSocket connection in progress');
 
-      logSpy.mockRestore();
       (window as any).WebSocket = originalWebSocket;
     });
 

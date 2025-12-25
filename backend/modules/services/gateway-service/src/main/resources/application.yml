@@ -97,10 +97,13 @@ backend:
       url: ${BACKEND_SERVICES_PRIOR_AUTH_URL:http://localhost:8102}
       timeout: 60000  # Longer timeout for payer API calls
     analytics:
-      url: ${BACKEND_SERVICES_ANALYTICS_URL:http://localhost:8106}
+      url: ${BACKEND_SERVICES_ANALYTICS_URL:http://localhost:8092}
       timeout: 30000
     documentation:
       url: ${BACKEND_SERVICES_DOCUMENTATION_URL:http://localhost:8091}
+      timeout: 30000
+    sales-automation:
+      url: ${BACKEND_SERVICES_SALES_AUTOMATION_URL:http://localhost:8106}
       timeout: 30000
 
 # Gateway Feature Flags
@@ -253,6 +256,12 @@ resilience4j:
         failureRateThreshold: 50
         waitDurationInOpenState: 30s
         permittedNumberOfCallsInHalfOpenState: 3
+      salesAutomation:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
   retry:
     instances:
       cqlEngine:
@@ -347,6 +356,14 @@ resilience4j:
         retryExceptions:
           - java.io.IOException
           - java.net.SocketTimeoutException
+      salesAutomation:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
   timelimiter:
     instances:
       cqlEngine:
@@ -386,6 +403,9 @@ resilience4j:
         timeoutDuration: 30s
         cancelRunningFuture: true
       documentationService:
+        timeoutDuration: 30s
+        cancelRunningFuture: true
+      salesAutomation:
         timeoutDuration: 30s
         cancelRunningFuture: true
   ratelimiter:

@@ -188,6 +188,7 @@ services:
       BACKEND_SERVICES_HCC_URL: http://hcc-service:8105
       BACKEND_SERVICES_ECR_URL: http://ecr-service:8101
       BACKEND_SERVICES_PRIOR_AUTH_URL: http://prior-auth-service:8102
+      BACKEND_SERVICES_SALES_AUTOMATION_URL: http://sales-automation-service:8106/sales-automation
     ports:
       - "8080:8080"
     healthcheck:
@@ -1122,6 +1123,56 @@ services:
       - "8102:8102"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8102/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================
+  # SALES & CRM SERVICES (8106)
+  # ============================================
+
+  # Port 8106 - Sales Automation Service
+  sales-automation-service:
+    container_name: healthdata-sales-automation-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/sales-automation-service/Dockerfile
+    profiles: ["full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sales_automation_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8106
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      # Zoho CRM Integration
+      ZOHO_CLIENT_ID: ${ZOHO_CLIENT_ID:-}
+      ZOHO_CLIENT_SECRET: ${ZOHO_CLIENT_SECRET:-}
+      ZOHO_REFRESH_TOKEN: ${ZOHO_REFRESH_TOKEN:-}
+      ZOHO_SYNC_ENABLED: ${ZOHO_SYNC_ENABLED:-false}
+      ZOHO_WEBHOOK_ENABLED: ${ZOHO_WEBHOOK_ENABLED:-false}
+      ZOHO_WEBHOOK_SECRET: ${ZOHO_WEBHOOK_SECRET:-}
+      # OpenTelemetry configuration for Jaeger
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+    ports:
+      - "8106:8106"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8106/sales-automation/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5

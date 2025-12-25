@@ -31,6 +31,7 @@ import {
   Assessment as AssessmentIcon,
   Approval as ApprovalIcon,
   ChevronLeft as ChevronLeftIcon,
+  TrendingUp as SalesIcon,
 } from '@mui/icons-material';
 import { DarkModeToggle } from './DarkModeToggle';
 import { useDarkMode } from '../hooks/useDarkMode';
@@ -56,6 +57,12 @@ const navItems: NavItem[] = [
     label: 'Approvals',
     icon: <ApprovalIcon />,
     description: 'Human-in-the-Loop approval queue',
+  },
+  {
+    path: '/sales',
+    label: 'Sales',
+    icon: <SalesIcon />,
+    description: 'Sales automation and CRM',
   },
 ];
 

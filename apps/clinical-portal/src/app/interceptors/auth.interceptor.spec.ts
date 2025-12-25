@@ -8,6 +8,12 @@ import { authInterceptor } from './auth.interceptor';
 import { API_CONFIG, HTTP_HEADERS } from '../config/api.config';
 import { AuthService } from '../services/auth.service';
 
+/**
+ * Auth Interceptor Tests
+ *
+ * The interceptor adds X-Tenant-ID header for multi-tenancy.
+ * JWT auth is handled via HttpOnly cookies (not Authorization headers).
+ */
 describe('AuthInterceptor', () => {
   let httpMock: HttpTestingController;
   let httpClient: HttpClient;
@@ -38,58 +44,55 @@ describe('AuthInterceptor', () => {
     httpMock.verify();
   });
 
-  describe('Bearer Auth Header Injection', () => {
-    it('should add Authorization header to CQL Engine requests', (done) => {
+  describe('Tenant ID Header Injection', () => {
+    it('should add X-Tenant-ID header to CQL Engine requests', (done) => {
       const url = `${API_CONFIG.CQL_ENGINE_URL}/api/v1/cql/libraries`;
 
       httpClient.get(url).subscribe(() => done());
 
       const req = httpMock.expectOne(url);
-      expect(req.request.headers.has(HTTP_HEADERS.AUTHORIZATION)).toBe(true);
-      expect(req.request.headers.get(HTTP_HEADERS.AUTHORIZATION)).toBe('Bearer test-token');
+      expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
 
       req.flush({});
     });
 
-    it('should add Authorization header to Quality Measure Service requests', (done) => {
+    it('should add X-Tenant-ID header to Quality Measure Service requests', (done) => {
       const url = `${API_CONFIG.QUALITY_MEASURE_URL}/quality-measure/calculate`;
 
       httpClient.get(url).subscribe(() => done());
 
       const req = httpMock.expectOne(url);
-      expect(req.request.headers.has(HTTP_HEADERS.AUTHORIZATION)).toBe(true);
-      expect(req.request.headers.get(HTTP_HEADERS.AUTHORIZATION)).toBe('Bearer test-token');
+      expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
 
       req.flush({});
     });
 
-    it('should add Authorization header to FHIR Server requests', (done) => {
+    it('should add X-Tenant-ID header to FHIR Server requests', (done) => {
       const url = `${API_CONFIG.FHIR_SERVER_URL}/Patient`;
 
       httpClient.get(url).subscribe(() => done());
 
       const req = httpMock.expectOne(url);
-      expect(req.request.headers.has(HTTP_HEADERS.AUTHORIZATION)).toBe(true);
-      expect(req.request.headers.get(HTTP_HEADERS.AUTHORIZATION)).toBe('Bearer test-token');
+      expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
       req.flush({});
     });
 
-    it('should NOT add Authorization header to external URLs', (done) => {
+    it('should NOT add X-Tenant-ID header to external URLs', (done) => {
       const url = 'https://external-api.example.com/data';
 
       httpClient.get(url).subscribe(() => done());
 
       const req = httpMock.expectOne(url);
-      expect(req.request.headers.has(HTTP_HEADERS.AUTHORIZATION)).toBe(false);
+      expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(false);
       req.flush({});
     });
   });
 
   describe('HTTP Methods', () => {
-    it('should add auth header to POST requests', (done) => {
+    it('should add tenant header to POST requests', (done) => {
       const url = `${API_CONFIG.CQL_ENGINE_URL}/api/v1/cql/evaluations`;
       const body = { libraryId: 'lib-1', patientId: 'patient-1' };
 
@@ -97,12 +100,12 @@ describe('AuthInterceptor', () => {
 
       const req = httpMock.expectOne(url);
       expect(req.request.method).toBe('POST');
-      expect(req.request.headers.has(HTTP_HEADERS.AUTHORIZATION)).toBe(true);
-      expect(req.request.headers.get(HTTP_HEADERS.AUTHORIZATION)).toBe('Bearer test-token');
+      expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
+      expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
       req.flush({});
     });
 
-    it('should add auth header to PUT requests', (done) => {
+    it('should add tenant header to PUT requests', (done) => {
       const url = `${API_CONFIG.CQL_ENGINE_URL}/api/v1/cql/libraries/lib-1`;
       const body = { name: 'Updated' };
 
@@ -110,26 +113,26 @@ describe('AuthInterceptor', () => {
 
       const req = httpMock.expectOne(url);
       expect(req.request.method).toBe('PUT');
-      expect(req.request.headers.has(HTTP_HEADERS.AUTHORIZATION)).toBe(true);
-      expect(req.request.headers.get(HTTP_HEADERS.AUTHORIZATION)).toBe('Bearer test-token');
+      expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
+      expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
       req.flush({});
     });
 
-    it('should add auth header to DELETE requests', (done) => {
+    it('should add tenant header to DELETE requests', (done) => {
       const url = `${API_CONFIG.CQL_ENGINE_URL}/api/v1/cql/libraries/lib-1`;
 
       httpClient.delete(url).subscribe(() => done());
 
       const req = httpMock.expectOne(url);
       expect(req.request.method).toBe('DELETE');
-      expect(req.request.headers.has(HTTP_HEADERS.AUTHORIZATION)).toBe(true);
-      expect(req.request.headers.get(HTTP_HEADERS.AUTHORIZATION)).toBe('Bearer test-token');
+      expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
+      expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
       req.flush(null);
     });
   });
 
   describe('Multiple Requests', () => {
-    it('should add auth header to all backend requests', (done) => {
+    it('should add tenant header to all backend requests', (done) => {
       const urls = [
         `${API_CONFIG.CQL_ENGINE_URL}/api/v1/cql/libraries`,
         `${API_CONFIG.QUALITY_MEASURE_URL}/quality-measure/calculate`,
@@ -146,8 +149,8 @@ describe('AuthInterceptor', () => {
 
       urls.forEach((url) => {
         const req = httpMock.expectOne(url);
-        expect(req.request.headers.has(HTTP_HEADERS.AUTHORIZATION)).toBe(true);
-        expect(req.request.headers.get(HTTP_HEADERS.AUTHORIZATION)).toBe('Bearer test-token');
+        expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
+        expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
         req.flush({});
       });
     });
@@ -161,8 +164,8 @@ describe('AuthInterceptor', () => {
       httpClient.get(url, customHeader).subscribe(() => done());
 
       const req = httpMock.expectOne(url);
-      expect(req.request.headers.has(HTTP_HEADERS.AUTHORIZATION)).toBe(true);
-      expect(req.request.headers.get(HTTP_HEADERS.AUTHORIZATION)).toBe('Bearer test-token');
+      expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
+      expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
       expect(req.request.headers.get('X-Custom-Header')).toBe('CustomValue');
       req.flush({});
     });
@@ -183,26 +186,40 @@ describe('AuthInterceptor', () => {
       const cqlReq = httpMock.expectOne(cqlUrl);
       const fhirReq = httpMock.expectOne(fhirUrl);
 
-      expect(cqlReq.request.headers.has(HTTP_HEADERS.AUTHORIZATION)).toBe(true);
-      expect(cqlReq.request.headers.get(HTTP_HEADERS.AUTHORIZATION)).toBe('Bearer test-token');
-      expect(fhirReq.request.headers.has(HTTP_HEADERS.AUTHORIZATION)).toBe(true);
-      expect(fhirReq.request.headers.get(HTTP_HEADERS.AUTHORIZATION)).toBe('Bearer test-token');
+      expect(cqlReq.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
+      expect(cqlReq.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
+      expect(fhirReq.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
+      expect(fhirReq.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
 
       cqlReq.flush({});
       fhirReq.flush({});
     });
   });
 
-  describe('Missing Token', () => {
-    it('should not add Authorization header when token is missing', (done) => {
-      authServiceMock.getToken.mockReturnValueOnce(null);
+  describe('Missing Tenant ID', () => {
+    it('should not add X-Tenant-ID header when tenant is missing', (done) => {
+      authServiceMock.getTenantId.mockReturnValueOnce(null);
       const url = `${API_CONFIG.CQL_ENGINE_URL}/api/v1/cql/libraries`;
 
       httpClient.get(url).subscribe(() => done());
 
       const req = httpMock.expectOne(url);
-      expect(req.request.headers.has(HTTP_HEADERS.AUTHORIZATION)).toBe(false);
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(false);
+      req.flush({});
+    });
+  });
+
+  describe('Cookie-based JWT Auth', () => {
+    it('should NOT add Authorization header (JWT is in HttpOnly cookie)', (done) => {
+      const url = `${API_CONFIG.CQL_ENGINE_URL}/api/v1/cql/libraries`;
+
+      httpClient.get(url).subscribe(() => done());
+
+      const req = httpMock.expectOne(url);
+      // Authorization header should NOT be set - JWT is handled via cookies
+      expect(req.request.headers.has(HTTP_HEADERS.AUTHORIZATION)).toBe(false);
+      // But tenant header should be set
+      expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       req.flush({});
     });
   });

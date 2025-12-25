@@ -1086,13 +1086,21 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/prior_auth_db
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: healthdata_password
+      # HDIM Persistence Module Configuration
+      HEALTHDATA_PERSISTENCE_PRIMARY_URL: jdbc:postgresql://postgres:5432/prior_auth_db
+      HEALTHDATA_PERSISTENCE_PRIMARY_USERNAME: healthdata
+      HEALTHDATA_PERSISTENCE_PRIMARY_PASSWORD: healthdata_password
+      HEALTHDATA_PERSISTENCE_PRIMARY_DRIVER_CLASS_NAME: org.postgresql.Driver
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SERVER_PORT: 8102
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      HEALTHDATA_SECURITY_JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      AUDIT_ENABLED: "false"
     ports:
       - "8102:8102"
     healthcheck:

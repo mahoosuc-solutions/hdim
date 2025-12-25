@@ -55,7 +55,8 @@ function a11yProps(index: number) {
 
 export function SalesPage() {
   const [activeTab, setActiveTab] = useState(0);
-  const tenantId = 'TENANT001'; // Default tenant for testing
+  // Use a valid UUID for the tenant ID (required by backend)
+  const tenantId = '00000000-0000-0000-0000-000000000001';
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);

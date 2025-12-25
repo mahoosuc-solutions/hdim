@@ -52,9 +52,9 @@ RUN chown -R nginx:nginx /usr/share/nginx/html \
 # Expose port 80
 EXPOSE 80
 
-# Health check
+# Health check (use 127.0.0.1 instead of localhost for Alpine compatibility)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+  CMD wget --quiet --tries=1 --spider http://127.0.0.1/ || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]

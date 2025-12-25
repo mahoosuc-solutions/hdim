@@ -474,14 +474,15 @@ describe('WebSocketVisualizationService', () => {
     }));
 
     it('should warn on unknown message type', () => {
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      // Get the mock logger that was injected
+      const mockLogger = mockLoggerService.withContext('WebSocketVisualizationService');
 
       (service as any).onMessage(
         new MessageEvent('message', { data: JSON.stringify({ type: 'unknown' }) })
       );
 
-      expect(warnSpy).toHaveBeenCalled();
-      warnSpy.mockRestore();
+      // The service uses LoggerService.warn() instead of console.warn
+      expect(mockLogger.warn).toHaveBeenCalled();
     });
   });
 

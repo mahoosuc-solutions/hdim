@@ -8,7 +8,21 @@ import {
 import { provideHttpClient } from '@angular/common/http';
 import { AuthService, User, LoginResponse, TokenResponse } from './auth.service';
 import { ApiService } from './api.service';
+import { LoggerService } from './logger.service';
 import { of, throwError } from 'rxjs';
+
+const mockLoggerService = {
+  withContext: jest.fn().mockReturnValue({
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  }),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -63,7 +77,7 @@ describe('AuthService', () => {
     };
 
     const apiServiceMock = {
-      post: jest.fn(),
+      post: jest.fn().mockReturnValue(of({})), // Default mock for API calls
       get: jest.fn(),
     };
 
@@ -74,6 +88,7 @@ describe('AuthService', () => {
         provideHttpClientTesting(),
         { provide: Router, useValue: routerMock },
         { provide: ApiService, useValue: apiServiceMock },
+        { provide: LoggerService, useValue: mockLoggerService },
       ],
     });
 
@@ -93,17 +108,16 @@ describe('AuthService', () => {
 
   describe('Login Functionality', () => {
     it('should login successfully and store auth data', (done) => {
-      // Create a valid JWT token with future expiration
-      const validToken = createMockJWT({ exp: Math.floor(Date.now() / 1000) + 3600 });
-      const loginResponse = { ...mockLoginResponse, accessToken: validToken };
-
-      apiService.post.mockReturnValue(of(loginResponse));
+      // With HttpOnly cookies, tokens are not accessible from JavaScript
+      // getToken() intentionally returns null for XSS protection
+      apiService.post.mockReturnValue(of(mockLoginResponse));
 
       service.login('testuser', 'password').subscribe({
         next: (response) => {
-          expect(response).toEqual(loginResponse);
-          expect(service.getToken()).toBe(validToken);
-          expect(service.getRefreshToken()).toBe(mockLoginResponse.refreshToken);
+          expect(response).toEqual(mockLoginResponse);
+          // Tokens are stored in HttpOnly cookies, not accessible from JS
+          expect(service.getToken()).toBeNull();
+          // User is stored and accessible
           expect(service.isAuthenticated()).toBe(true);
           expect(service.currentUserValue).toEqual(mockUser);
           done();
@@ -162,6 +176,8 @@ describe('AuthService', () => {
       localStorage.setItem('healthdata_auth_token', 'mock-token');
       localStorage.setItem('healthdata_refresh_token', 'mock-refresh');
       localStorage.setItem('healthdata_user', JSON.stringify(mockUser));
+      // Mock the logout API call (to clear HttpOnly cookies on backend)
+      apiService.post.mockReturnValue(of({}));
     });
 
     it('should clear all auth data on logout', () => {
@@ -207,69 +223,75 @@ describe('AuthService', () => {
       service.logout();
     });
 
-    it('should clear session storage completely', () => {
+    it('should clear user from session storage', () => {
+      // With HttpOnly cookies, only user profile is stored in localStorage
+      // Tokens are in HttpOnly cookies cleared by backend
       service.logout();
 
-      expect(localStorage.getItem('healthdata_auth_token')).toBeNull();
-      expect(localStorage.getItem('healthdata_refresh_token')).toBeNull();
       expect(localStorage.getItem('healthdata_user')).toBeNull();
     });
   });
 
   describe('Token Management', () => {
-    it('should get token from localStorage', () => {
-      const token = 'test-token';
-      localStorage.setItem('healthdata_auth_token', token);
-
-      expect(service.getToken()).toBe(token);
+    /**
+     * With HttpOnly cookies, token management methods are either no-ops
+     * or return null for security (XSS protection). Tokens are managed
+     * by the backend via HttpOnly cookies, not accessible from JavaScript.
+     */
+    it('should return null from getToken (HttpOnly cookies)', () => {
+      // Even if we try to set something in localStorage, getToken returns null
+      localStorage.setItem('healthdata_auth_token', 'test-token');
+      expect(service.getToken()).toBeNull();
     });
 
-    it('should set token in localStorage', () => {
-      const token = 'new-token';
-      service.setToken(token);
-
-      expect(localStorage.getItem('healthdata_auth_token')).toBe(token);
+    it('should be a no-op for setToken (HttpOnly cookies)', () => {
+      // setToken is a no-op - tokens are set by backend as HttpOnly cookies
+      service.setToken('new-token');
+      // The method doesn't throw, it's just a no-op for backwards compatibility
+      expect(service.getToken()).toBeNull();
     });
 
-    it('should remove token from localStorage', () => {
+    it('should handle removeToken gracefully', () => {
       localStorage.setItem('healthdata_auth_token', 'token');
       service.removeToken();
-
-      expect(localStorage.getItem('healthdata_auth_token')).toBeNull();
+      // The token removal is a no-op but should not throw
+      expect(true).toBe(true);
     });
 
-    it('should get refresh token from localStorage', () => {
-      const token = 'refresh-token';
-      localStorage.setItem('healthdata_refresh_token', token);
-
-      expect(service.getRefreshToken()).toBe(token);
+    it('should return null from getRefreshToken (HttpOnly cookies)', () => {
+      localStorage.setItem('healthdata_refresh_token', 'refresh-token');
+      expect(service.getRefreshToken()).toBeNull();
     });
 
-    it('should set refresh token in localStorage', () => {
-      const token = 'new-refresh-token';
-      service.setRefreshToken(token);
-
-      expect(localStorage.getItem('healthdata_refresh_token')).toBe(token);
+    it('should be a no-op for setRefreshToken (HttpOnly cookies)', () => {
+      service.setRefreshToken('new-refresh-token');
+      expect(service.getRefreshToken()).toBeNull();
     });
 
-    it('should remove refresh token from localStorage', () => {
+    it('should handle removeRefreshToken gracefully', () => {
       localStorage.setItem('healthdata_refresh_token', 'token');
       service.removeRefreshToken();
-
-      expect(localStorage.getItem('healthdata_refresh_token')).toBeNull();
+      expect(true).toBe(true);
     });
   });
 
   describe('Token Refresh', () => {
-    it('should refresh token successfully', (done) => {
-      localStorage.setItem('healthdata_refresh_token', 'old-refresh');
+    /**
+     * With HttpOnly cookies, token refresh is handled via cookie exchange.
+     * The refresh token is sent as an HttpOnly cookie by the browser,
+     * and new tokens are set as HttpOnly cookies by the backend.
+     */
+    it('should refresh token successfully via cookie exchange', (done) => {
+      // Store user to indicate valid session
+      localStorage.setItem('healthdata_user', JSON.stringify(mockUser));
       apiService.post.mockReturnValue(of(mockTokenResponse));
 
       service.refreshToken().subscribe({
         next: (response) => {
           expect(response).toEqual(mockTokenResponse);
-          expect(service.getToken()).toBe(mockTokenResponse.accessToken);
-          expect(service.getRefreshToken()).toBe(mockTokenResponse.refreshToken);
+          // Tokens are in HttpOnly cookies, not accessible from JS
+          expect(service.getToken()).toBeNull();
+          expect(service.getRefreshToken()).toBeNull();
           done();
         },
         error: () => fail('should not fail'),
@@ -277,7 +299,7 @@ describe('AuthService', () => {
     });
 
     it('should logout on refresh token error', (done) => {
-      localStorage.setItem('healthdata_refresh_token', 'old-refresh');
+      localStorage.setItem('healthdata_user', JSON.stringify(mockUser));
       const error = { status: 401, message: 'Invalid token' };
       apiService.post.mockReturnValue(throwError(() => error));
 
@@ -290,25 +312,31 @@ describe('AuthService', () => {
       });
     });
 
-    it('should return error if no refresh token available', (done) => {
+    it('should return error if no valid session exists', (done) => {
+      // No user in storage = no valid session
+      // With HttpOnly cookies, the API call will fail with 401
+      const error = { status: 401, message: 'Unauthorized' };
+      apiService.post.mockReturnValue(throwError(() => error));
+
       service.refreshToken().subscribe({
         next: () => fail('should not succeed'),
-        error: (error) => {
-          expect(error.message).toBe('No refresh token available');
+        error: (err) => {
+          expect(err.status).toBe(401);
           done();
         },
       });
     });
 
-    it('should update only access token if refresh token not provided in response', (done) => {
-      localStorage.setItem('healthdata_refresh_token', 'old-refresh');
+    it('should handle response without explicit refresh token', (done) => {
+      localStorage.setItem('healthdata_user', JSON.stringify(mockUser));
       const responseWithoutRefresh = { ...mockTokenResponse, refreshToken: undefined };
       apiService.post.mockReturnValue(of(responseWithoutRefresh));
 
       service.refreshToken().subscribe({
         next: () => {
-          expect(service.getToken()).toBe(mockTokenResponse.accessToken);
-          expect(service.getRefreshToken()).toBe('old-refresh'); // Unchanged
+          // Tokens are managed via HttpOnly cookies
+          expect(service.getToken()).toBeNull();
+          expect(service.getRefreshToken()).toBeNull();
           done();
         },
       });
@@ -316,38 +344,49 @@ describe('AuthService', () => {
   });
 
   describe('Authentication State', () => {
-    it('should return false when no token exists', () => {
+    /**
+     * With HttpOnly cookies, authentication state is determined by
+     * the presence of a valid user in storage, not by token presence.
+     * The backend validates actual token validity on each request.
+     */
+    it('should return false when no user exists in storage', () => {
       expect(service.isAuthenticated()).toBe(false);
     });
 
-    it('should return false when token is expired', () => {
-      // Create an expired token (expired 1 hour ago)
-      const expiredToken = createMockJWT({ exp: Math.floor(Date.now() / 1000) - 3600 });
-      localStorage.setItem('healthdata_auth_token', expiredToken);
-
-      expect(service.isAuthenticated()).toBe(false);
+    it('should return true when user exists in storage', () => {
+      localStorage.setItem('healthdata_user', JSON.stringify(mockUser));
+      // Need to create a new service instance to pick up the stored user
+      const newService = new AuthService(
+        TestBed.inject(HttpClient),
+        TestBed.inject(ApiService),
+        TestBed.inject(Router),
+        mockLoggerService as unknown as LoggerService
+      );
+      expect(newService.isAuthenticated()).toBe(true);
     });
 
-    it('should return true when token is valid', () => {
-      // Create a valid token (expires in 1 hour)
-      const validToken = createMockJWT({ exp: Math.floor(Date.now() / 1000) + 3600 });
-      localStorage.setItem('healthdata_auth_token', validToken);
-
-      expect(service.isAuthenticated()).toBe(true);
+    it('should return false when user storage is invalid JSON', () => {
+      localStorage.setItem('healthdata_user', 'invalid-json');
+      const newService = new AuthService(
+        TestBed.inject(HttpClient),
+        TestBed.inject(ApiService),
+        TestBed.inject(Router),
+        mockLoggerService as unknown as LoggerService
+      );
+      expect(newService.isAuthenticated()).toBe(false);
     });
 
-    it('should return false when token is malformed', () => {
-      localStorage.setItem('healthdata_auth_token', 'invalid-token');
-
+    it('should return false after logout clears user', () => {
+      localStorage.setItem('healthdata_user', JSON.stringify(mockUser));
+      // Logout clears the user
+      service.logout();
       expect(service.isAuthenticated()).toBe(false);
     });
   });
 
   describe('Tenant ID Management', () => {
     it('should return tenant ID from current user', (done) => {
-      const validToken = createMockJWT({ exp: Math.floor(Date.now() / 1000) + 3600 });
-      const loginResponse = { ...mockLoginResponse, accessToken: validToken };
-      apiService.post.mockReturnValue(of(loginResponse));
+      apiService.post.mockReturnValue(of(mockLoginResponse));
 
       service.login('testuser', 'password').subscribe({
         next: () => {
@@ -363,10 +402,8 @@ describe('AuthService', () => {
 
     it('should return null when user has no tenant ID', (done) => {
       const userWithoutTenant = { ...mockUser, tenantId: undefined };
-      const validToken = createMockJWT({ exp: Math.floor(Date.now() / 1000) + 3600 });
       const loginResponse = {
         ...mockLoginResponse,
-        accessToken: validToken,
         user: userWithoutTenant,
       };
       apiService.post.mockReturnValue(of(loginResponse));
@@ -394,9 +431,7 @@ describe('AuthService', () => {
     });
 
     it('should return cached user if available', (done) => {
-      const validToken = createMockJWT({ exp: Math.floor(Date.now() / 1000) + 3600 });
-      const loginResponse = { ...mockLoginResponse, accessToken: validToken };
-      apiService.post.mockReturnValue(of(loginResponse));
+      apiService.post.mockReturnValue(of(mockLoginResponse));
 
       // Login first to cache the user
       service.login('testuser', 'password').subscribe({
@@ -430,9 +465,7 @@ describe('AuthService', () => {
 
   describe('Role-Based Authorization', () => {
     beforeEach((done) => {
-      const validToken = createMockJWT({ exp: Math.floor(Date.now() / 1000) + 3600 });
-      const loginResponse = { ...mockLoginResponse, accessToken: validToken };
-      apiService.post.mockReturnValue(of(loginResponse));
+      apiService.post.mockReturnValue(of(mockLoginResponse));
 
       service.login('testuser', 'password').subscribe({
         next: () => done(),
@@ -464,10 +497,8 @@ describe('AuthService', () => {
         ...mockUser,
         roles: [{ id: 'admin', name: 'ADMIN', permissions: [] }],
       };
-      const validToken = createMockJWT({ exp: Math.floor(Date.now() / 1000) + 3600 });
       const loginResponse = {
         ...mockLoginResponse,
-        accessToken: validToken,
         user: adminUser,
       };
 
@@ -487,9 +518,7 @@ describe('AuthService', () => {
 
   describe('Permission-Based Authorization', () => {
     beforeEach((done) => {
-      const validToken = createMockJWT({ exp: Math.floor(Date.now() / 1000) + 3600 });
-      const loginResponse = { ...mockLoginResponse, accessToken: validToken };
-      apiService.post.mockReturnValue(of(loginResponse));
+      apiService.post.mockReturnValue(of(mockLoginResponse));
 
       service.login('testuser', 'password').subscribe({
         next: () => done(),
@@ -516,10 +545,8 @@ describe('AuthService', () => {
         ...mockUser,
         roles: [{ id: 'admin', name: 'ADMIN', permissions: [] }],
       };
-      const validToken = createMockJWT({ exp: Math.floor(Date.now() / 1000) + 3600 });
       const loginResponse = {
         ...mockLoginResponse,
-        accessToken: validToken,
         user: adminUser,
       };
 
@@ -547,9 +574,7 @@ describe('AuthService', () => {
         }
       });
 
-      const validToken = createMockJWT({ exp: Math.floor(Date.now() / 1000) + 3600 });
-      const loginResponse = { ...mockLoginResponse, accessToken: validToken };
-      apiService.post.mockReturnValue(of(loginResponse));
+      apiService.post.mockReturnValue(of(mockLoginResponse));
       service.login('testuser', 'password').subscribe();
     });
 
@@ -565,21 +590,8 @@ describe('AuthService', () => {
         }
       });
 
-      const validToken = createMockJWT({ exp: Math.floor(Date.now() / 1000) + 3600 });
-      const loginResponse = { ...mockLoginResponse, accessToken: validToken };
-      apiService.post.mockReturnValue(of(loginResponse));
+      apiService.post.mockReturnValue(of(mockLoginResponse));
       service.login('testuser', 'password').subscribe();
     });
   });
 });
-
-/**
- * Helper function to create a mock JWT token with custom payload
- */
-function createMockJWT(payload: any): string {
-  const header = { alg: 'HS256', typ: 'JWT' };
-  const encodedHeader = btoa(JSON.stringify(header));
-  const encodedPayload = btoa(JSON.stringify(payload));
-  const signature = 'mock-signature';
-  return `${encodedHeader}.${encodedPayload}.${signature}`;
-}

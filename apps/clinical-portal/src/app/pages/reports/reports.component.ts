@@ -2,7 +2,11 @@ import { Component, OnInit, OnDestroy, signal, ViewChild, AfterViewInit } from '
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,6 +20,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { SelectionModel } from '@angular/cdk/collections';
 import { EvaluationService } from '../../services/evaluation.service';
 import { AIAssistantService } from '../../services/ai-assistant.service';
+import { ReportTemplatesService, ReportTemplate, ReportTemplateCategory } from '../../services/report-templates.service';
 import { SavedReport, ReportType } from '../../models/quality-result.model';
 import { PatientSelectionDialogComponent } from '../../components/dialogs/patient-selection-dialog.component';
 import { YearSelectionDialogComponent } from '../../components/dialogs/year-selection-dialog.component';
@@ -66,6 +71,7 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
   selector: 'app-reports',
   imports: [
     CommonModule,
+    FormsModule,
     MatTabsModule,
     MatCardModule,
     MatButtonModule,
@@ -77,6 +83,9 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
     MatPaginatorModule,
     MatSortModule,
     MatCheckboxModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatChipsModule,
     LoadingButtonComponent,
     LoadingOverlayComponent,
   ],
@@ -594,6 +603,176 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
             </div>
           </div>
         </mat-tab>
+
+        <!-- Report Templates Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">library_books</mat-icon>
+            Report Templates
+          </ng-template>
+          <div class="tab-content">
+            <div class="templates-container">
+              <!-- Templates Header -->
+              <div class="templates-header">
+                <div class="templates-title-section">
+                  <h2>Pre-Built Report Templates</h2>
+                  <p class="templates-subtitle">Quick-start with CMS/HEDIS compliant report templates</p>
+                </div>
+                <div class="templates-search">
+                  <mat-form-field appearance="outline" class="search-field">
+                    <mat-label>Search templates</mat-label>
+                    <input
+                      matInput
+                      [(ngModel)]="templateSearchTerm"
+                      (ngModelChange)="filterTemplates()"
+                      placeholder="Search by name or tag..."
+                    />
+                    <mat-icon matPrefix>search</mat-icon>
+                    @if (templateSearchTerm) {
+                      <button mat-icon-button matSuffix (click)="templateSearchTerm = ''; filterTemplates()">
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    }
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <!-- Category Chips -->
+              <div class="category-chips">
+                <button
+                  mat-stroked-button
+                  [class.active]="!selectedTemplateCategory"
+                  (click)="selectTemplateCategory(null)"
+                >
+                  <mat-icon>apps</mat-icon>
+                  All Templates
+                </button>
+                @for (cat of templateCategories; track cat.value) {
+                  <button
+                    mat-stroked-button
+                    [class.active]="selectedTemplateCategory === cat.value"
+                    (click)="selectTemplateCategory(cat.value)"
+                  >
+                    <mat-icon>{{ cat.icon }}</mat-icon>
+                    {{ cat.label }}
+                  </button>
+                }
+              </div>
+
+              <!-- Favorites Section -->
+              @if (favoriteTemplates.length > 0) {
+                <div class="templates-section">
+                  <h3 class="section-title">
+                    <mat-icon>star</mat-icon>
+                    Favorite Templates
+                  </h3>
+                  <div class="templates-grid">
+                    @for (template of favoriteTemplates; track template.id) {
+                      <mat-card class="template-card" [class]="template.category.toLowerCase()">
+                        <mat-card-header>
+                          <mat-icon mat-card-avatar class="template-icon">{{ template.icon }}</mat-icon>
+                          <mat-card-title>{{ template.name }}</mat-card-title>
+                          <mat-card-subtitle>{{ template.category }} | {{ template.type }}</mat-card-subtitle>
+                          <button
+                            mat-icon-button
+                            class="favorite-btn favorited"
+                            (click)="toggleTemplateFavorite(template.id, $event)"
+                            matTooltip="Remove from favorites"
+                          >
+                            <mat-icon>star</mat-icon>
+                          </button>
+                        </mat-card-header>
+                        <mat-card-content>
+                          <p class="template-description">{{ template.description }}</p>
+                          <div class="template-tags">
+                            @for (tag of template.tags.slice(0, 3); track tag) {
+                              <span class="tag">{{ tag }}</span>
+                            }
+                          </div>
+                        </mat-card-content>
+                        <mat-card-actions>
+                          <button mat-raised-button color="primary" (click)="useTemplate(template)">
+                            <mat-icon>play_arrow</mat-icon>
+                            Use Template
+                          </button>
+                        </mat-card-actions>
+                      </mat-card>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- All Templates Section -->
+              <div class="templates-section">
+                <h3 class="section-title">
+                  <mat-icon>library_books</mat-icon>
+                  {{ selectedTemplateCategory ? getCategoryLabel(selectedTemplateCategory) : 'All Templates' }}
+                  <span class="count">({{ filteredTemplates.length }})</span>
+                </h3>
+                <div class="templates-grid">
+                  @for (template of filteredTemplates; track template.id) {
+                    <mat-card class="template-card" [class]="template.category.toLowerCase()">
+                      <mat-card-header>
+                        <mat-icon mat-card-avatar class="template-icon">{{ template.icon }}</mat-icon>
+                        <mat-card-title>{{ template.name }}</mat-card-title>
+                        <mat-card-subtitle>{{ template.category }} | {{ template.type }}</mat-card-subtitle>
+                        <button
+                          mat-icon-button
+                          class="favorite-btn"
+                          [class.favorited]="template.isFavorite"
+                          (click)="toggleTemplateFavorite(template.id, $event)"
+                          [matTooltip]="template.isFavorite ? 'Remove from favorites' : 'Add to favorites'"
+                        >
+                          <mat-icon>{{ template.isFavorite ? 'star' : 'star_border' }}</mat-icon>
+                        </button>
+                      </mat-card-header>
+                      <mat-card-content>
+                        <p class="template-description">{{ template.description }}</p>
+                        <div class="template-meta">
+                          <span class="meta-item" *ngIf="template.measures.length > 0">
+                            <mat-icon>checklist</mat-icon>
+                            {{ template.measures.length }} measures
+                          </span>
+                          <span class="meta-item" *ngIf="template.usageCount > 0">
+                            <mat-icon>trending_up</mat-icon>
+                            Used {{ template.usageCount }} times
+                          </span>
+                        </div>
+                        <div class="template-tags">
+                          @for (tag of template.tags.slice(0, 4); track tag) {
+                            <span class="tag">{{ tag }}</span>
+                          }
+                        </div>
+                      </mat-card-content>
+                      <mat-card-actions>
+                        <button mat-raised-button color="primary" (click)="useTemplate(template)">
+                          <mat-icon>play_arrow</mat-icon>
+                          Use Template
+                        </button>
+                        <button mat-stroked-button (click)="previewTemplate(template)">
+                          <mat-icon>visibility</mat-icon>
+                          Preview
+                        </button>
+                      </mat-card-actions>
+                    </mat-card>
+                  }
+                </div>
+
+                @if (filteredTemplates.length === 0) {
+                  <div class="empty-state">
+                    <mat-icon class="empty-icon">search_off</mat-icon>
+                    <h3>No Templates Found</h3>
+                    <p>Try adjusting your search or category filter</p>
+                    <button mat-raised-button color="primary" (click)="clearTemplateFilters()">
+                      <mat-icon>clear</mat-icon>
+                      Clear Filters
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </mat-tab>
       </mat-tab-group>
 
       <!-- Loading Overlay -->
@@ -1106,6 +1285,241 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
           }
         }
       }
+
+      /* Templates Tab Styles */
+      .templates-container {
+        padding: 0;
+      }
+
+      .templates-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+
+        .templates-title-section {
+          h2 {
+            font-size: 24px;
+            font-weight: 500;
+            margin: 0 0 4px 0;
+            color: #1a1a1a;
+          }
+
+          .templates-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+          }
+        }
+
+        .templates-search {
+          .search-field {
+            width: 300px;
+            margin: 0;
+
+            ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+              display: none;
+            }
+          }
+        }
+      }
+
+      .category-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 24px;
+
+        button {
+          border-radius: 20px;
+          padding: 0 16px;
+          height: 36px;
+          font-size: 13px;
+          transition: all 0.2s ease;
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+            margin-right: 6px;
+          }
+
+          &.active {
+            background-color: #1976d2;
+            color: white;
+            border-color: #1976d2;
+          }
+
+          &:hover:not(.active) {
+            background-color: #e3f2fd;
+          }
+        }
+      }
+
+      .templates-section {
+        margin-bottom: 32px;
+
+        .section-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 18px;
+          font-weight: 500;
+          color: #333;
+          margin: 0 0 16px 0;
+
+          mat-icon {
+            color: #1976d2;
+          }
+
+          .count {
+            font-weight: 400;
+            color: #666;
+            font-size: 14px;
+          }
+        }
+      }
+
+      .templates-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+      }
+
+      .template-card {
+        position: relative;
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        &.cms {
+          border-left-color: #1976d2;
+        }
+
+        &.hedis {
+          border-left-color: #388e3c;
+        }
+
+        &.preventive {
+          border-left-color: #00bcd4;
+        }
+
+        &.chronic_disease {
+          border-left-color: #ff9800;
+        }
+
+        &.behavioral_health {
+          border-left-color: #9c27b0;
+        }
+
+        &.medication {
+          border-left-color: #e91e63;
+        }
+
+        &.custom {
+          border-left-color: #607d8b;
+        }
+
+        mat-card-header {
+          position: relative;
+
+          .template-icon {
+            background-color: #f5f5f5;
+            color: #1976d2;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border-radius: 8px;
+          }
+
+          .favorite-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+
+            mat-icon {
+              color: #bdbdbd;
+              transition: color 0.2s ease;
+            }
+
+            &:hover mat-icon {
+              color: #ffc107;
+            }
+
+            &.favorited mat-icon {
+              color: #ffc107;
+            }
+          }
+        }
+
+        .template-description {
+          font-size: 14px;
+          color: #666;
+          line-height: 1.5;
+          margin: 0 0 12px 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .template-meta {
+          display: flex;
+          gap: 16px;
+          margin-bottom: 12px;
+
+          .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: #888;
+
+            mat-icon {
+              font-size: 16px;
+              width: 16px;
+              height: 16px;
+            }
+          }
+        }
+
+        .template-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+
+          .tag {
+            display: inline-block;
+            padding: 2px 10px;
+            background-color: #f0f0f0;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #666;
+          }
+        }
+
+        mat-card-actions {
+          display: flex;
+          gap: 8px;
+          padding: 12px 16px;
+          border-top: 1px solid #eee;
+
+          button {
+            mat-icon {
+              margin-right: 4px;
+            }
+          }
+        }
+      }
     `,
   ],
 })
@@ -1135,15 +1549,33 @@ export class ReportsComponent implements OnInit, OnDestroy, AfterViewInit {
     'actions',
   ];
 
+  // Template properties
+  templateSearchTerm = '';
+  selectedTemplateCategory: ReportTemplateCategory | null = null;
+  filteredTemplates: ReportTemplate[] = [];
+  favoriteTemplates: ReportTemplate[] = [];
+  templateCategories: { value: ReportTemplateCategory; label: string; icon: string }[] = [];
+
   constructor(
     private evaluationService: EvaluationService,
     private dialog: MatDialog,
     private toast: ToastService,
+    private reportTemplatesService: ReportTemplatesService,
     public aiAssistant: AIAssistantService
   ) {}
 
   ngOnInit(): void {
     this.loadSavedReports();
+    this.initializeTemplates();
+  }
+
+  /**
+   * Initialize report templates
+   */
+  private initializeTemplates(): void {
+    this.templateCategories = this.reportTemplatesService.getCategories();
+    this.filterTemplates();
+    this.updateFavoriteTemplates();
   }
 
   ngAfterViewInit(): void {
@@ -1555,5 +1987,128 @@ export class ReportsComponent implements OnInit, OnDestroy, AfterViewInit {
         },
       });
     });
+  }
+
+  // ===== Template Methods =====
+
+  /**
+   * Filter templates by search term and category
+   */
+  filterTemplates(): void {
+    let templates = this.reportTemplatesService.getTemplates();
+
+    // Filter by category
+    if (this.selectedTemplateCategory) {
+      templates = templates.filter(t => t.category === this.selectedTemplateCategory);
+    }
+
+    // Filter by search term
+    if (this.templateSearchTerm.trim()) {
+      templates = this.reportTemplatesService.searchTemplates(this.templateSearchTerm);
+      if (this.selectedTemplateCategory) {
+        templates = templates.filter(t => t.category === this.selectedTemplateCategory);
+      }
+    }
+
+    this.filteredTemplates = templates;
+  }
+
+  /**
+   * Update favorite templates list
+   */
+  private updateFavoriteTemplates(): void {
+    this.favoriteTemplates = this.reportTemplatesService.getFavoriteTemplates();
+  }
+
+  /**
+   * Select a template category
+   */
+  selectTemplateCategory(category: ReportTemplateCategory | null): void {
+    this.selectedTemplateCategory = category;
+    this.filterTemplates();
+  }
+
+  /**
+   * Toggle template favorite status
+   */
+  toggleTemplateFavorite(templateId: string, event: Event): void {
+    event.stopPropagation();
+    this.reportTemplatesService.toggleFavorite(templateId);
+    this.updateFavoriteTemplates();
+    this.filterTemplates();
+  }
+
+  /**
+   * Use a template to generate a report
+   */
+  useTemplate(template: ReportTemplate): void {
+    this.reportTemplatesService.recordUsage(template.id);
+
+    if (template.type === 'PATIENT') {
+      this.onGeneratePatientReport();
+    } else if (template.type === 'POPULATION') {
+      this.onGeneratePopulationReport();
+    } else if (template.type === 'COMPARATIVE') {
+      this.onGenerateComparativeReport();
+    }
+
+    this.toast.info(`Using template: ${template.name}`);
+  }
+
+  /**
+   * Preview a template configuration
+   */
+  previewTemplate(template: ReportTemplate): void {
+    const config = template.configuration;
+    const features = [];
+
+    if (config.includeCharts) features.push('Charts');
+    if (config.includeDetails) features.push('Details');
+    if (config.includeTrends) features.push('Trends');
+    if (config.includeCareGaps) features.push('Care Gaps');
+    if (config.includeRecommendations) features.push('Recommendations');
+
+    const message = `
+      <strong>${template.name}</strong><br><br>
+      <strong>Type:</strong> ${template.type}<br>
+      <strong>Category:</strong> ${template.category}<br>
+      <strong>Measures:</strong> ${template.measures.length > 0 ? template.measures.length : 'All applicable'}<br>
+      <strong>Features:</strong> ${features.join(', ')}<br>
+      <strong>Group By:</strong> ${config.groupBy}<br>
+      <strong>Sort By:</strong> ${config.sortBy}
+    `;
+
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Template Preview',
+        message: message,
+        confirmText: 'Use Template',
+        cancelText: 'Close',
+        confirmColor: 'primary',
+        icon: template.icon,
+        iconColor: '#1976d2'
+      }
+    }).afterClosed().pipe(takeUntil(this.destroy$)).subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.useTemplate(template);
+      }
+    });
+  }
+
+  /**
+   * Clear all template filters
+   */
+  clearTemplateFilters(): void {
+    this.templateSearchTerm = '';
+    this.selectedTemplateCategory = null;
+    this.filterTemplates();
+  }
+
+  /**
+   * Get category label
+   */
+  getCategoryLabel(category: ReportTemplateCategory): string {
+    const cat = this.templateCategories.find(c => c.value === category);
+    return cat ? cat.label : category;
   }
 }

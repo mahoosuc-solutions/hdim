@@ -32,16 +32,20 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * @see <a href="https://www.cms.gov/medicare/health-plans/medicareadvtgspecratestats/risk-adjustors">CMS HCC Risk Adjustment</a>
  */
-@SpringBootApplication(scanBasePackages = {
-    "com.healthdata.hcc",
-    "com.healthdata.audit"
-})
+@SpringBootApplication
 @Import({JwtAuthenticationFilter.class, JwtTokenService.class, JwtConfig.class})
 @EnableFeignClients
 @EnableCaching
 @EnableScheduling
-@EnableJpaRepositories(basePackages = {"com.healthdata.hcc.persistence"})
-@EntityScan(basePackages = {"com.healthdata.hcc.persistence"})
+@EnableJpaRepositories(basePackages = {
+    "com.healthdata.hcc.persistence",
+    "com.healthdata.authentication.repository"
+})
+@EntityScan(basePackages = {
+    "com.healthdata.hcc.persistence",
+    "com.healthdata.authentication.domain",
+    "com.healthdata.authentication.entity"
+})
 public class HccServiceApplication {
 
     public static void main(String[] args) {

@@ -23,18 +23,21 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * @see <a href="https://ecqi.healthit.gov/qrda">eCQI QRDA Standards</a>
  */
-@SpringBootApplication(scanBasePackages = {
-    "com.healthdata.qrda",
-    "com.healthdata.security",
-    "com.healthdata.audit"
-})
+@SpringBootApplication
 @Import({JwtAuthenticationFilter.class, JwtTokenService.class, JwtConfig.class})
 @EnableFeignClients
 @EnableCaching
 @EnableScheduling
 @EnableAsync
-@EnableJpaRepositories(basePackages = {"com.healthdata.qrda.persistence"})
-@EntityScan(basePackages = {"com.healthdata.qrda.persistence"})
+@EnableJpaRepositories(basePackages = {
+    "com.healthdata.qrda.persistence",
+    "com.healthdata.authentication.repository"
+})
+@EntityScan(basePackages = {
+    "com.healthdata.qrda.persistence",
+    "com.healthdata.authentication.domain",
+    "com.healthdata.authentication.entity"
+})
 public class QrdaExportServiceApplication {
 
     public static void main(String[] args) {

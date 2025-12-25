@@ -976,8 +976,10 @@ services:
       SERVER_PORT: 8101
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       ECR_AIMS_ENABLED: "false"
+      AUDIT_ENABLED: "false"
     ports:
       - "8101:8101"
     healthcheck:
@@ -1014,6 +1016,7 @@ services:
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      AUDIT_ENABLED: "false"
       QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087
       FHIR_SERVICE_URL: http://fhir-service:8085
     ports:
@@ -1053,6 +1056,7 @@ services:
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      AUDIT_ENABLED: "false"
       HCC_MODEL_V24_WEIGHT: "0.33"
       HCC_MODEL_V28_WEIGHT: "0.67"
       FHIR_SERVICE_URL: http://fhir-service:8085
@@ -1101,6 +1105,8 @@ services:
       SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       AUDIT_ENABLED: "false"
+      # OpenTelemetry configuration for Jaeger
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
     ports:
       - "8102:8102"
     healthcheck:

@@ -567,6 +567,7 @@ describe('PatientHealthOverviewComponent', () => {
           labs: [
             {
               code: { coding: [{ display: 'Creatinine', code: 'CREAT' }] },
+              name: 'Creatinine',
               value: 9.2,
               unit: 'mg/dL',
               date: new Date('2025-11-10'),

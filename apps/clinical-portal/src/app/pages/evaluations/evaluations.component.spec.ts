@@ -348,14 +348,12 @@ describe('EvaluationsComponent', () => {
       expect(component.selectedPatient).toEqual(patient);
     });
 
-    it('should log selected patient to console', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    it('should set selected patient', () => {
       const patient = PatientFactory.createSummary();
 
       component.onPatientSelected(patient);
 
-      expect(consoleSpy).toHaveBeenCalledWith('Selected patient:', patient);
-      consoleSpy.mockRestore();
+      expect(component.selectedPatient).toEqual(patient);
     });
   });
 

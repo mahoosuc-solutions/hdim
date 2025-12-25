@@ -9,6 +9,8 @@ import { MeasureService } from '../../services/measure.service';
 import { PatientService } from '../../services/patient.service';
 import { EvaluationService } from '../../services/evaluation.service';
 import { CareGapService, CareGap, CareGapStatus, CareGapType, GapPriority } from '../../services/care-gap.service';
+import { ScheduledEvaluationService } from '../../services/scheduled-evaluation.service';
+import { ToastService } from '../../services/toast.service';
 import { MeasureInfo } from '../../models/cql-library.model';
 import { PatientSummary } from '../../models/patient.model';
 
@@ -20,6 +22,8 @@ describe('BatchEvaluationDialogComponent', () => {
   let mockPatientService: jest.Mocked<Partial<PatientService>>;
   let mockEvaluationService: jest.Mocked<Partial<EvaluationService>>;
   let mockCareGapService: jest.Mocked<Partial<CareGapService>>;
+  let mockScheduledEvaluationService: jest.Mocked<Partial<ScheduledEvaluationService>>;
+  let mockToastService: jest.Mocked<Partial<ToastService>>;
   let mockRouter: { navigate: jest.Mock };
 
   const mockMeasures: MeasureInfo[] = [
@@ -84,6 +88,15 @@ describe('BatchEvaluationDialogComponent', () => {
       })),
       getPatientCareGaps: jest.fn().mockReturnValue(of(mockCareGaps)),
     };
+    mockScheduledEvaluationService = {
+      getSchedules: jest.fn().mockReturnValue(of([])),
+    };
+    mockToastService = {
+      success: jest.fn(),
+      error: jest.fn(),
+      info: jest.fn(),
+      warning: jest.fn(),
+    };
 
     await TestBed.configureTestingModule({
       imports: [BatchEvaluationDialogComponent, NoopAnimationsModule],
@@ -94,6 +107,8 @@ describe('BatchEvaluationDialogComponent', () => {
         { provide: PatientService, useValue: mockPatientService },
         { provide: EvaluationService, useValue: mockEvaluationService },
         { provide: CareGapService, useValue: mockCareGapService },
+        { provide: ScheduledEvaluationService, useValue: mockScheduledEvaluationService },
+        { provide: ToastService, useValue: mockToastService },
         { provide: Router, useValue: mockRouter },
         provideNativeDateAdapter(),
       ],
@@ -248,6 +263,8 @@ describe('BatchEvaluationDialogComponent', () => {
         { provide: PatientService, useValue: mockPatientService },
         { provide: EvaluationService, useValue: mockEvaluationService },
         { provide: CareGapService, useValue: mockCareGapService },
+        { provide: ScheduledEvaluationService, useValue: mockScheduledEvaluationService },
+        { provide: ToastService, useValue: mockToastService },
         { provide: Router, useValue: mockRouter },
         provideNativeDateAdapter(),
       ],

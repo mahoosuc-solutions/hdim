@@ -994,14 +994,15 @@ describe('PatientHealthService', () => {
         expect(labs.length).toBe(2);
 
         const hba1c = labs[0];
-        expect(hba1c.code.text).toBe('HbA1c');
+        // LabResult has 'code' as LOINC string and 'name' as display text
+        expect(hba1c.name).toBe('HbA1c');
         expect(hba1c.value).toBe(7.2);
         expect(hba1c.unit).toBe('%');
         expect(hba1c.status).toBe('abnormal');
         expect(hba1c.referenceRange?.text).toBe('<7% for diabetics');
 
         const ldl = labs[1];
-        expect(ldl.code.text).toBe('LDL Cholesterol');
+        expect(ldl.name).toBe('LDL Cholesterol');
         expect(ldl.value).toBe(145);
         expect(ldl.unit).toBe('mg/dL');
         expect(ldl.status).toBe('abnormal');
@@ -1166,8 +1167,9 @@ describe('PatientHealthService', () => {
 
       service.getLabResultsFromFhir(testPatientId, { followPagination: true }).subscribe((labs) => {
         expect(labs.length).toBe(50);
-        expect(labs[0].code.text).toBe('Lab Test 0');
-        expect(labs[49].code.text).toBe('Lab Test 49');
+        // LabResult has 'name' as display text, not 'code.text'
+        expect(labs[0].name).toBe('Lab Test 0');
+        expect(labs[49].name).toBe('Lab Test 49');
         done();
       });
 

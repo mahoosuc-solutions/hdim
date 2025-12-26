@@ -20,6 +20,7 @@ import dev.samstevens.totp.time.TimeProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,8 +48,8 @@ import static dev.samstevens.totp.util.Utils.getDataUriForImage;
  * - 8 recovery codes for account recovery
  * - Secure secret generation
  */
+// NOTE: No @Service annotation - this bean must be explicitly configured in Gateway service
 @Slf4j
-@Service
 @RequiredArgsConstructor
 public class MfaService {
 

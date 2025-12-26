@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDIM - Investor Pitch Deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #1E3A5F;
+            --secondary: #00A9A5;
+            --success: #2E7D32;
+            --text: #2C3E50;
+            --light: #F5F7FA;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--light);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .logo { font-size: 36px; font-weight: 700; color: var(--primary); }
+        .tagline { color: #666; margin-top: 10px; }
+        .slides-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .slide-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+        .slide-card:hover { transform: translateY(-5px); }
+        .slide-preview {
+            aspect-ratio: 16/9;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            padding: 20px;
+            text-align: center;
+        }
+        .slide-info {
+            padding: 15px;
+        }
+        .slide-number {
+            font-size: 12px;
+            color: var(--secondary);
+            font-weight: 600;
+        }
+        .slide-title {
+            font-size: 14px;
+            color: var(--primary);
+            margin-top: 5px;
+        }
+        .cta-section {
+            text-align: center;
+            margin-top: 50px;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+        }
+        .cta-section h2 { color: var(--primary); margin-bottom: 15px; }
+        .cta-section p { color: #666; margin-bottom: 25px; }
+        .btn {
+            display: inline-block;
+            padding: 16px 32px;
+            background: var(--secondary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #00897B; }
+        .download-note {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #999;
+        }
+        @media (max-width: 768px) {
+            .slides-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">HDIM</div>
+            <p class="tagline">Healthcare Data Integration Made Intelligent</p>
+            <h1 style="margin-top: 30px; color: var(--primary);">Investor Pitch Deck</h1>
+        </div>
+
+        <div class="slides-grid">
+            <div class="slide-card">
+                <div class="slide-preview">HDIM<br>Healthcare Data Integration Made Intelligent</div>
+                <div class="slide-info">
+                    <div class="slide-number">SLIDE 1</div>
+                    <div class="slide-title">Title</div>
+                </div>
+            </div>
+            <div class="slide-card">
+                <div class="slide-preview" style="background: #E65100;">$500K/year<br>integration nightmare</div>
+                <div class="slide-info">
+                    <div class="slide-number">SLIDE 2</div>
+                    <div class="slide-title">The Problem</div>
+                </div>
+            </div>
+            <div class="slide-card">
+                <div class="slide-preview">CMS 2026<br>FHIR Mandate</div>
+                <div class="slide-info">
+                    <div class="slide-number">SLIDE 3</div>
+                    <div class="slide-title">Why Now</div>
+                </div>
+            </div>
+            <div class="slide-card">
+                <div class="slide-preview" style="background: var(--secondary);">AI-Native FHIR<br>Zero Tech Debt</div>
+                <div class="slide-info">
+                    <div class="slide-number">SLIDE 4</div>
+                    <div class="slide-title">The Solution</div>
+                </div>
+            </div>
+            <div class="slide-card">
+                <div class="slide-preview" style="background: var(--success);">82% Faster<br>Prior Auth</div>
+                <div class="slide-info">
+                    <div class="slide-number">SLIDE 5</div>
+                    <div class="slide-title">Product Demo</div>
+                </div>
+            </div>
+            <div class="slide-card">
+                <div class="slide-preview">2+ Pilots<br>5+ Pipeline</div>
+                <div class="slide-info">
+                    <div class="slide-number">SLIDE 6</div>
+                    <div class="slide-title">Traction</div>
+                </div>
+            </div>
+            <div class="slide-card">
+                <div class="slide-preview">$24.8B TAM<br>15.2% CAGR</div>
+                <div class="slide-info">
+                    <div class="slide-number">SLIDE 7</div>
+                    <div class="slide-title">Market Size</div>
+                </div>
+            </div>
+            <div class="slide-card">
+                <div class="slide-preview" style="background: var(--secondary);">Land & Expand<br>$50K → $300K</div>
+                <div class="slide-info">
+                    <div class="slide-number">SLIDE 8</div>
+                    <div class="slide-title">Business Model</div>
+                </div>
+            </div>
+            <div class="slide-card">
+                <div class="slide-preview">HDIM vs<br>Legacy</div>
+                <div class="slide-info">
+                    <div class="slide-number">SLIDE 9</div>
+                    <div class="slide-title">Competition</div>
+                </div>
+            </div>
+            <div class="slide-card">
+                <div class="slide-preview">Healthcare IT<br>Veterans</div>
+                <div class="slide-info">
+                    <div class="slide-number">SLIDE 10</div>
+                    <div class="slide-title">Team</div>
+                </div>
+            </div>
+            <div class="slide-card">
+                <div class="slide-preview" style="background: var(--secondary);">$2M Seed<br>SAFE @ $10-12M</div>
+                <div class="slide-info">
+                    <div class="slide-number">SLIDE 11</div>
+                    <div class="slide-title">The Ask</div>
+                </div>
+            </div>
+            <div class="slide-card">
+                <div class="slide-preview">Integration Layer<br>for AI Healthcare</div>
+                <div class="slide-info">
+                    <div class="slide-number">SLIDE 12</div>
+                    <div class="slide-title">Vision</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cta-section">
+            <h2>Ready to Learn More?</h2>
+            <p>Request the full pitch deck and schedule a meeting with our team.</p>
+            <a href="/landing-page-a.html" class="btn">Request Full Deck</a>
+            <p class="download-note">Full presentation available upon request to verified investors.</p>
+        </div>
+    </div>
+</body>
+</html>

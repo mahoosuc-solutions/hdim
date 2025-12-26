@@ -3,8 +3,9 @@ package com.healthdata.authentication.service;
 import com.healthdata.authentication.domain.User;
 import com.healthdata.authentication.repository.UserRepository;
 import com.healthdata.cache.CacheEvictionService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -30,13 +31,19 @@ import java.util.Set;
  * @author Claude Code
  * @since 2025-11-14
  */
-@Service
+// NOTE: No @Service annotation - this bean must be explicitly configured in Gateway service
 @Slf4j
-@RequiredArgsConstructor
 public class LogoutService {
 
     private final UserRepository userRepository;
     private final CacheEvictionService cacheEvictionService;
+
+    @Autowired
+    public LogoutService(UserRepository userRepository,
+                         @Autowired(required = false) CacheEvictionService cacheEvictionService) {
+        this.userRepository = userRepository;
+        this.cacheEvictionService = cacheEvictionService;
+    }
 
     /**
      * Perform HIPAA-compliant logout with cache eviction

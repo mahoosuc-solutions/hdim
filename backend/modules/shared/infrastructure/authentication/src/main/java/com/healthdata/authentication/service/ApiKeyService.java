@@ -4,6 +4,7 @@ import com.healthdata.authentication.entity.ApiKey;
 import com.healthdata.authentication.repository.ApiKeyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,8 +29,8 @@ import java.util.*;
  * - Usage tracking
  * - Automatic expiration cleanup
  */
+// NOTE: No @Service annotation - this bean must be explicitly configured in Gateway service
 @Slf4j
-@Service
 @RequiredArgsConstructor
 public class ApiKeyService {
 

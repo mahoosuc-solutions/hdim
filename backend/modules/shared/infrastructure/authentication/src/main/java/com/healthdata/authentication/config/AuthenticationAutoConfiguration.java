@@ -36,10 +36,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @AutoConfiguration
 @ComponentScan(basePackages = {
     "com.healthdata.authentication.filter",
-    "com.healthdata.authentication.service",
     "com.healthdata.authentication.config",
+    "com.healthdata.authentication.service",
     "com.healthdata.cache"
 })
+// NOTE: Only services with @Service annotation are auto-scanned (JwtTokenService, CookieService).
+// Gateway-only services (LogoutService, MfaService, RefreshTokenService, ApiKeyService)
+// intentionally have NO @Service annotation - they are explicitly configured in GatewayAuthenticationConfig.
 @EntityScan(basePackages = {
     "com.healthdata.authentication.domain",
     "com.healthdata.authentication.entity"

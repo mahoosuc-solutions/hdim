@@ -1,6 +1,7 @@
 package com.healthdata.caregap.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import com.healthdata.caregap.persistence.CareGapEntity;
 import com.healthdata.caregap.service.CareGapIdentificationService;
 import com.healthdata.caregap.service.CareGapReportService;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -31,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @DisplayName("Care Gap Controller Tests")
 class CareGapControllerTest {
 

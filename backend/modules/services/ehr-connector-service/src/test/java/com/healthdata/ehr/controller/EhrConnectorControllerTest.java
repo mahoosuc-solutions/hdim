@@ -1,6 +1,7 @@
 package com.healthdata.ehr.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import com.healthdata.ehr.config.TestSecurityConfiguration;
 import com.healthdata.ehr.connector.EhrConnector;
 import com.healthdata.ehr.dto.*;
@@ -11,6 +12,7 @@ import com.healthdata.ehr.service.EhrSyncService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -40,6 +42,7 @@ import org.springframework.test.web.servlet.MvcResult;
 @ActiveProfiles("test")
 @Import(TestSecurityConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
+@EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @DisplayName("EHR Connector Controller Tests")
 class EhrConnectorControllerTest {
 

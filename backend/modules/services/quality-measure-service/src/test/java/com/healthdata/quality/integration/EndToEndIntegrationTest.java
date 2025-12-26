@@ -7,7 +7,9 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -56,6 +58,7 @@ import static org.awaitility.Awaitility.await;
  * Success Criteria: All steps complete within 5 seconds
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @Testcontainers
 @ActiveProfiles("test")
 @Import({TestMessagingConfiguration.class, TestWebSocketConfiguration.class})

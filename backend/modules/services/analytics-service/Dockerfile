@@ -32,6 +32,9 @@ WORKDIR /app
 RUN addgroup -g 1001 -S healthdata && \
     adduser -u 1001 -S healthdata -G healthdata -h /app
 
+# Install wget for health checks
+RUN apk add --no-cache wget
+
 # Copy the built JAR
 COPY --from=builder /app/modules/services/analytics-service/build/libs/*.jar app.jar
 
@@ -50,6 +53,6 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
 EXPOSE 8092
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8092/actuator/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8092/analytics/actuator/health || exit 1
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

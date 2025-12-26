@@ -1,5 +1,6 @@
 package com.healthdata.patient.entity;
 
+import com.healthdata.security.encryption.Encrypted;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -38,19 +39,24 @@ public class PatientDemographicsEntity {
     @Column(name = "fhir_patient_id", nullable = false, length = 64)
     private String fhirPatientId;
 
-    @Column(name = "mrn", length = 50)
+    @Encrypted(value = "Medical Record Number", category = Encrypted.HipaaCategory.PHI)
+    @Column(name = "mrn", length = 200)
     private String mrn;
 
+    @Encrypted(value = "Social Security Number", category = Encrypted.HipaaCategory.PHI)
     @Column(name = "ssn_encrypted", length = 256)
     private String ssnEncrypted;
 
-    @Column(name = "first_name", nullable = false, length = 128)
+    @Encrypted(value = "Patient First Name", category = Encrypted.HipaaCategory.PHI)
+    @Column(name = "first_name", nullable = false, length = 356)
     private String firstName;
 
-    @Column(name = "middle_name", length = 128)
+    @Encrypted(value = "Patient Middle Name", category = Encrypted.HipaaCategory.PHI)
+    @Column(name = "middle_name", length = 356)
     private String middleName;
 
-    @Column(name = "last_name", nullable = false, length = 128)
+    @Encrypted(value = "Patient Last Name", category = Encrypted.HipaaCategory.PHI)
+    @Column(name = "last_name", nullable = false, length = 356)
     private String lastName;
 
     @Column(name = "date_of_birth", nullable = false)
@@ -68,25 +74,31 @@ public class PatientDemographicsEntity {
     @Column(name = "preferred_language", length = 50)
     private String preferredLanguage;
 
-    @Column(name = "email", length = 255)
+    @Encrypted(value = "Patient Email", category = Encrypted.HipaaCategory.PII)
+    @Column(name = "email", length = 610)
     private String email;
 
-    @Column(name = "phone", length = 20)
+    @Encrypted(value = "Patient Phone", category = Encrypted.HipaaCategory.PII)
+    @Column(name = "phone", length = 140)
     private String phone;
 
-    @Column(name = "address_line1", length = 255)
+    @Encrypted(value = "Patient Address Line 1", category = Encrypted.HipaaCategory.PII)
+    @Column(name = "address_line1", length = 610)
     private String addressLine1;
 
-    @Column(name = "address_line2", length = 255)
+    @Encrypted(value = "Patient Address Line 2", category = Encrypted.HipaaCategory.PII)
+    @Column(name = "address_line2", length = 610)
     private String addressLine2;
 
-    @Column(name = "city", length = 100)
+    @Encrypted(value = "Patient City", category = Encrypted.HipaaCategory.PII)
+    @Column(name = "city", length = 300)
     private String city;
 
     @Column(name = "state", length = 50)
     private String state;
 
-    @Column(name = "zip_code", length = 20)
+    @Encrypted(value = "Patient Zip Code", category = Encrypted.HipaaCategory.PII)
+    @Column(name = "zip_code", length = 140)
     private String zipCode;
 
     @Column(name = "country", length = 50)

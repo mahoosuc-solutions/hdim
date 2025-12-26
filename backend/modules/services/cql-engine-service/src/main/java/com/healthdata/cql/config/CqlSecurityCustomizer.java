@@ -91,9 +91,8 @@ public class CqlSecurityCustomizer {
                     "/webjars/**",
                     "/ws/**"  // WebSocket endpoints - authenticated via interceptors
                 ).permitAll()
-                // DEMO MODE: Permit all CQL Engine API access (remove in production)
-                // Note: Context path is /cql-engine, so internal paths are relative
-                .requestMatchers("/**").permitAll()
+
+                // All CQL Engine endpoints require JWT authentication (HIPAA §164.312(d))
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

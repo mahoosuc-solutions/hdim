@@ -101,11 +101,8 @@ public class PatientSecurityConfig {
                     "/swagger-resources/**",
                     "/webjars/**"
                 ).permitAll()
-                // DEMO MODE: Permit all Patient API access (remove in production)
-                // Note: Context path is /patient, so internal paths are relative
-                .requestMatchers("/**").permitAll()
-                // All patient data endpoints require JWT authentication
-                .requestMatchers("/api/v1/patients/**", "/api/v1/health/**").authenticated()
+
+                // All patient data endpoints require JWT authentication (HIPAA §164.312(d))
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

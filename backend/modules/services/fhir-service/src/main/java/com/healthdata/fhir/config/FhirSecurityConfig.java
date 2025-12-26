@@ -94,8 +94,8 @@ public class FhirSecurityConfig {
                     "/v3/api-docs/**",
                     "/swagger-resources/**",
                     "/webjars/**",
-                    "/fhir/metadata",  // FHIR metadata endpoint
-                    // SMART on FHIR OAuth endpoints
+                    "/fhir/metadata",  // FHIR metadata endpoint (capability statement)
+                    // SMART on FHIR OAuth endpoints (public per spec)
                     "/.well-known/smart-configuration",
                     "/oauth/authorize",
                     "/oauth/token",
@@ -103,16 +103,8 @@ public class FhirSecurityConfig {
                     "/oauth/introspect",
                     "/.well-known/jwks.json"
                 ).permitAll()
-                // DEMO MODE: Permit all FHIR API access (remove in production)
-                // Note: Context path is /fhir, so internal paths are relative
-                .requestMatchers("/**").permitAll()
-                .requestMatchers(
-                    "/fhir/api/v1/$export",
-                    "/fhir/api/v1/Patient/$export",
-                    "/fhir/api/v1/Group/*/$export",
-                    "/fhir/api/v1/$export-poll-status/*",
-                    "/fhir/api/v1/download/*/*"
-                ).authenticated()  // Bulk export endpoints require authentication
+
+                // All FHIR data endpoints require authentication (HIPAA §164.312(d))
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

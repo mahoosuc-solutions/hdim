@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDIM - Calculate Your Integration Cost Savings</title>
+    <meta name="description" content="Use our ROI calculator to see how much your hospital could save with HDIM's AI-native integration platform.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1E3A5F;
+            --secondary: #00A9A5;
+            --success: #2E7D32;
+            --warning: #E65100;
+            --text: #2C3E50;
+            --light: #F5F7FA;
+            --white: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: var(--light);
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--white);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-trust {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, #2C5282 100%);
+            color: white;
+            padding: 80px 40px 60px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .hero p {
+            font-size: 18px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Calculator Section */
+        .calculator-section {
+            padding: 60px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .calculator-inputs {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .calculator-inputs h2 {
+            font-size: 24px;
+            color: var(--primary);
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .input-group .description {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .slider-container {
+            position: relative;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(to right, var(--secondary) 0%, var(--secondary) var(--value, 50%), #E0E0E0 var(--value, 50%), #E0E0E0 100%);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: var(--secondary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: var(--secondary);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-value {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-top: 15px;
+        }
+
+        .slider-range {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        /* Results Panel */
+        .calculator-results {
+            background: var(--primary);
+            padding: 40px;
+            border-radius: 16px;
+            color: white;
+        }
+
+        .calculator-results h2 {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+
+        .result-card {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .result-label {
+            font-size: 13px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .result-value {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .result-value.money::before {
+            content: '$';
+        }
+
+        .result-subtext {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .results-summary {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .summary-row .label {
+            opacity: 0.8;
+        }
+
+        .summary-row .value {
+            font-weight: 600;
+        }
+
+        .cta-button {
+            width: 100%;
+            padding: 18px;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: background 0.2s;
+        }
+
+        .cta-button:hover {
+            background: #00897B;
+        }
+
+        /* How We Calculate */
+        .methodology-section {
+            padding: 60px 40px;
+            background: white;
+        }
+
+        .methodology-section h2 {
+            font-size: 28px;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .methodology-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .methodology-card {
+            text-align: center;
+        }
+
+        .methodology-card .number {
+            width: 50px;
+            height: 50px;
+            background: var(--light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin: 0 auto 15px;
+        }
+
+        .methodology-card h3 {
+            font-size: 14px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .methodology-card p {
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* Form Section */
+        .form-section {
+            padding: 80px 40px;
+            background: linear-gradient(135deg, var(--secondary), #00897B);
+        }
+
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .form-container h2 {
+            font-size: 28px;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .form-container .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #E0E0E0;
+            border-radius: 6px;
+            font-size: 15px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            background: #00897B;
+        }
+
+        .form-trust {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        footer .logo {
+            color: white;
+        }
+
+        footer p {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-top: 15px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .calculator-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .methodology-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="/" class="logo">HDIM</a>
+        <div class="nav-trust">
+            <span>🔒 HIPAA Compliant</span>
+            <span>⭐ 4.9/5 Rating</span>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Calculate Your Integration Cost Savings</h1>
+        <p>See how much your hospital could save with HDIM's AI-native integration platform</p>
+    </section>
+
+    <!-- Calculator Section -->
+    <section class="calculator-section">
+        <div class="calculator-grid">
+            <div class="calculator-inputs">
+                <h2>Your Hospital Details</h2>
+
+                <div class="input-group">
+                    <label>Number of Hospital Beds</label>
+                    <p class="description">Larger facilities typically have more integration complexity</p>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="beds" min="50" max="2000" value="500" oninput="updateCalculations()">
+                        <div class="slider-value" id="bedsValue">500 beds</div>
+                        <div class="slider-range">
+                            <span>50</span>
+                            <span>2,000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Current Annual Integration Spend</label>
+                    <p class="description">Include interface maintenance, IT staff time, vendor costs</p>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="spend" min="50000" max="1000000" value="350000" step="10000" oninput="updateCalculations()">
+                        <div class="slider-value" id="spendValue">$350,000</div>
+                        <div class="slider-range">
+                            <span>$50K</span>
+                            <span>$1M</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Number of EHR/Clinical Systems</label>
+                    <p class="description">Count all systems requiring data exchange</p>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="systems" min="1" max="15" value="5" oninput="updateCalculations()">
+                        <div class="slider-value" id="systemsValue">5 systems</div>
+                        <div class="slider-range">
+                            <span>1</span>
+                            <span>15+</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Prior Authorizations per Month</label>
+                    <p class="description">Approximate volume of prior auth requests</p>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="priorauths" min="100" max="10000" value="2000" step="100" oninput="updateCalculations()">
+                        <div class="slider-value" id="priorauthsValue">2,000/month</div>
+                        <div class="slider-range">
+                            <span>100</span>
+                            <span>10,000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="calculator-results">
+                <h2>Your Estimated Savings</h2>
+
+                <div class="result-card">
+                    <div class="result-label">Annual Cost Savings</div>
+                    <div class="result-value money" id="annualSavings">210,000</div>
+                    <div class="result-subtext">Per year with HDIM</div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-label">ROI Timeline</div>
+                    <div class="result-value" id="roiMonths">4</div>
+                    <div class="result-subtext">Months to positive ROI</div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-label">IT Hours Saved</div>
+                    <div class="result-value" id="hoursSaved">1,200</div>
+                    <div class="result-subtext">Hours per year</div>
+                </div>
+
+                <div class="results-summary">
+                    <div class="summary-row">
+                        <span class="label">Current Annual Spend</span>
+                        <span class="value" id="summaryCurrentSpend">$350,000</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Projected HDIM Cost</span>
+                        <span class="value" id="summaryHdimCost">$140,000</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">5-Year Net Savings</span>
+                        <span class="value" id="summary5Year">$1,050,000</span>
+                    </div>
+                </div>
+
+                <button class="cta-button" onclick="document.getElementById('demo-form').scrollIntoView({behavior: 'smooth'})">
+                    Get Full ROI Report + Demo
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Methodology Section -->
+    <section class="methodology-section">
+        <h2>How We Calculate Your Savings</h2>
+        <div class="methodology-grid">
+            <div class="methodology-card">
+                <div class="number">1</div>
+                <h3>Interface Reduction</h3>
+                <p>Platform approach eliminates 60-80% of point-to-point maintenance</p>
+            </div>
+            <div class="methodology-card">
+                <div class="number">2</div>
+                <h3>IT Time Savings</h3>
+                <p>85% reduction in integration-related tickets and troubleshooting</p>
+            </div>
+            <div class="methodology-card">
+                <div class="number">3</div>
+                <h3>Prior Auth Automation</h3>
+                <p>82% faster processing = significant staff time recovery</p>
+            </div>
+            <div class="methodology-card">
+                <div class="number">4</div>
+                <h3>Future-Proofing</h3>
+                <p>Zero cost for new integrations after initial deployment</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Form Section -->
+    <section class="form-section" id="demo-form">
+        <div class="form-container">
+            <h2>Get Your Full ROI Report</h2>
+            <p class="subtitle">We'll send you a detailed analysis and schedule a demo</p>
+
+            <form action="#" method="POST">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name *</label>
+                        <input type="text" id="firstName" name="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name *</label>
+                        <input type="text" id="lastName" name="lastName" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Work Email *</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="company">Hospital/Health System Name *</label>
+                    <input type="text" id="company" name="company" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="title">Your Title *</label>
+                    <select id="title" name="title" required>
+                        <option value="">Select...</option>
+                        <option value="cio">CIO</option>
+                        <option value="cmio">CMIO</option>
+                        <option value="cto">CTO</option>
+                        <option value="vp-it">VP of IT</option>
+                        <option value="director-it">Director of IT</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="submit-btn">Get My ROI Report</button>
+
+                <div class="form-trust">
+                    <span>🔒 HIPAA Compliant</span>
+                    <span>📧 No Spam</span>
+                    <span>🚫 No Obligations</span>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <a href="/" class="logo">HDIM</a>
+        <p>Healthcare Data Integration Made Intelligent | HIPAA Compliant | SOC 2 (In Progress)</p>
+        <p style="margin-top: 10px; font-size: 12px;">© 2025 HDIM. All rights reserved.</p>
+    </footer>
+
+    <script>
+        function updateCalculations() {
+            // Get input values
+            const beds = parseInt(document.getElementById('beds').value);
+            const spend = parseInt(document.getElementById('spend').value);
+            const systems = parseInt(document.getElementById('systems').value);
+            const priorauths = parseInt(document.getElementById('priorauths').value);
+
+            // Update slider displays
+            document.getElementById('bedsValue').textContent = beds.toLocaleString() + ' beds';
+            document.getElementById('spendValue').textContent = '$' + spend.toLocaleString();
+            document.getElementById('systemsValue').textContent = systems + ' systems';
+            document.getElementById('priorauthsValue').textContent = priorauths.toLocaleString() + '/month';
+
+            // Update slider backgrounds
+            updateSliderBackground('beds', 50, 2000);
+            updateSliderBackground('spend', 50000, 1000000);
+            updateSliderBackground('systems', 1, 15);
+            updateSliderBackground('priorauths', 100, 10000);
+
+            // Calculate savings (simplified model)
+            const maintenanceSavings = spend * 0.60; // 60% reduction in maintenance
+            const priorAuthSavings = priorauths * 12 * 5; // $5 per prior auth automated
+            const totalSavings = Math.round(maintenanceSavings + priorAuthSavings);
+
+            // Calculate HDIM cost (estimate based on beds)
+            const hdimCost = Math.round(50000 + (beds * 100));
+
+            // Calculate ROI months
+            const roiMonths = Math.ceil(hdimCost / (totalSavings / 12));
+
+            // Calculate IT hours saved
+            const hoursSaved = Math.round(systems * 200 + (beds * 0.5));
+
+            // Update results
+            document.getElementById('annualSavings').textContent = totalSavings.toLocaleString();
+            document.getElementById('roiMonths').textContent = Math.min(roiMonths, 12);
+            document.getElementById('hoursSaved').textContent = hoursSaved.toLocaleString();
+
+            // Update summary
+            document.getElementById('summaryCurrentSpend').textContent = '$' + spend.toLocaleString();
+            document.getElementById('summaryHdimCost').textContent = '$' + hdimCost.toLocaleString();
+            document.getElementById('summary5Year').textContent = '$' + ((totalSavings - hdimCost) * 5).toLocaleString();
+        }
+
+        function updateSliderBackground(id, min, max) {
+            const slider = document.getElementById(id);
+            const value = (slider.value - min) / (max - min) * 100;
+            slider.style.setProperty('--value', value + '%');
+        }
+
+        // Initialize calculations on load
+        document.addEventListener('DOMContentLoaded', updateCalculations);
+    </script>
+
+</body>
+</html>

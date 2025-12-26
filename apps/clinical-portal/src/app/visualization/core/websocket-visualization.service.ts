@@ -127,7 +127,11 @@ export class WebSocketVisualizationService {
   public error$ = this.errorSubject.asObservable().pipe(share());
 
   // WebSocket endpoint (from backend CQL Engine Service)
-  private readonly wsUrl = API_CONFIG.CQL_ENGINE_URL.replace('http://', 'ws://').replace('/cql-engine', '') + '/ws/evaluation-progress';
+  // Handle both http->ws and https->wss for secure WebSocket connections
+  private readonly wsUrl = API_CONFIG.CQL_ENGINE_URL
+    .replace(/^https:\/\//, 'wss://')
+    .replace(/^http:\/\//, 'ws://')
+    .replace('/cql-engine', '') + '/ws/evaluation-progress';
   private log: ContextualLogger;
 
   constructor(private ngZone: NgZone, private logger: LoggerService) {

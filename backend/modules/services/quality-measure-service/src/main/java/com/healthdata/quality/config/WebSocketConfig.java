@@ -59,7 +59,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Value("${websocket.enabled:true}")
     private boolean websocketEnabled;
 
-    @Value("#{'${websocket.allowed-origins:http://localhost:4200,http://localhost:4201,http://localhost:4202,http://localhost:3000,http://localhost:8082}'.split(',')}")
+    @Value("#{'${websocket.allowed-origins:http://localhost:4200,http://localhost:4201,http://localhost:4202,http://localhost:3000,http://localhost:8082,https://localhost:4200,https://localhost:4201,https://localhost:4202,https://localhost:3000}'.split(',')}")
     private List<String> allowedOrigins;
 
     public WebSocketConfig(

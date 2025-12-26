@@ -35,8 +35,8 @@ RUN addgroup -g 1001 -S healthdata && \
 # Install wget for health checks
 RUN apk add --no-cache wget
 
-# Copy the built JAR
-COPY --from=builder /app/modules/services/cql-engine-service/build/libs/*.jar app.jar
+# Copy the built JAR (build-user is custom build directory)
+COPY --from=builder /app/modules/services/cql-engine-service/build-user/libs/*.jar app.jar
 
 # Set ownership
 RUN chown -R healthdata:healthdata /app

@@ -9,7 +9,9 @@ import com.healthdata.quality.service.QualityReportService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -28,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests the caching of measure results and quality reports
  */
 @SpringBootTest
+@EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @ActiveProfiles("test")
 @Transactional
 @Import({TestMessagingConfiguration.class, TestWebSocketConfiguration.class})

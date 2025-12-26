@@ -38,15 +38,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Tests the complete PA workflow including create, submit, status check, and cancel.
  */
 @SpringBootTest(
+    classes = com.healthdata.priorauth.TestPriorAuthApplication.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
         "spring.kafka.bootstrap-servers=",
         "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,com.healthdata.authentication.config.AuthenticationAutoConfiguration",
-        "healthdata.persistence.primary.url=jdbc:tc:postgresql:15-alpine:///testdb",
-        "healthdata.persistence.primary.username=sa",
-        "healthdata.persistence.primary.password=",
-        "healthdata.persistence.primary.driver-class-name=org.testcontainers.jdbc.ContainerDatabaseDriver",
-        "healthdata.persistence.primary.pool-name=h2-test-pool",
+        "spring.datasource.url=jdbc:tc:postgresql:15-alpine:///testdb",
+        "spring.datasource.username=test",
+        "spring.datasource.password=test",
+        "spring.datasource.driver-class-name=org.testcontainers.jdbc.ContainerDatabaseDriver",
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.jpa.properties.hibernate.default_schema=prior_auth",
+        "spring.jpa.properties.hibernate.hbm2ddl.create_namespaces=true",
         "healthdata.persistence.rls-enabled=false",
         "healthdata.security.jwt.secret=test-secret-key-for-unit-testing-only-minimum-32-chars",
         "healthdata.security.jwt.accessTokenExpirationMs=900000",

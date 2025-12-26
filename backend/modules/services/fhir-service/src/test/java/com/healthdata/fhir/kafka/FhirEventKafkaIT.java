@@ -33,6 +33,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
@@ -74,7 +75,12 @@ class FhirEventKafkaIT {
     private static final String USER_ID = "test-user";
 
     @Container
-    static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.5.0"));
+    static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.5.0"))
+        .withStartupTimeout(Duration.ofMinutes(3))
+        .withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true")
+        .withEnv("KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR", "1")
+        .withEnv("KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR", "1")
+        .withEnv("KAFKA_TRANSACTION_STATE_LOG_MIN_ISR", "1");
 
     @DynamicPropertySource
     static void overrideProperties(DynamicPropertyRegistry registry) {

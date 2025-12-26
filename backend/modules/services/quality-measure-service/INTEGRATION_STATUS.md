@@ -313,3 +313,7 @@ For issues related to this integration:
 - **2025-10-31**: Initial integration testing (Phase 9.1 RED)
 - **2025-10-31**: Identified API contract mismatch blocking measure calculation
 - **2025-10-31**: Created SecurityConfig to enable API access
+- **2025-12-26**: Fixed CQL Engine context-path mismatch in Docker/Kubernetes profiles
+  - Added `context-path: /cql-engine` to application-docker.yml
+  - Added `context-path: /cql-engine` to application-kubernetes.yml
+  - Added Feign exception handling in QualityMeasureExceptionHandler for user-friendly error messages

@@ -1,14 +1,11 @@
 {
-  "version": 2,
-  "name": "hdim-investor-portal",
-  "public": true,
-  "routes": [
-    { "src": "/", "dest": "/index.html" },
-    { "src": "/demo", "dest": "/landing-page-a.html" },
-    { "src": "/calculator", "dest": "/landing-page-b.html" },
-    { "src": "/investors", "dest": "/one-pager.html" },
-    { "src": "/deck", "dest": "/pitch-deck.html" },
-    { "src": "/holiday", "dest": "/holiday-card.html" }
+  "rewrites": [
+    { "source": "/demo", "destination": "/landing-page-a.html" },
+    { "source": "/calculator", "destination": "/landing-page-b.html" },
+    { "source": "/investors", "destination": "/one-pager.html" },
+    { "source": "/deck", "destination": "/pitch-deck.html" },
+    { "source": "/holiday", "destination": "/holiday-card.html" },
+    { "source": "/gallery", "destination": "/gallery.html" }
   ],
   "headers": [
     {

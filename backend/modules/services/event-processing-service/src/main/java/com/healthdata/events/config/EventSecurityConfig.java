@@ -1,11 +1,17 @@
 package com.healthdata.events.config;
 
+import com.healthdata.authentication.filter.JwtAuthenticationFilter;
+import com.healthdata.authentication.security.TenantAccessFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -15,11 +21,18 @@ import java.util.Arrays;
 /**
  * Event Processing Service Security Configuration
  *
- * DEMO MODE: All endpoints are currently open for demonstration purposes.
- * In production, JWT authentication should be enabled.
+ * Provides security configuration for different profiles:
+ * - Test: Permits all requests without authentication
+ * - Docker/Dev/Prod: JWT-based authentication via JwtAuthenticationFilter
+ *
+ * SECURITY: TenantAccessFilter is enabled to enforce multi-tenant isolation.
+ * This prevents CVE-INTERNAL-2025-001 (Complete Bypass of Tenant Isolation)
  */
 @Configuration
 public class EventSecurityConfig {
+
+    @Autowired(required = false)
+    private TenantAccessFilter tenantAccessFilter;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -39,8 +52,32 @@ public class EventSecurityConfig {
         return source;
     }
 
+    /**
+     * Test profile security filter chain.
+     * Permits all HTTP requests without authentication for integration testing.
+     */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Profile("test")
+    @Order(1)
+    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll()
+            );
+
+        return http.build();
+    }
+
+    /**
+     * Production security filter chain for docker/dev/prod profiles.
+     * Uses JWT-based authentication with stateless sessions.
+     */
+    @Bean
+    @Profile("!test")
+    @Order(2)
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
@@ -51,13 +88,20 @@ public class EventSecurityConfig {
                     "/actuator/health/**",
                     "/actuator/info"
                 ).permitAll()
-                // DEMO MODE: Permit all event processing API access
-                .requestMatchers("/**").permitAll()
+
+                // All event processing endpoints require JWT authentication (HIPAA §164.312(d))
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            );
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // CRITICAL SECURITY: Add tenant access filter AFTER JWT authentication
+        // This ensures tenant isolation is enforced for all authenticated requests
+        if (tenantAccessFilter != null) {
+            http.addFilterAfter(tenantAccessFilter, JwtAuthenticationFilter.class);
+        }
 
         return http.build();
     }

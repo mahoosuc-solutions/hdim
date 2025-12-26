@@ -8,6 +8,7 @@ dependencies {
     // Shared modules
     implementation(project(":modules:shared:domain:common"))
     implementation(project(":modules:shared:infrastructure:security"))
+    implementation(project(":modules:shared:infrastructure:authentication"))
     implementation(project(":modules:shared:infrastructure:audit"))
     implementation(project(":modules:shared:infrastructure:persistence"))
     implementation(project(":modules:shared:infrastructure:messaging"))

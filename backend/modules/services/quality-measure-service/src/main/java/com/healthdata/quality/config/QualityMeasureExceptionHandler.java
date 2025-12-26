@@ -1,5 +1,7 @@
 package com.healthdata.quality.config;
 
+import feign.FeignException;
+import feign.RetryableException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.net.ConnectException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -142,11 +145,96 @@ public class QualityMeasureExceptionHandler {
     }
 
     /**
+     * Handle Feign RetryableException (connection timeouts, service unavailable)
+     * This typically indicates the CQL Engine service is not reachable.
+     */
+    @ExceptionHandler(RetryableException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ResponseEntity<Map<String, Object>> handleRetryableException(RetryableException ex) {
+        log.error("CQL Engine service connection failed: {}", ex.getMessage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now().toString());
+        response.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
+        response.put("error", "Service Unavailable");
+        response.put("message", "Unable to process quality measures. The CQL Engine service may be temporarily unavailable. Please try again later.");
+        response.put("retryable", true);
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+    }
+
+    /**
+     * Handle Feign exceptions (API errors from CQL Engine service)
+     */
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<Map<String, Object>> handleFeignException(FeignException ex) {
+        log.error("CQL Engine service error: {} - {}", ex.status(), ex.getMessage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now().toString());
+
+        if (ex.status() == -1 || ex.status() == 0) {
+            // Connection refused or timeout
+            response.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
+            response.put("error", "Service Unavailable");
+            response.put("message", "Unable to process quality measures. The CQL Engine service may be temporarily unavailable. Please try again later.");
+            response.put("retryable", true);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+        } else if (ex.status() == 404) {
+            response.put("status", HttpStatus.NOT_FOUND.value());
+            response.put("error", "Not Found");
+            response.put("message", "The requested CQL library or measure was not found.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        } else if (ex.status() >= 500) {
+            response.put("status", HttpStatus.BAD_GATEWAY.value());
+            response.put("error", "Bad Gateway");
+            response.put("message", "The CQL Engine service encountered an error processing the request. Please try again later.");
+            response.put("retryable", true);
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(response);
+        } else {
+            response.put("status", ex.status());
+            response.put("error", "CQL Engine Error");
+            response.put("message", "Error communicating with CQL Engine service: " + ex.getMessage());
+            return ResponseEntity.status(ex.status()).body(response);
+        }
+    }
+
+    /**
+     * Handle connection exceptions (service unreachable)
+     */
+    @ExceptionHandler(ConnectException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ResponseEntity<Map<String, Object>> handleConnectException(ConnectException ex) {
+        log.error("Service connection failed: {}", ex.getMessage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now().toString());
+        response.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
+        response.put("error", "Service Unavailable");
+        response.put("message", "Unable to process quality measures. The CQL Engine service may be temporarily unavailable. Please try again later.");
+        response.put("retryable", true);
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+    }
+
+    /**
      * Handle runtime exceptions from service layer
      */
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
+        // Check if this is a wrapped Feign/connection exception
+        Throwable cause = ex.getCause();
+        if (cause instanceof FeignException) {
+            return handleFeignException((FeignException) cause);
+        }
+        if (cause instanceof RetryableException) {
+            return handleRetryableException((RetryableException) cause);
+        }
+        if (cause instanceof ConnectException) {
+            return handleConnectException((ConnectException) cause);
+        }
+
         log.error("Runtime exception: {}", ex.getMessage(), ex);
 
         Map<String, Object> response = new HashMap<>();

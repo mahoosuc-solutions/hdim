@@ -1,6 +1,8 @@
 # Kubernetes profile configuration for cql-engine-service
 server:
   port: 8081
+  servlet:
+    context-path: /cql-engine
 
 spring:
   datasource:

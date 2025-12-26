@@ -93,6 +93,45 @@
             font-size: 13px;
             color: #999;
         }
+        .compliance-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #1E3A5F 0%, #2C5282 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+        .compliance-badge .shield {
+            font-size: 16px;
+        }
+        .features-banner {
+            background: linear-gradient(135deg, #00A9A5 0%, #00897B 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .features-banner h3 {
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .features-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+        .feature-item {
+            background: rgba(255,255,255,0.15);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
         @media (max-width: 768px) {
             .slides-grid { grid-template-columns: 1fr; }
         }
@@ -103,7 +142,23 @@
         <div class="header">
             <div class="logo">HDIM</div>
             <p class="tagline">Healthcare Data Integration Made Intelligent</p>
+            <div class="compliance-badge">
+                <span class="shield">&#128737;</span>
+                <span>HIPAA Compliant | SOC 2 Type II Ready | BAA Available | Zero Security Bypasses</span>
+            </div>
             <h1 style="margin-top: 30px; color: var(--primary);">Investor Pitch Deck</h1>
+        </div>
+
+        <!-- New Features Banner -->
+        <div class="features-banner">
+            <h3>Production-Ready Enterprise Platform | 100% HIPAA Compliant</h3>
+            <div class="features-list">
+                <div class="feature-item">Advanced Doctor Workflows</div>
+                <div class="feature-item">CMS/HEDIS Report Templates</div>
+                <div class="feature-item">Distributed Tracing (15+ Services)</div>
+                <div class="feature-item">AI Agent Observability</div>
+                <div class="feature-item">Production Monitoring</div>
+            </div>
         </div>
 
         <div class="slides-grid">
@@ -115,7 +170,9 @@
                 </div>
             </div>
             <div class="slide-card">
-                <div class="slide-preview" style="background: #E65100;">$500K/year<br>integration nightmare</div>
+                <div class="slide-preview" style="background: #E65100; padding: 0; overflow: hidden;">
+                    <img src="assets/marketing/pitch/problem-maze.png" alt="Integration Problem" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;">
+                </div>
                 <div class="slide-info">
                     <div class="slide-number">SLIDE 2</div>
                     <div class="slide-title">The Problem</div>
@@ -129,10 +186,21 @@
                 </div>
             </div>
             <div class="slide-card">
-                <div class="slide-preview" style="background: var(--secondary);">AI-Native FHIR<br>Zero Tech Debt</div>
+                <div class="slide-preview" style="background: var(--secondary); padding: 0; overflow: hidden;">
+                    <img src="assets/marketing/pitch/solution-breakthrough.png" alt="HDIM Solution" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;">
+                </div>
                 <div class="slide-info">
                     <div class="slide-number">SLIDE 4</div>
                     <div class="slide-title">The Solution</div>
+                </div>
+            </div>
+            <div class="slide-card">
+                <div class="slide-preview" style="background: #2E7D32; padding: 0; overflow: hidden;">
+                    <img src="assets/marketing/people/doctor-patient-insights.png" alt="Doctor helping patient with insights" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;">
+                </div>
+                <div class="slide-info">
+                    <div class="slide-number">SLIDE 5</div>
+                    <div class="slide-title">Clinical Impact</div>
                 </div>
             </div>
             <div class="slide-card">
@@ -140,56 +208,67 @@
                     <img src="assets/screenshots/dashboard.png" alt="HDIM Product Demo" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;">
                 </div>
                 <div class="slide-info">
-                    <div class="slide-number">SLIDE 5</div>
+                    <div class="slide-number">SLIDE 6</div>
                     <div class="slide-title">Product Demo</div>
                 </div>
             </div>
             <div class="slide-card">
-                <div class="slide-preview">2+ Pilots<br>5+ Pipeline</div>
+                <div class="slide-preview" style="background: #1E3A5F;">Enterprise Security<br>15+ Service Tracing<br><small style="font-size: 10px; opacity: 0.9;">Production Ready</small></div>
                 <div class="slide-info">
-                    <div class="slide-number">SLIDE 6</div>
+                    <div class="slide-number">SLIDE 7</div>
+                    <div class="slide-title">Enterprise Features</div>
+                </div>
+            </div>
+            <div class="slide-card">
+                <div class="slide-preview" style="padding: 0; overflow: hidden;">
+                    <img src="assets/marketing/pitch/traction-momentum.png" alt="Traction & Momentum" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;">
+                </div>
+                <div class="slide-info">
+                    <div class="slide-number">SLIDE 8</div>
                     <div class="slide-title">Traction</div>
                 </div>
             </div>
             <div class="slide-card">
-                <div class="slide-preview">$24.8B TAM<br>15.2% CAGR</div>
+                <div class="slide-preview" style="padding: 0; overflow: hidden;">
+                    <img src="assets/marketing/pitch/market-opportunity.png" alt="$24.8B Market Opportunity" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;">
+                </div>
                 <div class="slide-info">
-                    <div class="slide-number">SLIDE 7</div>
+                    <div class="slide-number">SLIDE 9</div>
                     <div class="slide-title">Market Size</div>
                 </div>
             </div>
             <div class="slide-card">
-                <div class="slide-preview" style="background: var(--secondary);">Land & Expand<br>$50K → $300K</div>
+                <div class="slide-preview" style="background: var(--secondary);">Land & Expand<br>$50K → $500K</div>
                 <div class="slide-info">
-                    <div class="slide-number">SLIDE 8</div>
+                    <div class="slide-number">SLIDE 10</div>
                     <div class="slide-title">Business Model</div>
                 </div>
             </div>
             <div class="slide-card">
                 <div class="slide-preview">HDIM vs<br>Legacy</div>
                 <div class="slide-info">
-                    <div class="slide-number">SLIDE 9</div>
+                    <div class="slide-number">SLIDE 11</div>
                     <div class="slide-title">Competition</div>
                 </div>
             </div>
             <div class="slide-card">
                 <div class="slide-preview">Healthcare IT<br>Veterans</div>
                 <div class="slide-info">
-                    <div class="slide-number">SLIDE 10</div>
+                    <div class="slide-number">SLIDE 12</div>
                     <div class="slide-title">Team</div>
                 </div>
             </div>
             <div class="slide-card">
                 <div class="slide-preview" style="background: var(--secondary);">$2M Seed<br>SAFE @ $10-12M</div>
                 <div class="slide-info">
-                    <div class="slide-number">SLIDE 11</div>
+                    <div class="slide-number">SLIDE 13</div>
                     <div class="slide-title">The Ask</div>
                 </div>
             </div>
             <div class="slide-card">
                 <div class="slide-preview">Integration Layer<br>for AI Healthcare</div>
                 <div class="slide-info">
-                    <div class="slide-number">SLIDE 12</div>
+                    <div class="slide-number">SLIDE 14</div>
                     <div class="slide-title">Vision</div>
                 </div>
             </div>
@@ -197,9 +276,9 @@
 
         <div class="cta-section">
             <h2>Ready to Learn More?</h2>
-            <p>Request the full pitch deck and schedule a meeting with our team.</p>
+            <p>Enterprise-grade, HIPAA-compliant healthcare integration platform - production ready today.</p>
             <a href="/landing-page-a.html" class="btn">Request Full Deck</a>
-            <p class="download-note">Full presentation available upon request to verified investors.</p>
+            <p class="download-note">Full presentation available upon request to verified investors. BAA available for enterprise customers.</p>
         </div>
     </div>
 </body>

@@ -1,5 +1,6 @@
 package com.healthdata.patient.entity;
 
+import com.healthdata.security.encryption.Encrypted;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -50,10 +51,12 @@ public class PatientInsuranceEntity {
     @Column(name = "plan_name", length = 255)
     private String planName;
 
-    @Column(name = "member_id", nullable = false, length = 128)
+    @Encrypted(value = "Insurance Member ID", category = Encrypted.HipaaCategory.PHI)
+    @Column(name = "member_id", nullable = false, length = 356)
     private String memberId;
 
-    @Column(name = "group_number", length = 128)
+    @Encrypted(value = "Insurance Group Number", category = Encrypted.HipaaCategory.PHI)
+    @Column(name = "group_number", length = 356)
     private String groupNumber;
 
     @Column(name = "effective_date", nullable = false)

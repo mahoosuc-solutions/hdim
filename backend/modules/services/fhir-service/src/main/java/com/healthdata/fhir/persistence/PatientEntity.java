@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import com.healthdata.security.encryption.Encrypted;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -36,14 +37,17 @@ public class PatientEntity {
     @Column(name = "resource_type", nullable = false, length = 32)
     private String resourceType;
 
+    @Encrypted(value = "FHIR Patient Resource JSON", category = Encrypted.HipaaCategory.PHI)
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "resource_json", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "resource_json", nullable = false, columnDefinition = "text")
     private String resourceJson;
 
-    @Column(name = "first_name", length = 128)
+    @Encrypted(value = "Patient First Name", category = Encrypted.HipaaCategory.PHI)
+    @Column(name = "first_name", length = 356)
     private String firstName;
 
-    @Column(name = "last_name", length = 128)
+    @Encrypted(value = "Patient Last Name", category = Encrypted.HipaaCategory.PHI)
+    @Column(name = "last_name", length = 356)
     private String lastName;
 
     @Column(name = "gender", length = 32)

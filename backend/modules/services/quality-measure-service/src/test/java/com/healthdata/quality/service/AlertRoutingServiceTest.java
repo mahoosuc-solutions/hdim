@@ -284,7 +284,12 @@ class AlertRoutingServiceTest {
             .active(true)
             .build();
 
-        when(routingConfigRepository.findBusinessHoursRoutingConfigs(
+        // Mock both business hours and after-hours configs (lenient since only one will be used based on time)
+        org.mockito.Mockito.lenient().when(routingConfigRepository.findBusinessHoursRoutingConfigs(
+            TENANT_ID, "RISK_ESCALATION", "HIGH", true))
+            .thenReturn(List.of(pcpConfig, coordinatorConfig));
+
+        org.mockito.Mockito.lenient().when(routingConfigRepository.findAfterHoursRoutingConfigs(
             TENANT_ID, "RISK_ESCALATION", "HIGH", true))
             .thenReturn(List.of(pcpConfig, coordinatorConfig));
 

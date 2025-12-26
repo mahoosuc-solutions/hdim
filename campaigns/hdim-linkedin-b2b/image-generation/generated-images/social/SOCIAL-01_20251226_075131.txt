@@ -1,0 +1,15 @@
+Prompt ID: SOCIAL-01
+Name: Hospital Success
+Model: imagen-3.0-generate-002
+Timestamp: 20251226_075131
+Category: social
+
+========================================
+PROMPT:
+========================================
+Create a 4K image representing hospital transformation success. Scene: Modern hospital exterior at golden hour. Happy diverse healthcare workers (doctor, nurse, IT professional) walking together confidently. Digital elements suggest tech advancement. Clear sky, bright future feeling. Mood: Success, optimism, teamwork. Style: Commercial healthcare photography. Colors: Warm golden hour, whites, teal (#00A9A5) accents. Composition: Hospital backdrop, people foreground.
+
+========================================
+API Response (for debugging):
+========================================
+See: /home/mahoosuc-solutions/projects/hdim-master/hdim-master/campaigns/hdim-linkedin-b2b/image-generation/generated-images/social/SOCIAL-01_20251226_075131_response.json

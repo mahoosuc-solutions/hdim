@@ -22,6 +22,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUTPUT_DIR="${SCRIPT_DIR}/generated-images"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
+# API Keys (can be overridden by environment variables)
+GOOGLE_API_KEY="${GOOGLE_API_KEY:-AIzaSyBJKY_Hml7wvwxdppZQjET_imtwnAELhck}"
+export GOOGLE_API_KEY
+
 # Brand Colors
 PRIMARY="#1E3A5F"      # Deep Navy Blue
 SECONDARY="#00A9A5"    # Teal
@@ -214,7 +218,7 @@ list_prompts() {
 
 generate_with_gemini() {
     local prompt_id="$1"
-    local model="${2:-gemini-2.5-pro}"
+    local model="${2:-gemini-2.0-flash-exp-image-generation}"
 
     if [[ -z "${PROMPTS[$prompt_id]}" ]]; then
         echo "Error: Unknown prompt ID '$prompt_id'"
@@ -231,32 +235,66 @@ generate_with_gemini() {
     echo "    Model: $model"
     echo "    Output: $output_file"
 
-    # Check if gemini CLI is available
-    if command -v gemini &> /dev/null; then
-        gemini -p "$prompt" --output "$output_file" --model "$model" 2>&1 || {
-            echo "    Warning: gemini CLI failed, saving prompt to file"
-            echo "$prompt" > "${output_file%.png}.txt"
-        }
+    if [[ -z "$GOOGLE_API_KEY" ]]; then
+        echo "    Error: GOOGLE_API_KEY not set"
+        return 1
+    fi
+
+    # Escape prompt for JSON
+    local escaped_prompt="${prompt//\\/\\\\}"
+    escaped_prompt="${escaped_prompt//\"/\\\"}"
+    escaped_prompt="${escaped_prompt//$'\n'/\\n}"
+
+    # Use Gemini generateContent API for image generation
+    local response
+    response=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_API_KEY}" \
+        -H "Content-Type: application/json" \
+        -d "{
+            \"contents\": [{
+                \"parts\": [{
+                    \"text\": \"Generate this image: ${escaped_prompt}\"
+                }]
+            }],
+            \"generationConfig\": {
+                \"responseModalities\": [\"image\", \"text\"],
+                \"responseMimeType\": \"text/plain\"
+            }
+        }" 2>&1)
+
+    # Save response for debugging
+    echo "$response" > "${output_file%.png}_response.json"
+
+    # Check for error
+    if echo "$response" | grep -q '"error"'; then
+        echo "    API Error: $(echo "$response" | grep -o '"message": "[^"]*"' | head -1)"
+        echo "    Response saved to: ${output_file%.png}_response.json"
+        return 1
+    fi
+
+    # Extract base64 image data from generateContent response
+    local image_data
+    image_data=$(python3 -c "
+import sys, json
+try:
+    data = json.load(open('${output_file%.png}_response.json'))
+    candidates = data.get('candidates', [])
+    if candidates:
+        parts = candidates[0].get('content', {}).get('parts', [])
+        for part in parts:
+            if 'inlineData' in part:
+                print(part['inlineData'].get('data', ''))
+                break
+except Exception as e:
+    pass
+" 2>/dev/null)
+
+    if [[ -n "$image_data" && "$image_data" != "" ]]; then
+        echo "$image_data" | base64 -d > "$output_file"
+        echo "    Success! Saved to: $output_file"
+        rm -f "${output_file%.png}_response.json"  # Clean up response file on success
     else
-        echo "    Note: Gemini CLI not found. Saving prompt for manual use..."
-        cat > "${output_file%.png}.txt" << EOF
-Prompt ID: $prompt_id
-Name: $name
-Model: $model
-Timestamp: $TIMESTAMP
-Category: $category
-
-========================================
-PROMPT:
-========================================
-$prompt
-
-========================================
-GENERATION COMMAND:
-========================================
-gemini -p "[prompt above]" --output "$output_file" --model "$model"
-EOF
-        echo "    Saved to: ${output_file%.png}.txt"
+        echo "    Warning: Could not extract image from response"
+        echo "    Response saved to: ${output_file%.png}_response.json"
     fi
 }
 
@@ -593,7 +631,7 @@ EOF
 
 main() {
     local platform="gemini"
-    local model="gemini-2.5-pro"
+    local model="gemini-2.0-flash-exp-image-generation"
     local action=""
     local target=""
 

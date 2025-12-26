@@ -406,6 +406,74 @@
             margin-right: 4px;
         }
 
+        /* HIPAA Badge */
+        .hipaa-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #1E3A5F 0%, #2C5282 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 8pt;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .hipaa-badge .shield {
+            font-size: 10pt;
+        }
+
+        /* Clinical Features Box */
+        .clinical-features-box {
+            background: #F0FFF4;
+            border: 1px solid #2E7D32;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-top: 10px;
+        }
+
+        .clinical-features-box .title {
+            font-size: 9pt;
+            font-weight: 700;
+            color: #2E7D32;
+            margin-bottom: 6px;
+        }
+
+        .clinical-feature-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 3px;
+            font-size: 8pt;
+        }
+
+        .clinical-feature-item .check {
+            color: #2E7D32;
+            margin-right: 5px;
+            font-weight: 700;
+        }
+
+        /* Enterprise Badge */
+        .enterprise-badge {
+            background: #E8F4FD;
+            border: 1px solid #1E3A5F;
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-top: 8px;
+        }
+
+        .enterprise-badge .title {
+            font-size: 8pt;
+            font-weight: 700;
+            color: #1E3A5F;
+            margin-bottom: 4px;
+        }
+
+        .enterprise-badge .items {
+            font-size: 7pt;
+            color: #666;
+        }
+
         /* Print styles */
         @media print {
             body {
@@ -413,7 +481,8 @@
             }
 
             .mandate-box,
-            .vision-box {
+            .vision-box,
+            .hipaa-badge {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
@@ -427,6 +496,10 @@
         <div class="logo">HDIM</div>
         <div class="tagline">Healthcare Data Integration Made Intelligent</div>
         <div class="subtitle">AI-Native FHIR Integration Platform</div>
+        <div class="hipaa-badge">
+            <span class="shield">&#128737;</span>
+            <span>HIPAA Compliant | SOC 2 Ready | BAA Available | Production Ready</span>
+        </div>
     </header>
 
     <!-- Problem / Solution Grid -->
@@ -481,6 +554,17 @@
         </div>
     </div>
 
+    <!-- Clinical Features Box -->
+    <div class="clinical-features-box full-width">
+        <div class="title">New Clinical Features - Production Ready</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+            <div class="clinical-feature-item"><span class="check">✓</span> Advanced Doctor Workflows (Phase 4)</div>
+            <div class="clinical-feature-item"><span class="check">✓</span> CMS/HEDIS Report Templates Library</div>
+            <div class="clinical-feature-item"><span class="check">✓</span> Patient Health Services Integration</div>
+            <div class="clinical-feature-item"><span class="check">✓</span> Automated Compliance Reporting</div>
+        </div>
+    </div>
+
     <!-- CMS Mandate -->
     <div class="mandate-box full-width">
         <div class="mandate-title">CMS Interoperability & Prior Authorization Final Rule (CMS-0057-F)</div>
@@ -514,6 +598,10 @@
             <div class="traction-bullet"><span class="dot">●</span> 5+ enterprise deals in pipeline</div>
             <div class="traction-bullet"><span class="dot">●</span> Regional Medical Center: 3.5 days → 6 hours</div>
             <div class="traction-bullet"><span class="dot">●</span> IT tickets: 340/mo → 52/mo</div>
+        </div>
+        <div class="enterprise-badge">
+            <div class="title">Enterprise-Grade Infrastructure</div>
+            <div class="items">Distributed Tracing (15+ Services) | Production Monitoring with AlertManager | AI Agent Testing with Langfuse Observability</div>
         </div>
     </div>
 
@@ -550,8 +638,8 @@
             <div class="model-phase">
                 <span class="label">EXPAND</span>
                 <span class="arrow">→</span>
-                <span>All Clinical Workflows</span>
-                <span class="value">$200-500K</span>
+                <span>All Clinical Workflows + CMS/HEDIS</span>
+                <span class="value">$300-600K</span>
             </div>
             <table style="margin-top: 8px;">
                 <tr>
@@ -604,7 +692,7 @@
                 </tr>
             </tbody>
         </table>
-        <p style="margin-top: 6px; font-size: 8pt; font-weight: 600; color: #1E3A5F;">HDIM: Only AI-native, vendor-agnostic, zero-tech-debt platform</p>
+        <p style="margin-top: 6px; font-size: 8pt; font-weight: 600; color: #1E3A5F;">HDIM: Only AI-native, HIPAA-compliant, vendor-agnostic, zero-tech-debt platform with BAA available</p>
     </div>
 
     <!-- Team / Ask Grid -->
@@ -659,8 +747,8 @@
 
     <!-- Vision -->
     <div class="vision-box full-width">
-        <div class="vision-quote">"A world where healthcare data flows seamlessly between every system, enabling AI to deliver better care at lower cost."</div>
-        <div class="vision-tagline">HDIM is the integration layer for AI-enabled healthcare.</div>
+        <div class="vision-quote">"A world where healthcare data flows seamlessly between every system, enabling AI to deliver better care at lower cost - with enterprise-grade security and full HIPAA compliance."</div>
+        <div class="vision-tagline">HDIM is the secure, compliant integration layer for AI-enabled healthcare.</div>
     </div>
 
     <!-- Footer -->

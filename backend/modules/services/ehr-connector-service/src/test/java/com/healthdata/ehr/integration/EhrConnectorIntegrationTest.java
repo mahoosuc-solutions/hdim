@@ -1,5 +1,6 @@
 package com.healthdata.ehr.integration;
 
+import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import com.healthdata.ehr.config.TestSecurityConfiguration;
 import com.healthdata.ehr.dto.EhrConnectionConfig;
 import com.healthdata.ehr.factory.EhrConnectorFactory;
@@ -11,6 +12,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
@@ -27,6 +29,7 @@ import java.io.IOException;
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestSecurityConfiguration.class)
+@EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @DisplayName("EHR Connector Integration Tests")
 class EhrConnectorIntegrationTest {
 

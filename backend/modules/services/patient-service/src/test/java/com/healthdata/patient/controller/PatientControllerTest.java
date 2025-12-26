@@ -1,5 +1,6 @@
 package com.healthdata.patient.controller;
 
+import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import com.healthdata.patient.service.PatientAggregationService;
 import com.healthdata.patient.service.PatientHealthStatusService;
 import com.healthdata.patient.service.PatientTimelineService;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -33,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @DisplayName("Patient Controller Tests")
 class PatientControllerTest {
 

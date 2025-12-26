@@ -1,6 +1,7 @@
 package com.healthdata.sdoh.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import com.healthdata.sdoh.config.TestCacheConfiguration;
 import com.healthdata.sdoh.config.TestSecurityConfiguration;
 import com.healthdata.sdoh.model.*;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -37,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import({TestSecurityConfiguration.class, TestCacheConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
+@EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @DisplayName("SDOH Controller Tests")
 class SdohControllerTest {
 

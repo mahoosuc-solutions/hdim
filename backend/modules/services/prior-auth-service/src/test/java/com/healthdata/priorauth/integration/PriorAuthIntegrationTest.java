@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
         "spring.kafka.bootstrap-servers=",
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration",
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,com.healthdata.authentication.config.AuthenticationAutoConfiguration",
         "healthdata.persistence.primary.url=jdbc:tc:postgresql:15-alpine:///testdb",
         "healthdata.persistence.primary.username=sa",
         "healthdata.persistence.primary.password=",

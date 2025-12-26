@@ -45,7 +45,8 @@ class ConsentSecurityConfigTest {
         ConsentSecurityConfig config = new ConsentSecurityConfig();
         HttpSecurity http = httpSecurity();
 
-        SecurityFilterChain chain = config.securityFilterChain(http);
+        // Use testSecurityFilterChain which doesn't require JwtAuthenticationFilter
+        SecurityFilterChain chain = config.testSecurityFilterChain(http);
 
         assertThat(chain).isNotNull();
         assertThat(http).isNotNull();

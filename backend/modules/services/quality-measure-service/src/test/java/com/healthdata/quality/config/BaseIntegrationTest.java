@@ -1,5 +1,7 @@
 package com.healthdata.quality.config;
 
+import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -38,6 +40,7 @@ import java.lang.annotation.Target;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @Import({
     TestSecurityConfiguration.class,
     TestWebSocketConfiguration.class,

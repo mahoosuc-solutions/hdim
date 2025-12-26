@@ -114,11 +114,7 @@ public class QualityMeasureSecurityConfig {
                 // HTTP upgrade request must be permitted, security enforced in handshake
                 .requestMatchers("/ws/**").permitAll()
 
-                // DEMO MODE: Permit all Quality Measure API access (remove in production)
-                // Note: Context path is /quality-measure, so internal paths are relative
-                .requestMatchers("/**").permitAll()
-
-                // All other endpoints require authentication
+                // All API endpoints require authentication (HIPAA §164.312(d))
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

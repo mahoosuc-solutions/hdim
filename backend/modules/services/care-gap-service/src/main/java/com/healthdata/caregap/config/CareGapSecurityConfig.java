@@ -102,9 +102,8 @@ public class CareGapSecurityConfig {
                     "/swagger-resources/**",
                     "/webjars/**"
                 ).permitAll()
-                // DEMO MODE: Permit all Care Gap API access (remove in production)
-                // Note: Context path is /care-gap, so internal paths are relative
-                .requestMatchers("/**").permitAll()
+
+                // All care gap endpoints require JWT authentication (HIPAA §164.312(d))
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

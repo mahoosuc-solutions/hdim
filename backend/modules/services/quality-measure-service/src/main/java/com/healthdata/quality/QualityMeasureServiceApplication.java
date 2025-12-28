@@ -5,8 +5,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Quality Measure Service - HEDIS Quality Measure Calculation and Reporting
@@ -31,9 +35,19 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * - Immunization measures
  * - And more...
  */
-@SpringBootApplication(
-    scanBasePackages = {
-        "com.healthdata.quality"
+@SpringBootApplication
+@ComponentScan(
+    basePackages = {
+        "com.healthdata.quality",
+        "com.healthdata.authentication"  // For Tier 1: JwtAuthenticationFilter, JwtTokenService, CookieService
+    },
+    excludeFilters = {
+        // Exclude Tier 2 authentication controllers (Gateway-only)
+        // These require database repositories (UserRepository, ApiKeyRepository, etc.)
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com\\.healthdata\\.authentication\\.controller\\..*"
+        )
     }
 )
 @EnableFeignClients

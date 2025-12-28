@@ -1,31 +1,14 @@
-# Multi-stage build for sales-automation-service
-FROM gradle:8.5-jdk21 AS builder
-
-WORKDIR /app
-
-# Copy gradle files first for better caching
-COPY settings.gradle.kts build.gradle.kts gradle.properties ./
-COPY gradle ./gradle
-
-# Copy shared modules
-COPY modules/shared ./modules/shared
-
-# Copy this service
-COPY modules/services/sales-automation-service ./modules/services/sales-automation-service
-
-# Build the service
-RUN gradle :modules:services:sales-automation-service:bootJar --no-daemon -x test
-
-# Runtime stage
+# Runtime image for sales-automation-service
 FROM eclipse-temurin:21-jre-alpine
 
 # Add non-root user for security
-RUN addgroup -S healthdata && adduser -S healthdata -G healthdata
+RUN addgroup -S healthdata && adduser -S healthdata -G healthdata && \
+    apk add --no-cache curl
 
 WORKDIR /app
 
-# Copy the built JAR
-COPY --from=builder /app/modules/services/sales-automation-service/build/libs/*.jar app.jar
+# Copy the pre-built JAR
+COPY modules/services/sales-automation-service/build/libs/*.jar app.jar
 
 # Change ownership
 RUN chown -R healthdata:healthdata /app

@@ -1,25 +1,4 @@
-# Stage 1: Build
-FROM gradle:8.5-jdk21 AS builder
-
-WORKDIR /app
-
-# Copy Gradle configuration
-COPY settings.gradle.kts build.gradle.kts gradle.properties ./
-COPY gradle ./gradle
-
-# Copy shared modules
-COPY modules/shared ./modules/shared
-
-# Copy platform modules
-COPY platform ./platform
-
-# Copy service source
-COPY modules/services/migration-workflow-service ./modules/services/migration-workflow-service
-
-# Build the service
-RUN gradle :modules:services:migration-workflow-service:bootJar --no-daemon -x test
-
-# Stage 2: Runtime
+# Runtime image for migration-workflow-service
 FROM eclipse-temurin:21-jre-alpine
 
 LABEL maintainer="HDIM Platform Team"
@@ -30,10 +9,11 @@ WORKDIR /app
 
 # Create non-root user
 RUN addgroup -g 1001 -S healthdata && \
-    adduser -u 1001 -S healthdata -G healthdata -h /app
+    adduser -u 1001 -S healthdata -G healthdata -h /app && \
+    apk add --no-cache curl
 
-# Copy the built JAR
-COPY --from=builder /app/modules/services/migration-workflow-service/build/libs/*.jar app.jar
+# Copy the pre-built JAR
+COPY modules/services/migration-workflow-service/build/libs/*.jar app.jar
 
 # Set ownership
 RUN chown -R healthdata:healthdata /app

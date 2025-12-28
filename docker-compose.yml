@@ -375,6 +375,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       kafka:
         condition: service_started
     environment:
@@ -382,11 +384,17 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/caregap_db
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      HEALTHDATA_CACHE_REDIS_HOST: redis
+      HEALTHDATA_CACHE_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVER_PORT: 8086
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # OpenTelemetry configuration for Jaeger
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
     ports:
       - "8086:8086"
     healthcheck:

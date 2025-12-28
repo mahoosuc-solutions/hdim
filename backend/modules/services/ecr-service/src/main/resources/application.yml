@@ -71,9 +71,12 @@ ecr:
       max-interval-ms: 30000
 
   # RCTC (Reportable Condition Trigger Codes) Configuration
+  # NOTE: RCTC value sets are PUBLIC reference data published by CDC (not PHI).
+  # Longer cache TTL is acceptable for public reference data per HIPAA-CACHE-COMPLIANCE.md
+  # See: https://ersd.aimsplatform.org/ for RCTC source data
   rctc:
     value-set-update-cron: "0 0 2 * * SUN"  # Weekly Sunday 2 AM
-    cache-ttl-hours: 168  # 7 days
+    cache-ttl-hours: 168  # 7 days (public CDC reference data, not PHI)
 
   # eICR Generation Settings
   eicr:

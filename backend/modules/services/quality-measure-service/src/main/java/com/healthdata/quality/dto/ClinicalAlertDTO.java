@@ -15,7 +15,7 @@ import java.util.UUID;
  * risk escalation, and health decline notifications.
  */
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClinicalAlertDTO {

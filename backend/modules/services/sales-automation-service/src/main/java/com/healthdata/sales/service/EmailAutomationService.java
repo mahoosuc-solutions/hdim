@@ -32,11 +32,17 @@ public class EmailAutomationService {
     private final EmailSendLogRepository emailSendLogRepository;
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username:}")
+    @Value("${email.from.address:${spring.mail.username:}}")
     private String defaultFromEmail;
+
+    @Value("${email.from.name:HealthData-in-Motion}")
+    private String defaultFromName;
 
     @Value("${app.base-url:http://localhost:8106}")
     private String baseUrl;
+
+    @Value("${email.tracking.enabled:true}")
+    private boolean trackingEnabled;
 
     private static final Pattern MERGE_FIELD_PATTERN = Pattern.compile("\\{\\{(\\w+)\\}\\}");
 
@@ -140,7 +146,7 @@ public class EmailAutomationService {
             .recipientEmail(enrollment.getEmail())
             .recipientName(enrollment.getDisplayName())
             .fromEmail(sequence.getFromEmail() != null ? sequence.getFromEmail() : defaultFromEmail)
-            .fromName(sequence.getFromName())
+            .fromName(sequence.getFromName() != null ? sequence.getFromName() : defaultFromName)
             .subject(processMergeFields(step.getSubject(), enrollment))
             .status(EmailSendLog.EmailStatus.PENDING)
             .trackingId(UUID.randomUUID().toString())

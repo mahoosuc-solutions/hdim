@@ -61,6 +61,18 @@ spring:
           auth: true
           starttls:
             enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+# Email sending configuration
+email:
+  from:
+    address: ${MAIL_FROM:${MAIL_USERNAME:noreply@healthdatainmotion.com}}
+    name: ${MAIL_FROM_NAME:HealthData-in-Motion}
+  tracking:
+    enabled: ${EMAIL_TRACKING_ENABLED:true}
+    pixel-url: ${EMAIL_TRACKING_URL:${app.base-url}/api/sales/track}
 
 # Zoho CRM Integration
 zoho:
@@ -78,6 +90,21 @@ zoho:
   webhook:
     enabled: ${ZOHO_WEBHOOK_ENABLED:false}
     secret: ${ZOHO_WEBHOOK_SECRET:}
+
+# LinkedIn Integration
+linkedin:
+  api:
+    base-url: https://api.linkedin.com/v2
+    oauth-url: https://www.linkedin.com/oauth/v2
+  oauth:
+    client-id: ${LINKEDIN_CLIENT_ID:}
+    client-secret: ${LINKEDIN_CLIENT_SECRET:}
+    redirect-uri: ${LINKEDIN_REDIRECT_URI:http://localhost:8106/sales-automation/api/linkedin/oauth/callback}
+  outreach:
+    daily-connection-limit: ${LINKEDIN_DAILY_CONNECTION_LIMIT:50}
+    daily-inmail-limit: ${LINKEDIN_DAILY_INMAIL_LIMIT:25}
+    min-delay-between-actions-ms: ${LINKEDIN_MIN_DELAY_MS:30000}
+    max-delay-between-actions-ms: ${LINKEDIN_MAX_DELAY_MS:120000}
 
 # Security
 jwt:

@@ -56,6 +56,9 @@ public class Lead {
     @Column(name = "website", length = 255)
     private String website;
 
+    @Column(name = "linkedin_url", length = 500)
+    private String linkedinUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "source", nullable = false)
     private LeadSource source;

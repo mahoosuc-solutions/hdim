@@ -56,6 +56,8 @@ services:
   # ============================================
 
   gateway-service:
+    image: healthdata-gateway-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -66,6 +68,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   cql-engine-service:
+    image: healthdata-cql-engine-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -76,6 +80,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   consent-service:
+    image: healthdata-consent-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -86,6 +92,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   event-processing-service:
+    image: healthdata-event-processing-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -96,6 +104,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   patient-service:
+    image: healthdata-patient-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -106,6 +116,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   fhir-service:
+    image: healthdata-fhir-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -116,6 +128,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   care-gap-service:
+    image: healthdata-care-gap-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -126,6 +140,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   quality-measure-service:
+    image: healthdata-quality-measure-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -140,6 +156,8 @@ services:
   # ============================================
 
   agent-runtime-service:
+    image: healthdata-agent-runtime-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -150,6 +168,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   ai-assistant-service:
+    image: healthdata-ai-assistant-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -160,6 +180,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   agent-builder-service:
+    image: healthdata-agent-builder-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -174,6 +196,8 @@ services:
   # ============================================
 
   analytics-service:
+    image: healthdata-analytics-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -184,6 +208,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   predictive-analytics-service:
+    image: healthdata-predictive-analytics-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -194,6 +220,8 @@ services:
       JAVA_OPTS: "-Xmx512m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   sdoh-service:
+    image: healthdata-sdoh-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -208,6 +236,8 @@ services:
   # ============================================
 
   data-enrichment-service:
+    image: healthdata-data-enrichment-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -218,6 +248,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   event-router-service:
+    image: healthdata-event-router-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -228,6 +260,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   cdr-processor-service:
+    image: healthdata-cdr-processor-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -242,6 +276,8 @@ services:
   # ============================================
 
   approval-service:
+    image: healthdata-approval-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -252,6 +288,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   payer-workflows-service:
+    image: healthdata-payer-workflows-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -262,6 +300,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   migration-workflow-service:
+    image: healthdata-migration-workflow-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -276,6 +316,8 @@ services:
   # ============================================
 
   ehr-connector-service:
+    image: healthdata-ehr-connector-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -290,6 +332,8 @@ services:
   # ============================================
 
   ecr-service:
+    image: healthdata-ecr-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -300,6 +344,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   qrda-export-service:
+    image: healthdata-qrda-export-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -310,6 +356,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   hcc-service:
+    image: healthdata-hcc-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -320,6 +368,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   prior-auth-service:
+    image: healthdata-prior-auth-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:
@@ -334,6 +384,8 @@ services:
   # ============================================
 
   documentation-service:
+    image: healthdata-documentation-service:1.6.0
+    build: null
     deploy:
       resources:
         limits:

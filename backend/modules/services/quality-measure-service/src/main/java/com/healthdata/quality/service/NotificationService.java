@@ -137,43 +137,20 @@ public class NotificationService {
      */
     @Deprecated
     public void sendNotification(String tenantId, ClinicalAlertDTO alert) {
-        log.info("Sending {} alert notification for patient {} via appropriate channels",
-            alert.getSeverity(), alert.getPatientId());
-
-        String severity = alert.getSeverity();
-
-        try {
-            // WebSocket - all severities
-            webSocketHandler.broadcastClinicalAlert(alert, tenantId);
-
-            // Email - CRITICAL and HIGH
-            if (("CRITICAL".equals(severity) || "HIGH".equals(severity)) && emailChannel != null) {
-                try {
-                    emailChannel.send(tenantId, alert);
-                } catch (Exception e) {
-                    log.error("Email notification failed for alert {}: {}",
-                        alert.getId(), e.getMessage());
-                }
-            }
-
-            // SMS - CRITICAL only
-            if ("CRITICAL".equals(severity)) {
-                try {
-                    smsChannel.send(tenantId, alert);
-                } catch (Exception e) {
-                    log.error("SMS notification failed for alert {}: {}",
-                        alert.getId(), e.getMessage());
-                }
-            }
-
-        } catch (Exception e) {
-            log.error("Notification failed for alert {}: {}", alert.getId(), e.getMessage());
-        }
+        // Delegate to new API via ClinicalAlertNotificationRequest wrapper
+        ClinicalAlertDTO alertWithTenant = alert.getTenantId() == null
+                ? alert.toBuilder().tenantId(tenantId).build()
+                : alert;
+        NotificationRequest request = new ClinicalAlertNotificationRequest(alertWithTenant, null);
+        sendNotification(request);
     }
 
     /**
      * Send batch notifications
+     *
+     * @deprecated Use {@link #sendNotification(NotificationRequest)} in a loop instead
      */
+    @Deprecated
     public void sendBatchNotification(String tenantId, List<ClinicalAlertDTO> alerts) {
         log.info("Sending batch notification for {} alerts", alerts.size());
 
@@ -184,42 +161,17 @@ public class NotificationService {
 
     /**
      * Send notification and track delivery status
+     *
+     * @deprecated Use {@link #sendNotification(NotificationRequest)} instead
      */
+    @Deprecated
     public NotificationStatus sendNotificationWithStatus(String tenantId, ClinicalAlertDTO alert) {
-        Map<String, Boolean> channelStatus = new HashMap<>();
-
-        try {
-            channelStatus.put("websocket", webSocketHandler.broadcastClinicalAlert(alert, tenantId));
-        } catch (Exception e) {
-            channelStatus.put("websocket", false);
-            log.error("WebSocket notification failed: {}", e.getMessage());
-        }
-
-        String severity = alert.getSeverity();
-
-        if (("CRITICAL".equals(severity) || "HIGH".equals(severity)) && emailChannel != null) {
-            try {
-                channelStatus.put("email", emailChannel.send(tenantId, alert));
-            } catch (Exception e) {
-                channelStatus.put("email", false);
-                log.error("Email notification failed: {}", e.getMessage());
-            }
-        }
-
-        if ("CRITICAL".equals(severity)) {
-            try {
-                channelStatus.put("sms", smsChannel.send(tenantId, alert));
-            } catch (Exception e) {
-                channelStatus.put("sms", false);
-                log.error("SMS notification failed: {}", e.getMessage());
-            }
-        }
-
-        return NotificationStatus.builder()
-            .alertId(alert.getId())
-            .channelStatus(channelStatus)
-            .allSuccessful(channelStatus.values().stream().allMatch(Boolean::booleanValue))
-            .build();
+        // Delegate to new API via ClinicalAlertNotificationRequest wrapper
+        ClinicalAlertDTO alertWithTenant = alert.getTenantId() == null
+                ? alert.toBuilder().tenantId(tenantId).build()
+                : alert;
+        NotificationRequest request = new ClinicalAlertNotificationRequest(alertWithTenant, null);
+        return sendNotification(request);
     }
 
     /**

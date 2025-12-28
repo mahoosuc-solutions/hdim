@@ -1,10 +1,8 @@
 package com.healthdata.quality.service.notification;
 
-import com.healthdata.quality.dto.ClinicalAlertDTO;
 import com.healthdata.quality.dto.notification.NotificationRequest;
 import com.healthdata.quality.persistence.NotificationHistoryEntity;
 import com.healthdata.quality.persistence.NotificationHistoryRepository;
-import com.healthdata.quality.service.PatientNameService;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
@@ -14,10 +12,6 @@ import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -36,7 +30,6 @@ public class SmsNotificationChannel {
 
     private final TemplateRenderer templateRenderer;
     private final NotificationHistoryRepository notificationHistoryRepository;
-    private final PatientNameService patientNameService;
 
     @Value("${twilio.account-sid:}")
     private String accountSid;
@@ -53,11 +46,9 @@ public class SmsNotificationChannel {
     private boolean twilioInitialized = false;
 
     public SmsNotificationChannel(TemplateRenderer templateRenderer,
-                                  NotificationHistoryRepository notificationHistoryRepository,
-                                  PatientNameService patientNameService) {
+                                  NotificationHistoryRepository notificationHistoryRepository) {
         this.templateRenderer = templateRenderer;
         this.notificationHistoryRepository = notificationHistoryRepository;
-        this.patientNameService = patientNameService;
     }
 
     @PostConstruct
@@ -170,132 +161,4 @@ public class SmsNotificationChannel {
         }
     }
 
-    /**
-     * Send alert via SMS using template
-     * Records notification in history for HIPAA compliance
-     *
-     * @deprecated Use {@link #send(NotificationRequest)} instead
-     */
-    @Deprecated
-    public boolean send(String tenantId, ClinicalAlertDTO alert) {
-        String message = null;
-        String status = "FAILED";
-        String errorMessage = null;
-
-        try {
-            // Build template variables and render SMS template
-            Map<String, Object> templateVariables = buildTemplateVariables(alert);
-            message = templateRenderer.render("critical-alert", templateVariables);
-
-            // Send via Twilio if configured, otherwise mock
-            if (twilioInitialized && fromPhone != null && !fromPhone.isBlank()) {
-                Message twilioMessage = Message.creator(
-                    new PhoneNumber(DEFAULT_PHONE),
-                    new PhoneNumber(fromPhone),
-                    message
-                ).create();
-
-                status = "SENT";
-                log.info("SMS notification sent for alert {} to {} via Twilio. SID: {}",
-                        alert.getId(), DEFAULT_PHONE, twilioMessage.getSid());
-            } else {
-                status = "SENT";  // Mock mode
-                log.info("SMS notification sent for alert {} to {} using critical-alert SMS template (MOCK)",
-                        alert.getId(), DEFAULT_PHONE);
-            }
-            log.debug("SMS content ({} chars): {}", message.length(), message);
-
-            return true;
-
-        } catch (Exception e) {
-            errorMessage = "Failed to send SMS notification: " + e.getMessage();
-            log.error(errorMessage);
-            return false;
-        } finally {
-            // Always save notification history for HIPAA compliance
-            saveNotificationHistory(tenantId, alert, message, status, errorMessage);
-        }
-    }
-
-    /**
-     * Save notification history for HIPAA audit trail
-     * Runs in finally block to ensure history is saved even if send fails
-     */
-    private void saveNotificationHistory(String tenantId, ClinicalAlertDTO alert,
-                                         String content, String status, String errorMessage) {
-        try {
-            NotificationHistoryEntity history = NotificationHistoryEntity.builder()
-                    .tenantId(tenantId)
-                    .notificationType("CRITICAL_ALERT")
-                    .channel("SMS")
-                    .templateId("critical-alert")
-                    .patientId(alert.getPatientId())
-                    .recipientId(DEFAULT_PHONE)
-                    .subject(null)  // SMS doesn't have subjects
-                    .content(content)  // Encrypted via @Encrypted annotation on entity
-                    .status(status)
-                    .errorMessage(errorMessage)
-                    .alertId(alert.getId())
-                    .severity(alert.getSeverity())
-                    .sentAt(Instant.now())
-                    .build();
-
-            notificationHistoryRepository.save(history);
-            log.debug("Notification history saved for alert {}", alert.getId());
-        } catch (Exception e) {
-            // Log but don't throw - history saving should not prevent notification
-            log.error("Failed to save notification history: {}", e.getMessage());
-        }
-    }
-
-    /**
-     * Build template variables from ClinicalAlertDTO for SMS template
-     * Maps alert data to the critical-alert SMS template structure
-     */
-    private Map<String, Object> buildTemplateVariables(ClinicalAlertDTO alert) {
-        Map<String, Object> variables = new HashMap<>();
-
-        // Channel (SMS for this channel)
-        variables.put("channel", "SMS");
-
-        // Alert core fields
-        String alertType = formatAlertType(alert.getAlertType());
-        variables.put("alertType", alertType);
-        variables.put("severity", alert.getSeverity());
-        variables.put("alertMessage", alert.getMessage());
-
-        // Patient information - fetch from FHIR via PatientNameService
-        String patientId = alert.getPatientId() != null ? alert.getPatientId().toString() : null;
-        variables.put("patientName", patientNameService.getPatientName(alert.getPatientId()));
-        variables.put("mrn", patientId);
-        variables.put("patientId", patientId);
-
-        // Timestamp (convert Instant to LocalDateTime for formatting)
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime triggeredTime = alert.getTriggeredAt() != null
-                ? LocalDateTime.ofInstant(alert.getTriggeredAt(), ZoneId.systemDefault())
-                : LocalDateTime.now();
-        variables.put("timestamp", triggeredTime.format(formatter));
-
-        // Facility name
-        variables.put("facilityName", "HealthData Clinical System");
-
-        // Action URL - link to patient detail page
-        variables.put("actionUrl", "https://healthdata-in-motion.com/patients/" + patientId);
-
-        return variables;
-    }
-
-    /**
-     * Format alert type for display
-     */
-    private String formatAlertType(String alertType) {
-        return switch (alertType) {
-            case "MENTAL_HEALTH_CRISIS" -> "Mental Health Crisis";
-            case "RISK_ESCALATION" -> "Risk Escalation";
-            case "HEALTH_DECLINE" -> "Health Score Decline";
-            case "CHRONIC_DETERIORATION" -> "Chronic Disease Deterioration";
-            default -> alertType;
-        };
-    }
 }

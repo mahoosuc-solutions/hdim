@@ -54,10 +54,12 @@ spring:
           max-wait: -1ms
 
   # Cache Configuration
+  # ⚠️ HIPAA COMPLIANCE: PHI cache TTL must be ≤ 5 minutes (300000ms)
+  # See: backend/HIPAA-CACHE-COMPLIANCE.md
   cache:
     type: redis
     redis:
-      time-to-live: ${SPRING_CACHE_REDIS_TIME_TO_LIVE:86400000} # 24 hours
+      time-to-live: ${SPRING_CACHE_REDIS_TIME_TO_LIVE:300000}  # 5 minutes (HIPAA compliant for PHI)
       cache-null-values: false
       use-key-prefix: true
       key-prefix: "cql-engine:"

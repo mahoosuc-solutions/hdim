@@ -73,10 +73,13 @@ feign:
         readTimeout: 15000
 
 # Cache Configuration (Redis)
+# NOTE: HCC mappings are static reference data (ICD-10 → HCC code mappings), NOT PHI.
+# Longer cache TTL is acceptable for reference data per HIPAA-CACHE-COMPLIANCE.md
+# PHI (patient-specific HCC scores) is NOT cached - only the static crosswalk tables.
 spring.cache:
   type: redis
   redis:
-    time-to-live: 3600000  # 1 hour for HCC mappings (doesn't change frequently)
+    time-to-live: 3600000  # 1 hour for HCC mappings (static reference data, not PHI)
 
 # Kafka Configuration
 spring.kafka:

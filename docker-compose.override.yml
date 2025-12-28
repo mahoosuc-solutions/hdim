@@ -396,6 +396,38 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
 
   # ============================================
+  # SALES SERVICES
+  # ============================================
+
+  sales-automation-service:
+    image: healthdata-sales-automation-service:1.6.0
+    build: null
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
+      # Email Configuration (Zoho Mail SMTP)
+      MAIL_HOST: ${MAIL_HOST:-smtp.zoho.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-sales@healthdatainmotion.com}
+      # LinkedIn Configuration
+      LINKEDIN_CLIENT_ID: ${LINKEDIN_CLIENT_ID:-}
+      LINKEDIN_CLIENT_SECRET: ${LINKEDIN_CLIENT_SECRET:-}
+      LINKEDIN_DAILY_CONNECTION_LIMIT: ${LINKEDIN_DAILY_CONNECTION_LIMIT:-50}
+      LINKEDIN_DAILY_INMAIL_LIMIT: ${LINKEDIN_DAILY_INMAIL_LIMIT:-25}
+      # Zoho CRM Integration
+      ZOHO_CLIENT_ID: ${ZOHO_CLIENT_ID:-}
+      ZOHO_CLIENT_SECRET: ${ZOHO_CLIENT_SECRET:-}
+      ZOHO_REFRESH_TOKEN: ${ZOHO_REFRESH_TOKEN:-}
+      ZOHO_SYNC_ENABLED: ${ZOHO_SYNC_ENABLED:-false}
+
+  # ============================================
   # FRONTEND SERVICE
   # ============================================
 

@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hdim-production
+  labels:
+    app.kubernetes.io/name: hdim
+    app.kubernetes.io/version: "1.6.0"
+    environment: production
+    compliance: hipaa
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: hdim-quota
+  namespace: hdim-production
+spec:
+  hard:
+    requests.cpu: "16"
+    requests.memory: 32Gi
+    limits.cpu: "32"
+    limits.memory: 64Gi
+    pods: "50"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: hdim-limits
+  namespace: hdim-production
+spec:
+  limits:
+  - default:
+      cpu: "1"
+      memory: 2Gi
+    defaultRequest:
+      cpu: "500m"
+      memory: 1Gi
+    type: Container

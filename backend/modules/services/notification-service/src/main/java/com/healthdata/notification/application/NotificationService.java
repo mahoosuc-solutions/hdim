@@ -9,6 +9,7 @@ import com.healthdata.notification.domain.repository.NotificationTemplateReposit
 import com.healthdata.notification.infrastructure.providers.EmailProvider;
 import com.healthdata.notification.infrastructure.providers.PushProvider;
 import com.healthdata.notification.infrastructure.providers.SmsProvider;
+import com.healthdata.notification.infrastructure.websocket.WebSocketNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -41,6 +42,7 @@ public class NotificationService {
     private final EmailProvider emailProvider;
     private final Optional<SmsProvider> smsProvider;
     private final Optional<PushProvider> pushProvider;
+    private final WebSocketNotificationService webSocketService;
 
     private static final Pattern TEMPLATE_VAR_PATTERN = Pattern.compile("\\{\\{(\\w+)}}");
 
@@ -271,7 +273,17 @@ public class NotificationService {
     }
 
     private String storeInApp(Notification notification) {
-        // In-app notifications are stored in DB and fetched by clients
+        // In-app notifications are stored in DB and pushed via WebSocket
+        // Push real-time notification to user via WebSocket
+        try {
+            NotificationResponse response = mapToResponse(notification);
+            webSocketService.pushToUser(notification.getRecipientId(), response);
+            log.debug("Pushed IN_APP notification {} via WebSocket", notification.getId());
+        } catch (Exception e) {
+            log.warn("Failed to push IN_APP notification via WebSocket: {}", e.getMessage());
+            // Don't fail - notification is still stored in DB for later retrieval
+        }
+
         return "in-app-" + notification.getId();
     }
 

@@ -56,6 +56,9 @@ dependencies {
     // Freemarker for email templates
     implementation("org.springframework.boot:spring-boot-starter-freemarker")
 
+    // WebSocket for real-time IN_APP notifications
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
+
     // Twilio SDK for SMS
     implementation("com.twilio.sdk:twilio:10.1.0")
 

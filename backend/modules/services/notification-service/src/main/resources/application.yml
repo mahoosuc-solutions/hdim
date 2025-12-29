@@ -47,13 +47,39 @@ spring:
           timeout: 5000
           writetimeout: 5000
 
-# Notification Email Configuration
+# Notification Channel Configuration
 notification:
+  # Email Configuration
   email:
     from: ${MAIL_FROM:notifications@healthdatainmotion.com}
     reply-to: ${MAIL_REPLY_TO:}
     provider: smtp
     enabled: ${NOTIFICATION_EMAIL_ENABLED:true}
+
+  # SMS Configuration (Twilio)
+  sms:
+    provider: ${NOTIFICATION_SMS_PROVIDER:twilio}
+    twilio:
+      enabled: ${NOTIFICATION_SMS_ENABLED:false}
+      account-sid: ${TWILIO_ACCOUNT_SID:}
+      auth-token: ${TWILIO_AUTH_TOKEN:}
+      from-number: ${TWILIO_FROM_NUMBER:}
+      messaging-service-sid: ${TWILIO_MESSAGING_SERVICE_SID:}
+      default-sender-id: HealthData
+      max-message-length: 1600
+
+  # Push Notification Configuration (Firebase)
+  push:
+    provider: ${NOTIFICATION_PUSH_PROVIDER:firebase}
+    firebase:
+      enabled: ${NOTIFICATION_PUSH_ENABLED:false}
+      project-id: ${FIREBASE_PROJECT_ID:}
+      credentials-json: ${FIREBASE_CREDENTIALS_JSON:}
+      android-icon: ic_notification
+      android-color: "#1976D2"
+      android-channel-id: healthdata_notifications
+      default-ttl-seconds: 86400
+      dry-run: false
 
 # Feign Client Configuration
 feign:
@@ -109,11 +135,42 @@ management:
     health:
       show-details: when-authorized
 
+# Resilience4j Configuration
+resilience4j:
+  retry:
+    instances:
+      twilio-sms:
+        max-attempts: 3
+        wait-duration: 1s
+        retry-exceptions:
+          - java.io.IOException
+          - com.twilio.exception.TwilioException
+      firebase-push:
+        max-attempts: 3
+        wait-duration: 1s
+        retry-exceptions:
+          - java.io.IOException
+          - com.google.firebase.messaging.FirebaseMessagingException
+  circuitbreaker:
+    instances:
+      twilio-sms:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+      firebase-push:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+
 # Logging
 logging:
   level:
     root: INFO
     com.healthdata: DEBUG
     org.springframework.mail: DEBUG
+    com.twilio: INFO
+    com.google.firebase: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

@@ -56,6 +56,12 @@ dependencies {
     // Freemarker for email templates
     implementation("org.springframework.boot:spring-boot-starter-freemarker")
 
+    // Twilio SDK for SMS
+    implementation("com.twilio.sdk:twilio:10.1.0")
+
+    // Firebase Admin SDK for Push Notifications
+    implementation("com.google.firebase:firebase-admin:9.2.0")
+
     // Lombok for reducing boilerplate
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)

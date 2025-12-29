@@ -15,7 +15,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,8 +52,7 @@ class CqlEngineIntegrationTest {
     @MockBean
     private CqlEngineServiceClient cqlEngineServiceClient;
 
-    @MockBean
-    private KafkaTemplate<String, String> kafkaTemplate;
+    // Note: KafkaTemplate is provided by TestMessagingConfiguration, no @MockBean needed
 
     private static final String TENANT_ID = "test-tenant";
     private static final UUID PATIENT_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");

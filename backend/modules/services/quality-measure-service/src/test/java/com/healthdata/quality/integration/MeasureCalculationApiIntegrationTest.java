@@ -1,6 +1,5 @@
 package com.healthdata.quality.integration;
 
-import com.healthdata.quality.config.TestMessagingConfiguration;
 import com.healthdata.quality.config.TestWebSocketConfiguration;
 import com.healthdata.quality.dto.QualityMeasureResultDTO;
 import com.healthdata.quality.persistence.QualityMeasureResultEntity;
@@ -40,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-@Import({TestMessagingConfiguration.class, TestWebSocketConfiguration.class})
+@Import({TestWebSocketConfiguration.class})
 @DisplayName("Measure Calculation API Integration Tests")
 class MeasureCalculationApiIntegrationTest {
 

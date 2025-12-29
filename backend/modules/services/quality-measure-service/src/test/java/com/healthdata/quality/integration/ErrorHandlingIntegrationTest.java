@@ -1,7 +1,6 @@
 package com.healthdata.quality.integration;
 
 import com.healthdata.quality.client.CqlEngineServiceClient;
-import com.healthdata.quality.config.TestMessagingConfiguration;
 import com.healthdata.quality.config.TestWebSocketConfiguration;
 import com.healthdata.quality.persistence.QualityMeasureResultRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-@Import({TestMessagingConfiguration.class, TestWebSocketConfiguration.class})
+@Import({TestWebSocketConfiguration.class})
 @DisplayName("Error Handling Integration Tests")
 class ErrorHandlingIntegrationTest {
 

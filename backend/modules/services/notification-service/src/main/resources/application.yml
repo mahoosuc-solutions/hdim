@@ -1,0 +1,119 @@
+server:
+  port: 8107
+  servlet:
+    context-path: /notification
+
+spring:
+  application:
+    name: notification-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_notification}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+  # Email Configuration
+  mail:
+    host: ${MAIL_HOST:smtp.zoho.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+# Notification Email Configuration
+notification:
+  email:
+    from: ${MAIL_FROM:notifications@healthdatainmotion.com}
+    reply-to: ${MAIL_REPLY_TO:}
+    provider: smtp
+    enabled: ${NOTIFICATION_EMAIL_ENABLED:true}
+
+# Feign Client Configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 15000
+        loggerLevel: basic
+
+# Cache Configuration (Redis)
+spring.cache:
+  type: redis
+  redis:
+    time-to-live: 300000
+
+spring.data.redis:
+  host: ${SPRING_DATA_REDIS_HOST:localhost}
+  port: ${SPRING_DATA_REDIS_PORT:6379}
+  timeout: 2000ms
+
+# Kafka Configuration
+spring.kafka:
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  consumer:
+    group-id: notification-service
+    auto-offset-reset: earliest
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+# HIPAA Audit Configuration
+audit:
+  enabled: true
+  encryption:
+    enabled: true
+
+# Rate Limiting Configuration
+rate-limiting:
+  enabled: true
+  api:
+    per-minute: 100
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+    org.springframework.mail: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

@@ -8,5 +8,6 @@
     <include file="db/changelog/0001-create-notifications-table.xml"/>
     <include file="db/changelog/0002-create-notification-templates-table.xml"/>
     <include file="db/changelog/0003-create-notification-preferences-table.xml"/>
+    <include file="db/changelog/0004-add-device-token-column.xml"/>
 
 </databaseChangeLog>

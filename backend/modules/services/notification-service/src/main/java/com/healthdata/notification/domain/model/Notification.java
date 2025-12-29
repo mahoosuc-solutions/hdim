@@ -46,6 +46,9 @@ public class Notification {
     @Column(name = "recipient_phone", length = 50)
     private String recipientPhone;
 
+    @Column(name = "device_token", length = 500)
+    private String deviceToken;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "channel", nullable = false, length = 20)
     private NotificationChannel channel;

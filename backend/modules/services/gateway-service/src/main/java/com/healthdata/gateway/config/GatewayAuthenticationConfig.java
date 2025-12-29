@@ -12,10 +12,8 @@ import com.healthdata.authentication.service.RefreshTokenService;
 import com.healthdata.cache.CacheEvictionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * Gateway-specific authentication configuration.
@@ -36,13 +34,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
     havingValue = "true",
     matchIfMissing = false
 )
-@EnableJpaRepositories(basePackages = {
-    "com.healthdata.authentication.repository"
-})
-@EntityScan(basePackages = {
-    "com.healthdata.authentication.domain",
-    "com.healthdata.authentication.entity"
-})
+// Note: @EnableJpaRepositories and @EntityScan are on GatewayApplication to avoid duplicate bean definitions
 public class GatewayAuthenticationConfig {
 
     /**

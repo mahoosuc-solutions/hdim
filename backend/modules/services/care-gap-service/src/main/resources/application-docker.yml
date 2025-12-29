@@ -142,6 +142,11 @@ management:
     diskspace:
       enabled: true
 
+# OpenTelemetry Tracing Configuration
+tracing:
+  enabled: true
+  url: ${TRACING_URL:http://jaeger:4318/v1/traces}
+
 # Logging for Docker
 logging:
   level:

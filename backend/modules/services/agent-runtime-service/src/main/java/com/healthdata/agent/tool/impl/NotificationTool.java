@@ -158,16 +158,20 @@ public class NotificationTool implements Tool {
                     notification
                 );
 
-                String notificationId = (String) result.get("notificationId");
-                String status = (String) result.getOrDefault("status", "SENT");
+                // Parse response - notification-service returns id (UUID) and status (enum name)
+                String notificationId = result.get("id") != null
+                    ? result.get("id").toString()
+                    : (String) result.get("notificationId");
+                String status = (String) result.getOrDefault("status", "PENDING");
 
-                log.info("Notification sent: id={}, status={}", notificationId, status);
+                log.info("Notification sent: id={}, status={}, channel={}",
+                    notificationId, status, channel);
 
                 return ToolResult.success(
                     String.format("Notification sent successfully via %s (ID: %s, Status: %s)",
                         channel, notificationId, status),
                     Map.of(
-                        "notificationId", notificationId,
+                        "notificationId", notificationId != null ? notificationId : "unknown",
                         "status", status,
                         "channel", channel
                     )
@@ -228,49 +232,70 @@ public class NotificationTool implements Tool {
             AgentContext context) {
 
         Map<String, Object> notification = new java.util.LinkedHashMap<>();
-        notification.put("notificationId", UUID.randomUUID().toString());
-        notification.put("channel", channel);
-        notification.put("recipientType", recipientType);
+
+        // Map channel - notification-service supports: EMAIL, SMS, PUSH, IN_APP
+        // CARE_TEAM_ALERT maps to IN_APP with high priority
+        String mappedChannel = mapChannel(channel);
+        notification.put("channel", mappedChannel);
+
+        // Recipient info
         notification.put("recipientId", recipientId);
-        notification.put("tenantId", context.getTenantId());
-        notification.put("priority", priority);
+
+        // Priority (default to HIGH for CARE_TEAM_ALERT)
+        String mappedPriority = "CARE_TEAM_ALERT".equals(channel) ? "URGENT" : priority;
+        notification.put("priority", mappedPriority);
 
         if (subject != null) {
             notification.put("subject", subject);
         }
 
+        // Template or direct message
         if (templateId != null) {
-            notification.put("templateId", templateId);
+            notification.put("templateCode", templateId);
             if (templateVariables != null) {
-                notification.put("templateVariables", templateVariables);
+                notification.put("variables", templateVariables);
             }
         } else {
-            notification.put("message", message);
+            notification.put("body", message);
         }
 
+        // Correlation ID for tracing
+        notification.put("correlationId", context.getCorrelationId());
+
+        // Build metadata
+        Map<String, Object> metadataMap = new java.util.LinkedHashMap<>();
+        metadataMap.put("source", "AI_AGENT");
+        metadataMap.put("agentId", context.getAgentId() != null ? context.getAgentId() : "unknown");
+        metadataMap.put("sessionId", context.getSessionId());
+        metadataMap.put("recipientType", recipientType);
+
         if (actionUrl != null) {
-            notification.put("actionUrl", actionUrl);
+            metadataMap.put("actionUrl", actionUrl);
         }
 
         if (expiresIn > 0) {
-            notification.put("expiresAt",
+            metadataMap.put("expiresAt",
                 java.time.Instant.now().plusSeconds(expiresIn * 60L).toString());
         }
 
-        notification.put("metadata", Map.of(
-            "source", "AI_AGENT",
-            "agentId", context.getAgentId() != null ? context.getAgentId() : "unknown",
-            "correlationId", context.getCorrelationId(),
-            "sessionId", context.getSessionId()
-        ));
-
         if (metadata != null && !metadata.isEmpty()) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> existingMetadata = (Map<String, Object>) notification.get("metadata");
-            existingMetadata.putAll(metadata);
+            metadataMap.putAll(metadata);
         }
 
+        notification.put("metadata", metadataMap);
+
         return notification;
+    }
+
+    /**
+     * Map tool channel to notification-service channel.
+     * Notification service supports: EMAIL, SMS, PUSH, IN_APP
+     */
+    private String mapChannel(String channel) {
+        return switch (channel) {
+            case "CARE_TEAM_ALERT" -> "IN_APP";
+            default -> channel;
+        };
     }
 
     private boolean verifyPatientConsent(String patientId, String channel, AgentContext context) {

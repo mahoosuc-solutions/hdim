@@ -10,8 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Workflow automation service for sales processes
@@ -357,13 +356,67 @@ public class WorkflowService {
     // ==================== Lead Assignment ====================
 
     /**
-     * Round-robin lead assignment (placeholder for more sophisticated assignment)
+     * Round-robin lead assignment.
+     * Assigns leads evenly across available sales reps based on current lead counts.
      */
     @Transactional
     public UUID assignLead(UUID tenantId, Lead lead) {
-        // For now, return null to indicate manual assignment needed
-        // In production, this would implement round-robin or territory-based assignment
-        log.info("Lead {} requires manual assignment", lead.getId());
-        return null;
+        // Get all sales users for the tenant who can be assigned leads
+        List<UUID> availableReps = getAvailableSalesReps(tenantId);
+
+        if (availableReps.isEmpty()) {
+            log.warn("No available sales reps for tenant {}, lead {} requires manual assignment",
+                tenantId, lead.getId());
+            return null;
+        }
+
+        // Get lead counts per rep
+        Map<UUID, Long> leadCounts = new HashMap<>();
+        for (UUID repId : availableReps) {
+            long count = leadRepository.countByTenantIdAndAssignedToUserId(tenantId, repId);
+            leadCounts.put(repId, count);
+        }
+
+        // Find rep with fewest leads (round-robin based on load)
+        UUID assignedRep = leadCounts.entrySet().stream()
+            .min(Map.Entry.comparingByValue())
+            .map(Map.Entry::getKey)
+            .orElse(availableReps.get(0));
+
+        lead.setAssignedToUserId(assignedRep);
+        leadRepository.save(lead);
+
+        log.info("Assigned lead {} to rep {} (tenant: {})", lead.getId(), assignedRep, tenantId);
+        return assignedRep;
+    }
+
+    /**
+     * Get available sales representatives for a tenant.
+     * This can be extended to filter by territory, capacity, or availability.
+     */
+    private List<UUID> getAvailableSalesReps(UUID tenantId) {
+        // Get distinct assigned user IDs from existing opportunities and leads
+        // In a full implementation, this would query a users table
+        Set<UUID> reps = new LinkedHashSet<>();
+
+        // Get from opportunities
+        List<Opportunity> opportunities = opportunityRepository
+            .findByTenantId(tenantId, org.springframework.data.domain.Pageable.unpaged())
+            .getContent();
+        opportunities.stream()
+            .map(Opportunity::getOwnerUserId)
+            .filter(Objects::nonNull)
+            .forEach(reps::add);
+
+        // Get from leads
+        List<Lead> leads = leadRepository
+            .findByTenantId(tenantId, org.springframework.data.domain.Pageable.unpaged())
+            .getContent();
+        leads.stream()
+            .map(Lead::getAssignedToUserId)
+            .filter(Objects::nonNull)
+            .forEach(reps::add);
+
+        return new ArrayList<>(reps);
     }
 }

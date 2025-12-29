@@ -1,6 +1,7 @@
 package com.healthdata.ecr.config;
 
 import ca.uhn.fhir.context.FhirContext;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -20,6 +21,7 @@ public class EcrConfig {
     }
 
     @Bean
+    @ConditionalOnMissingBean
     public FhirContext fhirContext() {
         return FhirContext.forR4();
     }

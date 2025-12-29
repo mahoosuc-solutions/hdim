@@ -10,16 +10,16 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Notification template for generating messages.
- * Supports variable substitution using {{variableName}} syntax.
+ * Template for generating notifications.
+ * Supports variable substitution using {{variable}} syntax.
  */
 @Entity
 @Table(name = "notification_templates", indexes = {
     @Index(name = "idx_templates_tenant_id", columnList = "tenant_id"),
     @Index(name = "idx_templates_name", columnList = "name"),
-    @Index(name = "idx_templates_channel", columnList = "channel")
+    @Index(name = "idx_templates_code", columnList = "code")
 }, uniqueConstraints = {
-    @UniqueConstraint(name = "uk_template_tenant_name_channel", columnNames = {"tenant_id", "name", "channel"})
+    @UniqueConstraint(name = "uk_templates_tenant_code", columnNames = {"tenant_id", "code"})
 })
 @Data
 @NoArgsConstructor
@@ -34,7 +34,10 @@ public class NotificationTemplate {
     @Column(name = "tenant_id", nullable = false, length = 50)
     private String tenantId;
 
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(name = "code", nullable = false, length = 100)
+    private String code;
+
+    @Column(name = "name", nullable = false, length = 200)
     private String name;
 
     @Column(name = "description", length = 500)
@@ -49,6 +52,9 @@ public class NotificationTemplate {
 
     @Column(name = "body_template", nullable = false, columnDefinition = "TEXT")
     private String bodyTemplate;
+
+    @Column(name = "html_template", columnDefinition = "TEXT")
+    private String htmlTemplate;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "variables", columnDefinition = "jsonb")
@@ -68,8 +74,11 @@ public class NotificationTemplate {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    @Column(name = "created_by", length = 255)
+    @Column(name = "created_by")
     private String createdBy;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
 
     @PrePersist
     protected void onCreate() {

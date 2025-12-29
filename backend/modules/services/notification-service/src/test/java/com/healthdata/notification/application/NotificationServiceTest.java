@@ -1,17 +1,9 @@
 package com.healthdata.notification.application;
 
-import com.healthdata.notification.api.v1.dto.NotificationResponse;
-import com.healthdata.notification.api.v1.dto.SendNotificationRequest;
-import com.healthdata.notification.domain.model.Notification;
-import com.healthdata.notification.domain.model.NotificationChannel;
-import com.healthdata.notification.domain.model.NotificationStatus;
+import com.healthdata.notification.domain.model.*;
 import com.healthdata.notification.domain.repository.NotificationPreferenceRepository;
 import com.healthdata.notification.domain.repository.NotificationRepository;
-import com.healthdata.notification.domain.repository.NotificationTemplateRepository;
-import com.healthdata.notification.infrastructure.providers.EmailProvider;
-import com.healthdata.notification.infrastructure.providers.PushProvider;
-import com.healthdata.notification.infrastructure.providers.SmsProvider;
-import com.healthdata.notification.infrastructure.websocket.WebSocketNotificationService;
+import com.healthdata.notification.infrastructure.providers.NotificationProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,15 +14,12 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Map;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -43,22 +32,16 @@ class NotificationServiceTest {
     private NotificationRepository notificationRepository;
 
     @Mock
-    private NotificationTemplateRepository templateRepository;
-
-    @Mock
     private NotificationPreferenceRepository preferenceRepository;
 
     @Mock
-    private EmailProvider emailProvider;
+    private TemplateService templateService;
 
     @Mock
-    private SmsProvider smsProvider;
+    private ChannelRouter channelRouter;
 
     @Mock
-    private PushProvider pushProvider;
-
-    @Mock
-    private WebSocketNotificationService webSocketService;
+    private NotificationProvider emailProvider;
 
     @Captor
     private ArgumentCaptor<Notification> notificationCaptor;
@@ -71,12 +54,9 @@ class NotificationServiceTest {
     void setUp() {
         notificationService = new NotificationService(
             notificationRepository,
-            templateRepository,
             preferenceRepository,
-            emailProvider,
-            Optional.of(smsProvider),
-            Optional.of(pushProvider),
-            webSocketService
+            templateService,
+            channelRouter
         );
     }
 
@@ -88,16 +68,18 @@ class NotificationServiceTest {
         @DisplayName("should create notification with EMAIL channel")
         void shouldCreateNotificationWithEmailChannel() {
             // Given
-            SendNotificationRequest request = SendNotificationRequest.builder()
+            NotificationService.SendNotificationRequest request = NotificationService.SendNotificationRequest.builder()
+                .tenantId(TENANT_ID)
                 .recipientId("user123")
                 .recipientEmail("user@example.com")
                 .channel(NotificationChannel.EMAIL)
                 .subject("Test Subject")
                 .body("Test Body")
-                .checkPreferences(false)
                 .build();
 
-            when(emailProvider.send(anyString(), anyString(), anyString())).thenReturn("email-123");
+            when(preferenceRepository.findByTenantIdAndUserIdAndChannel(TENANT_ID, "user123", NotificationChannel.EMAIL))
+                .thenReturn(Optional.empty());
+            when(channelRouter.getProvider(NotificationChannel.EMAIL)).thenReturn(emailProvider);
             when(notificationRepository.save(any(Notification.class)))
                 .thenAnswer(invocation -> {
                     Notification n = invocation.getArgument(0);
@@ -108,101 +90,33 @@ class NotificationServiceTest {
                 });
 
             // When
-            NotificationResponse response = notificationService.sendNotification(request, TENANT_ID);
+            Notification result = notificationService.sendNotification(request);
 
             // Then
-            assertThat(response).isNotNull();
-            assertThat(response.getChannel()).isEqualTo(NotificationChannel.EMAIL);
+            assertThat(result).isNotNull();
+            assertThat(result.getChannel()).isEqualTo(NotificationChannel.EMAIL);
+            assertThat(result.getTenantId()).isEqualTo(TENANT_ID);
+            assertThat(result.getRecipientEmail()).isEqualTo("user@example.com");
 
             verify(notificationRepository, atLeastOnce()).save(notificationCaptor.capture());
-            Notification saved = notificationCaptor.getAllValues().get(0);
-            assertThat(saved.getTenantId()).isEqualTo(TENANT_ID);
-            assertThat(saved.getRecipientEmail()).isEqualTo("user@example.com");
-        }
-
-        @Test
-        @DisplayName("should create notification with SMS channel")
-        void shouldCreateNotificationWithSmsChannel() {
-            // Given
-            SendNotificationRequest request = SendNotificationRequest.builder()
-                .recipientId("user123")
-                .recipientPhone("+15551234567")
-                .channel(NotificationChannel.SMS)
-                .body("Test SMS message")
-                .checkPreferences(false)
-                .build();
-
-            when(smsProvider.isAvailable()).thenReturn(true);
-            when(smsProvider.send(anyString(), anyString())).thenReturn("sms-123");
-            when(notificationRepository.save(any(Notification.class)))
-                .thenAnswer(invocation -> {
-                    Notification n = invocation.getArgument(0);
-                    if (n.getId() == null) {
-                        n.setId(UUID.randomUUID());
-                    }
-                    return n;
-                });
-
-            // When
-            NotificationResponse response = notificationService.sendNotification(request, TENANT_ID);
-
-            // Then
-            assertThat(response).isNotNull();
-            assertThat(response.getChannel()).isEqualTo(NotificationChannel.SMS);
-
-            verify(notificationRepository, atLeastOnce()).save(notificationCaptor.capture());
-            Notification saved = notificationCaptor.getAllValues().get(0);
-            assertThat(saved.getRecipientPhone()).isEqualTo("+15551234567");
-        }
-
-        @Test
-        @DisplayName("should create notification with PUSH channel")
-        void shouldCreateNotificationWithPushChannel() {
-            // Given
-            SendNotificationRequest request = SendNotificationRequest.builder()
-                .recipientId("user123")
-                .deviceToken("fcm-token-abc123")
-                .channel(NotificationChannel.PUSH)
-                .subject("Push Title")
-                .body("Push Body")
-                .checkPreferences(false)
-                .build();
-
-            when(pushProvider.isAvailable()).thenReturn(true);
-            when(pushProvider.send(anyString(), anyString(), anyString())).thenReturn("push-123");
-            when(notificationRepository.save(any(Notification.class)))
-                .thenAnswer(invocation -> {
-                    Notification n = invocation.getArgument(0);
-                    if (n.getId() == null) {
-                        n.setId(UUID.randomUUID());
-                    }
-                    return n;
-                });
-
-            // When
-            NotificationResponse response = notificationService.sendNotification(request, TENANT_ID);
-
-            // Then
-            assertThat(response).isNotNull();
-            assertThat(response.getChannel()).isEqualTo(NotificationChannel.PUSH);
-
-            verify(notificationRepository, atLeastOnce()).save(notificationCaptor.capture());
-            Notification saved = notificationCaptor.getAllValues().get(0);
-            assertThat(saved.getDeviceToken()).isEqualTo("fcm-token-abc123");
         }
 
         @Test
         @DisplayName("should create notification with IN_APP channel")
         void shouldCreateNotificationWithInAppChannel() {
             // Given
-            SendNotificationRequest request = SendNotificationRequest.builder()
+            NotificationService.SendNotificationRequest request = NotificationService.SendNotificationRequest.builder()
+                .tenantId(TENANT_ID)
                 .recipientId("user123")
                 .channel(NotificationChannel.IN_APP)
                 .subject("In-App Title")
                 .body("In-App Body")
-                .checkPreferences(false)
                 .build();
 
+            NotificationProvider inAppProvider = mock(NotificationProvider.class);
+            when(preferenceRepository.findByTenantIdAndUserIdAndChannel(TENANT_ID, "user123", NotificationChannel.IN_APP))
+                .thenReturn(Optional.empty());
+            when(channelRouter.getProvider(NotificationChannel.IN_APP)).thenReturn(inAppProvider);
             when(notificationRepository.save(any(Notification.class)))
                 .thenAnswer(invocation -> {
                     Notification n = invocation.getArgument(0);
@@ -213,27 +127,62 @@ class NotificationServiceTest {
                 });
 
             // When
-            NotificationResponse response = notificationService.sendNotification(request, TENANT_ID);
+            Notification result = notificationService.sendNotification(request);
 
             // Then
-            assertThat(response).isNotNull();
-            assertThat(response.getChannel()).isEqualTo(NotificationChannel.IN_APP);
-
-            verify(notificationRepository, atLeastOnce()).save(notificationCaptor.capture());
+            assertThat(result).isNotNull();
+            assertThat(result.getChannel()).isEqualTo(NotificationChannel.IN_APP);
         }
 
         @Test
-        @DisplayName("should push IN_APP notification via WebSocket")
-        void shouldPushInAppNotificationViaWebSocket() {
+        @DisplayName("should block notification when user preference disables channel")
+        void shouldBlockNotificationWhenPreferenceDisabled() {
             // Given
-            SendNotificationRequest request = SendNotificationRequest.builder()
+            NotificationService.SendNotificationRequest request = NotificationService.SendNotificationRequest.builder()
+                .tenantId(TENANT_ID)
                 .recipientId("user123")
-                .channel(NotificationChannel.IN_APP)
-                .subject("WebSocket Test")
-                .body("Real-time notification")
-                .checkPreferences(false)
+                .recipientEmail("user@example.com")
+                .channel(NotificationChannel.EMAIL)
+                .subject("Test Subject")
+                .body("Test Body")
                 .build();
 
+            NotificationPreference disabledPreference = NotificationPreference.builder()
+                .tenantId(TENANT_ID)
+                .userId("user123")
+                .channel(NotificationChannel.EMAIL)
+                .enabled(false)
+                .build();
+
+            when(preferenceRepository.findByTenantIdAndUserIdAndChannel(TENANT_ID, "user123", NotificationChannel.EMAIL))
+                .thenReturn(Optional.of(disabledPreference));
+
+            // When
+            Notification result = notificationService.sendNotification(request);
+
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result.getStatus()).isEqualTo(NotificationStatus.CANCELLED);
+            assertThat(result.getErrorMessage()).contains("preferences");
+        }
+
+        @Test
+        @DisplayName("should schedule notification for future delivery")
+        void shouldScheduleNotificationForFutureDelivery() {
+            // Given
+            Instant futureTime = Instant.now().plusSeconds(3600);
+            NotificationService.SendNotificationRequest request = NotificationService.SendNotificationRequest.builder()
+                .tenantId(TENANT_ID)
+                .recipientId("user123")
+                .recipientEmail("user@example.com")
+                .channel(NotificationChannel.EMAIL)
+                .subject("Scheduled Subject")
+                .body("Scheduled Body")
+                .scheduledAt(futureTime)
+                .build();
+
+            when(preferenceRepository.findByTenantIdAndUserIdAndChannel(TENANT_ID, "user123", NotificationChannel.EMAIL))
+                .thenReturn(Optional.empty());
             when(notificationRepository.save(any(Notification.class)))
                 .thenAnswer(invocation -> {
                     Notification n = invocation.getArgument(0);
@@ -244,10 +193,15 @@ class NotificationServiceTest {
                 });
 
             // When
-            notificationService.sendNotification(request, TENANT_ID);
+            Notification result = notificationService.sendNotification(request);
 
-            // Then - verify WebSocket push was attempted
-            verify(webSocketService, atLeastOnce()).pushToUser(eq("user123"), any(NotificationResponse.class));
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result.getScheduledAt()).isEqualTo(futureTime);
+            assertThat(result.getStatus()).isEqualTo(NotificationStatus.PENDING);
+
+            // Should NOT trigger async send for future-scheduled notifications
+            verify(channelRouter, never()).getProvider(any());
         }
     }
 
@@ -274,7 +228,7 @@ class NotificationServiceTest {
                 .thenReturn(Optional.of(notification));
 
             // When
-            Optional<NotificationResponse> result = notificationService.getNotification(notificationId, TENANT_ID);
+            Optional<Notification> result = notificationService.getNotification(notificationId, TENANT_ID);
 
             // Then
             assertThat(result).isPresent();
@@ -291,7 +245,7 @@ class NotificationServiceTest {
                 .thenReturn(Optional.empty());
 
             // When
-            Optional<NotificationResponse> result = notificationService.getNotification(notificationId, TENANT_ID);
+            Optional<Notification> result = notificationService.getNotification(notificationId, TENANT_ID);
 
             // Then
             assertThat(result).isEmpty();
@@ -299,43 +253,49 @@ class NotificationServiceTest {
     }
 
     @Nested
-    @DisplayName("Provider Unavailable Handling")
-    class ProviderUnavailableTests {
+    @DisplayName("Bulk Notifications")
+    class BulkNotificationTests {
 
         @Test
-        @DisplayName("should handle missing SMS provider gracefully")
-        void shouldHandleMissingSmsProvider() {
-            // Create service without SMS provider
-            NotificationService serviceWithoutSms = new NotificationService(
-                notificationRepository,
-                templateRepository,
-                preferenceRepository,
-                emailProvider,
-                Optional.empty(),  // No SMS provider
-                Optional.of(pushProvider),
-                webSocketService
-            );
+        @DisplayName("should send multiple notifications")
+        void shouldSendMultipleNotifications() {
+            // Given
+            NotificationService.SendNotificationRequest request1 = NotificationService.SendNotificationRequest.builder()
+                .tenantId(TENANT_ID)
+                .recipientId("user1")
+                .recipientEmail("user1@example.com")
+                .channel(NotificationChannel.EMAIL)
+                .subject("Test 1")
+                .body("Body 1")
+                .build();
 
-            // Service should still be instantiable - provider availability checked at send time
-            assertThat(serviceWithoutSms).isNotNull();
-        }
+            NotificationService.SendNotificationRequest request2 = NotificationService.SendNotificationRequest.builder()
+                .tenantId(TENANT_ID)
+                .recipientId("user2")
+                .recipientEmail("user2@example.com")
+                .channel(NotificationChannel.EMAIL)
+                .subject("Test 2")
+                .body("Body 2")
+                .build();
 
-        @Test
-        @DisplayName("should handle missing Push provider gracefully")
-        void shouldHandleMissingPushProvider() {
-            // Create service without Push provider
-            NotificationService serviceWithoutPush = new NotificationService(
-                notificationRepository,
-                templateRepository,
-                preferenceRepository,
-                emailProvider,
-                Optional.of(smsProvider),
-                Optional.empty(),  // No Push provider
-                webSocketService
-            );
+            when(preferenceRepository.findByTenantIdAndUserIdAndChannel(anyString(), anyString(), any()))
+                .thenReturn(Optional.empty());
+            when(channelRouter.getProvider(NotificationChannel.EMAIL)).thenReturn(emailProvider);
+            when(notificationRepository.save(any(Notification.class)))
+                .thenAnswer(invocation -> {
+                    Notification n = invocation.getArgument(0);
+                    if (n.getId() == null) {
+                        n.setId(UUID.randomUUID());
+                    }
+                    return n;
+                });
 
-            // Service should still be instantiable - provider availability checked at send time
-            assertThat(serviceWithoutPush).isNotNull();
+            // When
+            var results = notificationService.sendBulkNotifications(java.util.List.of(request1, request2));
+
+            // Then
+            assertThat(results).hasSize(2);
+            verify(notificationRepository, atLeast(2)).save(any(Notification.class));
         }
     }
 }

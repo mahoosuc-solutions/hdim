@@ -45,6 +45,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 
     -- Support Services
     CREATE DATABASE docs_db;
+    CREATE DATABASE notification_db;
 
     -- Grant privileges to postgres user
     GRANT ALL PRIVILEGES ON DATABASE fhir_db TO "$POSTGRES_USER";
@@ -70,6 +71,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE ehr_connector_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE docs_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE sales_automation_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE notification_db TO "$POSTGRES_USER";
 EOSQL
 
 echo "All HDIM databases created successfully!"

@@ -15,62 +15,35 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Repository for Notification entity with multi-tenant filtering.
- */
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
 
-    /**
-     * Find notification by ID with tenant isolation.
-     */
     Optional<Notification> findByIdAndTenantId(UUID id, String tenantId);
 
-    /**
-     * Find notifications by recipient with tenant isolation.
-     */
-    Page<Notification> findByRecipientIdAndTenantId(String recipientId, String tenantId, Pageable pageable);
+    Page<Notification> findByTenantId(String tenantId, Pageable pageable);
 
-    /**
-     * Find notifications by status with tenant isolation.
-     */
-    List<Notification> findByStatusAndTenantId(NotificationStatus status, String tenantId);
+    Page<Notification> findByTenantIdAndRecipientId(String tenantId, String recipientId, Pageable pageable);
 
-    /**
-     * Find pending notifications ready for retry.
-     */
-    @Query("SELECT n FROM Notification n WHERE n.status IN :statuses AND n.retryCount < n.maxRetries AND n.createdAt > :since ORDER BY n.priority ASC, n.createdAt ASC")
-    List<Notification> findPendingForRetry(
-        @Param("statuses") List<NotificationStatus> statuses,
-        @Param("since") Instant since
+    Page<Notification> findByTenantIdAndStatus(String tenantId, NotificationStatus status, Pageable pageable);
+
+    Page<Notification> findByTenantIdAndChannel(String tenantId, NotificationChannel channel, Pageable pageable);
+
+    @Query("SELECT n FROM Notification n WHERE n.status = :status AND n.retryCount < n.maxRetries")
+    List<Notification> findRetryableNotifications(@Param("status") NotificationStatus status);
+
+    @Query("SELECT n FROM Notification n WHERE n.status = 'PENDING' AND " +
+           "(n.scheduledAt IS NULL OR n.scheduledAt <= :now)")
+    List<Notification> findPendingNotificationsToSend(@Param("now") Instant now);
+
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.tenantId = :tenantId AND n.status = :status")
+    long countByTenantIdAndStatus(@Param("tenantId") String tenantId, @Param("status") NotificationStatus status);
+
+    @Query("SELECT n FROM Notification n WHERE n.tenantId = :tenantId AND n.createdAt >= :since")
+    Page<Notification> findRecentByTenantId(
+        @Param("tenantId") String tenantId, 
+        @Param("since") Instant since, 
+        Pageable pageable
     );
 
-    /**
-     * Find notifications by channel with tenant isolation.
-     */
-    Page<Notification> findByChannelAndTenantId(NotificationChannel channel, String tenantId, Pageable pageable);
-
-    /**
-     * Count notifications by status and tenant.
-     */
-    long countByStatusAndTenantId(NotificationStatus status, String tenantId);
-
-    /**
-     * Find recent notifications for a recipient.
-     */
-    @Query("SELECT n FROM Notification n WHERE n.recipientId = :recipientId AND n.tenantId = :tenantId AND n.createdAt > :since ORDER BY n.createdAt DESC")
-    List<Notification> findRecentByRecipient(
-        @Param("recipientId") String recipientId,
-        @Param("tenantId") String tenantId,
-        @Param("since") Instant since
-    );
-
-    /**
-     * Delete old notifications for cleanup (HIPAA compliance).
-     */
-    @Query("DELETE FROM Notification n WHERE n.createdAt < :before AND n.status IN :terminalStatuses")
-    int deleteOldNotifications(
-        @Param("before") Instant before,
-        @Param("terminalStatuses") List<NotificationStatus> terminalStatuses
-    );
+    List<Notification> findByCorrelationId(String correlationId);
 }

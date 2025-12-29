@@ -1,17 +1,21 @@
 package com.healthdata.quality.service.notification;
 
+import com.healthdata.quality.dto.ClinicalAlertDTO;
 import com.healthdata.quality.dto.notification.NotificationRequest;
 import com.healthdata.quality.persistence.NotificationHistoryEntity;
 import com.healthdata.quality.persistence.NotificationHistoryRepository;
+import com.healthdata.quality.service.PatientNameService;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -30,6 +34,7 @@ public class SmsNotificationChannel {
 
     private final TemplateRenderer templateRenderer;
     private final NotificationHistoryRepository notificationHistoryRepository;
+    private final PatientNameService patientNameService;
 
     @Value("${twilio.account-sid:}")
     private String accountSid;
@@ -45,10 +50,13 @@ public class SmsNotificationChannel {
 
     private boolean twilioInitialized = false;
 
+    @Autowired
     public SmsNotificationChannel(TemplateRenderer templateRenderer,
-                                  NotificationHistoryRepository notificationHistoryRepository) {
+                                  NotificationHistoryRepository notificationHistoryRepository,
+                                  @Autowired(required = false) PatientNameService patientNameService) {
         this.templateRenderer = templateRenderer;
         this.notificationHistoryRepository = notificationHistoryRepository;
+        this.patientNameService = patientNameService;
     }
 
     @PostConstruct
@@ -157,6 +165,95 @@ public class SmsNotificationChannel {
                     request.getNotificationType());
         } catch (Exception e) {
             // Log but don't throw - history saving should not prevent notification
+            log.error("Failed to save notification history: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Send notification for a clinical alert (deprecated - use NotificationRequest).
+     *
+     * @param tenantId The tenant ID
+     * @param alert    The clinical alert DTO
+     * @return true if sent successfully, false otherwise
+     * @deprecated Use {@link #send(NotificationRequest)} instead
+     */
+    @Deprecated
+    public boolean send(String tenantId, ClinicalAlertDTO alert) {
+        String message = null;
+        String status = "FAILED";
+        String errorMessage = null;
+
+        try {
+            Map<String, Object> templateVariables = buildTemplateVariables(alert);
+            templateVariables.put("channel", "SMS");
+            message = templateRenderer.render("critical-alert", templateVariables);
+
+            // SMS is mock mode unless Twilio is configured
+            if (twilioInitialized && fromPhone != null && !fromPhone.isBlank()) {
+                Message twilioMessage = Message.creator(
+                    new PhoneNumber(DEFAULT_PHONE),
+                    new PhoneNumber(fromPhone),
+                    message
+                ).create();
+                log.info("Alert SMS sent via Twilio. SID: {}", twilioMessage.getSid());
+            } else {
+                log.info("Alert SMS sent (MOCK): {}", message);
+            }
+
+            status = "SENT";
+            return true;
+
+        } catch (Exception e) {
+            errorMessage = "Failed to send SMS notification: " + e.getMessage();
+            log.error(errorMessage);
+            return false;
+        } finally {
+            saveAlertNotificationHistory(tenantId, alert, message, status, errorMessage);
+        }
+    }
+
+    private Map<String, Object> buildTemplateVariables(ClinicalAlertDTO alert) {
+        Map<String, Object> variables = new HashMap<>();
+
+        String patientName = "Patient";
+        if (patientNameService != null && alert.getPatientId() != null) {
+            try {
+                patientName = patientNameService.getPatientName(alert.getPatientId());
+            } catch (Exception e) {
+                log.warn("Failed to get patient name: {}", e.getMessage());
+            }
+        }
+
+        variables.put("patientName", patientName);
+        variables.put("severity", alert.getSeverity());
+        variables.put("alertType", alert.getAlertType());
+        variables.put("message", alert.getMessage());
+        variables.put("alertId", alert.getId());
+
+        return variables;
+    }
+
+    private void saveAlertNotificationHistory(String tenantId, ClinicalAlertDTO alert,
+                                              String content, String status, String errorMessage) {
+        try {
+            NotificationHistoryEntity history = NotificationHistoryEntity.builder()
+                .tenantId(tenantId)
+                .notificationType("CLINICAL_ALERT")
+                .channel("SMS")
+                .templateId("critical-alert")
+                .patientId(alert.getPatientId())
+                .recipientId(DEFAULT_PHONE)
+                .subject(null)
+                .content(content)
+                .status(status)
+                .errorMessage(errorMessage)
+                .alertId(alert.getId())
+                .severity(alert.getSeverity())
+                .sentAt(Instant.now())
+                .build();
+
+            notificationHistoryRepository.save(history);
+        } catch (Exception e) {
             log.error("Failed to save notification history: {}", e.getMessage());
         }
     }

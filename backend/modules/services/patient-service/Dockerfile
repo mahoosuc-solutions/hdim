@@ -1,30 +1,12 @@
-# Stage 1: Build
-FROM gradle:8.5-jdk21 AS builder
-
-WORKDIR /app
-
-# Copy Gradle configuration first (for layer caching)
-COPY settings.gradle.kts build.gradle.kts gradle.properties ./
-COPY gradle ./gradle
-
-# Copy shared modules
-COPY modules/shared ./modules/shared
-
-# Copy platform modules
-COPY platform ./platform
-
-# Copy service source
-COPY modules/services/patient-service ./modules/services/patient-service
-
-# Build the service
-RUN gradle :modules:services:patient-service:bootJar --no-daemon -x test
-
-# Stage 2: Runtime
+# Simple Dockerfile for Patient Service - uses pre-built JAR
 FROM eclipse-temurin:21-jre-alpine
 
 LABEL maintainer="HDIM Platform Team"
 LABEL service="patient-service"
 LABEL description="Patient Management Service for HDIM Healthcare Platform"
+
+# Install wget for health checks
+RUN apk add --no-cache wget
 
 WORKDIR /app
 
@@ -32,11 +14,8 @@ WORKDIR /app
 RUN addgroup -g 1001 -S healthdata && \
     adduser -u 1001 -S healthdata -G healthdata -h /app
 
-# Install wget for health checks
-RUN apk add --no-cache wget
-
-# Copy the built JAR
-COPY --from=builder /app/modules/services/patient-service/build/libs/*.jar app.jar
+# Copy the pre-built JAR
+COPY modules/services/patient-service/build/libs/patient-service.jar app.jar
 
 # Set ownership
 RUN chown -R healthdata:healthdata /app

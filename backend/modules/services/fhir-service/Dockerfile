@@ -1,30 +1,12 @@
-# Stage 1: Build
-FROM gradle:8.5-jdk21 AS builder
-
-WORKDIR /app
-
-# Copy Gradle configuration first (for layer caching)
-COPY settings.gradle.kts build.gradle.kts gradle.properties ./
-COPY gradle ./gradle
-
-# Copy shared modules
-COPY modules/shared ./modules/shared
-
-# Copy platform modules
-COPY platform ./platform
-
-# Copy service source
-COPY modules/services/fhir-service ./modules/services/fhir-service
-
-# Build the service
-RUN gradle :modules:services:fhir-service:bootJar --no-daemon -x test
-
-# Stage 2: Runtime
+# Simple Dockerfile for FHIR Service - uses pre-built JAR
 FROM eclipse-temurin:21-jre-alpine
 
 LABEL maintainer="HDIM Platform Team"
 LABEL service="fhir-service"
 LABEL description="FHIR R4 Server for HDIM Healthcare Platform"
+
+# Install wget for health checks
+RUN apk add --no-cache wget
 
 WORKDIR /app
 
@@ -32,11 +14,8 @@ WORKDIR /app
 RUN addgroup -g 1001 -S healthdata && \
     adduser -u 1001 -S healthdata -G healthdata -h /app
 
-# Install wget for health checks
-RUN apk add --no-cache wget
-
-# Copy the built JAR
-COPY --from=builder /app/modules/services/fhir-service/build/libs/*.jar app.jar
+# Copy the pre-built JAR
+COPY modules/services/fhir-service/build/libs/fhir-service.jar app.jar
 
 # Set ownership
 RUN chown -R healthdata:healthdata /app

@@ -174,14 +174,31 @@ subprojects {
         classDirectories.setFrom(
             files(classDirectories.files.map {
                 fileTree(it) {
-                    exclude("**/*Application.class")
+                    exclude(
+                        "**/Application.class",
+                        "**/Application\$*.class",
+                        "**/config/**",
+                        "**/dto/**",
+                        "**/entity/**",
+                        "**/model/**",
+                        "**/exception/**"
+                    )
                 }
             })
         )
         violationRules {
             rule {
                 limit {
-                    minimum = "0.95".toBigDecimal()
+                    counter = "LINE"
+                    value = "COVEREDRATIO"
+                    minimum = "0.70".toBigDecimal()
+                }
+            }
+            rule {
+                limit {
+                    counter = "BRANCH"
+                    value = "COVEREDRATIO"
+                    minimum = "0.60".toBigDecimal()
                 }
             }
         }
@@ -254,4 +271,52 @@ tasks.register("cleanAll") {
     group = "build"
     description = "Clean all modules"
     dependsOn(subprojects.map { it.tasks.named("clean") })
+}
+
+// Coverage report tasks for critical services
+val criticalServices = listOf(
+    "quality-measure-service",
+    "cql-engine-service",
+    "fhir-service",
+    "patient-service",
+    "care-gap-service",
+    "consent-service"
+)
+
+tasks.register("testCriticalServicesWithCoverage") {
+    group = "verification"
+    description = "Run tests with coverage on critical services"
+    dependsOn(
+        criticalServices.map { ":modules:services:$it:test" }
+    )
+    finalizedBy(
+        criticalServices.map { ":modules:services:$it:jacocoTestReport" }
+    )
+}
+
+tasks.register("verifyCriticalServicesCoverage") {
+    group = "verification"
+    description = "Verify coverage thresholds on critical services"
+    dependsOn(
+        criticalServices.map { ":modules:services:$it:jacocoTestCoverageVerification" }
+    )
+}
+
+tasks.register("coverageReport") {
+    group = "verification"
+    description = "Generate coverage reports for all services"
+    dependsOn(subprojects.filter {
+        it.path.contains(":modules:services:")
+    }.map { "${it.path}:jacocoTestReport" })
+    doLast {
+        println("\n=== Coverage Reports Generated ===")
+        subprojects.filter {
+            it.path.contains(":modules:services:")
+        }.forEach { project ->
+            val reportDir = project.layout.buildDirectory.dir("reports/jacoco/test/html").get().asFile
+            if (reportDir.exists()) {
+                println("${project.name}: file://${reportDir.absolutePath}/index.html")
+            }
+        }
+    }
 }

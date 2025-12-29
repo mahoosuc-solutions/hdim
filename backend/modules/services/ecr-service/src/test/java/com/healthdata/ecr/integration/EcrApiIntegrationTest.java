@@ -6,6 +6,7 @@ import com.healthdata.audit.service.AuditService;
 import com.healthdata.authentication.filter.JwtAuthenticationFilter;
 import com.healthdata.authentication.repository.UserRepository;
 import com.healthdata.ecr.config.TestKafkaConfig;
+import com.healthdata.ecr.client.AimsApiClient;
 import com.healthdata.ecr.controller.EcrController;
 import com.healthdata.ecr.persistence.*;
 import com.healthdata.ecr.persistence.ElectronicCaseReportEntity.*;
@@ -58,7 +59,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@Import(TestKafkaConfig.class)
+@Import({TestKafkaConfig.class, com.healthdata.ecr.config.TestFhirConfig.class})
 @Testcontainers(disabledWithoutDocker = true)
 class EcrApiIntegrationTest {
 
@@ -91,6 +92,9 @@ class EcrApiIntegrationTest {
 
     @MockBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockBean
+    private AimsApiClient aimsApiClient;
 
     @Autowired
     private MockMvc mockMvc;

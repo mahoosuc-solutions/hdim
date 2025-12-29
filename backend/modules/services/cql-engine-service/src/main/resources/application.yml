@@ -61,8 +61,8 @@ spring.cache:
     cache-null-values: false
 
 spring.data.redis:
-  host: localhost
-  port: 6381
+  host: ${SPRING_DATA_REDIS_HOST:localhost}
+  port: ${SPRING_DATA_REDIS_PORT:6379}
   timeout: 2000ms
 
 # Kafka Configuration

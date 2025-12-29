@@ -150,6 +150,10 @@ services:
           memory: 256M
     environment:
       JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      HEALTHDATA_CACHE_REDIS_HOST: redis
+      HEALTHDATA_CACHE_REDIS_PORT: 6379
 
   # ============================================
   # AI SERVICES - Limited to 512MB each

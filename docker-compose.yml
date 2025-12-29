@@ -394,7 +394,7 @@ services:
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       # OpenTelemetry configuration for Jaeger
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      TRACING_URL: http://jaeger:4318/v1/traces
     ports:
       - "8086:8086"
     healthcheck:
@@ -991,7 +991,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       ECR_AIMS_ENABLED: "false"
       AUDIT_ENABLED: "false"
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      TRACING_URL: http://jaeger:4318/v1/traces
     ports:
       - "8101:8101"
     healthcheck:
@@ -1033,7 +1033,7 @@ services:
       AUDIT_ENABLED: "false"
       QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087
       FHIR_SERVICE_URL: http://fhir-service:8085
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      TRACING_URL: http://jaeger:4318/v1/traces
     ports:
       - "8104:8104"
     healthcheck:
@@ -1077,7 +1077,7 @@ services:
       HCC_MODEL_V24_WEIGHT: "0.33"
       HCC_MODEL_V28_WEIGHT: "0.67"
       FHIR_SERVICE_URL: http://fhir-service:8085
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      TRACING_URL: http://jaeger:4318/v1/traces
     ports:
       - "8105:8105"
     healthcheck:
@@ -1126,7 +1126,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       AUDIT_ENABLED: "false"
       # OpenTelemetry configuration for Jaeger
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      TRACING_URL: http://jaeger:4318/v1/traces
     ports:
       - "8102:8102"
     healthcheck:
@@ -1176,7 +1176,7 @@ services:
       ZOHO_WEBHOOK_ENABLED: ${ZOHO_WEBHOOK_ENABLED:-false}
       ZOHO_WEBHOOK_SECRET: ${ZOHO_WEBHOOK_SECRET:-}
       # OpenTelemetry configuration for Jaeger
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      TRACING_URL: http://jaeger:4318/v1/traces
     ports:
       - "8106:8106"
     healthcheck:

@@ -1,0 +1,199 @@
+import { defineConfig, devices } from '@playwright/test';
+import * as path from 'path';
+
+/**
+ * HDIM Unified E2E Test Configuration
+ *
+ * This configuration supports testing both the Angular Clinical Portal
+ * and React Sales Portal with shared utilities and fixtures.
+ *
+ * @see https://playwright.dev/docs/test-configuration
+ */
+
+// Environment configuration
+const BASE_URL = process.env.BASE_URL || 'http://localhost:4200';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8087';
+const CI = !!process.env.CI;
+
+export default defineConfig({
+  // Test directory
+  testDir: './tests',
+
+  // Test file patterns
+  testMatch: '**/*.spec.ts',
+
+  // Run tests in parallel
+  fullyParallel: true,
+
+  // Fail the build on CI if you accidentally left test.only in the source code
+  forbidOnly: CI,
+
+  // Retry failed tests
+  retries: CI ? 2 : 0,
+
+  // Limit parallel workers
+  workers: CI ? 4 : undefined,
+
+  // Reporter configuration
+  reporter: [
+    ['html', { open: 'never', outputFolder: 'playwright-report' }],
+    ['junit', { outputFile: 'test-results/junit.xml' }],
+    ['json', { outputFile: 'test-results/results.json' }],
+    CI ? ['github'] : ['line'],
+  ],
+
+  // Output directory for test artifacts
+  outputDir: 'test-results',
+
+  // Global setup and teardown
+  globalSetup: path.resolve(__dirname, 'global.setup.ts'),
+  globalTeardown: path.resolve(__dirname, 'global.teardown.ts'),
+
+  // Shared settings for all projects
+  use: {
+    // Base URL for navigation
+    baseURL: BASE_URL,
+
+    // Collect trace when retrying the failed test
+    trace: 'on-first-retry',
+
+    // Capture screenshot on failure
+    screenshot: 'only-on-failure',
+
+    // Record video on failure
+    video: 'retain-on-failure',
+
+    // Action timeout
+    actionTimeout: 15000,
+
+    // Navigation timeout
+    navigationTimeout: 30000,
+
+    // Extra HTTP headers for API requests
+    extraHTTPHeaders: {
+      'Accept': 'application/json',
+    },
+
+    // Viewport size
+    viewport: { width: 1280, height: 720 },
+
+    // Ignore HTTPS errors (for local testing)
+    ignoreHTTPSErrors: true,
+  },
+
+  // Test projects for different browsers/devices
+  projects: [
+    // Setup project - runs authentication before other tests
+    {
+      name: 'setup',
+      testMatch: /global\.setup\.ts/,
+      teardown: 'teardown',
+    },
+    {
+      name: 'teardown',
+      testMatch: /global\.teardown\.ts/,
+    },
+
+    // Desktop browsers
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
+    {
+      name: 'firefox',
+      use: {
+        ...devices['Desktop Firefox'],
+        storageState: 'e2e/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
+    {
+      name: 'webkit',
+      use: {
+        ...devices['Desktop Safari'],
+        storageState: 'e2e/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
+
+    // Mobile browsers
+    {
+      name: 'mobile-chrome',
+      use: {
+        ...devices['Pixel 5'],
+        storageState: 'e2e/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
+    {
+      name: 'mobile-safari',
+      use: {
+        ...devices['iPhone 12'],
+        storageState: 'e2e/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
+
+    // Tablet
+    {
+      name: 'tablet',
+      use: {
+        ...devices['iPad Pro 11'],
+        storageState: 'e2e/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
+
+    // Accessibility tests (run on chromium only)
+    {
+      name: 'accessibility',
+      testMatch: '**/accessibility/**/*.spec.ts',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
+
+    // Performance tests (run on chromium only)
+    {
+      name: 'performance',
+      testMatch: '**/performance/**/*.spec.ts',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
+  ],
+
+  // Web server configuration - starts the Angular dev server
+  webServer: [
+    {
+      command: 'cd ../apps/clinical-portal && npm run start',
+      url: 'http://localhost:4200',
+      reuseExistingServer: !CI,
+      timeout: 120000,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+  ],
+
+  // Expect configuration
+  expect: {
+    // Maximum time expect() should wait for the condition to be met
+    timeout: 10000,
+
+    // Configure snapshot testing
+    toHaveScreenshot: {
+      maxDiffPixels: 100,
+    },
+    toMatchSnapshot: {
+      maxDiffPixelRatio: 0.1,
+    },
+  },
+});

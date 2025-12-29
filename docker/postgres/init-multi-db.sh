@@ -84,4 +84,14 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE ecr_db TO "$POSTGRES_USER";
 EOSQL
 
+echo "Enabling PostgreSQL extensions..."
+
+# Enable pg_trgm extension for databases that use GIN trigram indexes
+for db in fhir_db cql_db quality_db patient_db; do
+    echo "Enabling pg_trgm in $db..."
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$db" <<-EOSQL
+        CREATE EXTENSION IF NOT EXISTS pg_trgm;
+EOSQL
+done
+
 echo "All HDIM databases created successfully!"

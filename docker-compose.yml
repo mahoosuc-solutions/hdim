@@ -992,6 +992,10 @@ services:
       ECR_AIMS_ENABLED: "false"
       AUDIT_ENABLED: "false"
       TRACING_URL: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: ecr-service
+      SPRING_DATA_REDIS_TIMEOUT: 10s
+      MANAGEMENT_HEALTH_REDIS_ENABLED: "false"
     ports:
       - "8101:8101"
     healthcheck:
@@ -1034,6 +1038,10 @@ services:
       QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087
       FHIR_SERVICE_URL: http://fhir-service:8085
       TRACING_URL: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: qrda-export-service
+      SPRING_DATA_REDIS_TIMEOUT: 10s
+      MANAGEMENT_HEALTH_REDIS_ENABLED: "false"
     ports:
       - "8104:8104"
     healthcheck:
@@ -1078,6 +1086,10 @@ services:
       HCC_MODEL_V28_WEIGHT: "0.67"
       FHIR_SERVICE_URL: http://fhir-service:8085
       TRACING_URL: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: hcc-service
+      SPRING_DATA_REDIS_TIMEOUT: 10s
+      MANAGEMENT_HEALTH_REDIS_ENABLED: "false"
     ports:
       - "8105:8105"
     healthcheck:
@@ -1127,6 +1139,10 @@ services:
       AUDIT_ENABLED: "false"
       # OpenTelemetry configuration for Jaeger
       TRACING_URL: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: prior-auth-service
+      SPRING_DATA_REDIS_TIMEOUT: 10s
+      MANAGEMENT_HEALTH_REDIS_ENABLED: "false"
     ports:
       - "8102:8102"
     healthcheck:

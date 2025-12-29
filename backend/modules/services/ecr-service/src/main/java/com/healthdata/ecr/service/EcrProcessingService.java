@@ -1,10 +1,13 @@
 package com.healthdata.ecr.service;
 
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.ecr.client.AimsApiClient;
 import com.healthdata.ecr.persistence.ElectronicCaseReportEntity;
 import com.healthdata.ecr.persistence.ElectronicCaseReportEntity.EcrStatus;
 import com.healthdata.ecr.persistence.ElectronicCaseReportRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hl7.fhir.r4.model.Bundle;
 import org.springframework.scheduling.annotation.Async;
@@ -29,7 +32,6 @@ import java.util.UUID;
  * Handles scheduling, retries, and error management.
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class EcrProcessingService {
 
@@ -37,8 +39,26 @@ public class EcrProcessingService {
     private final EicrGeneratorService eicrGenerator;
     private final AimsApiClient aimsClient;
     private final EcrDataFetchService dataFetchService;
+    private final ObjectMapper objectMapper;
+    private final IParser fhirJsonParser;
 
     private static final int MAX_RETRIES = 3;
+
+    public EcrProcessingService(
+            ElectronicCaseReportRepository ecrRepository,
+            EicrGeneratorService eicrGenerator,
+            AimsApiClient aimsClient,
+            EcrDataFetchService dataFetchService,
+            FhirContext fhirContext,
+            ObjectMapper objectMapper) {
+        this.ecrRepository = ecrRepository;
+        this.eicrGenerator = eicrGenerator;
+        this.aimsClient = aimsClient;
+        this.dataFetchService = dataFetchService;
+        this.objectMapper = objectMapper;
+        this.fhirJsonParser = fhirContext.newJsonParser();
+        this.fhirJsonParser.setPrettyPrint(false);
+    }
 
     /**
      * Process immediate-urgency eCRs asynchronously.
@@ -237,14 +257,30 @@ public class EcrProcessingService {
         };
     }
 
+    /**
+     * Convert FHIR Bundle to Map for JSON storage in database.
+     * Uses HAPI FHIR parser for accurate serialization.
+     *
+     * @param bundle The FHIR Bundle to convert
+     * @return Map representation of the bundle for JSONB storage
+     */
     private Map<String, Object> bundleToMap(Bundle bundle) {
-        // In production, use HAPI FHIR's JSON parser
-        // Simplified placeholder
-        return Map.of(
-            "resourceType", "Bundle",
-            "id", bundle.getId(),
-            "type", bundle.getType().toCode(),
-            "entryCount", bundle.getEntry().size()
-        );
+        try {
+            // Serialize Bundle to JSON using HAPI FHIR
+            String bundleJson = fhirJsonParser.encodeResourceToString(bundle);
+
+            // Parse JSON string to Map for JSONB storage
+            return objectMapper.readValue(bundleJson, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
+            log.error("Failed to convert Bundle to Map: {}", e.getMessage());
+            // Return minimal metadata on failure to avoid losing all information
+            return Map.of(
+                "resourceType", "Bundle",
+                "id", bundle.getId() != null ? bundle.getId() : "unknown",
+                "type", bundle.getType() != null ? bundle.getType().toCode() : "unknown",
+                "entryCount", bundle.getEntry() != null ? bundle.getEntry().size() : 0,
+                "_serializationError", e.getMessage()
+            );
+        }
     }
 }

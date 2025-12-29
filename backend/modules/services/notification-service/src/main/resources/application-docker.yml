@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/healthdata_notification
+    username: healthdata
+    password: ${POSTGRES_PASSWORD:healthdata_secure_password}
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+  kafka:
+    bootstrap-servers: kafka:29092
+
+  mail:
+    host: ${MAIL_HOST:smtp.zoho.com}
+    port: ${MAIL_PORT:587}
+
+# Tracing Configuration
+tracing:
+  url: ${TRACING_URL:http://jaeger:4318/v1/traces}

@@ -1,13 +1,18 @@
 package com.healthdata.ecr.client;
 
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hl7.fhir.r4.model.Bundle;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
@@ -32,12 +37,16 @@ import java.util.Map;
 public class AimsApiClient {
 
     private final RestTemplate restTemplate;
+    private final FhirContext fhirContext;
 
     @Value("${ecr.aims.enabled:false}")
     private boolean aimsEnabled;
 
     @Value("${ecr.aims.base-url:https://ecr.aimsplatform.org/api}")
     private String baseUrl;
+
+    @Value("${ecr.aims.token-url:https://ecr.aimsplatform.org/oauth/token}")
+    private String tokenUrl;
 
     @Value("${ecr.aims.client-id:}")
     private String clientId;
@@ -50,6 +59,22 @@ public class AimsApiClient {
 
     @Value("${ecr.aims.status-endpoint:/eicr/status}")
     private String statusEndpoint;
+
+    // OAuth2 token cache
+    private volatile String accessToken;
+    private volatile long tokenExpiresAt;
+    private final Object tokenLock = new Object();
+
+    // FHIR JSON parser for bundle serialization
+    private IParser fhirJsonParser;
+
+    @PostConstruct
+    public void init() {
+        this.fhirJsonParser = fhirContext.newJsonParser();
+        this.fhirJsonParser.setPrettyPrint(false);
+        this.fhirJsonParser.setSuppressNarratives(true);
+        log.info("AimsApiClient initialized with FHIR JSON parser");
+    }
 
     /**
      * Submit an eICR FHIR Bundle to AIMS platform.
@@ -213,21 +238,87 @@ public class AimsApiClient {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Accept", "application/json");
 
-        // Add authentication if configured
+        // Add OAuth2 Bearer token if credentials are configured
         if (clientId != null && !clientId.isEmpty()) {
-            // In production, implement proper OAuth2 token acquisition
-            headers.set("X-Client-ID", clientId);
-            headers.set("X-Client-Secret", clientSecret);
+            String token = getAccessToken();
+            if (token != null) {
+                headers.setBearerAuth(token);
+            } else {
+                // Fallback to client credentials in header if token acquisition fails
+                log.warn("OAuth2 token acquisition failed, falling back to header auth");
+                headers.set("X-Client-ID", clientId);
+                headers.set("X-Client-Secret", clientSecret);
+            }
         }
 
         return headers;
     }
 
+    /**
+     * Get or refresh OAuth2 access token using client credentials grant.
+     * Thread-safe with token caching and automatic refresh.
+     */
+    private String getAccessToken() {
+        // Check if current token is still valid (with 60s buffer)
+        if (accessToken != null && System.currentTimeMillis() < tokenExpiresAt - 60000) {
+            return accessToken;
+        }
+
+        synchronized (tokenLock) {
+            // Double-check after acquiring lock
+            if (accessToken != null && System.currentTimeMillis() < tokenExpiresAt - 60000) {
+                return accessToken;
+            }
+
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+                headers.setBasicAuth(clientId, clientSecret);
+
+                MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+                body.add("grant_type", "client_credentials");
+                body.add("scope", "eicr:submit eicr:status");
+
+                HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+
+                ResponseEntity<TokenResponse> response = restTemplate.exchange(
+                    tokenUrl,
+                    HttpMethod.POST,
+                    request,
+                    TokenResponse.class
+                );
+
+                if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                    TokenResponse tokenResponse = response.getBody();
+                    accessToken = tokenResponse.getAccessToken();
+                    // Calculate expiry (default 1 hour if not specified)
+                    long expiresIn = tokenResponse.getExpiresIn() != null
+                        ? tokenResponse.getExpiresIn()
+                        : 3600;
+                    tokenExpiresAt = System.currentTimeMillis() + (expiresIn * 1000);
+
+                    log.info("OAuth2 token acquired, expires in {} seconds", expiresIn);
+                    return accessToken;
+                }
+            } catch (Exception e) {
+                log.error("Failed to acquire OAuth2 token: {}", e.getMessage());
+            }
+
+            return null;
+        }
+    }
+
+    /**
+     * Serialize FHIR Bundle to JSON string using HAPI FHIR parser.
+     * Produces valid FHIR R4 JSON representation.
+     */
     private String serializeBundle(Bundle bundle) {
-        // In production, use HAPI FHIR's JSON parser
-        // ca.uhn.fhir.parser.IParser parser = FhirContext.forR4().newJsonParser();
-        // return parser.encodeResourceToString(bundle);
-        return "{\"resourceType\":\"Bundle\",\"id\":\"" + bundle.getId() + "\"}";
+        try {
+            return fhirJsonParser.encodeResourceToString(bundle);
+        } catch (Exception e) {
+            log.error("Failed to serialize FHIR Bundle: {}", e.getMessage());
+            throw new AimsApiException("Failed to serialize eICR bundle: " + e.getMessage(), e);
+        }
     }
 
     // Simulation methods for development/testing
@@ -301,6 +392,24 @@ public class AimsApiClient {
         private String reportabilityStatus;
         private String jurisdiction;
         private Map<String, Object> rrDetails;
+    }
+
+    /**
+     * OAuth2 token response DTO.
+     */
+    @lombok.Data
+    private static class TokenResponse {
+        @com.fasterxml.jackson.annotation.JsonProperty("access_token")
+        private String accessToken;
+
+        @com.fasterxml.jackson.annotation.JsonProperty("token_type")
+        private String tokenType;
+
+        @com.fasterxml.jackson.annotation.JsonProperty("expires_in")
+        private Long expiresIn;
+
+        @com.fasterxml.jackson.annotation.JsonProperty("scope")
+        private String scope;
     }
 
     // Custom exception

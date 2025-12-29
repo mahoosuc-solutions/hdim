@@ -17,6 +17,7 @@ import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -255,6 +256,49 @@ public class HdimGlobalExceptionHandler {
                 .error("Bad Request")
                 .errorCode("HDIM-VAL-400")
                 .message(message)
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    /**
+     * Handle unsupported HTTP method (405).
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<HdimErrorResponse> handleMethodNotSupported(
+            HttpRequestMethodNotSupportedException ex,
+            HttpServletRequest request) {
+
+        log.warn("Method not allowed at {}: {} method is not supported",
+                request.getRequestURI(), ex.getMethod());
+
+        HdimErrorResponse response = HdimErrorResponse.builder()
+                .status(HttpStatus.METHOD_NOT_ALLOWED.value())
+                .error("Method Not Allowed")
+                .errorCode("HDIM-HTTP-405")
+                .message("HTTP method '" + ex.getMethod() + "' is not supported for this endpoint")
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response);
+    }
+
+    /**
+     * Handle illegal argument exceptions (400).
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<HdimErrorResponse> handleIllegalArgument(
+            IllegalArgumentException ex,
+            HttpServletRequest request) {
+
+        log.warn("Illegal argument at {}: {}", request.getRequestURI(), ex.getMessage());
+
+        HdimErrorResponse response = HdimErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Bad Request")
+                .errorCode("HDIM-VAL-400")
+                .message(ex.getMessage())
                 .path(request.getRequestURI())
                 .build();
 

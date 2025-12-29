@@ -12,6 +12,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.net.ConnectException;
@@ -125,6 +126,23 @@ public class QualityMeasureExceptionHandler {
         response.put("message", "Required header '" + ex.getHeaderName() + "' is missing");
 
         return ResponseEntity.badRequest().body(response);
+    }
+
+    /**
+     * Handle unsupported HTTP method exceptions (405)
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    public ResponseEntity<Map<String, Object>> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException ex) {
+        log.warn("Method not allowed: {}", ex.getMessage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now().toString());
+        response.put("status", HttpStatus.METHOD_NOT_ALLOWED.value());
+        response.put("error", "Method Not Allowed");
+        response.put("message", "HTTP method '" + ex.getMethod() + "' is not supported for this endpoint");
+
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response);
     }
 
     /**

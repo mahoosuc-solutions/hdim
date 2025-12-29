@@ -1,9 +1,15 @@
 package com.healthdata.authentication.config;
 
 import com.healthdata.authentication.service.JwtTokenService;
+import com.healthdata.authentication.service.RefreshTokenService;
+import com.healthdata.authentication.service.LogoutService;
+import com.healthdata.authentication.service.MfaService;
+import com.healthdata.authentication.service.MfaTokenService;
+import com.healthdata.authentication.service.CookieService;
 import com.healthdata.authentication.config.JwtConfig;
 import com.healthdata.authentication.domain.User;
 import com.healthdata.authentication.repository.UserRepository;
+import com.healthdata.authentication.repository.RefreshTokenRepository;
 import com.healthdata.cache.CacheEvictionService;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -147,5 +153,51 @@ public class TestSecurityConfig {
                 .credentialsExpired(false)
                 .build();
         };
+    }
+
+    /**
+     * RefreshTokenService for test environment.
+     */
+    @Bean
+    public RefreshTokenService refreshTokenService(
+            RefreshTokenRepository refreshTokenRepository,
+            UserRepository userRepository,
+            JwtTokenService jwtTokenService,
+            JwtConfig jwtConfig) {
+        return new RefreshTokenService(refreshTokenRepository, userRepository, jwtTokenService, jwtConfig);
+    }
+
+    /**
+     * LogoutService for test environment.
+     */
+    @Bean
+    public LogoutService logoutService(
+            UserRepository userRepository,
+            CacheEvictionService cacheEvictionService) {
+        return new LogoutService(userRepository, cacheEvictionService);
+    }
+
+    /**
+     * MfaService for test environment.
+     */
+    @Bean
+    public MfaService mfaService(UserRepository userRepository) {
+        return new MfaService(userRepository);
+    }
+
+    /**
+     * MfaTokenService for test environment.
+     */
+    @Bean
+    public MfaTokenService mfaTokenService(JwtConfig jwtConfig) {
+        return new MfaTokenService(jwtConfig.getSecret());
+    }
+
+    /**
+     * CookieService for test environment.
+     */
+    @Bean
+    public CookieService cookieService() {
+        return new CookieService();
     }
 }

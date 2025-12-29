@@ -137,9 +137,10 @@ class NotificationServiceUnitTest {
         EmailNotificationChannel emailChannel = Mockito.mock(EmailNotificationChannel.class);
         SmsNotificationChannel smsChannel = Mockito.mock(SmsNotificationChannel.class);
 
-        when(webSocketHandler.broadcastClinicalAlert(Mockito.any(), Mockito.eq("tenant-1"))).thenReturn(true);
-        when(emailChannel.send(Mockito.eq("tenant-1"), Mockito.any(ClinicalAlertDTO.class))).thenReturn(true);
-        when(smsChannel.send(Mockito.eq("tenant-1"), Mockito.any(ClinicalAlertDTO.class))).thenReturn(true);
+        // The deprecated method now delegates to the new API which uses these signatures
+        when(broadcastService.broadcastNotification(Mockito.eq("tenant-1"), Mockito.any(NotificationRequest.class))).thenReturn(true);
+        when(emailChannel.send(Mockito.any(NotificationRequest.class))).thenReturn(true);
+        when(smsChannel.send(Mockito.any(NotificationRequest.class))).thenReturn(true);
 
         NotificationService service = new NotificationService(
             webSocketHandler,
@@ -187,9 +188,10 @@ class NotificationServiceUnitTest {
 
         service.sendNotification("tenant-1", alert);
 
-        verify(webSocketHandler, times(1)).broadcastClinicalAlert(alert, "tenant-1");
-        verify(emailChannel, times(1)).send("tenant-1", alert);
-        verify(smsChannel, times(1)).send("tenant-1", alert);
+        // The deprecated method now delegates to the new API
+        verify(broadcastService, times(1)).broadcastNotification(Mockito.eq("tenant-1"), Mockito.any(NotificationRequest.class));
+        verify(emailChannel, times(1)).send(Mockito.any(NotificationRequest.class));
+        verify(smsChannel, times(1)).send(Mockito.any(NotificationRequest.class));
     }
 
     @Test
@@ -244,9 +246,10 @@ class NotificationServiceUnitTest {
 
         service.sendNotification("tenant-1", alert);
 
-        verify(webSocketHandler).broadcastClinicalAlert(alert, "tenant-1");
-        verify(emailChannel).send("tenant-1", alert);
-        verify(smsChannel, Mockito.never()).send("tenant-1", alert);
+        // The deprecated method delegates to new API - HIGH severity gets websocket + email but not SMS
+        verify(broadcastService).broadcastNotification(Mockito.eq("tenant-1"), Mockito.any(NotificationRequest.class));
+        verify(emailChannel).send(Mockito.any(NotificationRequest.class));
+        verify(smsChannel, Mockito.never()).send(Mockito.any(NotificationRequest.class));
     }
 
     @Test
@@ -256,27 +259,29 @@ class NotificationServiceUnitTest {
         WebSocketBroadcastService broadcastService = Mockito.mock(WebSocketBroadcastService.class);
         SmsNotificationChannel smsChannel = Mockito.mock(SmsNotificationChannel.class);
 
-        when(webSocketHandler.broadcastClinicalAlert(Mockito.any(), Mockito.eq("tenant-1"))).thenReturn(true);
+        // The deprecated method delegates to new API which uses broadcastService
+        when(broadcastService.broadcastNotification(Mockito.eq("tenant-1"), Mockito.any(NotificationRequest.class))).thenReturn(true);
 
         NotificationService service = new NotificationService(
             webSocketHandler,
             broadcastService,
-            null,
+            null,  // No email channel
             smsChannel
         );
 
         ClinicalAlertDTO alert = ClinicalAlertDTO.builder()
             .id("alert-4")
             .patientId(UUID.randomUUID())
-            .severity("HIGH")
+            .severity("HIGH")  // HIGH = websocket + email (but email unavailable)
             .build();
 
         NotificationService.NotificationStatus status =
             service.sendNotificationWithStatus("tenant-1", alert);
 
         assertThat(status.getChannelStatus()).containsEntry("websocket", true);
-        assertThat(status.getChannelStatus()).doesNotContainKey("email");
-        assertThat(status.isAllSuccessful()).isTrue();
+        // Email should be marked as false because channel is unavailable
+        assertThat(status.getChannelStatus()).containsEntry("email", false);
+        assertThat(status.isAllSuccessful()).isFalse();  // Not all successful since email failed
     }
 
     @Test
@@ -287,7 +292,8 @@ class NotificationServiceUnitTest {
         EmailNotificationChannel emailChannel = Mockito.mock(EmailNotificationChannel.class);
         SmsNotificationChannel smsChannel = Mockito.mock(SmsNotificationChannel.class);
 
-        when(webSocketHandler.broadcastClinicalAlert(Mockito.any(), Mockito.eq("tenant-1")))
+        // The deprecated method delegates to new API which uses broadcastService
+        when(broadcastService.broadcastNotification(Mockito.eq("tenant-1"), Mockito.any(NotificationRequest.class)))
             .thenThrow(new RuntimeException("ws down"));
 
         NotificationService service = new NotificationService(
@@ -333,9 +339,10 @@ class NotificationServiceUnitTest {
 
         service.sendNotificationWithStatus("tenant-1", alert);
 
-        verify(emailChannel, times(0)).send("tenant-1", alert);
-        verify(smsChannel, times(0)).send("tenant-1", alert);
-        verify(webSocketHandler, times(1)).broadcastClinicalAlert(alert, "tenant-1");
+        // LOW severity: websocket only, no email or SMS per ClinicalAlertNotificationRequest logic
+        verify(emailChannel, times(0)).send(Mockito.any(NotificationRequest.class));
+        verify(smsChannel, times(0)).send(Mockito.any(NotificationRequest.class));
+        verify(broadcastService, times(1)).broadcastNotification(Mockito.eq("tenant-1"), Mockito.any(NotificationRequest.class));
     }
 
     @Test
@@ -423,8 +430,9 @@ class NotificationServiceUnitTest {
         EmailNotificationChannel emailChannel = Mockito.mock(EmailNotificationChannel.class);
         SmsNotificationChannel smsChannel = Mockito.mock(SmsNotificationChannel.class);
 
-        doThrow(new RuntimeException("email down")).when(emailChannel).send(Mockito.eq("tenant-1"), Mockito.any());
-        doThrow(new RuntimeException("sms down")).when(smsChannel).send(Mockito.eq("tenant-1"), Mockito.any());
+        // The deprecated method delegates to new API which uses NotificationRequest signatures
+        doThrow(new RuntimeException("email down")).when(emailChannel).send(Mockito.any(NotificationRequest.class));
+        doThrow(new RuntimeException("sms down")).when(smsChannel).send(Mockito.any(NotificationRequest.class));
 
         NotificationService service = new NotificationService(
             webSocketHandler,
@@ -441,9 +449,10 @@ class NotificationServiceUnitTest {
 
         service.sendNotification("tenant-1", alert);
 
-        verify(webSocketHandler).broadcastClinicalAlert(alert, "tenant-1");
-        verify(emailChannel).send("tenant-1", alert);
-        verify(smsChannel).send("tenant-1", alert);
+        // Verify new API methods are called (deprecated method delegates to new API)
+        verify(broadcastService).broadcastNotification(Mockito.eq("tenant-1"), Mockito.any(NotificationRequest.class));
+        verify(emailChannel).send(Mockito.any(NotificationRequest.class));
+        verify(smsChannel).send(Mockito.any(NotificationRequest.class));
     }
 
     @Test
@@ -454,8 +463,9 @@ class NotificationServiceUnitTest {
         EmailNotificationChannel emailChannel = Mockito.mock(EmailNotificationChannel.class);
         SmsNotificationChannel smsChannel = Mockito.mock(SmsNotificationChannel.class);
 
-        doThrow(new RuntimeException("ws down")).when(webSocketHandler)
-            .broadcastClinicalAlert(Mockito.any(), Mockito.eq("tenant-1"));
+        // The deprecated method delegates to new API which uses broadcastService
+        doThrow(new RuntimeException("ws down")).when(broadcastService)
+            .broadcastNotification(Mockito.eq("tenant-1"), Mockito.any(NotificationRequest.class));
 
         NotificationService service = new NotificationService(
             webSocketHandler,
@@ -472,7 +482,8 @@ class NotificationServiceUnitTest {
 
         service.sendNotification("tenant-1", alert);
 
-        verify(webSocketHandler).broadcastClinicalAlert(alert, "tenant-1");
+        // Verify broadcastService was called (deprecated method delegates to new API)
+        verify(broadcastService).broadcastNotification(Mockito.eq("tenant-1"), Mockito.any(NotificationRequest.class));
     }
 
     @Test
@@ -483,9 +494,10 @@ class NotificationServiceUnitTest {
         EmailNotificationChannel emailChannel = Mockito.mock(EmailNotificationChannel.class);
         SmsNotificationChannel smsChannel = Mockito.mock(SmsNotificationChannel.class);
 
-        when(webSocketHandler.broadcastClinicalAlert(Mockito.any(), Mockito.eq("tenant-1"))).thenReturn(true);
-        doThrow(new RuntimeException("email down")).when(emailChannel).send(Mockito.eq("tenant-1"), Mockito.any());
-        doThrow(new RuntimeException("sms down")).when(smsChannel).send(Mockito.eq("tenant-1"), Mockito.any());
+        // The deprecated method delegates to new API which uses NotificationRequest signatures
+        when(broadcastService.broadcastNotification(Mockito.eq("tenant-1"), Mockito.any(NotificationRequest.class))).thenReturn(true);
+        doThrow(new RuntimeException("email down")).when(emailChannel).send(Mockito.any(NotificationRequest.class));
+        doThrow(new RuntimeException("sms down")).when(smsChannel).send(Mockito.any(NotificationRequest.class));
 
         NotificationService service = new NotificationService(
             webSocketHandler,

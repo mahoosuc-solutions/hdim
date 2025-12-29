@@ -31,10 +31,10 @@ public class CacheProperties {
     public static class Redis {
 
         @NotBlank
-        private String host = "localhost";
+        private String host = "${REDIS_HOST:redis}";
 
         @Min(1)
-        private int port = 6381;
+        private int port = 6379;
 
         private String password;
 

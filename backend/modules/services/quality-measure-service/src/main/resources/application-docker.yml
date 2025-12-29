@@ -184,3 +184,12 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Shared cache module configuration (uses healthdata.cache prefix)
+healthdata:
+  cache:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2s
+      default-ttl: 5m

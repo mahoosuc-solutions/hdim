@@ -1188,64 +1188,6 @@ services:
     networks:
       - healthdata-network
 
-  # Port 8107 - Notification Service
-  notification-service:
-    container_name: healthdata-notification-service
-    build:
-      context: ./backend
-      dockerfile: modules/services/notification-service/Dockerfile
-    profiles: ["core", "full"]
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_started
-      redis:
-        condition: service_healthy
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_notification
-      SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-      SERVER_PORT: 8107
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
-      SPRING_LIQUIBASE_ENABLED: "true"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      # Email Configuration
-      MAIL_HOST: ${MAIL_HOST:-smtp.zoho.com}
-      MAIL_PORT: ${MAIL_PORT:-587}
-      MAIL_USERNAME: ${MAIL_USERNAME:-}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      MAIL_FROM: ${MAIL_FROM:-notifications@healthdatainmotion.com}
-      NOTIFICATION_EMAIL_ENABLED: ${NOTIFICATION_EMAIL_ENABLED:-true}
-      # SMS Configuration (Twilio)
-      NOTIFICATION_SMS_PROVIDER: ${NOTIFICATION_SMS_PROVIDER:-twilio}
-      NOTIFICATION_SMS_ENABLED: ${NOTIFICATION_SMS_ENABLED:-false}
-      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
-      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
-      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
-      TWILIO_MESSAGING_SERVICE_SID: ${TWILIO_MESSAGING_SERVICE_SID:-}
-      # Push Notification Configuration (Firebase)
-      NOTIFICATION_PUSH_PROVIDER: ${NOTIFICATION_PUSH_PROVIDER:-firebase}
-      NOTIFICATION_PUSH_ENABLED: ${NOTIFICATION_PUSH_ENABLED:-false}
-      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
-      FIREBASE_CREDENTIALS_JSON: ${FIREBASE_CREDENTIALS_JSON:-}
-      # Tracing
-      TRACING_URL: http://jaeger:4318/v1/traces
-    ports:
-      - "8107:8107"
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8107/notification/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-    networks:
-      - healthdata-network
-
   # ============================================
   # SUPPORT SERVICES (8091)
   # ============================================
@@ -1276,6 +1218,47 @@ services:
       - "8091:8091"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8091/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8107 - Notification Service
+  notification-service:
+    container_name: healthdata-notification-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/notification-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notification_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8107
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      TRACING_URL: http://jaeger:4318/v1/traces
+      NOTIFICATION_EMAIL_ENABLED: "true"
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+    ports:
+      - "8107:8107"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8107/notification/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5

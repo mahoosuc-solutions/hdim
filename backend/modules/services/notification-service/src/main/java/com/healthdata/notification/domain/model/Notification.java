@@ -10,12 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Represents a notification to be delivered to a recipient.
- *
- * HIPAA Compliance:
- * - PHI data is NOT stored in notifications (only references)
- * - Audit logging enabled for all state changes
- * - TTL enforced at application layer
+ * Notification entity representing a single notification to be sent.
  */
 @Entity
 @Table(name = "notifications", indexes = {
@@ -37,17 +32,14 @@ public class Notification {
     @Column(name = "tenant_id", nullable = false, length = 50)
     private String tenantId;
 
-    @Column(name = "recipient_id", nullable = false, length = 255)
+    @Column(name = "recipient_id", nullable = false)
     private String recipientId;
 
-    @Column(name = "recipient_email", length = 255)
+    @Column(name = "recipient_email")
     private String recipientEmail;
 
-    @Column(name = "recipient_phone", length = 50)
+    @Column(name = "recipient_phone")
     private String recipientPhone;
-
-    @Column(name = "device_token", length = 500)
-    private String deviceToken;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "channel", nullable = false, length = 20)
@@ -67,9 +59,13 @@ public class Notification {
     @Builder.Default
     private NotificationStatus status = NotificationStatus.PENDING;
 
-    @Column(name = "priority")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "priority", nullable = false, length = 20)
     @Builder.Default
-    private Integer priority = 5;
+    private NotificationPriority priority = NotificationPriority.NORMAL;
+
+    @Column(name = "scheduled_at")
+    private Instant scheduledAt;
 
     @Column(name = "sent_at")
     private Instant sentAt;
@@ -88,18 +84,24 @@ public class Notification {
     @Builder.Default
     private Integer maxRetries = 3;
 
-    @Column(name = "external_id", length = 255)
+    @Column(name = "external_id")
     private String externalId;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata", columnDefinition = "jsonb")
     private Map<String, Object> metadata;
 
+    @Column(name = "correlation_id")
+    private String correlationId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @Column(name = "created_by")
+    private String createdBy;
 
     @PrePersist
     protected void onCreate() {
@@ -112,22 +114,18 @@ public class Notification {
         updatedAt = Instant.now();
     }
 
-    public boolean canRetry() {
-        return !status.isTerminal() && retryCount < maxRetries;
-    }
-
-    public void markSent(String externalId) {
+    public void markAsSent() {
         this.status = NotificationStatus.SENT;
         this.sentAt = Instant.now();
-        this.externalId = externalId;
     }
 
-    public void markFailed(String errorMessage) {
+    public void markAsFailed(String errorMessage) {
         this.status = NotificationStatus.FAILED;
         this.errorMessage = errorMessage;
+        this.retryCount++;
     }
 
-    public void incrementRetry() {
-        this.retryCount++;
+    public boolean canRetry() {
+        return retryCount < maxRetries && status == NotificationStatus.FAILED;
     }
 }

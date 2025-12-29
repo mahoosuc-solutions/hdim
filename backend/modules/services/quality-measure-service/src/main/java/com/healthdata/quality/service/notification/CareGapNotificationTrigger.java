@@ -8,6 +8,7 @@ import com.healthdata.quality.service.NotificationService;
 import com.healthdata.quality.service.PatientNameService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -44,6 +45,12 @@ public class CareGapNotificationTrigger {
     private final NotificationService notificationService;
     private final RecipientResolutionService recipientResolutionService;
     private final PatientNameService patientNameService;
+
+    @Value("${notification.care-gap.default-recipients.email:caregaps@healthdata.example.com}")
+    private String defaultEmail;
+
+    @Value("${notification.care-gap.default-recipients.sms:+15555551234}")
+    private String defaultPhone;
 
     /**
      * Trigger notification when care gap is identified
@@ -189,7 +196,9 @@ public class CareGapNotificationTrigger {
      */
     private boolean shouldSendEmailForIdentification(CareGapDTO careGap) {
         // Send email for HIGH and CRITICAL priority
-        return "HIGH".equals(careGap.getPriority()) || "CRITICAL".equals(careGap.getPriority());
+        String priority = careGap.getPriority();
+        return priority != null &&
+               ("HIGH".equalsIgnoreCase(priority) || "CRITICAL".equalsIgnoreCase(priority));
     }
 
     /**
@@ -197,7 +206,8 @@ public class CareGapNotificationTrigger {
      */
     private boolean shouldSendSmsForIdentification(CareGapDTO careGap) {
         // Only send SMS for CRITICAL priority
-        return "CRITICAL".equals(careGap.getPriority());
+        String priority = careGap.getPriority();
+        return priority != null && "CRITICAL".equalsIgnoreCase(priority);
     }
 
     /**
@@ -394,6 +404,13 @@ public class CareGapNotificationTrigger {
                 .orElse(smsRecipients.get(0))
                 .getPhoneNumber();
             recipients.put("SMS", phone);
+        }
+
+        // If no recipients found, fall back to default recipients
+        if (recipients.isEmpty()) {
+            log.warn("No recipients found for patient {} in tenant {}, using defaults", patientId, tenantId);
+            recipients.put("EMAIL", defaultEmail);
+            recipients.put("SMS", defaultPhone);
         }
 
         log.debug("Resolved {} recipients for patient {} care gap", recipients.size(), patientId);

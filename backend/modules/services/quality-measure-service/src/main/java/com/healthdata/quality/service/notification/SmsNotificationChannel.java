@@ -226,11 +226,37 @@ public class SmsNotificationChannel {
 
         variables.put("patientName", patientName);
         variables.put("severity", alert.getSeverity());
-        variables.put("alertType", alert.getAlertType());
+        variables.put("alertType", formatAlertType(alert.getAlertType()));
         variables.put("message", alert.getMessage());
         variables.put("alertId", alert.getId());
+        // Default timestamp to now if not provided
+        variables.put("timestamp", alert.getTriggeredAt() != null ? alert.getTriggeredAt() : Instant.now());
 
         return variables;
+    }
+
+    /**
+     * Format alert type from ENUM_CASE to Title Case
+     * e.g., "MENTAL_HEALTH_CRISIS" -> "Mental Health Crisis"
+     */
+    private String formatAlertType(String alertType) {
+        if (alertType == null || alertType.isBlank()) {
+            return "Unknown";
+        }
+        String[] words = alertType.toLowerCase().split("_");
+        StringBuilder formatted = new StringBuilder();
+        for (String word : words) {
+            if (!word.isEmpty()) {
+                if (formatted.length() > 0) {
+                    formatted.append(" ");
+                }
+                formatted.append(Character.toUpperCase(word.charAt(0)));
+                if (word.length() > 1) {
+                    formatted.append(word.substring(1));
+                }
+            }
+        }
+        return formatted.toString();
     }
 
     private void saveAlertNotificationHistory(String tenantId, ClinicalAlertDTO alert,

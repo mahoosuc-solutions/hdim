@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,6 +37,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/v1/api-keys")
 @RequiredArgsConstructor
+@ConditionalOnBean(ApiKeyService.class)
 @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'API_ADMIN')")
 public class ApiKeyController {
 

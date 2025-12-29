@@ -53,6 +53,9 @@ public class TestCacheConfiguration implements CachingConfigurer {
             // Custom measures caches
             new ConcurrentMapCache("customMeasures"),
             new ConcurrentMapCache("tenantCustomMeasures"),
+            // Patient data caches
+            new ConcurrentMapCache("patientNames"),
+            new ConcurrentMapCache("patientData"),
             // Generic cache for other uses
             new ConcurrentMapCache("default")
         ));

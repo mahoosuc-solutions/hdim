@@ -51,6 +51,10 @@ public interface LeadRepository extends JpaRepository<Lead, UUID> {
     Long countByTenantIdAndStatus(@Param("tenantId") UUID tenantId,
                                    @Param("status") LeadStatus status);
 
+    @Query("SELECT COUNT(l) FROM Lead l WHERE l.tenantId = :tenantId AND l.assignedToUserId = :userId")
+    Long countByTenantIdAndAssignedToUserId(@Param("tenantId") UUID tenantId,
+                                             @Param("userId") UUID userId);
+
     @Query("SELECT l FROM Lead l WHERE l.tenantId = :tenantId AND l.zohoLeadId IS NOT NULL")
     List<Lead> findSyncedLeads(@Param("tenantId") UUID tenantId);
 

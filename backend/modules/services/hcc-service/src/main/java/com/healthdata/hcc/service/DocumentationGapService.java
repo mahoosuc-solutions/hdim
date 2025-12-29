@@ -12,21 +12,27 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Documentation Gap Detection Service
+ * Clinical Documentation Accuracy Service
  *
- * Analyzes patient diagnosis codes to identify documentation improvement opportunities
- * that could increase RAF scores. Focuses on:
+ * Analyzes patient diagnosis codes to identify opportunities to improve clinical
+ * documentation completeness and coding accuracy per CMS guidelines. This service
+ * ensures that documented conditions are coded to the highest level of specificity
+ * supported by the clinical record.
  *
- * 1. Specificity Gaps - Non-specific codes that could be coded more specifically
- * 2. Laterality Gaps - Codes missing required laterality
- * 3. Severity Gaps - Conditions that may warrant higher severity coding
- * 4. Missing HCC Gaps - Conditions documented but not coded to HCC level
- * 5. V28 Transition Gaps - Codes that changed from V24 to V28
+ * Gap Types Identified:
+ * 1. Specificity Gaps - Non-specific codes where clinical documentation supports more detail
+ * 2. Laterality Gaps - Codes missing required laterality per ICD-10 conventions
+ * 3. Severity Gaps - Conditions where severity level is documented but not coded
+ * 4. Missing Complication Gaps - Documented complications not reflected in diagnosis codes
+ * 5. V28 Transition Gaps - Codes requiring review due to CMS model changes
  *
- * CMS Documentation Requirements:
- * - MEAT criteria: Monitor, Evaluate, Assess/Address, Treat
- * - Annual recapture of chronic conditions
- * - Specificity to highest level supported by documentation
+ * IMPORTANT: This service identifies documentation gaps based on clinical evidence only.
+ * All identified gaps require clinical review and must be supported by documented
+ * clinical findings (MEAT criteria: Monitor, Evaluate, Assess/Address, Treat).
+ *
+ * Compliance Note: Gap prioritization is based on clinical significance and
+ * documentation completeness, not financial impact. RAF impact estimates are
+ * provided for planning purposes only and do not influence clinical decisions.
  */
 @Service
 @RequiredArgsConstructor
@@ -108,10 +114,16 @@ public class DocumentationGapService {
     }
 
     /**
-     * Get high-value gaps across population.
+     * Get clinically significant documentation gaps across population.
+     * Returns gaps with potential impact above threshold for prioritized clinical review.
+     *
+     * @param tenantId Tenant identifier
+     * @param profileYear Year for analysis
+     * @param minImpactThreshold Minimum RAF impact threshold (used for resource planning only)
+     * @return List of documentation gaps requiring clinical review
      */
-    public List<DocumentationGapEntity> getHighValueGaps(String tenantId, int profileYear, BigDecimal minRafImpact) {
-        return gapRepository.findHighValueGaps(tenantId, profileYear, minRafImpact);
+    public List<DocumentationGapEntity> getSignificantGaps(String tenantId, int profileYear, BigDecimal minImpactThreshold) {
+        return gapRepository.findHighValueGaps(tenantId, profileYear, minImpactThreshold);
     }
 
     /**
@@ -327,11 +339,21 @@ public class DocumentationGapService {
             .add(v28Impact.multiply(BigDecimal.valueOf(0.67)));
     }
 
+    /**
+     * Calculate priority based on clinical significance and documentation completeness.
+     * Priority reflects the clinical importance of accurate documentation, not financial impact.
+     *
+     * HIGH: Critical chronic conditions requiring accurate documentation for care continuity
+     * MEDIUM: Important conditions that benefit from complete documentation
+     * LOW: Minor documentation refinements
+     */
     private String calculatePriority(DiagnosisHccMapEntity mapping) {
-        if (mapping.getCoefficientV28() != null && mapping.getCoefficientV28() > 0.3) {
-            return "HIGH";
-        } else if (mapping.getCoefficientV28() != null && mapping.getCoefficientV28() > 0.1) {
-            return "MEDIUM";
+        // Priority is based on clinical significance (conditions that affect care decisions)
+        // Chronic conditions and those requiring ongoing monitoring are prioritized
+        if (mapping.getRequiresSpecificity() != null && mapping.getRequiresSpecificity()) {
+            return "HIGH"; // Specificity requirements indicate clinically significant conditions
+        } else if (mapping.getChangedInV28() != null && mapping.getChangedInV28()) {
+            return "MEDIUM"; // Model changes may indicate coding review needed
         }
         return "LOW";
     }

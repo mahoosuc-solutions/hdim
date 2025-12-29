@@ -18,7 +18,6 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,8 +54,7 @@ class MultiTenantIsolationIntegrationTest {
     @MockBean
     private CqlEngineServiceClient cqlEngineServiceClient;
 
-    @MockBean
-    private KafkaTemplate<String, String> kafkaTemplate;
+    // Note: KafkaTemplate is provided by TestMessagingConfiguration, no @MockBean needed
 
     @Autowired(required = false)
     private CacheManager cacheManager;

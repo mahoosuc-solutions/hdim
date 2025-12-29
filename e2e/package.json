@@ -1,0 +1,45 @@
+{
+  "name": "hdim-e2e-tests",
+  "version": "1.0.0",
+  "description": "HDIM Unified E2E Testing Framework for Clinical and Sales Portals",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:chromium": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "test:mobile": "playwright test --project=mobile-chrome --project=mobile-safari",
+    "test:accessibility": "playwright test --project=accessibility",
+    "test:performance": "playwright test --project=performance",
+    "test:auth": "playwright test tests/workflows/authentication",
+    "test:patient": "playwright test tests/workflows/patient",
+    "test:evaluation": "playwright test tests/workflows/quality-measure",
+    "test:care-gap": "playwright test tests/workflows/care-gap",
+    "test:events": "playwright test tests/workflows/events",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen",
+    "install-browsers": "playwright install"
+  },
+  "keywords": [
+    "playwright",
+    "e2e",
+    "testing",
+    "healthcare",
+    "hdim",
+    "hipaa"
+  ],
+  "author": "HDIM Team",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@playwright/test": "^1.40.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "@types/node": "^20.10.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

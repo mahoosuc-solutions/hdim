@@ -235,29 +235,29 @@ class DocumentationGapServiceTest {
     }
 
     @Nested
-    @DisplayName("getHighValueGaps() tests")
-    class GetHighValueGapsTests {
+    @DisplayName("getSignificantGaps() tests")
+    class GetSignificantGapsTests {
 
         @Test
-        @DisplayName("Should retrieve high-value gaps from repository")
-        void getHighValueGaps_shouldCallRepository() {
+        @DisplayName("Should retrieve clinically significant gaps from repository")
+        void getSignificantGaps_shouldCallRepository() {
             // Arrange
-            BigDecimal minRafImpact = BigDecimal.valueOf(0.2);
-            List<DocumentationGapEntity> highValueGaps = List.of(
+            BigDecimal minImpactThreshold = BigDecimal.valueOf(0.2);
+            List<DocumentationGapEntity> significantGaps = List.of(
                 createGap(DocumentationGapEntity.GapStatus.OPEN),
                 createGap(DocumentationGapEntity.GapStatus.OPEN)
             );
 
-            when(gapRepository.findHighValueGaps(TENANT_ID, PROFILE_YEAR, minRafImpact))
-                .thenReturn(highValueGaps);
+            when(gapRepository.findHighValueGaps(TENANT_ID, PROFILE_YEAR, minImpactThreshold))
+                .thenReturn(significantGaps);
 
             // Act
-            List<DocumentationGapEntity> gaps = documentationGapService.getHighValueGaps(
-                TENANT_ID, PROFILE_YEAR, minRafImpact);
+            List<DocumentationGapEntity> gaps = documentationGapService.getSignificantGaps(
+                TENANT_ID, PROFILE_YEAR, minImpactThreshold);
 
             // Assert
             assertThat(gaps).hasSize(2);
-            verify(gapRepository).findHighValueGaps(TENANT_ID, PROFILE_YEAR, minRafImpact);
+            verify(gapRepository).findHighValueGaps(TENANT_ID, PROFILE_YEAR, minImpactThreshold);
         }
     }
 

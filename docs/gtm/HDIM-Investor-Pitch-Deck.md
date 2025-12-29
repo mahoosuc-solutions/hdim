@@ -81,14 +81,14 @@ HDIM transforms healthcare quality measurement from a compliance burden into a s
 **Core Capabilities:**
 
 1. **HEDIS Quality Automation**
-   - All 82 HEDIS measures (2024/2025 specs)
+   - 56+ HEDIS measures (comprehensive 2024/2025 coverage)
    - Real-time CQL evaluation engine
    - Automated QRDA I/III export
    - Star Ratings projection
 
 2. **Care Gap Intelligence**
    - Real-time gap identification
-   - Risk stratification (HCC coding)
+   - Documentation accuracy (HCC coding compliance)
    - Predictive analytics for intervention
    - Mental health screening (PHQ-9/GAD-7)
 
@@ -128,7 +128,7 @@ HDIM transforms healthcare quality measurement from a compliance burden into a s
 │ FHIR Service │ │CQL Engine│ │Quality   │ │Care Gap   │
 │  (Port 8085) │ │(Port8081)│ │Measure   │ │(Port 8086)│
 │              │ │          │ │(Port8087)│ │           │
-│ FHIR R4      │ │HEDIS 82  │ │QRDA I/III│ │Real-time  │
+│ FHIR R4      │ │HEDIS 56+ │ │QRDA I/III│ │Real-time  │
 │ Resources    │ │Measures  │ │Export    │ │Detection  │
 └──────────────┘ └──────────┘ └──────────┘ └───────────┘
         │              │              │            │
@@ -162,9 +162,9 @@ HDIM transforms healthcare quality measurement from a compliance burden into a s
 | Feature | HDIM | Arcadia | HealthEC | Innovaccer |
 |---------|------|---------|----------|------------|
 | **HIPAA Compliance** | Built-in (5min cache) | Add-on | Partial | Enterprise-only |
-| **Implementation** | 90 days | 9-12 months | 6-9 months | 6-12 months |
+| **Time to First Value** | 2-4 weeks | 9-12 months | 6-9 months | 6-12 months |
 | **Pricing Model** | PMPM ($0.25-$0.50) | Quote-based | Quote-based | Enterprise-only |
-| **Mental Health** | PHQ-9/GAD-7 native | Limited | None | Limited |
+| **Mental Health** | Integrated workflow | Limited | None | Limited |
 | **Deployment** | Cloud/K8s/Docker/On-prem | SaaS-only | SaaS-only | SaaS-only |
 | **API Access** | Full FHIR R4 | Limited | Proprietary | Proprietary |
 | **CQL Engine** | Real-time native | Batch-only | None | Limited |
@@ -187,9 +187,9 @@ HDIM transforms healthcare quality measurement from a compliance burden into a s
    - $0.25 PMPM (Enterprise)
    - No hidden fees
 
-4. **Mental Health Leadership**
-   - Only platform with integrated PHQ-9/GAD-7/PHQ-2
-   - Fastest-growing quality measure category
+4. **Integrated Behavioral Health**
+   - PHQ-9/GAD-7/PHQ-2 unified with physical quality measures
+   - Single workflow for physical + mental health measurement
    - Star Ratings requirement (2025+)
 
 ---
@@ -251,8 +251,8 @@ HDIM transforms healthcare quality measurement from a compliance burden into a s
 | **Gross Margin** | 85% | Cloud hosting ~15% of revenue |
 | **CAC** | $45K | 10% of ACV (sales + marketing) |
 | **CAC Payback** | 1.3 months | Fast payback in healthcare |
-| **LTV** | $1.68M | 4-year average retention |
-| **LTV/CAC** | 37:1 | Exceptional SaaS economics |
+| **LTV** | $675K | 4-year average retention |
+| **LTV/CAC** | 15:1 | Strong SaaS economics |
 
 **Revenue Streams:**
 
@@ -342,7 +342,7 @@ HDIM transforms healthcare quality measurement from a compliance burden into a s
 
 **Technical Readiness (v1.6.0):**
 - ✅ 14 core services deployed and healthy
-- ✅ 82 HEDIS measures implemented
+- ✅ 56+ HEDIS measures implemented
 - ✅ FHIR R4 compliance certified
 - ✅ HIPAA architecture validated (5-minute cache TTL)
 - ✅ Load tested: 10K concurrent users
@@ -393,7 +393,7 @@ HDIM transforms healthcare quality measurement from a compliance burden into a s
 
 | Vendor | Strengths | Weaknesses | Our Advantage |
 |--------|-----------|------------|---------------|
-| **Arcadia Analytics** | Market leader, brand | $2M+ ACV, 12-mo implementation | 90-day deploy, $300K-$1.5M ACV |
+| **Arcadia Analytics** | Market leader, brand | $2M+ ACV, 12-mo implementation | 2-4 week first value, $300K-$1.5M ACV |
 | **HealthEC** | Population health focus | Limited mental health | PHQ-9/GAD-7 native, better tech |
 | **Innovaccer** | Enterprise, KLAS #1 | No pricing transparency, SaaS-only | Transparent pricing, Docker/K8s |
 | **Epic Healthy Planet** | EHR integration | Epic-only, expensive | Multi-EHR, FHIR standard |
@@ -401,10 +401,10 @@ HDIM transforms healthcare quality measurement from a compliance burden into a s
 
 **Why We Win:**
 
-1. **HIPAA Compliance** - Only platform with built-in 5-minute PHI compliance
-2. **Speed to Value** - 90 days vs 6-12 months
+1. **HIPAA Compliance** - Built-in 5-minute PHI cache compliance
+2. **Speed to Value** - First results in 2-4 weeks vs 6-12 months
 3. **Transparent Pricing** - PMPM model vs enterprise quotes
-4. **Mental Health** - PHQ-9/GAD-7 leadership
+4. **Integrated Behavioral Health** - Physical + mental health in unified workflow
 5. **Deployment Flexibility** - Cloud, K8s, Docker, on-prem
 6. **Modern Architecture** - API-first, microservices, FHIR R4
 
@@ -470,7 +470,7 @@ HDIM transforms healthcare quality measurement from a compliance burden into a s
 | **CAC** | $45K | $50K (enterprise SaaS) |
 | **CAC Payback** | 1.3 months | 12-18 months |
 | **Net Revenue Retention** | 125% | 110-120% (best-in-class) |
-| **LTV/CAC** | 37:1 | 3:1 (healthy SaaS) |
+| **LTV/CAC** | 15:1 | 3:1 (healthy SaaS) |
 | **Magic Number** | 2.8 | >0.75 (efficient) |
 
 **Path to Profitability:**
@@ -512,7 +512,7 @@ HDIM transforms healthcare quality measurement from a compliance burden into a s
 - ✅ Product-market fit validated (2 active pilots, positive LOIs)
 - ✅ Production-ready technology (v1.6.0, 14 services healthy)
 - ✅ Proven HIPAA compliance (technical safeguards validated)
-- ✅ Strong unit economics (37:1 LTV/CAC, 1.3mo payback)
+- ✅ Strong unit economics (15:1 LTV/CAC, 1.3mo payback)
 - ✅ Large addressable market ($25B TAM)
 - ✅ Experienced team (50+ years combined healthcare IT)
 
@@ -537,7 +537,7 @@ HDIM transforms healthcare quality measurement from a compliance burden into a s
 - Proven technology (v1.6.0 production-ready)
 - Experienced team with deep healthcare expertise
 - Clear path to $10M ARR in 18 months
-- Exceptional SaaS unit economics (37:1 LTV/CAC)
+- Strong SaaS unit economics (15:1 LTV/CAC)
 
 ---
 
@@ -580,7 +580,7 @@ HDIM transforms healthcare quality measurement from a compliance burden into a s
 
 ### A1: Detailed HEDIS Measure Coverage
 
-**All 82 HEDIS 2024/2025 Measures Supported:**
+**56+ Core HEDIS 2024/2025 Measures Implemented:**
 
 | Domain | Measures | Examples |
 |--------|----------|----------|

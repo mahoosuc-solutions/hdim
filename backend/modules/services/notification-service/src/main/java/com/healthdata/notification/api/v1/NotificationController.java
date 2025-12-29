@@ -2,8 +2,9 @@ package com.healthdata.notification.api.v1;
 
 import com.healthdata.notification.api.v1.dto.*;
 import com.healthdata.notification.application.NotificationService;
-import com.healthdata.notification.application.PreferenceService;
-import com.healthdata.notification.application.TemplateService;
+import com.healthdata.notification.domain.model.Notification;
+import com.healthdata.notification.domain.model.NotificationChannel;
+import com.healthdata.notification.domain.model.NotificationStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -11,182 +12,141 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
-/**
- * REST API for notification management.
- *
- * Endpoints:
- * - POST /api/v1/notifications - Send notification
- * - GET /api/v1/notifications/{id} - Get notification status
- * - POST /api/v1/notifications/bulk - Send bulk notifications
- * - GET/POST /api/v1/templates - Manage templates
- * - GET/PUT /api/v1/preferences/{userId} - User preferences
- */
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Notifications", description = "Notification management API")
+@Tag(name = "Notifications", description = "Notification management endpoints")
 public class NotificationController {
 
     private final NotificationService notificationService;
-    private final TemplateService templateService;
-    private final PreferenceService preferenceService;
 
-    // ==================== NOTIFICATIONS ====================
-
-    @PostMapping("/notifications")
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'SYSTEM')")
     @Operation(summary = "Send a notification")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'SYSTEM')")
     public ResponseEntity<NotificationResponse> sendNotification(
             @Valid @RequestBody SendNotificationRequest request,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            Authentication authentication) {
+        
+        log.info("Sending notification to {} via {} for tenant {}", 
+            request.getRecipientId(), request.getChannel(), tenantId);
 
-        log.info("Received notification request for recipient: {}", request.getRecipientId());
-        NotificationResponse response = notificationService.sendNotification(request, tenantId);
-        return ResponseEntity.ok(response);
+        NotificationService.SendNotificationRequest serviceRequest = 
+            NotificationService.SendNotificationRequest.builder()
+                .tenantId(tenantId)
+                .recipientId(request.getRecipientId())
+                .recipientEmail(request.getRecipientEmail())
+                .recipientPhone(request.getRecipientPhone())
+                .channel(request.getChannel())
+                .templateCode(request.getTemplateCode())
+                .templateId(request.getTemplateId())
+                .subject(request.getSubject())
+                .body(request.getBody())
+                .priority(request.getPriority())
+                .scheduledAt(request.getScheduledAt())
+                .variables(request.getVariables())
+                .metadata(request.getMetadata())
+                .correlationId(request.getCorrelationId())
+                .createdBy(authentication.getName())
+                .build();
+
+        Notification notification = notificationService.sendNotification(serviceRequest);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(NotificationResponse.fromEntity(notification));
     }
 
-    @GetMapping("/notifications/{id}")
+    @PostMapping("/bulk")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'SYSTEM')")
+    @Operation(summary = "Send bulk notifications")
+    public ResponseEntity<BulkNotificationResponse> sendBulkNotifications(
+            @Valid @RequestBody BulkNotificationRequest request,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            Authentication authentication) {
+        
+        log.info("Sending {} bulk notifications for tenant {}", 
+            request.getNotifications().size(), tenantId);
+
+        List<NotificationService.SendNotificationRequest> serviceRequests = 
+            request.getNotifications().stream()
+                .map(r -> NotificationService.SendNotificationRequest.builder()
+                    .tenantId(tenantId)
+                    .recipientId(r.getRecipientId())
+                    .recipientEmail(r.getRecipientEmail())
+                    .recipientPhone(r.getRecipientPhone())
+                    .channel(r.getChannel())
+                    .templateCode(r.getTemplateCode())
+                    .templateId(r.getTemplateId())
+                    .subject(r.getSubject())
+                    .body(r.getBody())
+                    .priority(r.getPriority())
+                    .scheduledAt(r.getScheduledAt())
+                    .variables(r.getVariables())
+                    .metadata(r.getMetadata())
+                    .correlationId(r.getCorrelationId())
+                    .createdBy(authentication.getName())
+                    .build())
+                .toList();
+
+        List<Notification> notifications = notificationService.sendBulkNotifications(serviceRequests);
+        
+        List<NotificationResponse> responses = notifications.stream()
+            .map(NotificationResponse::fromEntity)
+            .toList();
+
+        long successCount = notifications.stream()
+            .filter(n -> n.getStatus() != NotificationStatus.FAILED && 
+                        n.getStatus() != NotificationStatus.CANCELLED)
+            .count();
+
+        return ResponseEntity.ok(BulkNotificationResponse.builder()
+            .totalRequested(request.getNotifications().size())
+            .successCount((int) successCount)
+            .failedCount((int) (notifications.size() - successCount))
+            .notifications(responses)
+            .build());
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'VIEWER')")
     @Operation(summary = "Get notification by ID")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
     public ResponseEntity<NotificationResponse> getNotification(
             @PathVariable UUID id,
             @RequestHeader("X-Tenant-ID") String tenantId) {
-
+        
         return notificationService.getNotification(id, tenantId)
-            .map(ResponseEntity::ok)
+            .map(n -> ResponseEntity.ok(NotificationResponse.fromEntity(n)))
             .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/notifications")
-    @Operation(summary = "Get notifications for a recipient")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'VIEWER')")
+    @Operation(summary = "Get notifications for tenant")
     public ResponseEntity<Page<NotificationResponse>> getNotifications(
-            @RequestParam String recipientId,
             @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam(required = false) String recipientId,
+            @RequestParam(required = false) NotificationStatus status,
+            @RequestParam(required = false) NotificationChannel channel,
             Pageable pageable) {
+        
+        Page<Notification> notifications;
+        
+        if (recipientId != null) {
+            notifications = notificationService.getNotificationsForRecipient(
+                tenantId, recipientId, pageable);
+        } else {
+            notifications = notificationService.getNotifications(tenantId, pageable);
+        }
 
-        Page<NotificationResponse> notifications =
-            notificationService.getNotificationsForRecipient(recipientId, tenantId, pageable);
-        return ResponseEntity.ok(notifications);
-    }
-
-    @PostMapping("/notifications/bulk")
-    @Operation(summary = "Send bulk notifications")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<NotificationResponse>> sendBulkNotifications(
-            @Valid @RequestBody List<SendNotificationRequest> requests,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-
-        log.info("Received bulk notification request with {} items", requests.size());
-        List<NotificationResponse> responses = notificationService.sendBulkNotifications(requests, tenantId);
-        return ResponseEntity.ok(responses);
-    }
-
-    // ==================== TEMPLATES ====================
-
-    @PostMapping("/templates")
-    @Operation(summary = "Create a notification template")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<NotificationTemplateResponse> createTemplate(
-            @Valid @RequestBody NotificationTemplateRequest request,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String createdBy = auth != null ? auth.getName() : "system";
-        NotificationTemplateResponse response = templateService.createTemplate(request, tenantId, createdBy);
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/templates/{id}")
-    @Operation(summary = "Get template by ID")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
-    public ResponseEntity<NotificationTemplateResponse> getTemplate(
-            @PathVariable UUID id,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-
-        return templateService.getTemplate(id, tenantId)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/templates")
-    @Operation(summary = "Get all templates")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
-    public ResponseEntity<Page<NotificationTemplateResponse>> getTemplates(
-            @RequestHeader("X-Tenant-ID") String tenantId,
-            Pageable pageable) {
-
-        Page<NotificationTemplateResponse> templates = templateService.getTemplates(tenantId, pageable);
-        return ResponseEntity.ok(templates);
-    }
-
-    @PutMapping("/templates/{id}")
-    @Operation(summary = "Update a template")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<NotificationTemplateResponse> updateTemplate(
-            @PathVariable UUID id,
-            @Valid @RequestBody NotificationTemplateRequest request,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-
-        return templateService.updateTemplate(id, request, tenantId)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
-    }
-
-    @DeleteMapping("/templates/{id}")
-    @Operation(summary = "Delete a template")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteTemplate(
-            @PathVariable UUID id,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-
-        boolean deleted = templateService.deleteTemplate(id, tenantId);
-        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
-    }
-
-    // ==================== PREFERENCES ====================
-
-    @GetMapping("/preferences/{userId}")
-    @Operation(summary = "Get user notification preferences")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR') or #userId == authentication.name")
-    public ResponseEntity<List<NotificationPreferenceResponse>> getUserPreferences(
-            @PathVariable String userId,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-
-        List<NotificationPreferenceResponse> preferences = preferenceService.getUserPreferences(userId, tenantId);
-        return ResponseEntity.ok(preferences);
-    }
-
-    @PutMapping("/preferences/{userId}")
-    @Operation(summary = "Update user notification preference")
-    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.name")
-    public ResponseEntity<NotificationPreferenceResponse> updatePreference(
-            @PathVariable String userId,
-            @Valid @RequestBody NotificationPreferenceRequest request,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-
-        NotificationPreferenceResponse response = preferenceService.upsertPreference(userId, request, tenantId);
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/preferences/{userId}")
-    @Operation(summary = "Delete all user preferences (GDPR)")
-    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.name")
-    public ResponseEntity<Void> deleteUserPreferences(
-            @PathVariable String userId,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-
-        preferenceService.deleteUserPreferences(userId, tenantId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(notifications.map(NotificationResponse::fromEntity));
     }
 }

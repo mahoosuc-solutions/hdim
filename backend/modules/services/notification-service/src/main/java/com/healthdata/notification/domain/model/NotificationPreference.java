@@ -8,14 +8,14 @@ import java.time.LocalTime;
 import java.util.UUID;
 
 /**
- * User notification preferences including channel enablement and quiet hours.
+ * User preferences for receiving notifications.
  */
 @Entity
 @Table(name = "notification_preferences", indexes = {
-    @Index(name = "idx_preferences_tenant_id", columnList = "tenant_id"),
-    @Index(name = "idx_preferences_user_id", columnList = "user_id")
+    @Index(name = "idx_preferences_tenant_user", columnList = "tenant_id, user_id")
 }, uniqueConstraints = {
-    @UniqueConstraint(name = "uk_preference_tenant_user_channel", columnNames = {"tenant_id", "user_id", "channel"})
+    @UniqueConstraint(name = "uk_preferences_tenant_user_channel", 
+                      columnNames = {"tenant_id", "user_id", "channel"})
 })
 @Data
 @NoArgsConstructor
@@ -30,7 +30,7 @@ public class NotificationPreference {
     @Column(name = "tenant_id", nullable = false, length = 50)
     private String tenantId;
 
-    @Column(name = "user_id", nullable = false, length = 255)
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
     @Enumerated(EnumType.STRING)
@@ -40,6 +40,16 @@ public class NotificationPreference {
     @Column(name = "enabled", nullable = false)
     @Builder.Default
     private Boolean enabled = true;
+
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "quiet_hours_enabled")
+    @Builder.Default
+    private Boolean quietHoursEnabled = false;
 
     @Column(name = "quiet_hours_start")
     private LocalTime quietHoursStart;
@@ -68,19 +78,15 @@ public class NotificationPreference {
         updatedAt = Instant.now();
     }
 
-    /**
-     * Check if notifications should be suppressed based on quiet hours.
-     */
     public boolean isInQuietHours(LocalTime currentTime) {
-        if (quietHoursStart == null || quietHoursEnd == null) {
+        if (!quietHoursEnabled || quietHoursStart == null || quietHoursEnd == null) {
             return false;
         }
-
-        // Handle overnight quiet hours (e.g., 22:00 to 07:00)
-        if (quietHoursStart.isAfter(quietHoursEnd)) {
-            return currentTime.isAfter(quietHoursStart) || currentTime.isBefore(quietHoursEnd);
+        if (quietHoursStart.isBefore(quietHoursEnd)) {
+            return !currentTime.isBefore(quietHoursStart) && currentTime.isBefore(quietHoursEnd);
+        } else {
+            // Quiet hours span midnight
+            return !currentTime.isBefore(quietHoursStart) || currentTime.isBefore(quietHoursEnd);
         }
-
-        return currentTime.isAfter(quietHoursStart) && currentTime.isBefore(quietHoursEnd);
     }
 }

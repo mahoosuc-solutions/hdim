@@ -1,15 +1,9 @@
 package com.healthdata.notification.application;
 
-import com.healthdata.notification.api.v1.dto.NotificationResponse;
-import com.healthdata.notification.api.v1.dto.SendNotificationRequest;
 import com.healthdata.notification.domain.model.*;
-import com.healthdata.notification.domain.repository.NotificationPreferenceRepository;
 import com.healthdata.notification.domain.repository.NotificationRepository;
-import com.healthdata.notification.domain.repository.NotificationTemplateRepository;
-import com.healthdata.notification.infrastructure.providers.EmailProvider;
-import com.healthdata.notification.infrastructure.providers.PushProvider;
-import com.healthdata.notification.infrastructure.providers.SmsProvider;
-import com.healthdata.notification.infrastructure.websocket.WebSocketNotificationService;
+import com.healthdata.notification.domain.repository.NotificationPreferenceRepository;
+import com.healthdata.notification.infrastructure.providers.NotificationProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,291 +12,226 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 
-/**
- * Core notification service handling message creation, preference checking, and delivery routing.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
+@Transactional
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final NotificationTemplateRepository templateRepository;
     private final NotificationPreferenceRepository preferenceRepository;
-    private final EmailProvider emailProvider;
-    private final Optional<SmsProvider> smsProvider;
-    private final Optional<PushProvider> pushProvider;
-    private final WebSocketNotificationService webSocketService;
-
-    private static final Pattern TEMPLATE_VAR_PATTERN = Pattern.compile("\\{\\{(\\w+)}}");
+    private final TemplateService templateService;
+    private final ChannelRouter channelRouter;
 
     /**
-     * Send a notification to a recipient.
+     * Send a notification using a template.
      */
-    @Transactional
-    public NotificationResponse sendNotification(SendNotificationRequest request, String tenantId) {
-        log.info("Processing notification request for recipient: {}, channel: {}",
-            request.getRecipientId(), request.getChannel());
+    public Notification sendNotification(SendNotificationRequest request) {
+        log.info("Sending notification to {} via {} for tenant {}", 
+            request.getRecipientId(), request.getChannel(), request.getTenantId());
 
-        // Check user preferences if enabled
-        if (Boolean.TRUE.equals(request.getCheckPreferences())) {
-            Optional<NotificationPreference> pref = preferenceRepository
-                .findByUserIdAndChannelAndTenantId(request.getRecipientId(), request.getChannel(), tenantId);
-
-            if (pref.isPresent() && !pref.get().getEnabled()) {
-                log.info("Notification blocked: user {} has disabled {} channel",
-                    request.getRecipientId(), request.getChannel());
-                return createBlockedResponse(request, "User has disabled this channel");
-            }
-
-            // Check quiet hours
-            if (Boolean.TRUE.equals(request.getRespectQuietHours()) && pref.isPresent()) {
-                NotificationPreference preference = pref.get();
-                LocalTime currentTime = LocalTime.now(ZoneId.of(preference.getTimezone()));
-                if (preference.isInQuietHours(currentTime)) {
-                    log.info("Notification queued: user {} is in quiet hours", request.getRecipientId());
-                    // Queue for later delivery
-                    return createQueuedNotification(request, tenantId, "Queued for quiet hours");
-                }
-            }
+        // Check user preferences
+        if (!isNotificationAllowed(request.getTenantId(), request.getRecipientId(), request.getChannel())) {
+            log.info("Notification blocked by user preferences for {} on channel {}", 
+                request.getRecipientId(), request.getChannel());
+            return createBlockedNotification(request, "Blocked by user preferences");
         }
 
-        // Resolve template and generate content
+        // Resolve template if provided
         String subject = request.getSubject();
         String body = request.getBody();
-
-        if (request.getTemplateId() != null || request.getTemplateName() != null) {
-            Optional<NotificationTemplate> template = resolveTemplate(request, tenantId);
-            if (template.isPresent()) {
-                subject = processTemplate(template.get().getSubjectTemplate(), request.getTemplateVariables());
-                body = processTemplate(template.get().getBodyTemplate(), request.getTemplateVariables());
-            }
+        
+        if (request.getTemplateCode() != null) {
+            NotificationTemplate template = templateService.getTemplateByCode(
+                request.getTenantId(), request.getTemplateCode()
+            ).orElseThrow(() -> new IllegalArgumentException(
+                "Template not found: " + request.getTemplateCode()
+            ));
+            
+            subject = templateService.renderTemplate(template.getSubjectTemplate(), request.getVariables());
+            body = templateService.renderTemplate(template.getBodyTemplate(), request.getVariables());
         }
 
-        // Create notification record
+        // Create notification entity
         Notification notification = Notification.builder()
-            .tenantId(tenantId)
+            .tenantId(request.getTenantId())
             .recipientId(request.getRecipientId())
             .recipientEmail(request.getRecipientEmail())
             .recipientPhone(request.getRecipientPhone())
-            .deviceToken(request.getDeviceToken())
             .channel(request.getChannel())
             .templateId(request.getTemplateId())
             .subject(subject)
             .body(body)
-            .priority(request.getPriority())
+            .priority(request.getPriority() != null ? request.getPriority() : NotificationPriority.NORMAL)
+            .scheduledAt(request.getScheduledAt())
             .metadata(request.getMetadata())
+            .correlationId(request.getCorrelationId())
+            .createdBy(request.getCreatedBy())
             .status(NotificationStatus.PENDING)
             .build();
 
         notification = notificationRepository.save(notification);
 
-        // Send asynchronously
-        sendAsync(notification);
+        // Send immediately if not scheduled
+        if (notification.getScheduledAt() == null || notification.getScheduledAt().isBefore(Instant.now())) {
+            sendNotificationAsync(notification);
+        }
 
-        return mapToResponse(notification);
+        return notification;
     }
 
     /**
      * Send notification asynchronously.
      */
     @Async
-    @Transactional
-    public void sendAsync(Notification notification) {
+    public void sendNotificationAsync(Notification notification) {
         try {
             notification.setStatus(NotificationStatus.SENDING);
             notificationRepository.save(notification);
 
-            String externalId = switch (notification.getChannel()) {
-                case EMAIL -> emailProvider.send(
-                    notification.getRecipientEmail(),
-                    notification.getSubject(),
-                    notification.getBody()
-                );
-                case SMS -> sendSms(notification);
-                case PUSH -> sendPush(notification);
-                case IN_APP -> storeInApp(notification);
-            };
+            NotificationProvider provider = channelRouter.getProvider(notification.getChannel());
+            provider.send(notification);
 
-            notification.markSent(externalId);
+            notification.markAsSent();
+            notificationRepository.save(notification);
+            
             log.info("Notification {} sent successfully via {}", notification.getId(), notification.getChannel());
-
         } catch (Exception e) {
             log.error("Failed to send notification {}: {}", notification.getId(), e.getMessage());
-            notification.markFailed(e.getMessage());
-            notification.incrementRetry();
+            notification.markAsFailed(e.getMessage());
+            notificationRepository.save(notification);
         }
-
-        notificationRepository.save(notification);
-    }
-
-    /**
-     * Get notification by ID.
-     */
-    public Optional<NotificationResponse> getNotification(UUID id, String tenantId) {
-        return notificationRepository.findByIdAndTenantId(id, tenantId)
-            .map(this::mapToResponse);
-    }
-
-    /**
-     * Get notifications for a recipient.
-     */
-    public Page<NotificationResponse> getNotificationsForRecipient(String recipientId, String tenantId, Pageable pageable) {
-        return notificationRepository.findByRecipientIdAndTenantId(recipientId, tenantId, pageable)
-            .map(this::mapToResponse);
     }
 
     /**
      * Send bulk notifications.
      */
-    @Transactional
-    public List<NotificationResponse> sendBulkNotifications(List<SendNotificationRequest> requests, String tenantId) {
+    public List<Notification> sendBulkNotifications(List<SendNotificationRequest> requests) {
         return requests.stream()
-            .map(request -> sendNotification(request, tenantId))
+            .map(this::sendNotification)
             .toList();
     }
 
-    // Private helper methods
-
-    private Optional<NotificationTemplate> resolveTemplate(SendNotificationRequest request, String tenantId) {
-        if (request.getTemplateId() != null) {
-            return templateRepository.findByIdAndTenantId(request.getTemplateId(), tenantId);
-        }
-        if (request.getTemplateName() != null) {
-            return templateRepository.findByNameAndChannelAndTenantId(
-                request.getTemplateName(), request.getChannel(), tenantId);
-        }
-        return Optional.empty();
+    /**
+     * Get notification by ID.
+     */
+    @Transactional(readOnly = true)
+    public Optional<Notification> getNotification(UUID id, String tenantId) {
+        return notificationRepository.findByIdAndTenantId(id, tenantId);
     }
 
-    private String processTemplate(String template, Map<String, Object> variables) {
-        if (template == null || variables == null) {
-            return template;
-        }
-
-        StringBuffer result = new StringBuffer();
-        Matcher matcher = TEMPLATE_VAR_PATTERN.matcher(template);
-
-        while (matcher.find()) {
-            String varName = matcher.group(1);
-            Object value = variables.get(varName);
-            String replacement = value != null ? value.toString() : "";
-            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
-        }
-        matcher.appendTail(result);
-
-        return result.toString();
+    /**
+     * Get notifications for a tenant with pagination.
+     */
+    @Transactional(readOnly = true)
+    public Page<Notification> getNotifications(String tenantId, Pageable pageable) {
+        return notificationRepository.findByTenantId(tenantId, pageable);
     }
 
-    private NotificationResponse createBlockedResponse(SendNotificationRequest request, String reason) {
-        return NotificationResponse.builder()
+    /**
+     * Get notifications for a recipient.
+     */
+    @Transactional(readOnly = true)
+    public Page<Notification> getNotificationsForRecipient(
+            String tenantId, String recipientId, Pageable pageable) {
+        return notificationRepository.findByTenantIdAndRecipientId(tenantId, recipientId, pageable);
+    }
+
+    /**
+     * Retry failed notifications.
+     */
+    public void retryFailedNotifications() {
+        List<Notification> failedNotifications = notificationRepository
+            .findRetryableNotifications(NotificationStatus.FAILED);
+        
+        for (Notification notification : failedNotifications) {
+            if (notification.canRetry()) {
+                log.info("Retrying notification {}, attempt {}", 
+                    notification.getId(), notification.getRetryCount() + 1);
+                notification.setStatus(NotificationStatus.PENDING);
+                notificationRepository.save(notification);
+                sendNotificationAsync(notification);
+            }
+        }
+    }
+
+    /**
+     * Process scheduled notifications.
+     */
+    public void processScheduledNotifications() {
+        List<Notification> pendingNotifications = notificationRepository
+            .findPendingNotificationsToSend(Instant.now());
+        
+        for (Notification notification : pendingNotifications) {
+            sendNotificationAsync(notification);
+        }
+    }
+
+    /**
+     * Check if notification is allowed based on user preferences.
+     */
+    private boolean isNotificationAllowed(String tenantId, String recipientId, NotificationChannel channel) {
+        Optional<NotificationPreference> preference = preferenceRepository
+            .findByTenantIdAndUserIdAndChannel(tenantId, recipientId, channel);
+        
+        if (preference.isEmpty()) {
+            return true; // Default to allowed if no preference set
+        }
+
+        NotificationPreference pref = preference.get();
+        
+        if (!pref.getEnabled()) {
+            return false;
+        }
+
+        // Check quiet hours
+        if (pref.isInQuietHours(LocalTime.now(ZoneId.of(pref.getTimezone())))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private Notification createBlockedNotification(SendNotificationRequest request, String reason) {
+        return Notification.builder()
+            .tenantId(request.getTenantId())
             .recipientId(request.getRecipientId())
             .channel(request.getChannel())
+            .subject(request.getSubject())
+            .body(request.getBody() != null ? request.getBody() : "")
             .status(NotificationStatus.CANCELLED)
             .errorMessage(reason)
+            .createdBy(request.getCreatedBy())
             .build();
     }
 
-    private NotificationResponse createQueuedNotification(SendNotificationRequest request, String tenantId, String reason) {
-        Notification notification = Notification.builder()
-            .tenantId(tenantId)
-            .recipientId(request.getRecipientId())
-            .channel(request.getChannel())
-            .status(NotificationStatus.QUEUED)
-            .build();
-        notification = notificationRepository.save(notification);
-        return mapToResponse(notification);
-    }
-
-    private String sendSms(Notification notification) {
-        if (smsProvider.isEmpty() || !smsProvider.get().isAvailable()) {
-            throw new IllegalStateException("SMS provider not configured or unavailable");
-        }
-        if (notification.getRecipientPhone() == null || notification.getRecipientPhone().isBlank()) {
-            throw new IllegalArgumentException("Recipient phone number is required for SMS notifications");
-        }
-
-        log.debug("Sending SMS to recipient: {}", notification.getRecipientId());
-        return smsProvider.get().send(notification.getRecipientPhone(), notification.getBody());
-    }
-
-    private String sendPush(Notification notification) {
-        if (pushProvider.isEmpty() || !pushProvider.get().isAvailable()) {
-            throw new IllegalStateException("Push provider not configured or unavailable");
-        }
-        if (notification.getDeviceToken() == null || notification.getDeviceToken().isBlank()) {
-            throw new IllegalArgumentException("Device token is required for push notifications");
-        }
-
-        log.debug("Sending push notification to recipient: {}", notification.getRecipientId());
-
-        // Include metadata as data payload if present
-        Map<String, String> data = null;
-        if (notification.getMetadata() != null && !notification.getMetadata().isEmpty()) {
-            data = notification.getMetadata().entrySet().stream()
-                .collect(java.util.stream.Collectors.toMap(
-                    Map.Entry::getKey,
-                    e -> e.getValue() != null ? e.getValue().toString() : ""
-                ));
-        }
-
-        if (data != null && !data.isEmpty()) {
-            return pushProvider.get().sendWithData(
-                notification.getDeviceToken(),
-                notification.getSubject(),
-                notification.getBody(),
-                data
-            );
-        } else {
-            return pushProvider.get().send(
-                notification.getDeviceToken(),
-                notification.getSubject(),
-                notification.getBody()
-            );
-        }
-    }
-
-    private String storeInApp(Notification notification) {
-        // In-app notifications are stored in DB and pushed via WebSocket
-        // Push real-time notification to user via WebSocket
-        try {
-            NotificationResponse response = mapToResponse(notification);
-            webSocketService.pushToUser(notification.getRecipientId(), response);
-            log.debug("Pushed IN_APP notification {} via WebSocket", notification.getId());
-        } catch (Exception e) {
-            log.warn("Failed to push IN_APP notification via WebSocket: {}", e.getMessage());
-            // Don't fail - notification is still stored in DB for later retrieval
-        }
-
-        return "in-app-" + notification.getId();
-    }
-
-    private NotificationResponse mapToResponse(Notification notification) {
-        return NotificationResponse.builder()
-            .id(notification.getId())
-            .recipientId(notification.getRecipientId())
-            .channel(notification.getChannel())
-            .subject(notification.getSubject())
-            .status(notification.getStatus())
-            .priority(notification.getPriority())
-            .sentAt(notification.getSentAt())
-            .deliveredAt(notification.getDeliveredAt())
-            .errorMessage(notification.getErrorMessage())
-            .retryCount(notification.getRetryCount())
-            .externalId(notification.getExternalId())
-            .metadata(notification.getMetadata())
-            .createdAt(notification.getCreatedAt())
-            .updatedAt(notification.getUpdatedAt())
-            .build();
+    /**
+     * Request DTO for sending notifications.
+     */
+    @lombok.Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class SendNotificationRequest {
+        private String tenantId;
+        private String recipientId;
+        private String recipientEmail;
+        private String recipientPhone;
+        private NotificationChannel channel;
+        private String templateCode;
+        private UUID templateId;
+        private String subject;
+        private String body;
+        private NotificationPriority priority;
+        private Instant scheduledAt;
+        private Map<String, Object> variables;
+        private Map<String, Object> metadata;
+        private String correlationId;
+        private String createdBy;
     }
 }

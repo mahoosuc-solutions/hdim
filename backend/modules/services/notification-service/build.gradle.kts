@@ -28,8 +28,8 @@ dependencies {
     // Spring Mail for email sending
     implementation("org.springframework.boot:spring-boot-starter-mail")
 
-    // Spring Cloud OpenFeign (for Feign clients)
-    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+    // Thymeleaf for email templates
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 
     // OpenAPI/Swagger documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
@@ -38,7 +38,7 @@ dependencies {
     implementation(libs.jackson.databind)
     implementation(libs.jackson.datatype.jsr310)
 
-    // Spring Cache with Redis
+    // Redis for caching and rate limiting
     implementation(libs.spring.boot.starter.data.redis)
 
     // Kafka for notification events
@@ -47,25 +47,13 @@ dependencies {
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)
 
-    // Resilience4j for circuit breaker, retry, and rate limiting
+    // Resilience4j for circuit breaker and retry
     implementation("io.github.resilience4j:resilience4j-spring-boot3:2.1.0")
     implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.1.0")
     implementation("io.github.resilience4j:resilience4j-retry:2.1.0")
     implementation("io.github.resilience4j:resilience4j-ratelimiter:2.1.0")
 
-    // Freemarker for email templates
-    implementation("org.springframework.boot:spring-boot-starter-freemarker")
-
-    // WebSocket for real-time IN_APP notifications
-    implementation("org.springframework.boot:spring-boot-starter-websocket")
-
-    // Twilio SDK for SMS
-    implementation("com.twilio.sdk:twilio:10.1.0")
-
-    // Firebase Admin SDK for Push Notifications
-    implementation("com.google.firebase:firebase-admin:9.2.0")
-
-    // Lombok for reducing boilerplate
+    // Lombok
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
 
@@ -79,6 +67,7 @@ dependencies {
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.bundles.testing)
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.testcontainers:kafka:1.19.3")
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
 }

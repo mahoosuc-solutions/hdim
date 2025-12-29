@@ -1,7 +1,6 @@
 package com.healthdata.notification.application;
 
-import com.healthdata.notification.api.v1.dto.NotificationPreferenceRequest;
-import com.healthdata.notification.api.v1.dto.NotificationPreferenceResponse;
+import com.healthdata.notification.domain.model.NotificationChannel;
 import com.healthdata.notification.domain.model.NotificationPreference;
 import com.healthdata.notification.domain.repository.NotificationPreferenceRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,87 +8,114 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-/**
- * Service for managing user notification preferences.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
+@Transactional
 public class PreferenceService {
 
     private final NotificationPreferenceRepository preferenceRepository;
 
     /**
+     * Get or create preference for a user and channel.
+     */
+    public NotificationPreference getOrCreatePreference(
+            String tenantId, String userId, NotificationChannel channel) {
+        return preferenceRepository.findByTenantIdAndUserIdAndChannel(tenantId, userId, channel)
+            .orElseGet(() -> {
+                NotificationPreference preference = NotificationPreference.builder()
+                    .tenantId(tenantId)
+                    .userId(userId)
+                    .channel(channel)
+                    .enabled(true)
+                    .build();
+                return preferenceRepository.save(preference);
+            });
+    }
+
+    /**
      * Get all preferences for a user.
      */
-    public List<NotificationPreferenceResponse> getUserPreferences(String userId, String tenantId) {
-        return preferenceRepository.findByUserIdAndTenantId(userId, tenantId).stream()
-            .map(this::mapToResponse)
-            .toList();
+    @Transactional(readOnly = true)
+    public List<NotificationPreference> getUserPreferences(String tenantId, String userId) {
+        return preferenceRepository.findByTenantIdAndUserId(tenantId, userId);
     }
 
     /**
-     * Update or create a preference for a user.
+     * Update preference.
      */
-    @Transactional
-    public NotificationPreferenceResponse upsertPreference(String userId, NotificationPreferenceRequest request, String tenantId) {
-        log.info("Updating preference for user: {}, channel: {}", userId, request.getChannel());
+    public NotificationPreference updatePreference(UUID id, UpdatePreferenceRequest request) {
+        NotificationPreference preference = preferenceRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Preference not found: " + id));
 
-        NotificationPreference preference = preferenceRepository
-            .findByUserIdAndChannelAndTenantId(userId, request.getChannel(), tenantId)
-            .orElseGet(() -> NotificationPreference.builder()
-                .tenantId(tenantId)
-                .userId(userId)
-                .channel(request.getChannel())
-                .build());
+        if (request.getEnabled() != null) {
+            preference.setEnabled(request.getEnabled());
+        }
+        if (request.getEmail() != null) {
+            preference.setEmail(request.getEmail());
+        }
+        if (request.getPhone() != null) {
+            preference.setPhone(request.getPhone());
+        }
+        if (request.getQuietHoursEnabled() != null) {
+            preference.setQuietHoursEnabled(request.getQuietHoursEnabled());
+        }
+        if (request.getQuietHoursStart() != null) {
+            preference.setQuietHoursStart(request.getQuietHoursStart());
+        }
+        if (request.getQuietHoursEnd() != null) {
+            preference.setQuietHoursEnd(request.getQuietHoursEnd());
+        }
+        if (request.getTimezone() != null) {
+            preference.setTimezone(request.getTimezone());
+        }
 
-        preference.setEnabled(request.getEnabled());
-        preference.setQuietHoursStart(request.getQuietHoursStart());
-        preference.setQuietHoursEnd(request.getQuietHoursEnd());
-        preference.setTimezone(request.getTimezone());
-
-        preference = preferenceRepository.save(preference);
-        log.info("Saved preference: {} for user: {}", preference.getId(), userId);
-
-        return mapToResponse(preference);
+        return preferenceRepository.save(preference);
     }
 
     /**
-     * Delete all preferences for a user (GDPR right to be forgotten).
+     * Set user preference for a channel.
      */
-    @Transactional
-    public void deleteUserPreferences(String userId, String tenantId) {
-        log.info("Deleting all preferences for user: {}", userId);
-        preferenceRepository.deleteByUserIdAndTenantId(userId, tenantId);
+    public NotificationPreference setPreference(
+            String tenantId, String userId, NotificationChannel channel, 
+            boolean enabled, String email, String phone) {
+        
+        NotificationPreference preference = getOrCreatePreference(tenantId, userId, channel);
+        preference.setEnabled(enabled);
+        
+        if (email != null) {
+            preference.setEmail(email);
+        }
+        if (phone != null) {
+            preference.setPhone(phone);
+        }
+
+        return preferenceRepository.save(preference);
     }
 
     /**
-     * Check if a channel is enabled for a user.
+     * Delete all preferences for a user.
      */
-    public boolean isChannelEnabled(String userId, String channelName, String tenantId) {
-        return preferenceRepository
-            .findByUserIdAndChannelAndTenantId(userId,
-                com.healthdata.notification.domain.model.NotificationChannel.fromValue(channelName),
-                tenantId)
-            .map(NotificationPreference::getEnabled)
-            .orElse(true); // Default to enabled if no preference exists
+    public void deleteUserPreferences(String tenantId, String userId) {
+        preferenceRepository.deleteByTenantIdAndUserId(tenantId, userId);
     }
 
-    private NotificationPreferenceResponse mapToResponse(NotificationPreference preference) {
-        return NotificationPreferenceResponse.builder()
-            .id(preference.getId())
-            .userId(preference.getUserId())
-            .channel(preference.getChannel())
-            .enabled(preference.getEnabled())
-            .quietHoursStart(preference.getQuietHoursStart())
-            .quietHoursEnd(preference.getQuietHoursEnd())
-            .timezone(preference.getTimezone())
-            .createdAt(preference.getCreatedAt())
-            .updatedAt(preference.getUpdatedAt())
-            .build();
+    @lombok.Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class UpdatePreferenceRequest {
+        private Boolean enabled;
+        private String email;
+        private String phone;
+        private Boolean quietHoursEnabled;
+        private LocalTime quietHoursStart;
+        private LocalTime quietHoursEnd;
+        private String timezone;
     }
 }

@@ -9,34 +9,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Repository for NotificationPreference entity with multi-tenant filtering.
- */
 @Repository
 public interface NotificationPreferenceRepository extends JpaRepository<NotificationPreference, UUID> {
 
-    /**
-     * Find preference by user, channel and tenant.
-     */
-    Optional<NotificationPreference> findByUserIdAndChannelAndTenantId(String userId, NotificationChannel channel, String tenantId);
+    Optional<NotificationPreference> findByTenantIdAndUserIdAndChannel(
+        String tenantId, String userId, NotificationChannel channel
+    );
 
-    /**
-     * Find all preferences for a user with tenant isolation.
-     */
-    List<NotificationPreference> findByUserIdAndTenantId(String userId, String tenantId);
+    List<NotificationPreference> findByTenantIdAndUserId(String tenantId, String userId);
 
-    /**
-     * Find enabled preferences for a user.
-     */
-    List<NotificationPreference> findByUserIdAndEnabledAndTenantId(String userId, Boolean enabled, String tenantId);
+    List<NotificationPreference> findByTenantIdAndUserIdAndEnabledTrue(String tenantId, String userId);
 
-    /**
-     * Check if preference exists.
-     */
-    boolean existsByUserIdAndChannelAndTenantId(String userId, NotificationChannel channel, String tenantId);
+    boolean existsByTenantIdAndUserIdAndChannel(String tenantId, String userId, NotificationChannel channel);
 
-    /**
-     * Delete all preferences for a user (for GDPR/right to be forgotten).
-     */
-    void deleteByUserIdAndTenantId(String userId, String tenantId);
+    void deleteByTenantIdAndUserId(String tenantId, String userId);
 }

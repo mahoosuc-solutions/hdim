@@ -1,6 +1,7 @@
 package com.healthdata.quality.integration;
 
 import com.healthdata.quality.config.NotificationTestConfiguration;
+import com.healthdata.quality.config.TestCacheConfiguration;
 import com.healthdata.quality.dto.MentalHealthAssessmentRequest;
 import com.healthdata.quality.persistence.*;
 import com.healthdata.quality.service.CareGapService;
@@ -58,7 +59,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     }
 )
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
-@Import(NotificationTestConfiguration.class)
+@Import({NotificationTestConfiguration.class, TestCacheConfiguration.class})
 @ActiveProfiles("test")
 @Testcontainers(disabledWithoutDocker = true)
 @DisplayName("Notification System End-to-End Tests")

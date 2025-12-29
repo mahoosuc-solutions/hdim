@@ -7,6 +7,8 @@ import com.healthdata.notification.domain.repository.NotificationPreferenceRepos
 import com.healthdata.notification.domain.repository.NotificationRepository;
 import com.healthdata.notification.domain.repository.NotificationTemplateRepository;
 import com.healthdata.notification.infrastructure.providers.EmailProvider;
+import com.healthdata.notification.infrastructure.providers.PushProvider;
+import com.healthdata.notification.infrastructure.providers.SmsProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -37,6 +39,8 @@ public class NotificationService {
     private final NotificationTemplateRepository templateRepository;
     private final NotificationPreferenceRepository preferenceRepository;
     private final EmailProvider emailProvider;
+    private final Optional<SmsProvider> smsProvider;
+    private final Optional<PushProvider> pushProvider;
 
     private static final Pattern TEMPLATE_VAR_PATTERN = Pattern.compile("\\{\\{(\\w+)}}");
 
@@ -89,6 +93,7 @@ public class NotificationService {
             .recipientId(request.getRecipientId())
             .recipientEmail(request.getRecipientEmail())
             .recipientPhone(request.getRecipientPhone())
+            .deviceToken(request.getDeviceToken())
             .channel(request.getChannel())
             .templateId(request.getTemplateId())
             .subject(subject)
@@ -218,15 +223,51 @@ public class NotificationService {
     }
 
     private String sendSms(Notification notification) {
-        // TODO: Implement SMS provider (Twilio/SNS)
-        log.warn("SMS sending not yet implemented");
-        return "sms-" + UUID.randomUUID();
+        if (smsProvider.isEmpty() || !smsProvider.get().isAvailable()) {
+            throw new IllegalStateException("SMS provider not configured or unavailable");
+        }
+        if (notification.getRecipientPhone() == null || notification.getRecipientPhone().isBlank()) {
+            throw new IllegalArgumentException("Recipient phone number is required for SMS notifications");
+        }
+
+        log.debug("Sending SMS to recipient: {}", notification.getRecipientId());
+        return smsProvider.get().send(notification.getRecipientPhone(), notification.getBody());
     }
 
     private String sendPush(Notification notification) {
-        // TODO: Implement push notification provider (Firebase/APNs)
-        log.warn("Push notification sending not yet implemented");
-        return "push-" + UUID.randomUUID();
+        if (pushProvider.isEmpty() || !pushProvider.get().isAvailable()) {
+            throw new IllegalStateException("Push provider not configured or unavailable");
+        }
+        if (notification.getDeviceToken() == null || notification.getDeviceToken().isBlank()) {
+            throw new IllegalArgumentException("Device token is required for push notifications");
+        }
+
+        log.debug("Sending push notification to recipient: {}", notification.getRecipientId());
+
+        // Include metadata as data payload if present
+        Map<String, String> data = null;
+        if (notification.getMetadata() != null && !notification.getMetadata().isEmpty()) {
+            data = notification.getMetadata().entrySet().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                    Map.Entry::getKey,
+                    e -> e.getValue() != null ? e.getValue().toString() : ""
+                ));
+        }
+
+        if (data != null && !data.isEmpty()) {
+            return pushProvider.get().sendWithData(
+                notification.getDeviceToken(),
+                notification.getSubject(),
+                notification.getBody(),
+                data
+            );
+        } else {
+            return pushProvider.get().send(
+                notification.getDeviceToken(),
+                notification.getSubject(),
+                notification.getBody()
+            );
+        }
     }
 
     private String storeInApp(Notification notification) {

@@ -33,6 +33,12 @@ public class SendNotificationRequest {
      */
     private String recipientPhone;
 
+    /**
+     * Device token for push notifications (required for PUSH channel).
+     * FCM token for Android, APNs token for iOS.
+     */
+    private String deviceToken;
+
     @NotNull(message = "Channel is required")
     private NotificationChannel channel;
 

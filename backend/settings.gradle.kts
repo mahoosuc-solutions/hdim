@@ -66,7 +66,8 @@ include(
     "modules:services:ecr-service",
     "modules:services:prior-auth-service",
     "modules:services:migration-workflow-service",
-    "modules:services:sales-automation-service"
+    "modules:services:sales-automation-service",
+    "modules:services:notification-service"
 )
 
 // Applications

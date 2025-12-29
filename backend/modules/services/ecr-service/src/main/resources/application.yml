@@ -60,6 +60,7 @@ ecr:
   aims:
     enabled: ${ECR_AIMS_ENABLED:false}
     base-url: ${ECR_AIMS_URL:https://ecr.aimsplatform.org/api}
+    token-url: ${ECR_AIMS_TOKEN_URL:https://ecr.aimsplatform.org/oauth/token}
     client-id: ${ECR_AIMS_CLIENT_ID:}
     client-secret: ${ECR_AIMS_CLIENT_SECRET:}
     submission-endpoint: /eicr/submit

@@ -432,6 +432,22 @@ services:
       ZOHO_SYNC_ENABLED: ${ZOHO_SYNC_ENABLED:-false}
 
   # ============================================
+  # NOTIFICATION SERVICES
+  # ============================================
+
+  notification-service:
+    image: healthdata-notification-service:1.6.0
+    build: null
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      JAVA_OPTS: "-Xmx384m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
+
+  # ============================================
   # FRONTEND SERVICE
   # ============================================
 

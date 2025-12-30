@@ -1,12 +1,19 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { NxWelcome } from './nx-welcome';
+import { AdminLayoutComponent } from './shared/components/layout/admin-layout.component';
 
 @Component({
-  imports: [NxWelcome, RouterModule],
+  imports: [RouterModule, AdminLayoutComponent],
   selector: 'app-root',
-  templateUrl: './app.html',
-  styleUrl: './app.scss',
+  template: `<app-admin-layout></app-admin-layout>`,
+  styles: [
+    `
+      :host {
+        display: block;
+        height: 100vh;
+      }
+    `,
+  ],
 })
 export class App {
   protected title = 'admin-portal';

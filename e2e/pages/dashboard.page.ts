@@ -248,6 +248,28 @@ export class DashboardPage extends BasePage {
   }
 
   /**
+   * Navigate to care gaps page using sidebar
+   */
+  async navigateToCareGaps(): Promise<void> {
+    // Try direct navigation link or "Results" which contains care gaps
+    const careGapsLink = this.page.locator('a[href*="care-gap"], a:has-text("Care Gap")');
+    if (await careGapsLink.count() > 0) {
+      await careGapsLink.first().click();
+      await this.page.waitForURL(/care-gap|caregap/i, { timeout: 10000 });
+    } else {
+      // Fall back to Results which may contain care gaps
+      await this.navigateTo('results');
+    }
+  }
+
+  /**
+   * Navigate to evaluations page using sidebar
+   */
+  async navigateToEvaluations(): Promise<void> {
+    await this.navigateTo('evaluations');
+  }
+
+  /**
    * Assert dashboard metrics are displayed
    */
   async assertMetricsDisplayed(): Promise<void> {

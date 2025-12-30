@@ -29,10 +29,10 @@ export class LoginPage extends BasePage {
     super(page);
 
     // Form elements - Angular Material with reactive forms
-    this.usernameInput = page.locator('input[formcontrolname="username"], input[ng-reflect-name="username"], input[autocomplete="username"]');
-    this.passwordInput = page.locator('input[formcontrolname="password"], input[ng-reflect-name="password"], input[autocomplete="current-password"]');
-    this.loginButton = page.locator('button[type="submit"]:has-text("Sign In"), button[type="submit"]:has(mat-icon)');
-    this.forgotPasswordLink = page.locator('a[routerlink="/forgot-password"], a:has-text("Forgot password")');
+    this.usernameInput = page.locator('input[formcontrolname="username"], input[ng-reflect-name="username"], input[autocomplete="username"], input[placeholder*="username" i], input[aria-label*="Username" i]');
+    this.passwordInput = page.locator('input[formcontrolname="password"], input[ng-reflect-name="password"], input[autocomplete="current-password"], input[placeholder*="password" i], input[aria-label*="Password" i]');
+    this.loginButton = page.locator('button[type="submit"]:has-text("Sign In"), button[type="submit"]:has(mat-icon), button:has-text("Sign In")');
+    this.forgotPasswordLink = page.locator('a[routerlink="/forgot-password"], a:has-text("Forgot password"), a[href*="forgot"]');
     this.ssoButton = page.locator('button:has-text("SSO")');
     this.rememberMeCheckbox = page.locator('mat-checkbox[formcontrolname="rememberMe"], mat-checkbox:has-text("Remember me")');
 
@@ -63,8 +63,23 @@ export class LoginPage extends BasePage {
    */
   async isLoaded(): Promise<boolean> {
     try {
-      await this.usernameInput.waitFor({ state: 'visible', timeout: 5000 });
-      return true;
+      // Try multiple selectors to find login form
+      const loginFormSelectors = [
+        this.usernameInput,
+        this.page.getByRole('textbox', { name: /username/i }),
+        this.page.locator('form').filter({ hasText: 'Username' }),
+        this.page.locator('button:has-text("Demo Login")')
+      ];
+
+      for (const locator of loginFormSelectors) {
+        try {
+          await locator.waitFor({ state: 'visible', timeout: 3000 });
+          return true;
+        } catch {
+          continue;
+        }
+      }
+      return false;
     } catch {
       return false;
     }

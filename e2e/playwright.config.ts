@@ -12,8 +12,12 @@ import * as path from 'path';
 
 // Environment configuration
 const BASE_URL = process.env.BASE_URL || 'http://localhost:4200';
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8087';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8001';
 const CI = !!process.env.CI;
+const USE_DOCKER = process.env.USE_DOCKER === 'true';
+
+// Auth state file location (relative to e2e directory)
+const AUTH_STATE = path.resolve(__dirname, '.auth/user.json');
 
 export default defineConfig({
   // Test directory
@@ -99,7 +103,7 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        storageState: 'e2e/.auth/user.json',
+        storageState: AUTH_STATE,
       },
       dependencies: ['setup'],
     },
@@ -107,7 +111,7 @@ export default defineConfig({
       name: 'firefox',
       use: {
         ...devices['Desktop Firefox'],
-        storageState: 'e2e/.auth/user.json',
+        storageState: AUTH_STATE,
       },
       dependencies: ['setup'],
     },
@@ -115,7 +119,7 @@ export default defineConfig({
       name: 'webkit',
       use: {
         ...devices['Desktop Safari'],
-        storageState: 'e2e/.auth/user.json',
+        storageState: AUTH_STATE,
       },
       dependencies: ['setup'],
     },
@@ -125,7 +129,7 @@ export default defineConfig({
       name: 'mobile-chrome',
       use: {
         ...devices['Pixel 5'],
-        storageState: 'e2e/.auth/user.json',
+        storageState: AUTH_STATE,
       },
       dependencies: ['setup'],
     },
@@ -133,7 +137,7 @@ export default defineConfig({
       name: 'mobile-safari',
       use: {
         ...devices['iPhone 12'],
-        storageState: 'e2e/.auth/user.json',
+        storageState: AUTH_STATE,
       },
       dependencies: ['setup'],
     },
@@ -143,7 +147,29 @@ export default defineConfig({
       name: 'tablet',
       use: {
         ...devices['iPad Pro 11'],
-        storageState: 'e2e/.auth/user.json',
+        storageState: AUTH_STATE,
+      },
+      dependencies: ['setup'],
+    },
+
+    // Smoke tests - quick critical path verification
+    {
+      name: 'smoke',
+      testMatch: '**/smoke/**/*.spec.ts',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: AUTH_STATE,
+      },
+      dependencies: ['setup'],
+    },
+
+    // Security tests - tenant isolation, RBAC, audit
+    {
+      name: 'security',
+      testMatch: '**/security/**/*.spec.ts',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: AUTH_STATE,
       },
       dependencies: ['setup'],
     },
@@ -154,7 +180,7 @@ export default defineConfig({
       testMatch: '**/accessibility/**/*.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
-        storageState: 'e2e/.auth/user.json',
+        storageState: AUTH_STATE,
       },
       dependencies: ['setup'],
     },
@@ -165,23 +191,27 @@ export default defineConfig({
       testMatch: '**/performance/**/*.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
-        storageState: 'e2e/.auth/user.json',
+        storageState: AUTH_STATE,
       },
       dependencies: ['setup'],
     },
   ],
 
-  // Web server configuration - starts the Angular dev server
-  webServer: [
-    {
-      command: 'cd ../apps/clinical-portal && npm run start',
-      url: 'http://localhost:4200',
-      reuseExistingServer: !CI,
-      timeout: 120000,
-      stdout: 'pipe',
-      stderr: 'pipe',
-    },
-  ],
+  // Web server configuration
+  // In CI/Docker mode, services are started externally via docker-compose
+  // In local development, start the frontend and wait for backend
+  webServer: USE_DOCKER || CI
+    ? undefined
+    : [
+        {
+          command: 'cd ../frontend && npm run start',
+          url: 'http://localhost:4200',
+          reuseExistingServer: true,
+          timeout: 120000,
+          stdout: 'pipe',
+          stderr: 'pipe',
+        },
+      ],
 
   // Expect configuration
   expect: {

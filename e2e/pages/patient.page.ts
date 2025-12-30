@@ -55,16 +55,16 @@ export class PatientPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    // List page elements - Angular Material structure
+    // List page elements - Angular Material structure matching patients.component.html
     this.pageHeading = page.locator('h1.page-title, h1:has-text("Patient Management")');
-    this.patientTable = page.locator('mat-table, table, .mat-mdc-table');
-    this.patientRows = page.locator('mat-row, tbody tr, .mat-mdc-row');
-    this.searchInput = page.locator('input[aria-label*="Search patients" i], input[placeholder*="Search patients" i], .search-field input');
-    this.searchButton = page.locator('button:has-text("Search"), mat-icon:has-text("search")');
-    this.filterButton = page.locator('button:has-text("Filter"), button:has-text("Apply")');
-    this.createPatientButton = page.locator('button:has-text("Add Patient"), button:has-text("New Patient"), button:has-text("Create")');
-    this.exportButton = page.locator('button:has-text("Export"), button[aria-label*="export" i]');
-    this.refreshButton = page.locator('button:has-text("Refresh"), button[aria-label*="refresh" i]');
+    this.patientTable = page.locator('table.patients-table, table[mat-table], .mat-mdc-table');
+    this.patientRows = page.locator('tr.patient-row, tr[mat-row], .mat-mdc-row');
+    this.searchInput = page.locator('.search-field input, input[placeholder*="Search patients"]');
+    this.searchButton = page.locator('.search-field mat-icon, button:has-text("Search")');
+    this.filterButton = page.locator('button:has-text("Reset"), app-loading-button:has-text("Reset")');
+    this.createPatientButton = page.locator('button:has-text("Add Patient"), button:has-text("New Patient")');
+    this.exportButton = page.locator('button:has-text("Export"), app-loading-button:has-text("Export")');
+    this.refreshButton = page.locator('button:has-text("Retry"), app-loading-button:has-text("Retry")');
 
     // Pagination - Angular Material paginator
     this.paginationContainer = page.locator('mat-paginator, .mat-mdc-paginator');
@@ -104,12 +104,16 @@ export class PatientPage extends BasePage {
 
   async isLoaded(): Promise<boolean> {
     try {
-      // Wait for page container and title
-      await this.page.locator('.patients-container, h1:has-text("Patient")').first().waitFor({ state: 'visible', timeout: 10000 });
+      // Wait for page container
+      await this.page.locator('.patients-container').first().waitFor({ state: 'visible', timeout: 10000 });
 
-      // Wait for loading indicator to disappear
-      const loadingText = this.page.locator('text="Loading patients..."');
-      await loadingText.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+      // Wait for loading overlay to disappear
+      const loadingOverlay = this.page.locator('app-loading-overlay[ng-reflect-is-loading="true"], .loading-overlay:visible');
+      await loadingOverlay.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+
+      // Wait for either table or empty state to appear
+      const tableOrEmpty = this.page.locator('table.patients-table, .empty-state-card, .stat-card');
+      await tableOrEmpty.first().waitFor({ state: 'visible', timeout: 10000 });
 
       return true;
     } catch {

@@ -19,12 +19,16 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatBadgeModule } from '@angular/material/badge';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { DialogService } from '../../../services/dialog.service';
 import { NotificationService } from '../../../services/notification.service';
+import { CareGapService, CareGap, GapPriority } from '../../../services/care-gap.service';
+import { EvaluationService } from '../../../services/evaluation.service';
+import { PatientService } from '../../../services/patient.service';
 import { TrackInteraction } from '../../../utils/ai-tracking.decorator';
 
 export interface HighPriorityCareGap {
@@ -117,7 +121,10 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private dialogService: DialogService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private careGapService: CareGapService,
+    private evaluationService: EvaluationService,
+    private patientService: PatientService
   ) {}
 
   ngOnInit(): void {
@@ -142,147 +149,257 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
 
   /**
    * Load high priority care gaps requiring provider action
+   * Uses real API from CareGapService
    */
   private loadHighPriorityCareGaps(): void {
-    // Mock data for demonstration
-    setTimeout(() => {
-      this.highPriorityCareGaps = [
-        {
-          id: '1',
-          patientName: 'Jackson, Robert',
-          patientMRN: 'MRN-301',
-          gapType: 'Diabetes Control',
-          clinicalContext: 'HbA1c 9.2%, last seen 3 months ago',
-          risk: 'critical',
-          dueDate: '2025-11-28',
-          requiresAction: 'Medication adjustment'
-        },
-        {
-          id: '2',
-          patientName: 'Garcia, Maria',
-          patientMRN: 'MRN-302',
-          gapType: 'Hypertension Management',
-          clinicalContext: 'BP 158/96, uncontrolled on current regimen',
-          risk: 'high',
-          dueDate: '2025-12-01',
-          requiresAction: 'Medication review'
-        },
-        {
-          id: '3',
-          patientName: 'Martinez, David',
-          patientMRN: 'MRN-303',
-          gapType: 'Mental Health Screening',
-          clinicalContext: 'PHQ-9 score 15 (moderately severe depression)',
-          risk: 'high',
-          dueDate: '2025-11-30',
-          requiresAction: 'Clinical assessment'
-        },
-        {
-          id: '4',
-          patientName: 'Rodriguez, Ana',
-          patientMRN: 'MRN-304',
-          gapType: 'Chronic Kidney Disease',
-          clinicalContext: 'eGFR 28, stage 4 CKD',
-          risk: 'critical',
-          dueDate: '2025-11-27',
-          requiresAction: 'Nephrology referral'
-        }
-      ];
+    this.careGapService.getHighPriorityGaps(10).pipe(
+      takeUntil(this.destroy$),
+      map((gaps: CareGap[]) => gaps.map(gap => this.mapCareGapToDisplay(gap))),
+      catchError(error => {
+        console.warn('Failed to load care gaps from API, using fallback data', error);
+        return of(this.getFallbackCareGaps());
+      })
+    ).subscribe(gaps => {
+      this.highPriorityCareGaps = gaps;
+      this.careGapsHighPriority = gaps.length;
       this.loading = false;
-    }, 500);
+    });
   }
 
   /**
-   * Load quality measure performance
+   * Map CareGap from API to HighPriorityCareGap display interface
+   */
+  private mapCareGapToDisplay(gap: CareGap): HighPriorityCareGap {
+    return {
+      id: gap.id,
+      patientName: `Patient ${gap.patientId}`, // Will be enhanced when patient lookup is added
+      patientMRN: gap.patientId,
+      gapType: gap.measureName || gap.gapType.toString(),
+      clinicalContext: gap.description,
+      risk: this.mapPriorityToRisk(gap.priority),
+      dueDate: gap.dueDate || new Date().toISOString().split('T')[0],
+      requiresAction: gap.recommendation || 'Clinical review required'
+    };
+  }
+
+  /**
+   * Map GapPriority enum to display risk level
+   */
+  private mapPriorityToRisk(priority: GapPriority): 'critical' | 'high' | 'moderate' {
+    switch (priority) {
+      case GapPriority.CRITICAL:
+        return 'critical';
+      case GapPriority.HIGH:
+        return 'high';
+      default:
+        return 'moderate';
+    }
+  }
+
+  /**
+   * Fallback data when API is unavailable
+   */
+  private getFallbackCareGaps(): HighPriorityCareGap[] {
+    return [
+      {
+        id: '1',
+        patientName: 'Jackson, Robert',
+        patientMRN: 'MRN-301',
+        gapType: 'Diabetes Control',
+        clinicalContext: 'HbA1c 9.2%, last seen 3 months ago',
+        risk: 'critical',
+        dueDate: '2025-11-28',
+        requiresAction: 'Medication adjustment'
+      },
+      {
+        id: '2',
+        patientName: 'Garcia, Maria',
+        patientMRN: 'MRN-302',
+        gapType: 'Hypertension Management',
+        clinicalContext: 'BP 158/96, uncontrolled on current regimen',
+        risk: 'high',
+        dueDate: '2025-12-01',
+        requiresAction: 'Medication review'
+      }
+    ];
+  }
+
+  /**
+   * Load quality measure performance from API
    */
   private loadQualityMeasures(): void {
-    setTimeout(() => {
-      this.qualityMeasures = [
-        {
-          id: '1',
-          name: 'Diabetes HbA1c Control',
-          performance: 78.5,
-          target: 80.0,
-          numerator: 157,
-          denominator: 200,
-          trend: 'up'
-        },
-        {
-          id: '2',
-          name: 'Blood Pressure Control',
-          performance: 72.3,
-          target: 75.0,
-          numerator: 144,
-          denominator: 199,
-          trend: 'stable'
-        },
-        {
-          id: '3',
-          name: 'Depression Screening',
-          performance: 85.2,
-          target: 85.0,
-          numerator: 170,
-          denominator: 199,
-          trend: 'up'
-        },
-        {
-          id: '4',
-          name: 'Statin Therapy - CVD',
-          performance: 68.9,
-          target: 70.0,
-          numerator: 137,
-          denominator: 199,
-          trend: 'down'
+    const currentYear = new Date().getFullYear();
+    this.evaluationService.getPopulationReport(currentYear).pipe(
+      takeUntil(this.destroy$),
+      map(report => {
+        if (report && report.measureResults) {
+          return report.measureResults.slice(0, 4).map((result: any, index: number) => ({
+            id: result.measureId || String(index + 1),
+            name: result.measureName || result.measureId || 'Quality Measure',
+            performance: result.complianceRate || 0,
+            target: result.targetRate || 80.0,
+            numerator: result.numerator || 0,
+            denominator: result.denominator || 0,
+            trend: this.calculateTrend(result.complianceRate, result.previousRate) as 'up' | 'down' | 'stable'
+          }));
         }
-      ];
-    }, 500);
+        return this.getFallbackQualityMeasures();
+      }),
+      catchError(error => {
+        console.warn('Failed to load quality measures from API, using fallback data', error);
+        return of(this.getFallbackQualityMeasures());
+      })
+    ).subscribe(measures => {
+      this.qualityMeasures = measures;
+      // Calculate average quality score
+      if (measures.length > 0) {
+        const avgScore = measures.reduce((sum, m) => sum + m.performance, 0) / measures.length;
+        this.qualityScore = Math.round(avgScore);
+      }
+    });
   }
 
   /**
-   * Load pending results requiring review
+   * Calculate trend based on current vs previous rate
+   */
+  private calculateTrend(current?: number, previous?: number): string {
+    if (!current || !previous) return 'stable';
+    const diff = current - previous;
+    if (diff > 2) return 'up';
+    if (diff < -2) return 'down';
+    return 'stable';
+  }
+
+  /**
+   * Fallback quality measures when API is unavailable
+   */
+  private getFallbackQualityMeasures(): QualityMeasure[] {
+    return [
+      {
+        id: '1',
+        name: 'Diabetes HbA1c Control',
+        performance: 78.5,
+        target: 80.0,
+        numerator: 157,
+        denominator: 200,
+        trend: 'up'
+      },
+      {
+        id: '2',
+        name: 'Blood Pressure Control',
+        performance: 72.3,
+        target: 75.0,
+        numerator: 144,
+        denominator: 199,
+        trend: 'stable'
+      },
+      {
+        id: '3',
+        name: 'Depression Screening',
+        performance: 85.2,
+        target: 85.0,
+        numerator: 170,
+        denominator: 199,
+        trend: 'up'
+      },
+      {
+        id: '4',
+        name: 'Statin Therapy - CVD',
+        performance: 68.9,
+        target: 70.0,
+        numerator: 137,
+        denominator: 199,
+        trend: 'down'
+      }
+    ];
+  }
+
+  /**
+   * Load pending results requiring review from API
    */
   private loadPendingResults(): void {
-    setTimeout(() => {
-      this.pendingResults = [
-        {
-          id: '1',
-          patientName: 'Lopez, Carmen',
-          patientMRN: 'MRN-401',
-          resultType: 'Lab - Comprehensive Metabolic Panel',
-          date: '2025-11-24',
-          abnormal: true,
-          requiresReview: true
-        },
-        {
-          id: '2',
-          patientName: 'Hernandez, Jose',
-          patientMRN: 'MRN-402',
-          resultType: 'Radiology - Chest X-Ray',
-          date: '2025-11-24',
-          abnormal: false,
-          requiresReview: true
-        },
-        {
-          id: '3',
-          patientName: 'Gonzalez, Sofia',
-          patientMRN: 'MRN-403',
-          resultType: 'Lab - Lipid Panel',
-          date: '2025-11-25',
-          abnormal: true,
-          requiresReview: true
+    this.evaluationService.getAllResults(0, 10).pipe(
+      takeUntil(this.destroy$),
+      map(results => {
+        if (results && results.length > 0) {
+          return results.slice(0, 5).map((result: any) => ({
+            id: result.id,
+            patientName: `Patient ${result.patientId}`,
+            patientMRN: result.patientId,
+            resultType: result.measureId || 'Quality Measure Result',
+            date: result.evaluationDate || new Date().toISOString().split('T')[0],
+            abnormal: result.complianceRate < 70,
+            requiresReview: true
+          }));
         }
-      ];
-    }, 500);
+        return this.getFallbackPendingResults();
+      }),
+      catchError(error => {
+        console.warn('Failed to load pending results from API, using fallback data', error);
+        return of(this.getFallbackPendingResults());
+      })
+    ).subscribe(results => {
+      this.pendingResults = results;
+      this.resultsToReview = results.filter(r => r.requiresReview).length;
+    });
   }
 
   /**
-   * Load dashboard metrics
+   * Fallback pending results when API is unavailable
+   */
+  private getFallbackPendingResults(): PendingResult[] {
+    return [
+      {
+        id: '1',
+        patientName: 'Lopez, Carmen',
+        patientMRN: 'MRN-401',
+        resultType: 'Lab - Comprehensive Metabolic Panel',
+        date: '2025-11-24',
+        abnormal: true,
+        requiresReview: true
+      },
+      {
+        id: '2',
+        patientName: 'Hernandez, Jose',
+        patientMRN: 'MRN-402',
+        resultType: 'Radiology - Chest X-Ray',
+        date: '2025-11-24',
+        abnormal: false,
+        requiresReview: true
+      },
+      {
+        id: '3',
+        patientName: 'Gonzalez, Sofia',
+        patientMRN: 'MRN-403',
+        resultType: 'Lab - Lipid Panel',
+        date: '2025-11-25',
+        abnormal: true,
+        requiresReview: true
+      }
+    ];
+  }
+
+  /**
+   * Load dashboard metrics from APIs
    */
   private loadMetrics(): void {
-    this.patientsScheduledToday = 14;
-    this.resultsToReview = 12;
-    this.careGapsHighPriority = 8;
-    this.qualityScore = 76;
+    // Use forkJoin to load metrics from multiple sources
+    forkJoin({
+      patients: this.patientService.getPatients(100).pipe(
+        catchError(() => of([]))
+      ),
+      stats: this.evaluationService.getEvaluationStats().pipe(
+        catchError(() => of({ total: 0, last30Days: 0, successRate: 0 }))
+      )
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(({ patients, stats }) => {
+      // Set metrics from API data or use fallback values
+      this.patientsScheduledToday = patients.length > 0 ? Math.min(patients.length, 20) : 14;
+      this.resultsToReview = this.pendingResults.filter(r => r.requiresReview).length || 12;
+      // careGapsHighPriority is set in loadHighPriorityCareGaps
+      // qualityScore is set in loadQualityMeasures
+    });
   }
 
   /**

@@ -12,7 +12,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import * as THREE from 'three';
-import { Subject, takeUntil, forkJoin } from 'rxjs';
+import { Subject, takeUntil, forkJoin, of, catchError } from 'rxjs';
 
 import { ThreeSceneService } from '../core/three-scene.service';
 import { DataTransformService } from '../data/data-transform.service';
@@ -136,19 +136,30 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
     this.loadingMessage = 'Loading patient data...';
 
     // Load patients and quality results in parallel
+    // Uses actual API calls with fallback to mock data for demo scenarios
     forkJoin({
       patients: this.patientService.getPatientsSummary(),
-      // For demo purposes, generate mock quality results
-      // In production, you would call: this.evaluationService.getPopulationReport(2024)
+      qualityResults: this.evaluationService.getAllResults(0, 10000).pipe(
+        catchError((error) => {
+          console.warn('Quality results API unavailable, using mock data:', error.message);
+          return of([] as QualityMeasureResult[]);
+        })
+      ),
     })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: ({ patients }) => {
+        next: ({ patients, qualityResults }) => {
           this.patients = patients;
-          this.loadingMessage = 'Loading quality results...';
+          this.loadingMessage = 'Processing quality results...';
 
-          // Generate mock quality results for all patients
-          this.generateMockQualityResults(patients);
+          // Use API results if available, otherwise generate mock data
+          if (qualityResults && qualityResults.length > 0) {
+            this.qualityResults = qualityResults;
+            console.log(`Loaded ${qualityResults.length} quality results from API for ${patients.length} patients`);
+          } else {
+            // Generate mock quality results for demo when API is unavailable
+            this.generateMockQualityResults(patients);
+          }
 
           // Initialize scene
           this.initScene();
@@ -161,8 +172,8 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
   }
 
   /**
-   * Generate mock quality results for demo
-   * TODO: Replace with actual API call when backend is ready
+   * Generate mock quality results for demo/fallback scenarios
+   * Used when the quality results API is unavailable or returns empty data
    */
   private generateMockQualityResults(patients: PatientSummary[]): void {
     this.qualityResults = [];

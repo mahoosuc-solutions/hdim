@@ -540,7 +540,7 @@ export class DashboardComponent implements OnInit {
   }
 
   /**
-   * Calculate measure performance
+   * Calculate measure performance with trend analysis
    */
   private calculateMeasurePerformance(): void {
     const measureMap = new Map<string, {
@@ -566,7 +566,7 @@ export class DashboardComponent implements OnInit {
       measureMap.get(libraryId)?.evaluations.push(evaluation);
     });
 
-    // Calculate performance for each measure
+    // Calculate performance for each measure with trend
     this.measurePerformance = Array.from(measureMap.values()).map((measure) => {
       const eligibleEvals = measure.evaluations.filter((e) => e.evaluationResult?.['InDenominator'] === true);
       const compliantEvals = eligibleEvals.filter((e) => e.evaluationResult?.['InNumerator'] === true);
@@ -576,13 +576,16 @@ export class DashboardComponent implements OnInit {
           ? (compliantEvals.length / eligibleEvals.length) * 100
           : 0;
 
+      // Calculate trend by comparing recent vs older evaluations
+      const trend = this.calculateMeasureTrend(measure.evaluations);
+
       return {
         measureId: measure.measureId,
         measureName: measure.measureName,
         category: measure.category,
         evaluationCount: measure.evaluations.length,
         complianceRate: Math.round(complianceRate * 100) / 100,
-        trend: 'stable' as const, // TODO: Calculate actual trend
+        trend,
       };
     });
 
@@ -684,6 +687,56 @@ export class DashboardComponent implements OnInit {
     );
 
     return Math.round((sum / this.measurePerformance.length) * 100) / 100;
+  }
+
+  /**
+   * Calculate trend for a specific measure by comparing recent vs older evaluations
+   * @param evaluations - All evaluations for a measure
+   * @returns Trend direction: 'up', 'down', or 'stable'
+   */
+  private calculateMeasureTrend(evaluations: CqlEvaluation[]): 'up' | 'down' | 'stable' {
+    if (evaluations.length < 4) {
+      // Not enough data points to determine trend
+      return 'stable';
+    }
+
+    // Sort evaluations by date
+    const sortedEvals = [...evaluations]
+      .filter(e => e.evaluationDate)
+      .sort((a, b) => new Date(a.evaluationDate).getTime() - new Date(b.evaluationDate).getTime());
+
+    if (sortedEvals.length < 4) {
+      return 'stable';
+    }
+
+    // Split into two halves: older half and recent half
+    const midpoint = Math.floor(sortedEvals.length / 2);
+    const olderHalf = sortedEvals.slice(0, midpoint);
+    const recentHalf = sortedEvals.slice(midpoint);
+
+    // Calculate compliance rate for each half
+    const olderCompliance = this.calculateComplianceForEvaluations(olderHalf);
+    const recentCompliance = this.calculateComplianceForEvaluations(recentHalf);
+
+    // Determine trend based on percentage point difference
+    const difference = recentCompliance - olderCompliance;
+    const threshold = 3; // 3 percentage points threshold for significance
+
+    if (difference >= threshold) {
+      return 'up';
+    } else if (difference <= -threshold) {
+      return 'down';
+    }
+    return 'stable';
+  }
+
+  /**
+   * Helper to calculate compliance rate for a set of evaluations
+   */
+  private calculateComplianceForEvaluations(evaluations: CqlEvaluation[]): number {
+    const eligible = evaluations.filter(e => e.evaluationResult?.['InDenominator'] === true);
+    const compliant = eligible.filter(e => e.evaluationResult?.['InNumerator'] === true);
+    return eligible.length > 0 ? (compliant.length / eligible.length) * 100 : 0;
   }
 
   /**

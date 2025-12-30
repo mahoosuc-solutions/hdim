@@ -14,6 +14,8 @@ import {
   Lock
 } from 'lucide-react'
 
+const GCP_BUCKET_URL = 'https://storage.googleapis.com/hdim-platform-test-data/datasets'
+
 const datasets = [
   {
     id: 'hospital',
@@ -31,7 +33,8 @@ const datasets = [
       'Observations: BP, BMI, Labs',
       'Age distribution: 12% pediatric to 16% 75+'
     ],
-    color: 'blue'
+    color: 'blue',
+    filePrefix: 'academic-medical-center'
   },
   {
     id: 'provider',
@@ -49,7 +52,8 @@ const datasets = [
       'MIPS quality measure ready',
       'Realistic ambulatory utilization patterns'
     ],
-    color: 'green'
+    color: 'green',
+    filePrefix: 'large-multi-specialty'
   },
   {
     id: 'healthplan',
@@ -67,19 +71,21 @@ const datasets = [
       'Stars measure denominator ready',
       'Care gap baseline data included'
     ],
-    color: 'purple'
+    color: 'purple',
+    filePrefix: 'regional-health-plan'
   }
 ]
 
 const sampleSizes = [
-  { label: '100 patients', size: '~500 KB', free: true },
-  { label: '1,000 patients', size: '~5 MB', free: true },
-  { label: '10,000 patients', size: '~50 MB', free: false },
-  { label: '100,000 patients', size: '~430 MB', free: false },
+  { label: '100 patients', size: '~500 KB', free: true, fileSuffix: '100-fhir.json' },
+  { label: '1,000 patients', size: '~5 MB', free: true, fileSuffix: '1000-fhir.json' },
+  { label: '10,000 patients', size: '~50 MB', free: false, fileSuffix: null },
+  { label: '100,000 patients', size: '~430 MB', free: false, fileSuffix: '100000-fhir.json' },
 ]
 
 export default function DownloadsPage() {
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null)
+  const [selectedSize, setSelectedSize] = useState<string>('100-fhir.json')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -89,10 +95,16 @@ export default function DownloadsPage() {
   })
   const [submitted, setSubmitted] = useState(false)
 
+  const getDownloadUrl = (datasetId: string, sizeSuffix: string) => {
+    const dataset = datasets.find(d => d.id === datasetId)
+    if (!dataset) return '#'
+    return `${GCP_BUCKET_URL}/${dataset.filePrefix}-${sizeSuffix}`
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // In production, this would submit to your CRM/backend
-    console.log('Lead captured:', formData, 'Dataset:', selectedDataset)
+    console.log('Lead captured:', formData, 'Dataset:', selectedDataset, 'Size:', selectedSize)
     setSubmitted(true)
   }
 
@@ -291,13 +303,19 @@ export default function DownloadsPage() {
                       <label
                         key={size.label}
                         className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                          size.free ? 'hover:border-blue-300 hover:bg-blue-50' : 'opacity-60'
+                          size.free
+                            ? selectedSize === size.fileSuffix
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'hover:border-blue-300 hover:bg-blue-50'
+                            : 'opacity-60'
                         }`}
                       >
                         <input
                           type="radio"
                           name="sampleSize"
                           disabled={!size.free}
+                          checked={size.fileSuffix === selectedSize}
+                          onChange={() => size.fileSuffix && setSelectedSize(size.fileSuffix)}
                           className="mr-2"
                         />
                         <div>
@@ -326,7 +344,7 @@ export default function DownloadsPage() {
           )}
 
           {/* Success State */}
-          {submitted && (
+          {submitted && selectedDataset && (
             <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-sm p-8 text-center">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="w-8 h-8 text-green-600" />
@@ -335,22 +353,39 @@ export default function DownloadsPage() {
                 Download Ready!
               </h2>
               <p className="text-gray-600 mb-6">
-                Your sample dataset is ready. Check your email for the download link.
+                Your {datasets.find(d => d.id === selectedDataset)?.name} sample dataset is ready for download.
               </p>
               <div className="space-y-3">
                 <a
-                  href="#"
+                  href={getDownloadUrl(selectedDataset, selectedSize)}
+                  download
                   className="block w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Download className="w-5 h-5 inline mr-2" />
-                  Download 1,000 Patient Sample (FHIR R4)
+                  Download {sampleSizes.find(s => s.fileSuffix === selectedSize)?.label} Sample (FHIR R4)
                 </a>
+                <div className="flex justify-center gap-4 pt-4 border-t border-gray-100 mt-4">
+                  <a
+                    href={getDownloadUrl(selectedDataset, '100-fhir.json')}
+                    download
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    100 patients
+                  </a>
+                  <a
+                    href={getDownloadUrl(selectedDataset, '1000-fhir.json')}
+                    download
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    1,000 patients
+                  </a>
+                </div>
                 <button
                   onClick={() => {
                     setSubmitted(false)
                     setSelectedDataset(null)
                   }}
-                  className="text-blue-600 hover:text-blue-700 text-sm"
+                  className="text-gray-500 hover:text-gray-700 text-sm mt-4"
                 >
                   ← Download a different dataset
                 </button>

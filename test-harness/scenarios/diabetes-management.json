@@ -1,0 +1,119 @@
+{
+  "id": "diabetes-management",
+  "name": "Comprehensive Diabetes Care",
+  "description": "Demonstrates HDIM's impact on diabetes quality measures and patient outcomes",
+  "hedis_measures": ["CDC-HBA1C", "CDC-EYE", "CDC-BP", "CDC-NEPHRO"],
+  "target_population": {
+    "description": "Adults 18-75 with Type 2 Diabetes",
+    "inclusion_criteria": [
+      "Age 18-75",
+      "Diagnosis of Type 2 Diabetes (ICD-10: E11.x)",
+      "Continuous enrollment 12+ months"
+    ],
+    "exclusion_criteria": [
+      "End-stage renal disease",
+      "Hospice care"
+    ]
+  },
+  "baseline_metrics": {
+    "population_size": 500,
+    "hba1c_control_rate": 0.52,
+    "eye_exam_rate": 0.38,
+    "bp_control_rate": 0.45,
+    "nephropathy_screening_rate": 0.61,
+    "care_gaps_per_patient": 2.3,
+    "avg_hba1c": 8.4,
+    "hospitalizations_per_1000": 142
+  },
+  "intervention_timeline": [
+    {
+      "month": 0,
+      "action": "HDIM Platform Deployed",
+      "description": "Quality measure tracking and care gap detection activated"
+    },
+    {
+      "month": 1,
+      "action": "Care Gap Alerts Enabled",
+      "description": "Automated alerts to care teams for overdue screenings"
+    },
+    {
+      "month": 3,
+      "action": "Predictive Risk Scores Active",
+      "description": "High-risk patients prioritized for intensive management"
+    },
+    {
+      "month": 6,
+      "action": "Patient Outreach Integrated",
+      "description": "Automated appointment reminders and education materials"
+    }
+  ],
+  "post_intervention_metrics": {
+    "population_size": 500,
+    "hba1c_control_rate": 0.75,
+    "eye_exam_rate": 0.72,
+    "bp_control_rate": 0.68,
+    "nephropathy_screening_rate": 0.89,
+    "care_gaps_per_patient": 0.8,
+    "avg_hba1c": 7.1,
+    "hospitalizations_per_1000": 98
+  },
+  "outcomes_summary": {
+    "hba1c_improvement": "+23%",
+    "eye_exam_improvement": "+34%",
+    "bp_control_improvement": "+23%",
+    "nephropathy_improvement": "+28%",
+    "care_gaps_reduction": "-65%",
+    "hospitalization_reduction": "-31%",
+    "estimated_cost_savings_per_member": 2340
+  },
+  "clinical_stories": [
+    {
+      "patient_id": "DM-001",
+      "name": "Maria Rodriguez",
+      "age": 58,
+      "baseline": {
+        "hba1c": 9.2,
+        "last_eye_exam": "18 months ago",
+        "bp": "148/92",
+        "care_gaps": ["HbA1c control", "Eye exam overdue", "BP control"]
+      },
+      "hdim_actions": [
+        "Care gap alert triggered for overdue eye exam",
+        "Predictive model flagged high risk for complications",
+        "Care coordinator notified for intensive management",
+        "Medication adherence tracking initiated"
+      ],
+      "post_intervention": {
+        "hba1c": 7.0,
+        "last_eye_exam": "2 weeks ago",
+        "bp": "128/78",
+        "care_gaps": []
+      },
+      "outcome": "All care gaps closed, HbA1c reduced by 2.2 points, avoiding estimated $12,000 in complication costs"
+    },
+    {
+      "patient_id": "DM-002",
+      "name": "James Thompson",
+      "age": 67,
+      "baseline": {
+        "hba1c": 8.8,
+        "kidney_screening": "Never completed",
+        "risk_score": "High",
+        "care_gaps": ["HbA1c control", "Nephropathy screening"]
+      },
+      "hdim_actions": [
+        "Risk stratification identified kidney disease risk",
+        "Urgent nephropathy screening ordered",
+        "Early stage CKD detected and treated",
+        "Specialist referral coordinated"
+      ],
+      "post_intervention": {
+        "hba1c": 7.2,
+        "kidney_screening": "Completed - Stage 2 CKD managed",
+        "risk_score": "Moderate",
+        "care_gaps": []
+      },
+      "outcome": "Early CKD detection prevented progression, dialysis delayed/avoided, quality of life preserved"
+    }
+  ]
+}

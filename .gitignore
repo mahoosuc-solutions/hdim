@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Generated datasets (too large for git)
+test-harness/datasets/*.json
+
+# Build outputs
+*.js.map
+dist/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

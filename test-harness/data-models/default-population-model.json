@@ -1,0 +1,464 @@
+{
+  "modelId": "default-population-v1",
+  "modelName": "Default US Healthcare Population Model",
+  "description": "Statistical model for generating realistic patient populations based on US healthcare patterns",
+  "version": "1.0.0",
+
+  "demographics": {
+    "ageGroups": [
+      { "label": "pediatric", "min": 0, "max": 17, "weight": 0.12 },
+      { "label": "young_adult", "min": 18, "max": 39, "weight": 0.22 },
+      { "label": "middle_aged", "min": 40, "max": 64, "weight": 0.32 },
+      { "label": "senior", "min": 65, "max": 74, "weight": 0.18 },
+      { "label": "elderly", "min": 75, "max": 95, "weight": 0.16 }
+    ],
+    "genderRatio": {
+      "male": 0.49,
+      "female": 0.51
+    },
+    "ethnicityDistribution": {
+      "white": 0.60,
+      "hispanic": 0.19,
+      "black": 0.13,
+      "asian": 0.06,
+      "other": 0.02
+    },
+    "urbanRuralDistribution": {
+      "urban": 0.55,
+      "suburban": 0.30,
+      "rural": 0.15
+    }
+  },
+
+  "conditions": {
+    "diabetes": {
+      "name": "Type 2 Diabetes Mellitus",
+      "icd10": "E11.9",
+      "basePrevalence": 0.105,
+      "ageMultipliers": {
+        "pediatric": 0.01,
+        "young_adult": 0.25,
+        "middle_aged": 0.80,
+        "senior": 1.50,
+        "elderly": 1.80
+      },
+      "riskFactors": {
+        "obesity": 2.5,
+        "hypertension": 1.5,
+        "family_history": 2.0
+      },
+      "comorbidities": ["hypertension", "hyperlipidemia", "ckd", "obesity"],
+      "hedisRelevance": ["CDC-HBA1C", "CDC-EYE", "CDC-BP", "CDC-NEPHRO"]
+    },
+    "hypertension": {
+      "name": "Essential Hypertension",
+      "icd10": "I10",
+      "basePrevalence": 0.32,
+      "ageMultipliers": {
+        "pediatric": 0.02,
+        "young_adult": 0.30,
+        "middle_aged": 0.85,
+        "senior": 1.40,
+        "elderly": 1.60
+      },
+      "riskFactors": {
+        "obesity": 1.8,
+        "diabetes": 1.4,
+        "smoking": 1.3
+      },
+      "comorbidities": ["diabetes", "chf", "ckd", "hyperlipidemia"],
+      "hedisRelevance": ["CBP", "PBH"]
+    },
+    "chf": {
+      "name": "Heart Failure",
+      "icd10": "I50.9",
+      "basePrevalence": 0.023,
+      "ageMultipliers": {
+        "pediatric": 0.01,
+        "young_adult": 0.10,
+        "middle_aged": 0.50,
+        "senior": 1.80,
+        "elderly": 3.50
+      },
+      "riskFactors": {
+        "hypertension": 2.0,
+        "diabetes": 1.8,
+        "coronary_artery_disease": 3.0
+      },
+      "comorbidities": ["hypertension", "diabetes", "atrial_fib", "ckd"],
+      "hedisRelevance": ["TRC", "MRP"]
+    },
+    "copd": {
+      "name": "Chronic Obstructive Pulmonary Disease",
+      "icd10": "J44.9",
+      "basePrevalence": 0.062,
+      "ageMultipliers": {
+        "pediatric": 0.01,
+        "young_adult": 0.15,
+        "middle_aged": 0.70,
+        "senior": 1.60,
+        "elderly": 2.20
+      },
+      "riskFactors": {
+        "smoking": 4.0,
+        "environmental": 1.5
+      },
+      "comorbidities": ["chf", "depression", "osteoporosis"],
+      "hedisRelevance": ["SPR", "PCE"]
+    },
+    "ckd": {
+      "name": "Chronic Kidney Disease",
+      "icd10": "N18.3",
+      "basePrevalence": 0.15,
+      "ageMultipliers": {
+        "pediatric": 0.02,
+        "young_adult": 0.15,
+        "middle_aged": 0.60,
+        "senior": 1.50,
+        "elderly": 2.40
+      },
+      "riskFactors": {
+        "diabetes": 2.5,
+        "hypertension": 2.0
+      },
+      "comorbidities": ["diabetes", "hypertension", "chf"],
+      "hedisRelevance": ["CDC-NEPHRO"]
+    },
+    "depression": {
+      "name": "Major Depressive Disorder",
+      "icd10": "F32.9",
+      "basePrevalence": 0.08,
+      "ageMultipliers": {
+        "pediatric": 0.30,
+        "young_adult": 1.20,
+        "middle_aged": 1.00,
+        "senior": 0.80,
+        "elderly": 0.90
+      },
+      "riskFactors": {
+        "chronic_illness": 1.8,
+        "social_isolation": 1.5
+      },
+      "comorbidities": ["anxiety", "diabetes", "chf"],
+      "hedisRelevance": ["DMS", "AMM", "FUA", "FUM"]
+    },
+    "anxiety": {
+      "name": "Generalized Anxiety Disorder",
+      "icd10": "F41.1",
+      "basePrevalence": 0.058,
+      "ageMultipliers": {
+        "pediatric": 0.40,
+        "young_adult": 1.30,
+        "middle_aged": 1.00,
+        "senior": 0.70,
+        "elderly": 0.60
+      },
+      "riskFactors": {
+        "depression": 2.0,
+        "chronic_illness": 1.4
+      },
+      "comorbidities": ["depression"],
+      "hedisRelevance": ["DMS"]
+    },
+    "obesity": {
+      "name": "Obesity",
+      "icd10": "E66.9",
+      "basePrevalence": 0.42,
+      "ageMultipliers": {
+        "pediatric": 0.45,
+        "young_adult": 0.85,
+        "middle_aged": 1.15,
+        "senior": 1.00,
+        "elderly": 0.80
+      },
+      "riskFactors": {
+        "sedentary": 1.5,
+        "socioeconomic": 1.3
+      },
+      "comorbidities": ["diabetes", "hypertension", "hyperlipidemia"],
+      "hedisRelevance": ["WCC", "ABA"]
+    },
+    "hyperlipidemia": {
+      "name": "Hyperlipidemia",
+      "icd10": "E78.5",
+      "basePrevalence": 0.28,
+      "ageMultipliers": {
+        "pediatric": 0.05,
+        "young_adult": 0.40,
+        "middle_aged": 1.00,
+        "senior": 1.30,
+        "elderly": 1.20
+      },
+      "riskFactors": {
+        "obesity": 1.6,
+        "diabetes": 1.4
+      },
+      "comorbidities": ["diabetes", "hypertension"],
+      "hedisRelevance": ["SPC"]
+    },
+    "atrial_fib": {
+      "name": "Atrial Fibrillation",
+      "icd10": "I48.91",
+      "basePrevalence": 0.028,
+      "ageMultipliers": {
+        "pediatric": 0.01,
+        "young_adult": 0.10,
+        "middle_aged": 0.50,
+        "senior": 1.80,
+        "elderly": 4.00
+      },
+      "riskFactors": {
+        "hypertension": 1.8,
+        "chf": 2.5
+      },
+      "comorbidities": ["hypertension", "chf"],
+      "hedisRelevance": ["SPC"]
+    }
+  },
+
+  "utilization": {
+    "pcpVisitsPerYear": {
+      "healthy": 1.5,
+      "lowRisk": 2.5,
+      "risingRisk": 4.0,
+      "moderateRisk": 6.0,
+      "highRisk": 10.0
+    },
+    "specialistVisitsPerYear": {
+      "healthy": 0.5,
+      "lowRisk": 1.0,
+      "risingRisk": 2.5,
+      "moderateRisk": 5.0,
+      "highRisk": 12.0
+    },
+    "edVisitsPerThousand": {
+      "overall": 430,
+      "byRiskLevel": {
+        "healthy": 120,
+        "lowRisk": 280,
+        "risingRisk": 450,
+        "moderateRisk": 680,
+        "highRisk": 1200
+      }
+    },
+    "admissionsPerThousand": {
+      "overall": 105,
+      "byRiskLevel": {
+        "healthy": 25,
+        "lowRisk": 55,
+        "risingRisk": 95,
+        "moderateRisk": 180,
+        "highRisk": 420
+      }
+    },
+    "readmissionRates": {
+      "overall": 0.15,
+      "byCondition": {
+        "chf": 0.22,
+        "copd": 0.20,
+        "pneumonia": 0.16,
+        "ami": 0.18
+      }
+    }
+  },
+
+  "careGaps": {
+    "CDC-HBA1C": {
+      "measureName": "Diabetes HbA1c Control",
+      "baselineCompliance": 0.52,
+      "riskFactors": {
+        "age_over_65": -0.05,
+        "medicaid": -0.12,
+        "rural": -0.08,
+        "depression_comorbid": -0.10,
+        "recent_pcp_visit": 0.15
+      },
+      "seasonalVariation": false
+    },
+    "CDC-EYE": {
+      "measureName": "Diabetic Eye Exam",
+      "baselineCompliance": 0.42,
+      "riskFactors": {
+        "rural": -0.15,
+        "transportation_barrier": -0.18,
+        "recent_specialist_visit": 0.12
+      },
+      "seasonalVariation": false
+    },
+    "CBP": {
+      "measureName": "Blood Pressure Control",
+      "baselineCompliance": 0.58,
+      "riskFactors": {
+        "medication_adherence_low": -0.20,
+        "obesity": -0.08,
+        "smoking": -0.10,
+        "recent_pcp_visit": 0.12
+      },
+      "seasonalVariation": false
+    },
+    "BCS": {
+      "measureName": "Breast Cancer Screening",
+      "baselineCompliance": 0.72,
+      "riskFactors": {
+        "rural": -0.10,
+        "medicaid": -0.08,
+        "age_50_54": -0.05,
+        "age_70_74": -0.08
+      },
+      "seasonalVariation": true,
+      "peakMonths": [10, 11]
+    },
+    "COL": {
+      "measureName": "Colorectal Screening",
+      "baselineCompliance": 0.65,
+      "riskFactors": {
+        "male": -0.05,
+        "rural": -0.08,
+        "age_45_50": -0.10,
+        "recent_pcp_visit": 0.10
+      },
+      "seasonalVariation": false
+    },
+    "FLU": {
+      "measureName": "Influenza Vaccination",
+      "baselineCompliance": 0.48,
+      "riskFactors": {
+        "age_over_65": 0.20,
+        "chronic_condition": 0.10,
+        "rural": -0.05
+      },
+      "seasonalVariation": true,
+      "peakMonths": [9, 10, 11, 12]
+    },
+    "AMM": {
+      "measureName": "Antidepressant Medication Management",
+      "baselineCompliance": 0.55,
+      "riskFactors": {
+        "age_18_35": -0.10,
+        "medicaid": -0.08,
+        "pharmacy_access": 0.08
+      },
+      "seasonalVariation": false
+    }
+  },
+
+  "observations": {
+    "hba1c": {
+      "loincCode": "4548-4",
+      "name": "Hemoglobin A1c",
+      "unit": "%",
+      "normalRange": { "min": 4.0, "max": 5.6 },
+      "diabeticRange": { "min": 5.7, "max": 14.0 },
+      "distributions": {
+        "controlled": { "mean": 6.8, "stdDev": 0.4 },
+        "uncontrolled": { "mean": 9.2, "stdDev": 1.2 }
+      }
+    },
+    "systolicBP": {
+      "loincCode": "8480-6",
+      "name": "Systolic Blood Pressure",
+      "unit": "mmHg",
+      "normalRange": { "min": 90, "max": 120 },
+      "elevatedRange": { "min": 120, "max": 180 },
+      "distributions": {
+        "normal": { "mean": 118, "stdDev": 8 },
+        "hypertensive": { "mean": 148, "stdDev": 15 }
+      }
+    },
+    "diastolicBP": {
+      "loincCode": "8462-4",
+      "name": "Diastolic Blood Pressure",
+      "unit": "mmHg",
+      "normalRange": { "min": 60, "max": 80 },
+      "elevatedRange": { "min": 80, "max": 120 },
+      "distributions": {
+        "normal": { "mean": 76, "stdDev": 6 },
+        "hypertensive": { "mean": 92, "stdDev": 10 }
+      }
+    },
+    "ldl": {
+      "loincCode": "2089-1",
+      "name": "LDL Cholesterol",
+      "unit": "mg/dL",
+      "normalRange": { "min": 0, "max": 100 },
+      "elevatedRange": { "min": 100, "max": 250 },
+      "distributions": {
+        "normal": { "mean": 95, "stdDev": 20 },
+        "elevated": { "mean": 145, "stdDev": 30 }
+      }
+    },
+    "egfr": {
+      "loincCode": "48642-3",
+      "name": "eGFR",
+      "unit": "mL/min/1.73m2",
+      "normalRange": { "min": 90, "max": 120 },
+      "ckdRange": { "min": 15, "max": 90 },
+      "distributions": {
+        "normal": { "mean": 95, "stdDev": 12 },
+        "ckd_stage3": { "mean": 45, "stdDev": 10 }
+      }
+    },
+    "bmi": {
+      "loincCode": "39156-5",
+      "name": "Body Mass Index",
+      "unit": "kg/m2",
+      "normalRange": { "min": 18.5, "max": 24.9 },
+      "obeseRange": { "min": 30, "max": 60 },
+      "distributions": {
+        "normal": { "mean": 23, "stdDev": 2 },
+        "overweight": { "mean": 27, "stdDev": 2 },
+        "obese": { "mean": 34, "stdDev": 5 }
+      }
+    },
+    "phq9": {
+      "loincCode": "44261-6",
+      "name": "PHQ-9 Depression Score",
+      "unit": "{score}",
+      "normalRange": { "min": 0, "max": 4 },
+      "elevatedRange": { "min": 5, "max": 27 },
+      "distributions": {
+        "minimal": { "mean": 2, "stdDev": 1.5 },
+        "mild": { "mean": 7, "stdDev": 2 },
+        "moderate": { "mean": 12, "stdDev": 2 },
+        "severe": { "mean": 20, "stdDev": 3 }
+      }
+    }
+  },
+
+  "riskStratification": {
+    "distribution": {
+      "healthy": 0.30,
+      "lowRisk": 0.25,
+      "risingRisk": 0.20,
+      "moderateRisk": 0.15,
+      "highRisk": 0.10
+    },
+    "criteria": {
+      "healthy": {
+        "conditions": 0,
+        "edVisitsLast12Months": 0,
+        "admissionsLast12Months": 0
+      },
+      "lowRisk": {
+        "conditions": [1, 2],
+        "edVisitsLast12Months": [0, 1],
+        "admissionsLast12Months": 0
+      },
+      "risingRisk": {
+        "conditions": [2, 3],
+        "edVisitsLast12Months": [1, 2],
+        "admissionsLast12Months": [0, 1]
+      },
+      "moderateRisk": {
+        "conditions": [3, 5],
+        "edVisitsLast12Months": [2, 4],
+        "admissionsLast12Months": [1, 2]
+      },
+      "highRisk": {
+        "conditions": [5, 10],
+        "edVisitsLast12Months": [4, 12],
+        "admissionsLast12Months": [2, 6]
+      }
+    }
+  }
+}

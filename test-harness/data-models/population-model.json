@@ -1,0 +1,1087 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "version": "1.0.0",
+  "title": "HDIM Population Data Model",
+  "description": "Comprehensive population model for generating realistic synthetic patient data for healthcare quality measure testing",
+  "lastUpdated": "2025-12-29",
+
+  "demographicDistributions": {
+    "description": "Age, gender, geography, race/ethnicity, and socioeconomic distributions by population type",
+
+    "populationTypes": {
+      "general": {
+        "description": "General commercial population (employer-sponsored insurance)",
+        "ageDistribution": {
+          "type": "mixture_of_normals",
+          "components": [
+            {"mean": 8, "stdDev": 4, "weight": 0.15, "min": 0, "max": 18, "label": "pediatric"},
+            {"mean": 35, "stdDev": 10, "weight": 0.50, "min": 18, "max": 64, "label": "adult"},
+            {"mean": 55, "stdDev": 6, "weight": 0.35, "min": 45, "max": 64, "label": "late_adult"}
+          ]
+        },
+        "medianAge": 38
+      },
+      "medicare": {
+        "description": "Medicare population (65+ and disabled)",
+        "ageDistribution": {
+          "type": "mixture_of_normals",
+          "components": [
+            {"mean": 72, "stdDev": 6, "weight": 0.70, "min": 65, "max": 85, "label": "standard_medicare"},
+            {"mean": 82, "stdDev": 5, "weight": 0.20, "min": 75, "max": 100, "label": "elderly"},
+            {"mean": 45, "stdDev": 12, "weight": 0.10, "min": 18, "max": 64, "label": "disabled"}
+          ]
+        },
+        "medianAge": 73
+      },
+      "medicaid": {
+        "description": "Medicaid population (low-income, pregnant, children)",
+        "ageDistribution": {
+          "type": "mixture_of_normals",
+          "components": [
+            {"mean": 6, "stdDev": 4, "weight": 0.40, "min": 0, "max": 18, "label": "children"},
+            {"mean": 30, "stdDev": 8, "weight": 0.35, "min": 18, "max": 50, "label": "adults"},
+            {"mean": 55, "stdDev": 8, "weight": 0.15, "min": 40, "max": 64, "label": "older_adults"},
+            {"mean": 75, "stdDev": 7, "weight": 0.10, "min": 65, "max": 95, "label": "dual_eligible"}
+          ]
+        },
+        "medianAge": 28
+      },
+      "commercial": {
+        "description": "Commercial/Exchange population",
+        "ageDistribution": {
+          "type": "mixture_of_normals",
+          "components": [
+            {"mean": 10, "stdDev": 5, "weight": 0.20, "min": 0, "max": 18, "label": "pediatric"},
+            {"mean": 32, "stdDev": 8, "weight": 0.45, "min": 18, "max": 50, "label": "young_adult"},
+            {"mean": 55, "stdDev": 5, "weight": 0.35, "min": 45, "max": 64, "label": "pre_medicare"}
+          ]
+        },
+        "medianAge": 40
+      }
+    },
+
+    "genderDistribution": {
+      "description": "Gender ratio by population type (female probability)",
+      "general": 0.51,
+      "medicare": 0.55,
+      "medicaid": 0.58,
+      "commercial": 0.52,
+      "genderOptions": ["male", "female", "other", "unknown"],
+      "otherGenderProbability": 0.003,
+      "unknownGenderProbability": 0.002
+    },
+
+    "geographicDistribution": {
+      "urbanRuralMix": {
+        "general": {"urban": 0.55, "suburban": 0.32, "rural": 0.13},
+        "medicare": {"urban": 0.48, "suburban": 0.35, "rural": 0.17},
+        "medicaid": {"urban": 0.62, "suburban": 0.25, "rural": 0.13},
+        "commercial": {"urban": 0.52, "suburban": 0.36, "rural": 0.12}
+      },
+      "regions": {
+        "northeast": {"weight": 0.17, "states": ["ME", "NH", "VT", "MA", "RI", "CT", "NY", "NJ", "PA"]},
+        "midwest": {"weight": 0.21, "states": ["OH", "IN", "IL", "MI", "WI", "MN", "IA", "MO", "ND", "SD", "NE", "KS"]},
+        "south": {"weight": 0.38, "states": ["DE", "MD", "DC", "VA", "WV", "NC", "SC", "GA", "FL", "KY", "TN", "AL", "MS", "AR", "LA", "OK", "TX"]},
+        "west": {"weight": 0.24, "states": ["MT", "ID", "WY", "CO", "NM", "AZ", "UT", "NV", "WA", "OR", "CA", "AK", "HI"]}
+      }
+    },
+
+    "raceEthnicityDistribution": {
+      "description": "Based on US Census 2023 estimates",
+      "categories": {
+        "white": {"probability": 0.588, "hispanicSubset": 0.0},
+        "hispanic": {"probability": 0.195, "hispanicSubset": 1.0},
+        "black": {"probability": 0.124, "hispanicSubset": 0.0},
+        "asian": {"probability": 0.061, "hispanicSubset": 0.0},
+        "americanIndian": {"probability": 0.013, "hispanicSubset": 0.0},
+        "pacificIslander": {"probability": 0.003, "hispanicSubset": 0.0},
+        "multiracial": {"probability": 0.028, "hispanicSubset": 0.0},
+        "other": {"probability": 0.003, "hispanicSubset": 0.0}
+      },
+      "fhirRaceCodes": {
+        "white": {"system": "urn:oid:2.16.840.1.113883.6.238", "code": "2106-3", "display": "White"},
+        "black": {"system": "urn:oid:2.16.840.1.113883.6.238", "code": "2054-5", "display": "Black or African American"},
+        "asian": {"system": "urn:oid:2.16.840.1.113883.6.238", "code": "2028-9", "display": "Asian"},
+        "americanIndian": {"system": "urn:oid:2.16.840.1.113883.6.238", "code": "1002-5", "display": "American Indian or Alaska Native"},
+        "pacificIslander": {"system": "urn:oid:2.16.840.1.113883.6.238", "code": "2076-8", "display": "Native Hawaiian or Other Pacific Islander"},
+        "other": {"system": "urn:oid:2.16.840.1.113883.6.238", "code": "2131-1", "display": "Other Race"}
+      },
+      "fhirEthnicityCodes": {
+        "hispanic": {"system": "urn:oid:2.16.840.1.113883.6.238", "code": "2135-2", "display": "Hispanic or Latino"},
+        "nonHispanic": {"system": "urn:oid:2.16.840.1.113883.6.238", "code": "2186-5", "display": "Not Hispanic or Latino"}
+      }
+    },
+
+    "socioeconomicIndicators": {
+      "federalPovertyLevel": {
+        "distribution": {
+          "below100": {"probability": 0.11, "fpLabel": "<100% FPL"},
+          "100to138": {"probability": 0.07, "fplLabel": "100-138% FPL"},
+          "139to200": {"probability": 0.10, "fplLabel": "139-200% FPL"},
+          "201to400": {"probability": 0.25, "fplLabel": "201-400% FPL"},
+          "above400": {"probability": 0.47, "fplLabel": ">400% FPL"}
+        },
+        "byPopulationType": {
+          "medicaid": {"below100": 0.45, "100to138": 0.30, "139to200": 0.15, "201to400": 0.08, "above400": 0.02},
+          "medicare": {"below100": 0.14, "100to138": 0.08, "139to200": 0.12, "201to400": 0.26, "above400": 0.40},
+          "commercial": {"below100": 0.03, "100to138": 0.04, "139to200": 0.08, "201to400": 0.30, "above400": 0.55}
+        }
+      },
+      "educationLevel": {
+        "lessThanHighSchool": 0.11,
+        "highSchoolOrGED": 0.27,
+        "someCollege": 0.20,
+        "associateDegree": 0.09,
+        "bachelorDegree": 0.21,
+        "graduateDegree": 0.12
+      },
+      "sdohFactors": {
+        "foodInsecurity": {"overall": 0.105, "byFPL": {"below100": 0.35, "100to200": 0.22, "above200": 0.05}},
+        "housingInstability": {"overall": 0.08, "byFPL": {"below100": 0.25, "100to200": 0.12, "above200": 0.03}},
+        "transportationBarriers": {"overall": 0.06, "byFPL": {"below100": 0.20, "100to200": 0.10, "above200": 0.02}},
+        "socialIsolation": {"overall": 0.22, "byAge": {"under65": 0.15, "65to74": 0.22, "75plus": 0.35}},
+        "healthLiteracy": {"inadequate": 0.36, "marginal": 0.17, "adequate": 0.47}
+      }
+    }
+  },
+
+  "clinicalConditionPrevalence": {
+    "description": "Chronic disease prevalence rates with age/gender stratification",
+
+    "chronicConditions": {
+      "diabetes": {
+        "icd10Codes": ["E11.9", "E11.65", "E11.21", "E11.22", "E11.40", "E11.42", "E11.51", "E11.52"],
+        "hccCodes": ["HCC19", "HCC18", "HCC17"],
+        "overallPrevalence": 0.115,
+        "ageGenderPrevalence": {
+          "18-44": {"male": 0.035, "female": 0.028},
+          "45-64": {"male": 0.145, "female": 0.118},
+          "65-74": {"male": 0.235, "female": 0.188},
+          "75+": {"male": 0.248, "female": 0.205}
+        },
+        "raceEthnicityModifiers": {
+          "white": 1.0,
+          "black": 1.52,
+          "hispanic": 1.66,
+          "asian": 1.05,
+          "americanIndian": 2.18
+        },
+        "onsetAgeDistribution": {"mean": 52, "stdDev": 12, "min": 18, "max": 85}
+      },
+
+      "hypertension": {
+        "icd10Codes": ["I10", "I11.9", "I12.9", "I13.10"],
+        "hccCodes": [],
+        "overallPrevalence": 0.47,
+        "ageGenderPrevalence": {
+          "18-44": {"male": 0.28, "female": 0.18},
+          "45-64": {"male": 0.52, "female": 0.46},
+          "65-74": {"male": 0.68, "female": 0.72},
+          "75+": {"male": 0.78, "female": 0.82}
+        },
+        "raceEthnicityModifiers": {
+          "white": 1.0,
+          "black": 1.45,
+          "hispanic": 1.05,
+          "asian": 0.92
+        },
+        "onsetAgeDistribution": {"mean": 48, "stdDev": 14, "min": 18, "max": 90}
+      },
+
+      "heartFailure": {
+        "icd10Codes": ["I50.9", "I50.20", "I50.22", "I50.23", "I50.30", "I50.32", "I50.40", "I50.42"],
+        "hccCodes": ["HCC85", "HCC86"],
+        "overallPrevalence": 0.024,
+        "ageGenderPrevalence": {
+          "18-44": {"male": 0.002, "female": 0.001},
+          "45-64": {"male": 0.018, "female": 0.010},
+          "65-74": {"male": 0.055, "female": 0.035},
+          "75+": {"male": 0.118, "female": 0.095}
+        },
+        "ejectionFractionDistribution": {
+          "preserved_hfpef": {"probability": 0.50, "efRange": [50, 70]},
+          "mildly_reduced": {"probability": 0.15, "efRange": [41, 49]},
+          "reduced_hfref": {"probability": 0.35, "efRange": [15, 40]}
+        },
+        "onsetAgeDistribution": {"mean": 68, "stdDev": 12, "min": 30, "max": 95}
+      },
+
+      "copd": {
+        "icd10Codes": ["J44.0", "J44.1", "J44.9", "J43.9"],
+        "hccCodes": ["HCC111", "HCC112"],
+        "overallPrevalence": 0.047,
+        "ageGenderPrevalence": {
+          "18-44": {"male": 0.012, "female": 0.015},
+          "45-64": {"male": 0.052, "female": 0.058},
+          "65-74": {"male": 0.095, "female": 0.088},
+          "75+": {"male": 0.125, "female": 0.102}
+        },
+        "goldStageDistribution": {
+          "mild_I": {"probability": 0.15, "fev1Percent": [80, 100]},
+          "moderate_II": {"probability": 0.45, "fev1Percent": [50, 79]},
+          "severe_III": {"probability": 0.30, "fev1Percent": [30, 49]},
+          "very_severe_IV": {"probability": 0.10, "fev1Percent": [0, 29]}
+        },
+        "onsetAgeDistribution": {"mean": 58, "stdDev": 10, "min": 35, "max": 85}
+      },
+
+      "ckd": {
+        "icd10Codes": ["N18.1", "N18.2", "N18.3", "N18.30", "N18.31", "N18.32", "N18.4", "N18.5", "N18.6"],
+        "hccCodes": ["HCC138", "HCC137", "HCC136", "HCC135", "HCC134"],
+        "overallPrevalence": 0.15,
+        "ageGenderPrevalence": {
+          "18-44": {"male": 0.045, "female": 0.055},
+          "45-64": {"male": 0.105, "female": 0.125},
+          "65-74": {"male": 0.225, "female": 0.255},
+          "75+": {"male": 0.385, "female": 0.395}
+        },
+        "stageDistribution": {
+          "stage1": {"probability": 0.06, "egfrRange": [90, 120], "icd10": "N18.1"},
+          "stage2": {"probability": 0.18, "egfrRange": [60, 89], "icd10": "N18.2"},
+          "stage3a": {"probability": 0.35, "egfrRange": [45, 59], "icd10": "N18.31"},
+          "stage3b": {"probability": 0.25, "egfrRange": [30, 44], "icd10": "N18.32"},
+          "stage4": {"probability": 0.12, "egfrRange": [15, 29], "icd10": "N18.4"},
+          "stage5": {"probability": 0.04, "egfrRange": [0, 14], "icd10": "N18.5"}
+        },
+        "onsetAgeDistribution": {"mean": 62, "stdDev": 14, "min": 25, "max": 90}
+      },
+
+      "depression": {
+        "icd10Codes": ["F32.0", "F32.1", "F32.2", "F32.9", "F33.0", "F33.1", "F33.2", "F33.9"],
+        "hccCodes": ["HCC59"],
+        "overallPrevalence": 0.082,
+        "ageGenderPrevalence": {
+          "18-44": {"male": 0.062, "female": 0.115},
+          "45-64": {"male": 0.055, "female": 0.095},
+          "65-74": {"male": 0.042, "female": 0.068},
+          "75+": {"male": 0.038, "female": 0.055}
+        },
+        "severityDistribution": {
+          "mild": {"probability": 0.40, "phq9Range": [5, 9]},
+          "moderate": {"probability": 0.35, "phq9Range": [10, 14]},
+          "moderately_severe": {"probability": 0.18, "phq9Range": [15, 19]},
+          "severe": {"probability": 0.07, "phq9Range": [20, 27]}
+        },
+        "onsetAgeDistribution": {"mean": 32, "stdDev": 15, "min": 12, "max": 85}
+      },
+
+      "anxiety": {
+        "icd10Codes": ["F41.0", "F41.1", "F41.9", "F40.10"],
+        "hccCodes": [],
+        "overallPrevalence": 0.192,
+        "ageGenderPrevalence": {
+          "18-44": {"male": 0.145, "female": 0.265},
+          "45-64": {"male": 0.135, "female": 0.225},
+          "65-74": {"male": 0.095, "female": 0.165},
+          "75+": {"male": 0.075, "female": 0.125}
+        },
+        "severityDistribution": {
+          "minimal": {"probability": 0.35, "gad7Range": [0, 4]},
+          "mild": {"probability": 0.30, "gad7Range": [5, 9]},
+          "moderate": {"probability": 0.25, "gad7Range": [10, 14]},
+          "severe": {"probability": 0.10, "gad7Range": [15, 21]}
+        }
+      }
+    },
+
+    "comorbidityPatterns": {
+      "description": "Conditional probabilities for condition co-occurrence",
+      "diabetesComorbidities": {
+        "hypertension": {"conditionalProbability": 0.73, "description": "P(HTN|DM)"},
+        "ckd": {"conditionalProbability": 0.38, "description": "P(CKD|DM)"},
+        "heartFailure": {"conditionalProbability": 0.12, "description": "P(CHF|DM)"},
+        "depression": {"conditionalProbability": 0.22, "description": "P(DEP|DM)"},
+        "obesity": {"conditionalProbability": 0.68, "description": "P(OBE|DM)"}
+      },
+      "hypertensionComorbidities": {
+        "diabetes": {"conditionalProbability": 0.28, "description": "P(DM|HTN)"},
+        "ckd": {"conditionalProbability": 0.25, "description": "P(CKD|HTN)"},
+        "heartFailure": {"conditionalProbability": 0.08, "description": "P(CHF|HTN)"},
+        "cad": {"conditionalProbability": 0.18, "description": "P(CAD|HTN)"}
+      },
+      "ckdComorbidities": {
+        "diabetes": {"conditionalProbability": 0.44, "description": "P(DM|CKD)"},
+        "hypertension": {"conditionalProbability": 0.85, "description": "P(HTN|CKD)"},
+        "heartFailure": {"conditionalProbability": 0.22, "description": "P(CHF|CKD)"},
+        "anemia": {"conditionalProbability": 0.35, "description": "P(ANEMIA|CKD)"}
+      },
+      "heartFailureComorbidities": {
+        "hypertension": {"conditionalProbability": 0.78, "description": "P(HTN|CHF)"},
+        "diabetes": {"conditionalProbability": 0.42, "description": "P(DM|CHF)"},
+        "ckd": {"conditionalProbability": 0.52, "description": "P(CKD|CHF)"},
+        "afib": {"conditionalProbability": 0.38, "description": "P(AFIB|CHF)"},
+        "copd": {"conditionalProbability": 0.28, "description": "P(COPD|CHF)"}
+      },
+      "multiMorbidityDistribution": {
+        "description": "Distribution of total chronic condition count",
+        "byAgeGroup": {
+          "18-44": {"0": 0.55, "1": 0.28, "2": 0.12, "3+": 0.05},
+          "45-64": {"0": 0.30, "1": 0.32, "2": 0.22, "3+": 0.16},
+          "65-74": {"0": 0.12, "1": 0.25, "2": 0.28, "3+": 0.35},
+          "75+": {"0": 0.05, "1": 0.15, "2": 0.28, "3+": 0.52}
+        }
+      }
+    },
+
+    "riskStratification": {
+      "description": "Population distribution across risk tiers",
+      "tiers": {
+        "low": {
+          "probability": 0.45,
+          "criteria": "0-1 chronic conditions, no recent hospitalizations",
+          "hccRafScoreRange": [0.3, 0.7],
+          "expectedCostMultiplier": 0.4
+        },
+        "rising": {
+          "probability": 0.22,
+          "criteria": "1-2 conditions with suboptimal control",
+          "hccRafScoreRange": [0.7, 1.0],
+          "expectedCostMultiplier": 0.8
+        },
+        "moderate": {
+          "probability": 0.18,
+          "criteria": "2-3 conditions, some care gaps",
+          "hccRafScoreRange": [1.0, 1.5],
+          "expectedCostMultiplier": 1.2
+        },
+        "high": {
+          "probability": 0.10,
+          "criteria": "3+ conditions, recent utilization events",
+          "hccRafScoreRange": [1.5, 2.5],
+          "expectedCostMultiplier": 2.5
+        },
+        "veryHigh": {
+          "probability": 0.05,
+          "criteria": "Multiple complex conditions, recent hospitalization/ED",
+          "hccRafScoreRange": [2.5, 6.0],
+          "expectedCostMultiplier": 5.0
+        }
+      },
+      "byPopulationType": {
+        "medicare": {"low": 0.25, "rising": 0.22, "moderate": 0.25, "high": 0.18, "veryHigh": 0.10},
+        "medicaid": {"low": 0.35, "rising": 0.25, "moderate": 0.20, "high": 0.12, "veryHigh": 0.08},
+        "commercial": {"low": 0.55, "rising": 0.22, "moderate": 0.14, "high": 0.06, "veryHigh": 0.03}
+      }
+    }
+  },
+
+  "healthcareUtilization": {
+    "description": "Visit frequency and utilization patterns by risk level and condition",
+
+    "primaryCareVisits": {
+      "annualFrequency": {
+        "byRiskTier": {
+          "low": {"mean": 1.8, "stdDev": 1.2, "min": 0, "max": 6},
+          "rising": {"mean": 3.2, "stdDev": 1.5, "min": 1, "max": 8},
+          "moderate": {"mean": 4.5, "stdDev": 1.8, "min": 2, "max": 10},
+          "high": {"mean": 6.2, "stdDev": 2.2, "min": 3, "max": 14},
+          "veryHigh": {"mean": 8.5, "stdDev": 2.8, "min": 4, "max": 18}
+        },
+        "byAgeGroup": {
+          "0-17": {"mean": 3.2, "stdDev": 2.0},
+          "18-44": {"mean": 1.5, "stdDev": 1.2},
+          "45-64": {"mean": 2.8, "stdDev": 1.8},
+          "65+": {"mean": 5.2, "stdDev": 2.5}
+        }
+      },
+      "cptCodes": ["99213", "99214", "99215", "99395", "99396"],
+      "visitTypeDistribution": {
+        "wellnessVisit": 0.25,
+        "chronicCareManagement": 0.35,
+        "acuteIllness": 0.25,
+        "followUp": 0.15
+      }
+    },
+
+    "specialistVisits": {
+      "byCondition": {
+        "diabetes": {
+          "endocrinology": {"annualProbability": 0.35, "visitsIfUsed": {"mean": 2.2, "stdDev": 1.0}},
+          "ophthalmology": {"annualProbability": 0.65, "visitsIfUsed": {"mean": 1.2, "stdDev": 0.5}},
+          "nephrology": {"annualProbability": 0.18, "visitsIfUsed": {"mean": 2.5, "stdDev": 1.2}},
+          "podiatry": {"annualProbability": 0.42, "visitsIfUsed": {"mean": 2.0, "stdDev": 1.0}}
+        },
+        "heartFailure": {
+          "cardiology": {"annualProbability": 0.85, "visitsIfUsed": {"mean": 3.5, "stdDev": 1.5}},
+          "nephrology": {"annualProbability": 0.25, "visitsIfUsed": {"mean": 2.0, "stdDev": 1.0}}
+        },
+        "ckd": {
+          "nephrology": {"annualProbability": 0.55, "visitsIfUsed": {"mean": 3.0, "stdDev": 1.2}}
+        },
+        "copd": {
+          "pulmonology": {"annualProbability": 0.45, "visitsIfUsed": {"mean": 2.5, "stdDev": 1.0}}
+        },
+        "depression": {
+          "psychiatry": {"annualProbability": 0.28, "visitsIfUsed": {"mean": 4.0, "stdDev": 2.5}},
+          "psychology": {"annualProbability": 0.22, "visitsIfUsed": {"mean": 8.0, "stdDev": 6.0}}
+        }
+      }
+    },
+
+    "emergencyDepartment": {
+      "annualVisitRate": {
+        "byRiskTier": {
+          "low": {"visitsPerThousand": 180, "stdDev": 50},
+          "rising": {"visitsPerThousand": 280, "stdDev": 70},
+          "moderate": {"visitsPerThousand": 420, "stdDev": 100},
+          "high": {"visitsPerThousand": 650, "stdDev": 150},
+          "veryHigh": {"visitsPerThousand": 1100, "stdDev": 250}
+        },
+        "byCondition": {
+          "heartFailure": {"visitsPerThousand": 580},
+          "copd": {"visitsPerThousand": 420},
+          "diabetes": {"visitsPerThousand": 310},
+          "depression": {"visitsPerThousand": 180}
+        }
+      },
+      "dispositionDistribution": {
+        "discharge": 0.78,
+        "admission": 0.18,
+        "observation": 0.04
+      }
+    },
+
+    "hospitalizations": {
+      "annualAdmissionRate": {
+        "byRiskTier": {
+          "low": {"admissionsPerThousand": 35, "avgLOS": 3.2},
+          "rising": {"admissionsPerThousand": 65, "avgLOS": 3.8},
+          "moderate": {"admissionsPerThousand": 115, "avgLOS": 4.2},
+          "high": {"admissionsPerThousand": 185, "avgLOS": 4.8},
+          "veryHigh": {"admissionsPerThousand": 320, "avgLOS": 5.5}
+        },
+        "byCondition": {
+          "heartFailure": {"admissionsPerThousand": 245, "avgLOS": 5.2},
+          "copd": {"admissionsPerThousand": 165, "avgLOS": 4.8},
+          "diabetes": {"admissionsPerThousand": 98, "avgLOS": 4.1},
+          "ckd": {"admissionsPerThousand": 142, "avgLOS": 4.5}
+        }
+      },
+      "readmissionProbability": {
+        "30day": {
+          "overall": 0.15,
+          "byCondition": {
+            "heartFailure": 0.22,
+            "copd": 0.18,
+            "pneumonia": 0.16,
+            "ami": 0.14
+          },
+          "riskFactors": {
+            "priorAdmission6mo": {"oddsRatio": 2.1},
+            "ckdStage4Plus": {"oddsRatio": 1.8},
+            "polypharmacy10Plus": {"oddsRatio": 1.5},
+            "livesAlone": {"oddsRatio": 1.4},
+            "lowHealthLiteracy": {"oddsRatio": 1.3}
+          }
+        }
+      }
+    }
+  },
+
+  "careGapProbabilities": {
+    "description": "Baseline compliance rates and factors affecting gap closure for HEDIS measures",
+
+    "hedisMeasures": {
+      "CDC_HBA1C": {
+        "measureName": "Comprehensive Diabetes Care - HbA1c Testing",
+        "baselineCompliance": {
+          "overall": 0.88,
+          "byAge": {"18-44": 0.82, "45-64": 0.89, "65-74": 0.92, "75+": 0.85},
+          "byGender": {"male": 0.86, "female": 0.90},
+          "byRace": {"white": 0.90, "black": 0.84, "hispanic": 0.83, "asian": 0.92}
+        },
+        "controlRate": {
+          "hba1cUnder8": {"overall": 0.58, "byAge": {"18-44": 0.52, "45-64": 0.60, "65-74": 0.65, "75+": 0.55}},
+          "hba1cUnder9": {"overall": 0.72}
+        }
+      },
+      "CDC_EYE": {
+        "measureName": "Comprehensive Diabetes Care - Eye Exam",
+        "baselineCompliance": {
+          "overall": 0.55,
+          "byAge": {"18-44": 0.42, "45-64": 0.52, "65-74": 0.62, "75+": 0.58},
+          "byRace": {"white": 0.58, "black": 0.48, "hispanic": 0.45, "asian": 0.62}
+        }
+      },
+      "CDC_BP": {
+        "measureName": "Comprehensive Diabetes Care - Blood Pressure Control",
+        "baselineCompliance": {
+          "overall": 0.62,
+          "byAge": {"18-44": 0.55, "45-64": 0.60, "65-74": 0.68, "75+": 0.65}
+        },
+        "targetBP": {"systolic": 140, "diastolic": 90}
+      },
+      "CDC_NEPHRO": {
+        "measureName": "Comprehensive Diabetes Care - Nephropathy Screening",
+        "baselineCompliance": {
+          "overall": 0.89,
+          "byAge": {"18-44": 0.85, "45-64": 0.90, "65-74": 0.92, "75+": 0.88}
+        }
+      },
+      "CBP": {
+        "measureName": "Controlling High Blood Pressure",
+        "baselineCompliance": {
+          "overall": 0.55,
+          "byAge": {"18-44": 0.48, "45-64": 0.52, "65-74": 0.58, "75+": 0.60},
+          "byRace": {"white": 0.58, "black": 0.42, "hispanic": 0.50, "asian": 0.62}
+        },
+        "targetBP": {"systolic": 140, "diastolic": 90}
+      },
+      "BCS": {
+        "measureName": "Breast Cancer Screening",
+        "baselineCompliance": {
+          "overall": 0.72,
+          "byAge": {"50-54": 0.68, "55-64": 0.75, "65-74": 0.78}
+        },
+        "seasonality": {"q1": 0.95, "q2": 1.02, "q3": 1.05, "q4": 0.98}
+      },
+      "COL": {
+        "measureName": "Colorectal Cancer Screening",
+        "baselineCompliance": {
+          "overall": 0.60,
+          "byAge": {"45-49": 0.45, "50-54": 0.55, "55-64": 0.62, "65-74": 0.72}
+        }
+      },
+      "CIS": {
+        "measureName": "Childhood Immunization Status",
+        "baselineCompliance": {
+          "overall": 0.68,
+          "byAge": {"0-1": 0.72, "1-2": 0.65}
+        }
+      },
+      "FLU": {
+        "measureName": "Flu Immunization",
+        "baselineCompliance": {
+          "overall": 0.52,
+          "byAge": {"18-49": 0.35, "50-64": 0.48, "65+": 0.72}
+        },
+        "seasonality": {"sep": 0.6, "oct": 1.5, "nov": 1.3, "dec": 0.8, "jan": 0.5, "feb": 0.3}
+      },
+      "AWC": {
+        "measureName": "Adolescent Well-Care Visit",
+        "baselineCompliance": {
+          "overall": 0.52,
+          "byAge": {"12-17": 0.52}
+        },
+        "seasonality": {"aug": 1.4, "sep": 1.2, "jul": 1.1}
+      },
+      "WCV": {
+        "measureName": "Adult Well-Care Visit",
+        "baselineCompliance": {
+          "overall": 0.38,
+          "byAge": {"18-39": 0.32, "40-64": 0.42}
+        },
+        "seasonality": {"jan": 1.2, "sep": 1.1}
+      },
+      "PHQ9": {
+        "measureName": "Depression Screening and Follow-Up",
+        "baselineCompliance": {
+          "screening": 0.48,
+          "followUp": 0.35
+        }
+      },
+      "TRC": {
+        "measureName": "Transitions of Care",
+        "baselineCompliance": {
+          "medicationReconciliation": 0.52,
+          "patientEngagement": 0.45,
+          "followUpWithin30Days": 0.68
+        }
+      }
+    },
+
+    "gapClosureFactors": {
+      "sdohImpact": {
+        "foodInsecurity": {"complianceReduction": 0.12},
+        "housingInstability": {"complianceReduction": 0.18},
+        "transportationBarriers": {"complianceReduction": 0.22},
+        "lowHealthLiteracy": {"complianceReduction": 0.15}
+      },
+      "accessBarriers": {
+        "noUsualSource": {"complianceReduction": 0.25},
+        "uninsuredPeriod": {"complianceReduction": 0.35},
+        "ruralLocation": {"complianceReduction": 0.08},
+        "languageBarrier": {"complianceReduction": 0.12}
+      },
+      "engagementFactors": {
+        "patientPortalUser": {"complianceIncrease": 0.15},
+        "textRemindersEnabled": {"complianceIncrease": 0.10},
+        "careManagerAssigned": {"complianceIncrease": 0.22},
+        "chronicCareManagement": {"complianceIncrease": 0.18}
+      }
+    },
+
+    "seasonalPatterns": {
+      "description": "Monthly multipliers relative to annual average (1.0 = average)",
+      "fluVaccine": {
+        "jan": 0.3, "feb": 0.2, "mar": 0.1, "apr": 0.05, "may": 0.05, "jun": 0.05,
+        "jul": 0.1, "aug": 0.2, "sep": 0.8, "oct": 1.8, "nov": 1.5, "dec": 0.8
+      },
+      "wellnessVisits": {
+        "jan": 1.3, "feb": 1.1, "mar": 1.0, "apr": 0.95, "may": 0.9, "jun": 0.85,
+        "jul": 0.8, "aug": 0.9, "sep": 1.1, "oct": 1.0, "nov": 0.95, "dec": 0.85
+      },
+      "cancerScreenings": {
+        "jan": 1.1, "feb": 1.0, "mar": 1.05, "apr": 1.0, "may": 0.95, "jun": 0.9,
+        "jul": 0.85, "aug": 0.9, "sep": 1.0, "oct": 1.15, "nov": 1.1, "dec": 0.9
+      }
+    }
+  },
+
+  "fhirResourceTemplates": {
+    "description": "FHIR R4 resource templates with realistic value patterns",
+
+    "patient": {
+      "resourceType": "Patient",
+      "meta": {
+        "profile": ["http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"]
+      },
+      "identifierSystems": [
+        {"system": "http://healthdata-in-motion.com/patient-id", "use": "usual"},
+        {"system": "http://hl7.org/fhir/sid/us-ssn", "use": "official"},
+        {"system": "http://hospital.example.org/mrn", "use": "secondary"}
+      ],
+      "namePatterns": {
+        "firstNamesByGender": {
+          "male": ["James", "Michael", "Robert", "David", "William", "Richard", "Joseph", "Thomas", "John", "Daniel", "Carlos", "Luis", "Jose", "Antonio", "Wei", "Raj", "Mohammed"],
+          "female": ["Maria", "Jennifer", "Patricia", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen", "Ana", "Rosa", "Carmen", "Mei", "Priya", "Fatima"]
+        },
+        "lastNamesByEthnicity": {
+          "general": ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Anderson", "Taylor", "Thomas", "Jackson", "White", "Harris"],
+          "hispanic": ["Garcia", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Perez", "Sanchez", "Ramirez", "Torres", "Flores", "Rivera"],
+          "asian": ["Wang", "Li", "Zhang", "Chen", "Liu", "Kim", "Park", "Lee", "Patel", "Singh", "Nguyen", "Tran"]
+        }
+      },
+      "contactPatterns": {
+        "phoneProbability": 0.92,
+        "emailProbability": 0.75,
+        "addressFormats": {
+          "urban": "{streetNumber} {streetName} {streetType}, Apt {aptNumber}",
+          "suburban": "{streetNumber} {streetName} {streetType}",
+          "rural": "{routeNumber} {countyRoad}"
+        }
+      }
+    },
+
+    "condition": {
+      "resourceType": "Condition",
+      "meta": {
+        "profile": ["http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition"]
+      },
+      "clinicalStatusCodes": {
+        "active": {"system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active"},
+        "resolved": {"system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "resolved"},
+        "inactive": {"system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "inactive"}
+      },
+      "verificationStatusCodes": {
+        "confirmed": {"system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "confirmed"},
+        "provisional": {"system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "provisional"}
+      },
+      "categoryCodes": {
+        "problemList": {"system": "http://terminology.hl7.org/CodeSystem/condition-category", "code": "problem-list-item"},
+        "encounter": {"system": "http://terminology.hl7.org/CodeSystem/condition-category", "code": "encounter-diagnosis"}
+      },
+      "commonConditionCodes": {
+        "diabetes_type2": {"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "E11.9", "display": "Type 2 diabetes mellitus without complications"},
+        "diabetes_with_ckd": {"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "E11.22", "display": "Type 2 diabetes mellitus with diabetic chronic kidney disease"},
+        "hypertension": {"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "I10", "display": "Essential (primary) hypertension"},
+        "chf_unspecified": {"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "I50.9", "display": "Heart failure, unspecified"},
+        "chf_systolic": {"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "I50.20", "display": "Unspecified systolic (congestive) heart failure"},
+        "copd": {"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "J44.9", "display": "Chronic obstructive pulmonary disease, unspecified"},
+        "ckd_stage3": {"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "N18.3", "display": "Chronic kidney disease, stage 3 (moderate)"},
+        "depression_moderate": {"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "F32.1", "display": "Major depressive disorder, single episode, moderate"}
+      }
+    },
+
+    "observation": {
+      "resourceType": "Observation",
+      "meta": {
+        "profile": ["http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab"]
+      },
+      "vitalSigns": {
+        "bloodPressure": {
+          "loincCode": "85354-9",
+          "display": "Blood pressure panel with all children optional",
+          "components": {
+            "systolic": {"loincCode": "8480-6", "display": "Systolic blood pressure", "unit": "mm[Hg]"},
+            "diastolic": {"loincCode": "8462-4", "display": "Diastolic blood pressure", "unit": "mm[Hg]"}
+          },
+          "valueRanges": {
+            "normal": {"systolic": [90, 120], "diastolic": [60, 80]},
+            "elevated": {"systolic": [120, 129], "diastolic": [60, 80]},
+            "stage1Htn": {"systolic": [130, 139], "diastolic": [80, 89]},
+            "stage2Htn": {"systolic": [140, 180], "diastolic": [90, 120]},
+            "crisis": {"systolic": [180, 220], "diastolic": [120, 140]}
+          }
+        },
+        "heartRate": {
+          "loincCode": "8867-4",
+          "display": "Heart rate",
+          "unit": "/min",
+          "normalRange": [60, 100],
+          "distribution": {"mean": 75, "stdDev": 12}
+        },
+        "respiratoryRate": {
+          "loincCode": "9279-1",
+          "display": "Respiratory rate",
+          "unit": "/min",
+          "normalRange": [12, 20],
+          "distribution": {"mean": 16, "stdDev": 3}
+        },
+        "temperature": {
+          "loincCode": "8310-5",
+          "display": "Body temperature",
+          "unit": "Cel",
+          "normalRange": [36.1, 37.2],
+          "distribution": {"mean": 36.8, "stdDev": 0.4}
+        },
+        "bmi": {
+          "loincCode": "39156-5",
+          "display": "Body mass index (BMI)",
+          "unit": "kg/m2",
+          "categoryRanges": {
+            "underweight": [12, 18.5],
+            "normal": [18.5, 25],
+            "overweight": [25, 30],
+            "obese1": [30, 35],
+            "obese2": [35, 40],
+            "obese3": [40, 60]
+          },
+          "distributionByPopulation": {
+            "general": {"mean": 28.5, "stdDev": 6.0},
+            "diabetic": {"mean": 32.0, "stdDev": 6.5}
+          }
+        }
+      },
+      "labResults": {
+        "hba1c": {
+          "loincCode": "4548-4",
+          "display": "Hemoglobin A1c/Hemoglobin.total in Blood",
+          "unit": "%",
+          "normalRange": [4.0, 5.6],
+          "prediabetesRange": [5.7, 6.4],
+          "diabetesThreshold": 6.5,
+          "distributionByControl": {
+            "wellControlled": {"mean": 6.8, "stdDev": 0.5, "max": 7.5},
+            "moderateControl": {"mean": 8.0, "stdDev": 0.8, "max": 9.0},
+            "poorControl": {"mean": 9.5, "stdDev": 1.2, "max": 14.0}
+          }
+        },
+        "glucoseFasting": {
+          "loincCode": "1558-6",
+          "display": "Fasting glucose [Mass/volume] in Serum or Plasma",
+          "unit": "mg/dL",
+          "normalRange": [70, 99],
+          "prediabetesRange": [100, 125],
+          "diabetesThreshold": 126
+        },
+        "creatinine": {
+          "loincCode": "2160-0",
+          "display": "Creatinine [Mass/volume] in Serum or Plasma",
+          "unit": "mg/dL",
+          "normalRangeByGender": {
+            "male": [0.7, 1.3],
+            "female": [0.5, 1.1]
+          }
+        },
+        "egfr": {
+          "loincCode": "48642-3",
+          "display": "Glomerular filtration rate/1.73 sq M.predicted [Volume Rate/Area] in Serum, Plasma or Blood by Creatinine-based formula (MDRD)",
+          "unit": "mL/min/{1.73_m2}",
+          "stageThresholds": {
+            "normal": [90, 120],
+            "stage1": [90, 120],
+            "stage2": [60, 89],
+            "stage3a": [45, 59],
+            "stage3b": [30, 44],
+            "stage4": [15, 29],
+            "stage5": [0, 14]
+          }
+        },
+        "uacr": {
+          "loincCode": "9318-7",
+          "display": "Albumin/Creatinine [Mass Ratio] in Urine",
+          "unit": "mg/g{creat}",
+          "categoryThresholds": {
+            "normal": [0, 30],
+            "moderatelyIncreased": [30, 300],
+            "severelyIncreased": [300, 5000]
+          }
+        },
+        "ldlCholesterol": {
+          "loincCode": "2089-1",
+          "display": "Cholesterol in LDL [Mass/volume] in Serum or Plasma",
+          "unit": "mg/dL",
+          "targetRanges": {
+            "optimal": [0, 70],
+            "nearOptimal": [70, 100],
+            "borderlineHigh": [100, 129],
+            "high": [130, 159],
+            "veryHigh": [160, 300]
+          }
+        },
+        "totalCholesterol": {
+          "loincCode": "2093-3",
+          "display": "Cholesterol [Mass/volume] in Serum or Plasma",
+          "unit": "mg/dL",
+          "desirableRange": [0, 200]
+        },
+        "hdlCholesterol": {
+          "loincCode": "2085-9",
+          "display": "Cholesterol in HDL [Mass/volume] in Serum or Plasma",
+          "unit": "mg/dL",
+          "optimalRangeByGender": {
+            "male": [40, 100],
+            "female": [50, 100]
+          }
+        },
+        "triglycerides": {
+          "loincCode": "2571-8",
+          "display": "Triglyceride [Mass/volume] in Serum or Plasma",
+          "unit": "mg/dL",
+          "normalRange": [0, 150]
+        },
+        "potassium": {
+          "loincCode": "2823-3",
+          "display": "Potassium [Moles/volume] in Serum or Plasma",
+          "unit": "mmol/L",
+          "normalRange": [3.5, 5.0]
+        },
+        "phq9": {
+          "loincCode": "44261-6",
+          "display": "Patient Health Questionnaire 9 item (PHQ-9) total score [Reported]",
+          "unit": "{score}",
+          "severityRanges": {
+            "minimal": [0, 4],
+            "mild": [5, 9],
+            "moderate": [10, 14],
+            "moderatelySevere": [15, 19],
+            "severe": [20, 27]
+          }
+        },
+        "gad7": {
+          "loincCode": "70274-6",
+          "display": "Generalized anxiety disorder 7 item (GAD-7) total score [Reported]",
+          "unit": "{score}",
+          "severityRanges": {
+            "minimal": [0, 4],
+            "mild": [5, 9],
+            "moderate": [10, 14],
+            "severe": [15, 21]
+          }
+        }
+      }
+    },
+
+    "procedure": {
+      "resourceType": "Procedure",
+      "meta": {
+        "profile": ["http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure"]
+      },
+      "commonProcedures": {
+        "diabeticEyeExam": {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "92014",
+          "display": "Ophthalmological services: medical examination and evaluation with initiation or continuation of diagnostic and treatment program; comprehensive, established patient, 1 or more visits"
+        },
+        "mammogram": {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "77067",
+          "display": "Screening mammography, bilateral"
+        },
+        "colonoscopy": {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "45378",
+          "display": "Colonoscopy, flexible; diagnostic"
+        },
+        "fluVaccine": {
+          "system": "http://hl7.org/fhir/sid/cvx",
+          "code": "141",
+          "display": "Influenza, seasonal, injectable, preservative free"
+        },
+        "covid19Vaccine": {
+          "system": "http://hl7.org/fhir/sid/cvx",
+          "code": "208",
+          "display": "COVID-19, mRNA, LNP-S, PF, 30 mcg/0.3 mL dose"
+        },
+        "echocardiogram": {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "93306",
+          "display": "Echocardiography, transthoracic, real-time with image documentation"
+        }
+      },
+      "statusCodes": ["preparation", "in-progress", "not-done", "on-hold", "stopped", "completed", "entered-in-error", "unknown"]
+    },
+
+    "medicationRequest": {
+      "resourceType": "MedicationRequest",
+      "meta": {
+        "profile": ["http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest"]
+      },
+      "commonMedications": {
+        "diabetes": [
+          {"rxcui": "860975", "display": "Metformin 500 MG Oral Tablet", "class": "biguanide"},
+          {"rxcui": "311919", "display": "Metformin 1000 MG Oral Tablet", "class": "biguanide"},
+          {"rxcui": "1598393", "display": "Empagliflozin 25 MG Oral Tablet", "class": "sglt2"},
+          {"rxcui": "1598391", "display": "Empagliflozin 10 MG Oral Tablet", "class": "sglt2"},
+          {"rxcui": "1992681", "display": "Semaglutide 0.25 MG/0.5ML Pen Injector", "class": "glp1"},
+          {"rxcui": "1373463", "display": "Insulin glargine 100 UNT/ML Injectable Solution", "class": "insulin"},
+          {"rxcui": "847187", "display": "Lisinopril 10 MG Oral Tablet", "class": "ace_inhibitor"}
+        ],
+        "hypertension": [
+          {"rxcui": "847187", "display": "Lisinopril 10 MG Oral Tablet", "class": "ace_inhibitor"},
+          {"rxcui": "979480", "display": "Losartan 50 MG Oral Tablet", "class": "arb"},
+          {"rxcui": "197884", "display": "Amlodipine 5 MG Oral Tablet", "class": "ccb"},
+          {"rxcui": "746030", "display": "Hydrochlorothiazide 25 MG Oral Tablet", "class": "thiazide"},
+          {"rxcui": "866924", "display": "Metoprolol Succinate ER 50 MG Oral Tablet", "class": "beta_blocker"}
+        ],
+        "heartFailure": [
+          {"rxcui": "979480", "display": "Losartan 50 MG Oral Tablet", "class": "arb"},
+          {"rxcui": "1656340", "display": "Sacubitril 24.3 MG / Valsartan 25.7 MG Oral Tablet", "class": "arni"},
+          {"rxcui": "866924", "display": "Metoprolol Succinate ER 50 MG Oral Tablet", "class": "beta_blocker"},
+          {"rxcui": "1598393", "display": "Empagliflozin 25 MG Oral Tablet", "class": "sglt2"},
+          {"rxcui": "310429", "display": "Furosemide 40 MG Oral Tablet", "class": "loop_diuretic"},
+          {"rxcui": "313096", "display": "Spironolactone 25 MG Oral Tablet", "class": "mra"}
+        ],
+        "cholesterol": [
+          {"rxcui": "617311", "display": "Atorvastatin 40 MG Oral Tablet", "class": "statin"},
+          {"rxcui": "859749", "display": "Rosuvastatin 10 MG Oral Tablet", "class": "statin"},
+          {"rxcui": "1151131", "display": "Ezetimibe 10 MG Oral Tablet", "class": "cholesterol_absorption_inhibitor"}
+        ],
+        "depression": [
+          {"rxcui": "312938", "display": "Sertraline 50 MG Oral Tablet", "class": "ssri"},
+          {"rxcui": "313580", "display": "Escitalopram 10 MG Oral Tablet", "class": "ssri"},
+          {"rxcui": "311725", "display": "Duloxetine 30 MG Delayed Release Oral Capsule", "class": "snri"},
+          {"rxcui": "199889", "display": "Bupropion 150 MG Oral Tablet", "class": "ndri"}
+        ]
+      },
+      "dosagePatterns": {
+        "onceDaily": {"frequency": 1, "period": 1, "periodUnit": "d"},
+        "twiceDaily": {"frequency": 2, "period": 1, "periodUnit": "d"},
+        "threeTimesDaily": {"frequency": 3, "period": 1, "periodUnit": "d"},
+        "weekly": {"frequency": 1, "period": 1, "periodUnit": "wk"},
+        "asNeeded": {"asNeeded": true}
+      },
+      "adherencePatterns": {
+        "highAdherence": {"pdc": [0.80, 1.0], "probability": 0.45},
+        "moderateAdherence": {"pdc": [0.50, 0.79], "probability": 0.30},
+        "lowAdherence": {"pdc": [0.0, 0.49], "probability": 0.25}
+      }
+    },
+
+    "encounter": {
+      "resourceType": "Encounter",
+      "meta": {
+        "profile": ["http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter"]
+      },
+      "encounterTypes": {
+        "ambulatory": {"code": "AMB", "display": "ambulatory"},
+        "emergency": {"code": "EMER", "display": "emergency"},
+        "inpatient": {"code": "IMP", "display": "inpatient encounter"},
+        "virtual": {"code": "VR", "display": "virtual"}
+      },
+      "reasonCodes": {
+        "wellnessExam": {"system": "http://snomed.info/sct", "code": "185389009", "display": "Follow-up visit"},
+        "diabetesFollowUp": {"system": "http://snomed.info/sct", "code": "390906007", "display": "Follow-up encounter for diabetes"},
+        "hypertensionFollowUp": {"system": "http://snomed.info/sct", "code": "183616001", "display": "Follow-up for hypertension"}
+      },
+      "serviceTypes": {
+        "primaryCare": {"code": "124", "display": "General Practice"},
+        "cardiology": {"code": "165", "display": "Cardiology"},
+        "endocrinology": {"code": "131", "display": "Endocrinology"},
+        "nephrology": {"code": "174", "display": "Nephrology"},
+        "psychiatry": {"code": "286", "display": "Psychiatry"}
+      }
+    }
+  },
+
+  "dataGenerationParameters": {
+    "description": "Configuration parameters for the synthetic data generator",
+
+    "defaultPopulationSize": 1000,
+    "seedForReproducibility": null,
+
+    "timePeriods": {
+      "baselineStartDate": "2024-01-01",
+      "baselineEndDate": "2024-12-31",
+      "measurementYear": 2024,
+      "lookbackYears": 2
+    },
+
+    "correlationMatrices": {
+      "description": "Correlation coefficients between demographic/clinical variables",
+      "ageHba1c": 0.15,
+      "bmiHba1c": 0.35,
+      "ageBP": 0.25,
+      "ageCkdStage": 0.40,
+      "diabetesCkd": 0.45,
+      "htnCkd": 0.38
+    },
+
+    "missingDataPatterns": {
+      "description": "Probability of missing data by field type",
+      "demographics": {
+        "race": 0.08,
+        "ethnicity": 0.10,
+        "phone": 0.05,
+        "email": 0.15,
+        "address": 0.03
+      },
+      "clinicalData": {
+        "hba1c": 0.12,
+        "bloodPressure": 0.08,
+        "lipidPanel": 0.18,
+        "egfr": 0.15
+      }
+    },
+
+    "dataSplits": {
+      "training": 0.70,
+      "validation": 0.15,
+      "testing": 0.15
+    }
+  },
+
+  "validationRules": {
+    "description": "Business rules for data validity checking",
+
+    "ageConstraints": {
+      "minimum": 0,
+      "maximum": 120,
+      "pediatricMax": 17,
+      "adultMin": 18,
+      "medicareMin": 65
+    },
+
+    "clinicalRanges": {
+      "hba1c": {"minimum": 3.0, "maximum": 18.0, "criticalHigh": 14.0},
+      "systolicBP": {"minimum": 60, "maximum": 260, "criticalHigh": 180},
+      "diastolicBP": {"minimum": 30, "maximum": 140, "criticalHigh": 120},
+      "egfr": {"minimum": 0, "maximum": 150},
+      "bmi": {"minimum": 10, "maximum": 80}
+    },
+
+    "measureDenominatorRules": {
+      "CDC_HBA1C": {
+        "ageRange": [18, 75],
+        "requiredDiagnosis": "E11.*",
+        "exclusions": ["hospice", "esrd"]
+      },
+      "CDC_EYE": {
+        "ageRange": [18, 75],
+        "requiredDiagnosis": "E11.*",
+        "exclusions": ["hospice"]
+      },
+      "BCS": {
+        "ageRange": [50, 74],
+        "gender": "female",
+        "exclusions": ["bilateral_mastectomy"]
+      },
+      "CBP": {
+        "ageRange": [18, 85],
+        "requiredDiagnosis": "I10",
+        "exclusions": ["hospice", "esrd", "pregnancy"]
+      }
+    }
+  }
+}

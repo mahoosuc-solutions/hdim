@@ -109,3 +109,8 @@ actions-runner/
 
 # Gradle build artifacts (user-specific)
 **/build-user/
+
+# Playwright test artifacts
+**/test-results/
+**/playwright-report/
+**/.last-run.json

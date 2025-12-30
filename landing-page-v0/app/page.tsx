@@ -189,20 +189,28 @@ export default function LandingPage() {
                 Solutions
               </a>
               <a
-                href="#customers"
+                href="/research"
                 className={`text-sm font-medium transition-colors ${
                   scrolled ? 'text-gray-600 hover:text-primary' : 'text-white/80 hover:text-white'
                 }`}
               >
-                Customers
+                Research
               </a>
               <a
-                href="#resources"
+                href="/explorer"
                 className={`text-sm font-medium transition-colors ${
                   scrolled ? 'text-gray-600 hover:text-primary' : 'text-white/80 hover:text-white'
                 }`}
               >
-                Resources
+                Data Explorer
+              </a>
+              <a
+                href="/downloads"
+                className={`text-sm font-medium transition-colors ${
+                  scrolled ? 'text-gray-600 hover:text-primary' : 'text-white/80 hover:text-white'
+                }`}
+              >
+                Sample Data
               </a>
             </div>
 
@@ -244,9 +252,10 @@ export default function LandingPage() {
             <div className="px-4 py-4 space-y-3">
               <a href="#features" className="block text-gray-600 hover:text-primary">Features</a>
               <a href="#solutions" className="block text-gray-600 hover:text-primary">Solutions</a>
-              <a href="#customers" className="block text-gray-600 hover:text-primary">Customers</a>
-              <a href="#resources" className="block text-gray-600 hover:text-primary">Resources</a>
-              <a href="#demo" className="btn-primary w-full text-center mt-4">Request Demo</a>
+              <a href="/research" className="block text-gray-600 hover:text-primary">Research</a>
+              <a href="/explorer" className="block text-gray-600 hover:text-primary">Data Explorer</a>
+              <a href="/downloads" className="block text-gray-600 hover:text-primary">Sample Data</a>
+              <a href="/demo" className="btn-primary w-full text-center mt-4">Try Demo</a>
             </div>
           </div>
         )}
@@ -284,14 +293,14 @@ export default function LandingPage() {
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <a
-                  href="#demo"
+                  href="/demo"
                   className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary bg-white rounded-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-200"
                 >
                   <Play className="w-5 h-5 mr-2" />
                   Try Interactive Demo
                 </a>
                 <a
-                  href="#calculator"
+                  href="/research#calculator"
                   className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white border-2 border-white/30 rounded-lg hover:bg-white/10 transition-all duration-200"
                 >
                   Calculate Your ROI
@@ -680,14 +689,14 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="#"
+              href="/demo"
               className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary bg-white rounded-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-200"
             >
               <Play className="w-5 h-5 mr-2" />
               Try Interactive Demo
             </a>
             <a
-              href="#"
+              href="mailto:sales@hdim.io"
               className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white border-2 border-white/30 rounded-lg hover:bg-white/10 transition-all duration-200"
             >
               Schedule a Consultation

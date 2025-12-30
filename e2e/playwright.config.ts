@@ -86,18 +86,8 @@ export default defineConfig({
   },
 
   // Test projects for different browsers/devices
+  // Note: globalSetup/globalTeardown handle auth, so no setup project dependencies needed
   projects: [
-    // Setup project - runs authentication before other tests
-    {
-      name: 'setup',
-      testMatch: /global\.setup\.ts/,
-      teardown: 'teardown',
-    },
-    {
-      name: 'teardown',
-      testMatch: /global\.teardown\.ts/,
-    },
-
     // Desktop browsers
     {
       name: 'chromium',
@@ -105,7 +95,6 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         storageState: AUTH_STATE,
       },
-      dependencies: ['setup'],
     },
     {
       name: 'firefox',
@@ -113,7 +102,6 @@ export default defineConfig({
         ...devices['Desktop Firefox'],
         storageState: AUTH_STATE,
       },
-      dependencies: ['setup'],
     },
     {
       name: 'webkit',
@@ -121,7 +109,6 @@ export default defineConfig({
         ...devices['Desktop Safari'],
         storageState: AUTH_STATE,
       },
-      dependencies: ['setup'],
     },
 
     // Mobile browsers
@@ -131,7 +118,6 @@ export default defineConfig({
         ...devices['Pixel 5'],
         storageState: AUTH_STATE,
       },
-      dependencies: ['setup'],
     },
     {
       name: 'mobile-safari',
@@ -139,7 +125,6 @@ export default defineConfig({
         ...devices['iPhone 12'],
         storageState: AUTH_STATE,
       },
-      dependencies: ['setup'],
     },
 
     // Tablet
@@ -149,7 +134,6 @@ export default defineConfig({
         ...devices['iPad Pro 11'],
         storageState: AUTH_STATE,
       },
-      dependencies: ['setup'],
     },
 
     // Smoke tests - quick critical path verification
@@ -160,7 +144,6 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         storageState: AUTH_STATE,
       },
-      dependencies: ['setup'],
     },
 
     // Security tests - tenant isolation, RBAC, audit
@@ -171,7 +154,6 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         storageState: AUTH_STATE,
       },
-      dependencies: ['setup'],
     },
 
     // Accessibility tests (run on chromium only)
@@ -182,7 +164,6 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         storageState: AUTH_STATE,
       },
-      dependencies: ['setup'],
     },
 
     // Performance tests (run on chromium only)
@@ -193,7 +174,6 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         storageState: AUTH_STATE,
       },
-      dependencies: ['setup'],
     },
   ],
 

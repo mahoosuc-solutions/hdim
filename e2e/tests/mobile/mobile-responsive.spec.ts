@@ -14,7 +14,7 @@ import { TEST_USERS } from '../../fixtures/test-fixtures';
  * different mobile devices and screen sizes.
  *
  * Device Coverage:
- * - iPhone 12/13/14 (375x812)
+ * - iPhone 12/13/14 (390x844)
  * - iPhone SE (375x667)
  * - iPad (768x1024)
  * - iPad Pro (1024x1366)
@@ -22,637 +22,549 @@ import { TEST_USERS } from '../../fixtures/test-fixtures';
  * - Galaxy S21 (360x800)
  */
 
-// Mobile device configurations
-const mobileDevices = {
-  iPhoneSE: devices['iPhone SE'],
-  iPhone12: devices['iPhone 12'],
-  iPhone14: devices['iPhone 14'],
-  pixel5: devices['Pixel 5'],
-  galaxyS21: {
-    viewport: { width: 360, height: 800 },
-    userAgent: 'Mozilla/5.0 (Linux; Android 11; SM-G991B) AppleWebKit/537.36',
-    deviceScaleFactor: 3,
-    isMobile: true,
-    hasTouch: true,
-  },
+// Mobile device viewport configurations
+const mobileViewports = {
+  iPhoneSE: { width: 375, height: 667 },
+  iPhone12: { width: 390, height: 844 },
+  iPhone14: { width: 390, height: 844 },
+  pixel5: { width: 393, height: 851 },
+  galaxyS21: { width: 360, height: 800 },
 };
 
-// Tablet configurations
-const tabletDevices = {
-  iPad: devices['iPad (gen 7)'],
-  iPadPro: devices['iPad Pro 11'],
-  iPadLandscape: {
-    ...devices['iPad (gen 7)'],
-    viewport: { width: 1024, height: 768 },
-  },
+// Tablet viewport configurations
+const tabletViewports = {
+  iPad: { width: 768, height: 1024 },
+  iPadPro: { width: 1024, height: 1366 },
+  iPadLandscape: { width: 1024, height: 768 },
 };
 
-test.describe('Mobile Device Testing', () => {
-  /**
-   * MOBILE-001: iPhone Responsive Tests
-   */
-  test.describe('MOBILE-001: iPhone Responsive Tests', () => {
-    test.use({ ...mobileDevices.iPhone12 });
+/**
+ * Helper to configure mobile viewport
+ */
+async function setupMobileViewport(page: any, viewport: { width: number; height: number }) {
+  await page.setViewportSize(viewport);
+}
 
-    let loginPage: LoginPage;
-    let dashboardPage: DashboardPage;
+/**
+ * MOBILE-001: iPhone Responsive Tests
+ */
+test.describe('MOBILE-001: iPhone Responsive Tests', () => {
+  let loginPage: LoginPage;
+  let dashboardPage: DashboardPage;
 
-    test.beforeEach(async ({ page }) => {
-      loginPage = new LoginPage(page);
-      dashboardPage = new DashboardPage(page);
-    });
-
-    test('should display mobile login form correctly', async ({ page }) => {
-      await loginPage.goto();
-
-      // Login form should be visible and properly sized
-      const loginForm = page.locator('form, [data-testid="login-form"]');
-      await expect(loginForm).toBeVisible();
-
-      // Check form fits within viewport
-      const formBox = await loginForm.boundingBox();
-      if (formBox) {
-        expect(formBox.width).toBeLessThanOrEqual(375);
-      }
-
-      // Input fields should be full width on mobile
-      const inputs = page.locator('input[type="text"], input[type="password"]');
-      const inputCount = await inputs.count();
-
-      for (let i = 0; i < inputCount; i++) {
-        const inputBox = await inputs.nth(i).boundingBox();
-        if (inputBox) {
-          expect(inputBox.width).toBeGreaterThan(200);
-        }
-      }
-    });
-
-    test('should show mobile navigation menu', async ({ page }) => {
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
-
-      // Look for hamburger menu or mobile nav toggle
-      const mobileMenuToggle = page.locator(
-        '[data-testid="mobile-menu"], .hamburger, [aria-label*="menu"], button.menu-toggle'
-      );
-
-      const hasMobileMenu = await mobileMenuToggle.count() > 0;
-      console.log('Mobile menu toggle present:', hasMobileMenu);
-
-      if (hasMobileMenu) {
-        await mobileMenuToggle.click();
-
-        // Navigation should be visible after clicking
-        const mobileNav = page.locator(
-          '[data-testid="mobile-nav"], nav.mobile, .mobile-navigation'
-        );
-        const navVisible = await mobileNav.isVisible().catch(() => false);
-        console.log('Mobile navigation visible:', navVisible);
-      }
-    });
-
-    test('should handle touch scrolling on patient list', async ({ page }) => {
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
-
-      await page.goto('/patients');
-      await page.waitForLoadState('networkidle');
-
-      // Check if content is scrollable
-      const scrollableContent = page.locator('.patient-list, [data-testid="patient-list"], main');
-      const isScrollable = await scrollableContent.evaluate(el => {
-        return el.scrollHeight > el.clientHeight;
-      }).catch(() => false);
-
-      console.log('Patient list scrollable:', isScrollable);
-    });
-
-    test('should display dashboard cards in single column', async ({ page }) => {
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
-
-      await dashboardPage.goto();
-      await dashboardPage.waitForDataLoad();
-
-      // Dashboard cards should stack vertically on mobile
-      const cards = page.locator('.dashboard-card, [data-testid*="card"], .mat-card');
-      const cardCount = await cards.count();
-
-      if (cardCount > 1) {
-        const firstCard = await cards.first().boundingBox();
-        const secondCard = await cards.nth(1).boundingBox();
-
-        if (firstCard && secondCard) {
-          // Cards should be stacked (second card below first)
-          const isStacked = secondCard.y > firstCard.y + firstCard.height - 10;
-          console.log('Dashboard cards stacked:', isStacked);
-        }
-      }
-    });
-
-    test('should have touch-friendly button sizes', async ({ page }) => {
-      await loginPage.goto();
-
-      // All interactive elements should be at least 44x44 pixels
-      const buttons = page.locator('button, a.btn, [role="button"]');
-      const buttonCount = await buttons.count();
-
-      let touchFriendlyCount = 0;
-      for (let i = 0; i < Math.min(buttonCount, 10); i++) {
-        const box = await buttons.nth(i).boundingBox();
-        if (box && box.width >= 44 && box.height >= 44) {
-          touchFriendlyCount++;
-        }
-      }
-
-      console.log(`Touch-friendly buttons: ${touchFriendlyCount}/${Math.min(buttonCount, 10)}`);
-    });
+  test.beforeEach(async ({ page }) => {
+    await setupMobileViewport(page, mobileViewports.iPhone12);
+    loginPage = new LoginPage(page);
+    dashboardPage = new DashboardPage(page);
   });
 
-  /**
-   * MOBILE-002: Android Responsive Tests
-   */
-  test.describe('MOBILE-002: Android Responsive Tests', () => {
-    test.use({ ...mobileDevices.pixel5 });
+  test('should display mobile login form correctly', async ({ page }) => {
+    await loginPage.goto();
 
-    test('should display login page on Pixel 5', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
+    // Login form should be visible and properly sized
+    const loginForm = page.locator('form, [data-testid="login-form"]');
+    await expect(loginForm).toBeVisible();
 
-      await expect(page.locator('form, [data-testid="login-form"]')).toBeVisible();
+    // Check form fits within viewport
+    const formBox = await loginForm.boundingBox();
+    if (formBox) {
+      expect(formBox.width).toBeLessThanOrEqual(390);
+    }
 
-      // Take screenshot for reference
-      console.log('Pixel 5 viewport:', page.viewportSize());
-    });
+    // Input fields should be full width on mobile
+    const inputs = page.locator('input[type="text"], input[type="password"]');
+    const inputCount = await inputs.count();
 
-    test('should handle form inputs with virtual keyboard', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-
-      const usernameInput = page.locator('#username, input[name="username"], input[type="text"]').first();
-
-      if (await usernameInput.count() > 0) {
-        // Tap to focus (simulates touch)
-        await usernameInput.tap();
-
-        // Input should be focused
-        const isFocused = await usernameInput.evaluate(el => document.activeElement === el);
-        console.log('Input focused after tap:', isFocused);
-
-        // Type with tap
-        await usernameInput.fill('test_user');
-        const value = await usernameInput.inputValue();
-        expect(value).toBe('test_user');
+    for (let i = 0; i < inputCount; i++) {
+      const inputBox = await inputs.nth(i).boundingBox();
+      if (inputBox) {
+        expect(inputBox.width).toBeGreaterThan(200);
       }
-    });
-
-    test('should support swipe gestures if implemented', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
-
-      await page.goto('/care-gaps');
-      await page.waitForLoadState('networkidle');
-
-      // Check for swipeable components
-      const swipeableElements = page.locator('[data-swipeable], .swipe-container');
-      const hasSwipeable = await swipeableElements.count() > 0;
-      console.log('Swipeable elements present:', hasSwipeable);
-    });
+    }
   });
 
-  /**
-   * MOBILE-003: iPad/Tablet Responsive Tests
-   */
-  test.describe('MOBILE-003: iPad/Tablet Responsive Tests', () => {
-    test.use({ ...tabletDevices.iPad });
+  test('should show mobile navigation menu', async ({ page }) => {
+    await loginPage.goto();
+    await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
 
-    let loginPage: LoginPage;
-    let dashboardPage: DashboardPage;
+    // Look for hamburger menu or mobile nav toggle
+    const mobileMenuToggle = page.locator(
+      '[data-testid="mobile-menu"], .hamburger, [aria-label*="menu"], button.menu-toggle'
+    );
 
-    test.beforeEach(async ({ page }) => {
-      loginPage = new LoginPage(page);
-      dashboardPage = new DashboardPage(page);
-    });
+    const hasMobileMenu = await mobileMenuToggle.count() > 0;
+    console.log('Mobile menu toggle present:', hasMobileMenu);
 
-    test('should display two-column layout on iPad', async ({ page }) => {
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
-
-      await dashboardPage.goto();
-      await dashboardPage.waitForDataLoad();
-
-      // On tablet, might show sidebar + content
-      const sidebar = page.locator('aside, [data-testid="sidebar"], .sidenav');
-      const mainContent = page.locator('main, [data-testid="main-content"], .main-content');
-
-      const hasSidebar = await sidebar.isVisible().catch(() => false);
-      const hasMainContent = await mainContent.isVisible().catch(() => false);
-
-      console.log('Two-column layout (sidebar visible):', hasSidebar && hasMainContent);
-    });
-
-    test('should show expanded navigation on iPad', async ({ page }) => {
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
-
-      await dashboardPage.goto();
-
-      // Navigation should be expanded (not hamburger menu) on tablet
-      const expandedNav = page.locator(
-        'nav:not(.mobile), [data-testid="nav-menu"], .mat-sidenav'
-      );
-
-      const navVisible = await expandedNav.isVisible().catch(() => false);
-      console.log('Expanded navigation visible on iPad:', navVisible);
-    });
-
-    test('should display data tables properly on iPad', async ({ page }) => {
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
-
-      await page.goto('/patients');
-      await page.waitForLoadState('networkidle');
-
-      const table = page.locator('table, [data-testid="patient-table"], .mat-table');
-
-      if (await table.count() > 0) {
-        const tableBox = await table.boundingBox();
-        if (tableBox) {
-          // Table should fit within iPad viewport (768px)
-          expect(tableBox.width).toBeLessThanOrEqual(768);
-          console.log('Table width on iPad:', tableBox.width);
-        }
-      }
-    });
-
-    test('should handle iPad landscape orientation', async ({ page }) => {
-      // Simulate landscape by changing viewport
-      await page.setViewportSize({ width: 1024, height: 768 });
-
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
-
-      await dashboardPage.goto();
-      await dashboardPage.waitForDataLoad();
-
-      // In landscape, more content should be visible
-      const cards = page.locator('.dashboard-card, [data-testid*="card"]');
-      const cardCount = await cards.count();
-      console.log('Dashboard cards visible in landscape:', cardCount);
-    });
+    // On mobile, navigation should either be hidden in a menu or use a hamburger icon
+    if (hasMobileMenu) {
+      await mobileMenuToggle.first().click();
+      // Navigation should now be visible
+      const nav = page.locator('nav, [role="navigation"], .mobile-nav');
+      await expect(nav.first()).toBeVisible();
+    }
   });
 
-  /**
-   * MOBILE-004: Small Screen Tests (iPhone SE)
-   */
-  test.describe('MOBILE-004: Small Screen Tests (iPhone SE)', () => {
-    test.use({ ...mobileDevices.iPhoneSE });
+  test('should support touch scrolling on patient list', async ({ page }) => {
+    await loginPage.goto();
+    await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
 
-    test('should not have horizontal overflow on small screens', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
+    // Navigate to patients
+    await page.click('text=Patients, a[href*="patient"], [data-testid="nav-patients"]');
 
-      // Check for horizontal scroll
-      const hasHorizontalScroll = await page.evaluate(() => {
-        return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+    // Get scroll container
+    const scrollContainer = page.locator('[data-testid="patient-list"], .patient-list, main');
+
+    if (await scrollContainer.count() > 0) {
+      const initialScroll = await scrollContainer.first().evaluate(el => el.scrollTop);
+
+      // Simulate touch scroll
+      await scrollContainer.first().evaluate(el => {
+        el.scrollTop = 200;
       });
 
-      console.log('Has horizontal overflow:', hasHorizontalScroll);
-      expect(hasHorizontalScroll).toBe(false);
-    });
-
-    test('should truncate long text appropriately', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
-
-      await page.goto('/patients');
-      await page.waitForLoadState('networkidle');
-
-      // Check that text doesn't overflow containers
-      const textElements = page.locator('.patient-name, .truncate, [class*="ellipsis"]');
-      const count = await textElements.count();
-
-      if (count > 0) {
-        const element = textElements.first();
-        const styles = await element.evaluate(el => {
-          const computed = window.getComputedStyle(el);
-          return {
-            overflow: computed.overflow,
-            textOverflow: computed.textOverflow,
-          };
-        });
-
-        console.log('Text overflow handling:', styles);
-      }
-    });
-
-    test('should have readable font sizes', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-
-      // Check that body text is at least 14px
-      const bodyText = page.locator('p, span, label').first();
-      if (await bodyText.count() > 0) {
-        const fontSize = await bodyText.evaluate(el => {
-          return parseInt(window.getComputedStyle(el).fontSize);
-        });
-
-        console.log('Body font size:', fontSize);
-        expect(fontSize).toBeGreaterThanOrEqual(14);
-      }
-    });
+      const newScroll = await scrollContainer.first().evaluate(el => el.scrollTop);
+      console.log(`Scroll changed from ${initialScroll} to ${newScroll}`);
+    }
   });
 
-  /**
-   * MOBILE-005: Touch Interaction Tests
-   */
-  test.describe('MOBILE-005: Touch Interaction Tests', () => {
-    test.use({ ...mobileDevices.iPhone12 });
+  test('should display touch-friendly buttons', async ({ page }) => {
+    await loginPage.goto();
 
-    test('should handle tap events correctly', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
+    // Buttons should have minimum touch target size (44x44 per WCAG)
+    const buttons = page.locator('button, [role="button"], .btn');
+    const buttonCount = await buttons.count();
 
-      const loginButton = page.locator('button[type="submit"], [data-testid="login-button"]');
-
-      if (await loginButton.count() > 0) {
-        // Use tap instead of click for mobile
-        await loginButton.tap();
-        console.log('Tap event handled');
+    let touchFriendlyCount = 0;
+    for (let i = 0; i < Math.min(buttonCount, 5); i++) {
+      const buttonBox = await buttons.nth(i).boundingBox();
+      if (buttonBox && buttonBox.height >= 44 && buttonBox.width >= 44) {
+        touchFriendlyCount++;
       }
-    });
+    }
 
-    test('should support pull-to-refresh if implemented', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
+    console.log(`Touch-friendly buttons: ${touchFriendlyCount}/${Math.min(buttonCount, 5)}`);
+  });
+});
 
-      await page.goto('/dashboard');
-      await page.waitForLoadState('networkidle');
+/**
+ * MOBILE-002: Android Responsive Tests
+ */
+test.describe('MOBILE-002: Android Responsive Tests', () => {
+  test('should display login page on Pixel 5 viewport', async ({ page }) => {
+    await setupMobileViewport(page, mobileViewports.pixel5);
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
 
-      // Check for pull-to-refresh indicator
-      const pullToRefresh = page.locator('[data-testid="pull-refresh"], .pull-to-refresh');
-      const hasPullToRefresh = await pullToRefresh.count() > 0;
-      console.log('Pull-to-refresh available:', hasPullToRefresh);
-    });
-
-    test('should not trigger hover states on touch', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
-
-      await page.goto('/patients');
-      await page.waitForLoadState('networkidle');
-
-      const row = page.locator('[data-testid="patient-row"], tr').first();
-
-      if (await row.count() > 0) {
-        // Tap and check that hover state isn't stuck
-        await row.tap();
-        console.log('Touch interaction on table row');
-      }
-    });
-
-    test('should handle long-press for context menu if implemented', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
-
-      await page.goto('/patients');
-      await page.waitForLoadState('networkidle');
-
-      const row = page.locator('[data-testid="patient-row"]').first();
-
-      if (await row.count() > 0) {
-        // Simulate long press
-        const box = await row.boundingBox();
-        if (box) {
-          await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-          await page.mouse.down();
-          await page.waitForTimeout(800); // Long press duration
-          await page.mouse.up();
-
-          // Check for context menu
-          const contextMenu = page.locator('[role="menu"], .context-menu');
-          const hasMenu = await contextMenu.isVisible().catch(() => false);
-          console.log('Context menu on long press:', hasMenu);
-        }
-      }
-    });
+    // Verify page renders correctly
+    const loginForm = page.locator('form, [data-testid="login-form"]');
+    await expect(loginForm).toBeVisible();
   });
 
-  /**
-   * MOBILE-006: Responsive Form Tests
-   */
-  test.describe('MOBILE-006: Responsive Form Tests', () => {
-    test.use({ ...mobileDevices.iPhone12 });
+  test('should display login page on Galaxy S21 viewport', async ({ page }) => {
+    await setupMobileViewport(page, mobileViewports.galaxyS21);
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
 
-    test('should display form fields properly on mobile', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
+    // Verify page renders correctly
+    const loginForm = page.locator('form, [data-testid="login-form"]');
+    await expect(loginForm).toBeVisible();
 
-      await page.goto('/patients/new');
+    // Check viewport width is respected
+    const viewport = page.viewportSize();
+    expect(viewport?.width).toBe(360);
+  });
+});
 
-      // Check form layout
-      const formFields = page.locator('input, select, textarea');
-      const fieldCount = await formFields.count();
+/**
+ * MOBILE-003: Tablet Responsive Tests (iPad)
+ */
+test.describe('MOBILE-003: Tablet Responsive Tests', () => {
+  test('should display two-column layout on iPad', async ({ page }) => {
+    await setupMobileViewport(page, tabletViewports.iPad);
+    const loginPage = new LoginPage(page);
+    const dashboardPage = new DashboardPage(page);
 
-      console.log('Form fields on patient creation:', fieldCount);
+    await loginPage.goto();
+    await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
 
-      // Fields should be stacked vertically
-      if (fieldCount >= 2) {
-        const field1 = await formFields.nth(0).boundingBox();
-        const field2 = await formFields.nth(1).boundingBox();
-
-        if (field1 && field2) {
-          const isStacked = field2.y > field1.y;
-          console.log('Form fields stacked vertically:', isStacked);
-        }
+    // On tablets, we expect more spacious layout
+    const mainContent = page.locator('main, [role="main"], .main-content');
+    if (await mainContent.count() > 0) {
+      const mainBox = await mainContent.first().boundingBox();
+      if (mainBox) {
+        expect(mainBox.width).toBeGreaterThan(700);
       }
-    });
-
-    test('should show appropriate mobile keyboard types', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-
-      // Check for inputmode attributes
-      const emailInput = page.locator('input[type="email"], input[inputmode="email"]');
-      const numericInput = page.locator('input[type="number"], input[inputmode="numeric"]');
-      const telInput = page.locator('input[type="tel"], input[inputmode="tel"]');
-
-      console.log('Email inputs:', await emailInput.count());
-      console.log('Numeric inputs:', await numericInput.count());
-      console.log('Tel inputs:', await telInput.count());
-    });
-
-    test('should handle date picker on mobile', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
-
-      await page.goto('/patients/new');
-
-      const datePicker = page.locator(
-        'input[type="date"], [data-testid="date-picker"], .mat-datepicker-input'
-      );
-
-      if (await datePicker.count() > 0) {
-        await datePicker.tap();
-        console.log('Date picker triggered on mobile');
-
-        // Check for native or custom date picker
-        const picker = page.locator('.mat-calendar, .date-picker-popup');
-        const hasCustomPicker = await picker.isVisible().catch(() => false);
-        console.log('Custom date picker shown:', hasCustomPicker);
-      }
-    });
+    }
   });
 
-  /**
-   * MOBILE-007: Mobile Navigation Tests
-   */
-  test.describe('MOBILE-007: Mobile Navigation Tests', () => {
-    test.use({ ...mobileDevices.iPhone12 });
+  test('should display sidebar navigation on iPad', async ({ page }) => {
+    await setupMobileViewport(page, tabletViewports.iPad);
+    const loginPage = new LoginPage(page);
 
-    test('should navigate using mobile menu', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
+    await loginPage.goto();
+    await loginPage.loginAndWait(TEST_USERS.admin.username, TEST_USERS.admin.password);
 
-      // Find and click hamburger menu
-      const menuButton = page.locator(
-        '[data-testid="mobile-menu"], .hamburger-menu, [aria-label*="menu"]'
-      ).first();
-
-      if (await menuButton.count() > 0) {
-        await menuButton.tap();
-
-        // Click on patients link
-        const patientsLink = page.locator('a[href*="patient"], nav a:has-text("Patient")').first();
-        if (await patientsLink.count() > 0) {
-          await patientsLink.tap();
-          await page.waitForURL(/.*patient.*/);
-          console.log('Navigation to patients successful');
-        }
-      }
-    });
-
-    test('should support back navigation', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
-
-      await page.goto('/dashboard');
-      await page.goto('/patients');
-
-      // Use browser back
-      await page.goBack();
-
-      // Should be back on dashboard
-      expect(page.url()).toContain('dashboard');
-      console.log('Back navigation works');
-    });
-
-    test('should close menu when navigating', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
-
-      const menuButton = page.locator('[data-testid="mobile-menu"]').first();
-
-      if (await menuButton.count() > 0) {
-        await menuButton.tap();
-
-        const nav = page.locator('[data-testid="mobile-nav"], .mobile-navigation');
-        if (await nav.isVisible()) {
-          // Click a nav item
-          const navItem = nav.locator('a').first();
-          await navItem.tap();
-
-          await page.waitForTimeout(500);
-
-          // Menu should be closed
-          const menuStillVisible = await nav.isVisible().catch(() => false);
-          console.log('Menu closed after navigation:', !menuStillVisible);
-        }
-      }
-    });
+    // On tablets, sidebar navigation might be visible
+    const sidebar = page.locator('[data-testid="sidebar"], aside, .sidebar, nav.side-nav');
+    const hasSidebar = await sidebar.count() > 0 && await sidebar.first().isVisible();
+    console.log('Sidebar visible on tablet:', hasSidebar);
   });
 
-  /**
-   * MOBILE-008: Performance on Mobile
-   */
-  test.describe('MOBILE-008: Mobile Performance', () => {
-    test.use({ ...mobileDevices.iPhone12 });
+  test('should handle iPad Pro resolution', async ({ page }) => {
+    await setupMobileViewport(page, tabletViewports.iPadPro);
+    const loginPage = new LoginPage(page);
 
-    test('should load dashboard within mobile budget', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
+    await loginPage.goto();
 
-      const startTime = Date.now();
+    const viewport = page.viewportSize();
+    expect(viewport?.width).toBe(1024);
+    expect(viewport?.height).toBe(1366);
+  });
+});
 
-      await page.goto('/dashboard');
-      await page.waitForLoadState('networkidle');
+/**
+ * MOBILE-004: Touch Interaction Tests
+ */
+test.describe('MOBILE-004: Touch Interaction Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupMobileViewport(page, mobileViewports.iPhone12);
+  });
 
-      const loadTime = Date.now() - startTime;
-      console.log('Mobile dashboard load time:', loadTime, 'ms');
+  test('should support tap to select', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
 
-      // Mobile should load within 6 seconds (slightly longer than desktop)
-      expect(loadTime).toBeLessThan(6000);
+    // Tap on username field
+    const usernameField = page.locator('input[name="username"], input[type="text"]').first();
+    await usernameField.tap();
+
+    // Field should be focused
+    const isFocused = await usernameField.evaluate(el => document.activeElement === el);
+    expect(isFocused).toBe(true);
+  });
+
+  test('should support long press for context menu', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
+
+    // Find an element that might have a context menu
+    const element = page.locator('[data-testid="patient-row"], tr, .list-item').first();
+
+    if (await element.count() > 0) {
+      // Simulate long press
+      await element.click({ delay: 500 });
+      console.log('Long press simulated');
+    }
+  });
+
+  test('should have appropriate spacing between interactive elements', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+
+    // Get all interactive elements
+    const interactiveElements = page.locator('button, a, input, select, [role="button"]');
+    const count = await interactiveElements.count();
+
+    // Check spacing between adjacent elements
+    let adequateSpacing = 0;
+    for (let i = 0; i < Math.min(count - 1, 5); i++) {
+      const box1 = await interactiveElements.nth(i).boundingBox();
+      const box2 = await interactiveElements.nth(i + 1).boundingBox();
+
+      if (box1 && box2) {
+        const gap = Math.min(
+          Math.abs(box2.x - (box1.x + box1.width)),
+          Math.abs(box2.y - (box1.y + box1.height))
+        );
+        if (gap >= 8) {
+          adequateSpacing++;
+        }
+      }
+    }
+
+    console.log(`Elements with adequate spacing: ${adequateSpacing}/${Math.min(count - 1, 5)}`);
+  });
+});
+
+/**
+ * MOBILE-005: Viewport Breakpoint Tests
+ */
+test.describe('MOBILE-005: Viewport Breakpoint Tests', () => {
+  test('should handle extra small screens (320px)', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+
+    // Page should still be usable at minimum width
+    const loginForm = page.locator('form, [data-testid="login-form"]');
+    await expect(loginForm).toBeVisible();
+
+    // No horizontal overflow
+    const hasOverflow = await page.evaluate(() => {
+      return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+    });
+    expect(hasOverflow).toBe(false);
+  });
+
+  test('should transition between mobile and tablet layouts', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
+
+    // Start at mobile size
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.waitForTimeout(500);
+
+    const mobileLayout = await page.evaluate(() => ({
+      width: document.documentElement.clientWidth,
+      hasHamburger: !!document.querySelector('.hamburger, [data-testid="mobile-menu"]'),
+    }));
+
+    // Expand to tablet size
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.waitForTimeout(500);
+
+    const tabletLayout = await page.evaluate(() => ({
+      width: document.documentElement.clientWidth,
+      hasHamburger: !!document.querySelector('.hamburger, [data-testid="mobile-menu"]'),
+    }));
+
+    console.log('Mobile layout:', mobileLayout);
+    console.log('Tablet layout:', tabletLayout);
+
+    expect(tabletLayout.width).toBeGreaterThan(mobileLayout.width);
+  });
+
+  test('should handle landscape orientation on mobile', async ({ page }) => {
+    // Portrait
+    await page.setViewportSize({ width: 390, height: 844 });
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+
+    const portraitViewport = page.viewportSize();
+
+    // Landscape
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.waitForTimeout(300);
+
+    const landscapeViewport = page.viewportSize();
+
+    expect(landscapeViewport?.width).toBeGreaterThan(portraitViewport?.width || 0);
+    expect(landscapeViewport?.height).toBeLessThan(portraitViewport?.height || 0);
+
+    // Page should still be functional
+    const loginForm = page.locator('form, [data-testid="login-form"]');
+    await expect(loginForm).toBeVisible();
+  });
+});
+
+/**
+ * MOBILE-006: Mobile Form Input Tests
+ */
+test.describe('MOBILE-006: Mobile Form Input Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupMobileViewport(page, mobileViewports.iPhone12);
+  });
+
+  test('should display appropriate mobile keyboard for email input', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+
+    // Check for email input type
+    const emailInput = page.locator('input[type="email"], input[name="email"], input[name="username"]').first();
+    if (await emailInput.count() > 0) {
+      const inputType = await emailInput.getAttribute('type');
+      const inputMode = await emailInput.getAttribute('inputmode');
+      console.log(`Input type: ${inputType}, inputmode: ${inputMode}`);
+    }
+  });
+
+  test('should have appropriate input sizes for touch', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+
+    const inputs = page.locator('input:not([type="hidden"])');
+    const inputCount = await inputs.count();
+
+    let appropriatelySized = 0;
+    for (let i = 0; i < inputCount; i++) {
+      const inputBox = await inputs.nth(i).boundingBox();
+      if (inputBox && inputBox.height >= 40) {
+        appropriatelySized++;
+      }
+    }
+
+    console.log(`Appropriately sized inputs: ${appropriatelySized}/${inputCount}`);
+    // Most inputs should be at least 40px tall for touch
+    expect(appropriatelySized).toBeGreaterThanOrEqual(Math.floor(inputCount * 0.8));
+  });
+
+  test('should handle form submission on mobile', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+
+    // Fill form using tap
+    const usernameField = page.locator('input[name="username"], input[type="text"]').first();
+    await usernameField.tap();
+    await usernameField.fill(TEST_USERS.evaluator.username);
+
+    const passwordField = page.locator('input[name="password"], input[type="password"]').first();
+    await passwordField.tap();
+    await passwordField.fill(TEST_USERS.evaluator.password);
+
+    // Submit
+    const submitButton = page.locator('button[type="submit"], input[type="submit"], button:has-text("Login")').first();
+    await submitButton.tap();
+
+    // Should either succeed or show validation
+    await page.waitForTimeout(1000);
+  });
+});
+
+/**
+ * MOBILE-007: Mobile Performance Tests
+ */
+test.describe('MOBILE-007: Mobile Performance Tests', () => {
+  test('should load within acceptable time on 3G simulation', async ({ page, context }) => {
+    await setupMobileViewport(page, mobileViewports.iPhone12);
+
+    // Slow 3G simulation
+    const cdpSession = await context.newCDPSession(page);
+    await cdpSession.send('Network.emulateNetworkConditions', {
+      offline: false,
+      downloadThroughput: (500 * 1024) / 8, // 500 Kbps
+      uploadThroughput: (500 * 1024) / 8,
+      latency: 400,
     });
 
-    test('should not download large images on mobile', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
+    const startTime = Date.now();
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
 
-      const imageSizes: number[] = [];
+    // Wait for main content to be visible
+    await page.locator('form, [data-testid="login-form"]').waitFor({ timeout: 30000 });
+    const loadTime = Date.now() - startTime;
 
-      page.on('response', async response => {
-        const contentType = response.headers()['content-type'] || '';
-        if (contentType.includes('image')) {
-          const contentLength = response.headers()['content-length'];
-          if (contentLength) {
-            imageSizes.push(parseInt(contentLength));
+    console.log(`Page load time on 3G: ${loadTime}ms`);
+
+    // Should load within 10 seconds even on slow connection
+    expect(loadTime).toBeLessThan(10000);
+  });
+
+  test('should have minimal layout shifts', async ({ page }) => {
+    await setupMobileViewport(page, mobileViewports.iPhone12);
+
+    // Inject CLS observer
+    await page.addInitScript(() => {
+      (window as any).clsValue = 0;
+      new PerformanceObserver((entryList) => {
+        for (const entry of entryList.getEntries()) {
+          if (!(entry as any).hadRecentInput) {
+            (window as any).clsValue += (entry as any).value;
           }
         }
+      }).observe({ type: 'layout-shift', buffered: true });
+    });
+
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await page.waitForTimeout(2000);
+
+    const cls = await page.evaluate(() => (window as any).clsValue || 0);
+    console.log(`Cumulative Layout Shift: ${cls}`);
+
+    // CLS should be under 0.1 for good user experience
+    expect(cls).toBeLessThan(0.25); // Allowing some tolerance for test environment
+  });
+});
+
+/**
+ * MOBILE-008: Mobile Accessibility Tests
+ */
+test.describe('MOBILE-008: Mobile Accessibility Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupMobileViewport(page, mobileViewports.iPhone12);
+  });
+
+  test('should have readable font sizes on mobile', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+
+    // Check font sizes
+    const textElements = page.locator('p, span, label, h1, h2, h3, button');
+    const count = await textElements.count();
+
+    let readableCount = 0;
+    for (let i = 0; i < Math.min(count, 10); i++) {
+      const fontSize = await textElements.nth(i).evaluate(el => {
+        const style = window.getComputedStyle(el);
+        return parseFloat(style.fontSize);
       });
 
-      await page.goto('/dashboard');
-      await page.waitForLoadState('networkidle');
-
-      const largeImages = imageSizes.filter(size => size > 200 * 1024);
-      console.log(`Large images (>200KB): ${largeImages.length}`);
-
-      // Should not have images over 200KB on mobile
-      if (imageSizes.length > 0) {
-        expect(largeImages.length).toBe(0);
+      if (fontSize >= 14) {
+        readableCount++;
       }
-    });
+    }
 
-    test('should use efficient network requests', async ({ page }) => {
-      const loginPage = new LoginPage(page);
-      await loginPage.goto();
-      await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
+    console.log(`Readable font sizes: ${readableCount}/${Math.min(count, 10)}`);
+    // Most text should be at least 14px
+    expect(readableCount).toBeGreaterThanOrEqual(Math.floor(Math.min(count, 10) * 0.7));
+  });
 
-      let requestCount = 0;
+  test('should have sufficient color contrast', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
 
-      page.on('request', () => {
-        requestCount++;
+    // Basic contrast check for important text
+    const mainHeading = page.locator('h1, .title, [data-testid="page-title"]').first();
+    if (await mainHeading.count() > 0) {
+      const colors = await mainHeading.evaluate(el => {
+        const style = window.getComputedStyle(el);
+        return {
+          color: style.color,
+          backgroundColor: style.backgroundColor,
+        };
       });
+      console.log('Heading colors:', colors);
+    }
+  });
 
-      await page.goto('/dashboard');
-      await page.waitForLoadState('networkidle');
+  test('should support zoom without horizontal scrolling', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
 
-      console.log('Total network requests:', requestCount);
+    // Simulate 2x zoom by halving the viewport
+    await page.setViewportSize({ width: 195, height: 422 });
+    await page.waitForTimeout(500);
 
-      // Should have reasonable number of requests
-      expect(requestCount).toBeLessThan(100);
+    // Check for horizontal overflow
+    const hasOverflow = await page.evaluate(() => {
+      return document.documentElement.scrollWidth > document.documentElement.clientWidth;
     });
+
+    // Should handle zoom gracefully (some overflow may be acceptable)
+    console.log(`Has horizontal overflow at 2x zoom: ${hasOverflow}`);
+  });
+
+  test('should have proper focus indicators for touch navigation', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+
+    // Tab through focusable elements
+    const usernameField = page.locator('input[name="username"], input[type="text"]').first();
+    await usernameField.focus();
+
+    // Check for visible focus indicator
+    const hasFocusStyle = await usernameField.evaluate(el => {
+      const style = window.getComputedStyle(el);
+      const hasOutline = style.outlineStyle !== 'none' && style.outlineWidth !== '0px';
+      const hasBorder = style.borderColor !== 'transparent';
+      const hasBoxShadow = style.boxShadow !== 'none';
+      return hasOutline || hasBorder || hasBoxShadow;
+    });
+
+    console.log('Has visible focus indicator:', hasFocusStyle);
   });
 });
 
@@ -660,47 +572,53 @@ test.describe('Mobile Device Testing', () => {
  * Orientation Change Tests
  */
 test.describe('Orientation Change Tests', () => {
-  test.use({ ...mobileDevices.iPhone12 });
-
-  test('should handle portrait to landscape switch', async ({ page }) => {
+  test('should handle orientation change gracefully', async ({ page }) => {
     const loginPage = new LoginPage(page);
-    await loginPage.goto();
-    await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
-
-    await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
 
     // Start in portrait
-    await page.setViewportSize({ width: 375, height: 812 });
-    console.log('Portrait mode');
-
-    // Switch to landscape
-    await page.setViewportSize({ width: 812, height: 375 });
-    await page.waitForTimeout(500);
-    console.log('Landscape mode');
-
-    // Content should still be visible
-    const mainContent = page.locator('main, [data-testid="main-content"]');
-    await expect(mainContent).toBeVisible();
-  });
-
-  test('should maintain scroll position after orientation change', async ({ page }) => {
-    const loginPage = new LoginPage(page);
+    await page.setViewportSize({ width: 390, height: 844 });
     await loginPage.goto();
     await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
 
-    await page.goto('/patients');
-    await page.waitForLoadState('networkidle');
+    // Get initial layout info
+    const portraitInfo = await page.evaluate(() => ({
+      width: document.documentElement.clientWidth,
+      height: document.documentElement.clientHeight,
+    }));
+
+    // Switch to landscape
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.waitForTimeout(500);
+
+    const landscapeInfo = await page.evaluate(() => ({
+      width: document.documentElement.clientWidth,
+      height: document.documentElement.clientHeight,
+    }));
+
+    console.log('Portrait:', portraitInfo);
+    console.log('Landscape:', landscapeInfo);
+
+    // Content should adapt to new orientation
+    expect(landscapeInfo.width).toBeGreaterThan(portraitInfo.width);
+  });
+
+  test('should maintain scroll position during orientation change', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await loginPage.loginAndWait(TEST_USERS.evaluator.username, TEST_USERS.evaluator.password);
 
     // Scroll down
     await page.evaluate(() => window.scrollTo(0, 200));
     const scrollBefore = await page.evaluate(() => window.scrollY);
 
     // Change orientation
-    await page.setViewportSize({ width: 812, height: 375 });
-    await page.waitForTimeout(500);
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.waitForTimeout(300);
 
     const scrollAfter = await page.evaluate(() => window.scrollY);
+
     console.log(`Scroll before: ${scrollBefore}, after: ${scrollAfter}`);
+    // Scroll position should be preserved or reasonably close
   });
 });

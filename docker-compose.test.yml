@@ -1,0 +1,280 @@
+# HDIM E2E Test Environment
+# Minimal services required for E2E testing
+#
+# Usage:
+#   docker compose -f docker-compose.test.yml up -d
+#   npx wait-on http://localhost:4200 --timeout 120000
+#   cd e2e && npm test
+#   docker compose -f docker-compose.test.yml down
+#
+# This configuration provides:
+# - PostgreSQL database with test data
+# - Redis for caching
+# - Core backend services (gateway, patient, care-gap, etc.)
+# - Frontend application
+#
+# Note: Uses DDL auto-create for rapid test environment setup
+
+services:
+  # ============================================
+  # INFRASTRUCTURE
+  # ============================================
+
+  postgres:
+    container_name: hdim-test-postgres
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: healthdata
+      POSTGRES_PASSWORD: healthdata_test
+      POSTGRES_DB: healthdata_test
+    ports:
+      - "5436:5432"
+    volumes:
+      - ./docker/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh
+      - ./e2e/fixtures/seed-data.sql:/docker-entrypoint-initdb.d/02-seed-data.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthdata"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hdim-test-network
+
+  redis:
+    container_name: hdim-test-redis
+    image: redis:7-alpine
+    ports:
+      - "6381:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hdim-test-network
+
+  # ============================================
+  # BACKEND SERVICES
+  # ============================================
+
+  gateway-service:
+    container_name: hdim-test-gateway
+    build:
+      context: ./backend
+      dockerfile: modules/services/gateway-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: test
+      SERVER_PORT: 8080
+      JWT_SECRET: testSecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_test
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # Backend service URLs
+      BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084/patient
+      BACKEND_SERVICES_CARE_GAP_URL: http://care-gap-service:8086/care-gap
+      BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087/quality-measure
+      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir/fhir
+      BACKEND_SERVICES_CONSENT_URL: http://consent-service:8082/consent
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - hdim-test-network
+
+  patient-service:
+    container_name: hdim-test-patient
+    build:
+      context: ./backend
+      dockerfile: modules/services/patient-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: test
+      SERVER_PORT: 8084
+      JWT_SECRET: testSecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patient_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_test
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ""
+    ports:
+      - "8084:8084"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8084/patient/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - hdim-test-network
+
+  care-gap-service:
+    container_name: hdim-test-care-gap
+    build:
+      context: ./backend
+      dockerfile: modules/services/care-gap-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: test
+      SERVER_PORT: 8086
+      JWT_SECRET: testSecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/caregap_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_test
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      HEALTHDATA_CACHE_REDIS_HOST: redis
+      HEALTHDATA_CACHE_REDIS_PORT: 6379
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ""
+    ports:
+      - "8086:8086"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8086/care-gap/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - hdim-test-network
+
+  quality-measure-service:
+    container_name: hdim-test-quality-measure
+    build:
+      context: ./backend
+      dockerfile: modules/services/quality-measure-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: test
+      SERVER_PORT: 8087
+      JWT_SECRET: testSecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/quality_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_test
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ""
+    ports:
+      - "8087:8087"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8087/quality-measure/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - hdim-test-network
+
+  fhir-service:
+    container_name: hdim-test-fhir
+    build:
+      context: ./backend
+      dockerfile: modules/services/fhir-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: test
+      SERVER_PORT: 8085
+      JWT_SECRET: testSecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fhir_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_test
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ""
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8085/fhir/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - hdim-test-network
+
+  consent-service:
+    container_name: hdim-test-consent
+    build:
+      context: ./backend
+      dockerfile: modules/services/consent-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: test
+      SERVER_PORT: 8082
+      JWT_SECRET: testSecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/consent_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_test
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ""
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8082/consent/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - hdim-test-network
+
+  # ============================================
+  # FRONTEND
+  # ============================================
+
+  frontend:
+    container_name: hdim-test-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.test
+    depends_on:
+      gateway-service:
+        condition: service_healthy
+    environment:
+      VITE_API_URL: http://gateway-service:8080
+      VITE_WS_URL: ws://gateway-service:8080
+    ports:
+      - "4200:80"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hdim-test-network
+
+networks:
+  hdim-test-network:
+    driver: bridge

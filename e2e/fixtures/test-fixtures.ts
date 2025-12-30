@@ -3,6 +3,7 @@ import { ApiHelpers } from '../utils/api-helpers';
 import { WebSocketHelpers } from '../utils/websocket-helpers';
 import { TestDataFactory } from '../utils/test-data-factory';
 import { PHIMasking } from '../utils/phi-masking';
+import { setupApiMocks, clearApiMocks } from '../utils/api-mocks';
 
 /**
  * HDIM Custom Playwright Fixtures
@@ -68,6 +69,9 @@ export type HDIMFixtures = {
   adminPage: Page;
   evaluatorPage: Page;
   viewerPage: Page;
+
+  // Page with API mocking enabled (for reliable tests without backend)
+  mockedApiPage: Page;
 
   // API helpers for direct backend interaction
   apiHelpers: ApiHelpers;
@@ -186,6 +190,30 @@ export const test = base.extend<HDIMFixtures & HDIMOptions>({
     await authenticateUser(page, TEST_USERS.viewer, apiHelpers);
     await use(page);
     await context.close();
+  },
+
+  // Page with API mocking for reliable tests without backend
+  mockedApiPage: async ({ page }, use) => {
+    // Set up API mocks before the test
+    await setupApiMocks(page, {
+      mockPatients: true,
+      mockCareGaps: true,
+      mockQualityMeasures: true,
+      mockAuth: true,
+    });
+
+    // Navigate and authenticate with demo login
+    await page.goto('/login');
+    const demoButton = page.locator('button:has-text("Demo Login")');
+    if (await demoButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await demoButton.click();
+      await page.waitForURL('**/dashboard', { timeout: 30000 });
+    }
+
+    await use(page);
+
+    // Clean up mocks after the test
+    await clearApiMocks(page);
   },
 });
 

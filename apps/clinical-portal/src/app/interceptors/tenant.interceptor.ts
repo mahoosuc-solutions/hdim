@@ -11,9 +11,11 @@ export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
   const isCqlEngine = req.url.includes(API_CONFIG.CQL_ENGINE_URL);
   const isQualityMeasure = req.url.includes(API_CONFIG.QUALITY_MEASURE_URL);
   const isFhir = req.url.includes(API_CONFIG.FHIR_SERVER_URL);
+  const isCareGap = req.url.includes(API_CONFIG.CARE_GAP_URL);
+  const isPatient = req.url.includes(API_CONFIG.PATIENT_URL);
 
   // Only add tenant header for backend API calls
-  if (isCqlEngine || isQualityMeasure || isFhir) {
+  if (isCqlEngine || isQualityMeasure || isFhir || isCareGap || isPatient) {
     const tenantId = API_CONFIG.DEFAULT_TENANT_ID; // Could be dynamic based on user session
 
     const clonedRequest = req.clone({

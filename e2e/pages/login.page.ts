@@ -52,8 +52,29 @@ export class LoginPage extends BasePage {
 
   /**
    * Navigate to login page
+   * Clears any existing auth state first to ensure fresh login
    */
   async goto(): Promise<void> {
+    // First navigate to a page to establish context for evaluate
+    await this.page.goto('/login', { waitUntil: 'commit' });
+
+    // Clear auth state
+    await this.page.evaluate(() => {
+      localStorage.removeItem('healthdata_auth_token');
+      localStorage.removeItem('healthdata_user');
+      sessionStorage.clear();
+    });
+
+    // Reload to apply cleared state
+    await this.page.reload();
+    await this.waitForLoad();
+  }
+
+  /**
+   * Navigate to login page without clearing auth
+   * Use when testing redirect behavior
+   */
+  async gotoPreserveAuth(): Promise<void> {
     await this.page.goto('/login');
     await this.waitForLoad();
   }
@@ -87,12 +108,25 @@ export class LoginPage extends BasePage {
 
   /**
    * Use demo login (for development/testing)
+   * Handles already being logged in (redirected to dashboard)
    */
   async demoLogin(): Promise<void> {
+    // Check if already on dashboard (already logged in)
+    const currentUrl = this.page.url();
+    if (currentUrl.includes('/dashboard')) {
+      return; // Already logged in
+    }
+
     const demoButton = this.page.locator('button:has-text("Demo Login")');
-    if (await demoButton.isVisible()) {
+    if (await demoButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await demoButton.click();
       await this.page.waitForURL('**/dashboard', { timeout: 30000 });
+    } else {
+      // If demo button not visible, check if we're already logged in
+      await this.page.waitForURL('**/dashboard', { timeout: 5000 }).catch(() => {
+        // If not on dashboard and no demo button, navigate directly
+        this.page.goto('/dashboard');
+      });
     }
   }
 

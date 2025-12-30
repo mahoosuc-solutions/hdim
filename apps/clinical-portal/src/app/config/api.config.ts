@@ -46,8 +46,8 @@ export const API_CONFIG = {
     ? `${API_GATEWAY_URL}/api/qrda`
     : '/qrda',  // Proxied to localhost:8104
 
-  // Tenant Configuration
-  DEFAULT_TENANT_ID: 'demo-tenant',
+  // Tenant Configuration - must match backend test data
+  DEFAULT_TENANT_ID: 'TENANT001',
 
   // HTTP Settings
   TIMEOUT_MS: 30000, // 30 seconds

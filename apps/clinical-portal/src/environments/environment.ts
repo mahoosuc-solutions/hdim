@@ -18,8 +18,8 @@ export const environment = {
     qualityMeasureUrl: 'http://localhost:8087/quality-measure',
     fhirServerUrl: 'http://localhost:8085/fhir',
 
-    // Tenant configuration
-    defaultTenantId: 'default',
+    // Tenant configuration - must match backend test data
+    defaultTenantId: 'TENANT001',
 
     // HTTP settings
     timeoutMs: 30000,

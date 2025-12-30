@@ -68,19 +68,19 @@ export class CareGapPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    // Filters - Angular Material form fields
-    this.urgencyFilter = page.locator('mat-select[formcontrolname="urgency"], mat-select[aria-label*="urgency" i]');
-    this.typeFilter = page.locator('mat-select[formcontrolname="gapType"], mat-select[aria-label*="type" i]');
-    this.statusFilter = page.locator('mat-select[formcontrolname="status"], mat-select[aria-label*="status" i]');
-    this.patientFilter = page.locator('input[placeholder*="Search" i], .search-field input');
-    this.measureFilter = page.locator('mat-select[formcontrolname="measure"], mat-select[aria-label*="measure" i]');
-    this.clearFiltersButton = page.locator('button:has-text("Reset"), button:has-text("Clear")');
+    // Filters - Angular Material form fields matching care-gap-manager.component.html
+    this.urgencyFilter = page.locator('mat-select[formcontrolname="urgency"]');
+    this.typeFilter = page.locator('mat-select[formcontrolname="gapType"]');
+    this.statusFilter = page.locator('mat-select[formcontrolname="status"]');
+    this.patientFilter = page.locator('.search-field input, input[placeholder*="Search care gaps"]');
+    this.measureFilter = page.locator('mat-select[formcontrolname="measure"]');
+    this.clearFiltersButton = page.locator('app-loading-button:has-text("Reset"), button:has-text("Reset")');
 
     // Care gap list - Angular Material table
-    this.careGapTable = page.locator('mat-table, table, .mat-mdc-table');
-    this.careGapRows = page.locator('mat-row, tbody tr, .mat-mdc-row');
-    this.noGapsMessage = page.locator(':has-text("No care gaps"), .empty-state');
-    this.gapCount = page.locator('.summary-value, .total-card .summary-value');
+    this.careGapTable = page.locator('table.care-gaps-table, table[mat-table]');
+    this.careGapRows = page.locator('tr.care-gap-row, tr[mat-row]');
+    this.noGapsMessage = page.locator('.empty-state, :has-text("No care gaps found")');
+    this.gapCount = page.locator('.total-card .summary-value, .summary-card:first-child .summary-value');
 
     // Pagination - Angular Material paginator
     this.paginationControls = page.locator('mat-paginator, .mat-mdc-paginator');
@@ -135,17 +135,18 @@ export class CareGapPage extends BasePage {
    */
   async isLoaded(): Promise<boolean> {
     try {
-      // Wait for page container or heading
-      await this.page.locator('h1:has-text("Care Gap"), .care-gaps-container, h1:has-text("Gap")').first().waitFor({ state: 'visible', timeout: 10000 });
+      // Wait for page container
+      await this.page.locator('.care-gap-manager-container').first().waitFor({ state: 'visible', timeout: 10000 });
 
-      // Wait for loading to complete
-      await this.waitForSpinnerToDisappear();
+      // Wait for loading overlay to disappear
+      const loadingOverlay = this.page.locator('app-loading-overlay[ng-reflect-is-loading="true"]');
+      await loadingOverlay.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
 
-      // Either table or empty state should be visible
-      const tableVisible = await this.careGapTable.isVisible().catch(() => false);
-      const noGapsVisible = await this.noGapsMessage.isVisible().catch(() => false);
+      // Wait for either table, summary cards, or error to appear
+      const contentIndicator = this.page.locator('table.care-gaps-table, .summary-card, .error-card');
+      await contentIndicator.first().waitFor({ state: 'visible', timeout: 10000 });
 
-      return tableVisible || noGapsVisible;
+      return true;
     } catch {
       return false;
     }

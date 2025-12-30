@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { DEMO_USER } from './fixtures/auth.fixture';
 
 /**
  * E2E Smoke Tests for Reports Feature
@@ -24,6 +25,11 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Reports Feature - Smoke Tests', () => {
   test.beforeEach(async ({ page }) => {
+    // Set up authentication via localStorage before navigation
+    await page.addInitScript((demoUser) => {
+      localStorage.setItem('healthdata_auth_token', 'demo-jwt-token-' + Date.now());
+      localStorage.setItem('healthdata_user', JSON.stringify(demoUser));
+    }, DEMO_USER);
     await page.goto('/reports');
     await page.waitForLoadState('domcontentloaded');
   });

@@ -1,4 +1,9 @@
 import { test, expect, Page } from '@playwright/test';
+import {
+  setupDemoAuthViaStorage,
+  navigateAuthenticated,
+  waitForAppReady,
+} from './fixtures/auth.fixture';
 
 /**
  * Care Gap Management E2E Tests
@@ -102,11 +107,17 @@ const MOCK_CARE_GAP_SUMMARY = {
 
 /**
  * Helper: Set up demo authentication
+ * Uses the shared auth fixture for reliable authentication
  */
 async function setupDemoAuth(page: Page) {
-  await page.goto('/login');
-  await page.getByRole('button', { name: /demo login/i }).click();
-  await page.waitForURL('**/dashboard', { timeout: 10000 });
+  await setupDemoAuthViaStorage(page, '/dashboard');
+}
+
+/**
+ * Helper: Navigate to care gaps page with authentication
+ */
+async function navigateToCareGaps(page: Page) {
+  await navigateAuthenticated(page, '/care-gaps');
 }
 
 /**

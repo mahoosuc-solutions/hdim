@@ -393,3 +393,162 @@ export const offlineTestConfig = {
   // Enable verbose logging of mocked requests
   logRequests: false,
 };
+
+/**
+ * WebSocket Mock Server for E2E Testing
+ *
+ * Simulates WebSocket events for testing real-time features
+ * without a live backend connection.
+ */
+export class WebSocketMockServer {
+  private events: any[] = [];
+  private subscribers: ((event: any) => void)[] = [];
+  private autoPlay = false;
+  private playbackInterval: ReturnType<typeof setInterval> | null = null;
+
+  /**
+   * Queue an event to be sent
+   */
+  queueEvent(event: any): void {
+    this.events.push(event);
+  }
+
+  /**
+   * Queue multiple events
+   */
+  queueEvents(events: any[]): void {
+    this.events.push(...events);
+  }
+
+  /**
+   * Subscribe to receive events
+   */
+  subscribe(callback: (event: any) => void): () => void {
+    this.subscribers.push(callback);
+    return () => {
+      this.subscribers = this.subscribers.filter(s => s !== callback);
+    };
+  }
+
+  /**
+   * Send next queued event to all subscribers
+   */
+  sendNext(): any | undefined {
+    const event = this.events.shift();
+    if (event) {
+      this.subscribers.forEach(cb => cb(event));
+    }
+    return event;
+  }
+
+  /**
+   * Send all queued events
+   */
+  sendAll(): void {
+    while (this.events.length > 0) {
+      this.sendNext();
+    }
+  }
+
+  /**
+   * Start auto-playing events at interval
+   */
+  startAutoPlay(intervalMs: number = 1000): void {
+    this.autoPlay = true;
+    this.playbackInterval = setInterval(() => {
+      if (this.events.length > 0) {
+        this.sendNext();
+      } else {
+        this.stopAutoPlay();
+      }
+    }, intervalMs);
+  }
+
+  /**
+   * Stop auto-playing events
+   */
+  stopAutoPlay(): void {
+    this.autoPlay = false;
+    if (this.playbackInterval) {
+      clearInterval(this.playbackInterval);
+      this.playbackInterval = null;
+    }
+  }
+
+  /**
+   * Clear all queued events
+   */
+  clear(): void {
+    this.events = [];
+  }
+
+  /**
+   * Get count of queued events
+   */
+  get queuedCount(): number {
+    return this.events.length;
+  }
+}
+
+/**
+ * Create a WebSocket mock that integrates with Playwright page
+ */
+export function createPlaywrightWebSocketMock(page: any): WebSocketMockServer {
+  const mockServer = new WebSocketMockServer();
+
+  // Inject mock WebSocket into page
+  page.addInitScript(() => {
+    (window as any).__mockWebSocket = {
+      listeners: [] as ((event: any) => void)[],
+      emit: (event: any) => {
+        (window as any).__mockWebSocket.listeners.forEach((cb: any) => cb(event));
+      },
+    };
+
+    // Intercept WebSocket connections
+    const OriginalWebSocket = window.WebSocket;
+    (window as any).WebSocket = class MockWebSocket {
+      onopen: (() => void) | null = null;
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      onerror: ((error: Event) => void) | null = null;
+      onclose: (() => void) | null = null;
+      readyState = 1; // OPEN
+
+      constructor(url: string) {
+        console.log('[MockWebSocket] Connection to:', url);
+
+        // Simulate connection
+        setTimeout(() => {
+          if (this.onopen) this.onopen();
+        }, 100);
+
+        // Register for mock events
+        (window as any).__mockWebSocket.listeners.push((event: any) => {
+          if (this.onmessage) {
+            this.onmessage(new MessageEvent('message', {
+              data: JSON.stringify(event),
+            }));
+          }
+        });
+      }
+
+      send(data: string): void {
+        console.log('[MockWebSocket] Send:', data);
+      }
+
+      close(): void {
+        this.readyState = 3; // CLOSED
+        if (this.onclose) this.onclose();
+      }
+    };
+  });
+
+  // Bridge mock server events to page
+  mockServer.subscribe(async (event) => {
+    await page.evaluate((evt: any) => {
+      (window as any).__mockWebSocket?.emit(evt);
+    }, event);
+  });
+
+  return mockServer;
+}

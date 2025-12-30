@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { LoginPage } from '../../pages/login.page';
 import { DashboardPage } from '../../pages/dashboard.page';
 import { PatientPage } from '../../pages/patient.page';
-import { CareGapsPage } from '../../pages/care-gaps.page';
+import { CareGapsPage } from '../../pages/care-gap.page';
 import { TEST_USERS } from '../../fixtures/test-fixtures';
 import { maskPHIElements } from '../../utils/phi-masking';
 

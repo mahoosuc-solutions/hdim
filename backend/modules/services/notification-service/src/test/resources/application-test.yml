@@ -1,0 +1,53 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:15-alpine:///testdb
+    username: test
+    password: test
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+  # Disable Redis for tests
+  data:
+    redis:
+      repositories:
+        enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+  # Disable Kafka for tests
+  kafka:
+    bootstrap-servers: localhost:9092
+
+  # Disable mail sending
+  mail:
+    host: localhost
+    port: 1025
+
+# JWT configuration for shared auth module
+jwt:
+  secret: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+  expiration-ms: 86400000
+  issuer: test-issuer
+  audience: test-audience
+
+# JWT configuration for shared security module
+healthdata:
+  security:
+    jwt:
+      secret: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      expiration: 24h
+      issuer: test-issuer
+
+# Logging for tests
+logging:
+  level:
+    org.hibernate.SQL: WARN
+    org.springframework.security: WARN
+    com.healthdata: DEBUG

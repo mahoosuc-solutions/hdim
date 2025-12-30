@@ -1,0 +1,292 @@
+# HDIM Demo Sandbox Environment
+# Lightweight configuration for prospect self-service evaluation
+#
+# Usage:
+#   ./start-demo.sh              # Start demo with seed data
+#   docker compose -f docker-compose.demo.yml up -d    # Start manually
+#   docker compose -f docker-compose.demo.yml down     # Stop demo
+#
+# Access:
+#   API Gateway: http://localhost:8080
+#   Jaeger Tracing: http://localhost:16686
+#
+# Demo Users:
+#   demo_admin@hdim.ai / Demo123!    (ADMIN)
+#   demo_analyst@hdim.ai / Demo123!  (ANALYST)
+#   demo_viewer@hdim.ai / Demo123!   (VIEWER)
+
+services:
+  postgres:
+    container_name: hdim-demo-postgres
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: healthdata
+      POSTGRES_PASSWORD: demo_password_2024
+      POSTGRES_DB: healthdata_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - demo_postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/01-init-multi-db.sh
+      - ./docker/demo/demo-users.sql:/docker-entrypoint-initdb.d/02-demo-users.sql
+      - ./docker/demo/demo-seed-data.sql:/docker-entrypoint-initdb.d/03-demo-seed-data.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthdata"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  redis:
+    container_name: hdim-demo-redis
+    image: redis:7-alpine
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  kafka:
+    container_name: hdim-demo-kafka
+    image: confluentinc/cp-kafka:7.5.0
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9094
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 1
+      CLUSTER_ID: demo-cluster-hdim-2024
+      KAFKA_LOG_RETENTION_HOURS: 24
+    ports:
+      - "9094:9092"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:29092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  gateway-service:
+    container_name: hdim-demo-gateway
+    build:
+      context: ./backend
+      dockerfile: modules/services/gateway-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8080
+      JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: demo_password_2024
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JAVA_OPTS: "-Xmx256m -Xms128m"
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  fhir-service:
+    container_name: hdim-demo-fhir
+    build:
+      context: ./backend
+      dockerfile: modules/services/fhir-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fhir_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: demo_password_2024
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8085
+      JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JAVA_OPTS: "-Xmx384m -Xms192m"
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8085/fhir/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  patient-service:
+    container_name: hdim-demo-patient
+    build:
+      context: ./backend
+      dockerfile: modules/services/patient-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patient_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: demo_password_2024
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8084
+      JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JAVA_OPTS: "-Xmx384m -Xms192m"
+    ports:
+      - "8084:8084"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8084/patient/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  quality-measure-service:
+    container_name: hdim-demo-quality-measure
+    build:
+      context: ./backend
+      dockerfile: modules/services/quality-measure-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/quality_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: demo_password_2024
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8087
+      JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      FHIR_SERVICE_URL: http://fhir-service:8085
+      JAVA_OPTS: "-Xmx384m -Xms192m"
+    ports:
+      - "8087:8087"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8087/quality-measure/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  care-gap-service:
+    container_name: hdim-demo-care-gap
+    build:
+      context: ./backend
+      dockerfile: modules/services/care-gap-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/caregap_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: demo_password_2024
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8086
+      JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JAVA_OPTS: "-Xmx384m -Xms192m"
+    ports:
+      - "8086:8086"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8086/care-gap/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+networks:
+  hdim-demo-network:
+    driver: bridge
+
+volumes:
+  demo_postgres_data:
+    driver: local

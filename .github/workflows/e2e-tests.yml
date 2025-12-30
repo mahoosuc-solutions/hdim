@@ -1,0 +1,556 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'e2e/**'
+      - 'frontend/**'
+      - 'backend/**'
+      - '.github/workflows/e2e-tests.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'e2e/**'
+      - 'frontend/**'
+      - 'backend/**'
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Test suite to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - smoke
+          - regression
+          - performance
+          - accessibility
+          - visual
+          - mobile
+      browser:
+        description: 'Browser to test'
+        required: false
+        default: 'chromium'
+        type: choice
+        options:
+          - chromium
+          - firefox
+          - webkit
+          - all
+
+env:
+  NODE_VERSION: '20'
+  PLAYWRIGHT_VERSION: '1.40.0'
+
+jobs:
+  # Install and cache dependencies
+  install:
+    name: Install Dependencies
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache-deps.outputs.cache-hit }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Cache Playwright browsers
+        id: cache-playwright
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Cache node_modules
+        id: cache-deps
+        uses: actions/cache@v3
+        with:
+          path: e2e/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        working-directory: e2e
+        run: npm ci
+
+      - name: Install Playwright browsers
+        if: steps.cache-playwright.outputs.cache-hit != 'true'
+        working-directory: e2e
+        run: npx playwright install --with-deps
+
+  # Smoke tests - Run first, fast feedback
+  smoke-tests:
+    name: Smoke Tests
+    needs: install
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'smoke' || github.event.inputs.test_suite == ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore dependencies
+        uses: actions/cache@v3
+        with:
+          path: e2e/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+
+      - name: Restore Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Start application
+        run: |
+          docker compose -f docker-compose.test.yml up -d
+          npx wait-on http://localhost:4200 --timeout 120000
+
+      - name: Run smoke tests
+        working-directory: e2e
+        run: npx playwright test --grep @smoke --project=chromium
+        env:
+          BASE_URL: http://localhost:4200
+          API_URL: http://localhost:8000
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: smoke-test-results
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 7
+
+      - name: Stop application
+        if: always()
+        run: docker compose -f docker-compose.test.yml down
+
+  # Core workflow tests
+  workflow-tests:
+    name: Workflow Tests (${{ matrix.shard }})
+    needs: [install, smoke-tests]
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'regression' || github.event.inputs.test_suite == ''
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore dependencies
+        uses: actions/cache@v3
+        with:
+          path: e2e/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+
+      - name: Restore Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Start application
+        run: |
+          docker compose -f docker-compose.test.yml up -d
+          npx wait-on http://localhost:4200 --timeout 120000
+
+      - name: Run workflow tests
+        working-directory: e2e
+        run: npx playwright test tests/workflows --shard=${{ matrix.shard }}/4 --project=chromium
+        env:
+          BASE_URL: http://localhost:4200
+          API_URL: http://localhost:8000
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: workflow-test-results-shard-${{ matrix.shard }}
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 7
+
+      - name: Stop application
+        if: always()
+        run: docker compose -f docker-compose.test.yml down
+
+  # Security tests
+  security-tests:
+    name: Security Tests
+    needs: [install, smoke-tests]
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'regression' || github.event.inputs.test_suite == ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore dependencies
+        uses: actions/cache@v3
+        with:
+          path: e2e/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+
+      - name: Restore Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Start application
+        run: |
+          docker compose -f docker-compose.test.yml up -d
+          npx wait-on http://localhost:4200 --timeout 120000
+
+      - name: Run security tests
+        working-directory: e2e
+        run: npx playwright test tests/security --project=chromium
+        env:
+          BASE_URL: http://localhost:4200
+          API_URL: http://localhost:8000
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-test-results
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 7
+
+      - name: Stop application
+        if: always()
+        run: docker compose -f docker-compose.test.yml down
+
+  # Accessibility tests
+  accessibility-tests:
+    name: Accessibility Tests
+    needs: [install, smoke-tests]
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'accessibility' || github.event.inputs.test_suite == ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore dependencies
+        uses: actions/cache@v3
+        with:
+          path: e2e/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+
+      - name: Restore Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Start application
+        run: |
+          docker compose -f docker-compose.test.yml up -d
+          npx wait-on http://localhost:4200 --timeout 120000
+
+      - name: Run accessibility tests
+        working-directory: e2e
+        run: npx playwright test tests/accessibility --project=chromium
+        env:
+          BASE_URL: http://localhost:4200
+          API_URL: http://localhost:8000
+
+      - name: Upload accessibility report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: accessibility-test-results
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+            e2e/accessibility-reports/
+          retention-days: 30
+
+      - name: Stop application
+        if: always()
+        run: docker compose -f docker-compose.test.yml down
+
+  # Visual regression tests
+  visual-tests:
+    name: Visual Regression Tests
+    needs: [install, smoke-tests]
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'visual' || github.event.inputs.test_suite == ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore dependencies
+        uses: actions/cache@v3
+        with:
+          path: e2e/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+
+      - name: Restore Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Start application
+        run: |
+          docker compose -f docker-compose.test.yml up -d
+          npx wait-on http://localhost:4200 --timeout 120000
+
+      - name: Run visual tests
+        working-directory: e2e
+        run: npx playwright test tests/visual --project=chromium --update-snapshots
+        env:
+          BASE_URL: http://localhost:4200
+          API_URL: http://localhost:8000
+
+      - name: Upload visual test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: visual-test-results
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 7
+
+      - name: Stop application
+        if: always()
+        run: docker compose -f docker-compose.test.yml down
+
+  # Performance tests with Lighthouse
+  performance-tests:
+    name: Performance Tests
+    needs: [install, smoke-tests]
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'performance' || github.event.inputs.test_suite == ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore dependencies
+        uses: actions/cache@v3
+        with:
+          path: e2e/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+
+      - name: Restore Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Start application
+        run: |
+          docker compose -f docker-compose.test.yml up -d
+          npx wait-on http://localhost:4200 --timeout 120000
+
+      - name: Run performance tests
+        working-directory: e2e
+        run: npx playwright test tests/performance --project=chromium
+        env:
+          BASE_URL: http://localhost:4200
+          API_URL: http://localhost:8000
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          configPath: ./e2e/lighthouse-ci.json
+          uploadArtifacts: true
+
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-test-results
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+            .lighthouseci/
+          retention-days: 7
+
+      - name: Stop application
+        if: always()
+        run: docker compose -f docker-compose.test.yml down
+
+  # Mobile tests
+  mobile-tests:
+    name: Mobile Tests
+    needs: [install, smoke-tests]
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'mobile' || github.event.inputs.test_suite == ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore dependencies
+        uses: actions/cache@v3
+        with:
+          path: e2e/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+
+      - name: Restore Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Start application
+        run: |
+          docker compose -f docker-compose.test.yml up -d
+          npx wait-on http://localhost:4200 --timeout 120000
+
+      - name: Run mobile tests
+        working-directory: e2e
+        run: npx playwright test tests/mobile --project="Mobile Chrome" --project="Mobile Safari"
+        env:
+          BASE_URL: http://localhost:4200
+          API_URL: http://localhost:8000
+
+      - name: Upload mobile test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: mobile-test-results
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 7
+
+      - name: Stop application
+        if: always()
+        run: docker compose -f docker-compose.test.yml down
+
+  # Cross-browser tests (runs on schedule or manual trigger)
+  cross-browser-tests:
+    name: Cross-Browser Tests (${{ matrix.browser }})
+    needs: install
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.browser == 'all'
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore dependencies
+        uses: actions/cache@v3
+        with:
+          path: e2e/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+
+      - name: Restore Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Start application
+        run: |
+          docker compose -f docker-compose.test.yml up -d
+          npx wait-on http://localhost:4200 --timeout 120000
+
+      - name: Run cross-browser tests
+        working-directory: e2e
+        run: npx playwright test --project=${{ matrix.browser }}
+        env:
+          BASE_URL: http://localhost:4200
+          API_URL: http://localhost:8000
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: browser-test-results-${{ matrix.browser }}
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 7
+
+      - name: Stop application
+        if: always()
+        run: docker compose -f docker-compose.test.yml down
+
+  # Merge and publish test reports
+  publish-reports:
+    name: Publish Test Reports
+    needs: [smoke-tests, workflow-tests, security-tests, accessibility-tests, visual-tests, performance-tests, mobile-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Merge test results
+        run: |
+          mkdir -p merged-reports
+          find artifacts -name '*.html' -exec cp {} merged-reports/ \;
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: E2E Test Results
+          path: artifacts/**/results.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Upload merged reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: merged-e2e-reports
+          path: merged-reports/
+          retention-days: 30

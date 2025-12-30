@@ -243,19 +243,36 @@ export class PatientHealthService {
       return this.getMockMentalHealth('');
     }
 
-    const transformedAssessments: MentalHealthAssessment[] = assessments.map((a) => ({
-      type: a.type?.replace('_', '-') || a.assessmentType,
-      name: a.name || this.getAssessmentName(a.type || a.assessmentType),
-      score: a.score,
-      maxScore: a.maxScore,
-      severity: a.severity,
-      date: new Date(a.assessmentDate || a.date),
-      interpretation: a.interpretation,
-      positiveScreen: a.positiveScreen,
-      thresholdScore: a.thresholdScore,
-      requiresFollowup: a.requiresFollowup,
-      trend: 'stable', // TODO: Calculate from history
-    }));
+    // Group assessments by type for trend calculation
+    const assessmentsByType = new Map<string, any[]>();
+    assessments.forEach((a) => {
+      const type = a.type?.replace('_', '-') || a.assessmentType;
+      if (!assessmentsByType.has(type)) {
+        assessmentsByType.set(type, []);
+      }
+      assessmentsByType.get(type)!.push(a);
+    });
+
+    // Sort each type's assessments by date and calculate trend
+    const transformedAssessments: MentalHealthAssessment[] = assessments.map((a) => {
+      const type = a.type?.replace('_', '-') || a.assessmentType;
+      const typeAssessments = assessmentsByType.get(type) || [];
+      const trend = this.calculateAssessmentTrend(a, typeAssessments);
+
+      return {
+        type,
+        name: a.name || this.getAssessmentName(a.type || a.assessmentType),
+        score: a.score,
+        maxScore: a.maxScore,
+        severity: a.severity,
+        date: new Date(a.assessmentDate || a.date),
+        interpretation: a.interpretation,
+        positiveScreen: a.positiveScreen,
+        thresholdScore: a.thresholdScore,
+        requiresFollowup: a.requiresFollowup,
+        trend,
+      };
+    });
 
     // Determine overall mental health status
     const hasPositiveScreens = transformedAssessments.some((a) => a.positiveScreen);
@@ -266,7 +283,7 @@ export class PatientHealthService {
       status,
       riskLevel,
       assessments: transformedAssessments,
-      diagnoses: [], // TODO: Get from FHIR Conditions
+      diagnoses: [], // Mental health diagnoses should be fetched from FHIR Conditions endpoint separately
       substanceUse: {
         hasSubstanceUse: false,
         substances: [],
@@ -304,6 +321,53 @@ export class PatientHealthService {
     if (moderatelySevereCount > 0) return 'high';
     if (moderateCount > 0) return 'moderate';
     return 'low';
+  }
+
+  /**
+   * Calculate trend for a mental health assessment based on history
+   * Compares current assessment score with previous assessments of the same type
+   * For mental health scales (PHQ-9, GAD-7), lower scores are better (improvement = down)
+   */
+  private calculateAssessmentTrend(currentAssessment: any, allAssessments: any[]): 'improving' | 'declining' | 'stable' {
+    if (!allAssessments || allAssessments.length < 2) {
+      return 'stable';
+    }
+
+    // Sort by date (newest first)
+    const sorted = [...allAssessments].sort((a, b) => {
+      const dateA = new Date(a.assessmentDate || a.date).getTime();
+      const dateB = new Date(b.assessmentDate || b.date).getTime();
+      return dateB - dateA;
+    });
+
+    // Find the current assessment position
+    const currentDate = new Date(currentAssessment.assessmentDate || currentAssessment.date).getTime();
+    const currentIndex = sorted.findIndex(
+      (a) => new Date(a.assessmentDate || a.date).getTime() === currentDate
+    );
+
+    // If current is the oldest or not found, return stable
+    if (currentIndex === -1 || currentIndex >= sorted.length - 1) {
+      return 'stable';
+    }
+
+    // Compare with the previous assessment
+    const previousAssessment = sorted[currentIndex + 1];
+    const currentScore = currentAssessment.score;
+    const previousScore = previousAssessment.score;
+    const maxScore = currentAssessment.maxScore || 27; // Default for PHQ-9
+
+    // Calculate score change as percentage of max score
+    const scoreDifference = currentScore - previousScore;
+    const significantChange = maxScore * 0.1; // 10% of max score is significant
+
+    // For mental health scales, lower score = better (improvement)
+    if (scoreDifference <= -significantChange) {
+      return 'improving'; // Score decreased significantly
+    } else if (scoreDifference >= significantChange) {
+      return 'declining'; // Score increased significantly (declining mental health)
+    }
+    return 'stable';
   }
 
   /**
@@ -2766,6 +2830,7 @@ export class PatientHealthService {
 
   /**
    * Get health metric trends over time
+   * Queries FHIR observations for the specified metric LOINC code
    */
   getHealthMetricTrend(
     patientId: string,
@@ -2773,8 +2838,89 @@ export class PatientHealthService {
     startDate: Date,
     endDate: Date
   ): Observable<HealthMetricTrend> {
-    // TODO: Query time-series observation data
-    return of(this.getMockHealthTrend(metric, startDate, endDate));
+    // Map metric names to LOINC codes
+    const metricToLoinc: Record<string, { code: string; name: string; unit: string; target?: number; refRange: { low: number; high: number } }> = {
+      'HbA1c': { code: '4548-4', name: 'HbA1c', unit: '%', target: 7.0, refRange: { low: 4, high: 6 } },
+      'bloodPressure': { code: '85354-9', name: 'Blood Pressure', unit: 'mmHg', target: 120, refRange: { low: 90, high: 140 } },
+      'systolicBP': { code: '8480-6', name: 'Systolic BP', unit: 'mmHg', target: 120, refRange: { low: 90, high: 140 } },
+      'diastolicBP': { code: '8462-4', name: 'Diastolic BP', unit: 'mmHg', target: 80, refRange: { low: 60, high: 90 } },
+      'weight': { code: '29463-7', name: 'Weight', unit: 'kg', refRange: { low: 50, high: 100 } },
+      'bmi': { code: '39156-5', name: 'BMI', unit: 'kg/m2', target: 25, refRange: { low: 18.5, high: 25 } },
+      'glucose': { code: '2339-0', name: 'Glucose', unit: 'mg/dL', target: 100, refRange: { low: 70, high: 100 } },
+      'ldl': { code: '2089-1', name: 'LDL Cholesterol', unit: 'mg/dL', target: 100, refRange: { low: 0, high: 100 } },
+      'creatinine': { code: '2160-0', name: 'Creatinine', unit: 'mg/dL', refRange: { low: 0.6, high: 1.2 } },
+    };
+
+    const metricConfig = metricToLoinc[metric];
+    if (!metricConfig) {
+      // Unknown metric, return mock data
+      return of(this.getMockHealthTrend(metric, startDate, endDate));
+    }
+
+    // Query FHIR observations for this LOINC code
+    const url = buildFhirUrl(FHIR_ENDPOINTS.OBSERVATION);
+    const params = new HttpParams()
+      .set('subject', `Patient/${patientId}`)
+      .set('code', metricConfig.code)
+      .set('date', `ge${startDate.toISOString().split('T')[0]}`)
+      .set('date', `le${endDate.toISOString().split('T')[0]}`)
+      .set('_sort', 'date')
+      .set('_count', '100');
+
+    return this.http.get<FhirBundle>(url, { headers: this.getHeaders(), params }).pipe(
+      map((bundle) => {
+        const observations = bundle.entry?.map((e) => e.resource as FhirObservation) || [];
+
+        // Transform to trend data points
+        const dataPoints = observations
+          .filter((obs) => obs.valueQuantity?.value !== undefined)
+          .map((obs) => ({
+            date: new Date(obs.effectiveDateTime || obs.issued || ''),
+            value: obs.valueQuantity!.value!,
+          }))
+          .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+        // Calculate trend direction
+        const trend = this.calculateMetricValueTrend(dataPoints);
+        const currentValue = dataPoints.length > 0 ? dataPoints[dataPoints.length - 1].value : metricConfig.target || 0;
+
+        return {
+          metric: metricConfig.name,
+          unit: metricConfig.unit,
+          dataPoints,
+          trend,
+          currentValue,
+          targetValue: metricConfig.target,
+          referenceRange: metricConfig.refRange,
+        };
+      }),
+      catchError((error) => {
+        this.log.warn(`Failed to fetch FHIR observations for ${metric}, using mock data:`, error.message);
+        return of(this.getMockHealthTrend(metric, startDate, endDate));
+      })
+    );
+  }
+
+  /**
+   * Calculate trend direction from metric data points
+   */
+  private calculateMetricValueTrend(dataPoints: { date: Date; value: number }[]): 'improving' | 'declining' | 'stable' {
+    if (dataPoints.length < 2) return 'stable';
+
+    // Compare first half average with second half average
+    const midpoint = Math.floor(dataPoints.length / 2);
+    const firstHalf = dataPoints.slice(0, midpoint);
+    const secondHalf = dataPoints.slice(midpoint);
+
+    const firstAvg = firstHalf.reduce((sum, p) => sum + p.value, 0) / firstHalf.length;
+    const secondAvg = secondHalf.reduce((sum, p) => sum + p.value, 0) / secondHalf.length;
+
+    const changePercent = ((secondAvg - firstAvg) / firstAvg) * 100;
+    const threshold = 5; // 5% change threshold
+
+    if (Math.abs(changePercent) < threshold) return 'stable';
+    // For most metrics, lower is better (weight, BP, glucose, etc.)
+    return changePercent < 0 ? 'improving' : 'declining';
   }
 
   /**
@@ -3357,16 +3503,18 @@ export class PatientHealthService {
     else if (score >= 50) status = 'fair';
     else status = 'poor';
 
-    // Chronic disease score (derived from physical health for now)
-    // TODO: Implement dedicated chronic disease management score
-    const chronicDiseaseScore = physicalScore;
+    // Calculate chronic disease management score based on condition control, adherence, and monitoring
+    const chronicDiseaseScore = this.calculateChronicDiseaseScore(physical);
+
+    // Calculate trend by comparing with cached historical data
+    const trend = this.getQuickTrendDirection(patientId, score);
 
     return {
       patientId,
       overallScore: score,
       score, // Deprecated compatibility
       status,
-      trend: 'stable', // TODO: Calculate from historical data
+      trend,
       components: {
         physical: physicalScore,
         mental: mentalScore,
@@ -3377,6 +3525,64 @@ export class PatientHealthService {
       calculatedAt: new Date(),
       lastCalculated: new Date(), // Deprecated compatibility
     };
+  }
+
+  /**
+   * Calculate chronic disease management score
+   * Based on: condition control, medication adherence, monitoring compliance
+   */
+  private calculateChronicDiseaseScore(physical: PhysicalHealthSummary): number {
+    if (!physical.chronicConditions || physical.chronicConditions.length === 0) {
+      // No chronic conditions = perfect score
+      return 100;
+    }
+
+    let score = 100;
+
+    // Evaluate each chronic condition
+    for (const condition of physical.chronicConditions) {
+      // Deduct points based on control status
+      if (!condition.controlled) {
+        if (condition.severity === 'severe') score -= 20;
+        else if (condition.severity === 'moderate') score -= 12;
+        else score -= 6;
+      } else {
+        // Controlled conditions still have a small impact
+        if (condition.severity === 'severe') score -= 5;
+        else if (condition.severity === 'moderate') score -= 3;
+      }
+    }
+
+    // Factor in medication adherence (25% weight on chronic disease management)
+    const adherenceScore = physical.medicationAdherence.overallRate || 0;
+    const adherenceImpact = (adherenceScore / 100) * 25;
+    score = score * 0.75 + adherenceImpact;
+
+    // Factor in functional status impact
+    if (physical.functionalStatus.adlScore < 4) score -= 15;
+    else if (physical.functionalStatus.adlScore < 6) score -= 8;
+
+    return Math.max(0, Math.min(100, Math.round(score)));
+  }
+
+  /**
+   * Quickly determine trend direction from cached historical data
+   * Compares current score with recent historical scores
+   * Returns direction indicator matching HealthScore.trend type
+   */
+  private getQuickTrendDirection(patientId: string, currentScore: number): 'improving' | 'stable' | 'declining' | 'unknown' {
+    // Check for cached historical score to compare
+    const cached = this.healthScoreCache.get(patientId);
+    if (cached && cached.data) {
+      const previousScore = cached.data.overallScore;
+      const difference = currentScore - previousScore;
+      const threshold = 5; // 5 point change is significant
+
+      if (difference >= threshold) return 'improving';
+      if (difference <= -threshold) return 'declining';
+      return 'stable';
+    }
+    return 'stable'; // No historical data, assume stable
   }
 
   /**

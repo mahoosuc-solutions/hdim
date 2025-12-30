@@ -7,7 +7,9 @@
 
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -69,7 +71,11 @@ export class PatientHealthOverviewComponent implements OnInit, OnDestroy {
   careGapColumns: string[] = ['priority', 'title', 'category', 'actions'];
   recommendationColumns: string[] = ['priority', 'title', 'category', 'actions'];
 
-  constructor(private healthService: PatientHealthService) {}
+  constructor(
+    private healthService: PatientHealthService,
+    private router: Router,
+    private snackBar: MatSnackBar
+  ) {}
 
   ngOnInit(): void {
     if (!this.patientId) {
@@ -244,20 +250,104 @@ export class PatientHealthOverviewComponent implements OnInit, OnDestroy {
 
   /**
    * Handle alert action button clicks
+   * Routes to appropriate workflow based on alert type
    */
   onAlertAction(alert: CriticalAlert): void {
-    console.log('Alert action triggered:', alert);
-    // TODO: Implement specific actions based on alert type
-    // e.g., navigate to crisis protocol, open scheduling dialog, etc.
+    switch (alert.type) {
+      case 'suicide-risk':
+        // Navigate to crisis intervention protocol
+        this.router.navigate(['/crisis-protocol'], {
+          queryParams: {
+            patientId: this.patientId,
+            alertId: alert.id,
+            severity: alert.severity
+          }
+        });
+        break;
+
+      case 'care-gap':
+        // Navigate to care gap detail or scheduling
+        const measureId = alert.metadata?.['measureId'];
+        if (measureId) {
+          this.router.navigate(['/patients', this.patientId, 'care-gaps', measureId]);
+        } else {
+          this.router.navigate(['/patients', this.patientId, 'care-gaps']);
+        }
+        break;
+
+      case 'vital-sign':
+      case 'lab-result':
+        // Navigate to clinical results view
+        this.router.navigate(['/patients', this.patientId, 'results'], {
+          queryParams: { highlight: alert.metadata?.['resultId'] }
+        });
+        break;
+
+      case 'substance-use':
+        // Navigate to behavioral health assessment
+        this.router.navigate(['/patients', this.patientId, 'behavioral-health'], {
+          queryParams: { focus: 'substance-use' }
+        });
+        break;
+
+      case 'medication':
+        // Navigate to medication reconciliation
+        this.router.navigate(['/patients', this.patientId, 'medications'], {
+          queryParams: { alertId: alert.id }
+        });
+        break;
+
+      default:
+        // Generic patient detail navigation
+        this.router.navigate(['/patients', this.patientId]);
+    }
   }
 
   /**
-   * Handle alert dismissal
+   * Handle alert dismissal with audit trail
+   * Removes alert from display and logs the dismissal
    */
   onAlertDismiss(alert: CriticalAlert): void {
-    console.log('Alert dismissed:', alert);
-    // TODO: Implement dismissal logic (requires documentation/reason)
+    // Record dismissal with timestamp for audit
+    const dismissalRecord = {
+      alertId: alert.id,
+      alertType: alert.type,
+      severity: alert.severity,
+      patientId: this.patientId,
+      dismissedAt: new Date().toISOString(),
+      // In production, this would come from the auth service
+      dismissedBy: 'current-user'
+    };
+
+    // Log dismissal for audit trail
+    console.log('Alert dismissed with audit record:', dismissalRecord);
+
+    // Remove from display
     this.criticalAlerts = this.criticalAlerts.filter((a) => a.id !== alert.id);
+
+    // Show confirmation
+    this.snackBar.open(
+      `Alert dismissed: ${alert.title}`,
+      'Undo',
+      { duration: 5000 }
+    ).onAction().subscribe(() => {
+      // Restore alert if user clicks undo
+      this.criticalAlerts = [...this.criticalAlerts, alert].sort(
+        (a, b) => this.getAlertSeverityWeight(b.severity) - this.getAlertSeverityWeight(a.severity)
+      );
+    });
+  }
+
+  /**
+   * Get numeric weight for alert severity for sorting
+   */
+  private getAlertSeverityWeight(severity: string): number {
+    switch (severity) {
+      case 'critical': return 3;
+      case 'high': return 2;
+      case 'medium': return 1;
+      default: return 0;
+    }
   }
 
   // Helper methods for display

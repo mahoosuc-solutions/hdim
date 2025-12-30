@@ -28,26 +28,26 @@ export class LoginPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    // Form elements
-    this.usernameInput = page.locator('[data-testid="username-input"], #username, input[name="username"]');
-    this.passwordInput = page.locator('[data-testid="password-input"], #password, input[name="password"]');
-    this.loginButton = page.locator('[data-testid="login-button"], button[type="submit"]');
-    this.forgotPasswordLink = page.locator('[data-testid="forgot-password-link"], a:has-text("Forgot")');
-    this.ssoButton = page.locator('[data-testid="sso-button"], button:has-text("SSO")');
-    this.rememberMeCheckbox = page.locator('[data-testid="remember-me"], #rememberMe, input[name="rememberMe"]');
+    // Form elements - Angular Material with reactive forms
+    this.usernameInput = page.locator('input[formcontrolname="username"], input[ng-reflect-name="username"], input[autocomplete="username"]');
+    this.passwordInput = page.locator('input[formcontrolname="password"], input[ng-reflect-name="password"], input[autocomplete="current-password"]');
+    this.loginButton = page.locator('button[type="submit"]:has-text("Sign In"), button[type="submit"]:has(mat-icon)');
+    this.forgotPasswordLink = page.locator('a[routerlink="/forgot-password"], a:has-text("Forgot password")');
+    this.ssoButton = page.locator('button:has-text("SSO")');
+    this.rememberMeCheckbox = page.locator('mat-checkbox[formcontrolname="rememberMe"], mat-checkbox:has-text("Remember me")');
 
     // MFA elements
     this.mfaCodeInput = page.locator('[data-testid="mfa-code-input"], #mfaCode, input[name="mfaCode"]');
     this.mfaSubmitButton = page.locator('[data-testid="mfa-submit"], button:has-text("Verify")');
 
-    // Error display
-    this.loginError = page.locator('[data-testid="login-error"], .login-error, .error-message');
+    // Error display - Angular Material snackbar or mat-error
+    this.loginError = page.locator('mat-error, .mat-mdc-snack-bar-container, simple-snack-bar, .error-snackbar');
 
     // Tenant selector (for multi-tenant)
-    this.tenantSelector = page.locator('[data-testid="tenant-selector"], #tenant');
+    this.tenantSelector = page.locator('[data-testid="tenant-selector"], #tenant, mat-select[formcontrolname="tenant"]');
 
-    // Logo
-    this.logoImage = page.locator('[data-testid="logo"], .logo img');
+    // Logo - Angular Material icon
+    this.logoImage = page.locator('.logo-icon, mat-icon:has-text("health_and_safety"), .logo-container mat-icon');
   }
 
   /**
@@ -62,7 +62,23 @@ export class LoginPage extends BasePage {
    * Check if login page is loaded
    */
   async isLoaded(): Promise<boolean> {
-    return this.usernameInput.isVisible();
+    try {
+      await this.usernameInput.waitFor({ state: 'visible', timeout: 5000 });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Use demo login (for development/testing)
+   */
+  async demoLogin(): Promise<void> {
+    const demoButton = this.page.locator('button:has-text("Demo Login")');
+    if (await demoButton.isVisible()) {
+      await demoButton.click();
+      await this.page.waitForURL('**/dashboard', { timeout: 30000 });
+    }
   }
 
   /**
@@ -198,5 +214,17 @@ export class LoginPage extends BasePage {
     const input = this.passwordInput;
     const classes = await input.getAttribute('class') || '';
     return classes.includes('invalid') || classes.includes('error') || classes.includes('ng-invalid');
+  }
+
+  /**
+   * Check if there's a login error displayed
+   */
+  async hasError(): Promise<boolean> {
+    try {
+      await this.loginError.waitFor({ state: 'visible', timeout: 3000 });
+      return true;
+    } catch {
+      return false;
+    }
   }
 }

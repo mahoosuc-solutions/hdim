@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { DEMO_USER } from './fixtures/auth.fixture';
 
 /**
  * Clinical Portal UI Documentation Tests
@@ -9,6 +10,12 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Clinical Portal - UI Documentation', () => {
   test.beforeEach(async ({ page }) => {
+    // Set up authentication via localStorage before navigation
+    await page.addInitScript((demoUser) => {
+      localStorage.setItem('healthdata_auth_token', 'demo-jwt-token-' + Date.now());
+      localStorage.setItem('healthdata_user', JSON.stringify(demoUser));
+    }, DEMO_USER);
+
     // Navigate to the app before each test
     await page.goto('/');
 

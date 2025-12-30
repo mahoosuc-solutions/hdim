@@ -40,31 +40,32 @@ export class DashboardPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    // Navigation
-    this.navigation = page.locator('[data-testid="navigation"], nav, .sidebar');
-    this.userMenu = page.locator('[data-testid="user-menu"], .user-menu, [aria-label="User menu"]');
-    this.logoutButton = page.locator('[data-testid="logout-button"], button:has-text("Logout"), button:has-text("Sign out")');
-    this.settingsLink = page.locator('[data-testid="settings-link"], a:has-text("Settings")');
+    // Navigation - Angular Material sidenav
+    this.navigation = page.locator('mat-sidenav, .mat-drawer, nav, .sidenav');
+    this.userMenu = page.locator('button[aria-label="User menu"], button[aria-label*="user" i], button[aria-label*="account" i]').first();
+    this.logoutButton = page.locator('button:has-text("Logout"), button:has-text("Sign out"), button:has-text("Log out"), [role="menuitem"]:has-text("Logout")');
+    this.settingsLink = page.locator('a:has-text("Settings"), button:has-text("Settings"), [role="menuitem"]:has-text("Settings")');
 
-    // Dashboard metric cards
-    this.patientCountCard = page.locator('[data-testid="patient-count-card"], .dashboard-card:has-text("Patients")');
-    this.careGapsCard = page.locator('[data-testid="care-gaps-card"], .dashboard-card:has-text("Care Gaps")');
-    this.evaluationsCard = page.locator('[data-testid="evaluations-card"], .dashboard-card:has-text("Evaluations")');
-    this.complianceRateCard = page.locator('[data-testid="compliance-rate-card"], .dashboard-card:has-text("Compliance")');
+    // Dashboard metric cards - role-based dashboards have different cards
+    // Provider dashboard: Patients Today, Results to Review, High Priority Gaps, Quality Score
+    this.patientCountCard = page.locator('[aria-label*="Patients" i], :has-text("Patients Today"):not(button), :has-text("Total Patients"):not(button)').first();
+    this.careGapsCard = page.locator('[aria-label*="Priority Gaps" i], :has-text("High Priority Gaps"):not(button), :has-text("Care Gap"):not(button)').first();
+    this.evaluationsCard = page.locator('[aria-label*="Results" i], :has-text("Results to Review"):not(button), :has-text("Evaluations"):not(button)').first();
+    this.complianceRateCard = page.locator('[aria-label*="Quality Score" i], :has-text("Quality Score"):not(button), :has-text("Compliance"):not(button)').first();
 
     // Quick action buttons
-    this.newEvaluationButton = page.locator('[data-testid="new-evaluation-button"], button:has-text("New Evaluation")');
-    this.viewCareGapsButton = page.locator('[data-testid="view-care-gaps-button"], button:has-text("View Care Gaps")');
-    this.searchPatientButton = page.locator('[data-testid="search-patient-button"], button:has-text("Search Patient")');
-    this.generateReportButton = page.locator('[data-testid="generate-report-button"], button:has-text("Generate Report")');
+    this.newEvaluationButton = page.locator('button:has-text("New Evaluation"), a:has-text("New Evaluation")');
+    this.viewCareGapsButton = page.locator('button:has-text("View All Care Gaps"), button:has-text("View Care Gaps")');
+    this.searchPatientButton = page.locator('button:has-text("View All"):near(app-stat-card:has-text("Patients"))');
+    this.generateReportButton = page.locator('button:has-text("Generate Report"), a:has-text("Reports")');
 
     // Recent activity lists
-    this.recentEvaluationsList = page.locator('[data-testid="recent-evaluations-list"], .recent-evaluations');
-    this.recentCareGapsList = page.locator('[data-testid="recent-care-gaps-list"], .recent-care-gaps');
+    this.recentEvaluationsList = page.locator('.recent-activity-section, .recent-evaluations, mat-card:has-text("Recent Activity")');
+    this.recentCareGapsList = page.locator('.care-gaps-list, .care-gap-item');
 
-    // Charts
-    this.complianceTrendChart = page.locator('[data-testid="compliance-trend-chart"], .compliance-chart');
-    this.careGapDistributionChart = page.locator('[data-testid="care-gap-distribution-chart"], .care-gap-chart');
+    // Charts - ngx-charts
+    this.complianceTrendChart = page.locator('ngx-charts-line-chart, .compliance-trend-chart');
+    this.careGapDistributionChart = page.locator('ngx-charts-bar-horizontal, .care-gap-distribution-chart');
   }
 
   /**
@@ -80,11 +81,22 @@ export class DashboardPage extends BasePage {
    */
   async isLoaded(): Promise<boolean> {
     try {
-      await this.patientCountCard.waitFor({ state: 'visible', timeout: 5000 });
+      // Wait for dashboard header
+      await this.page.locator('h1:has-text("Dashboard")').first().waitFor({ state: 'visible', timeout: 10000 });
+
+      // Wait for role switcher radio group or dashboard content
+      const roleSelector = this.page.locator('[aria-label*="user role" i], [aria-label*="role view" i]');
+      await roleSelector.waitFor({ state: 'visible', timeout: 15000 });
+
       return true;
     } catch {
       return false;
     }
+  }
+
+  // Alias for careGapsCard
+  get careGapCard(): Locator {
+    return this.careGapsCard;
   }
 
   /**
@@ -211,19 +223,28 @@ export class DashboardPage extends BasePage {
   /**
    * Navigate using sidebar
    */
-  async navigateTo(menuItem: 'patients' | 'evaluations' | 'care-gaps' | 'reports' | 'measures' | 'admin'): Promise<void> {
-    const menuMap: Record<string, string> = {
-      'patients': 'Patients',
-      'evaluations': 'Evaluations',
-      'care-gaps': 'Care Gaps',
-      'reports': 'Reports',
-      'measures': 'Quality Measures',
-      'admin': 'Administration',
+  async navigateTo(menuItem: 'patients' | 'evaluations' | 'care-gaps' | 'reports' | 'measures' | 'admin' | 'results'): Promise<void> {
+    const menuMap: Record<string, { text: string; urlPattern: string }> = {
+      'patients': { text: 'Patients', urlPattern: '**/patients' },
+      'evaluations': { text: 'Evaluations', urlPattern: '**/evaluations' },
+      'care-gaps': { text: 'Care Gaps', urlPattern: '**/care-gaps' },
+      'reports': { text: 'Reports', urlPattern: '**/reports' },
+      'measures': { text: 'Measure Builder', urlPattern: '**/measures' },
+      'results': { text: 'Results', urlPattern: '**/results' },
+      'admin': { text: 'Administration', urlPattern: '**/admin' },
     };
 
-    const linkText = menuMap[menuItem];
-    await this.navigation.locator(`a:has-text("${linkText}"), [routerlink*="${menuItem}"]`).click();
-    await this.page.waitForURL(`**/${menuItem}`);
+    const config = menuMap[menuItem];
+    // Click sidebar navigation item - Angular Material sidenav structure
+    await this.page.locator(`mat-sidenav a:has-text("${config.text}"), .sidenav a:has-text("${config.text}"), nav a:has-text("${config.text}")`).click();
+    await this.page.waitForURL(config.urlPattern, { timeout: 10000 });
+  }
+
+  /**
+   * Navigate to patients page using sidebar
+   */
+  async navigateToPatients(): Promise<void> {
+    await this.navigateTo('patients');
   }
 
   /**

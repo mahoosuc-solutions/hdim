@@ -55,30 +55,30 @@ export class PatientPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    // List page elements
-    this.pageHeading = page.locator('h1, h2').filter({ hasText: /patient/i });
-    this.patientTable = page.locator('[data-testid="patient-table"], .patient-table, table');
-    this.patientRows = page.locator('[data-testid="patient-row"], .patient-row, tbody tr');
-    this.searchInput = page.locator('[data-testid="patient-search"], input[placeholder*="Search"], #patientSearch');
-    this.searchButton = page.locator('[data-testid="search-button"], button:has-text("Search")');
-    this.filterButton = page.locator('[data-testid="filter-button"], button:has-text("Filter")');
-    this.createPatientButton = page.locator('[data-testid="create-patient"], button:has-text("Add Patient"), button:has-text("New")');
-    this.exportButton = page.locator('[data-testid="export-patients"], button:has-text("Export")');
-    this.refreshButton = page.locator('[data-testid="refresh"], button:has-text("Refresh")');
+    // List page elements - Angular Material structure
+    this.pageHeading = page.locator('h1.page-title, h1:has-text("Patient Management")');
+    this.patientTable = page.locator('mat-table, table, .mat-mdc-table');
+    this.patientRows = page.locator('mat-row, tbody tr, .mat-mdc-row');
+    this.searchInput = page.locator('input[aria-label*="Search patients" i], input[placeholder*="Search patients" i], .search-field input');
+    this.searchButton = page.locator('button:has-text("Search"), mat-icon:has-text("search")');
+    this.filterButton = page.locator('button:has-text("Filter"), button:has-text("Apply")');
+    this.createPatientButton = page.locator('button:has-text("Add Patient"), button:has-text("New Patient"), button:has-text("Create")');
+    this.exportButton = page.locator('button:has-text("Export"), button[aria-label*="export" i]');
+    this.refreshButton = page.locator('button:has-text("Refresh"), button[aria-label*="refresh" i]');
 
-    // Pagination
-    this.paginationContainer = page.locator('[data-testid="pagination"], .pagination, mat-paginator');
-    this.nextPageButton = page.locator('[data-testid="next-page"], button[aria-label*="next"], .mat-paginator-navigation-next');
-    this.prevPageButton = page.locator('[data-testid="prev-page"], button[aria-label*="previous"], .mat-paginator-navigation-previous');
-    this.pageSizeSelect = page.locator('[data-testid="page-size"], .page-size-select, .mat-paginator-page-size-select');
-    this.pageInfo = page.locator('[data-testid="page-info"], .page-info, .mat-paginator-range-label');
+    // Pagination - Angular Material paginator
+    this.paginationContainer = page.locator('mat-paginator, .mat-mdc-paginator');
+    this.nextPageButton = page.locator('button[aria-label*="Next" i], .mat-mdc-paginator-navigation-next');
+    this.prevPageButton = page.locator('button[aria-label*="Previous" i], .mat-mdc-paginator-navigation-previous');
+    this.pageSizeSelect = page.locator('.mat-mdc-paginator-page-size-select, mat-select');
+    this.pageInfo = page.locator('.mat-mdc-paginator-range-label');
 
-    // Filters
-    this.statusFilter = page.locator('[data-testid="status-filter"], #statusFilter');
-    this.genderFilter = page.locator('[data-testid="gender-filter"], #genderFilter');
-    this.ageFilter = page.locator('[data-testid="age-filter"], #ageFilter');
-    this.riskFilter = page.locator('[data-testid="risk-filter"], #riskFilter');
-    this.clearFiltersButton = page.locator('[data-testid="clear-filters"], button:has-text("Clear")');
+    // Filters - Angular Material form fields
+    this.statusFilter = page.locator('mat-select[formcontrolname="status"], mat-select[aria-label*="status" i]');
+    this.genderFilter = page.locator('mat-select[formcontrolname="gender"], mat-select[aria-label*="gender" i]');
+    this.ageFilter = page.locator('mat-select[formcontrolname="ageRange"], mat-select[aria-label*="age" i]');
+    this.riskFilter = page.locator('mat-select[formcontrolname="riskLevel"], mat-select[aria-label*="risk" i]');
+    this.clearFiltersButton = page.locator('button:has-text("Reset"), button:has-text("Clear")');
 
     // Patient Detail
     this.patientName = page.locator('[data-testid="patient-name"], .patient-name, h1');
@@ -103,7 +103,18 @@ export class PatientPage extends BasePage {
   }
 
   async isLoaded(): Promise<boolean> {
-    return (await this.patientTable.count()) > 0 || (await this.pageHeading.count()) > 0;
+    try {
+      // Wait for page container and title
+      await this.page.locator('.patients-container, h1:has-text("Patient")').first().waitFor({ state: 'visible', timeout: 10000 });
+
+      // Wait for loading indicator to disappear
+      const loadingText = this.page.locator('text="Loading patients..."');
+      await loadingText.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**

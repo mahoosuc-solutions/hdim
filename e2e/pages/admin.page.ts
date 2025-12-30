@@ -70,61 +70,61 @@ export class AdminPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    // Navigation
-    this.pageHeading = page.locator('h1, h2').filter({ hasText: /admin|settings/i });
-    this.usersTab = page.locator('[data-testid="users-tab"], [role="tab"]:has-text("Users")');
-    this.rolesTab = page.locator('[data-testid="roles-tab"], [role="tab"]:has-text("Roles")');
-    this.settingsTab = page.locator('[data-testid="settings-tab"], [role="tab"]:has-text("Settings")');
-    this.auditTab = page.locator('[data-testid="audit-tab"], [role="tab"]:has-text("Audit")');
-    this.importTab = page.locator('[data-testid="import-tab"], [role="tab"]:has-text("Import")');
+    // Navigation - Angular Material tabs
+    this.pageHeading = page.locator('h1:has-text("Admin"), h1:has-text("Settings"), h2:has-text("Admin"), h1.page-title');
+    this.usersTab = page.locator('[data-testid="users-tab"], [role="tab"]:has-text("Users"), mat-tab:has-text("Users")');
+    this.rolesTab = page.locator('[data-testid="roles-tab"], [role="tab"]:has-text("Roles"), mat-tab:has-text("Roles")');
+    this.settingsTab = page.locator('[data-testid="settings-tab"], [role="tab"]:has-text("Settings"), mat-tab:has-text("Settings")');
+    this.auditTab = page.locator('[data-testid="audit-tab"], [role="tab"]:has-text("Audit"), mat-tab:has-text("Audit")');
+    this.importTab = page.locator('[data-testid="import-tab"], [role="tab"]:has-text("Import"), mat-tab:has-text("Import")');
 
-    // User Management
-    this.userList = page.locator('[data-testid="user-list"], .user-list, table');
-    this.userRows = page.locator('[data-testid="user-row"], .user-row, tbody tr');
-    this.createUserButton = page.locator('[data-testid="create-user"], button:has-text("Add User"), button:has-text("Create")');
-    this.userSearchInput = page.locator('[data-testid="user-search"], input[placeholder*="Search"]');
-    this.userStatusFilter = page.locator('[data-testid="user-status-filter"], #userStatus');
-    this.userRoleFilter = page.locator('[data-testid="user-role-filter"], #userRole');
+    // User Management - Angular Material table
+    this.userList = page.locator('[data-testid="user-list"], mat-table, table, .mat-mdc-table');
+    this.userRows = page.locator('[data-testid="user-row"], mat-row, tbody tr, .mat-mdc-row');
+    this.createUserButton = page.locator('[data-testid="create-user"], button:has-text("Add User"), button:has-text("Create"), button:has-text("New User")');
+    this.userSearchInput = page.locator('[data-testid="user-search"], input[placeholder*="Search" i], .search-field input');
+    this.userStatusFilter = page.locator('[data-testid="user-status-filter"], mat-select[formcontrolname="status"], mat-select[aria-label*="status" i], #userStatus');
+    this.userRoleFilter = page.locator('[data-testid="user-role-filter"], mat-select[formcontrolname="role"], mat-select[aria-label*="role" i], #userRole');
 
-    // User Form
-    this.userModal = page.locator('[data-testid="user-modal"], [role="dialog"]');
-    this.usernameInput = page.locator('[data-testid="username"], #username');
-    this.emailInput = page.locator('[data-testid="email"], #email');
-    this.firstNameInput = page.locator('[data-testid="first-name"], #firstName');
-    this.lastNameInput = page.locator('[data-testid="last-name"], #lastName');
-    this.roleSelect = page.locator('[data-testid="role-select"], #role');
-    this.statusSelect = page.locator('[data-testid="status-select"], #status');
-    this.saveUserButton = page.locator('[data-testid="save-user"], button:has-text("Save")');
+    // User Form - Angular Material dialog and form fields
+    this.userModal = page.locator('[data-testid="user-modal"], mat-dialog-container, [role="dialog"]');
+    this.usernameInput = page.locator('[data-testid="username"], input[formcontrolname="username"], #username');
+    this.emailInput = page.locator('[data-testid="email"], input[formcontrolname="email"], #email');
+    this.firstNameInput = page.locator('[data-testid="first-name"], input[formcontrolname="firstName"], #firstName');
+    this.lastNameInput = page.locator('[data-testid="last-name"], input[formcontrolname="lastName"], #lastName');
+    this.roleSelect = page.locator('[data-testid="role-select"], mat-select[formcontrolname="role"], #role');
+    this.statusSelect = page.locator('[data-testid="status-select"], mat-select[formcontrolname="status"], #status');
+    this.saveUserButton = page.locator('[data-testid="save-user"], button:has-text("Save"), button[type="submit"]');
     this.cancelButton = page.locator('[data-testid="cancel"], button:has-text("Cancel")');
 
     // Role Management
-    this.roleList = page.locator('[data-testid="role-list"], .role-list');
-    this.roleRows = page.locator('[data-testid="role-row"], .role-row');
-    this.createRoleButton = page.locator('[data-testid="create-role"], button:has-text("Add Role")');
-    this.permissionsList = page.locator('[data-testid="permissions"], .permissions-list');
+    this.roleList = page.locator('[data-testid="role-list"], mat-list, mat-table, .role-list');
+    this.roleRows = page.locator('[data-testid="role-row"], mat-list-item, mat-row, .role-row');
+    this.createRoleButton = page.locator('[data-testid="create-role"], button:has-text("Add Role"), button:has-text("New Role")');
+    this.permissionsList = page.locator('[data-testid="permissions"], mat-selection-list, .permissions-list');
 
-    // System Settings
-    this.settingsForm = page.locator('[data-testid="settings-form"], form.settings');
-    this.tenantSettings = page.locator('[data-testid="tenant-settings"], .tenant-settings');
-    this.securitySettings = page.locator('[data-testid="security-settings"], .security-settings');
-    this.notificationSettings = page.locator('[data-testid="notification-settings"], .notification-settings');
-    this.saveSettingsButton = page.locator('[data-testid="save-settings"], button:has-text("Save Settings")');
+    // System Settings - Angular Material form
+    this.settingsForm = page.locator('[data-testid="settings-form"], form, mat-card form');
+    this.tenantSettings = page.locator('[data-testid="tenant-settings"], mat-card:has-text("Tenant"), .tenant-settings');
+    this.securitySettings = page.locator('[data-testid="security-settings"], mat-card:has-text("Security"), .security-settings');
+    this.notificationSettings = page.locator('[data-testid="notification-settings"], mat-card:has-text("Notification"), .notification-settings');
+    this.saveSettingsButton = page.locator('[data-testid="save-settings"], button:has-text("Save Settings"), button:has-text("Save")');
 
-    // Audit Log
-    this.auditTable = page.locator('[data-testid="audit-table"], .audit-table, table');
-    this.auditRows = page.locator('[data-testid="audit-row"], .audit-row, tbody tr');
-    this.auditDateFilter = page.locator('[data-testid="audit-date"], #auditDate');
-    this.auditActionFilter = page.locator('[data-testid="audit-action"], #auditAction');
-    this.auditUserFilter = page.locator('[data-testid="audit-user"], #auditUser');
-    this.exportAuditButton = page.locator('[data-testid="export-audit"], button:has-text("Export")');
+    // Audit Log - Angular Material table
+    this.auditTable = page.locator('[data-testid="audit-table"], mat-table, table, .mat-mdc-table');
+    this.auditRows = page.locator('[data-testid="audit-row"], mat-row, tbody tr, .mat-mdc-row');
+    this.auditDateFilter = page.locator('[data-testid="audit-date"], mat-datepicker input, input[formcontrolname="date"], #auditDate');
+    this.auditActionFilter = page.locator('[data-testid="audit-action"], mat-select[formcontrolname="action"], #auditAction');
+    this.auditUserFilter = page.locator('[data-testid="audit-user"], mat-select[formcontrolname="user"], #auditUser');
+    this.exportAuditButton = page.locator('[data-testid="export-audit"], button:has-text("Export"), button[aria-label*="export" i]');
 
     // Data Import
-    this.importDropzone = page.locator('[data-testid="import-dropzone"], .dropzone');
+    this.importDropzone = page.locator('[data-testid="import-dropzone"], ngx-dropzone, .dropzone');
     this.importFileInput = page.locator('input[type="file"]');
-    this.importTypeSelect = page.locator('[data-testid="import-type"], #importType');
-    this.importButton = page.locator('[data-testid="import-button"], button:has-text("Import")');
-    this.importProgress = page.locator('[data-testid="import-progress"], .progress-bar');
-    this.importResults = page.locator('[data-testid="import-results"], .import-results');
+    this.importTypeSelect = page.locator('[data-testid="import-type"], mat-select[formcontrolname="importType"], #importType');
+    this.importButton = page.locator('[data-testid="import-button"], button:has-text("Import"), button:has-text("Upload")');
+    this.importProgress = page.locator('[data-testid="import-progress"], mat-progress-bar, .progress-bar');
+    this.importResults = page.locator('[data-testid="import-results"], mat-card.results, .import-results');
   }
 
   async goto(): Promise<void> {
@@ -133,7 +133,17 @@ export class AdminPage extends BasePage {
   }
 
   async isLoaded(): Promise<boolean> {
-    return (await this.pageHeading.count()) > 0;
+    try {
+      // Wait for page container or heading
+      await this.page.locator('h1:has-text("Admin"), h1:has-text("Settings"), .admin-container, h1.page-title').first().waitFor({ state: 'visible', timeout: 10000 });
+
+      // Wait for loading to complete
+      await this.waitForSpinnerToDisappear();
+
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**

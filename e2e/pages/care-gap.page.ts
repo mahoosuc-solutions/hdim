@@ -68,34 +68,34 @@ export class CareGapPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    // Filters
-    this.urgencyFilter = page.locator('[data-testid="urgency-filter"], #urgencyFilter, [formcontrolname="urgency"]');
-    this.typeFilter = page.locator('[data-testid="type-filter"], #typeFilter, [formcontrolname="gapType"]');
-    this.statusFilter = page.locator('[data-testid="status-filter"], #statusFilter, [formcontrolname="status"]');
-    this.patientFilter = page.locator('[data-testid="patient-filter"], #patientFilter');
-    this.measureFilter = page.locator('[data-testid="measure-filter"], #measureFilter');
-    this.clearFiltersButton = page.locator('[data-testid="clear-filters"], button:has-text("Clear Filters")');
+    // Filters - Angular Material form fields
+    this.urgencyFilter = page.locator('mat-select[formcontrolname="urgency"], mat-select[aria-label*="urgency" i]');
+    this.typeFilter = page.locator('mat-select[formcontrolname="gapType"], mat-select[aria-label*="type" i]');
+    this.statusFilter = page.locator('mat-select[formcontrolname="status"], mat-select[aria-label*="status" i]');
+    this.patientFilter = page.locator('input[placeholder*="Search" i], .search-field input');
+    this.measureFilter = page.locator('mat-select[formcontrolname="measure"], mat-select[aria-label*="measure" i]');
+    this.clearFiltersButton = page.locator('button:has-text("Reset"), button:has-text("Clear")');
 
-    // Care gap list
-    this.careGapTable = page.locator('[data-testid="care-gaps-table"], .care-gaps-table, table');
-    this.careGapRows = page.locator('[data-testid="care-gap-row"], .care-gap-row, tbody tr');
-    this.noGapsMessage = page.locator('[data-testid="no-gaps"], .no-gaps-message, :has-text("No care gaps")');
-    this.gapCount = page.locator('[data-testid="gap-count"], .gap-count');
+    // Care gap list - Angular Material table
+    this.careGapTable = page.locator('mat-table, table, .mat-mdc-table');
+    this.careGapRows = page.locator('mat-row, tbody tr, .mat-mdc-row');
+    this.noGapsMessage = page.locator(':has-text("No care gaps"), .empty-state');
+    this.gapCount = page.locator('.summary-value, .total-card .summary-value');
 
-    // Pagination
-    this.paginationControls = page.locator('[data-testid="pagination"], .pagination, mat-paginator');
-    this.nextPageButton = page.locator('[data-testid="next-page"], button[aria-label="Next page"]');
-    this.previousPageButton = page.locator('[data-testid="prev-page"], button[aria-label="Previous page"]');
+    // Pagination - Angular Material paginator
+    this.paginationControls = page.locator('mat-paginator, .mat-mdc-paginator');
+    this.nextPageButton = page.locator('button[aria-label*="Next" i], .mat-mdc-paginator-navigation-next');
+    this.previousPageButton = page.locator('button[aria-label*="Previous" i], .mat-mdc-paginator-navigation-previous');
 
     // Gap details
-    this.gapDetailsPanel = page.locator('[data-testid="gap-details"], .gap-details-panel, aside');
-    this.gapPatientName = page.locator('[data-testid="gap-patient-name"], .gap-patient-name');
-    this.gapMeasureName = page.locator('[data-testid="gap-measure-name"], .gap-measure-name');
-    this.gapUrgency = page.locator('[data-testid="gap-urgency"], .gap-urgency, .urgency-badge');
-    this.gapType = page.locator('[data-testid="gap-type"], .gap-type');
-    this.gapDueDate = page.locator('[data-testid="gap-due-date"], .gap-due-date');
-    this.gapRecommendation = page.locator('[data-testid="gap-recommendation"], .gap-recommendation');
-    this.gapHistory = page.locator('[data-testid="gap-history"], .gap-history, .intervention-history');
+    this.gapDetailsPanel = page.locator('.gap-detail-card, [role="dialog"], mat-card:has-text("Details")');
+    this.gapPatientName = page.locator('.patient-name, td:has-text("Patient")');
+    this.gapMeasureName = page.locator('.measure-name, td.measure-column');
+    this.gapUrgency = page.locator('.urgency-badge, mat-chip[class*="urgency"]');
+    this.gapType = page.locator('.gap-type, td.gap-type-column');
+    this.gapDueDate = page.locator('.due-date, td.days-overdue-column');
+    this.gapRecommendation = page.locator('.recommendation, .gap-description');
+    this.gapHistory = page.locator('.intervention-history, .history-section');
 
     // Intervention
     this.recordInterventionButton = page.locator('[data-testid="record-intervention"], button:has-text("Record Intervention")');
@@ -134,7 +134,29 @@ export class CareGapPage extends BasePage {
    * Check if page is loaded
    */
   async isLoaded(): Promise<boolean> {
-    return this.careGapTable.isVisible() || this.noGapsMessage.isVisible();
+    try {
+      // Wait for page container or heading
+      await this.page.locator('h1:has-text("Care Gap"), .care-gaps-container, h1:has-text("Gap")').first().waitFor({ state: 'visible', timeout: 10000 });
+
+      // Wait for loading to complete
+      await this.waitForSpinnerToDisappear();
+
+      // Either table or empty state should be visible
+      const tableVisible = await this.careGapTable.isVisible().catch(() => false);
+      const noGapsVisible = await this.noGapsMessage.isVisible().catch(() => false);
+
+      return tableVisible || noGapsVisible;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Wait for care gap data to load
+   */
+  async waitForDataLoad(): Promise<void> {
+    await this.waitForSpinnerToDisappear();
+    await this.page.waitForLoadState('networkidle');
   }
 
   /**

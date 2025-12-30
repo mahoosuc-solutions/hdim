@@ -58,50 +58,50 @@ export class RiskPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    // Navigation
-    this.pageHeading = page.locator('h1, h2').filter({ hasText: /risk/i });
-    this.stratificationTab = page.locator('[data-testid="stratification-tab"], [role="tab"]:has-text("Stratification")');
-    this.hccTab = page.locator('[data-testid="hcc-tab"], [role="tab"]:has-text("HCC")');
-    this.trendsTab = page.locator('[data-testid="trends-tab"], [role="tab"]:has-text("Trends")');
+    // Navigation - Angular Material tabs
+    this.pageHeading = page.locator('h1:has-text("Risk"), h2:has-text("Risk"), h1.page-title');
+    this.stratificationTab = page.locator('[data-testid="stratification-tab"], [role="tab"]:has-text("Stratification"), mat-tab:has-text("Stratification")');
+    this.hccTab = page.locator('[data-testid="hcc-tab"], [role="tab"]:has-text("HCC"), mat-tab:has-text("HCC")');
+    this.trendsTab = page.locator('[data-testid="trends-tab"], [role="tab"]:has-text("Trends"), mat-tab:has-text("Trends")');
 
-    // Risk Dashboard
-    this.riskSummaryCards = page.locator('[data-testid="risk-summary"], .risk-summary');
-    this.highRiskCount = page.locator('[data-testid="high-risk-count"], .high-risk .count');
-    this.mediumRiskCount = page.locator('[data-testid="medium-risk-count"], .medium-risk .count');
-    this.lowRiskCount = page.locator('[data-testid="low-risk-count"], .low-risk .count');
-    this.averageRafScore = page.locator('[data-testid="avg-raf"], .average-raf');
+    // Risk Dashboard - Angular Material cards
+    this.riskSummaryCards = page.locator('[data-testid="risk-summary"], mat-card.summary-card, .risk-summary');
+    this.highRiskCount = page.locator('[data-testid="high-risk-count"], :has-text("High Risk") .summary-value, .high-risk .count');
+    this.mediumRiskCount = page.locator('[data-testid="medium-risk-count"], :has-text("Medium Risk") .summary-value, .medium-risk .count');
+    this.lowRiskCount = page.locator('[data-testid="low-risk-count"], :has-text("Low Risk") .summary-value, .low-risk .count');
+    this.averageRafScore = page.locator('[data-testid="avg-raf"], :has-text("RAF") .summary-value, .average-raf');
 
-    // Patient Risk List
-    this.riskTable = page.locator('[data-testid="risk-table"], .risk-table, table');
-    this.riskRows = page.locator('[data-testid="risk-row"], .risk-row, tbody tr');
-    this.riskLevelFilter = page.locator('[data-testid="risk-level-filter"], #riskLevel');
-    this.sortByRiskButton = page.locator('[data-testid="sort-risk"], th:has-text("Risk")');
-    this.searchInput = page.locator('[data-testid="risk-search"], input[placeholder*="Search"]');
+    // Patient Risk List - Angular Material table
+    this.riskTable = page.locator('[data-testid="risk-table"], mat-table, table, .mat-mdc-table');
+    this.riskRows = page.locator('[data-testid="risk-row"], mat-row, tbody tr, .mat-mdc-row');
+    this.riskLevelFilter = page.locator('[data-testid="risk-level-filter"], mat-select[formcontrolname="riskLevel"], mat-select[aria-label*="risk" i], #riskLevel');
+    this.sortByRiskButton = page.locator('[data-testid="sort-risk"], th:has-text("Risk"), mat-header-cell:has-text("Risk")');
+    this.searchInput = page.locator('[data-testid="risk-search"], input[placeholder*="Search" i], .search-field input');
 
-    // Risk Details
-    this.patientRiskCard = page.locator('[data-testid="patient-risk-card"], .patient-risk');
-    this.riskScore = page.locator('[data-testid="risk-score"], .risk-score');
-    this.riskLevel = page.locator('[data-testid="risk-level"], .risk-level');
-    this.riskFactors = page.locator('[data-testid="risk-factors"], .risk-factors');
-    this.hccCodes = page.locator('[data-testid="hcc-codes"], .hcc-codes');
-    this.rafScore = page.locator('[data-testid="raf-score"], .raf-score');
+    // Risk Details - Angular Material cards
+    this.patientRiskCard = page.locator('[data-testid="patient-risk-card"], mat-card.patient-risk, .patient-risk');
+    this.riskScore = page.locator('[data-testid="risk-score"], .risk-score, :has-text("Risk Score") .value');
+    this.riskLevel = page.locator('[data-testid="risk-level"], mat-chip[class*="risk"], .risk-level');
+    this.riskFactors = page.locator('[data-testid="risk-factors"], mat-list.risk-factors, .risk-factors');
+    this.hccCodes = page.locator('[data-testid="hcc-codes"], mat-chip-set.hcc-codes, .hcc-codes');
+    this.rafScore = page.locator('[data-testid="raf-score"], .raf-score, :has-text("RAF Score") .value');
 
     // HCC Risk Adjustment
-    this.hccDashboard = page.locator('[data-testid="hcc-dashboard"], .hcc-dashboard');
-    this.hccCategories = page.locator('[data-testid="hcc-category"], .hcc-category');
-    this.hccTrends = page.locator('[data-testid="hcc-trends"], .hcc-trends');
-    this.recalculateButton = page.locator('[data-testid="recalculate"], button:has-text("Recalculate")');
-    this.modelVersionSelect = page.locator('[data-testid="model-version"], #modelVersion');
+    this.hccDashboard = page.locator('[data-testid="hcc-dashboard"], .hcc-dashboard, mat-card:has-text("HCC")');
+    this.hccCategories = page.locator('[data-testid="hcc-category"], mat-chip.hcc-category, .hcc-category');
+    this.hccTrends = page.locator('[data-testid="hcc-trends"], .hcc-trends, canvas');
+    this.recalculateButton = page.locator('[data-testid="recalculate"], button:has-text("Recalculate"), button:has-text("Refresh")');
+    this.modelVersionSelect = page.locator('[data-testid="model-version"], mat-select[formcontrolname="modelVersion"], #modelVersion');
 
     // Population Stratification
-    this.stratificationChart = page.locator('[data-testid="stratification-chart"], .stratification-chart');
-    this.riskDistribution = page.locator('[data-testid="risk-distribution"], .risk-distribution');
-    this.cohortSelector = page.locator('[data-testid="cohort-select"], #cohort');
-    this.exportButton = page.locator('[data-testid="export"], button:has-text("Export")');
+    this.stratificationChart = page.locator('[data-testid="stratification-chart"], .stratification-chart, canvas, ngx-charts-pie-chart');
+    this.riskDistribution = page.locator('[data-testid="risk-distribution"], .risk-distribution, ngx-charts-bar-vertical');
+    this.cohortSelector = page.locator('[data-testid="cohort-select"], mat-select[formcontrolname="cohort"], #cohort');
+    this.exportButton = page.locator('[data-testid="export"], button:has-text("Export"), button[aria-label*="export" i]');
 
     // Risk Recommendations
-    this.recommendationsPanel = page.locator('[data-testid="recommendations"], .recommendations');
-    this.recommendationItems = page.locator('[data-testid="recommendation-item"], .recommendation-item');
+    this.recommendationsPanel = page.locator('[data-testid="recommendations"], mat-card.recommendations, .recommendations');
+    this.recommendationItems = page.locator('[data-testid="recommendation-item"], mat-list-item, .recommendation-item');
   }
 
   async goto(): Promise<void> {
@@ -110,7 +110,21 @@ export class RiskPage extends BasePage {
   }
 
   async isLoaded(): Promise<boolean> {
-    return (await this.pageHeading.count()) > 0 || (await this.riskTable.count()) > 0;
+    try {
+      // Wait for page container or heading
+      await this.page.locator('h1:has-text("Risk"), .risk-container, h1.page-title').first().waitFor({ state: 'visible', timeout: 10000 });
+
+      // Wait for loading to complete
+      await this.waitForSpinnerToDisappear();
+
+      // Either summary cards or table should be visible
+      const cardsVisible = await this.riskSummaryCards.first().isVisible().catch(() => false);
+      const tableVisible = await this.riskTable.isVisible().catch(() => false);
+
+      return cardsVisible || tableVisible;
+    } catch {
+      return false;
+    }
   }
 
   /**

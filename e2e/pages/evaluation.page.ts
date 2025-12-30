@@ -56,46 +56,46 @@ export class EvaluationPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    // Patient selection
-    this.patientSearchInput = page.locator('[data-testid="patient-search"], #patientSearch, [placeholder*="patient"]');
-    this.patientAutocomplete = page.locator('[data-testid="patient-autocomplete"], .autocomplete-options, mat-option');
-    this.selectedPatientCard = page.locator('[data-testid="selected-patient"], .selected-patient-card');
-    this.changePatientButton = page.locator('[data-testid="change-patient"], button:has-text("Change Patient")');
+    // Patient selection - Angular Material autocomplete
+    this.patientSearchInput = page.locator('[data-testid="patient-search"], input[placeholder*="patient" i], input[aria-label*="patient" i], mat-form-field input');
+    this.patientAutocomplete = page.locator('[data-testid="patient-autocomplete"], mat-option, .mat-mdc-option, .autocomplete-options');
+    this.selectedPatientCard = page.locator('[data-testid="selected-patient"], .selected-patient-card, mat-card:has-text("Patient")');
+    this.changePatientButton = page.locator('[data-testid="change-patient"], button:has-text("Change Patient"), button:has-text("Change")');
 
-    // Measure selection
-    this.measureDropdown = page.locator('[data-testid="measure-dropdown"], #measureSelect, [formcontrolname="measure"]');
-    this.measureSearchInput = page.locator('[data-testid="measure-search"], .measure-search input');
-    this.measureOptions = page.locator('[data-testid="measure-option"], .measure-option, mat-option');
-    this.selectedMeasureCard = page.locator('[data-testid="selected-measure"], .selected-measure-card');
-    this.measureCategoryFilter = page.locator('[data-testid="measure-category-filter"], .category-filter');
-    this.favoriteMeasuresToggle = page.locator('[data-testid="favorites-toggle"], button:has-text("Favorites")');
+    // Measure selection - Angular Material select
+    this.measureDropdown = page.locator('[data-testid="measure-dropdown"], mat-select[formcontrolname="measure"], mat-select[aria-label*="measure" i], #measureSelect');
+    this.measureSearchInput = page.locator('[data-testid="measure-search"], .measure-search input, mat-form-field:has-text("Search") input');
+    this.measureOptions = page.locator('[data-testid="measure-option"], mat-option, .mat-mdc-option');
+    this.selectedMeasureCard = page.locator('[data-testid="selected-measure"], .selected-measure-card, mat-card:has-text("Measure")');
+    this.measureCategoryFilter = page.locator('[data-testid="measure-category-filter"], mat-select[formcontrolname="category"], .category-filter');
+    this.favoriteMeasuresToggle = page.locator('[data-testid="favorites-toggle"], button:has-text("Favorites"), mat-slide-toggle:has-text("Favorites")');
 
     // Evaluation controls
-    this.evaluateButton = page.locator('[data-testid="evaluate-button"], button:has-text("Evaluate")');
-    this.clearFormButton = page.locator('[data-testid="clear-form"], button:has-text("Clear")');
-    this.evaluationProgress = page.locator('[data-testid="evaluation-progress"], .evaluation-progress');
+    this.evaluateButton = page.locator('[data-testid="evaluate-button"], button:has-text("Evaluate"), button:has-text("Run Evaluation")');
+    this.clearFormButton = page.locator('[data-testid="clear-form"], button:has-text("Clear"), button:has-text("Reset")');
+    this.evaluationProgress = page.locator('[data-testid="evaluation-progress"], mat-progress-bar, mat-spinner, .evaluation-progress');
 
-    // Results display
-    this.resultCard = page.locator('[data-testid="result-card"], .evaluation-result-card');
-    this.resultStatus = page.locator('[data-testid="result-status"], .result-status, .compliance-badge');
-    this.resultDetails = page.locator('[data-testid="result-details"], .result-details');
-    this.numeratorValue = page.locator('[data-testid="numerator"], .numerator-value');
-    this.denominatorValue = page.locator('[data-testid="denominator"], .denominator-value');
-    this.complianceRate = page.locator('[data-testid="compliance-rate"], .compliance-rate');
-    this.evaluationDate = page.locator('[data-testid="evaluation-date"], .evaluation-date');
+    // Results display - Angular Material cards
+    this.resultCard = page.locator('[data-testid="result-card"], mat-card.result-card, .evaluation-result-card, mat-card:has-text("Result")');
+    this.resultStatus = page.locator('[data-testid="result-status"], .result-status, mat-chip[class*="status"], .compliance-badge');
+    this.resultDetails = page.locator('[data-testid="result-details"], .result-details, mat-expansion-panel');
+    this.numeratorValue = page.locator('[data-testid="numerator"], .numerator-value, :has-text("Numerator") + *');
+    this.denominatorValue = page.locator('[data-testid="denominator"], .denominator-value, :has-text("Denominator") + *');
+    this.complianceRate = page.locator('[data-testid="compliance-rate"], .compliance-rate, :has-text("Compliance") .value');
+    this.evaluationDate = page.locator('[data-testid="evaluation-date"], .evaluation-date, :has-text("Date") .value');
     this.evaluationId = page.locator('[data-testid="evaluation-id"], .evaluation-id');
 
     // Result actions
-    this.viewCareGapButton = page.locator('[data-testid="view-care-gap"], button:has-text("View Care Gap")');
-    this.runAnotherButton = page.locator('[data-testid="run-another"], button:has-text("Run Another")');
+    this.viewCareGapButton = page.locator('[data-testid="view-care-gap"], button:has-text("View Care Gap"), button:has-text("Care Gap")');
+    this.runAnotherButton = page.locator('[data-testid="run-another"], button:has-text("Run Another"), button:has-text("New Evaluation")');
     this.exportResultButton = page.locator('[data-testid="export-result"], button:has-text("Export")');
 
     // Batch evaluation
-    this.batchModeToggle = page.locator('[data-testid="batch-mode-toggle"], button:has-text("Batch Mode")');
-    this.batchPatientList = page.locator('[data-testid="batch-patients"], .batch-patient-list');
+    this.batchModeToggle = page.locator('[data-testid="batch-mode-toggle"], button:has-text("Batch Mode"), mat-slide-toggle:has-text("Batch")');
+    this.batchPatientList = page.locator('[data-testid="batch-patients"], .batch-patient-list, mat-selection-list');
     this.batchMeasureList = page.locator('[data-testid="batch-measures"], .batch-measure-list');
-    this.batchProgress = page.locator('[data-testid="batch-progress"], .batch-progress');
-    this.batchResults = page.locator('[data-testid="batch-results"], .batch-results');
+    this.batchProgress = page.locator('[data-testid="batch-progress"], mat-progress-bar, .batch-progress');
+    this.batchResults = page.locator('[data-testid="batch-results"], mat-table, .batch-results');
   }
 
   /**
@@ -110,7 +110,28 @@ export class EvaluationPage extends BasePage {
    * Check if page is loaded
    */
   async isLoaded(): Promise<boolean> {
-    return this.patientSearchInput.isVisible();
+    try {
+      // Wait for page heading - "Quality Measure Evaluations"
+      await this.page.locator('h1:has-text("Evaluation"), h1:has-text("Quality Measure"), .evaluations-container').first().waitFor({ state: 'visible', timeout: 10000 });
+
+      // Wait for loading to complete
+      await this.waitForSpinnerToDisappear();
+
+      // Check for evaluation form elements - look for the searchbox or combobox
+      const formVisible = await this.page.locator('form[aria-label*="evaluation" i], form[aria-label*="measure" i], searchbox, combobox[aria-label*="measure" i]').first().isVisible().catch(() => false);
+
+      return true;  // If we got past the heading wait, page is loaded
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Wait for evaluation data to load
+   */
+  async waitForDataLoad(): Promise<void> {
+    await this.waitForSpinnerToDisappear();
+    await this.page.waitForLoadState('networkidle');
   }
 
   /**

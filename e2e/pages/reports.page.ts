@@ -59,51 +59,51 @@ export class ReportsPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    // Navigation
-    this.pageHeading = page.locator('h1, h2').filter({ hasText: /report/i });
-    this.patientReportsTab = page.locator('[data-testid="patient-reports-tab"], [role="tab"]:has-text("Patient")');
-    this.populationReportsTab = page.locator('[data-testid="population-reports-tab"], [role="tab"]:has-text("Population")');
-    this.qualityReportsTab = page.locator('[data-testid="quality-reports-tab"], [role="tab"]:has-text("Quality")');
-    this.customReportsTab = page.locator('[data-testid="custom-reports-tab"], [role="tab"]:has-text("Custom")');
+    // Navigation - Angular Material tabs
+    this.pageHeading = page.locator('h1:has-text("Report"), h2:has-text("Report"), h1.page-title');
+    this.patientReportsTab = page.locator('[data-testid="patient-reports-tab"], [role="tab"]:has-text("Patient"), mat-tab:has-text("Patient")');
+    this.populationReportsTab = page.locator('[data-testid="population-reports-tab"], [role="tab"]:has-text("Population"), mat-tab:has-text("Population")');
+    this.qualityReportsTab = page.locator('[data-testid="quality-reports-tab"], [role="tab"]:has-text("Quality"), mat-tab:has-text("Quality")');
+    this.customReportsTab = page.locator('[data-testid="custom-reports-tab"], [role="tab"]:has-text("Custom"), mat-tab:has-text("Custom")');
 
-    // Report List
-    this.reportList = page.locator('[data-testid="report-list"], .report-list');
-    this.reportItems = page.locator('[data-testid="report-item"], .report-item');
-    this.createReportButton = page.locator('[data-testid="create-report"], button:has-text("Create Report"), button:has-text("Generate")');
-    this.refreshButton = page.locator('[data-testid="refresh"], button:has-text("Refresh")');
+    // Report List - Angular Material table/list
+    this.reportList = page.locator('[data-testid="report-list"], mat-table, mat-list, .report-list');
+    this.reportItems = page.locator('[data-testid="report-item"], mat-row, mat-list-item, .report-item');
+    this.createReportButton = page.locator('[data-testid="create-report"], button:has-text("Create Report"), button:has-text("Generate"), button:has-text("New Report")');
+    this.refreshButton = page.locator('[data-testid="refresh"], button:has-text("Refresh"), button[aria-label*="refresh" i]');
 
-    // Report Generation
-    this.reportTypeSelect = page.locator('[data-testid="report-type"], #reportType');
-    this.dateRangeStart = page.locator('[data-testid="date-start"], #startDate');
-    this.dateRangeEnd = page.locator('[data-testid="date-end"], #endDate');
-    this.measureSelect = page.locator('[data-testid="measure-select"], #measures');
-    this.patientPopulationSelect = page.locator('[data-testid="population-select"], #population');
-    this.generateButton = page.locator('[data-testid="generate-report"], button:has-text("Generate")');
+    // Report Generation - Angular Material form fields
+    this.reportTypeSelect = page.locator('[data-testid="report-type"], mat-select[formcontrolname="reportType"], mat-select[aria-label*="type" i], #reportType');
+    this.dateRangeStart = page.locator('[data-testid="date-start"], input[formcontrolname="startDate"], mat-datepicker input, #startDate');
+    this.dateRangeEnd = page.locator('[data-testid="date-end"], input[formcontrolname="endDate"], #endDate');
+    this.measureSelect = page.locator('[data-testid="measure-select"], mat-select[formcontrolname="measures"], #measures');
+    this.patientPopulationSelect = page.locator('[data-testid="population-select"], mat-select[formcontrolname="population"], #population');
+    this.generateButton = page.locator('[data-testid="generate-report"], button:has-text("Generate"), button:has-text("Run Report")');
 
-    // Export Options
-    this.exportButton = page.locator('[data-testid="export-button"], button:has-text("Export")');
-    this.exportCSV = page.locator('[data-testid="export-csv"], [role="menuitem"]:has-text("CSV")');
-    this.exportExcel = page.locator('[data-testid="export-excel"], [role="menuitem"]:has-text("Excel")');
-    this.exportPDF = page.locator('[data-testid="export-pdf"], [role="menuitem"]:has-text("PDF")');
-    this.exportQRDA = page.locator('[data-testid="export-qrda"], [role="menuitem"]:has-text("QRDA")');
+    // Export Options - Angular Material menu
+    this.exportButton = page.locator('[data-testid="export-button"], button:has-text("Export"), button[aria-label*="export" i]');
+    this.exportCSV = page.locator('[data-testid="export-csv"], [role="menuitem"]:has-text("CSV"), button:has-text("CSV")');
+    this.exportExcel = page.locator('[data-testid="export-excel"], [role="menuitem"]:has-text("Excel"), button:has-text("Excel")');
+    this.exportPDF = page.locator('[data-testid="export-pdf"], [role="menuitem"]:has-text("PDF"), button:has-text("PDF")');
+    this.exportQRDA = page.locator('[data-testid="export-qrda"], [role="menuitem"]:has-text("QRDA"), button:has-text("QRDA")');
 
     // QRDA Specific
-    this.qrdaCategorySelect = page.locator('[data-testid="qrda-category"], #qrdaCategory');
-    this.qrdaProviderSelect = page.locator('[data-testid="qrda-provider"], #provider');
+    this.qrdaCategorySelect = page.locator('[data-testid="qrda-category"], mat-select[formcontrolname="qrdaCategory"], #qrdaCategory');
+    this.qrdaProviderSelect = page.locator('[data-testid="qrda-provider"], mat-select[formcontrolname="provider"], #provider');
     this.qrdaValidateButton = page.locator('[data-testid="validate-qrda"], button:has-text("Validate")');
 
-    // Report Viewer
-    this.reportViewer = page.locator('[data-testid="report-viewer"], .report-viewer');
-    this.reportTitle = page.locator('[data-testid="report-title"], .report-title');
-    this.reportSummary = page.locator('[data-testid="report-summary"], .report-summary');
-    this.reportData = page.locator('[data-testid="report-data"], .report-data, table');
-    this.reportCharts = page.locator('[data-testid="report-charts"], .charts-container');
+    // Report Viewer - Angular Material cards and tables
+    this.reportViewer = page.locator('[data-testid="report-viewer"], mat-card.report-viewer, .report-viewer');
+    this.reportTitle = page.locator('[data-testid="report-title"], mat-card-title, .report-title, h2');
+    this.reportSummary = page.locator('[data-testid="report-summary"], mat-card-subtitle, .report-summary');
+    this.reportData = page.locator('[data-testid="report-data"], mat-table, table, .report-data');
+    this.reportCharts = page.locator('[data-testid="report-charts"], .charts-container, canvas, ngx-charts-bar-vertical');
 
-    // KPI Dashboard
-    this.kpiCards = page.locator('[data-testid="kpi-card"], .kpi-card');
-    this.complianceRate = page.locator('[data-testid="compliance-rate"], .compliance-rate');
-    this.careGapsClosed = page.locator('[data-testid="gaps-closed"], .gaps-closed');
-    this.patientsEvaluated = page.locator('[data-testid="patients-evaluated"], .patients-evaluated');
+    // KPI Dashboard - Angular Material cards
+    this.kpiCards = page.locator('[data-testid="kpi-card"], mat-card.kpi-card, .summary-card, .kpi-card');
+    this.complianceRate = page.locator('[data-testid="compliance-rate"], :has-text("Compliance") .summary-value, .compliance-rate');
+    this.careGapsClosed = page.locator('[data-testid="gaps-closed"], :has-text("Gaps Closed") .summary-value, .gaps-closed');
+    this.patientsEvaluated = page.locator('[data-testid="patients-evaluated"], :has-text("Patients Evaluated") .summary-value, .patients-evaluated');
   }
 
   async goto(): Promise<void> {
@@ -112,7 +112,17 @@ export class ReportsPage extends BasePage {
   }
 
   async isLoaded(): Promise<boolean> {
-    return (await this.pageHeading.count()) > 0;
+    try {
+      // Wait for page container or heading
+      await this.page.locator('h1:has-text("Report"), .reports-container, h1.page-title').first().waitFor({ state: 'visible', timeout: 10000 });
+
+      // Wait for loading to complete
+      await this.waitForSpinnerToDisappear();
+
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**

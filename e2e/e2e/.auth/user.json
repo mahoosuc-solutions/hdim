@@ -1,0 +1,26 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:4200",
+      "localStorage": [
+        {
+          "name": "auth_token",
+          "value": "mock_test_token"
+        },
+        {
+          "name": "refresh_token",
+          "value": "mock_refresh_token"
+        },
+        {
+          "name": "tenant_id",
+          "value": "TENANT001"
+        },
+        {
+          "name": "user_role",
+          "value": "EVALUATOR"
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { DEMO_USER } from './fixtures/auth.fixture';
 
 /**
  * E2E Tests for Care Recommendations Workflow
@@ -291,6 +292,11 @@ async function mockRecommendationApis(page: Page) {
 test.describe('Care Recommendations - Smoke Tests', () => {
   test.beforeEach(async ({ page }) => {
     await mockRecommendationApis(page);
+    // Set up authentication via localStorage before navigation
+    await page.addInitScript((demoUser) => {
+      localStorage.setItem('healthdata_auth_token', 'demo-jwt-token-' + Date.now());
+      localStorage.setItem('healthdata_user', JSON.stringify(demoUser));
+    }, DEMO_USER);
     await page.goto('/care-recommendations');
     await page.waitForLoadState('domcontentloaded');
   });

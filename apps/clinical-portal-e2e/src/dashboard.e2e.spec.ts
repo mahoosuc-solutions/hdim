@@ -1,4 +1,8 @@
 import { test, expect, Page } from '@playwright/test';
+import {
+  setupDemoAuthViaStorage,
+  waitForAppReady,
+} from './fixtures/auth.fixture';
 
 /**
  * Dashboard E2E Tests
@@ -86,11 +90,10 @@ const MOCK_MEASURES = [
 
 /**
  * Helper: Set up demo authentication
+ * Uses the shared auth fixture for reliable authentication
  */
 async function setupDemoAuth(page: Page) {
-  await page.goto('/login');
-  await page.getByRole('button', { name: /demo login/i }).click();
-  await page.waitForURL('**/dashboard', { timeout: 10000 });
+  await setupDemoAuthViaStorage(page, '/dashboard');
 }
 
 /**

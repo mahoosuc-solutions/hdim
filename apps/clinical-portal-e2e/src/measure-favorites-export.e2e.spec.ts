@@ -1,4 +1,8 @@
 import { test, expect, Page } from '@playwright/test';
+import {
+  setupDemoAuthViaStorage,
+  DEMO_USER,
+} from './fixtures/auth.fixture';
 
 /**
  * E2E tests for Measure Favorites and Export Features
@@ -175,10 +179,15 @@ async function setupMockRoutes(page: Page) {
 test.describe('Measure Favorites Feature', () => {
   test.beforeEach(async ({ page }) => {
     await setupMockRoutes(page);
-    // Clear localStorage before each test
-    await page.addInitScript(() => {
-      localStorage.clear();
-    });
+    // Set up authentication - note: we preserve auth tokens but clear test data
+    await page.addInitScript((demoUser) => {
+      // Clear test-specific data but preserve auth
+      localStorage.removeItem('hdim_measure_favorites');
+      localStorage.removeItem('hdim_recent_measures');
+      // Set up auth tokens
+      localStorage.setItem('healthdata_auth_token', 'demo-jwt-token-' + Date.now());
+      localStorage.setItem('healthdata_user', JSON.stringify(demoUser));
+    }, DEMO_USER);
   });
 
   test('should display Quick Access card when favorites exist', async ({ page }) => {
@@ -319,6 +328,11 @@ test.describe('Measure Favorites Feature', () => {
 test.describe('Export Features', () => {
   test.beforeEach(async ({ page }) => {
     await setupMockRoutes(page);
+    // Set up authentication
+    await page.addInitScript((demoUser) => {
+      localStorage.setItem('healthdata_auth_token', 'demo-jwt-token-' + Date.now());
+      localStorage.setItem('healthdata_user', JSON.stringify(demoUser));
+    }, DEMO_USER);
   });
 
   test('should display export menu with all options', async ({ page }) => {
@@ -395,6 +409,11 @@ test.describe('Export Features', () => {
 test.describe('Results Dashboard Charts', () => {
   test.beforeEach(async ({ page }) => {
     await setupMockRoutes(page);
+    // Set up authentication
+    await page.addInitScript((demoUser) => {
+      localStorage.setItem('healthdata_auth_token', 'demo-jwt-token-' + Date.now());
+      localStorage.setItem('healthdata_user', JSON.stringify(demoUser));
+    }, DEMO_USER);
   });
 
   test('should display compliance trend chart', async ({ page }) => {
@@ -430,6 +449,11 @@ test.describe('Results Dashboard Charts', () => {
 test.describe('Batch Evaluation with Care Gaps', () => {
   test.beforeEach(async ({ page }) => {
     await setupMockRoutes(page);
+    // Set up authentication
+    await page.addInitScript((demoUser) => {
+      localStorage.setItem('healthdata_auth_token', 'demo-jwt-token-' + Date.now());
+      localStorage.setItem('healthdata_user', JSON.stringify(demoUser));
+    }, DEMO_USER);
 
     // Mock care gap detection
     await page.route('**/care-gaps/detect-batch*', (route) => {

@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { DEMO_USER } from './fixtures/auth.fixture';
 
 /**
  * UI Readability E2E Tests
@@ -10,6 +11,14 @@ import { test, expect, Page } from '@playwright/test';
  * - Theme switching functionality
  * - WCAG AA compliant contrast ratios
  */
+
+// Set up authentication for all tests in this file
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript((demoUser) => {
+    localStorage.setItem('healthdata_auth_token', 'demo-jwt-token-' + Date.now());
+    localStorage.setItem('healthdata_user', JSON.stringify(demoUser));
+  }, DEMO_USER);
+});
 
 // Helper to calculate relative luminance (WCAG formula)
 function getLuminance(r: number, g: number, b: number): number {

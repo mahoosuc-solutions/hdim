@@ -194,6 +194,7 @@ export interface PhysicalHealthSummary {
     overallRate: number; // 0-100
     status: 'excellent' | 'good' | 'poor' | 'unknown';
     problematicMedications: string[];
+    totalMedications: number; // Total active medications count
   };
 
   // Functional Status

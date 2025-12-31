@@ -62,8 +62,9 @@ export class EvaluationPage extends BasePage {
     this.selectedPatientCard = page.locator('[data-testid="selected-patient"], .selected-patient-card, mat-card:has-text("Patient")');
     this.changePatientButton = page.locator('[data-testid="change-patient"], button:has-text("Change Patient"), button:has-text("Change")');
 
-    // Measure selection - Angular Material select
-    this.measureDropdown = page.locator('[data-testid="measure-dropdown"], mat-select[formcontrolname="measure"], mat-select[aria-label*="measure" i], #measureSelect');
+    // Measure selection - Angular Material select (matches evaluations.component.html)
+    // Use specific formcontrolname to avoid matching category filter
+    this.measureDropdown = page.locator('mat-select[formcontrolname="measureId"], [data-testid="measure-dropdown"]').first();
     this.measureSearchInput = page.locator('[data-testid="measure-search"], .measure-search input, mat-form-field:has-text("Search") input');
     this.measureOptions = page.locator('[data-testid="measure-option"], mat-option, .mat-mdc-option');
     this.selectedMeasureCard = page.locator('[data-testid="selected-measure"], .selected-measure-card, mat-card:has-text("Measure")');
@@ -111,16 +112,14 @@ export class EvaluationPage extends BasePage {
    */
   async isLoaded(): Promise<boolean> {
     try {
-      // Wait for page heading - "Quality Measure Evaluations"
-      await this.page.locator('h1:has-text("Evaluation"), h1:has-text("Quality Measure"), .evaluations-container').first().waitFor({ state: 'visible', timeout: 10000 });
+      // Wait for evaluations container (matches evaluations.component.html)
+      await this.page.locator('.evaluations-container').first().waitFor({ state: 'visible', timeout: 10000 });
 
-      // Wait for loading to complete
-      await this.waitForSpinnerToDisappear();
+      // Wait for loading overlay to disappear
+      const loadingOverlay = this.page.locator('app-loading-overlay[ng-reflect-is-loading="true"]');
+      await loadingOverlay.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
 
-      // Check for evaluation form elements - look for the searchbox or combobox
-      const formVisible = await this.page.locator('form[aria-label*="evaluation" i], form[aria-label*="measure" i], searchbox, combobox[aria-label*="measure" i]').first().isVisible().catch(() => false);
-
-      return true;  // If we got past the heading wait, page is loaded
+      return true;
     } catch {
       return false;
     }

@@ -66,9 +66,9 @@ export class ReportsPage extends BasePage {
     this.qualityReportsTab = page.locator('[data-testid="quality-reports-tab"], [role="tab"]:has-text("Quality"), mat-tab:has-text("Quality")');
     this.customReportsTab = page.locator('[data-testid="custom-reports-tab"], [role="tab"]:has-text("Custom"), mat-tab:has-text("Custom")');
 
-    // Report List - Angular Material table/list
-    this.reportList = page.locator('[data-testid="report-list"], mat-table, mat-list, .report-list');
-    this.reportItems = page.locator('[data-testid="report-item"], mat-row, mat-list-item, .report-item');
+    // Report List - Angular Material table/list (matches reports.component.ts template)
+    this.reportList = page.locator('[data-testid="report-list"], table.reports-table, .reports-list, mat-table');
+    this.reportItems = page.locator('[data-testid="report-item"], mat-row, .report-list-card, mat-list-item');
     this.createReportButton = page.locator('[data-testid="create-report"], button:has-text("Create Report"), button:has-text("Generate"), button:has-text("New Report")');
     this.refreshButton = page.locator('[data-testid="refresh"], button:has-text("Refresh"), button[aria-label*="refresh" i]');
 
@@ -113,11 +113,12 @@ export class ReportsPage extends BasePage {
 
   async isLoaded(): Promise<boolean> {
     try {
-      // Wait for page container or heading
-      await this.page.locator('h1:has-text("Report"), .reports-container, h1.page-title').first().waitFor({ state: 'visible', timeout: 10000 });
+      // Wait for page container or heading (matches reports.component.ts template)
+      await this.page.locator('.page-container, h1:has-text("Quality Reports"), h1.page-title:has-text("Report")').first().waitFor({ state: 'visible', timeout: 10000 });
 
-      // Wait for loading to complete
-      await this.waitForSpinnerToDisappear();
+      // Wait for loading overlay to disappear
+      const loadingOverlay = this.page.locator('app-loading-overlay[ng-reflect-is-loading="true"]');
+      await loadingOverlay.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
 
       return true;
     } catch {

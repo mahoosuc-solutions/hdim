@@ -144,6 +144,21 @@ export class DashboardComponent implements OnInit {
   // Subscription cleanup
   private destroy$ = injectDestroy();
 
+  /**
+   * Configuration constants for trend calculation
+   * These can be adjusted based on clinical requirements or made configurable via environment
+   */
+  private static readonly TREND_CONFIG = {
+    /** Minimum number of evaluations required to calculate a meaningful trend */
+    MIN_EVALUATIONS_FOR_TREND: 4,
+    /** Percentage point difference threshold to consider a trend significant */
+    TREND_SIGNIFICANCE_THRESHOLD: 3,
+    /** Minimum compliance improvement to be considered 'up' trend */
+    UP_TREND_MIN_CHANGE: 3,
+    /** Maximum compliance decline before considered 'down' trend */
+    DOWN_TREND_MAX_CHANGE: -3
+  };
+
   // Role management
   currentRole: UserRole = UserRole.ADMIN;
   UserRole = UserRole; // Expose enum for template use
@@ -690,12 +705,21 @@ export class DashboardComponent implements OnInit {
   }
 
   /**
-   * Calculate trend for a specific measure by comparing recent vs older evaluations
+   * Calculate trend for a specific measure by comparing recent vs older evaluations.
+   * Uses configurable thresholds from TREND_CONFIG for clinical flexibility.
+   *
    * @param evaluations - All evaluations for a measure
    * @returns Trend direction: 'up', 'down', or 'stable'
+   *
+   * @remarks
+   * - Requires MIN_EVALUATIONS_FOR_TREND data points (default: 4) to calculate meaningful trends
+   * - Uses TREND_SIGNIFICANCE_THRESHOLD (default: 3%) to determine if change is significant
+   * - Compares older half vs recent half of evaluations for trend direction
    */
   private calculateMeasureTrend(evaluations: CqlEvaluation[]): 'up' | 'down' | 'stable' {
-    if (evaluations.length < 4) {
+    const { MIN_EVALUATIONS_FOR_TREND, UP_TREND_MIN_CHANGE, DOWN_TREND_MAX_CHANGE } = DashboardComponent.TREND_CONFIG;
+
+    if (evaluations.length < MIN_EVALUATIONS_FOR_TREND) {
       // Not enough data points to determine trend
       return 'stable';
     }
@@ -705,7 +729,7 @@ export class DashboardComponent implements OnInit {
       .filter(e => e.evaluationDate)
       .sort((a, b) => new Date(a.evaluationDate).getTime() - new Date(b.evaluationDate).getTime());
 
-    if (sortedEvals.length < 4) {
+    if (sortedEvals.length < MIN_EVALUATIONS_FOR_TREND) {
       return 'stable';
     }
 
@@ -718,13 +742,12 @@ export class DashboardComponent implements OnInit {
     const olderCompliance = this.calculateComplianceForEvaluations(olderHalf);
     const recentCompliance = this.calculateComplianceForEvaluations(recentHalf);
 
-    // Determine trend based on percentage point difference
+    // Determine trend based on percentage point difference using configurable thresholds
     const difference = recentCompliance - olderCompliance;
-    const threshold = 3; // 3 percentage points threshold for significance
 
-    if (difference >= threshold) {
+    if (difference >= UP_TREND_MIN_CHANGE) {
       return 'up';
-    } else if (difference <= -threshold) {
+    } else if (difference <= DOWN_TREND_MAX_CHANGE) {
       return 'down';
     }
     return 'stable';

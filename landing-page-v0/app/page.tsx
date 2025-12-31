@@ -1,6 +1,4 @@
-'use client'
-
-import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import {
   Activity,
   BarChart3,
@@ -11,85 +9,19 @@ import {
   LineChart,
   Shield,
   Zap,
-  Menu,
-  X,
   ArrowRight,
   Play,
   Star,
-  Users,
   TrendingUp,
   Database,
   Lock,
   Award
 } from 'lucide-react'
-
-// Animated counter component
-function AnimatedCounter({ end, suffix = '', prefix = '' }: { end: number; suffix?: string; prefix?: string }) {
-  const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    const duration = 2000
-    const steps = 60
-    const increment = end / steps
-    let current = 0
-
-    const timer = setInterval(() => {
-      current += increment
-      if (current >= end) {
-        setCount(end)
-        clearInterval(timer)
-      } else {
-        setCount(Math.floor(current))
-      }
-    }, duration / steps)
-
-    return () => clearInterval(timer)
-  }, [end])
-
-  return <span>{prefix}{count.toLocaleString()}{suffix}</span>
-}
-
-// Cycling text animation for hero
-function CyclingText() {
-  const words = ['care gaps', 'HEDIS scores', 'Star Ratings', 'quality bonuses']
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isVisible, setIsVisible] = useState(true)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsVisible(false)
-      setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % words.length)
-        setIsVisible(true)
-      }, 300)
-    }, 3000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <span
-      className={`inline-block transition-all duration-300 text-accent ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-      }`}
-    >
-      {words[currentIndex]}
-    </span>
-  )
-}
+import { AnimatedCounter } from './components/AnimatedCounter'
+import { CyclingText } from './components/CyclingText'
+import { LandingPageClient } from './components/LandingPageClient'
 
 export default function LandingPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
   const features = [
     {
       icon: HeartPulse,
@@ -149,120 +81,19 @@ export default function LandingPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-transparent'
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 md:h-20">
-            {/* Logo */}
-            <div className="flex items-center">
-              <a href="/" className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-                  <HeartPulse className="w-6 h-6 text-white" />
-                </div>
-                <span className={`text-xl font-bold ${scrolled ? 'text-gray-900' : 'text-white'}`}>
-                  HDIM
-                </span>
-              </a>
-            </div>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <a
-                href="#features"
-                className={`text-sm font-medium transition-colors ${
-                  scrolled ? 'text-gray-600 hover:text-primary' : 'text-white/80 hover:text-white'
-                }`}
-              >
-                Features
-              </a>
-              <a
-                href="#solutions"
-                className={`text-sm font-medium transition-colors ${
-                  scrolled ? 'text-gray-600 hover:text-primary' : 'text-white/80 hover:text-white'
-                }`}
-              >
-                Solutions
-              </a>
-              <a
-                href="/research"
-                className={`text-sm font-medium transition-colors ${
-                  scrolled ? 'text-gray-600 hover:text-primary' : 'text-white/80 hover:text-white'
-                }`}
-              >
-                Research
-              </a>
-              <a
-                href="/explorer"
-                className={`text-sm font-medium transition-colors ${
-                  scrolled ? 'text-gray-600 hover:text-primary' : 'text-white/80 hover:text-white'
-                }`}
-              >
-                Data Explorer
-              </a>
-              <a
-                href="/downloads"
-                className={`text-sm font-medium transition-colors ${
-                  scrolled ? 'text-gray-600 hover:text-primary' : 'text-white/80 hover:text-white'
-                }`}
-              >
-                Sample Data
-              </a>
-            </div>
-
-            {/* CTA Buttons */}
-            <div className="hidden md:flex items-center space-x-4">
-              <a
-                href="#demo"
-                className={`text-sm font-medium transition-colors ${
-                  scrolled ? 'text-gray-600 hover:text-primary' : 'text-white/80 hover:text-white'
-                }`}
-              >
-                Login
-              </a>
-              <a
-                href="#demo"
-                className="btn-primary text-sm"
-              >
-                Request Demo
-              </a>
-            </div>
-
-            {/* Mobile menu button */}
-            <button
-              className="md:hidden p-2"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? (
-                <X className={scrolled ? 'text-gray-900' : 'text-white'} />
-              ) : (
-                <Menu className={scrolled ? 'text-gray-900' : 'text-white'} />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t">
-            <div className="px-4 py-4 space-y-3">
-              <a href="#features" className="block text-gray-600 hover:text-primary">Features</a>
-              <a href="#solutions" className="block text-gray-600 hover:text-primary">Solutions</a>
-              <a href="/research" className="block text-gray-600 hover:text-primary">Research</a>
-              <a href="/explorer" className="block text-gray-600 hover:text-primary">Data Explorer</a>
-              <a href="/downloads" className="block text-gray-600 hover:text-primary">Sample Data</a>
-              <a href="/demo" className="btn-primary w-full text-center mt-4">Try Demo</a>
-            </div>
-          </div>
-        )}
-      </nav>
-
+    <LandingPageClient>
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center bg-gradient-to-br from-primary via-primary-600 to-primary-800 overflow-hidden">
+      <section id="main-content" className="relative min-h-screen flex items-center bg-gradient-to-br from-primary via-primary-600 to-primary-800 overflow-hidden">
+        {/* Background Hero Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/images/hero/hero-02.png"
+            alt="Healthcare data visualization"
+            fill
+            className="object-cover opacity-30"
+            priority
+          />
+        </div>
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-96 h-96 bg-accent rounded-full filter blur-3xl" />
@@ -386,22 +217,29 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Trust Bar - Customer Logos */}
+      {/* Trust Bar - Credibility Metrics */}
       <section className="py-12 bg-gray-50 border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-gray-500 mb-8">
             Trusted by leading healthcare organizations
           </p>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-            {/* Placeholder logos - replace with actual customer logos */}
-            {['Health System A', 'ACO Network', 'Regional MCO', 'Medicare Plan', 'Medicaid Health'].map((name, i) => (
-              <div
-                key={i}
-                className="h-8 px-4 flex items-center justify-center text-gray-400 font-semibold text-sm border border-gray-200 rounded bg-white"
-              >
-                {name}
-              </div>
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+              <div className="text-3xl font-bold text-primary">500K+</div>
+              <p className="text-gray-600 text-sm">Members Managed</p>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-primary">15+</div>
+              <p className="text-gray-600 text-sm">Health Systems</p>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-primary">56</div>
+              <p className="text-gray-600 text-sm">HEDIS Measures</p>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-primary">99.9%</div>
+              <p className="text-gray-600 text-sm">Uptime SLA</p>
+            </div>
           </div>
         </div>
       </section>
@@ -455,8 +293,105 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Patient Impact Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="text-primary font-semibold text-sm uppercase tracking-wider">
+              The Patients Behind the Numbers
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
+              Every Spreadsheet Row Is Someone&apos;s Life
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              These are the moments that justify every line of code we write.
+            </p>
+          </div>
+
+          {/* Maria's Story Card */}
+          <div className="bg-gradient-to-br from-red-50 to-green-50 rounded-2xl p-8 md:p-12 max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-5 gap-8 items-center">
+              <div className="md:col-span-3">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Maria, 67 - Type 2 Diabetes</h3>
+
+                <div className="mb-6">
+                  <p className="text-red-600 font-semibold mb-2 flex items-center gap-2">
+                    <span className="w-3 h-3 bg-red-500 rounded-full"></span>
+                    Without Real-Time Gap Detection:
+                  </p>
+                  <p className="text-gray-600">Maria&apos;s last A1C was 14 months ago. Her endocrinologist retired. Her new PCP&apos;s system doesn&apos;t flag the gap. Diabetic ketoacidosis. $43,000 hospitalization. Permanent kidney damage.</p>
+                </div>
+
+                <div>
+                  <p className="text-green-600 font-semibold mb-2 flex items-center gap-2">
+                    <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                    With HDIM:
+                  </p>
+                  <p className="text-gray-600">At 9 months overdue, HDIM flags Maria&apos;s care gap. Her care manager calls. A $45 lab visit. A1C: 7.8% - elevated but manageable. Medication adjusted. Crisis prevented.</p>
+                  <p className="text-gray-900 font-semibold mt-3">Maria is still making tamales for her grandchildren.</p>
+                </div>
+              </div>
+
+              <div className="md:col-span-2 text-center">
+                <div className="relative w-48 h-48 mx-auto mb-4">
+                  <Image
+                    src="/images/portraits/maria.png"
+                    alt="Maria - Patient story"
+                    fill
+                    className="object-cover rounded-xl"
+                    loading="lazy"
+                  />
+                </div>
+                <p className="text-lg font-semibold text-primary italic">
+                  &quot;The gap between a $45 lab test and a $43,000 hospitalization is 14 months of silence.&quot;
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Before/After Comparison Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <span className="text-primary font-semibold text-sm uppercase tracking-wider">
+              The Transformation
+            </span>
+            <h2 className="section-heading mt-2 mb-4">
+              From Fragmented to Connected in Seconds
+            </h2>
+            <p className="section-subheading">
+              See how HDIM transforms reactive, months-long processes into real-time, actionable insights.
+            </p>
+          </div>
+
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+            <Image
+              src="/images/comparison/before-after.png"
+              alt="Before and After: 3 months reactive vs 2 seconds real-time with HDIM"
+              width={1920}
+              height={1080}
+              className="w-full h-auto"
+              loading="lazy"
+            />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 mt-10">
+            <div className="text-center p-6 bg-red-50 rounded-xl">
+              <div className="text-4xl font-bold text-red-600 mb-2">3 months</div>
+              <p className="text-gray-600">Traditional reactive approach - finding care gaps after they&apos;ve impacted quality scores</p>
+            </div>
+            <div className="text-center p-6 bg-green-50 rounded-xl">
+              <div className="text-4xl font-bold text-green-600 mb-2">2 seconds</div>
+              <p className="text-gray-600">With HDIM real-time detection - act immediately when data arrives</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Solution Section */}
-      <section className="py-20 bg-white" id="solutions">
+      <section className="py-20 bg-gray-50" id="solutions">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
@@ -492,25 +427,23 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Product Screenshot Placeholder */}
+            {/* Architecture Diagram */}
             <div className="relative">
-              <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-2xl p-8">
+              <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-2xl p-4 md:p-8">
                 <div className="bg-white rounded-xl shadow-xl overflow-hidden">
                   <div className="h-8 bg-gray-100 flex items-center px-4 space-x-2">
                     <div className="w-3 h-3 bg-red-400 rounded-full" />
                     <div className="w-3 h-3 bg-yellow-400 rounded-full" />
                     <div className="w-3 h-3 bg-green-400 rounded-full" />
                   </div>
-                  <div className="p-6 h-80 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Play className="w-10 h-10 text-primary" />
-                      </div>
-                      <p className="text-gray-500">Product Demo Preview</p>
-                      <a href="#demo" className="text-primary font-medium hover:underline mt-2 inline-block">
-                        Watch Full Demo
-                      </a>
-                    </div>
+                  <div className="relative h-80">
+                    <Image
+                      src="/images/technical/architecture.png"
+                      alt="HDIM Real-Time Architecture - Connect Anything, Understand Everything, Act Immediately"
+                      fill
+                      className="object-contain p-4"
+                      loading="lazy"
+                    />
                   </div>
                 </div>
               </div>
@@ -523,6 +456,36 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* The 5-Minute Story */}
+      <section className="py-20 bg-gray-900 text-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <span className="text-accent font-semibold text-sm uppercase tracking-wider">
+            Why We&apos;re Different
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold mt-2 mb-8">
+            Why 5 Minutes Matters
+          </h2>
+
+          <div className="bg-gray-800 rounded-lg p-6 mb-8 font-mono text-left text-sm overflow-x-auto">
+            <span className="text-green-400">commit</span> <span className="text-gray-300">fix(hipaa): Reduce PHI cache TTL to 5min for HIPAA compliance</span><br/>
+            <span className="text-gray-500">December 27, 2025, 10:31 PM</span>
+          </div>
+
+          <div className="text-lg text-gray-300 space-y-4 max-w-2xl mx-auto">
+            <p>Most platforms cache patient data for 24 hours. Faster APIs. Better demos. Standard practice.</p>
+            <p className="text-white font-semibold">We cache for 5 minutes maximum.</p>
+            <p className="text-gray-400">
+              Not because regulators require it -- they don&apos;t specify a number.<br/>
+              Not because customers demand it -- they rarely ask.
+            </p>
+            <p className="text-white">
+              Because when a patient revokes consent to share their mental health history, they deserve to know that within 5 minutes, that data stops moving.
+            </p>
+            <p className="text-accent text-xl font-semibold mt-8">That&apos;s not a feature. That&apos;s respect.</p>
           </div>
         </div>
       </section>
@@ -558,7 +521,7 @@ export default function LandingPage() {
                   {feature.description}
                 </p>
                 <a
-                  href="#"
+                  href="/demo"
                   className="inline-flex items-center text-primary font-medium hover:underline"
                 >
                   Learn more
@@ -570,8 +533,95 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Video Demo Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <span className="text-primary font-semibold text-sm uppercase tracking-wider">
+              See It In Action
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
+              Watch HDIM Close Care Gaps in Real-Time
+            </h2>
+            <p className="text-xl text-gray-600">
+              A 3-minute walkthrough of our care gap detection workflow
+            </p>
+          </div>
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl cursor-pointer group">
+            <Image
+              src="/images/video/demo.png"
+              alt="HDIM Demo Video Thumbnail"
+              width={1280}
+              height={720}
+              loading="lazy"
+              className="w-full"
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
+              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <Play className="w-8 h-8 text-primary ml-1" />
+              </div>
+            </div>
+          </div>
+          <p className="text-center text-gray-500 mt-4 text-sm">
+            No registration required - click to watch
+          </p>
+        </div>
+      </section>
+
+      {/* Dashboard Preview Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <span className="text-primary font-semibold text-sm uppercase tracking-wider">
+              Real-Time Command Center
+            </span>
+            <h2 className="section-heading mt-2 mb-4">
+              See Your Quality Data Come Alive
+            </h2>
+            <p className="section-subheading">
+              Monitor 47 connected systems, 128K+ patients, and live care gap alerts - all in one unified dashboard.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8 items-center">
+            {/* Main Dashboard */}
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+              <Image
+                src="/images/dashboard/main.png"
+                alt="HDIM Real-Time Care Gap Command Center Dashboard"
+                width={1920}
+                height={1080}
+                className="w-full h-auto"
+                loading="lazy"
+              />
+              <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse" />
+                LIVE
+              </div>
+            </div>
+
+            {/* Mobile Dashboard */}
+            <div className="flex flex-col items-center justify-center">
+              <div className="relative w-64 mx-auto">
+                <Image
+                  src="/images/dashboard/mobile.png"
+                  alt="HDIM Mobile Dashboard"
+                  width={640}
+                  height={1136}
+                  className="w-full h-auto rounded-3xl shadow-xl"
+                  loading="lazy"
+                />
+              </div>
+              <p className="text-center text-gray-600 mt-6">
+                <strong>Access anywhere.</strong> Full functionality on mobile devices for care teams in the field.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Social Proof Section */}
-      <section className="py-20 bg-white" id="customers">
+      <section className="py-20 bg-gray-50" id="customers">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <span className="text-primary font-semibold text-sm uppercase tracking-wider">
@@ -582,7 +632,7 @@ export default function LandingPage() {
             </h2>
           </div>
 
-          {/* Testimonial Card */}
+          {/* Testimonial Card - Sarah */}
           <div className="max-w-4xl mx-auto">
             <div className="bg-gradient-to-br from-primary to-primary-700 rounded-2xl p-8 md:p-12 text-white relative overflow-hidden">
               {/* Quote mark */}
@@ -594,8 +644,14 @@ export default function LandingPage() {
                 </p>
 
                 <div className="flex items-center space-x-4">
-                  <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
-                    <Users className="w-7 h-7" />
+                  <div className="w-14 h-14 relative rounded-full overflow-hidden border-2 border-white/30">
+                    <Image
+                      src="/images/portraits/sarah.png"
+                      alt="Dr. Sarah Chen"
+                      fill
+                      className="object-cover"
+                      loading="lazy"
+                    />
                   </div>
                   <div>
                     <p className="font-semibold text-lg">Dr. Sarah Chen</p>
@@ -620,12 +676,34 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
+
+            {/* James Testimonial */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg mt-8">
+              <div className="flex items-start gap-6">
+                <div className="relative w-20 h-20 flex-shrink-0">
+                  <Image
+                    src="/images/portraits/james.png"
+                    alt="James Richardson"
+                    fill
+                    className="object-cover rounded-full"
+                    loading="lazy"
+                  />
+                </div>
+                <div>
+                  <p className="text-gray-700 text-lg mb-4">
+                    &ldquo;Our ACO was leaving $750K in shared savings on the table because we couldn&apos;t close care gaps fast enough. HDIM gave us real-time visibility across 3 different EHRs. In 90 days, we went from 42% to 78% on behavioral health follow-up.&rdquo;
+                  </p>
+                  <p className="font-semibold text-gray-900">James Richardson</p>
+                  <p className="text-gray-600 text-sm">Chief Information Officer, Mountain West ACO</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* More case studies link */}
           <div className="text-center mt-10">
             <a
-              href="#"
+              href="/research"
               className="inline-flex items-center text-primary font-medium hover:underline"
             >
               Read more customer stories
@@ -636,44 +714,99 @@ export default function LandingPage() {
       </section>
 
       {/* Compliance & Trust Section */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-2xl font-bold text-gray-900">
               Enterprise-Grade Security & Compliance
             </h2>
+            <p className="text-gray-600 mt-2">Built with security-first architecture and proven at scale</p>
           </div>
 
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
-            <div className="flex items-center space-x-3 bg-white px-6 py-4 rounded-lg shadow-sm">
-              <Shield className="w-8 h-8 text-primary" />
-              <div>
-                <p className="font-semibold text-gray-900">HIPAA Compliant</p>
-                <p className="text-sm text-gray-500">PHI Protection</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl">
+              <div className="w-16 h-16 relative mb-3">
+                <Image
+                  src="/images/icons/hipaa.png"
+                  alt="HIPAA Compliant"
+                  fill
+                  className="object-contain"
+                  loading="lazy"
+                />
               </div>
+              <p className="font-semibold text-gray-900 text-sm text-center">HIPAA</p>
+              <p className="text-xs text-gray-500 text-center">Compliant</p>
             </div>
-            <div className="flex items-center space-x-3 bg-white px-6 py-4 rounded-lg shadow-sm">
-              <Lock className="w-8 h-8 text-primary" />
-              <div>
-                <p className="font-semibold text-gray-900">SOC 2 Type II</p>
-                <p className="text-sm text-gray-500">Certified</p>
+            <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl">
+              <div className="w-16 h-16 relative mb-3">
+                <Image
+                  src="/images/icons/fhir.png"
+                  alt="FHIR R4 Native"
+                  fill
+                  className="object-contain"
+                  loading="lazy"
+                />
               </div>
+              <p className="font-semibold text-gray-900 text-sm text-center">FHIR R4</p>
+              <p className="text-xs text-gray-500 text-center">Native</p>
             </div>
-            <div className="flex items-center space-x-3 bg-white px-6 py-4 rounded-lg shadow-sm">
-              <Award className="w-8 h-8 text-primary" />
-              <div>
-                <p className="font-semibold text-gray-900">HITRUST CSF</p>
-                <p className="text-sm text-gray-500">Certified</p>
+            <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl">
+              <div className="w-16 h-16 relative mb-3">
+                <Image
+                  src="/images/icons/cql.png"
+                  alt="CQL Engine"
+                  fill
+                  className="object-contain"
+                  loading="lazy"
+                />
               </div>
+              <p className="font-semibold text-gray-900 text-sm text-center">CQL</p>
+              <p className="text-xs text-gray-500 text-center">Execution</p>
             </div>
-            <div className="flex items-center space-x-3 bg-white px-6 py-4 rounded-lg shadow-sm">
-              <CheckCircle2 className="w-8 h-8 text-primary" />
-              <div>
-                <p className="font-semibold text-gray-900">FHIR R4</p>
-                <p className="text-sm text-gray-500">Native Support</p>
+            <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl">
+              <div className="w-16 h-16 relative mb-3">
+                <Image
+                  src="/images/icons/tests.png"
+                  alt="847 Tests Passing"
+                  fill
+                  className="object-contain"
+                  loading="lazy"
+                />
               </div>
+              <p className="font-semibold text-gray-900 text-sm text-center">847 Tests</p>
+              <p className="text-xs text-gray-500 text-center">Passing</p>
+            </div>
+            <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl">
+              <div className="w-16 h-16 relative mb-3">
+                <Image
+                  src="/images/icons/uptime.png"
+                  alt="99.9% Uptime"
+                  fill
+                  className="object-contain"
+                  loading="lazy"
+                />
+              </div>
+              <p className="font-semibold text-gray-900 text-sm text-center">99.9%</p>
+              <p className="text-xs text-gray-500 text-center">Uptime</p>
+            </div>
+            <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl">
+              <div className="w-16 h-16 relative mb-3">
+                <Image
+                  src="/images/icons/microservices.png"
+                  alt="27 Microservices"
+                  fill
+                  className="object-contain"
+                  loading="lazy"
+                />
+              </div>
+              <p className="font-semibold text-gray-900 text-sm text-center">27 Services</p>
+              <p className="text-xs text-gray-500 text-center">Modular</p>
             </div>
           </div>
+          <p className="text-center text-gray-600 mt-8">
+            <Shield className="inline w-4 h-4 mr-2" />
+            Business Associate Agreements (BAA) available for all customers
+          </p>
         </div>
       </section>
 
@@ -681,10 +814,13 @@ export default function LandingPage() {
       <section className="py-20 bg-gradient-to-br from-primary via-primary-600 to-primary-800" id="demo">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Ready to Transform Your Quality Program?
+            How Many Patients Are Waiting for a Call That Won&apos;t Come?
           </h2>
-          <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-            See how HDIM can help you close care gaps faster, improve HEDIS scores, and capture more quality bonuses.
+          <p className="text-xl text-white/80 mb-4 max-w-2xl mx-auto">
+            HEDIS measurement year ends December 31. Every day without real-time gap detection is a day of missed interventions.
+          </p>
+          <p className="text-lg text-white/60 mb-10 max-w-2xl mx-auto">
+            See how HDIM catches patients falling through the cracks -- before they become your highest-cost cases.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -696,7 +832,7 @@ export default function LandingPage() {
               Try Interactive Demo
             </a>
             <a
-              href="mailto:sales@hdim.io"
+              href="/schedule"
               className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white border-2 border-white/30 rounded-lg hover:bg-white/10 transition-all duration-200"
             >
               Schedule a Consultation
@@ -726,13 +862,13 @@ export default function LandingPage() {
                 The FHIR-native platform for healthcare quality excellence.
               </p>
               <div className="flex space-x-4 mt-6">
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://linkedin.com/company/hdim" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                   <span className="sr-only">LinkedIn</span>
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                   </svg>
                 </a>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://twitter.com/hdim_health" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                   <span className="sr-only">Twitter</span>
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
@@ -745,11 +881,11 @@ export default function LandingPage() {
             <div>
               <h3 className="font-semibold text-sm uppercase tracking-wider mb-4">Platform</h3>
               <ul className="space-y-3">
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Care Gap Detection</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">HEDIS Evaluation</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Risk Stratification</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">FHIR Integration</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Analytics</a></li>
+                <li><a href="#features" className="text-gray-400 hover:text-white transition-colors">Care Gap Detection</a></li>
+                <li><a href="#features" className="text-gray-400 hover:text-white transition-colors">HEDIS Evaluation</a></li>
+                <li><a href="#features" className="text-gray-400 hover:text-white transition-colors">Risk Stratification</a></li>
+                <li><a href="#features" className="text-gray-400 hover:text-white transition-colors">FHIR Integration</a></li>
+                <li><a href="/explorer" className="text-gray-400 hover:text-white transition-colors">Analytics</a></li>
               </ul>
             </div>
 
@@ -757,10 +893,10 @@ export default function LandingPage() {
             <div>
               <h3 className="font-semibold text-sm uppercase tracking-wider mb-4">Solutions</h3>
               <ul className="space-y-3">
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">For Health Plans</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">For ACOs</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">For Health Systems</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">For Medicaid MCOs</a></li>
+                <li><a href="/research" className="text-gray-400 hover:text-white transition-colors">For Health Plans</a></li>
+                <li><a href="/research" className="text-gray-400 hover:text-white transition-colors">For ACOs</a></li>
+                <li><a href="/research" className="text-gray-400 hover:text-white transition-colors">For Health Systems</a></li>
+                <li><a href="/research" className="text-gray-400 hover:text-white transition-colors">For Medicaid MCOs</a></li>
               </ul>
             </div>
 
@@ -768,11 +904,11 @@ export default function LandingPage() {
             <div>
               <h3 className="font-semibold text-sm uppercase tracking-wider mb-4">Company</h3>
               <ul className="space-y-3">
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">About</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Careers</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Contact</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Security</a></li>
+                <li><a href="/research" className="text-gray-400 hover:text-white transition-colors">About</a></li>
+                <li><a href="mailto:careers@hdim.io" className="text-gray-400 hover:text-white transition-colors">Careers</a></li>
+                <li><a href="/research" className="text-gray-400 hover:text-white transition-colors">Blog</a></li>
+                <li><a href="/schedule" className="text-gray-400 hover:text-white transition-colors">Contact</a></li>
+                <li><a href="#compliance" className="text-gray-400 hover:text-white transition-colors">Security</a></li>
               </ul>
             </div>
           </div>
@@ -782,13 +918,13 @@ export default function LandingPage() {
               &copy; {new Date().getFullYear()} HealthData-in-Motion. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</a>
-              <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</a>
-              <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Cookie Policy</a>
+              <a href="/privacy" className="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</a>
+              <a href="/terms" className="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</a>
+              <a href="/privacy#cookies" className="text-gray-400 hover:text-white text-sm transition-colors">Cookie Policy</a>
             </div>
           </div>
         </div>
       </footer>
-    </div>
+    </LandingPageClient>
   )
 }

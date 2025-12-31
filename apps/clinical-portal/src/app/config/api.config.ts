@@ -46,8 +46,12 @@ export const API_CONFIG = {
     ? `${API_GATEWAY_URL}/api/qrda`
     : '/qrda',  // Proxied to localhost:8104
 
+  AI_ASSISTANT_URL: USE_API_GATEWAY
+    ? `${API_GATEWAY_URL}/api/ai-assistant`
+    : '/api/ai-assistant',  // Proxied or direct to AI service
+
   // Tenant Configuration - must match backend test data
-  DEFAULT_TENANT_ID: 'TENANT001',
+  DEFAULT_TENANT_ID: 'DEMO001',  // Demo tenant for clinical portal
 
   // HTTP Settings
   TIMEOUT_MS: 30000, // 30 seconds

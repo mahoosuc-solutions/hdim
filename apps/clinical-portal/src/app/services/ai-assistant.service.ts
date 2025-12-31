@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { KnowledgeBaseService } from './knowledge-base.service';
+import { API_CONFIG } from '../config/api.config';
 
 /**
  * AI Assistant Service
@@ -53,7 +54,7 @@ export interface UserInteraction {
   providedIn: 'root'
 })
 export class AIAssistantService {
-  private readonly API_URL = 'http://localhost:8000/api/ai-assistant';
+  private readonly API_URL = API_CONFIG.AI_ASSISTANT_URL;
 
   // Chat interface
   private messagesSubject = new BehaviorSubject<AIMessage[]>([]);

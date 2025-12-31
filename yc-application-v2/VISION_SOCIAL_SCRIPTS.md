@@ -37,7 +37,7 @@ NEW WORLD (2025+):
 
 I just proved this.
 
-Built HDIM—61 HEDIS quality measures, 27 microservices, 162K lines of code, 534 tests—in 3 months for $46K.
+Built HDIM—61 HEDIS quality measures, 28 microservices, 162K lines of code, 534 tests—in 3 months for $46K.
 
 Traditional estimate: $1.7M, 18 months, 10 engineers.
 
@@ -219,7 +219,7 @@ Real example (me):
 
 Built a healthcare quality platform with:
 - 162,752 lines of code
-- 27 microservices
+- 28 microservices
 - 61 quality measures
 - 534 test files
 
@@ -528,7 +528,7 @@ What will you build? 🚀
 "The economics of building complex software have changed by an order of magnitude. What used to take $1.7 million and 18 months can now be done for $46,000 in 3 months. This means every market that was previously uneconomical to serve is now addressable. The era of 'we can't afford good software' is over."
 
 ### The Proof Point (45 seconds)
-"I built HDIM—61 HEDIS quality measures, 27 microservices, 162,000 lines of code, 534 test files—in 3 months for $46,000. Traditional estimate was $1.7 million. Same quality output. AI didn't write my code—it handled the boilerplate while I focused on architecture and clinical logic. This methodology is reproducible for any domain expert willing to learn AI-assisted development."
+"I built HDIM—61 HEDIS quality measures, 28 microservices, 162,000 lines of code, 534 test files—in 3 months for $46,000. Traditional estimate was $1.7 million. Same quality output. AI didn't write my code—it handled the boilerplate while I focused on architecture and clinical logic. This methodology is reproducible for any domain expert willing to learn AI-assisted development."
 
 ### The Call to Action (30 seconds)
 "If you're a domain expert frustrated with bad software in your industry, you can now build the replacement. The tools exist. The economics work. The only thing missing is builders who care enough about the problem to solve it. The question isn't whether good software will come to underserved markets—it's who will build it."

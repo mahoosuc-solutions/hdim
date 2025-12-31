@@ -35,7 +35,7 @@ HDIM calculates **61 HEDIS quality measures** in sub-second time at point of car
 We deploy in days instead of months, plug into existing infrastructure via FHIR/IHE standards, and are SMART on FHIR OAuth 2.0 certified.
 
 **Technical differentiators:**
-- **27 microservices** with event-driven Kafka architecture (vs. monolithic legacy)
+- **28 microservices** with event-driven Kafka architecture (vs. monolithic legacy)
 - **Template-driven CQL engine** - Add measures in hours, not weeks of code deployments
 - **Enterprise Kubernetes infrastructure** - Auto-scaling (HPA), high availability (PDB), full observability (Prometheus/Grafana/Jaeger)
 - **Multi-tenant isolation** - Verified with 41 security test cases, zero critical CVEs
@@ -131,7 +131,7 @@ Health systems are terrified of switching quality platforms because their custom
 ## Progress / current state
 
 **Platform built and production-ready:**
-- **27 microservices** with 61 HEDIS measures (complete HEDIS MY2024 coverage)
+- **28 microservices** with 61 HEDIS measures (complete HEDIS MY2024 coverage)
 - **Custom Measure Builder** with Monaco CQL editor, value set picker, automated testing, and publishing workflow
 - **5 validated risk models** (Charlson, Elixhauser, LACE, HCC, Frailty) with 154 TDD tests
 - **Real-time CDS** with WebSocket alerts, 5-component health scoring, 7-dimension risk stratification
@@ -155,7 +155,7 @@ Health systems are terrified of switching quality platforms because their custom
 ## How much have you raised?
 
 Self-funded. I've invested my own time and resources to build a production-grade platform:
-- 27 microservices with 61 HEDIS measures
+- 28 microservices with 61 HEDIS measures
 - Custom Measure Builder with CQL editor and automated testing
 - Enterprise Kubernetes infrastructure with full observability
 - 5 validated risk models and real-time clinical decision support
@@ -212,7 +212,7 @@ HDIM becomes the default quality measurement infrastructure for value-based care
 
 2. **I've architected HIE infrastructure serving millions.** As Integration Architect and MPI Architect at HealthInfoNet, I built the systems connecting healthcare providers across Maine. As Enterprise Architect at Healthix, I designed interoperability infrastructure for New York. I understand healthcare integration at scale.
 
-3. **AI-augmented solo founder with production results.** I built this entire platform using AI-assisted development: 27 microservices, 61 HEDIS measures, 500+ tests, enterprise Kubernetes infrastructure. This proves one motivated founder with modern tools can build what previously required a team of 20.
+3. **AI-augmented solo founder with production results.** I built this entire platform using AI-assisted development: 28 microservices, 61 HEDIS measures, 500+ tests, enterprise Kubernetes infrastructure. This proves one motivated founder with modern tools can build what previously required a team of 20.
 
 4. **Deep domain expertise from the trenches.** Not just theory—I've spent years at HealthInfoNet, Healthix, and Verato solving real healthcare data problems: patient matching, identity resolution, system integration. I know where the bodies are buried.
 
@@ -240,7 +240,7 @@ HDIM becomes the default quality measurement infrastructure for value-based care
 **Technical Depth:**
 - Deep expertise in healthcare interoperability: FHIR R4, HL7v2, CQL, IHE profiles
 - Master Patient Index (MPI) architecture—critical for patient matching across systems
-- Built HDIM: 27 microservices, 61 HEDIS measures, 5 risk models, 500+ tests, enterprise Kubernetes infrastructure
+- Built HDIM: 28 microservices, 61 HEDIS measures, 5 risk models, 500+ tests, enterprise Kubernetes infrastructure
 - Leveraged AI-assisted development to build what would typically require a 20-person team
 
 **Why Me:**

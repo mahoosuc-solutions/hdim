@@ -45,7 +45,7 @@ Healthcare organizations struggle with fragmented quality measurement systems, d
 <td width="50%" valign="top">
 
 ### Architecture
-- 27 microservices architecture
+- 28 microservices architecture
 - Kubernetes-native deployment
 - API-first design (OpenAPI 3.0)
 - Event-driven (Apache Kafka)

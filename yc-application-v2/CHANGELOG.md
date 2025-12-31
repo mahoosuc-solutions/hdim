@@ -82,7 +82,7 @@
 |--------|-------|--------|
 | Lines of Code | 162,752 | Agent analysis |
 | Test Files | 534 | Agent analysis |
-| Microservices | 27 | Architecture |
+| Microservices | 28 | Architecture |
 | Angular Components | 82 | Agent analysis |
 | HEDIS Measures | 61 | CQL Engine |
 | Documentation Lines | 215,000+ | Agent analysis |

@@ -221,7 +221,7 @@
 │                                                                 │
 │   WHAT WE BUILT:                                                │
 │                                                                 │
-│   162,752 lines of code    │    27 microservices               │
+│   162,752 lines of code    │    28 microservices               │
 │   534 test files           │    61 HEDIS measures              │
 │   215,000 lines of docs    │    82 UI components               │
 │                                                                 │
@@ -591,7 +591,7 @@
 │                    └───────────┘                                │
 │                                                                 │
 │   KEY STATS:                                                    │
-│   • 27 microservices                                            │
+│   • 28 microservices                                            │
 │   • 162,752 lines of code                                       │
 │   • 534 automated tests                                         │
 │   • <200ms response time                                        │

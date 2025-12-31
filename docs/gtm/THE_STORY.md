@@ -182,7 +182,7 @@ Every measure we implement is backed by peer-reviewed research showing it improv
 
 ### HEDIS: Measuring What Matters
 
-82 measures. Not because it's marketable, but because **CMS requires them** and **patients benefit from them**.
+56 measures. Not because it's marketable, but because **CMS requires them** and **patients benefit from them**.
 
 **Mental Health Leadership:**
 ```
@@ -201,12 +201,12 @@ We're the only platform with native PHQ-9 (depression), GAD-7 (anxiety), and PHQ
 
 ## The Architecture of Trust
 
-### 27 Microservices: Each One a Promise
+### 28 Microservices: Each One a Promise
 
 ```
 ✅ FHIR Service (8085) - Your data speaks the standard
 ✅ CQL Engine (8081) - Evidence-based measure evaluation
-✅ Quality Measure (8087) - 82 HEDIS measures, auditable
+✅ Quality Measure (8087) - 56 HEDIS measures, auditable
 ✅ Patient Service (8084) - Every patient record protected
 ✅ Care Gap (8086) - Real-time intervention opportunities
 ✅ Consent Service (8083) - Patient rights respected
@@ -215,7 +215,7 @@ We're the only platform with native PHQ-9 (depression), GAD-7 (anxiety), and PHQ
 ✅ ECR Service (8101) - Public health reporting
 ✅ Prior Auth (8102) - Reduce administrative burden
 ✅ Notification (8107) - Patient engagement that works
-... and 16 more
+... and 17 more
 ```
 
 **Each service:**
@@ -437,7 +437,7 @@ You're not buying a platform. You're choosing a **partner who shares your values
 
 **What we bring:**
 - ✅ HIPAA compliance you can trust (5-minute cache, comprehensive audits)
-- ✅ Clinical standards you can verify (82 HEDIS measures, FHIR R4, CQL)
+- ✅ Clinical standards you can verify (56 HEDIS measures, FHIR R4, CQL)
 - ✅ Test coverage you can audit (100% pass rate, integration tested)
 - ✅ Uptime you can depend on (99.9% SLA, 24/7 monitoring)
 - ✅ **Values you can respect** (patient safety over shortcuts)

@@ -65,7 +65,7 @@ HDIM was built using AI-assisted development with Claude Code, demonstrating a n
 
 | Metric | Value |
 |--------|-------|
-| Backend Services | 27 microservices |
+| Backend Services | 28 microservices |
 | Lines of Code | 162,752 |
 | Angular Components | 82 |
 | Test Files | 534 |

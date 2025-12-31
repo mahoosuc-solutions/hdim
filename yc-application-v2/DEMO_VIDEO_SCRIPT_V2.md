@@ -22,7 +22,7 @@
 **Visual:** HDIM logo, then split screen showing code + platform metrics
 
 **Voiceover:**
-> "We built a $1.7 million healthcare platform for $46,000 using AI-assisted development. 162,000 lines of code. 27 microservices. One founder. Three months."
+> "We built a $1.7 million healthcare platform for $46,000 using AI-assisted development. 162,000 lines of code. 28 microservices. One founder. Three months."
 
 **On-screen text:** "37x Cost Reduction | AI-Native Development"
 
@@ -246,7 +246,7 @@ Predicted outcomes → Intervention recommendations
 ## TALKING POINTS FOR LIVE DEMO
 
 ### If Asked About Architecture:
-> "27 microservices, all stateless, Kubernetes-ready. The CQL engine is template-driven—we can add new measures in hours. HAPI FHIR 7.x for the data layer, Kafka for events, PostgreSQL with row-level tenant isolation."
+> "28 microservices, all stateless, Kubernetes-ready. The CQL engine is template-driven—we can add new measures in hours. HAPI FHIR 7.x for the data layer, Kafka for events, PostgreSQL with row-level tenant isolation."
 
 ### If Asked About Security:
 > "TOTP multi-factor authentication with recovery codes. JWT tokens with 15-minute expiry. HIPAA-compliant caching—we reduced cache TTLs by 99.7%. Vulnerability scanning runs on every commit. Zero critical CVEs."

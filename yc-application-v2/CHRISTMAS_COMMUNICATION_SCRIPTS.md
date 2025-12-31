@@ -73,7 +73,7 @@ What I did:
 Same output:
 • 162,752 lines of code
 • 534 test files
-• 27 microservices
+• 28 microservices
 • 61 HEDIS measures
 
 The difference? AI-assisted development.
@@ -110,7 +110,7 @@ In January, I had an idea.
 By April, I had a platform.
 By December, I had:
 
-→ 27 microservices
+→ 28 microservices
 → 61 healthcare quality measures
 → 5 validated risk models
 → MFA security
@@ -142,7 +142,7 @@ Happy New Year.
 ### Post 4: The Technical Deep Dive (For Developer Audience)
 
 ```
-How I structured 27 microservices for healthcare quality measurement:
+How I structured 28 microservices for healthcare quality measurement:
 
 Core Services:
 ├── CQL Engine (61 HEDIS measures, <200ms)
@@ -224,7 +224,7 @@ The platform today:
 
 • 162,752 lines of code
 • 534 test files
-• 27 microservices
+• 28 microservices
 • 82 Angular components
 • 5 risk models
 • MFA security
@@ -399,7 +399,7 @@ What I learned:
 The output:
 
 • 162,752 lines of code
-• 27 microservices
+• 28 microservices
 • 61 HEDIS measures
 • 5 risk models
 • Zero critical CVEs
@@ -429,7 +429,7 @@ The AI revolution in software is here. Now.
 ### Title Options:
 - "Show HN: I built a $1.7M healthcare platform for $46K using AI"
 - "Show HN: Real-time HEDIS quality measures in <200ms (open for feedback)"
-- "I built 27 microservices in 3 months as a solo founder using AI"
+- "I built 28 microservices in 3 months as a solo founder using AI"
 
 ### Post Body:
 
@@ -443,7 +443,7 @@ Healthcare quality platforms (Epic Healthy Planet, Innovaccer) calculate measure
 
 **What I built:**
 - 61 HEDIS quality measures calculated in <200ms
-- 27 microservices (Java 21, Spring Boot 3.x)
+- 28 microservices (Java 21, Spring Boot 3.x)
 - Angular clinical portal (82 components)
 - 5 validated risk models (Charlson, Elixhauser, LACE, HCC, Frailty)
 - Custom Measure Builder with Monaco CQL editor
@@ -529,7 +529,7 @@ Just wrapped my first year as a solo founder. Here's what happened:
 **December 2025:** Production-ready platform:
 - 162,752 lines of code
 - 534 test files
-- 27 microservices
+- 28 microservices
 - 61 healthcare quality measures
 - Zero critical CVEs
 
@@ -575,7 +575,7 @@ Here's the interesting part: I built this using AI-assisted development as a sol
 Traditional estimate: $1.7M, 18 months, 10-person team
 What I did: $46K, 3 months, just me
 
-Same output: 162,752 lines of code, 534 tests, 27 microservices.
+Same output: 162,752 lines of code, 534 tests, 28 microservices.
 
 The result is a platform that can serve organizations priced out of enterprise tools. $80/month vs $50,000/month.
 

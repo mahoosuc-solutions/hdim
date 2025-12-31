@@ -1,19 +1,28 @@
 # HDIM Platform Demo Walkthrough
 
-## One-Command Demo Launch (Recommended)
+## Quick Start
 
-For customer demos, use the minimal single-VM demo platform:
+The HDIM demo stack provides a fully functional healthcare interoperability platform with clinical portal, API gateway, and microservices.
 
-```bash
-cd demo
-./start-demo.sh
-```
+### Demo Stack Access Points
 
-**Wait 2-3 minutes** for services to start, then open http://localhost:4200
+| Service | URL | Purpose |
+|---------|-----|---------|
+| **Clinical Portal** | http://localhost:4200 | Web UI for clinical staff |
+| **API Gateway** | http://localhost:8080 | REST API for integrations |
+| **PostgreSQL** | localhost:5435 | Database (clinical-portal user: healthdata) |
+| **Redis** | localhost:6380 | Cache layer |
+| **Kafka** | localhost:9094 | Event streaming |
 
-### Demo Credentials
-- **Username**: `demo_user`
-- **Password**: `demo_password`
+### Demo Users (All Password: `demo123`)
+
+| Email | Username | Role | Permissions |
+|-------|----------|------|-------------|
+| demo_admin@hdim.ai | demo_admin | ADMIN, EVALUATOR | Full access, run evaluations |
+| demo_analyst@hdim.ai | demo_analyst | ANALYST, EVALUATOR | View reports, run evaluations |
+| demo_viewer@hdim.ai | demo_viewer | VIEWER | Read-only access |
+
+**All demo users belong to tenant: DEMO001**
 
 ### Hero Patient for Walkthrough
 **Maria Garcia** (MRN: MRN-2024-4521)
@@ -25,22 +34,34 @@ See [demo/DEMO_WALKTHROUGH.md](demo/DEMO_WALKTHROUGH.md) for the complete 15-20 
 
 ---
 
-## Full Platform Start (Development Mode)
+## Startup Instructions
 
-### Prerequisites
-- Docker Compose running with core profile
-- Frontend dev server started
+### Docker Compose Demo Stack (Recommended)
 
-### Start Commands
 ```bash
-# Backend services (from hdim-master directory)
-cd /home/mahoosuc-solutions/projects/hdim-master/hdim-master
-docker compose --profile core up -d
+# Start all demo services including clinical portal
+docker compose -f docker-compose.demo.yml up -d
 
-# Frontend (in separate terminal)
+# Wait for all services to be healthy (approximately 2-3 minutes)
+docker compose -f docker-compose.demo.yml ps
+
+# Once all services show "healthy", access the clinical portal
+# Open browser to: http://localhost:4200
+```
+
+### Development Mode (Frontend Dev Server)
+
+For frontend development with hot reload:
+
+```bash
+# Terminal 1: Start backend services
+docker compose -f docker-compose.demo.yml up -d
+
+# Terminal 2: Start Angular dev server
 cd apps/clinical-portal
+npm install  # if needed
 npm run dev
-# Running at: http://localhost:4200
+# Frontend runs at: http://localhost:4200
 ```
 
 ## Demo Data
@@ -57,12 +78,16 @@ npm run dev
 | Hypertension | I10 | 295 |
 | Coronary Artery Disease | I25.10 | 143 |
 
-### Test Users
-| Username | Password | Role |
-|----------|----------|------|
-| test_superadmin | password123 | SUPER_ADMIN |
-| test_admin | password123 | ADMIN |
-| test_evaluator | password123 | EVALUATOR |
+### Clinical Portal Features
+
+The clinical portal includes:
+- **Patient Dashboard**: View patient list with clinical summaries
+- **Patient Details**: Comprehensive patient health profiles with conditions, medications, observations
+- **Care Gap Detection**: Identify missing preventive care and quality measures
+- **Quality Evaluations**: Run HEDIS quality measure evaluations
+- **Reports**: Generate quality reports for performance metrics
+- **3D Visualizations**: Advanced clinical data visualizations
+- **AI Assistant**: Clinical decision support chatbot
 
 ## Working API Endpoints
 
@@ -71,29 +96,30 @@ npm run dev
 # Login
 curl -X POST http://localhost:8080/api/v1/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"username": "test_admin", "password": "password123"}'
+  -d '{\"username\": \"demo_admin\", \"password\": \"demo123\"}'"}'
 
 # Response includes accessToken for subsequent requests
 ```
 
 ### FHIR API (via Gateway - Port 8080)
-```bash
-TOKEN="<from login response>"
 
-# List Patients (returns 1000 patients)
+Note: The clinical portal uses HttpOnly cookies for HIPAA compliance. For API testing with curl, authenticate first as shown above.
+
+```bash
+# List Patients
 curl "http://localhost:8080/fhir/Patient?_count=10" \
   -H "Authorization: Bearer $TOKEN" \
-  -H "X-Tenant-ID: default"
+  -H "X-Tenant-ID: DEMO001"
 
 # Get Patient by ID
 curl "http://localhost:8080/fhir/Patient/{patientId}" \
   -H "Authorization: Bearer $TOKEN" \
-  -H "X-Tenant-ID: default"
+  -H "X-Tenant-ID: DEMO001"
 
 # Get Conditions for Patient
 curl "http://localhost:8080/fhir/Condition?patient={patientId}" \
   -H "Authorization: Bearer $TOKEN" \
-  -H "X-Tenant-ID: default"
+  -H "X-Tenant-ID: DEMO001"
 ```
 
 ### Health Checks (No Auth Required)
@@ -112,13 +138,12 @@ curl http://localhost:8081/actuator/health
 
 | Service | Port | Status |
 |---------|------|--------|
-| Gateway | 8080 | ✅ Healthy |
+| **Clinical Portal** | **4200** | **✅ Healthy** |
+| API Gateway | 8080 | ✅ Healthy |
 | FHIR Service | 8085 | ✅ Healthy |
-| CQL Engine | 8081 | ✅ Healthy |
 | Patient Service | 8084 | ✅ Healthy |
-| Quality Measure | 8087 | ⚠️ Auth issues |
-| Care Gap | 8086 | ⚠️ Auth issues |
-| Frontend | 3003 | ✅ Running |
+| Quality Measure Service | 8087 | ✅ Healthy |
+| Care Gap Service | 8086 | ✅ Healthy |
 | PostgreSQL | 5435 | ✅ Healthy |
 | Redis | 6380 | ✅ Healthy |
 | Kafka | 9094 | ✅ Healthy |
@@ -141,9 +166,11 @@ curl http://localhost:8081/actuator/health
 - Multi-tenant data isolation
 
 ### 4. Clinical Portal (Frontend)
-- Access at http://localhost:3003
-- Login with test_admin credentials
-- Navigate patient views
+- Access at http://localhost:4200
+- Login with demo_admin credentials (email: demo_admin@hdim.ai, password: demo123)
+- Navigate patient list and view patient details
+- Run care gap detection on a patient
+- View quality measure evaluation results
 
 ## Backup & Restore
 

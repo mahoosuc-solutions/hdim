@@ -283,6 +283,32 @@ services:
         limits:
           memory: 512M
 
+  clinical-portal:
+    container_name: hdim-demo-clinical-portal
+    build:
+      context: .
+      dockerfile: apps/clinical-portal/Dockerfile
+    depends_on:
+      gateway-service:
+        condition: service_healthy
+    environment:
+      API_URL: http://gateway-service:8080
+      DEFAULT_TENANT_ID: DEMO001
+    ports:
+      - "4200:80"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
 networks:
   hdim-demo-network:
     driver: bridge

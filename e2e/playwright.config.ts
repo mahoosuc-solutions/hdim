@@ -180,14 +180,15 @@ export default defineConfig({
   // Web server configuration
   // In CI/Docker mode, services are started externally via docker-compose
   // In local development, start the frontend and wait for backend
+  // NOTE: This is an NX monorepo - use `npx nx serve clinical-portal` to start
   webServer: USE_DOCKER || CI
     ? undefined
     : [
         {
-          command: 'cd ../frontend && npm run start',
+          command: 'cd .. && npx nx serve clinical-portal --configuration=development',
           url: 'http://localhost:4200',
           reuseExistingServer: true,
-          timeout: 120000,
+          timeout: 180000, // 3 minutes for initial build
           stdout: 'pipe',
           stderr: 'pipe',
         },

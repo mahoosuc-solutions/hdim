@@ -232,15 +232,15 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     this.evaluationService.getPopulationReport(currentYear).pipe(
       takeUntil(this.destroy$),
       map(report => {
-        if (report && report.measureResults) {
-          return report.measureResults.slice(0, 4).map((result: any, index: number) => ({
+        if (report && report.measureSummaries) {
+          return report.measureSummaries.slice(0, 4).map((result, index: number) => ({
             id: result.measureId || String(index + 1),
             name: result.measureName || result.measureId || 'Quality Measure',
             performance: result.complianceRate || 0,
-            target: result.targetRate || 80.0,
-            numerator: result.numerator || 0,
-            denominator: result.denominator || 0,
-            trend: this.calculateTrend(result.complianceRate, result.previousRate) as 'up' | 'down' | 'stable'
+            target: 80.0, // Default target rate
+            numerator: result.totalCompliant || 0,
+            denominator: result.totalEligible || 0,
+            trend: this.calculateTrend(result.complianceRate, undefined) as 'up' | 'down' | 'stable'
           }));
         }
         return this.getFallbackQualityMeasures();
@@ -253,7 +253,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
       this.qualityMeasures = measures;
       // Calculate average quality score
       if (measures.length > 0) {
-        const avgScore = measures.reduce((sum, m) => sum + m.performance, 0) / measures.length;
+        const avgScore = measures.reduce((sum: number, m: { performance: number }) => sum + m.performance, 0) / measures.length;
         this.qualityScore = Math.round(avgScore);
       }
     });

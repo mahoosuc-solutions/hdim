@@ -344,6 +344,7 @@ export class PhysicalHealthService extends CacheableService {
       overallRate: data.medications.overallPDC,
       status: this.determineMedicationAdherenceStatus(data.medications.overallPDC),
       problematicMedications: data.medications.problematicMedications,
+      totalMedications: data.medications.totalMedications,
     };
 
     // Detect and flag critical alerts
@@ -706,6 +707,7 @@ export class PhysicalHealthService extends CacheableService {
         overallRate: 85,
         status: 'excellent',
         problematicMedications: [],
+        totalMedications: 5,
       },
       functionalStatus: this.getDefaultFunctionalStatus(),
     };

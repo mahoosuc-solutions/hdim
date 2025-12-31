@@ -241,45 +241,49 @@ export class DashboardPage extends BasePage {
   /**
    * Navigate using sidebar
    * Uses Angular Material mat-nav-list with mat-list-item anchors
+   * Note: Actual nav items in app.ts: Dashboard, Patients, Evaluations, Results, Reports, Measure Builder, AI Assistant
    */
-  async navigateTo(menuItem: 'patients' | 'evaluations' | 'care-gaps' | 'reports' | 'measures' | 'admin' | 'results'): Promise<void> {
+  async navigateTo(menuItem: 'patients' | 'evaluations' | 'care-gaps' | 'reports' | 'measures' | 'results'): Promise<void> {
     const menuMap: Record<string, { text: string; urlPattern: string; fallbackRoute: string }> = {
       'patients': { text: 'Patients', urlPattern: '**/patients', fallbackRoute: '/patients' },
       'evaluations': { text: 'Evaluations', urlPattern: '**/evaluations', fallbackRoute: '/evaluations' },
-      'care-gaps': { text: 'Care Gaps', urlPattern: '**/care-gaps', fallbackRoute: '/care-gaps' },
+      'care-gaps': { text: 'Care Gaps', urlPattern: '**/care-gaps', fallbackRoute: '/care-gaps' }, // Not in nav, direct route
       'reports': { text: 'Reports', urlPattern: '**/reports', fallbackRoute: '/reports' },
-      'measures': { text: 'Measure Builder', urlPattern: '**/measures', fallbackRoute: '/measures' },
+      'measures': { text: 'Measure Builder', urlPattern: '**/measure-builder', fallbackRoute: '/measure-builder' },
       'results': { text: 'Results', urlPattern: '**/results', fallbackRoute: '/results' },
-      'admin': { text: 'Administration', urlPattern: '**/admin', fallbackRoute: '/admin' },
     };
 
     const config = menuMap[menuItem];
 
-    // Try multiple selector strategies for Angular Material nav
+    // Try multiple selector strategies for Angular Material nav (matches app.html structure)
     const navSelectors = [
-      `mat-nav-list a[mat-list-item]:has-text("${config.text}")`,
+      `mat-nav-list a[routerLink="${config.fallbackRoute}"]`,
+      `mat-nav-list a:has-text("${config.text}")`,
+      `mat-sidenav a[routerLink="${config.fallbackRoute}"]`,
       `mat-sidenav a:has-text("${config.text}")`,
-      `.nav-list a:has-text("${config.text}")`,
-      `a[routerlink*="${config.fallbackRoute.replace('/', '')}"]`,
-      `a[href*="${config.fallbackRoute}"]`,
+      `a[routerlink="${config.fallbackRoute}"]`,
     ];
 
     let clicked = false;
     for (const selector of navSelectors) {
-      const element = this.page.locator(selector).first();
-      if (await element.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await element.click();
-        clicked = true;
-        break;
+      try {
+        const element = this.page.locator(selector).first();
+        if (await element.isVisible({ timeout: 2000 })) {
+          await element.click();
+          clicked = true;
+          break;
+        }
+      } catch {
+        continue;
       }
     }
 
-    // If no nav item found, navigate directly
+    // If no nav item found, navigate directly (e.g., care-gaps is not in sidebar)
     if (!clicked) {
       await this.page.goto(config.fallbackRoute);
     }
 
-    await this.page.waitForURL(config.urlPattern, { timeout: 10000 });
+    await this.page.waitForURL(config.urlPattern, { timeout: 15000 });
   }
 
   /**
@@ -290,18 +294,12 @@ export class DashboardPage extends BasePage {
   }
 
   /**
-   * Navigate to care gaps page using sidebar
+   * Navigate to care gaps page
+   * Note: Care gaps is not in the sidebar nav, so use direct navigation
    */
   async navigateToCareGaps(): Promise<void> {
-    // Try direct navigation link or "Results" which contains care gaps
-    const careGapsLink = this.page.locator('a[href*="care-gap"], a:has-text("Care Gap")');
-    if (await careGapsLink.count() > 0) {
-      await careGapsLink.first().click();
-      await this.page.waitForURL(/care-gap|caregap/i, { timeout: 10000 });
-    } else {
-      // Fall back to Results which may contain care gaps
-      await this.navigateTo('results');
-    }
+    await this.page.goto('/care-gaps');
+    await this.page.waitForURL('**/care-gaps', { timeout: 15000 });
   }
 
   /**

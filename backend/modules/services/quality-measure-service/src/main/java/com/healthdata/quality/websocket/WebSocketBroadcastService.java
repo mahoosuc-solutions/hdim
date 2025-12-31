@@ -1,4 +1,5 @@
 package com.healthdata.quality.websocket;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +41,7 @@ import java.util.Map;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "websocket.enabled", havingValue = "true", matchIfMissing = true)
 public class WebSocketBroadcastService {
 
     private final HealthScoreWebSocketHandler webSocketHandler;

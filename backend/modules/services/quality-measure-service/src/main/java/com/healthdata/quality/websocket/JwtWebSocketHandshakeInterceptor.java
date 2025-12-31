@@ -1,4 +1,5 @@
 package com.healthdata.quality.websocket;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import com.healthdata.authentication.service.JwtTokenService;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ import java.util.Map;
  * - With header: ws://...?tenantId=TENANT001 (+ Authorization: Bearer <token>)
  * - With param:  ws://...?tenantId=TENANT001&token=<jwt-token>
  */
+@ConditionalOnProperty(name = "websocket.enabled", havingValue = "true", matchIfMissing = true)
 @Component
 @RequiredArgsConstructor
 @Slf4j

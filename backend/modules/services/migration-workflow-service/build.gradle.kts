@@ -20,17 +20,6 @@ configurations.all {
     }
 }
 
-// Exclude hibernate-types libraries from test runtime to avoid H2 compatibility issues
-configurations {
-    testRuntimeClasspath {
-        exclude(group = "com.vladmihalcea", module = "hibernate-types-60")
-        exclude(group = "io.hypersistence", module = "hypersistence-utils-hibernate-63")
-    }
-    testCompileClasspath {
-        exclude(group = "com.vladmihalcea", module = "hibernate-types-60")
-        exclude(group = "io.hypersistence", module = "hypersistence-utils-hibernate-63")
-    }
-}
 
 dependencies {
     // Shared modules
@@ -75,8 +64,7 @@ dependencies {
     implementation("io.github.resilience4j:resilience4j-ratelimiter:2.2.0")
     implementation("org.springframework.boot:spring-boot-starter-aop")
 
-    // JSON type support for JPA
-    implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
+    // JSON type support for JPA (JSONB, HSTORE, etc.)
     implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.7.0")
 
     // Jackson for JSON processing

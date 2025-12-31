@@ -1,6 +1,31 @@
 # HDIM Platform Demo Walkthrough
 
-## Quick Start
+## One-Command Demo Launch (Recommended)
+
+For customer demos, use the minimal single-VM demo platform:
+
+```bash
+cd demo
+./start-demo.sh
+```
+
+**Wait 2-3 minutes** for services to start, then open http://localhost:4200
+
+### Demo Credentials
+- **Username**: `demo_user`
+- **Password**: `demo_password`
+
+### Hero Patient for Walkthrough
+**Maria Garcia** (MRN: MRN-2024-4521)
+- 57-year-old female
+- Colorectal Cancer Screening gap (127 days overdue)
+- Breast Cancer Screening gap (45 days overdue)
+
+See [demo/DEMO_WALKTHROUGH.md](demo/DEMO_WALKTHROUGH.md) for the complete 15-20 minute customer presentation guide.
+
+---
+
+## Full Platform Start (Development Mode)
 
 ### Prerequisites
 - Docker Compose running with core profile
@@ -13,9 +38,9 @@ cd /home/mahoosuc-solutions/projects/hdim-master/hdim-master
 docker compose --profile core up -d
 
 # Frontend (in separate terminal)
-cd frontend
+cd apps/clinical-portal
 npm run dev
-# Running at: http://localhost:3003
+# Running at: http://localhost:4200
 ```
 
 ## Demo Data
@@ -155,4 +180,22 @@ docker exec healthdata-backup /usr/local/bin/restore.sh --list
 - [ ] Review security hardening checklist
 
 ---
-*Generated: December 30, 2025*
+
+## Demo Platform Files
+
+| File | Description |
+|------|-------------|
+| [demo/README.md](demo/README.md) | Demo platform documentation |
+| [demo/DEMO_WALKTHROUGH.md](demo/DEMO_WALKTHROUGH.md) | Customer presentation guide |
+| [demo/start-demo.sh](demo/start-demo.sh) | One-command startup |
+| [demo/seed-demo-data.sh](demo/seed-demo-data.sh) | Demo data loader |
+| [demo/docker-compose.demo.yml](demo/docker-compose.demo.yml) | Minimal service config |
+
+## Related Documentation
+
+- [Video Production Package](docs/video/CARE_GAP_VIDEO_PRODUCTION_PACKAGE.md)
+- [System Architecture](docs/architecture/SYSTEM_ARCHITECTURE.md)
+- [Backend API Specification](BACKEND_API_SPECIFICATION.md)
+
+---
+*Last Updated: December 31, 2025*

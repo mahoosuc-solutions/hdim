@@ -4,8 +4,8 @@ import com.healthdata.quality.dto.HealthScoreDTO;
 import com.healthdata.quality.persistence.*;
 import com.healthdata.quality.service.notification.HealthScoreNotificationTrigger;
 import com.healthdata.quality.websocket.HealthScoreWebSocketHandler;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -30,7 +30,6 @@ import java.util.UUID;
  */
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class HealthScoreService {
 
     private final HealthScoreRepository healthScoreRepository;
@@ -39,8 +38,34 @@ public class HealthScoreService {
     private final CareGapRepository careGapRepository;
     private final RiskAssessmentRepository riskAssessmentRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final HealthScoreWebSocketHandler webSocketHandler;
     private final HealthScoreNotificationTrigger notificationTrigger;
+
+    // Optional websocket handler - may be null when websocket is disabled
+    private HealthScoreWebSocketHandler webSocketHandler;
+
+    @Autowired
+    public HealthScoreService(
+            HealthScoreRepository healthScoreRepository,
+            HealthScoreHistoryRepository healthScoreHistoryRepository,
+            MentalHealthAssessmentRepository mentalHealthRepository,
+            CareGapRepository careGapRepository,
+            RiskAssessmentRepository riskAssessmentRepository,
+            KafkaTemplate<String, Object> kafkaTemplate,
+            HealthScoreNotificationTrigger notificationTrigger) {
+        this.healthScoreRepository = healthScoreRepository;
+        this.healthScoreHistoryRepository = healthScoreHistoryRepository;
+        this.mentalHealthRepository = mentalHealthRepository;
+        this.careGapRepository = careGapRepository;
+        this.riskAssessmentRepository = riskAssessmentRepository;
+        this.kafkaTemplate = kafkaTemplate;
+        this.notificationTrigger = notificationTrigger;
+    }
+
+    @Autowired(required = false)
+    public void setWebSocketHandler(HealthScoreWebSocketHandler webSocketHandler) {
+        this.webSocketHandler = webSocketHandler;
+        log.info("WebSocket handler injected: {}", webSocketHandler != null);
+    }
 
     // Scoring weights
     private static final double PHYSICAL_HEALTH_WEIGHT = 0.30;
@@ -483,12 +508,14 @@ public class HealthScoreService {
         kafkaTemplate.send("health-score.updated", healthScore.getPatientId().toString(), event);
         log.debug("Published health-score.updated event for patient: {}", healthScore.getPatientId());
 
-        // Broadcast update via WebSocket for real-time UI updates
-        try {
-            webSocketHandler.broadcastHealthScoreUpdate(event, healthScore.getTenantId());
-            log.debug("Broadcasted health score update via WebSocket for patient: {}", healthScore.getPatientId());
-        } catch (Exception e) {
-            log.error("Failed to broadcast health score update via WebSocket: {}", e.getMessage());
+        // Broadcast update via WebSocket for real-time UI updates (if websocket is enabled)
+        if (webSocketHandler != null) {
+            try {
+                webSocketHandler.broadcastHealthScoreUpdate(event, healthScore.getTenantId());
+                log.debug("Broadcasted health score update via WebSocket for patient: {}", healthScore.getPatientId());
+            } catch (Exception e) {
+                log.error("Failed to broadcast health score update via WebSocket: {}", e.getMessage());
+            }
         }
 
         // Publish significant change event if applicable
@@ -506,12 +533,14 @@ public class HealthScoreService {
             log.info("Published health-score.significant-change event for patient: {} - {}",
                 healthScore.getPatientId(), healthScore.getChangeReason());
 
-            // Broadcast alert via WebSocket for immediate attention
-            try {
-                webSocketHandler.broadcastSignificantChange(significantChangeEvent, healthScore.getTenantId());
-                log.info("Broadcasted significant change alert via WebSocket for patient: {}", healthScore.getPatientId());
-            } catch (Exception e) {
-                log.error("Failed to broadcast significant change alert via WebSocket: {}", e.getMessage());
+            // Broadcast alert via WebSocket for immediate attention (if websocket is enabled)
+            if (webSocketHandler != null) {
+                try {
+                    webSocketHandler.broadcastSignificantChange(significantChangeEvent, healthScore.getTenantId());
+                    log.info("Broadcasted significant change alert via WebSocket for patient: {}", healthScore.getPatientId());
+                } catch (Exception e) {
+                    log.error("Failed to broadcast significant change alert via WebSocket: {}", e.getMessage());
+                }
             }
         }
     }

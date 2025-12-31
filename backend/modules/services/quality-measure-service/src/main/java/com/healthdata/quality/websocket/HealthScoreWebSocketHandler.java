@@ -1,4 +1,5 @@
 package com.healthdata.quality.websocket;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -40,6 +41,7 @@ import java.util.UUID;
  * wss://host/quality-measure/ws/health-scores?tenantId=TENANT001
  * Header: Authorization: Bearer <jwt-token>
  */
+@ConditionalOnProperty(name = "websocket.enabled", havingValue = "true", matchIfMissing = true)
 @Component
 public class HealthScoreWebSocketHandler extends TextWebSocketHandler {
 

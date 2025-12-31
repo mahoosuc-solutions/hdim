@@ -36,14 +36,15 @@ import java.util.Map;
 @Slf4j
 public class NotificationService {
 
+    // Optional websocket dependencies - may be null when websocket is disabled
     private final HealthScoreWebSocketHandler webSocketHandler;
     private final WebSocketBroadcastService webSocketBroadcastService;
     private final EmailNotificationChannel emailChannel;
     private final SmsNotificationChannel smsChannel;
 
     public NotificationService(
-            HealthScoreWebSocketHandler webSocketHandler,
-            WebSocketBroadcastService webSocketBroadcastService,
+            @Autowired(required = false) HealthScoreWebSocketHandler webSocketHandler,
+            @Autowired(required = false) WebSocketBroadcastService webSocketBroadcastService,
             @Autowired(required = false) EmailNotificationChannel emailChannel,
             SmsNotificationChannel smsChannel) {
         this.webSocketHandler = webSocketHandler;
@@ -51,6 +52,9 @@ public class NotificationService {
         this.emailChannel = emailChannel;
         this.smsChannel = smsChannel;
 
+        if (webSocketHandler == null || webSocketBroadcastService == null) {
+            log.warn("WebSocket components not available - WebSocket notifications disabled. Set websocket.enabled=true to enable.");
+        }
         if (emailChannel == null) {
             log.warn("EmailNotificationChannel not available - email notifications disabled. Configure mail properties to enable.");
         }
@@ -71,21 +75,26 @@ public class NotificationService {
         String tenantId = request.getTenantId();
 
         try {
-            // WebSocket channel - now using generic WebSocketBroadcastService
+            // WebSocket channel - now using generic WebSocketBroadcastService (if enabled)
             if (request.shouldSendWebSocket()) {
-                try {
-                    // Use generic broadcast service for all notification types
-                    boolean webSocketSuccess = webSocketBroadcastService.broadcastNotification(
-                            tenantId, request);
-                    channelStatus.put("websocket", webSocketSuccess);
+                if (webSocketBroadcastService != null) {
+                    try {
+                        // Use generic broadcast service for all notification types
+                        boolean webSocketSuccess = webSocketBroadcastService.broadcastNotification(
+                                tenantId, request);
+                        channelStatus.put("websocket", webSocketSuccess);
 
-                    log.debug("WebSocket broadcast {} for notification type: {} to tenant: {}",
-                            webSocketSuccess ? "succeeded" : "failed",
-                            request.getNotificationType(), tenantId);
-                } catch (Exception e) {
+                        log.debug("WebSocket broadcast {} for notification type: {} to tenant: {}",
+                                webSocketSuccess ? "succeeded" : "failed",
+                                request.getNotificationType(), tenantId);
+                    } catch (Exception e) {
+                        channelStatus.put("websocket", false);
+                        log.error("WebSocket notification failed for {}: {}",
+                                request.getNotificationId(), e.getMessage());
+                    }
+                } else {
+                    log.debug("WebSocket notification requested but WebSocketBroadcastService not available");
                     channelStatus.put("websocket", false);
-                    log.error("WebSocket notification failed for {}: {}",
-                            request.getNotificationId(), e.getMessage());
                 }
             }
 

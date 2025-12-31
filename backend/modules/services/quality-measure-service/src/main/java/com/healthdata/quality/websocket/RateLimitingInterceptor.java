@@ -1,4 +1,5 @@
 package com.healthdata.quality.websocket;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * - Connection attempts: 60 seconds (rolling window)
  * - Cleanup runs every 60 seconds to remove expired entries
  */
+@ConditionalOnProperty(name = "websocket.enabled", havingValue = "true", matchIfMissing = true)
 @Component
 @Slf4j
 public class RateLimitingInterceptor implements HandshakeInterceptor {

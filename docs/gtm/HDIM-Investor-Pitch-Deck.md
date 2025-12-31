@@ -600,7 +600,7 @@ HDIM transforms healthcare quality measurement from a compliance burden into a s
 
 ### A2: Technical Architecture Details
 
-**Microservices (27 Total):**
+**Microservices (28 Total):**
 
 **Core Clinical Services (14):**
 1. FHIR Service (Port 8085) - FHIR R4 resource server

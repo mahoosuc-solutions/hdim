@@ -2,6 +2,7 @@ package com.healthdata.quality.config;
 
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -80,7 +81,7 @@ public class QualityMeasureSecurityConfig {
      */
     @Bean
     @Profile("!test")
-    public TrustedHeaderAuthFilter trustedHeaderAuthFilter() {
+    public TrustedHeaderAuthFilter trustedHeaderAuthFilter(MeterRegistry meterRegistry) {
         TrustedHeaderAuthFilter.TrustedHeaderAuthConfig config;
 
         if (devMode) {
@@ -89,7 +90,7 @@ public class QualityMeasureSecurityConfig {
             config = TrustedHeaderAuthFilter.TrustedHeaderAuthConfig.production(signingSecret);
         }
 
-        return new TrustedHeaderAuthFilter(config);
+        return new TrustedHeaderAuthFilter(config, meterRegistry);
     }
 
     /**
@@ -99,8 +100,8 @@ public class QualityMeasureSecurityConfig {
      */
     @Bean
     @Profile("!test")
-    public TrustedTenantAccessFilter trustedTenantAccessFilter() {
-        return new TrustedTenantAccessFilter();
+    public TrustedTenantAccessFilter trustedTenantAccessFilter(MeterRegistry meterRegistry) {
+        return new TrustedTenantAccessFilter(meterRegistry);
     }
 
     /**

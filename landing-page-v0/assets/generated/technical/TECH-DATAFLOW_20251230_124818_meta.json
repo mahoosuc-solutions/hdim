@@ -1,0 +1,9 @@
+{
+  "prompt_id": "TECH-DATAFLOW",
+  "name": "Real-Time Data Flow",
+  "category": "technical",
+  "dimensions": "1920x600",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a cinematic, animated-feeling visualization of healthcare data flowing in real-time.\n\nLayout: Wide panoramic view showing data journey from left to right.\n\nLEFT - Data Sources (appearing as gentle pulses):\n- EHR systems emitting patient data\n- Lab results flowing in\n- Claims data streaming\n- Device readings pulsing\nEach source has its own color but they all flow toward center.\n\nCENTER - The Transformation Engine:\n- FHIR standardization layer (data streams becoming uniform)\n- CQL Engine (p..."
+}

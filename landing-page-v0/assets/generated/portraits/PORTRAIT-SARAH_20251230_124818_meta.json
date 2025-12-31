@@ -1,0 +1,9 @@
+{
+  "prompt_id": "PORTRAIT-SARAH",
+  "name": "Sarah - Cancer Survivor",
+  "category": "portraits",
+  "dimensions": "800x1000",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a confident portrait photograph of a 55-year-old professional woman named Sarah, a cancer survivor.\n\nSubject: Sarah is a strong, successful woman who beat breast cancer early. She wears\nprofessional attire but appears relaxed and healthy. Her expression conveys confidence,\ngratitude, and forward momentum. She clearly knows she dodged a bullet and is living\nfully.\n\nSetting: Modern office with large windows, or outdoor corporate campus with contemporary\narchitecture. Setting suggests succes..."
+}

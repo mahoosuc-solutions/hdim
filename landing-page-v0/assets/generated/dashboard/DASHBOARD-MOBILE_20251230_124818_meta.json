@@ -1,0 +1,9 @@
+{
+  "prompt_id": "DASHBOARD-MOBILE",
+  "name": "Mobile Dashboard",
+  "category": "dashboard",
+  "dimensions": "375x812",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a mobile-responsive version of a healthcare analytics dashboard.\n\nLayout:\n- Collapsed navigation (hamburger menu)\n- Key stats prominently displayed\n- Simplified chart view\n- Swipe-able patient cards\n\nStyle:\n- Clean, modern SaaS aesthetic optimized for mobile\n- White background with subtle gray card backgrounds\n- Primary blue (#0066CC) for highlights\n- Touch-friendly spacing\n\nDimensions: 375x812 pixels (iPhone viewport), portrait orientation...."
+}

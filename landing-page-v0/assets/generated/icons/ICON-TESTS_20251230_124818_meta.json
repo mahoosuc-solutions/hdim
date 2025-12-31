@@ -1,0 +1,9 @@
+{
+  "prompt_id": "ICON-TESTS",
+  "name": "Test Coverage Icon",
+  "category": "icons",
+  "dimensions": "128x128",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a modern icon for Test Coverage/Quality.\n\nDesign: A checkmark inside a circle, with a small sparkle/star accent suggesting\nexcellence and completeness.\n\nStyle guidelines:\n- Minimal line art, consistent 2px stroke weight\n- Modern, clean, professional aesthetic\n- Primary color: Deep blue (#0066CC)\n- Accent/highlight: Teal (#00A5B5)\n- Transparent background\n\nDimensions: 128x128 pixels with transparent background...."
+}

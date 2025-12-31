@@ -1,0 +1,9 @@
+{
+  "prompt_id": "VIDEO-OVERVIEW",
+  "name": "Platform Overview Thumbnail",
+  "category": "video",
+  "dimensions": "1920x1080",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a video thumbnail/title card for platform overview.\n\nDesign:\n- Text placeholder for: \"Healthcare Software Built By People Who Care\"\n- Warm image of diverse patients looking healthy\n- Subtle play button overlay\n- HDIM logo\n- Professional, inviting, clickable feel\n\nColors: Deep blue (#0066CC), warm teal (#00A5B5), warm skin tones\n\nDimensions: 1920x1080 pixels, landscape orientation...."
+}

@@ -1,0 +1,9 @@
+{
+  "prompt_id": "ICON-CQL",
+  "name": "CQL Engine Icon",
+  "category": "icons",
+  "dimensions": "128x128",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a modern icon for CQL Engine (Clinical Quality Language).\n\nDesign: A medical cross combined with code brackets < >, suggesting the intersection\nof clinical knowledge and technology.\n\nStyle guidelines:\n- Minimal line art, consistent 2px stroke weight\n- Modern, clean, professional aesthetic\n- Primary color: Deep blue (#0066CC)\n- Accent/highlight: Teal (#00A5B5)\n- Transparent background\n\nDimensions: 128x128 pixels with transparent background...."
+}

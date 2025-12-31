@@ -1,0 +1,9 @@
+{
+  "prompt_id": "VIDEO-DEMO",
+  "name": "Demo Video Title Card",
+  "category": "video",
+  "dimensions": "1920x1080",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a video title card for product demo.\n\nDesign:\n- Text placeholder for: \"See HDIM in Action\"\n- Dashboard screenshot preview\n- HDIM branding\n- Clean, modern, professional\n- Suggests valuable educational content\n- Subtle play button indicator\n\nColors: Deep blue (#0066CC), teal (#00A5B5) accents, white background\n\nDimensions: 1920x1080 pixels, landscape orientation...."
+}

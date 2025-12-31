@@ -1,0 +1,9 @@
+{
+  "prompt_id": "HERO-02",
+  "name": "Hero - Mobile",
+  "category": "hero",
+  "dimensions": "750x1334",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a warm, hopeful healthcare technology hero image optimized for mobile devices.\n\nSame scene as desktop hero, but composed for portrait/mobile orientation. Focus on one\nor two of the patient faces with the digital connection elements visible above/around them.\n\nFeature: A 67-year-old Latina grandmother OR a 42-year-old professional man, looking\nhealthy, happy, and at peace. Subtle digital data visualization elements flow around them.\n\nMood: Optimistic, human-centered, genuine - NOT stock ph..."
+}

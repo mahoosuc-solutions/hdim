@@ -17,11 +17,6 @@ public class CernerFhirClientConfig {
     private final CernerConnectionConfig connectionConfig;
 
     @Bean
-    public FhirContext fhirContext() {
-        return FhirContext.forR4();
-    }
-
-    @Bean
     public IGenericClient cernerFhirClient(FhirContext fhirContext) {
         IGenericClient client = fhirContext.newRestfulGenericClient(connectionConfig.getBaseUrl());
         

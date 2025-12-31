@@ -95,7 +95,7 @@ This document provides a comprehensive analysis of HDIM's current Vercel/web pre
 
 ### HDIM Unique Value Props (Under-Communicated)
 
-1. **27 Specialized Microservices** - Modular, not monolithic
+1. **28 Specialized Microservices** - Modular, not monolithic
 2. **HAPI FHIR 7.x Native** - Latest R4 compliance
 3. **CQL Engine Integration** - Ready for digital HEDIS 2030
 4. **QRDA I/III Export** - Regulatory reporting built-in

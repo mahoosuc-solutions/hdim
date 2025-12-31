@@ -1,4 +1,5 @@
 package com.healthdata.quality.websocket;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ import java.util.Map;
  * Audit Log Format:
  * JSON-structured logs compatible with ELK stack, Splunk, CloudWatch
  */
+@ConditionalOnProperty(name = "websocket.enabled", havingValue = "true", matchIfMissing = true)
 @Component
 @RequiredArgsConstructor
 @Slf4j

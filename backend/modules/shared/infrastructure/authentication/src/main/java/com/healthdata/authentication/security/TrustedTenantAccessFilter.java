@@ -1,10 +1,13 @@
 package com.healthdata.authentication.security;
 
 import com.healthdata.authentication.constants.AuthHeaderConstants;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
@@ -52,7 +55,19 @@ import java.util.Set;
  * @see AuthHeaderConstants#ATTR_TENANT_IDS
  */
 @Slf4j
+@RequiredArgsConstructor
 public class TrustedTenantAccessFilter extends OncePerRequestFilter {
+
+    /**
+     * Metrics registry for collecting tenant isolation metrics.
+     */
+    private final MeterRegistry meterRegistry;
+
+    /**
+     * Metrics counters for tenant isolation.
+     */
+    private Counter tenantViolationCounter;
+    private Counter missingTenantContextCounter;
 
     /**
      * Public endpoints that don't require tenant validation.
@@ -67,6 +82,32 @@ public class TrustedTenantAccessFilter extends OncePerRequestFilter {
         "/api/v1/auth/register",
         "/api/v1/auth/refresh"
     );
+
+    /**
+     * Initialize metrics after construction.
+     */
+    @Override
+    public void afterPropertiesSet() throws ServletException {
+        super.afterPropertiesSet();
+        initializeMetrics();
+    }
+
+    /**
+     * Initialize Micrometer metrics for tenant isolation tracking.
+     */
+    private void initializeMetrics() {
+        tenantViolationCounter = Counter.builder("tenant_violations_total")
+            .description("Total number of tenant isolation violations")
+            .tag("filter", "trusted_tenant_access")
+            .register(meterRegistry);
+
+        missingTenantContextCounter = Counter.builder("missing_tenant_context_total")
+            .description("Total number of requests with missing tenant context")
+            .tag("filter", "trusted_tenant_access")
+            .register(meterRegistry);
+
+        log.info("Metrics initialized for TrustedTenantAccessFilter");
+    }
 
     @Override
     protected void doFilterInternal(
@@ -114,6 +155,7 @@ public class TrustedTenantAccessFilter extends OncePerRequestFilter {
             log.warn("No tenant IDs found in request attributes. User: {}. " +
                      "Ensure TrustedHeaderAuthFilter runs before this filter.",
                 authentication.getName());
+            missingTenantContextCounter.increment();
 
             // In strict mode, deny access. Otherwise, allow controller to handle.
             // For gateway-authenticated requests, missing tenant IDs indicates a problem.
@@ -126,6 +168,7 @@ public class TrustedTenantAccessFilter extends OncePerRequestFilter {
             log.warn("SECURITY: User {} attempted to access unauthorized tenant: {}. " +
                      "Authorized tenants: {}",
                 authentication.getName(), requestedTenantId, allowedTenants);
+            tenantViolationCounter.increment();
 
             sendForbiddenResponse(response,
                 String.format("Access denied to tenant: %s", requestedTenantId));

@@ -1,6 +1,9 @@
 package com.healthdata.authentication.filter;
 
 import com.healthdata.authentication.constants.AuthHeaderConstants;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -72,6 +75,55 @@ public class TrustedHeaderAuthFilter extends OncePerRequestFilter {
     private final TrustedHeaderAuthConfig config;
 
     /**
+     * Metrics registry for collecting authentication metrics.
+     */
+    private final MeterRegistry meterRegistry;
+
+    /**
+     * Metrics counters and timers.
+     */
+    private Counter authSuccessCounter;
+    private Counter authFailureCounter;
+    private Counter hmacValidationFailureCounter;
+    private Timer authLatencyTimer;
+
+    /**
+     * Initialize metrics after construction.
+     */
+    @Override
+    public void afterPropertiesSet() throws ServletException {
+        super.afterPropertiesSet();
+        initializeMetrics();
+    }
+
+    /**
+     * Initialize Micrometer metrics for authentication tracking.
+     */
+    private void initializeMetrics() {
+        authSuccessCounter = Counter.builder("auth_success_total")
+            .description("Total number of successful authentications")
+            .tag("filter", "trusted_header_auth")
+            .register(meterRegistry);
+
+        authFailureCounter = Counter.builder("auth_failure_total")
+            .description("Total number of failed authentications")
+            .tag("filter", "trusted_header_auth")
+            .register(meterRegistry);
+
+        hmacValidationFailureCounter = Counter.builder("hmac_validation_failures_total")
+            .description("Total number of HMAC validation failures")
+            .tag("filter", "trusted_header_auth")
+            .register(meterRegistry);
+
+        authLatencyTimer = Timer.builder("auth_latency")
+            .description("Authentication processing latency in seconds")
+            .tag("filter", "trusted_header_auth")
+            .register(meterRegistry);
+
+        log.info("Metrics initialized for TrustedHeaderAuthFilter");
+    }
+
+    /**
      * Filter internal implementation.
      * Extracts user context from trusted headers and sets authentication in SecurityContext.
      */
@@ -82,6 +134,8 @@ public class TrustedHeaderAuthFilter extends OncePerRequestFilter {
         @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
+        Timer.Sample sample = Timer.start(meterRegistry);
+
         try {
             // Check if request has the validated header from gateway
             String validatedHeader = request.getHeader(AuthHeaderConstants.HEADER_VALIDATED);
@@ -89,9 +143,14 @@ public class TrustedHeaderAuthFilter extends OncePerRequestFilter {
 
             if (validatedHeader != null && isValidSignature(validatedHeader, userId)) {
                 processAuthHeaders(request);
+                authSuccessCounter.increment();
+                sample.stop(authLatencyTimer);
             } else if (validatedHeader != null) {
                 log.warn("Invalid gateway validation signature for request to {}: {}",
                     request.getRequestURI(), maskSignature(validatedHeader));
+                hmacValidationFailureCounter.increment();
+                authFailureCounter.increment();
+                sample.stop(authLatencyTimer);
                 // In strict mode, reject the request
                 if (config.isStrictMode()) {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -103,10 +162,13 @@ public class TrustedHeaderAuthFilter extends OncePerRequestFilter {
                 }
             } else {
                 log.trace("No gateway validation header found, skipping trusted header auth");
+                sample.stop(authLatencyTimer);
             }
 
         } catch (Exception e) {
             log.error("Error processing trusted headers", e);
+            authFailureCounter.increment();
+            sample.stop(authLatencyTimer);
             SecurityContextHolder.clearContext();
         }
 

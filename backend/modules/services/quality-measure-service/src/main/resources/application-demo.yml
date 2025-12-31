@@ -7,9 +7,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5435/quality_db
+    url: jdbc:postgresql://postgres:5432/quality_db
     username: healthdata
-    password: healthdata_password
+    password: demo_password_123
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 5
@@ -17,7 +17,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -30,45 +30,58 @@ spring:
   flyway:
     enabled: false
 
-  # Exclude Kafka auto-configuration for demo
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+  # Kafka configuration for demo
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: quality-measure-demo
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
-  # Use simple cache instead of Redis
-  cache:
-    type: simple
-
-  # Redis configuration (using local Docker)
+  # Redis configuration (using Docker container name)
   data:
     redis:
-      host: localhost
-      port: 6380
+      host: redis
+      port: 6379
       timeout: 2000ms
+
+  cache:
+    type: redis
 
 # JWT Configuration
 jwt:
-  secret: demo_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+  secret: DemoSecretKeyForJWTMustBeAtLeast256BitsLongForHS256Algorithm123456789
   access-token-expiration: 1h
   refresh-token-expiration: 1d
   issuer: healthdata-demo
   audience: healthdata-api-demo
 
-# Service client URLs for demo (localhost)
+# Service client URLs for demo (using Docker container names)
 service:
   cql-engine:
-    base-url: http://localhost:8086
+    base-url: http://cql-engine-service:8081/cql-engine
   fhir:
-    base-url: http://localhost:8085/fhir
+    base-url: http://fhir-service:8085/fhir
   patient:
-    base-url: http://localhost:8084
+    base-url: http://patient-service:8084/patient
 
-# Disable audit for demo
+# Audit configuration
 audit:
+  enabled: true
+
+# Gateway trust auth
+gateway:
+  auth:
+    dev-mode: true
+
+# Disable websocket for demo (avoids Kafka dependency)
+websocket:
   enabled: false
 
 logging:
   level:
     root: INFO
     com.healthdata: DEBUG
-    org.hibernate.SQL: DEBUG
+    org.hibernate.SQL: WARN

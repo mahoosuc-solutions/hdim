@@ -8,9 +8,9 @@ spring:
     name: migration-workflow-service
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:healthdata_migration}
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:migration_db}
     username: ${DB_USER:healthdata}
-    password: ${DB_PASSWORD:healthdata}
+    password: ${DB_PASSWORD:healthdata_password}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -19,7 +19,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:

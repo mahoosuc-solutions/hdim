@@ -1,24 +1,42 @@
 package com.healthdata.ehr.config;
 
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
+import io.micrometer.core.instrument.MeterRegistry;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Bean;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Configuration;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Profile;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.core.annotation.Order;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.web.SecurityFilterChain;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.web.cors.CorsConfiguration;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.web.cors.CorsConfigurationSource;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import io.micrometer.core.instrument.MeterRegistry;
 
 import java.util.List;
+import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * Security configuration for EHR Connector Service.
@@ -50,22 +68,22 @@ public class SecurityConfig {
      * Creates the TrustedHeaderAuthFilter bean.
      */
     @Bean
-    public TrustedHeaderAuthFilter trustedHeaderAuthFilter() {
+    public TrustedHeaderAuthFilter trustedHeaderAuthFilter(MeterRegistry meterRegistry) {
         TrustedHeaderAuthFilter.TrustedHeaderAuthConfig config;
         if (devMode) {
             config = TrustedHeaderAuthFilter.TrustedHeaderAuthConfig.development();
         } else {
             config = TrustedHeaderAuthFilter.TrustedHeaderAuthConfig.production(signingSecret);
         }
-        return new TrustedHeaderAuthFilter(config);
+        return new TrustedHeaderAuthFilter(config, meterRegistry);
     }
 
     /**
      * Creates the TrustedTenantAccessFilter bean.
      */
     @Bean
-    public TrustedTenantAccessFilter trustedTenantAccessFilter() {
-        return new TrustedTenantAccessFilter();
+    public TrustedTenantAccessFilter trustedTenantAccessFilter(MeterRegistry meterRegistry) {
+        return new TrustedTenantAccessFilter(meterRegistry);
     }
 
     /**

@@ -17,7 +17,7 @@ alerting:
 
 # Load rules once and periodically evaluate them
 rule_files:
-  # - "alerts/*.yml"
+  - "rules/*.yml"
 
 # Scrape configurations
 scrape_configs:
@@ -68,11 +68,136 @@ scrape_configs:
           service: 'fhir'
           application: 'hapi-fhir'
 
+  # Patient Service
+  - job_name: 'patient-service'
+    metrics_path: '/patient/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['patient-service:8084']
+        labels:
+          service: 'patient'
+
+  # Care Gap Service
+  - job_name: 'care-gap-service'
+    metrics_path: '/care-gap/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['care-gap-service:8086']
+        labels:
+          service: 'care-gap'
+
+  # Prior Auth Service
+  - job_name: 'prior-auth-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['prior-auth-service:8102']
+        labels:
+          service: 'prior-auth'
+
+  # Migration Workflow Service
+  - job_name: 'migration-workflow-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['migration-workflow-service:8103']
+        labels:
+          service: 'migration-workflow'
+
+  # QRDA Export Service
+  - job_name: 'qrda-export-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['qrda-export-service:8104']
+        labels:
+          service: 'qrda-export'
+
+  # HCC Service
+  - job_name: 'hcc-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['hcc-service:8105']
+        labels:
+          service: 'hcc'
+
+  # Sales Automation Service
+  - job_name: 'sales-automation-service'
+    metrics_path: '/sales-automation/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['sales-automation-service:8106']
+        labels:
+          service: 'sales-automation'
+
+  # SDOH Service
+  - job_name: 'sdoh-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['sdoh-service:8094']
+        labels:
+          service: 'sdoh'
+
+  # EHR Connector Service
+  - job_name: 'ehr-connector-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['ehr-connector-service:8095']
+        labels:
+          service: 'ehr-connector'
+
+  # ECR Service
+  - job_name: 'ecr-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['ecr-service:8101']
+        labels:
+          service: 'ecr'
+
+  # Consent Service
+  - job_name: 'consent-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['consent-service:8088']
+        labels:
+          service: 'consent'
+
+  # Event Processing Service
+  - job_name: 'event-processing-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['event-processing-service:8089']
+        labels:
+          service: 'event-processing'
+
+  # Notification Service
+  - job_name: 'notification-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['notification-service:8090']
+        labels:
+          service: 'notification'
+
+  # Gateway Service
+  - job_name: 'gateway-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['gateway-service:8001']
+        labels:
+          service: 'gateway'
+
   # PostgreSQL Exporter (if deployed)
   - job_name: 'postgres'
     static_configs:
       - targets: []
-        # - 'postgres-exporter:9187'
         labels:
           service: 'database'
           database: 'postgresql'
@@ -81,7 +206,6 @@ scrape_configs:
   - job_name: 'redis'
     static_configs:
       - targets: []
-        # - 'redis-exporter:9121'
         labels:
           service: 'cache'
           cache: 'redis'
@@ -90,7 +214,6 @@ scrape_configs:
   - job_name: 'kafka'
     static_configs:
       - targets: []
-        # - 'kafka-exporter:9308'
         labels:
           service: 'messaging'
           messaging: 'kafka'

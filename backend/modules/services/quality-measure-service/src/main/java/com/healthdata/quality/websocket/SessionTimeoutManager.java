@@ -1,4 +1,5 @@
 package com.healthdata.quality.websocket;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * - Gracefully closes connections with appropriate status code
  * - Triggers audit logging on timeout
  */
+@ConditionalOnProperty(name = "websocket.enabled", havingValue = "true", matchIfMissing = true)
 @Component
 @RequiredArgsConstructor
 @Slf4j

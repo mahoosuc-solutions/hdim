@@ -214,17 +214,438 @@ docker compose --profile care-gap up care-gap-service
 
 ## Testing
 
+### Overview
+
+Care Gap Service has comprehensive test coverage across 6 test types:
+
+| Test Type | Files | Focus Area |
+|-----------|-------|------------|
+| Unit Tests | 5+ | Service layer, entity validation, business logic |
+| Integration Tests | 4+ | Repository operations, API endpoints |
+| Multi-Tenant Tests | 4+ | Tenant data isolation (HIPAA compliance) |
+| RBAC Tests | 1+ | Role-based access control |
+| Kafka Event Tests | 2+ | Event publishing verification |
+| Performance Tests | 1+ | Query latency, batch operations |
+
+### Quick Start
+
 ```bash
-# Unit tests
+# Run all tests
 ./gradlew :modules:services:care-gap-service:test
 
+# Run specific test suite
+./gradlew :modules:services:care-gap-service:test --tests "*ServiceTest"
+./gradlew :modules:services:care-gap-service:test --tests "*IntegrationTest"
+./gradlew :modules:services:care-gap-service:test --tests "*MultiTenant*"
+
+# Run with coverage
+./gradlew :modules:services:care-gap-service:test jacocoTestReport
+
+# View coverage report
+open build/reports/jacoco/test/html/index.html
+```
+
+### Test Organization
+
+```
+src/test/java/com/healthdata/caregap/
+├── config/
+│   ├── BaseIntegrationTest.java           # TestContainers annotation
+│   ├── TestCacheConfiguration.java        # In-memory cache for tests
+│   └── CareGapSecurityConfigTest.java     # Security configuration tests
+├── service/
+│   ├── CareGapIdentificationServiceTest.java  # Gap identification logic (605 lines)
+│   └── CareGapReportServiceTest.java          # Reporting logic
+├── controller/
+│   ├── CareGapControllerTest.java             # Unit tests with mocks
+│   └── CareGapControllerIntegrationTest.java  # Full API tests
+├── persistence/
+│   ├── CareGapEntityTest.java                 # Entity validation
+│   ├── CareGapRecommendationEntityTest.java   # Recommendation entity
+│   └── CareGapClosureEntityTest.java          # Closure tracking
+└── integration/
+    ├── CareGapRepositoryIntegrationTest.java  # Repository queries (445 lines)
+    ├── CareGapClosureRepositoryIntegrationTest.java
+    └── CareGapRecommendationRepositoryIntegrationTest.java
+```
+
+### Unit Tests (Service Layer)
+
+Tests care gap identification, closure, and statistics with mocked dependencies:
+
+```java
+@ExtendWith(MockitoExtension.class)
+@DisplayName("Care Gap Identification Service Tests")
+class CareGapIdentificationServiceTest {
+
+    @Mock
+    private CareGapRepository careGapRepository;
+
+    @Mock
+    private CqlEngineServiceClient cqlEngineServiceClient;
+
+    @Mock
+    private KafkaTemplate<String, String> kafkaTemplate;
+
+    @Captor
+    private ArgumentCaptor<CareGapEntity> gapCaptor;
+
+    @InjectMocks
+    private CareGapIdentificationService service;
+
+    private static final String TENANT_ID = "tenant-123";
+    private static final UUID PATIENT_UUID = UUID.randomUUID();
+
+    @Nested
+    @DisplayName("Identify Care Gaps for Library Tests")
+    class IdentifyGapsForLibraryTests {
+
+        @Test
+        @DisplayName("Should create gap when CQL indicates hasGap=true")
+        void shouldCreateGapWhenHasGapTrue() {
+            // Given - CQL evaluation result
+            String cqlResult = """
+                {"hasGap":true,"measureId":"HEDIS_CDC_A1C",
+                 "measureName":"Diabetes A1C Control","priority":"high",
+                 "gapDescription":"A1C test not performed"}""";
+            when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(), isNull()))
+                .thenReturn(cqlResult);
+            when(careGapRepository.save(any(CareGapEntity.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+            // When
+            List<CareGapEntity> gaps = service.identifyCareGapsForLibrary(
+                TENANT_ID, PATIENT_UUID, "HEDIS_CDC_A1C", "test-user");
+
+            // Then
+            assertThat(gaps).hasSize(1);
+            verify(careGapRepository).save(gapCaptor.capture());
+            CareGapEntity savedGap = gapCaptor.getValue();
+            assertThat(savedGap.getMeasureId()).isEqualTo("HEDIS_CDC_A1C");
+            assertThat(savedGap.getPriority()).isEqualTo("high");
+            assertThat(savedGap.getGapDescription()).isEqualTo("A1C test not performed");
+        }
+
+        @Test
+        @DisplayName("Should not create gap when inNumerator=true")
+        void shouldNotCreateGapWhenInNumerator() {
+            // Given - Patient meets measure criteria
+            when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(), isNull()))
+                .thenReturn("{\"inNumerator\":true,\"measureId\":\"CMS130\"}");
+
+            // When
+            List<CareGapEntity> gaps = service.identifyCareGapsForLibrary(
+                TENANT_ID, PATIENT_UUID, "CMS_COLORECTAL", "test-user");
+
+            // Then - No gap created
+            assertThat(gaps).isEmpty();
+            verify(careGapRepository, never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("Close Care Gap Tests")
+    class CloseCareGapTests {
+
+        @Test
+        @DisplayName("Should close care gap and publish event")
+        void shouldCloseCareGapSuccessfully() {
+            // Given
+            UUID gapId = UUID.randomUUID();
+            CareGapEntity existingGap = CareGapEntity.builder()
+                .id(gapId)
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_UUID)
+                .measureId("CDC_A1C")
+                .gapStatus("open")
+                .build();
+
+            when(careGapRepository.findByIdAndTenantId(gapId, TENANT_ID))
+                .thenReturn(Optional.of(existingGap));
+            when(careGapRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(kafkaTemplate.send(anyString(), anyString()))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+            // When
+            CareGapEntity closedGap = service.closeCareGap(
+                TENANT_ID, gapId, "clinician-1", "A1C test performed", "Lab order completed");
+
+            // Then
+            assertThat(closedGap.getGapStatus()).isEqualTo("CLOSED");
+            assertThat(closedGap.getClosedBy()).isEqualTo("clinician-1");
+            assertThat(closedGap.getClosedDate()).isNotNull();
+
+            // Verify Kafka event
+            verify(kafkaTemplate).send(eq("care-gap-closed"), anyString());
+        }
+    }
+}
+```
+
+### Integration Tests (Repository Layer)
+
+Tests database operations with real PostgreSQL via TestContainers:
+
+```java
+@BaseIntegrationTest
+@DisplayName("CareGapRepository Integration Tests")
+class CareGapRepositoryIntegrationTest {
+
+    @Autowired
+    private CareGapRepository careGapRepository;
+
+    private static final String TENANT_ID = "test-tenant";
+    private static final String OTHER_TENANT = "other-tenant";
+    private static final UUID PATIENT_ID = UUID.randomUUID();
+
+    @Nested
+    @DisplayName("Status-Based Queries")
+    class StatusBasedQueryTests {
+
+        @Test
+        @DisplayName("Should find open care gaps for patient")
+        void shouldFindOpenGaps() {
+            // Given - setup open and closed gaps
+            CareGapEntity openGap = createCareGap(TENANT_ID, PATIENT_ID, "HEDIS_CDC", "OPEN");
+            CareGapEntity closedGap = createCareGap(TENANT_ID, PATIENT_ID, "HEDIS_BCS", "CLOSED");
+            careGapRepository.saveAll(List.of(openGap, closedGap));
+
+            // When
+            List<CareGapEntity> openGaps = careGapRepository.findOpenGapsByPatient(TENANT_ID, PATIENT_ID);
+
+            // Then
+            assertThat(openGaps).hasSize(1);
+            assertThat(openGaps).allMatch(g -> g.getGapStatus().equals("OPEN"));
+        }
+
+        @Test
+        @DisplayName("Should find high priority open gaps")
+        void shouldFindHighPriorityOpenGaps() {
+            // Given
+            CareGapEntity highPriority = createCareGap(TENANT_ID, PATIENT_ID, "CRITICAL", "OPEN");
+            highPriority.setPriority("high");
+            careGapRepository.save(highPriority);
+
+            // When
+            List<CareGapEntity> gaps = careGapRepository.findHighPriorityOpenGaps(TENANT_ID, PATIENT_ID);
+
+            // Then
+            assertThat(gaps).allMatch(g -> g.getPriority().equals("high"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Date-Based Queries")
+    class DateBasedQueryTests {
+
+        @Test
+        @DisplayName("Should find overdue care gaps")
+        void shouldFindOverdueGaps() {
+            // Given - gap with past due date
+            CareGapEntity overdueGap = createCareGap(TENANT_ID, PATIENT_ID, "HEDIS_COL", "OPEN");
+            overdueGap.setDueDate(LocalDate.now().minusDays(7));
+            careGapRepository.save(overdueGap);
+
+            // When
+            List<CareGapEntity> overdueGaps = careGapRepository.findOverdueGaps(TENANT_ID, LocalDate.now());
+
+            // Then
+            assertThat(overdueGaps).isNotEmpty();
+            assertThat(overdueGaps).allMatch(g -> g.getDueDate().isBefore(LocalDate.now()));
+        }
+
+        @Test
+        @DisplayName("Should find gaps due in date range")
+        void shouldFindGapsDueInRange() {
+            LocalDate startDate = LocalDate.now();
+            LocalDate endDate = LocalDate.now().plusDays(45);
+
+            List<CareGapEntity> gaps = careGapRepository.findGapsDueInRange(
+                TENANT_ID, PATIENT_ID, startDate, endDate);
+
+            assertThat(gaps).allMatch(g ->
+                !g.getDueDate().isBefore(startDate) && !g.getDueDate().isAfter(endDate));
+        }
+    }
+
+    private CareGapEntity createCareGap(String tenantId, UUID patientId, String measureId, String status) {
+        return CareGapEntity.builder()
+            .tenantId(tenantId)
+            .patientId(patientId)
+            .measureId(measureId)
+            .gapStatus(status)
+            .priority("medium")
+            .gapCategory("HEDIS")
+            .dueDate(LocalDate.now().plusDays(30))
+            .identifiedDate(Instant.now())
+            .createdBy("test-system")
+            .build();
+    }
+}
+```
+
+### Multi-Tenant Isolation Tests (HIPAA Compliance)
+
+Verifies tenant data isolation at database layer:
+
+```java
+@Nested
+@DisplayName("Multi-Tenant Isolation (HIPAA Compliance)")
+class MultiTenantIsolationTests {
+
+    @Test
+    @DisplayName("Should isolate data between tenants")
+    void shouldIsolateDataBetweenTenants() {
+        // Given - gaps for different tenants with same patient ID
+        CareGapEntity tenant1Gap = createCareGap(TENANT_ID, PATIENT_ID, "HEDIS_CDC", "OPEN");
+        CareGapEntity tenant2Gap = createCareGap(OTHER_TENANT, PATIENT_ID, "HEDIS_CDC", "OPEN");
+        careGapRepository.saveAll(List.of(tenant1Gap, tenant2Gap));
+
+        // When - query each tenant
+        List<CareGapEntity> tenant1Gaps = careGapRepository.findAllOpenGaps(TENANT_ID);
+        List<CareGapEntity> tenant2Gaps = careGapRepository.findAllOpenGaps(OTHER_TENANT);
+
+        // Then - no cross-tenant data leakage
+        assertThat(tenant1Gaps).noneMatch(g -> g.getTenantId().equals(OTHER_TENANT));
+        assertThat(tenant2Gaps).noneMatch(g -> g.getTenantId().equals(TENANT_ID));
+    }
+
+    @Test
+    @DisplayName("Should not allow cross-tenant access via ID query")
+    void shouldNotAllowCrossTenantAccessById() {
+        CareGapEntity gap = createCareGap(TENANT_ID, PATIENT_ID, "HEDIS_CDC", "OPEN");
+        gap = careGapRepository.save(gap);
+
+        // Attempt to access with wrong tenant
+        Optional<CareGapEntity> result = careGapRepository.findByIdAndTenantId(gap.getId(), OTHER_TENANT);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Should count only tenant's own gaps")
+    void shouldCountOnlyTenantOwnGaps() {
+        // Create gaps for both tenants
+        careGapRepository.save(createCareGap(TENANT_ID, PATIENT_ID, "GAP1", "OPEN"));
+        careGapRepository.save(createCareGap(TENANT_ID, PATIENT_ID, "GAP2", "OPEN"));
+        careGapRepository.save(createCareGap(OTHER_TENANT, PATIENT_ID, "GAP3", "OPEN"));
+
+        // Verify counts are isolated
+        long tenant1Count = careGapRepository.countOpenGaps(TENANT_ID, PATIENT_ID);
+        long tenant2Count = careGapRepository.countOpenGaps(OTHER_TENANT, PATIENT_ID);
+
+        assertThat(tenant1Count).isEqualTo(2);
+        assertThat(tenant2Count).isEqualTo(1);
+    }
+}
+```
+
+### Kafka Event Testing
+
+Verifies event publishing for care gap lifecycle:
+
+```java
+@Test
+@DisplayName("Should publish gap identification event")
+void shouldPublishGapIdentificationEvent() {
+    // Given
+    when(cqlEngineServiceClient.evaluateCql(anyString(), anyString(), any(), isNull()))
+        .thenReturn("{\"hasGap\":true,\"measureId\":\"CDC\"}");
+    when(careGapRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    when(kafkaTemplate.send(anyString(), anyString()))
+        .thenReturn(CompletableFuture.completedFuture(null));
+
+    // When
+    service.identifyAllCareGaps(TENANT_ID, PATIENT_UUID, "test-user");
+
+    // Then
+    verify(kafkaTemplate).send(eq("care-gap-identified"), kafkaMessageCaptor.capture());
+    String message = kafkaMessageCaptor.getValue();
+    assertThat(message).contains(TENANT_ID);
+    assertThat(message).contains(PATIENT_UUID.toString());
+}
+
+@Test
+@DisplayName("Should handle Kafka errors gracefully")
+void shouldHandleKafkaErrorsGracefully() {
+    // Given - Kafka unavailable
+    when(kafkaTemplate.send(anyString(), anyString()))
+        .thenThrow(new RuntimeException("Kafka down"));
+
+    // When - should not throw, gap creation should succeed
+    CareGapEntity closedGap = service.closeCareGap(
+        TENANT_ID, gapId, "user", "reason", "action");
+
+    // Then - gap still closed despite Kafka failure
+    assertThat(closedGap.getGapStatus()).isEqualTo("CLOSED");
+}
+```
+
+### Test Configuration
+
+**BaseIntegrationTest annotation** (simplified):
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
+@Import({TestCacheConfiguration.class})
+public @interface BaseIntegrationTest {
+}
+```
+
+**application-test.yml** configuration:
+```yaml
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:16:///healthdata_caregap
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  cache:
+    type: simple  # In-memory cache for tests
+  kafka:
+    bootstrap-servers: ${spring.embedded.kafka.brokers:localhost:9092}
+
+# Disable external service calls in tests
+cql.engine.url: http://localhost:${wiremock.server.port:8081}/cql-engine
+patient.service.url: http://localhost:${wiremock.server.port:8084}/patient
+```
+
+### Best Practices
+
+- **HIPAA Compliance**: All test data uses synthetic patterns (TEST-PATIENT-xxx, TEST-MEASURE-xxx)
+- **Tenant Isolation**: Every test verifies tenantId filtering in queries
+- **Kafka Mocking**: Use `@MockBean KafkaTemplate` for unit tests
+- **CQL Engine Mocking**: Mock CqlEngineServiceClient responses
+- **Date Testing**: Use `LocalDate.now()` relative dates for robust tests
+- **Transactional Rollback**: All integration tests rollback via `@Transactional`
+
+### Troubleshooting
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| TestContainers timeout | Docker not running | Start Docker Desktop |
+| Kafka tests fail | Embedded Kafka not starting | Check spring-kafka-test dependency |
+| Multi-tenant test fails | Missing tenantId filter | Add WHERE clause to repository query |
+| CQL mock not working | Wrong argument matchers | Use `anyString()` or `eq()` consistently |
+| Date query fails | Timezone issues | Use `LocalDate` not `Date` |
+
+### Manual Testing (curl examples)
+
+```bash
 # Identify all care gaps for patient
 curl -X POST http://localhost:8086/care-gap/identify?patient=p123 \
-  -H "X-Tenant-ID: tenant-1"
+  -H "X-Tenant-ID: tenant-1" \
+  -H "X-Auth-User-Id: user-001" \
+  -H "X-Auth-Roles: EVALUATOR"
 
 # Get open care gaps
 curl http://localhost:8086/care-gap/open?patient=p123 \
-  -H "X-Tenant-ID: tenant-1"
+  -H "X-Tenant-ID: tenant-1" \
+  -H "X-Auth-Roles: VIEWER"
 
 # Get high priority gaps
 curl http://localhost:8086/care-gap/high-priority?patient=p123 \
@@ -235,13 +656,15 @@ curl http://localhost:8086/care-gap/overdue?patient=p123 \
   -H "X-Tenant-ID: tenant-1"
 
 # Close a gap
-curl -X POST http://localhost:8086/care-gap/close \
+curl -X POST "http://localhost:8086/care-gap/close?gapId=gap-uuid&closedBy=provider-123" \
   -H "X-Tenant-ID: tenant-1" \
-  -d "gapId=gap-uuid&closedBy=provider-123&closureReason=Screening completed&closureAction=Colonoscopy performed"
+  -H "X-Auth-Roles: ADMIN" \
+  -d "closureReason=Screening completed&closureAction=Colonoscopy performed"
 
 # Get population report
 curl http://localhost:8086/care-gap/population-report \
-  -H "X-Tenant-ID: tenant-1"
+  -H "X-Tenant-ID: tenant-1" \
+  -H "X-Auth-Roles: ANALYST"
 ```
 
 ## Use Cases

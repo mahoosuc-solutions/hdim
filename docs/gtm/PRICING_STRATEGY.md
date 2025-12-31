@@ -31,7 +31,7 @@ HDIM's pricing strategy positions us as the **value leader** in healthcare data 
 **$80/month** (Docker deployment)
 
 **Includes:**
-- Full platform deployment (all 26 services)
+- Full platform deployment (all 28 services)
 - Up to 1,000 patients
 - Community support
 - Documentation access

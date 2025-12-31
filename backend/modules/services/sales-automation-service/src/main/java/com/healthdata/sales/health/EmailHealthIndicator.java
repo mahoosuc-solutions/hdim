@@ -6,13 +6,18 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
-import org.springframework.stereotype.Component;
 
 /**
  * Health indicator for Email/SMTP connectivity.
  * Reports the status of email sending capability.
+ *
+ * Only enabled when spring.mail.username is configured and non-empty.
+ * This prevents the health check from failing in development environments
+ * where SMTP credentials are not available.
+ *
+ * Note: This class is NOT registered as a @Component directly.
+ * It is conditionally registered via EmailHealthConfiguration bean factory.
  */
-@Component("email")
 @RequiredArgsConstructor
 @Slf4j
 public class EmailHealthIndicator implements HealthIndicator {

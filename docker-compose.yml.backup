@@ -1,0 +1,1310 @@
+# HDIM Healthcare Platform - Complete Docker Compose
+# All 26 Backend Services with Profiles (including migration-workflow-service)
+#
+# Usage:
+#   docker compose --profile light up -d     # Infrastructure only (Postgres, Redis) - ~1GB RAM
+#   docker compose --profile core up -d      # Infrastructure + 10 core clinical services
+#   docker compose --profile ai up -d        # Infrastructure + 3 AI services
+#   docker compose --profile analytics up -d # Infrastructure + 3 analytics services
+#   docker compose --profile full up -d      # All 22 services
+#
+# For local CI testing with act runner:
+#   docker compose --profile light up -d     # Start minimal infrastructure
+#   act -j build                             # Run GitHub Actions locally
+
+services:
+  # ============================================
+  # INFRASTRUCTURE SERVICES
+  # ============================================
+
+  postgres:
+    container_name: healthdata-postgres
+    image: postgres:15-alpine
+    profiles: ["light", "core", "ai", "analytics", "full"]
+    environment:
+      POSTGRES_USER: healthdata
+      POSTGRES_PASSWORD: healthdata_password
+      POSTGRES_DB: healthdata_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthdata"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - healthdata-network
+
+  redis:
+    container_name: healthdata-redis
+    image: redis:7-alpine
+    profiles: ["light", "core", "ai", "analytics", "full"]
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - healthdata-network
+
+  # Jaeger - Distributed Tracing Backend
+  # Access UI at http://localhost:16686
+  jaeger:
+    container_name: healthdata-jaeger
+    image: jaegertracing/all-in-one:1.52
+    profiles: ["core", "ai", "analytics", "full"]
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+      - "14250:14250"   # Model used by Jaeger
+      - "6831:6831/udp" # Thrift compact
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - healthdata-network
+
+  zookeeper:
+    container_name: healthdata-zookeeper
+    image: confluentinc/cp-zookeeper:7.5.0
+    profiles: ["core", "ai", "analytics", "full"]
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2182:2181"
+    healthcheck:
+      test: ["CMD-SHELL", "echo srvr | nc localhost 2181 | grep -q Mode"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - healthdata-network
+
+  kafka:
+    container_name: healthdata-kafka
+    image: confluentinc/cp-kafka:7.5.0
+    profiles: ["core", "ai", "analytics", "full"]
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9094
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9094:9092"
+      - "9095:9093"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:29092 --list || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+    networks:
+      - healthdata-network
+
+  # PostgreSQL Backup Service
+  # Runs scheduled backups with configurable retention
+  # Manual backup: docker exec healthdata-backup /usr/local/bin/backup.sh
+  # List backups:  docker exec healthdata-backup /usr/local/bin/restore.sh --list
+  postgres-backup:
+    container_name: healthdata-backup
+    build:
+      context: ./docker/postgres/backup
+      dockerfile: Dockerfile
+    profiles: ["core", "ai", "analytics", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: healthdata
+      PGPASSWORD: healthdata_password
+      BACKUP_RETENTION_DAYS: 7
+      BACKUP_OUTPUT_DIR: /backups
+      BACKUP_CRON: "0 2 * * *"  # Daily at 2 AM
+      BACKUP_ON_STARTUP: "false"
+      # SLACK_WEBHOOK_URL: ""  # Optional: Slack notifications
+      # BACKUP_ENCRYPTION_KEY: ""  # Optional: GPG key for encryption
+    volumes:
+      - postgres_backups:/backups
+    networks:
+      - healthdata-network
+
+  # ============================================
+  # CORE CLINICAL SERVICES (8080-8087)
+  # ============================================
+
+  # Port 8080 - API Gateway
+  gateway-service:
+    container_name: healthdata-gateway-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/gateway-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8080
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # Backend service URLs (include context-path + internal controller path)
+      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir/fhir
+      BACKEND_SERVICES_CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
+      BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087/quality-measure
+      BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084/patient
+      BACKEND_SERVICES_CARE_GAP_URL: http://care-gap-service:8086/care-gap
+      BACKEND_SERVICES_CONSENT_URL: http://consent-service:8082/consent
+      BACKEND_SERVICES_EVENTS_URL: http://event-processing-service:8083/events
+      BACKEND_SERVICES_AGENT_BUILDER_URL: http://agent-builder-service:8096
+      BACKEND_SERVICES_AGENT_RUNTIME_URL: http://agent-runtime-service:8088
+      BACKEND_SERVICES_QRDA_EXPORT_URL: http://qrda-export-service:8104
+      BACKEND_SERVICES_HCC_URL: http://hcc-service:8105
+      BACKEND_SERVICES_ECR_URL: http://ecr-service:8101
+      BACKEND_SERVICES_PRIOR_AUTH_URL: http://prior-auth-service:8102
+      BACKEND_SERVICES_SALES_AUTOMATION_URL: http://sales-automation-service:8106/sales-automation
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8081 - CQL Engine Service
+  cql-engine-service:
+    container_name: healthdata-cql-engine-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/cql-engine-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cql_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8081
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/cql-engine/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8082 - Consent Service
+  consent-service:
+    container_name: healthdata-consent-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/consent-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/consent_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8082
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8082/consent/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8083 - Event Processing Service
+  event-processing-service:
+    container_name: healthdata-event-processing-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/event-processing-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/event_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8083
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8083:8083"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8083/events/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8084 - Patient Service
+  patient-service:
+    container_name: healthdata-patient-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/patient-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patient_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8084
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8084:8084"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8084/patient/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8085 - FHIR Service
+  fhir-service:
+    container_name: healthdata-fhir-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/fhir-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fhir_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8085
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8085/fhir/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8086 - Care Gap Service
+  care-gap-service:
+    container_name: healthdata-care-gap-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/care-gap-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/caregap_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      HEALTHDATA_CACHE_REDIS_HOST: redis
+      HEALTHDATA_CACHE_REDIS_PORT: 6379
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8086
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # OpenTelemetry configuration for Jaeger
+      TRACING_URL: http://jaeger:4318/v1/traces
+    ports:
+      - "8086:8086"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8086/care-gap/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8087 - Quality Measure Service
+  quality-measure-service:
+    container_name: healthdata-quality-measure-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/quality-measure-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/quality_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8087
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8081/cql-engine
+      FHIR_SERVICE_URL: http://fhir-service:8085
+    ports:
+      - "8087:8087"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8087/quality-measure/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================
+  # AI SERVICES (8088, 8090, 8096)
+  # ============================================
+
+  # Port 8088 - Agent Runtime Service
+  agent-runtime-service:
+    container_name: healthdata-agent-runtime-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/agent-runtime-service/Dockerfile
+    profiles: ["ai", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/agent_runtime_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8088
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # LLM Provider Configuration
+      HDIM_AGENT_LLM_DEFAULT_PROVIDER: claude
+      HDIM_AGENT_LLM_PROVIDERS_CLAUDE_ENABLED: "false"
+      HDIM_AGENT_LLM_PROVIDERS_AZURE_OPENAI_ENABLED: "false"
+      HDIM_AGENT_LLM_PROVIDERS_BEDROCK_ENABLED: "false"
+      # Service URLs
+      HDIM_SERVICES_FHIR_URL: http://fhir-service:8085
+      HDIM_SERVICES_CQL_URL: http://cql-engine-service:8081
+      # Security
+      HDIM_AGENT_SECURITY_ENCRYPTION_MASTER_KEY: ${AGENT_ENCRYPTION_KEY:-DefaultAgentEncryptionKeyForDev123456}
+      HDIM_AGENT_SECURITY_ENCRYPTION_SALT: ${AGENT_ENCRYPTION_SALT:-DefaultAgentSaltForDevelopment}
+    ports:
+      - "8088:8088"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8088/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8090 - AI Assistant Service
+  ai-assistant-service:
+    container_name: healthdata-ai-assistant-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/ai-assistant-service/Dockerfile
+    profiles: ["ai", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ai_assistant_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8090
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8090:8090"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8090/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8096 - Agent Builder Service
+  agent-builder-service:
+    container_name: healthdata-agent-builder-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/agent-builder-service/Dockerfile
+    profiles: ["ai", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      agent-runtime-service:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/agent_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SERVER_PORT: 8096
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      HDIM_AGENT_RUNTIME_URL: http://agent-runtime-service:8088
+      HDIM_SERVICES_AGENT_RUNTIME_URL: http://agent-runtime-service:8088
+      HDIM_AGENT_BUILDER_MAX_AGENTS_PER_TENANT: 50
+      HDIM_AGENT_BUILDER_MAX_VERSIONS_PER_AGENT: 100
+      HDIM_AGENT_BUILDER_TEST_TIMEOUT_SECONDS: 60
+    ports:
+      - "8096:8096"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8096/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - healthdata-network
+
+  # ============================================
+  # ANALYTICS SERVICES (8092-8094)
+  # ============================================
+
+  # Port 8092 - Analytics Service
+  analytics-service:
+    container_name: healthdata-analytics-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/analytics-service/Dockerfile
+    profiles: ["analytics", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/analytics_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8092
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8092:8092"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8092/analytics/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8093 - Predictive Analytics Service
+  predictive-analytics-service:
+    container_name: healthdata-predictive-analytics-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/predictive-analytics-service/Dockerfile
+    profiles: ["analytics", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/predictive_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8093
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8093:8093"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8093/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8094 - SDOH Service
+  sdoh-service:
+    container_name: healthdata-sdoh-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/sdoh-service/Dockerfile
+    profiles: ["analytics", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sdoh_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8094
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8094:8094"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8094/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================
+  # DATA PROCESSING SERVICES (8089, 8095, 8099)
+  # ============================================
+
+  # Port 8089 - Data Enrichment Service
+  data-enrichment-service:
+    container_name: healthdata-data-enrichment-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/data-enrichment-service/Dockerfile
+    profiles: ["full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/enrichment_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8089
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8089:8089"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8089/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8095 - Event Router Service
+  event-router-service:
+    container_name: healthdata-event-router-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/event-router-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/event_router_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8095
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8095:8095"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8095/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8099 - CDR Processor Service
+  cdr-processor-service:
+    container_name: healthdata-cdr-processor-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/cdr-processor-service/Dockerfile
+    profiles: ["full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cdr_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8099
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8099:8099"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8099/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================
+  # WORKFLOW SERVICES (8097-8098)
+  # ============================================
+
+  # Port 8097 - Approval Service
+  approval-service:
+    container_name: healthdata-approval-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/approval-service/Dockerfile
+    profiles: ["full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/approval_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8097
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8097:8097"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8097/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8098 - Payer Workflows Service
+  payer-workflows-service:
+    container_name: healthdata-payer-workflows-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/payer-workflows-service/Dockerfile
+    profiles: ["full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payer_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8098
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8098:8098"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8098/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8103 - Migration Workflow Service
+  migration-workflow-service:
+    container_name: healthdata-migration-workflow-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/migration-workflow-service/Dockerfile
+    profiles: ["full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      fhir-service:
+        condition: service_started
+      cdr-processor-service:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/migration_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8103
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # Service URLs
+      FHIR_SERVICE_URL: http://fhir-service:8085
+      CDR_PROCESSOR_SERVICE_URL: http://cdr-processor-service:8099
+    ports:
+      - "8103:8103"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8103/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================
+  # INTEGRATION SERVICES (8100)
+  # ============================================
+
+  # Port 8100 - EHR Connector Service
+  ehr-connector-service:
+    container_name: healthdata-ehr-connector-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/ehr-connector-service/Dockerfile
+    profiles: ["full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ehr_connector_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8100
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8100:8100"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8100/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================
+  # REGULATORY COMPLIANCE SERVICES (8101, 8104, 8105)
+  # ============================================
+
+  # Port 8101 - Electronic Case Reporting Service
+  ecr-service:
+    container_name: healthdata-ecr-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/ecr-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ecr_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      HEALTHDATA_CACHE_REDIS_HOST: redis
+      HEALTHDATA_CACHE_REDIS_PORT: 6379
+      SERVER_PORT: 8101
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      ECR_AIMS_ENABLED: "false"
+      AUDIT_ENABLED: "false"
+      TRACING_URL: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: ecr-service
+      SPRING_DATA_REDIS_TIMEOUT: 10s
+      MANAGEMENT_HEALTH_REDIS_ENABLED: "false"
+    ports:
+      - "8101:8101"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8101/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8104 - QRDA Export Service
+  qrda-export-service:
+    container_name: healthdata-qrda-export-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/qrda-export-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      quality-measure-service:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/qrda_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      HEALTHDATA_CACHE_REDIS_HOST: redis
+      HEALTHDATA_CACHE_REDIS_PORT: 6379
+      SERVER_PORT: 8104
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      AUDIT_ENABLED: "false"
+      QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087
+      FHIR_SERVICE_URL: http://fhir-service:8085
+      TRACING_URL: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: qrda-export-service
+      SPRING_DATA_REDIS_TIMEOUT: 10s
+      MANAGEMENT_HEALTH_REDIS_ENABLED: "false"
+    ports:
+      - "8104:8104"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8104/qrda-export/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8105 - HCC Risk Adjustment Service
+  hcc-service:
+    container_name: healthdata-hcc-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/hcc-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hcc_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      HEALTHDATA_CACHE_REDIS_HOST: redis
+      HEALTHDATA_CACHE_REDIS_PORT: 6379
+      SERVER_PORT: 8105
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      AUDIT_ENABLED: "false"
+      HCC_MODEL_V24_WEIGHT: "0.33"
+      HCC_MODEL_V28_WEIGHT: "0.67"
+      FHIR_SERVICE_URL: http://fhir-service:8085
+      TRACING_URL: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: hcc-service
+      SPRING_DATA_REDIS_TIMEOUT: 10s
+      MANAGEMENT_HEALTH_REDIS_ENABLED: "false"
+    ports:
+      - "8105:8105"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8105/hcc/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8102 - Prior Authorization Service
+  prior-auth-service:
+    container_name: healthdata-prior-auth-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/prior-auth-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/prior_auth_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      # HDIM Persistence Module Configuration
+      HEALTHDATA_PERSISTENCE_PRIMARY_URL: jdbc:postgresql://postgres:5432/prior_auth_db
+      HEALTHDATA_PERSISTENCE_PRIMARY_USERNAME: healthdata
+      HEALTHDATA_PERSISTENCE_PRIMARY_PASSWORD: healthdata_password
+      HEALTHDATA_PERSISTENCE_PRIMARY_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      HEALTHDATA_CACHE_REDIS_HOST: redis
+      HEALTHDATA_CACHE_REDIS_PORT: 6379
+      SERVER_PORT: 8102
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      HEALTHDATA_SECURITY_JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      AUDIT_ENABLED: "false"
+      # OpenTelemetry configuration for Jaeger
+      TRACING_URL: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: prior-auth-service
+      SPRING_DATA_REDIS_TIMEOUT: 10s
+      MANAGEMENT_HEALTH_REDIS_ENABLED: "false"
+    ports:
+      - "8102:8102"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8102/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================
+  # SALES & CRM SERVICES (8106)
+  # ============================================
+
+  # Port 8106 - Sales Automation Service
+  sales-automation-service:
+    container_name: healthdata-sales-automation-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/sales-automation-service/Dockerfile
+    profiles: ["full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sales_automation_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8106
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # Zoho CRM Integration
+      ZOHO_CLIENT_ID: ${ZOHO_CLIENT_ID:-}
+      ZOHO_CLIENT_SECRET: ${ZOHO_CLIENT_SECRET:-}
+      ZOHO_REFRESH_TOKEN: ${ZOHO_REFRESH_TOKEN:-}
+      ZOHO_SYNC_ENABLED: ${ZOHO_SYNC_ENABLED:-false}
+      ZOHO_WEBHOOK_ENABLED: ${ZOHO_WEBHOOK_ENABLED:-false}
+      ZOHO_WEBHOOK_SECRET: ${ZOHO_WEBHOOK_SECRET:-}
+      # OpenTelemetry configuration for Jaeger
+      TRACING_URL: http://jaeger:4318/v1/traces
+    ports:
+      - "8106:8106"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8106/sales-automation/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================
+  # SUPPORT SERVICES (8091)
+  # ============================================
+
+  # Port 8091 - Documentation Service
+  documentation-service:
+    container_name: healthdata-documentation-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/documentation-service/Dockerfile
+    profiles: ["full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/docs_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8091
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    ports:
+      - "8091:8091"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8091/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8107 - Notification Service
+  notification-service:
+    container_name: healthdata-notification-service
+    build:
+      context: ./backend
+      dockerfile: modules/services/notification-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notification_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8107
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      TRACING_URL: http://jaeger:4318/v1/traces
+      NOTIFICATION_EMAIL_ENABLED: "true"
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+    ports:
+      - "8107:8107"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8107/notification/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================
+  # FRONTEND SERVICE
+  # ============================================
+
+  clinical-portal:
+    container_name: healthdata-clinical-portal
+    build:
+      context: .
+      dockerfile: apps/clinical-portal/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      - gateway-service
+    environment:
+      API_URL: http://gateway-service:8080
+    ports:
+      - "4200:80"
+    networks:
+      - healthdata-network
+
+networks:
+  healthdata-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  postgres_backups:

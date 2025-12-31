@@ -1,4 +1,5 @@
 package com.healthdata.quality.websocket;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -35,6 +36,7 @@ import java.util.Map;
  * URL Format:
  * ws://...?tenantId=TENANT001  (+ Authorization: Bearer <token> with tenantId claim)
  */
+@ConditionalOnProperty(name = "websocket.enabled", havingValue = "true", matchIfMissing = true)
 @Component
 @Slf4j
 public class TenantAccessInterceptor implements HandshakeInterceptor {

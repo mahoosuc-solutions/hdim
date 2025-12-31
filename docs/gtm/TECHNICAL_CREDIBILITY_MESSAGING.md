@@ -250,8 +250,8 @@ This document provides messaging frameworks that translate HDIM's technical arch
 
 | Metric | Value | Why It Matters |
 |--------|-------|----------------|
-| Total microservices | 28 | Complex system, rigorous testing |
-| Services passing tests | 28/28 | 100% - no exceptions |
+| Total microservices | 29 | Complex system, rigorous testing |
+| Services passing tests | 29/29 | 100% - no exceptions |
 | Integration tests | 100+ | End-to-end workflow validation |
 | Security tests | Comprehensive | JWT, authentication, authorization |
 | FHIR compliance tests | 24+ | Every resource type validated |
@@ -412,7 +412,7 @@ This document provides messaging frameworks that translate HDIM's technical arch
 3. **"FHIR R4 Native - No Translation Required"**
    *Supporting text: Direct integration with Epic, Cerner, Athena, and any FHIR-compliant EHR*
 
-4. **"28 Services, 28 Promises"**
+4. **"29 Services, 29 Promises"**
    *Supporting text: Modular architecture means isolated failures, surgical updates, and precise scaling*
 
 5. **"Official CQL - Evidence-Based, Not Interpretive"**

@@ -3,8 +3,8 @@ package com.healthdata.caregap.config;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import com.healthdata.authentication.filter.JwtAuthenticationFilter;
-import com.healthdata.authentication.security.TenantAccessFilter;
+import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
+import com.healthdata.authentication.security.TrustedTenantAccessFilter;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -51,26 +51,17 @@ class CareGapSecurityConfigTest {
     }
 
     @Test
-    @DisplayName("Should build production security filter chain without tenant filter")
-    void shouldBuildProductionChainWithoutTenantFilter() throws Exception {
+    @DisplayName("Should build production security filter chain with gateway trust filters")
+    void shouldBuildProductionChainWithGatewayTrustFilters() throws Exception {
         CareGapSecurityConfig config = new CareGapSecurityConfig();
-        JwtAuthenticationFilter jwt = mock(JwtAuthenticationFilter.class);
+        TrustedHeaderAuthFilter trustedHeaderFilter = mock(TrustedHeaderAuthFilter.class);
+        TrustedTenantAccessFilter trustedTenantFilter = mock(TrustedTenantAccessFilter.class);
 
-        SecurityFilterChain chain = config.securityFilterChain(httpSecurity(), jwt);
-
-        assertThat(chain).isNotNull();
-    }
-
-    @Test
-    @DisplayName("Should build production security filter chain with tenant filter")
-    void shouldBuildProductionChainWithTenantFilter() throws Exception {
-        CareGapSecurityConfig config = new CareGapSecurityConfig();
-        TenantAccessFilter tenantFilter = mock(TenantAccessFilter.class);
-        JwtAuthenticationFilter jwt = mock(JwtAuthenticationFilter.class);
-
-        org.springframework.test.util.ReflectionTestUtils.setField(config, "tenantAccessFilter", tenantFilter);
-
-        SecurityFilterChain chain = config.securityFilterChain(httpSecurity(), jwt);
+        SecurityFilterChain chain = config.securityFilterChain(
+            httpSecurity(),
+            trustedHeaderFilter,
+            trustedTenantFilter
+        );
 
         assertThat(chain).isNotNull();
     }

@@ -237,6 +237,11 @@ export class AuthService {
    */
   getTenantId(): string | null {
     const user = this.currentUserSubject.value;
+    // Use tenantIds array from gateway (UUIDs) if available
+    if (user?.tenantIds && user.tenantIds.length > 0) {
+      return user.tenantIds[0];  // Use first tenant UUID
+    }
+    // Fallback to tenantId for backward compatibility
     return user?.tenantId || null;
   }
 
@@ -458,6 +463,7 @@ export interface User {
   fullName: string;
   roles: Role[];
   tenantId?: string;
+  tenantIds?: string[];  // Tenant UUID array from gateway
   active: boolean;
   createdAt?: string;
   lastLogin?: string;

@@ -103,6 +103,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      fhir-service:
+        condition: service_healthy
+      patient-service:
+        condition: service_healthy
+      quality-measure-service:
+        condition: service_healthy
+      care-gap-service:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: 8080
@@ -115,6 +123,12 @@ services:
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       JAVA_OPTS: "-Xmx256m -Xms128m"
+      # Backend service URLs (using Docker service names and correct ports)
+      # Note: Include service context paths so gateway routing works correctly
+      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir
+      BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084/patient
+      BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087/quality-measure
+      BACKEND_SERVICES_CARE_GAP_URL: http://care-gap-service:8086/care-gap
     ports:
       - "8080:8080"
     healthcheck:

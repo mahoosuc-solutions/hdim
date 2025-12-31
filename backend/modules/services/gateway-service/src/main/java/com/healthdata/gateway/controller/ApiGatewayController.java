@@ -384,8 +384,11 @@ public class ApiGatewayController {
             Enumeration<String> headerNames = request.getHeaderNames();
             while (headerNames.hasMoreElements()) {
                 String headerName = headerNames.nextElement();
-                // Forward important headers including user identity for Pattern 3 services
-                if (headerName.equalsIgnoreCase("Authorization") ||
+                // Forward important headers including:
+                // - X-Auth-* headers injected by GatewayAuthenticationFilter (user identity)
+                // - Standard headers for routing and content negotiation
+                if (headerName.startsWith("X-Auth-") ||
+                    headerName.equalsIgnoreCase("Authorization") ||
                     headerName.equalsIgnoreCase("X-Tenant-ID") ||
                     headerName.equalsIgnoreCase("X-User-ID") ||
                     headerName.equalsIgnoreCase("Content-Type") ||

@@ -42,7 +42,7 @@
 hdim-master/
 ├── backend/
 │   ├── modules/
-│   │   ├── services/           # 27 microservices
+│   │   ├── services/           # 28 microservices
 │   │   │   ├── quality-measure-service/   # Core - HEDIS measures
 │   │   │   ├── cql-engine-service/        # Core - CQL evaluation
 │   │   │   ├── fhir-service/              # Core - FHIR R4 resources
@@ -345,6 +345,68 @@ throw new TenantAccessDeniedException(tenantId);
 
 ---
 
+## Gateway Trust Authentication Architecture
+
+**IMPORTANT**: Backend services use gateway-trust authentication, NOT direct JWT validation.
+
+### Architecture Overview
+```
+Client → Gateway (validates JWT) → Backend Service (trusts headers)
+```
+
+The gateway validates JWT tokens and injects trusted `X-Auth-*` headers. Backend services trust these headers rather than re-validating JWT or performing database lookups.
+
+### Key Components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `TrustedHeaderAuthFilter` | shared/authentication | Validates gateway headers, sets SecurityContext |
+| `TrustedTenantAccessFilter` | shared/authentication | Validates tenant access from attributes (no DB) |
+| `GatewayAuthenticationFilter` | gateway-service | Validates JWT, injects trusted headers |
+
+### Headers Injected by Gateway
+
+| Header | Description |
+|--------|-------------|
+| `X-Auth-User-Id` | User's UUID |
+| `X-Auth-Username` | User's login name |
+| `X-Auth-Tenant-Ids` | Comma-separated authorized tenants |
+| `X-Auth-Roles` | Comma-separated roles |
+| `X-Auth-Validated` | HMAC signature proving gateway origin |
+
+### When Modifying Service Security
+
+**DO NOT** use `JwtAuthenticationFilter` + `TenantAccessFilter` (performs DB lookup).
+
+**DO** use `TrustedHeaderAuthFilter` + `TrustedTenantAccessFilter` (trusts gateway headers).
+
+```java
+// CORRECT - Gateway Trust Pattern
+@Bean
+public SecurityFilterChain securityFilterChain(
+        HttpSecurity http,
+        TrustedHeaderAuthFilter trustedHeaderAuthFilter,
+        TrustedTenantAccessFilter trustedTenantAccessFilter) {
+    http.addFilterBefore(trustedHeaderAuthFilter, UsernamePasswordAuthenticationFilter.class);
+    http.addFilterAfter(trustedTenantAccessFilter, TrustedHeaderAuthFilter.class);
+    return http.build();
+}
+```
+
+### Configuration
+
+```yaml
+# docker-compose.yml
+environment:
+  GATEWAY_AUTH_DEV_MODE: "true"          # Development: skip HMAC validation
+  GATEWAY_AUTH_SIGNING_SECRET: ${SECRET} # Production: HMAC secret
+```
+
+### Documentation
+- Full details: `backend/docs/GATEWAY_TRUST_ARCHITECTURE.md`
+
+---
+
 ## FHIR R4 Guidelines
 
 ### Resource Handling
@@ -484,12 +546,18 @@ KAFKA_BOOTSTRAP_SERVERS=localhost:9094
 - `docs/DEPLOYMENT_RUNBOOK.md` - Deployment procedures
 - `00_IMPLEMENTATION_OVERVIEW.md` - Documentation portal status
 
+### Architecture Documentation
+- `docs/architecture/SYSTEM_ARCHITECTURE.md` - Complete system architecture with 28 services
+- `docs/architecture/decisions/` - Technology ADRs (HAPI FHIR, Kafka, PostgreSQL, Redis, Kong)
+- `docs/TERMINOLOGY_GLOSSARY.md` - Single source of truth for terminology
+- `backend/docs/GATEWAY_TRUST_ARCHITECTURE.md` - Authentication architecture (gold standard)
+
 ---
 
 ## Build Notes
 
 ### Build Status
-- ✅ All 27 services compile successfully (verified December 2025)
+- ✅ All 28 services compile successfully (verified December 2025)
 - ✅ agent-runtime-service: 84 tests passing
 - ✅ agent-builder-service: Build successful
 
@@ -527,13 +595,15 @@ Before submitting code, verify:
 
 ## Getting Help
 
-- **Architecture questions**: See `DISTRIBUTION_ARCHITECTURE.md`
+- **System architecture**: See `docs/architecture/SYSTEM_ARCHITECTURE.md`
+- **Technology decisions**: See `docs/architecture/decisions/` (ADRs)
+- **Terminology**: See `docs/TERMINOLOGY_GLOSSARY.md`
 - **API design**: See `BACKEND_API_SPECIFICATION.md`
 - **Security/HIPAA**: See `docs/PRODUCTION_SECURITY_GUIDE.md`
+- **Authentication**: See `backend/docs/GATEWAY_TRUST_ARCHITECTURE.md`
 - **Deployment**: See `docs/DEPLOYMENT_RUNBOOK.md`
-- **Authentication**: See `AUTHENTICATION_GUIDE.md`
 
 ---
 
-*Last Updated: December 27, 2025*
-*Version: 1.0*
+*Last Updated: December 31, 2025*
+*Version: 1.1*

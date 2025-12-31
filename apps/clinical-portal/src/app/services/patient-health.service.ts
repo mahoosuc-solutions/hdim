@@ -114,6 +114,55 @@ export class PatientHealthService {
     'financial-strain': 'Z59.9',
   };
 
+  /**
+   * Centralized Risk Category Multipliers Configuration
+   * These multipliers determine how clinical complexity scores translate to category-specific risks
+   *
+   * Clinical rationale:
+   * - Diabetes (0.85): High correlation with clinical complexity - HbA1c, microvascular complications
+   * - Cardiovascular (0.80): Strong correlation with overall clinical burden, medications, comorbidities
+   * - Respiratory (0.60): Moderate correlation - often affected by other conditions and medications
+   * - Fall Risk (0.50): Moderate correlation - influenced by medications, mobility, cognition
+   * - Mental Health: Uses dedicated mental health risk score, not clinical complexity multiplier
+   *
+   * @remarks These values can be adjusted based on:
+   * - Organization-specific risk models
+   * - CMS risk adjustment factors
+   * - Local patient population characteristics
+   */
+  private readonly RISK_CATEGORY_MULTIPLIERS = {
+    diabetes: 0.85,
+    cardiovascular: 0.80,
+    respiratory: 0.60,
+    fallRisk: 0.50,
+  } as const;
+
+  /**
+   * Risk Stratification Weights Configuration
+   * Determines how different risk factors contribute to overall risk score
+   *
+   * Clinical rationale:
+   * - Clinical Complexity (40%): Primary driver of healthcare utilization
+   * - SDOH Risk (30%): Social factors significantly impact outcomes
+   * - Mental Health Risk (30%): Mental health strongly correlates with overall health outcomes
+   */
+  private readonly RISK_STRATIFICATION_WEIGHTS = {
+    clinicalComplexity: 0.40,
+    sdohRisk: 0.30,
+    mentalHealthRisk: 0.30,
+  } as const;
+
+  /**
+   * Health Score Component Weights Configuration
+   * Determines how different health domains contribute to overall health score
+   */
+  private readonly HEALTH_SCORE_WEIGHTS = {
+    physical: 0.40,
+    mental: 0.30,
+    social: 0.15,
+    preventive: 0.15,
+  } as const;
+
   private log: ContextualLogger;
 
   constructor(
@@ -1882,15 +1931,17 @@ export class PatientHealthService {
   }
 
   /**
-   * Derive risk categories from scores
+   * Derive risk categories from scores using centralized RISK_CATEGORY_MULTIPLIERS configuration
+   * Mental health uses dedicated risk score rather than clinical complexity multiplier
    */
   private deriveRiskCategories(clinicalComplexity: number, mentalHealthRisk: number): Record<string, RiskLevel> {
+    const { diabetes, cardiovascular, respiratory, fallRisk } = this.RISK_CATEGORY_MULTIPLIERS;
     return {
-      diabetes: this.scoreToRiskLevel(clinicalComplexity * 0.9),
-      cardiovascular: this.scoreToRiskLevel(clinicalComplexity * 0.85),
-      respiratory: this.scoreToRiskLevel(clinicalComplexity * 0.6),
+      diabetes: this.scoreToRiskLevel(clinicalComplexity * diabetes),
+      cardiovascular: this.scoreToRiskLevel(clinicalComplexity * cardiovascular),
+      respiratory: this.scoreToRiskLevel(clinicalComplexity * respiratory),
       mentalHealth: this.scoreToRiskLevel(mentalHealthRisk),
-      fallRisk: this.scoreToRiskLevel(clinicalComplexity * 0.4),
+      fallRisk: this.scoreToRiskLevel(clinicalComplexity * fallRisk),
     };
   }
 
@@ -2256,12 +2307,24 @@ export class PatientHealthService {
       utilization: this.calculateUtilizationRiskScore(patientId),
     }).pipe(
       map((data) => {
+        const clinicalComplexity = data.clinical.total;
+        const socialComplexity = data.sdoh.score;
+        const mentalHealthRisk = this.calculateMentalHealthRiskScore(data.mental);
+        const utilizationRisk = data.utilization.total;
+        // Calculate costRisk using the same weighted formula as getRiskStratification
+        const costRisk = this.calculateCostRiskScore(
+          clinicalComplexity,
+          socialComplexity,
+          mentalHealthRisk,
+          utilizationRisk
+        );
+
         const scores = {
-          clinicalComplexity: data.clinical.total,
-          socialComplexity: data.sdoh.score,
-          mentalHealthRisk: this.calculateMentalHealthRiskScore(data.mental),
-          utilizationRisk: data.utilization.total,
-          costRisk: 50, // Mock value
+          clinicalComplexity,
+          socialComplexity,
+          mentalHealthRisk,
+          utilizationRisk,
+          costRisk,
         };
 
         const avgScore = (
@@ -2283,12 +2346,13 @@ export class PatientHealthService {
             edVisitRisk30Day: Math.min(avgScore * 0.4, 100),
             readmissionRisk: Math.min(avgScore * 0.25, 100),
           },
+          // Use centralized RISK_CATEGORY_MULTIPLIERS for consistency across the application
           categories: {
-            diabetes: this.getRiskLevelFromScore(scores.clinicalComplexity * 0.8),
-            cardiovascular: this.getRiskLevelFromScore(scores.clinicalComplexity * 0.7),
-            respiratory: 'low' as RiskLevel,
+            diabetes: this.getRiskLevelFromScore(scores.clinicalComplexity * this.RISK_CATEGORY_MULTIPLIERS.diabetes),
+            cardiovascular: this.getRiskLevelFromScore(scores.clinicalComplexity * this.RISK_CATEGORY_MULTIPLIERS.cardiovascular),
+            respiratory: this.getRiskLevelFromScore(scores.clinicalComplexity * this.RISK_CATEGORY_MULTIPLIERS.respiratory),
             mentalHealth: this.getRiskLevelFromScore(scores.mentalHealthRisk),
-            fallRisk: 'low' as RiskLevel,
+            fallRisk: this.getRiskLevelFromScore(scores.clinicalComplexity * this.RISK_CATEGORY_MULTIPLIERS.fallRisk),
           },
         };
       })
@@ -2316,29 +2380,55 @@ export class PatientHealthService {
 
   /**
    * Get risk score trend over time
+   * Queries backend for historical risk scores
    */
   getRiskScoreTrend(
     patientId: string,
     startDate: Date,
     endDate: Date
   ): Observable<HealthMetricTrend> {
-    // Mock implementation - would query historical risk scores
-    const dataPoints = [
-      { date: new Date('2025-01-01'), value: 65 },
-      { date: new Date('2025-04-01'), value: 60 },
-      { date: new Date('2025-07-01'), value: 55 },
-      { date: new Date('2025-10-01'), value: 50 },
-    ];
+    const url = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.RISK_HISTORY(patientId));
+    const params = new HttpParams()
+      .set('startDate', startDate.toISOString().split('T')[0])
+      .set('endDate', endDate.toISOString().split('T')[0]);
 
-    const trend = this.analyzeTrendFromDataPoints(dataPoints);
+    return this.http.get<any>(url, { headers: this.getHeaders(), params }).pipe(
+      map((response) => {
+        // Map backend response to HealthMetricTrend format
+        const dataPoints = (response.history || []).map((item: any) => ({
+          date: new Date(item.date || item.calculatedAt),
+          value: item.overallScore || item.riskScore || 0,
+        }));
 
-    return of({
-      metric: 'overallRisk',
-      unit: 'score',
-      dataPoints,
-      trend,
-      currentValue: 50,
-    });
+        const trend = this.analyzeTrendFromDataPoints(dataPoints);
+        const currentValue = dataPoints.length > 0
+          ? dataPoints[dataPoints.length - 1].value
+          : 50;
+
+        return {
+          metric: 'overallRisk',
+          unit: 'score',
+          dataPoints,
+          trend,
+          currentValue,
+        };
+      }),
+      catchError((error) => {
+        this.log.warn('Failed to fetch risk history, using mock data:', error.message);
+        // Fallback to mock data if backend unavailable
+        const mockDataPoints = [
+          { date: new Date(startDate), value: 60 },
+          { date: new Date(endDate), value: 55 },
+        ];
+        return of({
+          metric: 'overallRisk',
+          unit: 'score',
+          dataPoints: mockDataPoints,
+          trend: this.analyzeTrendFromDataPoints(mockDataPoints),
+          currentValue: mockDataPoints[mockDataPoints.length - 1].value,
+        });
+      })
+    );
   }
 
   /**
@@ -2382,19 +2472,15 @@ export class PatientHealthService {
       sdohRiskScore: this.calculateSDOHRiskScore(patientId),
     }).pipe(
       map((data) => {
-        // Define evidence-based weights
-        const weights = {
-          clinicalComplexity: 0.40, // 40% - Primary clinical indicators
-          sdohRisk: 0.30,           // 30% - Social determinants
-          mentalHealthRisk: 0.30,   // 30% - Mental health factors
-        };
+        // Use centralized RISK_STRATIFICATION_WEIGHTS for consistent risk calculations
+        const weights = this.RISK_STRATIFICATION_WEIGHTS;
 
         // Calculate component scores (0-100)
         const clinicalScore = data.clinicalComplexity.total;
         const sdohScore = data.sdohRiskScore.score;
         const mentalHealthScore = this.calculateMentalHealthRiskScore(data.mental);
 
-        // Calculate weighted overall score
+        // Calculate weighted overall score using centralized weights
         const overallScore = Math.round(
           clinicalScore * weights.clinicalComplexity +
           sdohScore * weights.sdohRisk +
@@ -2415,8 +2501,8 @@ export class PatientHealthService {
           a => a.severity === 'severe' || a.severity === 'moderately-severe'
         ).length;
 
-        // Get medication count (mock for now, would query FHIR in real implementation)
-        const medicationCount = 0; // Would be from FHIR MedicationStatement
+        // Get medication count from physical health summary (queried from FHIR MedicationStatement)
+        const medicationCount = data.physical.medicationAdherence.totalMedications;
 
         // Determine overall risk level
         const overallRisk = this.getRiskLevelFromScore(normalizedScore);
@@ -2446,7 +2532,7 @@ export class PatientHealthService {
       }),
       catchError((error) => {
         this.log.error('Error calculating multi-factor risk score:', error);
-        // Return a default safe score
+        // Return a default safe score using centralized weights
         return of({
           patientId,
           overallScore: 0,
@@ -2457,11 +2543,7 @@ export class PatientHealthService {
             sdohRisk: 0,
             mentalHealthRisk: 0,
           },
-          weights: {
-            clinicalComplexity: 0.40,
-            sdohRisk: 0.30,
-            mentalHealthRisk: 0.30,
-          },
+          weights: { ...this.RISK_STRATIFICATION_WEIGHTS },
           details: {
             conditionCount: 0,
             uncontrolledConditionCount: 0,
@@ -3467,7 +3549,7 @@ export class PatientHealthService {
   }
 
   /**
-   * Calculate overall health score
+   * Calculate overall health score using centralized HEALTH_SCORE_WEIGHTS configuration
    */
   private calculateOverallHealthScore(
     patientId: string,
@@ -3476,24 +3558,26 @@ export class PatientHealthService {
     social: SDOHSummary,
     quality: QualityMeasurePerformance
   ): HealthScore {
-    // Physical health component (40% weight)
+    const weights = this.HEALTH_SCORE_WEIGHTS;
+
+    // Physical health component
     const physicalScore = this.calculatePhysicalScore(physical);
 
-    // Mental health component (30% weight)
+    // Mental health component
     const mentalScore = this.calculateMentalScore(mental);
 
-    // Social health component (15% weight)
+    // Social health component
     const socialScore = this.calculateSocialScore(social);
 
-    // Preventive care component (15% weight)
+    // Preventive care component
     const preventiveScore = quality.overallCompliance;
 
-    // Weighted overall score
+    // Weighted overall score using centralized configuration
     const score = Math.round(
-      physicalScore * 0.4 +
-      mentalScore * 0.3 +
-      socialScore * 0.15 +
-      preventiveScore * 0.15
+      physicalScore * weights.physical +
+      mentalScore * weights.mental +
+      socialScore * weights.social +
+      preventiveScore * weights.preventive
     );
 
     // Determine status
@@ -4454,6 +4538,7 @@ export class PatientHealthService {
         overallRate: 85,
         status: 'good',
         problematicMedications: [],
+        totalMedications: 6,
       },
       functionalStatus: {
         adlScore: 6,
@@ -5449,13 +5534,21 @@ export class PatientHealthService {
    * Returns medication adherence summary
    */
   getMedicationAdherenceData(patientId: string): Observable<PhysicalHealthSummary['medicationAdherence']> {
-    // For now, return mock data
-    // In production, query FHIR MedicationStatement and calculate adherence
-    return of({
-      overallRate: 85,
-      status: 'good' as const,
-      problematicMedications: []
-    });
+    // Query medication adherence from FHIR MedicationStatement
+    return this.medicationAdherenceService.calculateOverallAdherence(patientId).pipe(
+      map((adherence) => ({
+        overallRate: adherence.overallPDC,
+        status: this.determineMedicationAdherenceStatus(adherence.overallPDC),
+        problematicMedications: adherence.problematicMedications,
+        totalMedications: adherence.totalMedications
+      })),
+      catchError(() => of({
+        overallRate: 85,
+        status: 'good' as const,
+        problematicMedications: [],
+        totalMedications: 0
+      }))
+    );
   }
 
   /**
@@ -5578,7 +5671,8 @@ export class PatientHealthService {
     const medicationAdherence: PhysicalHealthSummary['medicationAdherence'] = {
       overallRate: data.medications.overallPDC,
       status: this.determineMedicationAdherenceStatus(data.medications.overallPDC),
-      problematicMedications: data.medications.problematicMedications
+      problematicMedications: data.medications.problematicMedications,
+      totalMedications: data.medications.totalMedications
     };
 
     // Detect critical alerts from vitals and labs

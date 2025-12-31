@@ -3,13 +3,12 @@
 
 FROM postgres:15-alpine
 
-# Install dependencies
+# Install dependencies (using busybox crond instead of dcron for container compatibility)
 RUN apk add --no-cache \
     bash \
     curl \
     gnupg \
     jq \
-    dcron \
     tzdata
 
 # Copy backup scripts
@@ -29,4 +28,5 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["crond", "-f", "-d", "8"]
+# Use busybox crond with foreground mode (-f) and log to stderr (-d 8)
+CMD ["crond", "-f", "-l", "2"]

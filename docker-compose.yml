@@ -19,6 +19,7 @@ services:
 
   postgres:
     container_name: healthdata-postgres
+    restart: unless-stopped
     image: postgres:15-alpine
     profiles: ["light", "core", "ai", "analytics", "full"]
     environment:
@@ -40,6 +41,7 @@ services:
 
   redis:
     container_name: healthdata-redis
+    restart: unless-stopped
     image: redis:7-alpine
     profiles: ["light", "core", "ai", "analytics", "full"]
     ports:
@@ -56,6 +58,7 @@ services:
   # Access UI at http://localhost:16686
   jaeger:
     container_name: healthdata-jaeger
+    restart: unless-stopped
     image: jaegertracing/all-in-one:1.52
     profiles: ["core", "ai", "analytics", "full"]
     environment:
@@ -76,6 +79,7 @@ services:
 
   zookeeper:
     container_name: healthdata-zookeeper
+    restart: unless-stopped
     image: confluentinc/cp-zookeeper:7.5.0
     profiles: ["core", "ai", "analytics", "full"]
     environment:
@@ -93,6 +97,7 @@ services:
 
   kafka:
     container_name: healthdata-kafka
+    restart: unless-stopped
     image: confluentinc/cp-kafka:7.5.0
     profiles: ["core", "ai", "analytics", "full"]
     depends_on:
@@ -124,6 +129,7 @@ services:
   # List backups:  docker exec healthdata-backup /usr/local/bin/restore.sh --list
   postgres-backup:
     container_name: healthdata-backup
+    restart: unless-stopped
     build:
       context: ./docker/postgres/backup
       dockerfile: Dockerfile
@@ -154,6 +160,7 @@ services:
   # Port 8080 - API Gateway
   gateway-service:
     container_name: healthdata-gateway-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/gateway-service/Dockerfile
@@ -203,6 +210,7 @@ services:
   # Port 8081 - CQL Engine Service
   cql-engine-service:
     container_name: healthdata-cql-engine-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/cql-engine-service/Dockerfile
@@ -222,6 +230,9 @@ services:
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
     ports:
       - "8081:8081"
     healthcheck:
@@ -236,6 +247,7 @@ services:
   # Port 8082 - Consent Service
   consent-service:
     container_name: healthdata-consent-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/consent-service/Dockerfile
@@ -255,6 +267,9 @@ services:
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
     ports:
       - "8082:8082"
     healthcheck:
@@ -269,6 +284,7 @@ services:
   # Port 8083 - Event Processing Service
   event-processing-service:
     container_name: healthdata-event-processing-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/event-processing-service/Dockerfile
@@ -288,6 +304,9 @@ services:
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
     ports:
       - "8083:8083"
     healthcheck:
@@ -302,6 +321,7 @@ services:
   # Port 8084 - Patient Service
   patient-service:
     container_name: healthdata-patient-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/patient-service/Dockerfile
@@ -321,6 +341,9 @@ services:
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
     ports:
       - "8084:8084"
     healthcheck:
@@ -335,6 +358,7 @@ services:
   # Port 8085 - FHIR Service
   fhir-service:
     container_name: healthdata-fhir-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/fhir-service/Dockerfile
@@ -354,6 +378,9 @@ services:
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
     ports:
       - "8085:8085"
     healthcheck:
@@ -368,6 +395,7 @@ services:
   # Port 8086 - Care Gap Service
   care-gap-service:
     container_name: healthdata-care-gap-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/care-gap-service/Dockerfile
@@ -395,6 +423,9 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       # OpenTelemetry configuration for Jaeger
       TRACING_URL: http://jaeger:4318/v1/traces
+      # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
     ports:
       - "8086:8086"
     healthcheck:
@@ -409,6 +440,7 @@ services:
   # Port 8087 - Quality Measure Service
   quality-measure-service:
     container_name: healthdata-quality-measure-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/quality-measure-service/Dockerfile
@@ -434,6 +466,9 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8081/cql-engine
       FHIR_SERVICE_URL: http://fhir-service:8085
+      # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
     ports:
       - "8087:8087"
     healthcheck:
@@ -452,6 +487,7 @@ services:
   # Port 8088 - Agent Runtime Service
   agent-runtime-service:
     container_name: healthdata-agent-runtime-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/agent-runtime-service/Dockerfile
@@ -500,6 +536,7 @@ services:
   # Port 8090 - AI Assistant Service
   ai-assistant-service:
     container_name: healthdata-ai-assistant-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/ai-assistant-service/Dockerfile
@@ -537,6 +574,7 @@ services:
   # Port 8096 - Agent Builder Service
   agent-builder-service:
     container_name: healthdata-agent-builder-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/agent-builder-service/Dockerfile
@@ -582,6 +620,7 @@ services:
   # Port 8092 - Analytics Service
   analytics-service:
     container_name: healthdata-analytics-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/analytics-service/Dockerfile
@@ -619,6 +658,7 @@ services:
   # Port 8093 - Predictive Analytics Service
   predictive-analytics-service:
     container_name: healthdata-predictive-analytics-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/predictive-analytics-service/Dockerfile
@@ -656,6 +696,7 @@ services:
   # Port 8094 - SDOH Service
   sdoh-service:
     container_name: healthdata-sdoh-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/sdoh-service/Dockerfile
@@ -697,6 +738,7 @@ services:
   # Port 8089 - Data Enrichment Service
   data-enrichment-service:
     container_name: healthdata-data-enrichment-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/data-enrichment-service/Dockerfile
@@ -730,6 +772,7 @@ services:
   # Port 8095 - Event Router Service
   event-router-service:
     container_name: healthdata-event-router-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/event-router-service/Dockerfile
@@ -763,6 +806,7 @@ services:
   # Port 8099 - CDR Processor Service
   cdr-processor-service:
     container_name: healthdata-cdr-processor-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/cdr-processor-service/Dockerfile
@@ -800,6 +844,7 @@ services:
   # Port 8097 - Approval Service
   approval-service:
     container_name: healthdata-approval-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/approval-service/Dockerfile
@@ -837,6 +882,7 @@ services:
   # Port 8098 - Payer Workflows Service
   payer-workflows-service:
     container_name: healthdata-payer-workflows-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/payer-workflows-service/Dockerfile
@@ -874,6 +920,7 @@ services:
   # Port 8103 - Migration Workflow Service
   migration-workflow-service:
     container_name: healthdata-migration-workflow-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/migration-workflow-service/Dockerfile
@@ -894,6 +941,12 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/migration_db
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: healthdata_password
+      # Migration Workflow service requires these for application.yml defaults
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: migration_db
+      DB_USER: healthdata
+      DB_PASSWORD: healthdata_password
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
@@ -922,6 +975,7 @@ services:
   # Port 8100 - EHR Connector Service
   ehr-connector-service:
     container_name: healthdata-ehr-connector-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/ehr-connector-service/Dockerfile
@@ -963,6 +1017,7 @@ services:
   # Port 8101 - Electronic Case Reporting Service
   ecr-service:
     container_name: healthdata-ecr-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/ecr-service/Dockerfile
@@ -996,6 +1051,9 @@ services:
       OTEL_SERVICE_NAME: ecr-service
       SPRING_DATA_REDIS_TIMEOUT: 10s
       MANAGEMENT_HEALTH_REDIS_ENABLED: "false"
+      # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
     ports:
       - "8101:8101"
     healthcheck:
@@ -1010,6 +1068,7 @@ services:
   # Port 8104 - QRDA Export Service
   qrda-export-service:
     container_name: healthdata-qrda-export-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/qrda-export-service/Dockerfile
@@ -1042,6 +1101,9 @@ services:
       OTEL_SERVICE_NAME: qrda-export-service
       SPRING_DATA_REDIS_TIMEOUT: 10s
       MANAGEMENT_HEALTH_REDIS_ENABLED: "false"
+      # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
     ports:
       - "8104:8104"
     healthcheck:
@@ -1056,6 +1118,7 @@ services:
   # Port 8105 - HCC Risk Adjustment Service
   hcc-service:
     container_name: healthdata-hcc-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/hcc-service/Dockerfile
@@ -1090,6 +1153,9 @@ services:
       OTEL_SERVICE_NAME: hcc-service
       SPRING_DATA_REDIS_TIMEOUT: 10s
       MANAGEMENT_HEALTH_REDIS_ENABLED: "false"
+      # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
     ports:
       - "8105:8105"
     healthcheck:
@@ -1104,6 +1170,7 @@ services:
   # Port 8102 - Prior Authorization Service
   prior-auth-service:
     container_name: healthdata-prior-auth-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/prior-auth-service/Dockerfile
@@ -1161,6 +1228,7 @@ services:
   # Port 8106 - Sales Automation Service
   sales-automation-service:
     container_name: healthdata-sales-automation-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/sales-automation-service/Dockerfile
@@ -1193,6 +1261,9 @@ services:
       ZOHO_WEBHOOK_SECRET: ${ZOHO_WEBHOOK_SECRET:-}
       # OpenTelemetry configuration for Jaeger
       TRACING_URL: http://jaeger:4318/v1/traces
+      # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
     ports:
       - "8106:8106"
     healthcheck:
@@ -1211,6 +1282,7 @@ services:
   # Port 8091 - Documentation Service
   documentation-service:
     container_name: healthdata-documentation-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/documentation-service/Dockerfile
@@ -1244,6 +1316,7 @@ services:
   # Port 8107 - Notification Service
   notification-service:
     container_name: healthdata-notification-service
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: modules/services/notification-service/Dockerfile
@@ -1271,6 +1344,9 @@ services:
       NOTIFICATION_EMAIL_ENABLED: "true"
       SMTP_HOST: mailhog
       SMTP_PORT: 1025
+      # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
     ports:
       - "8107:8107"
     healthcheck:
@@ -1288,10 +1364,11 @@ services:
 
   clinical-portal:
     container_name: healthdata-clinical-portal
+    restart: unless-stopped
     build:
       context: .
       dockerfile: apps/clinical-portal/Dockerfile
-    profiles: ["core", "full"]
+    profiles: ["full"]  # Removed from core - requires build
     depends_on:
       - gateway-service
     environment:

@@ -11,9 +11,9 @@
 #   Jaeger Tracing: http://localhost:16686
 #
 # Demo Users:
-#   demo_admin@hdim.ai / Demo123!    (ADMIN)
-#   demo_analyst@hdim.ai / Demo123!  (ANALYST)
-#   demo_viewer@hdim.ai / Demo123!   (VIEWER)
+#   demo_admin@hdim.ai / TestPassword123!    (ADMIN, EVALUATOR)
+#   demo_analyst@hdim.ai / TestPassword123!  (ANALYST, EVALUATOR)
+#   demo_viewer@hdim.ai / TestPassword123!   (VIEWER)
 
 services:
   postgres:

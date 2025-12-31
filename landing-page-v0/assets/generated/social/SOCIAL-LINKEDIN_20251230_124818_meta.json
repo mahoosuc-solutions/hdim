@@ -1,0 +1,9 @@
+{
+  "prompt_id": "SOCIAL-LINKEDIN",
+  "name": "LinkedIn Post Template",
+  "category": "social",
+  "dimensions": "1200x627",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a template for LinkedIn posts with HDIM branding.\n\nDesign:\n- HDIM brand colors (blue #0066CC/teal #00A5B5)\n- Space for headline text (left 60%)\n- Circular image placeholder (right 40%)\n- Subtle geometric patterns in background\n- HDIM logo watermark bottom right\n- Clean, professional, modern feel\n\nDimensions: 1200x627 pixels, landscape orientation...."
+}

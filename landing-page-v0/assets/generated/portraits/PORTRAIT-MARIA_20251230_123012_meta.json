@@ -1,0 +1,9 @@
+{
+  "prompt_id": "PORTRAIT-MARIA",
+  "name": "Maria - Diabetes Patient",
+  "category": "portraits",
+  "dimensions": "800x1000",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_123012",
+  "prompt": "Create a warm, genuine portrait photograph of a 67-year-old Latina grandmother named Maria.\n\nSubject: Maria looks healthy, vibrant, and grateful. She has kind eyes, silver-streaked\ndark hair, and a gentle, authentic smile. She wears comfortable everyday clothing -\nperhaps a cardigan over a blouse.\n\nSetting: Soft focus background suggesting a warm home kitchen with family photos visible,\nor a garden setting with flowers.\n\nMood: Hope, gratitude, family love, resilience.\nLighting: Warm, natural win..."
+}

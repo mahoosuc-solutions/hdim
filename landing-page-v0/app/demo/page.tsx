@@ -493,8 +493,123 @@ export default function DemoPage() {
             </div>
           )}
 
+          {/* Technical Implementation Section */}
+          <div className="mt-16 mb-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+              Technical Implementation
+            </h2>
+            <p className="text-gray-600 text-center mb-8 max-w-2xl mx-auto">
+              HDIM is built on enterprise-grade open source technologies, designed for HIPAA compliance and healthcare-scale performance.
+            </p>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-blue-50 p-6 rounded-xl">
+                <h3 className="font-semibold text-lg text-gray-900 mb-4">Architecture</h3>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start">
+                    <span className="font-medium w-28 flex-shrink-0">Backend:</span>
+                    <span>28 Spring Boot 3.x microservices (Java 21 LTS)</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium w-28 flex-shrink-0">Frontend:</span>
+                    <span>Angular 17+ with RxJS state management</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium w-28 flex-shrink-0">FHIR:</span>
+                    <span>HAPI FHIR 7.x (FHIR R4 certified)</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium w-28 flex-shrink-0">CQL Engine:</span>
+                    <span>Native CQL execution (no proprietary translation)</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium w-28 flex-shrink-0">Database:</span>
+                    <span>PostgreSQL 15 with multi-tenant isolation</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium w-28 flex-shrink-0">Cache:</span>
+                    <span>Redis 7 (5-minute PHI TTL for HIPAA)</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium w-28 flex-shrink-0">Messaging:</span>
+                    <span>Apache Kafka 3.x for event streaming</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium w-28 flex-shrink-0">Gateway:</span>
+                    <span>Kong API Gateway with JWT validation</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-green-50 p-6 rounded-xl">
+                <h3 className="font-semibold text-lg text-gray-900 mb-4">Performance Benchmarks</h3>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start">
+                    <span className="font-medium w-32 flex-shrink-0">FHIR Queries:</span>
+                    <span>&lt;200ms p95 latency</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium w-32 flex-shrink-0">CQL Execution:</span>
+                    <span>~500ms avg per patient per measure</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium w-32 flex-shrink-0">Throughput:</span>
+                    <span>200+ evaluations/sec per tenant</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium w-32 flex-shrink-0">Cache Hit Rate:</span>
+                    <span>&gt;85% for repeat queries</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium w-32 flex-shrink-0">API Gateway:</span>
+                    <span>&lt;10ms authentication overhead</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium w-32 flex-shrink-0">Uptime SLA:</span>
+                    <span>99.9% (excluding maintenance)</span>
+                  </li>
+                </ul>
+                <div className="mt-4 pt-4 border-t border-green-200">
+                  <p className="text-xs text-gray-500">
+                    Benchmarks from production load testing with 10,000 patients, 56 HEDIS measures, 1,000 concurrent users (December 2024).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Security & Compliance */}
+            <div className="mt-6 bg-purple-50 p-6 rounded-xl">
+              <h3 className="font-semibold text-lg text-gray-900 mb-4">Security & Compliance</h3>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div>
+                  <h4 className="font-medium text-gray-800 mb-2">Authentication</h4>
+                  <ul className="text-sm text-gray-700 space-y-1">
+                    <li>• Gateway Trust model with HMAC-signed headers</li>
+                    <li>• OAuth 2.0 / JWT token validation</li>
+                    <li>• Role-based access control (RBAC)</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-800 mb-2">HIPAA Controls</h4>
+                  <ul className="text-sm text-gray-700 space-y-1">
+                    <li>• AES-256 encryption at rest</li>
+                    <li>• TLS 1.3 encryption in transit</li>
+                    <li>• 5-minute PHI cache TTL (enforced)</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-800 mb-2">Audit & Isolation</h4>
+                  <ul className="text-sm text-gray-700 space-y-1">
+                    <li>• Complete PHI access audit trail</li>
+                    <li>• Multi-tenant row-level isolation</li>
+                    <li>• Tenant-namespaced cache keys</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* FAQ Section */}
-          <div className="mt-16 bg-white rounded-xl p-8 shadow-sm">
+          <div className="bg-white rounded-xl p-8 shadow-sm">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
               Demo FAQ
             </h2>

@@ -65,12 +65,12 @@ export default function PortalNav() {
 
           {/* CTA Button */}
           <div className="hidden md:block">
-            <a
-              href="mailto:sales@hdim.io"
+            <Link
+              href="/schedule"
               className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Contact Sales
-            </a>
+              Schedule Demo
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -106,12 +106,12 @@ export default function PortalNav() {
                 </Link>
               )
             })}
-            <a
-              href="mailto:sales@hdim.io"
+            <Link
+              href="/schedule"
               className="block w-full text-center px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg mt-2"
             >
-              Contact Sales
-            </a>
+              Schedule Demo
+            </Link>
           </div>
         </div>
       )}

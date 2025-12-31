@@ -9,13 +9,17 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://hdim-landing-page.vercel.app'),
   title: 'HDIM - Close Care Gaps 40% Faster | Healthcare Quality Platform',
   description: 'The FHIR-native platform for HEDIS excellence. Automate quality measure evaluation, detect care gaps, and improve Star Ratings with AI-powered healthcare interoperability.',
   keywords: 'HEDIS, FHIR, healthcare interoperability, care gaps, quality measures, CQL, value-based care, Star Ratings, Medicare Advantage',
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     title: 'HDIM - Healthcare Quality Measurement Platform',
     description: 'Close care gaps 40% faster with AI-powered quality measure evaluation.',
-    url: 'https://hdim.io',
+    url: 'https://hdim-landing-page.vercel.app',
     siteName: 'HDIM',
     images: [
       {

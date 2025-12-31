@@ -99,10 +99,27 @@ public class AuthController {
         log.info("Login attempt for user: {}", loginRequest.getUsername());
 
         try {
+            // Resolve username: if input is email, look up the actual username
+            String authUsername = loginRequest.getUsername();
+            
+            // Check if input looks like an email (contains @)
+            if (authUsername.contains("@")) {
+                log.debug("Email-based login detected, resolving to username");
+                // Try to find user by email and use their username for authentication
+                Optional<User> userByEmail = userRepository.findByEmail(authUsername);
+                if (userByEmail.isPresent()) {
+                    authUsername = userByEmail.get().getUsername();
+                    log.debug("Resolved email {} to username {}", loginRequest.getUsername(), authUsername);
+                } else {
+                    log.warn("Email not found: {}", authUsername);
+                    // Let authentication fail naturally below
+                }
+            }
+
             // Authenticate using Spring Security's AuthenticationManager
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                    loginRequest.getUsername(),
+                    authUsername,
                     loginRequest.getPassword()
                 )
             );

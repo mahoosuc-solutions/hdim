@@ -62,8 +62,8 @@ jwt:
   secret: ${JWT_SECRET:}
   accessTokenExpirationMs: ${JWT_ACCESS_EXPIRATION:900000}  # 15 minutes
   refreshTokenExpirationMs: ${JWT_REFRESH_EXPIRATION:604800000}  # 7 days
-  issuer: ${JWT_ISSUER:healthdata-gateway}
-  audience: ${JWT_AUDIENCE:healthdata-services}
+  issuer: ${JWT_ISSUER:healthdata-in-motion}
+  audience: ${JWT_AUDIENCE:healthdata-api}
 
 # Backend Service URLs
 backend:

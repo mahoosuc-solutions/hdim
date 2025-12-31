@@ -3,8 +3,8 @@ package com.healthdata.quality.config;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import com.healthdata.authentication.filter.JwtAuthenticationFilter;
-import com.healthdata.authentication.security.TenantAccessFilter;
+import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
+import com.healthdata.authentication.security.TrustedTenantAccessFilter;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +19,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -55,25 +54,17 @@ class QualityMeasureSecurityConfigTest {
     }
 
     @Test
-    @DisplayName("Should build production security filter chain without tenant filter")
-    void shouldBuildProductionSecurityFilterChainWithoutTenantFilter() throws Exception {
+    @DisplayName("Should build production security filter chain with gateway trust filters")
+    void shouldBuildProductionSecurityFilterChainWithGatewayTrustFilters() throws Exception {
         QualityMeasureSecurityConfig config = new QualityMeasureSecurityConfig();
-        JwtAuthenticationFilter jwtAuthenticationFilter = mock(JwtAuthenticationFilter.class);
+        TrustedHeaderAuthFilter trustedHeaderFilter = mock(TrustedHeaderAuthFilter.class);
+        TrustedTenantAccessFilter trustedTenantFilter = mock(TrustedTenantAccessFilter.class);
 
-        SecurityFilterChain chain = config.securityFilterChain(httpSecurity(), jwtAuthenticationFilter);
-
-        assertThat(chain).isNotNull();
-    }
-
-    @Test
-    @DisplayName("Should build production security filter chain with tenant filter")
-    void shouldBuildProductionSecurityFilterChainWithTenantFilter() throws Exception {
-        QualityMeasureSecurityConfig config = new QualityMeasureSecurityConfig();
-        JwtAuthenticationFilter jwtAuthenticationFilter = mock(JwtAuthenticationFilter.class);
-        TenantAccessFilter tenantAccessFilter = mock(TenantAccessFilter.class);
-        ReflectionTestUtils.setField(config, "tenantAccessFilter", tenantAccessFilter);
-
-        SecurityFilterChain chain = config.securityFilterChain(httpSecurity(), jwtAuthenticationFilter);
+        SecurityFilterChain chain = config.securityFilterChain(
+            httpSecurity(),
+            trustedHeaderFilter,
+            trustedTenantFilter
+        );
 
         assertThat(chain).isNotNull();
     }

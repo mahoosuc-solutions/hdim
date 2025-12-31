@@ -1,8 +1,8 @@
 package com.healthdata.consent.config;
 
-import com.healthdata.authentication.filter.JwtAuthenticationFilter;
-import com.healthdata.authentication.security.TenantAccessFilter;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
+import com.healthdata.authentication.security.TrustedTenantAccessFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -23,16 +23,26 @@ import java.util.Arrays;
  *
  * Provides security configuration for different profiles:
  * - Test: Permits all requests without authentication
- * - Docker/Dev/Prod: JWT-based authentication via JwtAuthenticationFilter
+ * - Docker/Dev/Prod: Gateway-trust authentication via TrustedHeaderAuthFilter
  *
- * SECURITY: TenantAccessFilter is enabled to enforce multi-tenant isolation.
+ * SECURITY ARCHITECTURE:
+ * This service trusts gateway-injected headers for authentication.
+ * The gateway validates JWT tokens and injects X-Auth-* headers with user context.
+ * Backend services do NOT re-validate JWT or perform database lookups for users.
+ *
  * This prevents CVE-INTERNAL-2025-001 (Complete Bypass of Tenant Isolation)
+ *
+ * @see TrustedHeaderAuthFilter
+ * @see TrustedTenantAccessFilter
  */
 @Configuration
 public class ConsentSecurityConfig {
 
-    @Autowired(required = false)
-    private TenantAccessFilter tenantAccessFilter;
+    @Value("${gateway.auth.signing-secret:}")
+    private String signingSecret;
+
+    @Value("${gateway.auth.dev-mode:true}")
+    private boolean devMode;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -50,6 +60,30 @@ public class ConsentSecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    /**
+     * Creates the TrustedHeaderAuthFilter bean.
+     */
+    @Bean
+    @Profile("!test")
+    public TrustedHeaderAuthFilter trustedHeaderAuthFilter() {
+        TrustedHeaderAuthFilter.TrustedHeaderAuthConfig config;
+        if (devMode) {
+            config = TrustedHeaderAuthFilter.TrustedHeaderAuthConfig.development();
+        } else {
+            config = TrustedHeaderAuthFilter.TrustedHeaderAuthConfig.production(signingSecret);
+        }
+        return new TrustedHeaderAuthFilter(config);
+    }
+
+    /**
+     * Creates the TrustedTenantAccessFilter bean.
+     */
+    @Bean
+    @Profile("!test")
+    public TrustedTenantAccessFilter trustedTenantAccessFilter() {
+        return new TrustedTenantAccessFilter();
     }
 
     /**
@@ -72,12 +106,18 @@ public class ConsentSecurityConfig {
 
     /**
      * Production security filter chain for docker/dev/prod profiles.
-     * Uses JWT-based authentication with stateless sessions.
+     * Uses gateway-trust authentication with stateless sessions.
+     *
+     * SECURITY: This service trusts gateway-injected X-Auth-* headers.
+     * It does NOT validate JWT tokens directly - that's the gateway's job.
      */
     @Bean
     @Profile("!test")
     @Order(2)
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            TrustedHeaderAuthFilter trustedHeaderAuthFilter,
+            TrustedTenantAccessFilter trustedTenantAccessFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
@@ -86,22 +126,25 @@ public class ConsentSecurityConfig {
                 .requestMatchers(
                     "/actuator/health",
                     "/actuator/health/**",
-                    "/actuator/info"
+                    "/actuator/info",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/swagger-resources/**",
+                    "/webjars/**"
                 ).permitAll()
 
-                // All consent endpoints require JWT authentication (HIPAA §164.312(d))
+                // All consent endpoints require authentication (HIPAA §164.312(d))
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            // TrustedHeaderAuthFilter extracts user context from gateway headers
+            .addFilterBefore(trustedHeaderAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // CRITICAL SECURITY: Add tenant access filter AFTER JWT authentication
+        // CRITICAL SECURITY: Add tenant access filter AFTER header authentication
         // This ensures tenant isolation is enforced for all authenticated requests
-        if (tenantAccessFilter != null) {
-            http.addFilterAfter(tenantAccessFilter, JwtAuthenticationFilter.class);
-        }
+        http.addFilterAfter(trustedTenantAccessFilter, TrustedHeaderAuthFilter.class);
 
         return http.build();
     }

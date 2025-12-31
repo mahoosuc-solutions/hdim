@@ -1,8 +1,8 @@
 package com.healthdata.quality.config;
 
-import com.healthdata.authentication.filter.JwtAuthenticationFilter;
-import com.healthdata.authentication.security.TenantAccessFilter;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
+import com.healthdata.authentication.security.TrustedTenantAccessFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -23,16 +23,32 @@ import java.util.Arrays;
  *
  * Provides security configuration for different profiles:
  * - Test: Permits all requests without authentication
- * - Docker/Dev/Prod: JWT-based authentication via JwtAuthenticationFilter
+ * - Docker/Dev/Prod: Gateway-trust authentication via TrustedHeaderAuthFilter
  *
- * SECURITY: TenantAccessFilter is enabled to enforce multi-tenant isolation.
+ * SECURITY ARCHITECTURE:
+ * This service trusts gateway-injected headers for authentication.
+ * The gateway validates JWT tokens and injects X-Auth-* headers with user context.
+ * Backend services do NOT re-validate JWT or perform database lookups for users.
+ *
+ * Flow:
+ * 1. Client sends JWT to Gateway
+ * 2. Gateway validates JWT, injects X-Auth-* headers with HMAC signature
+ * 3. TrustedHeaderAuthFilter validates signature, extracts user context
+ * 4. TrustedTenantAccessFilter validates tenant access from attributes
+ *
  * This prevents CVE-INTERNAL-2025-001 (Complete Bypass of Tenant Isolation)
+ *
+ * @see TrustedHeaderAuthFilter
+ * @see TrustedTenantAccessFilter
  */
 @Configuration
 public class QualityMeasureSecurityConfig {
 
-    @Autowired(required = false)
-    private TenantAccessFilter tenantAccessFilter;
+    @Value("${gateway.auth.signing-secret:}")
+    private String signingSecret;
+
+    @Value("${gateway.auth.dev-mode:true}")
+    private boolean devMode;
 
     /**
      * CORS configuration for frontend applications.
@@ -57,6 +73,37 @@ public class QualityMeasureSecurityConfig {
     }
 
     /**
+     * Creates the TrustedHeaderAuthFilter bean.
+     *
+     * In development mode, accepts any gateway signature with valid prefix.
+     * In production mode, validates HMAC signature with shared secret.
+     */
+    @Bean
+    @Profile("!test")
+    public TrustedHeaderAuthFilter trustedHeaderAuthFilter() {
+        TrustedHeaderAuthFilter.TrustedHeaderAuthConfig config;
+
+        if (devMode) {
+            config = TrustedHeaderAuthFilter.TrustedHeaderAuthConfig.development();
+        } else {
+            config = TrustedHeaderAuthFilter.TrustedHeaderAuthConfig.production(signingSecret);
+        }
+
+        return new TrustedHeaderAuthFilter(config);
+    }
+
+    /**
+     * Creates the TrustedTenantAccessFilter bean.
+     *
+     * Validates tenant access using request attributes (no database lookup).
+     */
+    @Bean
+    @Profile("!test")
+    public TrustedTenantAccessFilter trustedTenantAccessFilter() {
+        return new TrustedTenantAccessFilter();
+    }
+
+    /**
      * Test profile security filter chain.
      * Permits all HTTP requests without authentication for integration testing.
      */
@@ -77,7 +124,7 @@ public class QualityMeasureSecurityConfig {
 
     /**
      * Production security filter chain for docker/dev/prod profiles.
-     * Uses JWT-based authentication with stateless sessions.
+     * Uses gateway-trust authentication with stateless sessions.
      *
      * HIPAA Security Rule Compliance:
      * - §164.312(d) - Person or Entity Authentication
@@ -85,7 +132,10 @@ public class QualityMeasureSecurityConfig {
      * - §164.308(a)(4)(i) - Isolate Healthcare Clearinghouse Functions
      *
      * Public endpoints: Health checks, API documentation
-     * Protected endpoints: All patient health, mental health, care gap, and quality measure endpoints require JWT
+     * Protected endpoints: All endpoints require gateway-authenticated headers
+     *
+     * SECURITY: This service trusts gateway-injected X-Auth-* headers.
+     * It does NOT validate JWT tokens directly - that's the gateway's job.
      *
      * WebSocket Security:
      * - WebSocket upgrade requests (/ws/**) are permitted at HTTP level
@@ -96,7 +146,10 @@ public class QualityMeasureSecurityConfig {
     @Bean
     @Profile("!test")
     @Order(2)
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            TrustedHeaderAuthFilter trustedHeaderAuthFilter,
+            TrustedTenantAccessFilter trustedTenantAccessFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
@@ -120,13 +173,13 @@ public class QualityMeasureSecurityConfig {
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            // TrustedHeaderAuthFilter extracts user context from gateway headers
+            .addFilterBefore(trustedHeaderAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // CRITICAL SECURITY: Add tenant access filter AFTER JWT authentication
+        // CRITICAL SECURITY: Add tenant access filter AFTER header authentication
         // This ensures tenant isolation is enforced for all authenticated requests
-        if (tenantAccessFilter != null) {
-            http.addFilterAfter(tenantAccessFilter, JwtAuthenticationFilter.class);
-        }
+        // Uses request attributes (no database lookup)
+        http.addFilterAfter(trustedTenantAccessFilter, TrustedHeaderAuthFilter.class);
 
         return http.build();
     }

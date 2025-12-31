@@ -19,7 +19,7 @@ export const environment = {
     fhirServerUrl: 'http://localhost:8085/fhir',
 
     // Tenant configuration - must match backend test data
-    defaultTenantId: 'TENANT001',
+    defaultTenantId: 'DEMO001',  // Demo tenant UUID from demo-users.sql
 
     // HTTP settings
     timeoutMs: 30000,

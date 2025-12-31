@@ -29,8 +29,7 @@ spring:
           time_zone: UTC
 
   liquibase:
-    change-log: classpath:db/changelog/0013-create-migration-jobs.sql
-    enabled: true
+    enabled: false
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}

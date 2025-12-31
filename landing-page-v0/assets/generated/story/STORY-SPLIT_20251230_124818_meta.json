@@ -1,0 +1,9 @@
+{
+  "prompt_id": "STORY-SPLIT",
+  "name": "5-Minute Story Split Screen",
+  "category": "story",
+  "dimensions": "1920x1080",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a powerful split-screen image representing \"code that saves lives.\"\n\nLEFT SIDE (50%):\nA computer terminal/code editor with a dark background (like VS Code dark theme).\nThe commit message is clearly visible:\n\"fix(hipaa): Reduce PHI cache TTL to <=5min for HIPAA compliance\"\nDate visible: December 27, 2025, 10:31 PM\nThe code screen should look authentic, with syntax highlighting.\n\nRIGHT SIDE (50%):\nA warm, touching family moment. A grandmother (could be Maria) with grandchildren,\nor a father..."
+}

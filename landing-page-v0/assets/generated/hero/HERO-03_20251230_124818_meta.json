@@ -1,0 +1,9 @@
+{
+  "prompt_id": "HERO-03",
+  "name": "Social Share Image",
+  "category": "hero",
+  "dimensions": "1200x630",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a social media share image for HDIM healthcare technology platform.\n\nSimplified version of hero image optimized for social media sharing. One or two patient\nfaces - a healthy, happy grandmother and/or professional - with subtle digital connection\nelements. Space on left third for headline text overlay.\n\nMood: Optimistic, trustworthy, innovative.\nColor palette: Deep blue (#0066CC), warm teal (#00A5B5), light backgrounds.\n\nStyle: Photorealistic, clean composition for text overlay.\nDimension..."
+}

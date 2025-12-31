@@ -26,32 +26,32 @@ export default function LandingPage() {
     {
       icon: HeartPulse,
       title: 'Care Gap Detection',
-      description: 'AI-powered identification of care gaps with prioritized outreach recommendations.',
+      description: 'Real-time CQL execution identifies care gaps using NCQA-certified HEDIS specifications. Sub-second detection across 56 quality measures.',
     },
     {
       icon: BarChart3,
       title: 'HEDIS Evaluation',
-      description: 'Automated quality measure calculation with real-time compliance tracking.',
+      description: 'CQL-native measure calculation with <500ms per patient execution. No proprietary interpretation—identical results to NCQA CQL playground.',
     },
     {
       icon: LineChart,
       title: 'Risk Stratification',
-      description: 'HCC-aligned scoring with predictive analytics for proactive care management.',
+      description: 'HCC v28 risk adjustment models with validated scoring algorithms. Predict patient risk scores for value-based contracts.',
     },
     {
       icon: Database,
       title: 'FHIR R4 Integration',
-      description: 'Native FHIR architecture with 20+ resource types and seamless EHR connectivity.',
+      description: 'HAPI FHIR 7.x native architecture—no v2→FHIR translation layer. Direct FHIR R4 queries with <200ms p95 latency.',
     },
     {
       icon: Zap,
       title: 'CQL Engine',
-      description: 'Execute clinical quality language directly - ready for digital HEDIS 2030.',
+      description: 'Direct CQL execution via open-source cql-engine library. What you test in NCQA playground runs identically in production.',
     },
     {
       icon: FileCheck,
       title: 'QRDA Export',
-      description: 'One-click regulatory reporting with QRDA I/III generation.',
+      description: 'Automated QRDA I/III generation for CMS quality reporting. Audit-ready with full measure traceability.',
     },
   ]
 
@@ -407,10 +407,10 @@ export default function LandingPage() {
 
               <div className="space-y-4">
                 {[
-                  '27 specialized microservices for modular deployment',
-                  'HAPI FHIR 7.x with full R4 compliance',
-                  'Real-time CQL execution for instant measure calculation',
-                  'Multi-tenant architecture with HIPAA-compliant caching',
+                  '28 specialized microservices for modular deployment',
+                  'HAPI FHIR 7.x with full R4 compliance (<200ms p95 queries)',
+                  'CQL-native execution—identical to NCQA reference implementation',
+                  'Multi-tenant isolation with 5-minute PHI cache TTL (HIPAA)',
                 ].map((item, index) => (
                   <div key={index} className="flex items-start space-x-3">
                     <CheckCircle2 className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" />
@@ -793,13 +793,13 @@ export default function LandingPage() {
               <div className="w-16 h-16 relative mb-3">
                 <Image
                   src="/images/icons/microservices.png"
-                  alt="27 Microservices"
+                  alt="28 Microservices"
                   fill
                   className="object-contain"
                   loading="lazy"
                 />
               </div>
-              <p className="font-semibold text-gray-900 text-sm text-center">27 Services</p>
+              <p className="font-semibold text-gray-900 text-sm text-center">28 Services</p>
               <p className="text-xs text-gray-500 text-center">Modular</p>
             </div>
           </div>

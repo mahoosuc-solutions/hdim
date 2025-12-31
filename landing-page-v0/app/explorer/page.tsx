@@ -480,10 +480,10 @@ export default function ExplorerPage() {
                 Try Live Demo
               </a>
               <a
-                href="mailto:sales@hdim.io"
+                href="/schedule"
                 className="px-6 py-3 border border-white text-white font-medium rounded-lg hover:bg-white/10 transition-colors"
               >
-                Contact Sales
+                Schedule Demo
               </a>
             </div>
           </div>

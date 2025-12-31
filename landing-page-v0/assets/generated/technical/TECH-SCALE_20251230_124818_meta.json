@@ -1,0 +1,9 @@
+{
+  "prompt_id": "TECH-SCALE",
+  "name": "Enterprise Scale Visualization",
+  "category": "technical",
+  "dimensions": "1200x800",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a powerful visualization showing HDIM operating at enterprise healthcare scale.\n\nCentral concept: A glowing central hub (HDIM platform) with radiating connections to:\n\nInner ring (large, prominent):\n- 47 Connected Health Systems (hospital icons)\n- Show major EHR logos subtly: Epic, Cerner, Meditech, Athena\n\nMiddle ring:\n- 250+ Data Sources (labs, pharmacies, devices, payers)\n- Each as a small node with connection line to hub\n\nOuter ring (representing reach):\n- 500,000+ Patients Monitored\n..."
+}

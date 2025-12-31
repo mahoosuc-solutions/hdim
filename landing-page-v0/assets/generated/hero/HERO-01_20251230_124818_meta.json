@@ -1,0 +1,9 @@
+{
+  "prompt_id": "HERO-01",
+  "name": "Main Hero - Desktop",
+  "category": "hero",
+  "dimensions": "1920x1080",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a warm, hopeful healthcare technology hero image for a website.\n\nScene: A diverse group of three patients - a 67-year-old Latina grandmother, a 42-year-old\nprofessional man, and a 55-year-old professional woman - all looking healthy, happy, and\nconnected. They should appear in a modern, light-filled healthcare or home environment.\n\nVisual elements: Subtle, elegant real-time data visualization elements flowing between the\npeople - representing how FHIR-connected systems and CQL insights pr..."
+}

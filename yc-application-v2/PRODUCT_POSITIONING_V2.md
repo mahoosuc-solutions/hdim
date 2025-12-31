@@ -40,7 +40,7 @@
 **Proof:**
 - 162,752 lines of production code
 - 534 test files
-- 27 microservices
+- 28 microservices
 - Built by 1 founder with AI assistance
 
 **Messaging:**
@@ -285,7 +285,7 @@
 ### Technical
 - 162,752 lines of production code
 - 534 test files (comprehensive coverage)
-- 27 microservices (scalable architecture)
+- 28 microservices (scalable architecture)
 - <200ms P95 response time
 - Zero critical CVEs
 
@@ -312,7 +312,7 @@
 > "Those work great if you're 100% Epic or Cerner. But most health systems have a mix of EHRs. HDIM is EHR-agnostic—one platform for your entire network. Plus, we calculate measures in milliseconds, not overnight."
 
 ### "How do you handle scale?"
-> "Our architecture is stateless and Kubernetes-ready. We process 1,000+ patients per minute in batch mode. <200ms for real-time evaluation. The same architecture that powers our 27 microservices will scale to millions of patients."
+> "Our architecture is stateless and Kubernetes-ready. We process 1,000+ patients per minute in batch mode. <200ms for real-time evaluation. The same architecture that powers our 28 microservices will scale to millions of patients."
 
 ### "What about compliance and security?"
 > "We're SOC2-ready—Type I certification targeted for month 12. TOTP MFA with recovery codes. HIPAA-compliant caching. Zero critical CVEs. Our security architecture documentation is available for your review."

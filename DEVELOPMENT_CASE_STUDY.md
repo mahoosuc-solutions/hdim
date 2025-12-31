@@ -30,7 +30,7 @@
 
 **HDIM Clinical Portal** - A complete healthcare SaaS platform:
 
-- **27 microservices** (Java/Spring Boot)
+- **28 microservices** (Java/Spring Boot)
 - **82 Angular components** (TypeScript)
 - **162,752 lines of code**
 - **534 test files**

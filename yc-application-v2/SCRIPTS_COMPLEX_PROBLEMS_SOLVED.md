@@ -60,7 +60,7 @@ $1.7M → $46K
 
 Same output:
 • 162,752 lines of code
-• 27 microservices
+• 28 microservices
 • 61 HEDIS measures
 • 534 test files
 • Zero critical vulnerabilities
@@ -103,7 +103,7 @@ Complex software that used to take years now takes months.
 
 Here's what I just built in 3 months:
 • Healthcare quality measurement platform
-• 27 microservices
+• 28 microservices
 • 61 clinical measures
 • Real-time analytics (<200ms)
 • Multi-tenant architecture
@@ -219,7 +219,7 @@ Here's what "too complex" means in 2025:
 The complexity didn't change.
 The cost of handling complexity changed.
 
-I just built something that has 27 microservices, 61 clinical algorithms, and real-time analytics in 3 months.
+I just built something that has 28 microservices, 61 clinical algorithms, and real-time analytics in 3 months.
 
 That's not simple.
 It's complex—handled efficiently.
@@ -282,7 +282,7 @@ Real example—what I just built:
 
 HDIM: Healthcare quality platform
 • 162,752 lines of code
-• 27 microservices
+• 28 microservices
 • 61 clinical measures
 • 534 test files
 

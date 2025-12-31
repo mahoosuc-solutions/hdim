@@ -35,7 +35,7 @@ Healthcare organizations face an increasingly complex landscape of regulatory re
 
 ### The Solution
 
-HealthData-in-Motion (HDIM) is an enterprise-grade healthcare interoperability platform purpose-built for HEDIS quality measure evaluation, FHIR R4 compliance, and clinical decision support. Built on a modern microservices architecture with 27 specialized services, HDIM enables healthcare organizations to:
+HealthData-in-Motion (HDIM) is an enterprise-grade healthcare interoperability platform purpose-built for HEDIS quality measure evaluation, FHIR R4 compliance, and clinical decision support. Built on a modern microservices architecture with 28 specialized services, HDIM enables healthcare organizations to:
 
 - **Evaluate clinical quality measures in real-time** using native Clinical Quality Language (CQL) execution
 - **Identify and close care gaps** through automated detection and intervention workflows
@@ -106,7 +106,7 @@ Many healthcare organizations rely on aging technology stacks that were never de
 
 ### Microservices Design Philosophy
 
-HDIM embraces a domain-driven microservices architecture, decomposing healthcare interoperability into 27 specialized services. Each service owns its data, defines its API contracts, and can be developed, deployed, and scaled independently.
+HDIM embraces a domain-driven microservices architecture, decomposing healthcare interoperability into 28 specialized services. Each service owns its data, defines its API contracts, and can be developed, deployed, and scaled independently.
 
 ```
                          Load Balancer / CDN
@@ -128,7 +128,7 @@ Services    Services      Services      Services
 
 ### Service Inventory
 
-HDIM comprises 27 microservices organized into functional domains:
+HDIM comprises 28 microservices organized into functional domains:
 
 #### Core Clinical Services (Ports 8080-8087)
 

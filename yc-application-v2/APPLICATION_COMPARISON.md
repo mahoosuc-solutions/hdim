@@ -30,7 +30,7 @@ The v2 application reflects **significant platform maturation** since the origin
 |--------|---------------|--------------|-------|
 | Lines of Code | Not specified | 162,752 | **Validated** |
 | Test Files | 500+ | 534 | **Precise count** |
-| Microservices | 27 | 27 | Same |
+| Microservices | 28 | 28 | Same |
 | HEDIS Measures | 61 | 61 | Same |
 | Angular Components | Not specified | 82 | **Added** |
 | Documentation | Not specified | 215,000+ lines | **Added** |

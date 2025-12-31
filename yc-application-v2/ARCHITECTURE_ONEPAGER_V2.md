@@ -52,7 +52,7 @@ We calculate all **61 HEDIS quality measures** in <200ms when a patient chart op
 |--------|-------|----------|
 | **Lines of Code** | 162,752 | Agent analysis |
 | **Test Files** | 534 | Agent analysis |
-| **Microservices** | 27 | Architecture |
+| **Microservices** | 28 | Architecture |
 | **Angular Components** | 82 | Frontend analysis |
 | **HEDIS Measures** | 61 | CQL engine |
 | **Risk Models** | 5 | Clinical validation |
@@ -76,7 +76,7 @@ We calculate all **61 HEDIS quality measures** in <200ms when a patient chart op
 
 ---
 
-## 27 Microservices Architecture
+## 28 Microservices Architecture
 
 ### Core Clinical Services
 | Service | Purpose | Tech |

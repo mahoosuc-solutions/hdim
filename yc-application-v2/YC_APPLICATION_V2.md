@@ -39,7 +39,7 @@ HDIM calculates **61 HEDIS quality measures** in sub-second time at point of car
 - **TOTP Multi-Factor Authentication** - HIPAA-compliant MFA with recovery codes
 
 **Production metrics (validated):**
-- 27 microservices with 162,752 lines of code
+- 28 microservices with 162,752 lines of code
 - 534 test files with comprehensive coverage
 - Zero critical CVEs
 - 82 Angular components in clinical portal
@@ -65,7 +65,7 @@ Every platform we wanted was either too expensive ($50K+/month), too hard to imp
 **The result exceeded my expectations:**
 - 162,752 lines of production code
 - 534 test files
-- 27 microservices
+- 28 microservices
 - 82 Angular components
 - Full documentation site
 - All built by one person in ~3 months for $46K
@@ -169,7 +169,7 @@ Health systems are terrified of switching platforms because their custom measure
 **v1.5.0 Released (December 2025) - Production-ready platform:**
 
 **Core Platform:**
-- 27 microservices with 162,752 lines of production code
+- 28 microservices with 162,752 lines of production code
 - 61 HEDIS measures (complete MY2024 coverage)
 - 534 test files with comprehensive coverage
 - 5 validated risk models (Charlson, Elixhauser, LACE, HCC, Frailty)
@@ -321,7 +321,7 @@ HDIM becomes the default quality measurement infrastructure for value-based care
 
 **Technical Depth:**
 - Deep expertise: FHIR R4, HL7v2, CQL, IHE profiles, MPI architecture
-- Built HDIM: 27 microservices, 162,752 lines, 534 tests, enterprise infrastructure
+- Built HDIM: 28 microservices, 162,752 lines, 534 tests, enterprise infrastructure
 - Pioneered AI-assisted healthcare development (37x cost efficiency proven)
 
 **Personal Mission:**

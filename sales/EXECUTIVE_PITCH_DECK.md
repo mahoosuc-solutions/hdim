@@ -620,7 +620,7 @@ FHIR Webhook/Polling -----> HDIM Data Pipeline
 
 | Metric | Value |
 |--------|-------|
-| Codebase size | 27 microservices, 115+ components |
+| Codebase size | 28 microservices, 115+ components |
 | Build status | 100% services compiling |
 | Test coverage | 84+ tests passing |
 | Documentation | 115 docs across 3 portals |

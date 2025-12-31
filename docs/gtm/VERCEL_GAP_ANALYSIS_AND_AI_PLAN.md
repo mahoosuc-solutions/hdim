@@ -273,7 +273,7 @@ Personalized Recommendation:
 
 5. DIFFERENTIATION
    ├── "Why HDIM" comparison table
-   ├── Technical advantages (27 microservices, FHIR R4 native)
+   ├── Technical advantages (28 microservices, FHIR R4 native)
    └── Compliance certifications
 
 6. CONVERSION PATH
@@ -535,7 +535,7 @@ Based on industry benchmarks:
 
 ### When Prospect Mentions Arcadia
 
-**Counter-Position**: "Arcadia has excellent quality management. HDIM was built for the digital measure transition - our 27 microservices mean you can deploy exactly what you need, rather than buying a monolithic platform. For organizations focused on HEDIS 2030 readiness, this modular approach is key."
+**Counter-Position**: "Arcadia has excellent quality management. HDIM was built for the digital measure transition - our 28 microservices mean you can deploy exactly what you need, rather than buying a monolithic platform. For organizations focused on HEDIS 2030 readiness, this modular approach is key."
 
 **Demo to Show**: Microservice architecture + QRDA export
 

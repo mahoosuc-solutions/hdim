@@ -145,7 +145,7 @@ One person with AI tools can build production-grade enterprise software.
 
 **What I built:**
 - 162,752 lines of code
-- 27 microservices
+- 28 microservices
 - 61 HEDIS quality measures
 - 5 validated risk models
 - 534 test files

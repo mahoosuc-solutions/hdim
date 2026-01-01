@@ -352,6 +352,47 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+
+          {/* Eleanor's Story Card */}
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 md:p-12 max-w-4xl mx-auto mt-8">
+            <div className="grid md:grid-cols-5 gap-8 items-center">
+              <div className="md:col-span-2 text-center order-2 md:order-1">
+                <div className="relative w-48 h-48 mx-auto mb-4">
+                  <Image
+                    src="/images/portraits/eleanor-survivor-v2.png"
+                    alt="Eleanor - Cancer Survivor"
+                    fill
+                    className="object-cover rounded-xl"
+                    loading="lazy"
+                  />
+                </div>
+                <p className="text-lg font-semibold text-purple-700 italic">
+                  &quot;They caught it early. That&apos;s why I&apos;m still here.&quot;
+                </p>
+              </div>
+
+              <div className="md:col-span-3 order-1 md:order-2">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Eleanor, 63 - Breast Cancer Survivor</h3>
+
+                <div className="mb-6">
+                  <p className="text-red-600 font-semibold mb-2 flex items-center gap-2">
+                    <span className="w-3 h-3 bg-red-500 rounded-full"></span>
+                    Without Proactive Screening Gaps:
+                  </p>
+                  <p className="text-gray-600">Eleanor was 18 months overdue for her mammogram. No one noticed across three different health systems. When she finally scheduled it herself, Stage III. Aggressive treatment. Uncertain prognosis.</p>
+                </div>
+
+                <div>
+                  <p className="text-green-600 font-semibold mb-2 flex items-center gap-2">
+                    <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                    With HDIM:
+                  </p>
+                  <p className="text-gray-600">At 10 months overdue, HDIM identified Eleanor&apos;s BCS-E measure gap. Care coordinator scheduled her mammogram within a week. Stage I detected. Lumpectomy. Five years cancer-free.</p>
+                  <p className="text-gray-900 font-semibold mt-3">Eleanor just celebrated her granddaughter&apos;s graduation.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -553,10 +594,10 @@ export default function LandingPage() {
           </div>
           <div className="relative rounded-2xl overflow-hidden shadow-2xl cursor-pointer group">
             <Image
-              src="/images/video/demo.png"
-              alt="HDIM Demo Video Thumbnail"
-              width={1280}
-              height={720}
+              src="/images/video/eleanor-story-thumb-v2.png"
+              alt="Eleanor's Story - They Caught It Early"
+              width={1408}
+              height={768}
               loading="lazy"
               className="w-full"
             />

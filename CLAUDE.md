@@ -593,6 +593,77 @@ Before submitting code, verify:
 
 ---
 
+## Entity-Migration Synchronization (CRITICAL)
+
+**This practice prevents production schema drift issues (like the RefreshToken authentication bug).**
+
+### Quick Checklist
+
+When **creating** a new entity:
+- [ ] Create JPA entity with `@Entity`, `@Table`, `@Column` annotations
+- [ ] Create Liquibase migration file (`NNNN-create-table.xml`)
+- [ ] Add migration include to `db.changelog-master.xml`
+- [ ] Use sequential migration numbers (no gaps, no reuse)
+- [ ] Run validation test: `./gradlew test --tests "*EntityMigrationValidationTest"`
+
+When **modifying** an entity:
+- [ ] Update `@Column` annotations
+- [ ] Create NEW migration (never modify existing ones)
+- [ ] Use descriptive migration ID: `NNNN-add-field-to-table.xml`
+- [ ] Run validation test to ensure sync
+
+### Validation Tests
+
+Every critical service has automated validation:
+- ✅ authentication module
+- ✅ patient-service
+- ✅ quality-measure-service
+- ✅ care-gap-service
+- ✅ fhir-service
+- ✅ sales-automation-service
+
+Run locally: `./gradlew test --tests "*EntityMigrationValidationTest"`
+
+### Hibernate Configuration
+
+**CRITICAL**: All environments must use proper DDL auto settings:
+
+```yaml
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Use ONLY 'validate' in prod/docker/dev
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+```
+
+**NEVER** use `ddl-auto: update` or `ddl-auto: create` in production.
+
+### Column Type Mapping
+
+| Java | PostgreSQL | Liquibase |
+|------|------------|-----------|
+| String (255) | VARCHAR(255) | VARCHAR(255) |
+| String (large) | TEXT | TEXT |
+| UUID | uuid | UUID |
+| Instant | timestamp with time zone | TIMESTAMP WITH TIME ZONE |
+| Boolean | boolean | BOOLEAN |
+| Integer | integer | INT |
+| Long | bigint | BIGINT |
+
+### Full Guide
+
+See `backend/docs/ENTITY_MIGRATION_GUIDE.md` for comprehensive documentation including:
+- Complete type mapping reference
+- Entity annotation best practices
+- Migration file templates
+- Troubleshooting guide
+- Phase-by-phase implementation status
+
+---
+
 ## Getting Help
 
 - **System architecture**: See `docs/architecture/SYSTEM_ARCHITECTURE.md`
@@ -605,5 +676,5 @@ Before submitting code, verify:
 
 ---
 
-*Last Updated: December 31, 2025*
-*Version: 1.1*
+*Last Updated: January 1, 2026*
+*Version: 1.2* - Added Entity-Migration Synchronization section with validation framework

@@ -9,11 +9,12 @@ spring:
     allow-circular-references: true
   
   liquibase:
-    enabled: false
-  
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
   cache:
     type: none
-  
+
   # ⚠️ SECURITY: Database password MUST be provided via DB_PASSWORD environment variable
   datasource:
     url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:healthdata_cql}
@@ -26,10 +27,10 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
-  
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:

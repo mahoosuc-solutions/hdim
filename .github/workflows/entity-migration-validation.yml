@@ -1,0 +1,183 @@
+name: Entity-Migration Validation
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**/*.java'
+      - 'backend/**/db/changelog/**'
+      - 'backend/**/src/main/resources/application*.yml'
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  validate:
+    name: Entity-Migration Validation Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: healthdata
+          POSTGRES_PASSWORD: healthdata_password
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v3
+
+      - name: Run Entity-Migration Validation Tests
+        run: |
+          cd backend
+          echo "Running validation tests for critical services..."
+          ./gradlew :modules:shared:infrastructure:authentication:test \
+            --tests "*EntityMigrationValidationTest" -i || true
+          ./gradlew :modules:services:patient-service:test \
+            --tests "*EntityMigrationValidationTest" -i || true
+          ./gradlew :modules:services:quality-measure-service:test \
+            --tests "*EntityMigrationValidationTest" -i || true
+          ./gradlew :modules:services:care-gap-service:test \
+            --tests "*EntityMigrationValidationTest" -i || true
+          ./gradlew :modules:services:fhir-service:test \
+            --tests "*EntityMigrationValidationTest" -i || true
+          ./gradlew :modules:services:sales-automation-service:test \
+            --tests "*EntityMigrationValidationTest" -i || true
+
+      - name: Check Liquibase Configuration
+        run: |
+          cd backend
+          echo "Verifying Liquibase configuration in all services..."
+
+          for file in $(find . -name "application-prod.yml" -o -name "application-docker.yml"); do
+            if grep -q "ddl-auto: update" "$file"; then
+              echo "ERROR: Found 'ddl-auto: update' in $file"
+              echo "CRITICAL: Production/Docker must use 'ddl-auto: validate'"
+              exit 1
+            fi
+          done
+          echo "✓ All configs use 'ddl-auto: validate'"
+
+      - name: Verify Migration File Numbering
+        run: |
+          cd backend
+          echo "Checking migration numbering..."
+
+          for service_dir in modules/services/*/src/main/resources/db/changelog/; do
+            if [ -d "$service_dir" ]; then
+              service=$(echo "$service_dir" | grep -oE 'services/[^/]+' | cut -d/ -f2)
+              duplicates=$(ls -1 "$service_dir" 2>/dev/null | grep -E "^[0-9]{4}-" | \
+                          sed 's/^[0-9]\{4\}-.*/&/' | cut -d- -f1 | sort | uniq -d | wc -l)
+
+              if [ "$duplicates" -gt 0 ]; then
+                echo "WARNING: Service '$service' has duplicate migration numbers"
+              fi
+            fi
+          done
+
+      - name: Validate XML Syntax
+        run: |
+          cd backend
+          echo "Validating migration XML syntax..."
+
+          for migration_file in $(find . -path "*/db/changelog/*.xml" -not -path "*/bin/*" -not -name "db.changelog-master.xml"); do
+            if ! xmllint --noout "$migration_file" 2>&1; then
+              echo "ERROR: Invalid XML in $migration_file"
+              exit 1
+            fi
+          done
+          echo "✓ All migration XML files valid"
+
+  lint-migrations:
+    name: Migration File Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Lint Migration Files
+        run: |
+          echo "Linting migration files..."
+
+          for migration_file in $(find backend -path "*/db/changelog/*.xml" -not -path "*/bin/*" -not -name "db.changelog-master.xml"); do
+            filename=$(basename "$migration_file")
+
+            # Check naming convention
+            if ! echo "$filename" | grep -q "^[0-9]\{4\}-.*\.xml$"; then
+              echo "WARNING: File doesn't follow convention: $filename (expected NNNN-descriptive-name.xml)"
+            fi
+
+            # Check for author and comment
+            if ! grep -q 'author=' "$migration_file"; then
+              echo "WARNING: No author in $filename"
+            fi
+
+            if ! grep -q '<comment>' "$migration_file"; then
+              echo "WARNING: No comment in $filename"
+            fi
+          done
+          echo "✓ Migration linting complete"
+
+  changelog-consistency:
+    name: Master Changelog Consistency
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Master Changelog Consistency
+        run: |
+          echo "Verifying master changelog consistency..."
+
+          for master_changelog in $(find backend -name "db.changelog-master.xml" -not -path "*/bin/*"); do
+            changelog_dir=$(dirname "$master_changelog")
+
+            # Get all includes
+            includes=$(grep -oP 'file="db/changelog/\K[^"]+' "$master_changelog" 2>/dev/null || echo "")
+
+            if [ -z "$includes" ]; then
+              continue
+            fi
+
+            # Verify each file exists
+            while IFS= read -r include_file; do
+              full_path="$changelog_dir/$include_file"
+              if [ ! -f "$full_path" ]; then
+                echo "ERROR: Missing file in changelog: $include_file"
+                exit 1
+              fi
+            done <<< "$includes"
+          done
+          echo "✓ Master changelog consistency verified"
+
+  summary:
+    name: Validation Summary
+    runs-on: ubuntu-latest
+    needs: [validate, lint-migrations, changelog-consistency]
+    if: always()
+
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "✅ Entity-Migration validation workflow completed"

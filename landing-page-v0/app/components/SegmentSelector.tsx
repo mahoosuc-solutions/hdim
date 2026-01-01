@@ -6,6 +6,7 @@ import { ChevronDown, Building2, Users, Heart, Hospital } from 'lucide-react'
 interface Segment {
   id: string
   label: string
+  selectorText: string
   icon: React.ElementType
   headline: string
   subheadline: string
@@ -19,6 +20,7 @@ const segments: Segment[] = [
   {
     id: 'health-plans',
     label: 'Health Plans',
+    selectorText: 'a health plan',
     icon: Building2,
     headline: 'Improve Star Ratings',
     subheadline: 'Turn Star Ratings from a compliance headache into a competitive advantage. A 1-star improvement for 175K members means $192M in annual CMS bonus payments.',
@@ -30,6 +32,7 @@ const segments: Segment[] = [
   {
     id: 'acos',
     label: 'ACOs',
+    selectorText: 'an ACO',
     icon: Users,
     headline: 'Capture Shared Savings',
     subheadline: 'Close 35% more care gaps without adding staff. Move from reactive quarterly reporting to proactive daily interventions that capture shared savings before they slip away.',
@@ -41,6 +44,7 @@ const segments: Segment[] = [
   {
     id: 'fqhcs',
     label: 'FQHCs',
+    selectorText: 'an FQHC',
     icon: Heart,
     headline: 'Protect Your 330 Grant',
     subheadline: 'Enterprise-grade quality automation at community health center budgets. Achieve UDS reporting compliance while identifying your highest-risk patients.',
@@ -52,6 +56,7 @@ const segments: Segment[] = [
   {
     id: 'health-systems',
     label: 'Health Systems',
+    selectorText: 'a health system',
     icon: Hospital,
     headline: 'Unify Quality Across EHRs',
     subheadline: 'One platform for Epic, Cerner, Meditech, and any FHIR-compliant system. Eliminate the integration nightmare with native FHIR R4 support.',
@@ -78,7 +83,7 @@ export function SegmentSelector() {
         >
           <div className="flex items-center gap-3">
             <activeSegment.icon className="w-5 h-5" />
-            <span className="font-medium">I work at a {activeSegment.label.toLowerCase().replace('s', '')}</span>
+            <span className="font-medium">I work at {activeSegment.selectorText}</span>
           </div>
           <ChevronDown className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>

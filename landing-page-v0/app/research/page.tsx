@@ -356,7 +356,7 @@ export default function ResearchPage() {
                   source: 'Centers for Medicare & Medicaid Services',
                   year: '2024',
                   summary: 'Federal quality reporting requirements including MIPS, Stars, and value-based care programs.',
-                  url: 'https://www.cms.gov/Medicare/Quality-Initiatives-Patient-Assessment-Instruments'
+                  url: 'https://www.cms.gov/medicare/quality/value-based-programs'
                 }
               ].map((ref, i) => (
                 <a

@@ -1,0 +1,48 @@
+{
+  "customerType": "payer",
+  "profiles": [
+    {
+      "id": "regional-health-plan",
+      "name": "Regional Health Plan",
+      "memberCount": 500000,
+      "linesOfBusiness": ["commercial", "medicare-advantage", "medicaid"],
+      "providerNetwork": 8000,
+      "dataVolume": {
+        "claims": 15000000,
+        "members": 500000,
+        "authorizations": 2000000,
+        "encounters": 8000000
+      },
+      "qualityMetrics": ["hedis", "cms-stars", "ncqa"],
+      "focusAreas": ["stars-improvement", "risk-adjustment", "utilization-management"]
+    },
+    {
+      "id": "medicare-advantage-plan",
+      "name": "Medicare Advantage Plan",
+      "memberCount": 150000,
+      "linesOfBusiness": ["medicare-advantage", "dsnp"],
+      "providerNetwork": 4000,
+      "dataVolume": {
+        "claims": 6000000,
+        "members": 150000,
+        "authorizations": 800000,
+        "encounters": 3000000
+      },
+      "qualityMetrics": ["hedis", "cms-stars", "cahps"],
+      "focusAreas": ["stars-rating", "hcc-capture", "transitions-of-care"]
+    },
+    {
+      "id": "aco-mssp",
+      "name": "ACO - Medicare Shared Savings",
+      "memberCount": 45000,
+      "participatingProviders": 250,
+      "dataVolume": {
+        "claims": 1800000,
+        "members": 45000,
+        "qualityMeasures": 450000
+      },
+      "qualityMetrics": ["mssp-quality", "hedis"],
+      "focusAreas": ["cost-reduction", "quality-improvement", "care-coordination"]
+    }
+  ]
+}

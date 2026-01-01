@@ -1,0 +1,119 @@
+{
+  "id": "cardiac-care",
+  "name": "Cardiovascular Risk Management",
+  "description": "Blood pressure control and cardiac event prevention through proactive monitoring",
+  "hedis_measures": ["CBP", "PBH", "SPC"],
+  "target_population": {
+    "description": "Adults 18-85 with hypertension diagnosis",
+    "inclusion_criteria": [
+      "Age 18-85",
+      "Diagnosis of essential hypertension (ICD-10: I10)",
+      "Two or more BP readings in measurement period"
+    ],
+    "exclusion_criteria": [
+      "End-stage renal disease",
+      "Pregnancy",
+      "Hospice care"
+    ]
+  },
+  "baseline_metrics": {
+    "population_size": 750,
+    "bp_control_rate": 0.42,
+    "medication_adherence_rate": 0.58,
+    "annual_cv_events_per_1000": 45,
+    "er_visits_per_1000": 187,
+    "care_gaps_per_patient": 1.8,
+    "avg_systolic_bp": 152
+  },
+  "intervention_timeline": [
+    {
+      "month": 0,
+      "action": "Real-time BP Monitoring Enabled",
+      "description": "Integration with remote patient monitoring devices"
+    },
+    {
+      "month": 2,
+      "action": "Medication Adherence Tracking",
+      "description": "Pharmacy claims analysis for adherence patterns"
+    },
+    {
+      "month": 4,
+      "action": "Risk-Based Outreach",
+      "description": "High-risk patients contacted proactively"
+    },
+    {
+      "month": 6,
+      "action": "Care Plan Optimization",
+      "description": "AI-recommended treatment adjustments"
+    }
+  ],
+  "post_intervention_metrics": {
+    "population_size": 750,
+    "bp_control_rate": 0.73,
+    "medication_adherence_rate": 0.81,
+    "annual_cv_events_per_1000": 28,
+    "er_visits_per_1000": 124,
+    "care_gaps_per_patient": 0.6,
+    "avg_systolic_bp": 134
+  },
+  "outcomes_summary": {
+    "bp_control_improvement": "+31%",
+    "adherence_improvement": "+23%",
+    "cv_event_reduction": "-38%",
+    "er_visit_reduction": "-34%",
+    "care_gaps_reduction": "-67%",
+    "estimated_cost_savings_per_member": 3180
+  },
+  "clinical_stories": [
+    {
+      "patient_id": "CV-001",
+      "name": "Robert Chen",
+      "age": 62,
+      "baseline": {
+        "systolic_bp": 168,
+        "diastolic_bp": 98,
+        "medication_adherence": "42%",
+        "cv_risk_score": "Very High",
+        "care_gaps": ["BP control", "Medication adherence"]
+      },
+      "hdim_actions": [
+        "RPM device data integration detected persistent hypertension",
+        "Medication gap analysis revealed missed doses",
+        "Pharmacist consultation triggered for adherence counseling",
+        "Treatment intensification recommended to provider"
+      ],
+      "post_intervention": {
+        "systolic_bp": 132,
+        "diastolic_bp": 82,
+        "medication_adherence": "91%",
+        "cv_risk_score": "Moderate",
+        "care_gaps": []
+      },
+      "outcome": "BP controlled, stroke risk reduced by 40%, avoided potential $85,000 stroke hospitalization"
+    },
+    {
+      "patient_id": "CV-002",
+      "name": "Patricia Williams",
+      "age": 71,
+      "baseline": {
+        "systolic_bp": 158,
+        "history": "Previous MI 3 years ago",
+        "statin_adherence": "68%",
+        "care_gaps": ["BP control", "Statin persistence"]
+      },
+      "hdim_actions": [
+        "Post-MI care gap identified via HEDIS SPC measure",
+        "Automated alert to cardiology care team",
+        "90-day medication supply arranged",
+        "Monthly adherence check-ins scheduled"
+      ],
+      "post_intervention": {
+        "systolic_bp": 128,
+        "statin_adherence": "95%",
+        "ldl_cholesterol": 68,
+        "care_gaps": []
+      },
+      "outcome": "Secondary prevention optimized, recurrent MI risk reduced by 45%"
+    }
+  ]
+}

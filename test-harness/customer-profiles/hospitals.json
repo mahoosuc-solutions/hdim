@@ -1,0 +1,2003 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "created": "2025-12-29",
+    "description": "HDIM Hospital Customer Profiles - Comprehensive quality measurement platform targeting",
+    "dataSource": "Healthcare industry benchmarks and CMS publicly reported data patterns",
+    "lastUpdated": "2025-12-29"
+  },
+  "hospitalTypes": {
+    "largeAcademicMedicalCenter": {
+      "id": "HOSP-AMC-001",
+      "name": "Large Academic Medical Center",
+      "description": "Teaching hospitals affiliated with medical schools, providing tertiary and quaternary care with extensive research programs",
+      "characteristics": {
+        "bedCount": {
+          "min": 500,
+          "max": 1500,
+          "typical": 750
+        },
+        "teachingStatus": "Major Teaching Hospital",
+        "traumaLevel": "Level I",
+        "accreditations": [
+          "The Joint Commission",
+          "AAMC Member",
+          "NCI-Designated Cancer Center",
+          "Magnet Recognition Program",
+          "AABB Accredited"
+        ]
+      },
+      "patientVolume": {
+        "annualAdmissions": {
+          "min": 35000,
+          "max": 65000,
+          "typical": 48000
+        },
+        "annualEDVisits": {
+          "min": 80000,
+          "max": 150000,
+          "typical": 110000
+        },
+        "annualOutpatientVisits": {
+          "min": 500000,
+          "max": 1200000,
+          "typical": 850000
+        },
+        "annualSurgeries": {
+          "inpatient": 18000,
+          "outpatient": 32000
+        },
+        "averageLengthOfStay": 5.8,
+        "caseMixIndex": 2.15
+      },
+      "payerMix": {
+        "medicare": {
+          "percentage": 38,
+          "breakdown": {
+            "traditionalMedicare": 22,
+            "medicareAdvantage": 16
+          }
+        },
+        "medicaid": {
+          "percentage": 18,
+          "breakdown": {
+            "traditionalMedicaid": 12,
+            "managedMedicaid": 6
+          }
+        },
+        "commercial": {
+          "percentage": 35,
+          "breakdown": {
+            "employerSponsored": 28,
+            "individualMarket": 4,
+            "exchange": 3
+          }
+        },
+        "selfPay": 5,
+        "tricare": 2,
+        "workersComp": 1,
+        "other": 1
+      },
+      "specialtyServiceLines": [
+        {
+          "name": "Cardiovascular Services",
+          "services": ["Open Heart Surgery", "TAVR", "Complex PCI", "Heart Transplant", "LVAD Program"],
+          "annualVolume": 4500,
+          "qualityFocus": ["ACC Chest Pain Center", "STS Database Reporting"]
+        },
+        {
+          "name": "Oncology",
+          "services": ["Medical Oncology", "Radiation Oncology", "Surgical Oncology", "BMT", "CAR-T Therapy"],
+          "annualVolume": 12000,
+          "qualityFocus": ["NCQA Oncology Medical Home", "Commission on Cancer"]
+        },
+        {
+          "name": "Neurosciences",
+          "services": ["Neurosurgery", "Stroke Care", "Epilepsy Surgery", "Movement Disorders"],
+          "annualVolume": 6500,
+          "qualityFocus": ["Comprehensive Stroke Center", "Level 4 Epilepsy Center"]
+        },
+        {
+          "name": "Transplant Services",
+          "services": ["Heart", "Liver", "Kidney", "Lung", "Multi-organ"],
+          "annualVolume": 450,
+          "qualityFocus": ["UNOS Compliance", "CMS Conditions of Participation"]
+        },
+        {
+          "name": "Women's and Children's",
+          "services": ["High-Risk OB", "Level IV NICU", "Pediatric Subspecialties", "Maternal-Fetal Medicine"],
+          "annualVolume": 8000,
+          "qualityFocus": ["Baby-Friendly Hospital", "Children's Hospital Designation"]
+        }
+      ],
+      "qualityMeasureFocus": {
+        "hedis": {
+          "priority": "High",
+          "keyMeasures": [
+            {
+              "measureId": "CDC",
+              "measureName": "Comprehensive Diabetes Care",
+              "currentPerformance": 72,
+              "benchmark": 80,
+              "gap": 8,
+              "patientCount": 15420
+            },
+            {
+              "measureId": "CBP",
+              "measureName": "Controlling High Blood Pressure",
+              "currentPerformance": 68,
+              "benchmark": 75,
+              "gap": 7,
+              "patientCount": 28650
+            },
+            {
+              "measureId": "BCS",
+              "measureName": "Breast Cancer Screening",
+              "currentPerformance": 74,
+              "benchmark": 82,
+              "gap": 8,
+              "patientCount": 42300
+            },
+            {
+              "measureId": "COL",
+              "measureName": "Colorectal Cancer Screening",
+              "currentPerformance": 65,
+              "benchmark": 72,
+              "gap": 7,
+              "patientCount": 56800
+            },
+            {
+              "measureId": "OMW",
+              "measureName": "Osteoporosis Management in Women Who Had a Fracture",
+              "currentPerformance": 42,
+              "benchmark": 55,
+              "gap": 13,
+              "patientCount": 2340
+            }
+          ]
+        },
+        "cmsStars": {
+          "priority": "Critical",
+          "currentRating": 3,
+          "targetRating": 4,
+          "keyDomains": [
+            {
+              "domain": "Mortality",
+              "weight": 22,
+              "performance": "Above Average"
+            },
+            {
+              "domain": "Safety of Care",
+              "weight": 22,
+              "performance": "Average"
+            },
+            {
+              "domain": "Readmission",
+              "weight": 22,
+              "performance": "Below Average"
+            },
+            {
+              "domain": "Patient Experience",
+              "weight": 22,
+              "performance": "Average"
+            },
+            {
+              "domain": "Timely and Effective Care",
+              "weight": 12,
+              "performance": "Above Average"
+            }
+          ]
+        },
+        "leapfrog": {
+          "priority": "High",
+          "currentGrade": "B",
+          "targetGrade": "A",
+          "focusAreas": [
+            "CLABSI Prevention",
+            "CAUTI Prevention",
+            "Hand Hygiene",
+            "Safe Surgery Checklist",
+            "ICU Physician Staffing"
+          ]
+        },
+        "valueBasedPrograms": [
+          {
+            "program": "Hospital VBP",
+            "participation": true,
+            "currentScore": 42,
+            "paymentAdjustment": -0.3
+          },
+          {
+            "program": "HRRP",
+            "participation": true,
+            "excessReadmissionRatio": 1.04,
+            "paymentAdjustment": -1.2
+          },
+          {
+            "program": "HAC Reduction Program",
+            "participation": true,
+            "totalHACScore": 5.2,
+            "penaltyStatus": false
+          },
+          {
+            "program": "Bundled Payments (BPCI-A)",
+            "participation": true,
+            "episodes": ["CABG", "Major Joint Replacement", "Sepsis"],
+            "performanceYear": 2024
+          }
+        ]
+      },
+      "commonCareGaps": [
+        {
+          "category": "Chronic Disease Management",
+          "gaps": [
+            {
+              "condition": "Diabetes",
+              "issue": "A1c testing compliance",
+              "affectedPatients": 4200,
+              "root Cause": "Lost to follow-up after discharge"
+            },
+            {
+              "condition": "Heart Failure",
+              "issue": "Post-discharge follow-up within 7 days",
+              "affectedPatients": 890,
+              "rootCause": "Cardiology clinic capacity constraints"
+            },
+            {
+              "condition": "COPD",
+              "issue": "Spirometry confirmation",
+              "affectedPatients": 1560,
+              "rootCause": "PFT lab scheduling backlog"
+            }
+          ]
+        },
+        {
+          "category": "Preventive Care",
+          "gaps": [
+            {
+              "condition": "Cancer Screening",
+              "issue": "Colorectal cancer screening in 50-75 age group",
+              "affectedPatients": 18500,
+              "rootCause": "GI endoscopy capacity, patient reluctance"
+            },
+            {
+              "condition": "Immunizations",
+              "issue": "Influenza and pneumococcal vaccination",
+              "affectedPatients": 32000,
+              "rootCause": "Workflow integration, documentation gaps"
+            }
+          ]
+        },
+        {
+          "category": "Care Transitions",
+          "gaps": [
+            {
+              "condition": "All-Cause Readmissions",
+              "issue": "30-day readmission rate",
+              "affectedPatients": 2400,
+              "rootCause": "Inadequate discharge planning, medication reconciliation"
+            },
+            {
+              "condition": "ED Utilization",
+              "issue": "Avoidable ED visits by chronic disease patients",
+              "affectedPatients": 8900,
+              "rootCause": "After-hours access, care coordination"
+            }
+          ]
+        }
+      ],
+      "staffing": {
+        "totalEmployees": 12500,
+        "physicianFTEs": 850,
+        "nursingFTEs": 4200,
+        "ratios": {
+          "nurseToBedRatio": 5.6,
+          "nurseToPatientICU": "1:2",
+          "nurseToPatientMedSurg": "1:5",
+          "nurseToPatientED": "1:4"
+        },
+        "qualityStaff": {
+          "qualityDirectors": 3,
+          "qualityManagers": 12,
+          "qualityAnalysts": 25,
+          "performanceImprovementSpecialists": 18,
+          "clinicalDocumentationSpecialists": 22
+        }
+      },
+      "technologyMaturity": {
+        "level": "Advanced",
+        "score": 85,
+        "capabilities": {
+          "ehr": {
+            "vendor": "Epic",
+            "version": "2024",
+            "modules": ["Inpatient", "Ambulatory", "ED", "OR", "Radiology", "Lab", "Pharmacy", "Revenue Cycle"]
+          },
+          "analytics": {
+            "platform": "Epic Cogito + Tableau",
+            "capabilities": ["Descriptive", "Diagnostic", "Predictive"],
+            "realTimeDashboards": true
+          },
+          "populationHealth": {
+            "platform": "Epic Healthy Planet",
+            "registries": ["Diabetes", "Heart Failure", "COPD", "Oncology", "High-Risk OB"],
+            "riskStratification": true
+          },
+          "interoperability": {
+            "hie": "Regional HIE Connected",
+            "fhir": "R4 Compliant",
+            "directMessaging": true,
+            "patientPortal": "MyChart"
+          },
+          "qualityReporting": {
+            "automated": true,
+            "registryIntegration": ["STS", "ACC", "NCDR", "ACS NSQIP"],
+            "abstractionRate": 15
+          }
+        }
+      },
+      "regulatoryPressures": {
+        "valueBasedContracts": {
+          "percentageOfRevenue": 35,
+          "contractTypes": [
+            {
+              "type": "Shared Savings",
+              "partners": ["Medicare ACO", "Blue Cross ACO"],
+              "lives": 145000
+            },
+            {
+              "type": "Bundled Payments",
+              "episodes": ["Joint Replacement", "CABG", "Spine Surgery"],
+              "annualVolume": 2800
+            },
+            {
+              "type": "Capitated",
+              "partners": ["Medicare Advantage Plans"],
+              "lives": 28000
+            }
+          ]
+        },
+        "payForPerformance": {
+          "programs": [
+            "Hospital VBP",
+            "HRRP",
+            "HAC Reduction",
+            "MIPS (Employed Physicians)",
+            "Commercial P4P"
+          ],
+          "atRiskRevenue": 45000000
+        },
+        "complianceRequirements": [
+          "CMS Conditions of Participation",
+          "Joint Commission Standards",
+          "State DOH Requirements",
+          "Price Transparency",
+          "Interoperability Rules",
+          "Information Blocking Prevention"
+        ]
+      },
+      "useCaseScenarios": {
+        "primaryQualityInitiatives": [
+          {
+            "initiative": "Reduce 30-Day Readmissions",
+            "goal": "Achieve excess readmission ratio < 1.0",
+            "timeline": "18 months",
+            "approach": [
+              "Enhanced discharge planning with risk stratification",
+              "Post-discharge phone calls within 48 hours",
+              "7-day follow-up appointments for high-risk patients",
+              "Medication reconciliation improvements",
+              "Care transition nurse program"
+            ],
+            "hdimUtilization": [
+              "Real-time readmission risk scoring",
+              "Care gap identification for discharged patients",
+              "Automated outreach trigger workflows",
+              "Performance tracking by service line"
+            ]
+          },
+          {
+            "initiative": "Improve CMS Star Rating to 4 Stars",
+            "goal": "Move from 3-star to 4-star rating",
+            "timeline": "24 months",
+            "approach": [
+              "Focus on patient experience improvement",
+              "Reduce hospital-acquired infections",
+              "Enhance care coordination",
+              "Improve timely and effective care measures"
+            ],
+            "hdimUtilization": [
+              "Cross-measure impact analysis",
+              "Patient cohort identification for interventions",
+              "Trend analysis and forecasting",
+              "Competitive benchmarking"
+            ]
+          }
+        ],
+        "careGapClosurePriorities": [
+          {
+            "priority": 1,
+            "measure": "Comprehensive Diabetes Care - HbA1c Control",
+            "gapSize": 4200,
+            "strategy": "Ambulatory care coordination with pharmacy integration",
+            "expectedImpact": "8% improvement in compliance"
+          },
+          {
+            "priority": 2,
+            "measure": "Colorectal Cancer Screening",
+            "gapSize": 18500,
+            "strategy": "FIT kit mailing program with patient navigation",
+            "expectedImpact": "12% improvement in screening rates"
+          },
+          {
+            "priority": 3,
+            "measure": "Controlling High Blood Pressure",
+            "gapSize": 8900,
+            "strategy": "Remote patient monitoring program",
+            "expectedImpact": "10% improvement in BP control"
+          }
+        ],
+        "populationHealthNeeds": [
+          {
+            "need": "Medicare ACO Performance",
+            "description": "Manage 145,000 attributed lives across MSSP ACO",
+            "requirements": [
+              "Risk stratification of entire attributed population",
+              "Proactive care gap outreach",
+              "Care management for high-risk patients",
+              "Cost and utilization tracking"
+            ]
+          },
+          {
+            "need": "Medicare Advantage Contract Success",
+            "description": "Achieve 4+ star rating for MA plan partnerships",
+            "requirements": [
+              "HEDIS measure compliance tracking",
+              "HCC risk adjustment optimization",
+              "Member retention through quality",
+              "CAHPS improvement initiatives"
+            ]
+          }
+        ],
+        "riskStratificationRequirements": [
+          {
+            "population": "Inpatient Admissions",
+            "model": "Readmission risk at admission",
+            "factors": ["Prior utilization", "Comorbidities", "Social determinants", "Medication complexity"],
+            "actionTriggers": ["High-risk designation triggers care management enrollment"]
+          },
+          {
+            "population": "ACO Attributed",
+            "model": "Total cost of care risk",
+            "factors": ["HCC scores", "Care gaps", "Prior year spend", "Chronic conditions"],
+            "actionTriggers": ["Top 5% risk triggers intensive care management"]
+          }
+        ]
+      }
+    },
+    "communityHospital": {
+      "id": "HOSP-COMM-002",
+      "name": "Community Hospital",
+      "description": "General acute care hospitals serving local communities with essential medical services and select specialty programs",
+      "characteristics": {
+        "bedCount": {
+          "min": 100,
+          "max": 300,
+          "typical": 180
+        },
+        "teachingStatus": "Non-Teaching or Minor Teaching",
+        "traumaLevel": "Level III or IV",
+        "accreditations": [
+          "The Joint Commission",
+          "DNV Healthcare",
+          "State Licensure"
+        ]
+      },
+      "patientVolume": {
+        "annualAdmissions": {
+          "min": 8000,
+          "max": 18000,
+          "typical": 12500
+        },
+        "annualEDVisits": {
+          "min": 35000,
+          "max": 65000,
+          "typical": 48000
+        },
+        "annualOutpatientVisits": {
+          "min": 120000,
+          "max": 350000,
+          "typical": 225000
+        },
+        "annualSurgeries": {
+          "inpatient": 3500,
+          "outpatient": 8500
+        },
+        "averageLengthOfStay": 4.2,
+        "caseMixIndex": 1.45
+      },
+      "payerMix": {
+        "medicare": {
+          "percentage": 45,
+          "breakdown": {
+            "traditionalMedicare": 28,
+            "medicareAdvantage": 17
+          }
+        },
+        "medicaid": {
+          "percentage": 12,
+          "breakdown": {
+            "traditionalMedicaid": 7,
+            "managedMedicaid": 5
+          }
+        },
+        "commercial": {
+          "percentage": 32,
+          "breakdown": {
+            "employerSponsored": 26,
+            "individualMarket": 3,
+            "exchange": 3
+          }
+        },
+        "selfPay": 7,
+        "tricare": 2,
+        "workersComp": 1,
+        "other": 1
+      },
+      "specialtyServiceLines": [
+        {
+          "name": "Cardiovascular Services",
+          "services": ["Cardiac Catheterization", "Interventional Cardiology", "Cardiac Rehabilitation"],
+          "annualVolume": 1800,
+          "qualityFocus": ["ACC Chest Pain Center", "Heart Failure Accreditation"]
+        },
+        {
+          "name": "Orthopedics",
+          "services": ["Joint Replacement", "Spine Surgery", "Sports Medicine", "Fracture Care"],
+          "annualVolume": 2200,
+          "qualityFocus": ["Joint Commission Hip/Knee Certification", "Blue Distinction Center"]
+        },
+        {
+          "name": "Women's Services",
+          "services": ["Labor and Delivery", "Level II NICU", "Breast Health", "Gynecologic Surgery"],
+          "annualVolume": 1400,
+          "qualityFocus": ["Baby-Friendly Designation", "Perinatal Care Certification"]
+        },
+        {
+          "name": "General Surgery",
+          "services": ["Laparoscopic Surgery", "Bariatric Surgery", "Hernia Repair", "Gallbladder"],
+          "annualVolume": 2800,
+          "qualityFocus": ["MBSAQIP Accreditation", "ACS NSQIP Participant"]
+        }
+      ],
+      "qualityMeasureFocus": {
+        "hedis": {
+          "priority": "Medium-High",
+          "keyMeasures": [
+            {
+              "measureId": "CDC",
+              "measureName": "Comprehensive Diabetes Care",
+              "currentPerformance": 68,
+              "benchmark": 78,
+              "gap": 10,
+              "patientCount": 4850
+            },
+            {
+              "measureId": "CBP",
+              "measureName": "Controlling High Blood Pressure",
+              "currentPerformance": 65,
+              "benchmark": 73,
+              "gap": 8,
+              "patientCount": 8920
+            },
+            {
+              "measureId": "BCS",
+              "measureName": "Breast Cancer Screening",
+              "currentPerformance": 71,
+              "benchmark": 80,
+              "gap": 9,
+              "patientCount": 12400
+            },
+            {
+              "measureId": "COL",
+              "measureName": "Colorectal Cancer Screening",
+              "currentPerformance": 58,
+              "benchmark": 70,
+              "gap": 12,
+              "patientCount": 16200
+            },
+            {
+              "measureId": "FUH",
+              "measureName": "Follow-Up After Hospitalization for Mental Illness",
+              "currentPerformance": 45,
+              "benchmark": 58,
+              "gap": 13,
+              "patientCount": 680
+            }
+          ]
+        },
+        "cmsStars": {
+          "priority": "High",
+          "currentRating": 3,
+          "targetRating": 4,
+          "keyDomains": [
+            {
+              "domain": "Mortality",
+              "weight": 22,
+              "performance": "Average"
+            },
+            {
+              "domain": "Safety of Care",
+              "weight": 22,
+              "performance": "Average"
+            },
+            {
+              "domain": "Readmission",
+              "weight": 22,
+              "performance": "Average"
+            },
+            {
+              "domain": "Patient Experience",
+              "weight": 22,
+              "performance": "Below Average"
+            },
+            {
+              "domain": "Timely and Effective Care",
+              "weight": 12,
+              "performance": "Average"
+            }
+          ]
+        },
+        "leapfrog": {
+          "priority": "Medium",
+          "currentGrade": "C",
+          "targetGrade": "B",
+          "focusAreas": [
+            "Safe Surgery Checklist",
+            "Hand Hygiene",
+            "Medication Safety (BCMA)",
+            "Nursing Workforce"
+          ]
+        },
+        "valueBasedPrograms": [
+          {
+            "program": "Hospital VBP",
+            "participation": true,
+            "currentScore": 38,
+            "paymentAdjustment": -0.5
+          },
+          {
+            "program": "HRRP",
+            "participation": true,
+            "excessReadmissionRatio": 1.02,
+            "paymentAdjustment": -0.8
+          },
+          {
+            "program": "HAC Reduction Program",
+            "participation": true,
+            "totalHACScore": 4.8,
+            "penaltyStatus": false
+          }
+        ]
+      },
+      "commonCareGaps": [
+        {
+          "category": "Chronic Disease Management",
+          "gaps": [
+            {
+              "condition": "Diabetes",
+              "issue": "Eye exams and nephropathy monitoring",
+              "affectedPatients": 1850,
+              "rootCause": "Limited specialist availability, referral leakage"
+            },
+            {
+              "condition": "Hypertension",
+              "issue": "Blood pressure control in elderly",
+              "affectedPatients": 2900,
+              "rootCause": "Medication adherence, limited home monitoring"
+            }
+          ]
+        },
+        {
+          "category": "Preventive Care",
+          "gaps": [
+            {
+              "condition": "Cancer Screening",
+              "issue": "Colonoscopy completion",
+              "affectedPatients": 6400,
+              "rootCause": "GI capacity constraints, patient no-shows"
+            },
+            {
+              "condition": "Immunizations",
+              "issue": "Adult immunization gaps",
+              "affectedPatients": 9800,
+              "rootCause": "Standing orders not implemented"
+            }
+          ]
+        },
+        {
+          "category": "Care Coordination",
+          "gaps": [
+            {
+              "condition": "Post-Acute Care",
+              "issue": "SNF quality selection",
+              "affectedPatients": 820,
+              "rootCause": "Limited data on SNF quality outcomes"
+            }
+          ]
+        }
+      ],
+      "staffing": {
+        "totalEmployees": 2200,
+        "physicianFTEs": 125,
+        "nursingFTEs": 650,
+        "ratios": {
+          "nurseToBedRatio": 3.6,
+          "nurseToPatientICU": "1:2",
+          "nurseToPatientMedSurg": "1:6",
+          "nurseToPatientED": "1:5"
+        },
+        "qualityStaff": {
+          "qualityDirectors": 1,
+          "qualityManagers": 3,
+          "qualityAnalysts": 4,
+          "performanceImprovementSpecialists": 3,
+          "clinicalDocumentationSpecialists": 4
+        }
+      },
+      "technologyMaturity": {
+        "level": "Intermediate",
+        "score": 65,
+        "capabilities": {
+          "ehr": {
+            "vendor": "Meditech or CPSI",
+            "version": "Expanse 2023",
+            "modules": ["Inpatient", "Ambulatory", "ED", "Revenue Cycle"]
+          },
+          "analytics": {
+            "platform": "Vendor-provided + Excel",
+            "capabilities": ["Descriptive", "Some Diagnostic"],
+            "realTimeDashboards": false
+          },
+          "populationHealth": {
+            "platform": "Basic Registry Functions",
+            "registries": ["Diabetes", "Heart Failure"],
+            "riskStratification": false
+          },
+          "interoperability": {
+            "hie": "State HIE Connected",
+            "fhir": "Partial Implementation",
+            "directMessaging": true,
+            "patientPortal": "Vendor-provided"
+          },
+          "qualityReporting": {
+            "automated": "Partial",
+            "registryIntegration": ["Limited"],
+            "abstractionRate": 45
+          }
+        }
+      },
+      "regulatoryPressures": {
+        "valueBasedContracts": {
+          "percentageOfRevenue": 18,
+          "contractTypes": [
+            {
+              "type": "Shared Savings",
+              "partners": ["Regional ACO"],
+              "lives": 22000
+            },
+            {
+              "type": "Pay for Performance",
+              "partners": ["Major Commercial Payers"],
+              "measures": "Core Quality Set"
+            }
+          ]
+        },
+        "payForPerformance": {
+          "programs": [
+            "Hospital VBP",
+            "HRRP",
+            "HAC Reduction",
+            "Commercial Quality Bonuses"
+          ],
+          "atRiskRevenue": 4500000
+        },
+        "complianceRequirements": [
+          "CMS Conditions of Participation",
+          "Joint Commission or DNV Standards",
+          "State Requirements",
+          "Price Transparency"
+        ]
+      },
+      "useCaseScenarios": {
+        "primaryQualityInitiatives": [
+          {
+            "initiative": "Improve HCAHPS Scores",
+            "goal": "Move patient experience from Below Average to Average",
+            "timeline": "12 months",
+            "approach": [
+              "Nurse leader rounding implementation",
+              "Discharge communication improvement",
+              "Environmental services responsiveness",
+              "Pain management communication"
+            ],
+            "hdimUtilization": [
+              "HCAHPS domain tracking",
+              "Unit-level performance comparison",
+              "Correlation analysis with staffing",
+              "Best practice identification"
+            ]
+          },
+          {
+            "initiative": "Reduce Surgical Site Infections",
+            "goal": "Achieve SIR < 0.8",
+            "timeline": "18 months",
+            "approach": [
+              "Enhanced bundle compliance monitoring",
+              "Surgical prep optimization",
+              "Prophylactic antibiotic timing",
+              "Post-op wound care education"
+            ],
+            "hdimUtilization": [
+              "Real-time bundle compliance tracking",
+              "Surgeon-specific reporting",
+              "Risk-adjusted outcome analysis",
+              "Intervention effectiveness measurement"
+            ]
+          }
+        ],
+        "careGapClosurePriorities": [
+          {
+            "priority": 1,
+            "measure": "Colorectal Cancer Screening",
+            "gapSize": 6400,
+            "strategy": "FIT kit program with centralized reminder system",
+            "expectedImpact": "15% improvement"
+          },
+          {
+            "priority": 2,
+            "measure": "Diabetes Care Composite",
+            "gapSize": 1850,
+            "strategy": "Certified diabetes educator program with group visits",
+            "expectedImpact": "10% improvement"
+          }
+        ],
+        "populationHealthNeeds": [
+          {
+            "need": "ACO Participation Support",
+            "description": "Support regional ACO quality requirements",
+            "requirements": [
+              "Care gap closure for attributed patients",
+              "Readmission reduction focus",
+              "Cost management awareness"
+            ]
+          }
+        ],
+        "riskStratificationRequirements": [
+          {
+            "population": "Medicare Patients",
+            "model": "Basic risk tiers",
+            "factors": ["Age", "Chronic conditions", "Prior hospitalizations"],
+            "actionTriggers": ["High-risk triggers discharge planning enhancement"]
+          }
+        ]
+      }
+    },
+    "ruralCriticalAccessHospital": {
+      "id": "HOSP-CAH-003",
+      "name": "Rural Critical Access Hospital",
+      "description": "Small rural hospitals designated as Critical Access Hospitals by CMS, providing essential services to geographically isolated communities",
+      "characteristics": {
+        "bedCount": {
+          "min": 10,
+          "max": 25,
+          "typical": 18
+        },
+        "teachingStatus": "Non-Teaching",
+        "traumaLevel": "Level IV or None",
+        "accreditations": [
+          "State Licensure",
+          "CMS Critical Access Hospital Designation",
+          "The Joint Commission (some)"
+        ],
+        "ruralDesignations": [
+          "Critical Access Hospital",
+          "Sole Community Hospital",
+          "Rural Referral Center",
+          "Medicare-Dependent Hospital"
+        ]
+      },
+      "patientVolume": {
+        "annualAdmissions": {
+          "min": 400,
+          "max": 1200,
+          "typical": 750
+        },
+        "annualEDVisits": {
+          "min": 4000,
+          "max": 12000,
+          "typical": 7500
+        },
+        "annualOutpatientVisits": {
+          "min": 15000,
+          "max": 45000,
+          "typical": 28000
+        },
+        "annualSurgeries": {
+          "inpatient": 120,
+          "outpatient": 450
+        },
+        "averageLengthOfStay": 3.2,
+        "caseMixIndex": 0.95,
+        "swingBedDays": 2800
+      },
+      "payerMix": {
+        "medicare": {
+          "percentage": 58,
+          "breakdown": {
+            "traditionalMedicare": 42,
+            "medicareAdvantage": 16
+          }
+        },
+        "medicaid": {
+          "percentage": 15,
+          "breakdown": {
+            "traditionalMedicaid": 10,
+            "managedMedicaid": 5
+          }
+        },
+        "commercial": {
+          "percentage": 18,
+          "breakdown": {
+            "employerSponsored": 14,
+            "individualMarket": 2,
+            "exchange": 2
+          }
+        },
+        "selfPay": 6,
+        "tricare": 1,
+        "workersComp": 1,
+        "other": 1
+      },
+      "specialtyServiceLines": [
+        {
+          "name": "Emergency Services",
+          "services": ["24/7 Emergency Care", "Stabilization", "Transfer Coordination"],
+          "annualVolume": 7500,
+          "qualityFocus": ["Door-to-Transfer Time", "EMTALA Compliance"]
+        },
+        {
+          "name": "Primary Care",
+          "services": ["Family Medicine", "Internal Medicine", "Chronic Disease Management"],
+          "annualVolume": 18000,
+          "qualityFocus": ["Chronic Care Management", "Preventive Services"]
+        },
+        {
+          "name": "Swing Bed/Post-Acute",
+          "services": ["Skilled Nursing", "Rehabilitation", "Respite Care"],
+          "annualVolume": 280,
+          "qualityFocus": ["Discharge to Community", "Functional Improvement"]
+        },
+        {
+          "name": "Telehealth Services",
+          "services": ["Tele-Stroke", "Tele-ICU", "Specialty Consultations"],
+          "annualVolume": 450,
+          "qualityFocus": ["Access to Specialists", "Avoid Unnecessary Transfers"]
+        }
+      ],
+      "qualityMeasureFocus": {
+        "hedis": {
+          "priority": "Medium",
+          "keyMeasures": [
+            {
+              "measureId": "CDC",
+              "measureName": "Comprehensive Diabetes Care",
+              "currentPerformance": 62,
+              "benchmark": 75,
+              "gap": 13,
+              "patientCount": 890
+            },
+            {
+              "measureId": "CBP",
+              "measureName": "Controlling High Blood Pressure",
+              "currentPerformance": 58,
+              "benchmark": 70,
+              "gap": 12,
+              "patientCount": 1420
+            },
+            {
+              "measureId": "AWC",
+              "measureName": "Adolescent Well-Care Visits",
+              "currentPerformance": 42,
+              "benchmark": 55,
+              "gap": 13,
+              "patientCount": 340
+            },
+            {
+              "measureId": "IMA",
+              "measureName": "Immunizations for Adolescents",
+              "currentPerformance": 35,
+              "benchmark": 50,
+              "gap": 15,
+              "patientCount": 280
+            }
+          ]
+        },
+        "cmsStars": {
+          "priority": "Medium",
+          "currentRating": 2,
+          "targetRating": 3,
+          "keyDomains": [
+            {
+              "domain": "Mortality",
+              "weight": 22,
+              "performance": "Not Applicable (Low Volume)"
+            },
+            {
+              "domain": "Safety of Care",
+              "weight": 22,
+              "performance": "Average"
+            },
+            {
+              "domain": "Readmission",
+              "weight": 22,
+              "performance": "Average"
+            },
+            {
+              "domain": "Patient Experience",
+              "weight": 22,
+              "performance": "Above Average"
+            },
+            {
+              "domain": "Timely and Effective Care",
+              "weight": 12,
+              "performance": "Below Average"
+            }
+          ]
+        },
+        "leapfrog": {
+          "priority": "Low",
+          "currentGrade": "Not Graded",
+          "targetGrade": "N/A",
+          "focusAreas": [
+            "Limited volume excludes from most measures"
+          ]
+        },
+        "valueBasedPrograms": [
+          {
+            "program": "Medicare Beneficiary Quality Improvement Project (MBQIP)",
+            "participation": true,
+            "measures": ["ED Transfer Communication", "Outpatient Quality", "Patient Safety"],
+            "performanceLevel": "Participating"
+          },
+          {
+            "program": "HRRP",
+            "participation": false,
+            "reason": "CAH exemption"
+          },
+          {
+            "program": "Rural Emergency Hospital Quality Reporting",
+            "participation": "Considering Conversion",
+            "measures": ["Under Evaluation"]
+          }
+        ]
+      },
+      "commonCareGaps": [
+        {
+          "category": "Access to Care",
+          "gaps": [
+            {
+              "condition": "Specialist Access",
+              "issue": "Limited access to specialists",
+              "affectedPatients": 2400,
+              "rootCause": "Geographic isolation, specialist recruitment challenges"
+            },
+            {
+              "condition": "Mental Health",
+              "issue": "Behavioral health services availability",
+              "affectedPatients": 580,
+              "rootCause": "No psychiatrists within 50 miles"
+            }
+          ]
+        },
+        {
+          "category": "Chronic Disease Management",
+          "gaps": [
+            {
+              "condition": "Diabetes",
+              "issue": "Comprehensive care delivery",
+              "affectedPatients": 320,
+              "rootCause": "No endocrinologist, limited diabetes education"
+            },
+            {
+              "condition": "Heart Disease",
+              "issue": "Cardiac rehabilitation access",
+              "affectedPatients": 145,
+              "rootCause": "Program not financially viable at low volume"
+            }
+          ]
+        },
+        {
+          "category": "Preventive Care",
+          "gaps": [
+            {
+              "condition": "Cancer Screening",
+              "issue": "Mammography and colonoscopy access",
+              "affectedPatients": 1850,
+              "rootCause": "Mobile services sporadic, patient travel burden"
+            }
+          ]
+        }
+      ],
+      "staffing": {
+        "totalEmployees": 185,
+        "physicianFTEs": 8,
+        "nursingFTEs": 52,
+        "ratios": {
+          "nurseToBedRatio": 2.9,
+          "nurseToPatientACute": "1:4",
+          "nurseToPatientED": "1:4 (often single coverage)"
+        },
+        "qualityStaff": {
+          "qualityDirectors": 0,
+          "qualityManagers": 1,
+          "qualityAnalysts": 0,
+          "performanceImprovementSpecialists": 0,
+          "clinicalDocumentationSpecialists": 0,
+          "note": "Quality functions often shared with nursing leadership"
+        },
+        "challenges": [
+          "Physician recruitment and retention",
+          "Nursing shortages",
+          "Limited specialty coverage",
+          "On-call burden"
+        ]
+      },
+      "technologyMaturity": {
+        "level": "Basic",
+        "score": 40,
+        "capabilities": {
+          "ehr": {
+            "vendor": "Athenahealth, CPSI, or Meditech",
+            "version": "Current",
+            "modules": ["Inpatient", "Ambulatory", "ED"]
+          },
+          "analytics": {
+            "platform": "Basic EHR Reports + Excel",
+            "capabilities": ["Basic Descriptive"],
+            "realTimeDashboards": false
+          },
+          "populationHealth": {
+            "platform": "Minimal",
+            "registries": ["Manual tracking"],
+            "riskStratification": false
+          },
+          "interoperability": {
+            "hie": "Limited State HIE",
+            "fhir": "Not Implemented",
+            "directMessaging": "Some",
+            "patientPortal": "Basic"
+          },
+          "qualityReporting": {
+            "automated": false,
+            "registryIntegration": ["None"],
+            "abstractionRate": 85
+          }
+        },
+        "barriers": [
+          "Limited IT budget",
+          "No dedicated IT staff (shared with operations)",
+          "Internet connectivity challenges",
+          "Vendor support limitations"
+        ]
+      },
+      "regulatoryPressures": {
+        "valueBasedContracts": {
+          "percentageOfRevenue": 5,
+          "contractTypes": [
+            {
+              "type": "MBQIP Participation",
+              "partners": ["CMS/HRSA"],
+              "focus": "Quality reporting participation"
+            },
+            {
+              "type": "ACO (Limited)",
+              "partners": ["May be part of regional network"],
+              "lives": 2500
+            }
+          ]
+        },
+        "payForPerformance": {
+          "programs": [
+            "MBQIP",
+            "State Quality Programs",
+            "Rural Health Clinic Quality"
+          ],
+          "atRiskRevenue": 150000
+        },
+        "complianceRequirements": [
+          "CAH Conditions of Participation",
+          "96-Hour Average Length of Stay",
+          "Provider-Based RHC Requirements",
+          "EMTALA Compliance"
+        ],
+        "financialPressures": [
+          "Cost-based reimbursement optimization",
+          "Low patient volume viability",
+          "340B program participation",
+          "Workforce cost inflation",
+          "Rural hospital closure risk mitigation"
+        ]
+      },
+      "useCaseScenarios": {
+        "primaryQualityInitiatives": [
+          {
+            "initiative": "MBQIP Performance Improvement",
+            "goal": "Achieve top quartile performance in MBQIP measures",
+            "timeline": "12 months",
+            "approach": [
+              "Focus on ED transfer communication",
+              "Improve outpatient preventive care documentation",
+              "Enhance patient safety event reporting"
+            ],
+            "hdimUtilization": [
+              "Simplified quality dashboards",
+              "Automated MBQIP measure tracking",
+              "Peer comparison with similar CAHs",
+              "Care gap reports for primary care"
+            ]
+          },
+          {
+            "initiative": "Chronic Disease Management Enhancement",
+            "goal": "Improve diabetes and hypertension control",
+            "timeline": "18 months",
+            "approach": [
+              "Implement chronic care management billing",
+              "Telehealth specialist consultations",
+              "Community health worker program"
+            ],
+            "hdimUtilization": [
+              "Patient registry with simple risk tiers",
+              "Care gap identification",
+              "Telehealth integration support",
+              "Outcome tracking"
+            ]
+          }
+        ],
+        "careGapClosurePriorities": [
+          {
+            "priority": 1,
+            "measure": "Diabetes Care - A1c Testing",
+            "gapSize": 320,
+            "strategy": "Standing orders, point-of-care A1c",
+            "expectedImpact": "20% improvement"
+          },
+          {
+            "priority": 2,
+            "measure": "Blood Pressure Control",
+            "gapSize": 1420,
+            "strategy": "Home BP monitoring program with pharmacist support",
+            "expectedImpact": "15% improvement"
+          }
+        ],
+        "populationHealthNeeds": [
+          {
+            "need": "Community Health Improvement",
+            "description": "Address health needs of service area population",
+            "requirements": [
+              "CHNA/CHIP alignment",
+              "Preventive services outreach",
+              "Transportation barrier solutions",
+              "Community partnerships"
+            ]
+          }
+        ],
+        "riskStratificationRequirements": [
+          {
+            "population": "Medicare Patients",
+            "model": "Simple risk flags",
+            "factors": ["Recent hospitalization", "Multiple chronic conditions", "Polypharmacy"],
+            "actionTriggers": ["Flag for care management outreach"]
+          }
+        ]
+      }
+    },
+    "specialtyHospital": {
+      "id": "HOSP-SPEC-004",
+      "name": "Specialty Hospital",
+      "description": "Hospitals focusing on specific service lines such as cardiac, orthopedic, rehabilitation, or pediatric care with concentrated expertise",
+      "subtypes": [
+        {
+          "subtype": "Cardiac Specialty Hospital",
+          "id": "HOSP-SPEC-004A",
+          "characteristics": {
+            "bedCount": {
+              "min": 60,
+              "max": 150,
+              "typical": 100
+            },
+            "services": [
+              "Cardiac Surgery",
+              "Interventional Cardiology",
+              "Electrophysiology",
+              "Advanced Heart Failure",
+              "Cardiac Rehabilitation"
+            ]
+          }
+        },
+        {
+          "subtype": "Orthopedic Specialty Hospital",
+          "id": "HOSP-SPEC-004B",
+          "characteristics": {
+            "bedCount": {
+              "min": 40,
+              "max": 100,
+              "typical": 70
+            },
+            "services": [
+              "Total Joint Replacement",
+              "Spine Surgery",
+              "Sports Medicine",
+              "Hand Surgery",
+              "Orthopedic Trauma"
+            ]
+          }
+        },
+        {
+          "subtype": "Pediatric Specialty Hospital",
+          "id": "HOSP-SPEC-004C",
+          "characteristics": {
+            "bedCount": {
+              "min": 100,
+              "max": 400,
+              "typical": 225
+            },
+            "services": [
+              "Pediatric Subspecialties",
+              "Pediatric Surgery",
+              "NICU",
+              "PICU",
+              "Pediatric Emergency"
+            ]
+          }
+        },
+        {
+          "subtype": "Rehabilitation Hospital",
+          "id": "HOSP-SPEC-004D",
+          "characteristics": {
+            "bedCount": {
+              "min": 40,
+              "max": 150,
+              "typical": 80
+            },
+            "services": [
+              "Stroke Rehabilitation",
+              "Brain Injury",
+              "Spinal Cord Injury",
+              "Orthopedic Rehabilitation",
+              "Cardiac Rehabilitation"
+            ]
+          }
+        }
+      ],
+      "characteristics": {
+        "bedCount": {
+          "min": 40,
+          "max": 400,
+          "typical": 120
+        },
+        "teachingStatus": "Varies - Often Affiliated",
+        "accreditations": [
+          "The Joint Commission Disease-Specific Certifications",
+          "Specialty Society Accreditations",
+          "CARF (Rehabilitation)",
+          "Blue Distinction Centers"
+        ]
+      },
+      "patientVolume": {
+        "annualAdmissions": {
+          "min": 3000,
+          "max": 15000,
+          "typical": 6500,
+          "note": "Highly concentrated in specialty"
+        },
+        "annualEDVisits": {
+          "min": 0,
+          "max": 45000,
+          "typical": 8000,
+          "note": "Only applicable to some specialty types"
+        },
+        "annualOutpatientVisits": {
+          "min": 25000,
+          "max": 200000,
+          "typical": 75000
+        },
+        "annualSurgeries": {
+          "inpatient": 4500,
+          "outpatient": 8500
+        },
+        "averageLengthOfStay": {
+          "orthopedic": 2.1,
+          "cardiac": 4.8,
+          "pediatric": 4.5,
+          "rehabilitation": 12.5
+        },
+        "caseMixIndex": {
+          "orthopedic": 1.85,
+          "cardiac": 2.45,
+          "pediatric": 1.95,
+          "rehabilitation": 1.15
+        }
+      },
+      "payerMix": {
+        "orthopedicHospital": {
+          "medicare": 42,
+          "medicaid": 5,
+          "commercial": 45,
+          "selfPay": 5,
+          "workersComp": 3
+        },
+        "cardiacHospital": {
+          "medicare": 55,
+          "medicaid": 8,
+          "commercial": 32,
+          "selfPay": 4,
+          "other": 1
+        },
+        "pediatricHospital": {
+          "medicare": 0,
+          "medicaid": 45,
+          "commercial": 42,
+          "selfPay": 8,
+          "other": 5
+        },
+        "rehabilitationHospital": {
+          "medicare": 62,
+          "medicaid": 12,
+          "commercial": 22,
+          "selfPay": 3,
+          "workersComp": 1
+        }
+      },
+      "qualityMeasureFocus": {
+        "hedis": {
+          "priority": "High for Relevant Measures",
+          "keyMeasures": [
+            {
+              "measureId": "PCR",
+              "measureName": "Plan All-Cause Readmissions",
+              "currentPerformance": 78,
+              "benchmark": 85,
+              "gap": 7,
+              "applicableTo": ["All Specialty Types"],
+              "patientCount": 4200
+            },
+            {
+              "measureId": "PBH",
+              "measureName": "Persistence of Beta-Blocker Treatment After Heart Attack",
+              "currentPerformance": 82,
+              "benchmark": 90,
+              "gap": 8,
+              "applicableTo": ["Cardiac"],
+              "patientCount": 680
+            },
+            {
+              "measureId": "SPC",
+              "measureName": "Statin Therapy for Patients With Cardiovascular Disease",
+              "currentPerformance": 76,
+              "benchmark": 85,
+              "gap": 9,
+              "applicableTo": ["Cardiac"],
+              "patientCount": 2450
+            },
+            {
+              "measureId": "W15",
+              "measureName": "Well-Child Visits in the First 15 Months of Life",
+              "currentPerformance": 68,
+              "benchmark": 80,
+              "gap": 12,
+              "applicableTo": ["Pediatric"],
+              "patientCount": 1200
+            },
+            {
+              "measureId": "ADD",
+              "measureName": "Follow-Up Care for Children Prescribed ADHD Medication",
+              "currentPerformance": 52,
+              "benchmark": 65,
+              "gap": 13,
+              "applicableTo": ["Pediatric"],
+              "patientCount": 890
+            }
+          ]
+        },
+        "cmsStars": {
+          "priority": "Critical",
+          "currentRating": 4,
+          "targetRating": 5,
+          "keyDomains": [
+            {
+              "domain": "Mortality",
+              "weight": 22,
+              "performance": "Above Average",
+              "note": "Specialty-specific mortality measures"
+            },
+            {
+              "domain": "Safety of Care",
+              "weight": 22,
+              "performance": "Above Average"
+            },
+            {
+              "domain": "Readmission",
+              "weight": 22,
+              "performance": "Above Average"
+            },
+            {
+              "domain": "Patient Experience",
+              "weight": 22,
+              "performance": "Above Average"
+            },
+            {
+              "domain": "Timely and Effective Care",
+              "weight": 12,
+              "performance": "Above Average"
+            }
+          ]
+        },
+        "leapfrog": {
+          "priority": "High",
+          "currentGrade": "A",
+          "targetGrade": "A (Maintain)",
+          "focusAreas": [
+            "Specialty-specific volume standards",
+            "Surgeon volume thresholds",
+            "ICU physician staffing"
+          ]
+        },
+        "specialtySpecificPrograms": [
+          {
+            "program": "STS National Database",
+            "applicableTo": "Cardiac",
+            "measures": ["CABG Mortality", "Valve Surgery Outcomes", "Composite Score"],
+            "currentPerformance": "3-Star (Expected)"
+          },
+          {
+            "program": "AJRR/AAOS Registry",
+            "applicableTo": "Orthopedic",
+            "measures": ["Joint Replacement Outcomes", "Revision Rates", "Patient-Reported Outcomes"],
+            "currentPerformance": "Above National Average"
+          },
+          {
+            "program": "Children's Hospitals Solutions for Patient Safety",
+            "applicableTo": "Pediatric",
+            "measures": ["Pediatric HAIs", "Adverse Drug Events", "Surgical Site Infections"],
+            "currentPerformance": "High Performer"
+          },
+          {
+            "program": "IRF Quality Reporting",
+            "applicableTo": "Rehabilitation",
+            "measures": ["Discharge to Community", "Potentially Preventable Readmissions", "Functional Improvement"],
+            "currentPerformance": "Above Threshold"
+          }
+        ],
+        "valueBasedPrograms": [
+          {
+            "program": "Comprehensive Care for Joint Replacement (CJR)",
+            "applicableTo": "Orthopedic",
+            "participation": true,
+            "episodeVolume": 1200,
+            "reconciliationResult": "Positive"
+          },
+          {
+            "program": "BPCI-Advanced",
+            "applicableTo": "Cardiac, Orthopedic",
+            "participation": true,
+            "episodes": ["CABG", "Major Joint Replacement", "Cardiac Defibrillator"],
+            "performanceYear": 2024
+          },
+          {
+            "program": "IRF Quality Reporting Program",
+            "applicableTo": "Rehabilitation",
+            "participation": true,
+            "paymentImpact": "2% APU"
+          }
+        ]
+      },
+      "commonCareGaps": [
+        {
+          "category": "Post-Procedural Care",
+          "gaps": [
+            {
+              "condition": "Joint Replacement",
+              "issue": "Post-discharge physical therapy compliance",
+              "affectedPatients": 850,
+              "rootCause": "Outpatient PT access, patient engagement"
+            },
+            {
+              "condition": "Cardiac Surgery",
+              "issue": "Cardiac rehabilitation enrollment",
+              "affectedPatients": 420,
+              "rootCause": "Referral process, insurance coverage barriers"
+            }
+          ]
+        },
+        {
+          "category": "Care Transitions",
+          "gaps": [
+            {
+              "condition": "Specialty Discharges",
+              "issue": "Communication to PCP",
+              "affectedPatients": 2800,
+              "rootCause": "Interoperability, out-of-network PCPs"
+            },
+            {
+              "condition": "Medication Management",
+              "issue": "Post-procedure medication adherence",
+              "affectedPatients": 1650,
+              "rootCause": "Complex regimens, patient education"
+            }
+          ]
+        },
+        {
+          "category": "Long-term Outcomes",
+          "gaps": [
+            {
+              "condition": "Patient-Reported Outcomes",
+              "issue": "PRO collection completion",
+              "affectedPatients": 3200,
+              "rootCause": "Patient follow-up, survey fatigue"
+            }
+          ]
+        }
+      ],
+      "staffing": {
+        "totalEmployees": 1800,
+        "physicianFTEs": 120,
+        "nursingFTEs": 480,
+        "ratios": {
+          "nurseToBedRatio": 4.0,
+          "nurseToPatientICU": "1:2",
+          "nurseToPatientStepdown": "1:3",
+          "nurseToPatientFloor": "1:4"
+        },
+        "qualityStaff": {
+          "qualityDirectors": 1,
+          "qualityManagers": 4,
+          "qualityAnalysts": 8,
+          "performanceImprovementSpecialists": 6,
+          "clinicalDocumentationSpecialists": 8,
+          "outcomesResearchStaff": 4
+        },
+        "specialtySpecific": {
+          "surgeonVolume": "High-volume surgeons meeting Leapfrog thresholds",
+          "certifiedSpecialists": "Board-certified subspecialists",
+          "therapeuticStaff": "PT/OT/Speech as applicable"
+        }
+      },
+      "technologyMaturity": {
+        "level": "Advanced",
+        "score": 80,
+        "capabilities": {
+          "ehr": {
+            "vendor": "Epic or Specialty EHR",
+            "version": "Current",
+            "modules": ["Core Clinical", "Specialty Workflows", "Registry Integration"]
+          },
+          "analytics": {
+            "platform": "Specialty Dashboards + Enterprise Analytics",
+            "capabilities": ["Descriptive", "Diagnostic", "Predictive"],
+            "realTimeDashboards": true
+          },
+          "populationHealth": {
+            "platform": "Specialty Registries",
+            "registries": ["Disease-Specific", "Procedure-Specific", "Outcomes"],
+            "riskStratification": true
+          },
+          "interoperability": {
+            "hie": "Connected",
+            "fhir": "R4 Compliant",
+            "directMessaging": true,
+            "patientPortal": "Specialty-Enhanced"
+          },
+          "qualityReporting": {
+            "automated": true,
+            "registryIntegration": ["STS", "NCDR", "AJRR", "NSQIP"],
+            "abstractionRate": 10
+          },
+          "specialtyTechnology": [
+            "Patient-reported outcome collection systems",
+            "Surgical navigation and robotics",
+            "Remote patient monitoring",
+            "Wearable integration for rehabilitation"
+          ]
+        }
+      },
+      "regulatoryPressures": {
+        "valueBasedContracts": {
+          "percentageOfRevenue": 45,
+          "contractTypes": [
+            {
+              "type": "Bundled Payments",
+              "episodes": ["Joint Replacement", "Cardiac Procedures", "Spine"],
+              "annualVolume": 3500
+            },
+            {
+              "type": "Centers of Excellence",
+              "partners": ["Large Employers", "National Payers"],
+              "designations": ["Employer Direct Contracting"]
+            },
+            {
+              "type": "Outcomes-Based Contracts",
+              "partners": ["Select Commercial Plans"],
+              "metrics": ["Complication Rates", "Readmissions", "PROs"]
+            }
+          ]
+        },
+        "payForPerformance": {
+          "programs": [
+            "Hospital VBP",
+            "HRRP",
+            "CJR/BPCI-A",
+            "Commercial Bundled Programs",
+            "Employer Direct Contracts"
+          ],
+          "atRiskRevenue": 25000000
+        },
+        "complianceRequirements": [
+          "Specialty Accreditation Requirements",
+          "Registry Participation Mandates",
+          "Volume Threshold Maintenance",
+          "Outcomes Transparency Requirements"
+        ]
+      },
+      "useCaseScenarios": {
+        "primaryQualityInitiatives": [
+          {
+            "initiative": "Achieve 5-Star CMS Rating",
+            "goal": "Move from 4-star to 5-star hospital rating",
+            "timeline": "24 months",
+            "approach": [
+              "Perfect patient experience scores",
+              "Zero hospital-acquired infections",
+              "Best-in-class readmission rates",
+              "Mortality below expected"
+            ],
+            "hdimUtilization": [
+              "Multi-measure optimization modeling",
+              "Real-time performance monitoring",
+              "Predictive risk identification",
+              "Competitive benchmarking analysis"
+            ]
+          },
+          {
+            "initiative": "Bundled Payment Success",
+            "goal": "Achieve positive reconciliation in all bundled episodes",
+            "timeline": "12 months",
+            "approach": [
+              "Optimize patient selection",
+              "Standardize care pathways",
+              "SNF network optimization",
+              "Post-acute cost management"
+            ],
+            "hdimUtilization": [
+              "Episode cost prediction",
+              "Risk stratification for bundles",
+              "Post-acute network analysis",
+              "Real-time episode tracking"
+            ]
+          }
+        ],
+        "careGapClosurePriorities": [
+          {
+            "priority": 1,
+            "measure": "Post-Procedure Follow-up",
+            "gapSize": 2800,
+            "strategy": "Automated post-discharge outreach with remote monitoring",
+            "expectedImpact": "95% follow-up completion"
+          },
+          {
+            "priority": 2,
+            "measure": "Cardiac Rehabilitation Enrollment",
+            "gapSize": 420,
+            "strategy": "Automatic referral with patient navigator",
+            "expectedImpact": "85% enrollment rate"
+          },
+          {
+            "priority": 3,
+            "measure": "Patient-Reported Outcomes Collection",
+            "gapSize": 3200,
+            "strategy": "Multi-modal PRO collection with incentives",
+            "expectedImpact": "80% PRO completion"
+          }
+        ],
+        "populationHealthNeeds": [
+          {
+            "need": "Specialty Network Development",
+            "description": "Build high-value network of referring providers and post-acute partners",
+            "requirements": [
+              "Referring physician quality feedback",
+              "Post-acute partner performance tracking",
+              "Patient leakage analysis",
+              "Market share analytics"
+            ]
+          },
+          {
+            "need": "Outcomes Differentiation",
+            "description": "Demonstrate superior outcomes for employer and payer contracts",
+            "requirements": [
+              "Risk-adjusted outcomes reporting",
+              "PRO/PROM tracking",
+              "Cost efficiency documentation",
+              "Transparency reporting"
+            ]
+          }
+        ],
+        "riskStratificationRequirements": [
+          {
+            "population": "Surgical Candidates",
+            "model": "Procedure-specific risk",
+            "factors": ["Comorbidities", "Functional status", "Social support", "Frailty index"],
+            "actionTriggers": ["High-risk triggers enhanced pre-habilitation"]
+          },
+          {
+            "population": "Bundled Episode Patients",
+            "model": "Total episode cost risk",
+            "factors": ["Discharge disposition prediction", "Complication risk", "SNF utilization likelihood"],
+            "actionTriggers": ["High-cost risk triggers care pathway optimization"]
+          }
+        ]
+      }
+    }
+  },
+  "crossCuttingThemes": {
+    "hdimValueProposition": {
+      "largeAcademicMedicalCenter": {
+        "primaryValue": "Enterprise-wide quality intelligence and optimization",
+        "keyBenefits": [
+          "Cross-measure impact analysis",
+          "Advanced risk stratification",
+          "ACO and population health support",
+          "Predictive analytics for proactive intervention"
+        ],
+        "estimatedROI": {
+          "readmissionReduction": 2400000,
+          "vbpImprovement": 1800000,
+          "efficiencyGains": 950000
+        }
+      },
+      "communityHospital": {
+        "primaryValue": "Practical quality improvement with limited resources",
+        "keyBenefits": [
+          "Automated measure tracking",
+          "Prioritized care gap closure",
+          "Simple dashboards for action",
+          "Peer benchmarking"
+        ],
+        "estimatedROI": {
+          "readmissionReduction": 480000,
+          "vbpImprovement": 350000,
+          "efficiencyGains": 180000
+        }
+      },
+      "ruralCriticalAccessHospital": {
+        "primaryValue": "Accessible quality tools for resource-constrained settings",
+        "keyBenefits": [
+          "Simplified MBQIP tracking",
+          "Basic care gap identification",
+          "Telehealth integration support",
+          "Rural peer comparison"
+        ],
+        "estimatedROI": {
+          "qualityBonuses": 75000,
+          "efficiencyGains": 45000,
+          "avoidedPenalties": 30000
+        }
+      },
+      "specialtyHospital": {
+        "primaryValue": "Specialty-specific excellence and competitive differentiation",
+        "keyBenefits": [
+          "Procedure-specific outcomes tracking",
+          "Bundled payment optimization",
+          "PRO/PROM integration",
+          "Registry automation"
+        ],
+        "estimatedROI": {
+          "bundledPaymentSavings": 1500000,
+          "vbpImprovement": 800000,
+          "coeContractRevenue": 2500000
+        }
+      }
+    },
+    "implementationConsiderations": {
+      "largeAcademicMedicalCenter": {
+        "complexity": "High",
+        "implementationTime": "6-9 months",
+        "integrationPoints": ["Epic", "Multiple Registries", "Warehouse"],
+        "stakeholders": ["CMO", "CNO", "CIO", "VP Quality", "CFO"],
+        "changeManagement": "Enterprise rollout with departmental champions"
+      },
+      "communityHospital": {
+        "complexity": "Medium",
+        "implementationTime": "3-4 months",
+        "integrationPoints": ["Primary EHR", "Limited Registries"],
+        "stakeholders": ["CEO", "CMO", "CNO", "Quality Director"],
+        "changeManagement": "Focused implementation with quality team"
+      },
+      "ruralCriticalAccessHospital": {
+        "complexity": "Low-Medium",
+        "implementationTime": "2-3 months",
+        "integrationPoints": ["EHR", "State HIE"],
+        "stakeholders": ["CEO", "CNO", "Quality Manager"],
+        "changeManagement": "Simple implementation with hands-on support"
+      },
+      "specialtyHospital": {
+        "complexity": "Medium-High",
+        "implementationTime": "4-6 months",
+        "integrationPoints": ["EHR", "Specialty Registries", "PRO Systems"],
+        "stakeholders": ["CEO", "CMO", "Service Line Directors", "Quality Leadership"],
+        "changeManagement": "Specialty-focused with outcomes emphasis"
+      }
+    },
+    "competitivePositioning": {
+      "versusGenericQualityTools": [
+        "Healthcare-specific design",
+        "Pre-built measure libraries",
+        "Regulatory program alignment",
+        "Clinical workflow integration"
+      ],
+      "versusEhrBuiltInTools": [
+        "Cross-EHR capability",
+        "Advanced analytics beyond descriptive",
+        "Vendor-agnostic benchmarking",
+        "Specialized quality focus"
+      ],
+      "versusConsultingFirms": [
+        "Ongoing vs. project-based",
+        "Technology-enabled scale",
+        "Real-time vs. periodic insights",
+        "Lower total cost of ownership"
+      ]
+    }
+  },
+  "marketSizing": {
+    "totalAddressableMarket": {
+      "largeAcademicMedicalCenters": {
+        "count": 400,
+        "averageContractValue": 450000,
+        "totalMarket": 180000000
+      },
+      "communityHospitals": {
+        "count": 2800,
+        "averageContractValue": 125000,
+        "totalMarket": 350000000
+      },
+      "ruralCriticalAccessHospitals": {
+        "count": 1350,
+        "averageContractValue": 35000,
+        "totalMarket": 47250000
+      },
+      "specialtyHospitals": {
+        "count": 450,
+        "averageContractValue": 200000,
+        "totalMarket": 90000000
+      }
+    },
+    "priorityTargeting": {
+      "tier1": {
+        "segment": "Large Academic Medical Centers",
+        "rationale": "High contract value, complex needs match HDIM capabilities"
+      },
+      "tier2": {
+        "segment": "Specialty Hospitals",
+        "rationale": "Outcomes focus, value-based contract pressure"
+      },
+      "tier3": {
+        "segment": "Community Hospitals",
+        "rationale": "Volume opportunity, quality improvement mandate"
+      },
+      "tier4": {
+        "segment": "Rural Critical Access Hospitals",
+        "rationale": "Different pricing model needed, grant funding opportunities"
+      }
+    }
+  }
+}

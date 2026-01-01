@@ -1,0 +1,2802 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "created": "2025-12-29",
+    "description": "Comprehensive customer profiles for provider practices using HDIM quality measurement platform",
+    "author": "HDIM Product Team",
+    "lastUpdated": "2025-12-29"
+  },
+  "practiceTypes": [
+    {
+      "id": "large-multispecialty-group",
+      "name": "Large Multi-specialty Group",
+      "description": "Integrated medical group with multiple specialties under unified governance, often part of larger health system or independent practice association",
+      "characteristics": {
+        "physicianCount": {
+          "min": 50,
+          "max": 500,
+          "typical": 150
+        },
+        "advancedPracticeProviders": {
+          "min": 20,
+          "max": 200,
+          "typical": 75
+        },
+        "specialties": [
+          "Internal Medicine",
+          "Family Medicine",
+          "Pediatrics",
+          "OB/GYN",
+          "Cardiology",
+          "Endocrinology",
+          "Pulmonology",
+          "Gastroenterology",
+          "Neurology",
+          "Orthopedics",
+          "Behavioral Health",
+          "Dermatology",
+          "Urology"
+        ],
+        "locations": {
+          "min": 5,
+          "max": 50,
+          "typical": 15
+        }
+      },
+      "patientPanel": {
+        "attributedLives": {
+          "min": 75000,
+          "max": 500000,
+          "typical": 200000
+        },
+        "medicareAdvantage": {
+          "percentage": 25,
+          "typicalLives": 50000
+        },
+        "medicaid": {
+          "percentage": 15,
+          "typicalLives": 30000
+        },
+        "commercialHMO": {
+          "percentage": 30,
+          "typicalLives": 60000
+        },
+        "commercialPPO": {
+          "percentage": 20,
+          "typicalLives": 40000
+        },
+        "selfPay": {
+          "percentage": 5,
+          "typicalLives": 10000
+        },
+        "dualEligible": {
+          "percentage": 5,
+          "typicalLives": 10000
+        }
+      },
+      "annualVisitVolume": {
+        "totalVisits": 600000,
+        "primaryCareVisits": 350000,
+        "specialtyVisits": 200000,
+        "urgentCareVisits": 50000,
+        "telehealth": {
+          "percentage": 18,
+          "visits": 108000
+        }
+      },
+      "qualityMeasures": {
+        "mips": {
+          "participationType": "Group Reporting (TIN-Level)",
+          "alternativePaymentModel": true,
+          "apmEntity": "MSSP ACO Track 2",
+          "qualityMeasures": [
+            {
+              "measureId": "PREV-5",
+              "name": "Colorectal Cancer Screening",
+              "currentPerformance": 68.5,
+              "benchmark": 75.0,
+              "targetPatients": 45000,
+              "gapsIdentified": 14175
+            },
+            {
+              "measureId": "PREV-7",
+              "name": "Breast Cancer Screening",
+              "currentPerformance": 72.3,
+              "benchmark": 78.0,
+              "targetPatients": 38000,
+              "gapsIdentified": 10526
+            },
+            {
+              "measureId": "PREV-12",
+              "name": "Pneumococcal Vaccination",
+              "currentPerformance": 65.2,
+              "benchmark": 70.0,
+              "targetPatients": 52000,
+              "gapsIdentified": 18096
+            },
+            {
+              "measureId": "DM-2",
+              "name": "Diabetes: Hemoglobin A1c Poor Control",
+              "currentPerformance": 22.5,
+              "benchmark": 15.0,
+              "targetPatients": 28000,
+              "gapsIdentified": 6300
+            },
+            {
+              "measureId": "HTN-2",
+              "name": "Controlling High Blood Pressure",
+              "currentPerformance": 64.8,
+              "benchmark": 72.0,
+              "targetPatients": 55000,
+              "gapsIdentified": 19360
+            },
+            {
+              "measureId": "PREV-13",
+              "name": "Statin Therapy for Prevention/Treatment of CVD",
+              "currentPerformance": 71.2,
+              "benchmark": 80.0,
+              "targetPatients": 35000,
+              "gapsIdentified": 10080
+            }
+          ],
+          "improvementActivities": [
+            "Care Coordination Agreements",
+            "Population Health Management",
+            "Chronic Care Management",
+            "Behavioral Health Integration"
+          ],
+          "promotingInteroperability": {
+            "ehr": "Epic",
+            "score": 85,
+            "eRxBonus": true,
+            "hieParticipation": true
+          }
+        },
+        "acoQuality": {
+          "mssp": true,
+          "track": "Enhanced Track",
+          "sharedSavings": {
+            "targetSavingsRate": 3.5,
+            "qualityScore": 88.5,
+            "totalBenchmark": 245000000
+          },
+          "webInterfaceMeasures": [
+            "PREV-5 Colorectal Cancer Screening",
+            "PREV-7 Breast Cancer Screening",
+            "DM-2 Diabetes A1c Control",
+            "HTN-2 Blood Pressure Control",
+            "MH-1 Depression Screening",
+            "CAD-7 ACE/ARB Therapy",
+            "PREV-10 Influenza Immunization",
+            "PREV-6 Cervical Cancer Screening"
+          ]
+        },
+        "payerIncentives": [
+          {
+            "payer": "Blue Cross Blue Shield",
+            "program": "Blue Quality Physician Program",
+            "measures": [
+              "Diabetes Bundle (A1c, Eye Exam, Nephropathy)",
+              "Cardiovascular Bundle (Statin, BP Control)",
+              "Preventive Care (Mammography, Colonoscopy)"
+            ],
+            "incentiveStructure": "Per-member-per-month bonus up to $8 PMPM",
+            "annualOpportunity": 2880000
+          },
+          {
+            "payer": "Aetna",
+            "program": "Aetna Quality Performance",
+            "measures": [
+              "HEDIS Hybrid Measures",
+              "Star Rating Support Measures"
+            ],
+            "incentiveStructure": "Quality bonus pool sharing",
+            "annualOpportunity": 1500000
+          },
+          {
+            "payer": "United Healthcare",
+            "program": "UHC Premium Designation",
+            "measures": [
+              "Evidence-Based Medicine Measures",
+              "Cost Efficiency Metrics"
+            ],
+            "incentiveStructure": "Premium network placement + fee schedule bonus",
+            "annualOpportunity": 2200000
+          }
+        ]
+      },
+      "commonCareGaps": {
+        "preventive": [
+          {
+            "measure": "Colorectal Cancer Screening",
+            "gapRate": 31.5,
+            "impactedPatients": 14175,
+            "revenueImpact": 425250,
+            "interventionCost": 85000
+          },
+          {
+            "measure": "Breast Cancer Screening",
+            "gapRate": 27.7,
+            "impactedPatients": 10526,
+            "revenueImpact": 315780,
+            "interventionCost": 52000
+          },
+          {
+            "measure": "Cervical Cancer Screening",
+            "gapRate": 24.3,
+            "impactedPatients": 8750,
+            "revenueImpact": 175000,
+            "interventionCost": 35000
+          },
+          {
+            "measure": "Annual Wellness Visit",
+            "gapRate": 45.0,
+            "impactedPatients": 90000,
+            "revenueImpact": 13500000,
+            "interventionCost": 250000
+          }
+        ],
+        "chronic": [
+          {
+            "measure": "Diabetes A1c Control (<8%)",
+            "gapRate": 22.5,
+            "impactedPatients": 6300,
+            "revenueImpact": 756000,
+            "interventionCost": 315000
+          },
+          {
+            "measure": "Blood Pressure Control (<140/90)",
+            "gapRate": 35.2,
+            "impactedPatients": 19360,
+            "revenueImpact": 967000,
+            "interventionCost": 290000
+          },
+          {
+            "measure": "Statin Therapy Adherence",
+            "gapRate": 28.8,
+            "impactedPatients": 10080,
+            "revenueImpact": 604800,
+            "interventionCost": 150000
+          },
+          {
+            "measure": "Depression Follow-up",
+            "gapRate": 42.1,
+            "impactedPatients": 8420,
+            "revenueImpact": 505200,
+            "interventionCost": 168000
+          }
+        ],
+        "specialty": [
+          {
+            "measure": "Diabetic Retinal Exam",
+            "gapRate": 38.5,
+            "impactedPatients": 10780,
+            "revenueImpact": 539000,
+            "interventionCost": 108000
+          },
+          {
+            "measure": "Nephropathy Screening",
+            "gapRate": 25.4,
+            "impactedPatients": 7112,
+            "revenueImpact": 355600,
+            "interventionCost": 71000
+          }
+        ]
+      },
+      "payerContracts": {
+        "valueBasedArrangements": [
+          {
+            "type": "Medicare Shared Savings Program",
+            "riskLevel": "Two-Sided Risk",
+            "lives": 52000,
+            "benchmarkPMPM": 1050,
+            "sharedSavingsRate": 60,
+            "downsidesRiskRate": 40,
+            "qualityWithhold": 2
+          },
+          {
+            "type": "Commercial Global Capitation",
+            "payer": "Blue Cross Blue Shield",
+            "riskLevel": "Full Professional Risk",
+            "lives": 35000,
+            "capPMPM": 85,
+            "qualityBonus": 8,
+            "reinsuranceThreshold": 50000
+          },
+          {
+            "type": "Medicaid MCO Shared Savings",
+            "payer": "Centene",
+            "riskLevel": "Upside Only",
+            "lives": 28000,
+            "targetMLR": 88,
+            "sharedSavingsRate": 50
+          },
+          {
+            "type": "Medicare Advantage Quality Program",
+            "payer": "Humana",
+            "riskLevel": "Quality Bonus",
+            "lives": 18000,
+            "starMeasureFocus": [
+              "Diabetes Care",
+              "Medication Adherence",
+              "Breast Cancer Screening"
+            ],
+            "bonusPMPM": 12
+          }
+        ],
+        "feeForService": {
+          "percentage": 25,
+          "payers": ["Medicare FFS", "Commercial PPO", "Worker's Comp"]
+        }
+      },
+      "ehrIntegration": {
+        "primaryEHR": "Epic",
+        "version": "November 2024",
+        "modules": [
+          "EpicCare Ambulatory",
+          "MyChart",
+          "Healthy Planet",
+          "Care Everywhere",
+          "Beacon (Oncology)",
+          "Resolute (Billing)"
+        ],
+        "integrationCapabilities": {
+          "hl7v2": true,
+          "fhirR4": true,
+          "ccdaExport": true,
+          "bulkFhir": true,
+          "smartOnFhir": true,
+          "apiGateway": "Epic on FHIR"
+        },
+        "dataExchanges": [
+          {
+            "partner": "Surescripts",
+            "type": "E-Prescribing",
+            "frequency": "Real-time"
+          },
+          {
+            "partner": "CommonWell",
+            "type": "Document Query",
+            "frequency": "On-demand"
+          },
+          {
+            "partner": "Carequality",
+            "type": "Care Everywhere",
+            "frequency": "Real-time"
+          },
+          {
+            "partner": "Regional HIE",
+            "type": "ADT Notifications",
+            "frequency": "Real-time"
+          }
+        ],
+        "registryIntegrations": [
+          "Qualified Clinical Data Registry (QCDR)",
+          "State Immunization Registry",
+          "Cancer Registry",
+          "Prescription Drug Monitoring Program"
+        ]
+      },
+      "careCoordination": {
+        "resources": {
+          "careManagers": 25,
+          "socialWorkers": 8,
+          "pharmacists": 12,
+          "healthCoaches": 15,
+          "communityHealthWorkers": 6,
+          "nurseNavigators": 10
+        },
+        "programs": [
+          {
+            "name": "Chronic Care Management (CCM)",
+            "enrolledPatients": 8500,
+            "eligiblePatients": 35000,
+            "monthlyTouchpoints": 2,
+            "annualRevenue": 5100000
+          },
+          {
+            "name": "Transitional Care Management (TCM)",
+            "monthlyDischarges": 450,
+            "captureRate": 65,
+            "annualRevenue": 2100000
+          },
+          {
+            "name": "Remote Patient Monitoring (RPM)",
+            "enrolledPatients": 3200,
+            "devices": ["Blood Pressure", "Glucose Monitor", "Weight Scale"],
+            "annualRevenue": 1920000
+          },
+          {
+            "name": "Annual Wellness Visit (AWV)",
+            "completionRate": 55,
+            "annualVisits": 27500,
+            "annualRevenue": 4125000
+          },
+          {
+            "name": "Behavioral Health Integration (BHI)",
+            "enrolledPatients": 2800,
+            "monthlyMinutes": 45,
+            "annualRevenue": 840000
+          }
+        ],
+        "technology": [
+          "Care Management Platform (Lightbeam)",
+          "Patient Engagement (Twistle)",
+          "Telehealth (Teladoc)",
+          "Secure Messaging (MyChart)"
+        ]
+      },
+      "socialDeterminants": {
+        "populationChallenges": [
+          {
+            "sdoh": "Food Insecurity",
+            "prevalence": 18.5,
+            "impactedPatients": 37000,
+            "screeningRate": 45,
+            "interventions": [
+              "Food pharmacy partnership",
+              "SNAP enrollment assistance",
+              "Medically tailored meals program"
+            ]
+          },
+          {
+            "sdoh": "Transportation Barriers",
+            "prevalence": 22.3,
+            "impactedPatients": 44600,
+            "screeningRate": 52,
+            "interventions": [
+              "Lyft Health partnership",
+              "Medical transportation benefit coordination",
+              "Telehealth prioritization"
+            ]
+          },
+          {
+            "sdoh": "Housing Instability",
+            "prevalence": 8.5,
+            "impactedPatients": 17000,
+            "screeningRate": 38,
+            "interventions": [
+              "Housing authority partnerships",
+              "Medical respite care",
+              "Social work referrals"
+            ]
+          },
+          {
+            "sdoh": "Social Isolation",
+            "prevalence": 25.0,
+            "impactedPatients": 50000,
+            "screeningRate": 32,
+            "interventions": [
+              "Community resource navigation",
+              "Senior center partnerships",
+              "Group visit programs"
+            ]
+          }
+        ],
+        "screeningTools": [
+          "PRAPARE",
+          "AHC-HRSN (CMS)",
+          "Protocol for Responding to and Assessing Patients' Assets, Risks, and Experiences"
+        ],
+        "communityPartnerships": [
+          "United Way 211",
+          "Local Food Banks",
+          "Area Agency on Aging",
+          "Community Mental Health Center",
+          "Housing Authority"
+        ]
+      },
+      "useCases": [
+        {
+          "id": "mips-quality-reporting",
+          "name": "MIPS Quality Reporting Automation",
+          "description": "Automated quality measure calculation and CMS submission for 150+ providers across all specialties",
+          "hdimFeatures": [
+            "Automated gap identification across all MIPS measures",
+            "Real-time performance dashboards by provider/location",
+            "CMS-compliant QRDA III file generation",
+            "Improvement activity documentation tracking"
+          ],
+          "expectedOutcomes": {
+            "mipsScoreImprovement": 15,
+            "avoidedPenalty": 450000,
+            "qualityBonusEarned": 320000,
+            "staffTimeSaved": 2500
+          }
+        },
+        {
+          "id": "aco-quality-management",
+          "name": "ACO Quality and Cost Management",
+          "description": "Comprehensive population health management for MSSP ACO with 52,000 Medicare beneficiaries",
+          "hdimFeatures": [
+            "Web Interface measure tracking and gap closure",
+            "Total cost of care analytics",
+            "High-risk patient identification",
+            "Care management referral automation"
+          ],
+          "expectedOutcomes": {
+            "qualityScoreImprovement": 5,
+            "sharedSavingsEarned": 2800000,
+            "emergencyVisitsReduced": 12,
+            "admissionsReduced": 8
+          }
+        },
+        {
+          "id": "chronic-disease-management",
+          "name": "Multi-Condition Chronic Disease Program",
+          "description": "Integrated management program for diabetes, hypertension, and cardiovascular disease",
+          "hdimFeatures": [
+            "Multi-condition gap identification",
+            "Care pathway automation",
+            "Provider-level performance tracking",
+            "Patient engagement campaign orchestration"
+          ],
+          "expectedOutcomes": {
+            "diabetesA1cImprovement": 0.8,
+            "bpControlImprovement": 12,
+            "statinAdherenceImprovement": 15,
+            "chronicCareRevenueIncrease": 1200000
+          }
+        },
+        {
+          "id": "preventive-care-gaps",
+          "name": "Preventive Care Gap Closure Campaign",
+          "description": "Proactive outreach for mammography, colonoscopy, and immunizations",
+          "hdimFeatures": [
+            "Eligibility determination engine",
+            "Multi-channel patient outreach",
+            "Scheduling integration",
+            "Compliance tracking"
+          ],
+          "expectedOutcomes": {
+            "mammographyRateIncrease": 8,
+            "colonoscopyRateIncrease": 10,
+            "immunizationRateIncrease": 12,
+            "preventiveRevenueIncrease": 850000
+          }
+        },
+        {
+          "id": "referral-coordination",
+          "name": "Specialty Referral and Care Coordination",
+          "description": "Closed-loop referral management between primary care and specialty departments",
+          "hdimFeatures": [
+            "Referral quality metrics tracking",
+            "Specialist performance dashboards",
+            "Care gap handoff automation",
+            "Results follow-up tracking"
+          ],
+          "expectedOutcomes": {
+            "referralLeakageReduced": 25,
+            "referralCompletionImproved": 20,
+            "careGapClosure": 15,
+            "patientSatisfactionImproved": 8
+          }
+        }
+      ]
+    },
+    {
+      "id": "primary-care-practice",
+      "name": "Primary Care Practice",
+      "description": "Mid-sized primary care focused practice with family medicine and internal medicine physicians serving diverse community population",
+      "characteristics": {
+        "physicianCount": {
+          "min": 5,
+          "max": 15,
+          "typical": 8
+        },
+        "advancedPracticeProviders": {
+          "min": 3,
+          "max": 10,
+          "typical": 5
+        },
+        "specialties": [
+          "Family Medicine",
+          "Internal Medicine",
+          "Pediatrics"
+        ],
+        "locations": {
+          "min": 1,
+          "max": 4,
+          "typical": 2
+        }
+      },
+      "patientPanel": {
+        "attributedLives": {
+          "min": 8000,
+          "max": 30000,
+          "typical": 18000
+        },
+        "medicareAdvantage": {
+          "percentage": 20,
+          "typicalLives": 3600
+        },
+        "medicaid": {
+          "percentage": 12,
+          "typicalLives": 2160
+        },
+        "commercialHMO": {
+          "percentage": 35,
+          "typicalLives": 6300
+        },
+        "commercialPPO": {
+          "percentage": 25,
+          "typicalLives": 4500
+        },
+        "selfPay": {
+          "percentage": 5,
+          "typicalLives": 900
+        },
+        "dualEligible": {
+          "percentage": 3,
+          "typicalLives": 540
+        }
+      },
+      "annualVisitVolume": {
+        "totalVisits": 52000,
+        "primaryCareVisits": 48000,
+        "specialtyVisits": 0,
+        "urgentCareVisits": 4000,
+        "telehealth": {
+          "percentage": 15,
+          "visits": 7800
+        }
+      },
+      "qualityMeasures": {
+        "mips": {
+          "participationType": "Individual or Small Group",
+          "alternativePaymentModel": false,
+          "qualityMeasures": [
+            {
+              "measureId": "PREV-5",
+              "name": "Colorectal Cancer Screening",
+              "currentPerformance": 62.3,
+              "benchmark": 75.0,
+              "targetPatients": 4200,
+              "gapsIdentified": 1583
+            },
+            {
+              "measureId": "PREV-7",
+              "name": "Breast Cancer Screening",
+              "currentPerformance": 68.5,
+              "benchmark": 78.0,
+              "targetPatients": 3800,
+              "gapsIdentified": 1197
+            },
+            {
+              "measureId": "DM-2",
+              "name": "Diabetes: Hemoglobin A1c Poor Control",
+              "currentPerformance": 25.8,
+              "benchmark": 15.0,
+              "targetPatients": 2800,
+              "gapsIdentified": 722
+            },
+            {
+              "measureId": "HTN-2",
+              "name": "Controlling High Blood Pressure",
+              "currentPerformance": 58.2,
+              "benchmark": 72.0,
+              "targetPatients": 5500,
+              "gapsIdentified": 2299
+            },
+            {
+              "measureId": "MH-1",
+              "name": "Depression Screening and Follow-up",
+              "currentPerformance": 52.4,
+              "benchmark": 65.0,
+              "targetPatients": 16000,
+              "gapsIdentified": 7616
+            },
+            {
+              "measureId": "PREV-10",
+              "name": "Influenza Immunization",
+              "currentPerformance": 48.5,
+              "benchmark": 60.0,
+              "targetPatients": 14000,
+              "gapsIdentified": 7210
+            }
+          ],
+          "improvementActivities": [
+            "Patient-Centered Medical Home",
+            "Care Coordination",
+            "Quality Improvement"
+          ],
+          "promotingInteroperability": {
+            "ehr": "athenahealth",
+            "score": 75,
+            "eRxBonus": true,
+            "hieParticipation": false
+          }
+        },
+        "payerIncentives": [
+          {
+            "payer": "Blue Cross Blue Shield",
+            "program": "Patient-Centered Primary Care",
+            "measures": [
+              "Well-Child Visits",
+              "Diabetes Management",
+              "Preventive Screenings"
+            ],
+            "incentiveStructure": "Quality bonus PMPM $3-5",
+            "annualOpportunity": 180000
+          },
+          {
+            "payer": "Aetna",
+            "program": "Primary Care Bonus Program",
+            "measures": [
+              "HEDIS Core Set",
+              "Patient Satisfaction"
+            ],
+            "incentiveStructure": "Annual bonus based on performance",
+            "annualOpportunity": 85000
+          }
+        ]
+      },
+      "commonCareGaps": {
+        "preventive": [
+          {
+            "measure": "Colorectal Cancer Screening",
+            "gapRate": 37.7,
+            "impactedPatients": 1583,
+            "revenueImpact": 47490,
+            "interventionCost": 15000
+          },
+          {
+            "measure": "Breast Cancer Screening",
+            "gapRate": 31.5,
+            "impactedPatients": 1197,
+            "revenueImpact": 35910,
+            "interventionCost": 8000
+          },
+          {
+            "measure": "Annual Wellness Visit",
+            "gapRate": 55.0,
+            "impactedPatients": 9900,
+            "revenueImpact": 1485000,
+            "interventionCost": 45000
+          },
+          {
+            "measure": "Childhood Immunizations",
+            "gapRate": 22.5,
+            "impactedPatients": 450,
+            "revenueImpact": 27000,
+            "interventionCost": 5000
+          }
+        ],
+        "chronic": [
+          {
+            "measure": "Diabetes A1c Control",
+            "gapRate": 25.8,
+            "impactedPatients": 722,
+            "revenueImpact": 86640,
+            "interventionCost": 36000
+          },
+          {
+            "measure": "Blood Pressure Control",
+            "gapRate": 41.8,
+            "impactedPatients": 2299,
+            "revenueImpact": 114950,
+            "interventionCost": 34000
+          },
+          {
+            "measure": "Depression Follow-up",
+            "gapRate": 47.6,
+            "impactedPatients": 7616,
+            "revenueImpact": 228480,
+            "interventionCost": 45000
+          }
+        ]
+      },
+      "payerContracts": {
+        "valueBasedArrangements": [
+          {
+            "type": "Commercial PCMH Bonus",
+            "payer": "Blue Cross Blue Shield",
+            "riskLevel": "Upside Only",
+            "lives": 6000,
+            "bonusPMPM": 4,
+            "qualityGates": [
+              "NCQA PCMH Recognition",
+              "Quality Measure Performance"
+            ]
+          },
+          {
+            "type": "Medicare Quality Program",
+            "payer": "Humana MA",
+            "riskLevel": "Quality Bonus",
+            "lives": 2500,
+            "bonusPMPM": 6,
+            "starMeasureFocus": [
+              "Preventive Care",
+              "Diabetes Management"
+            ]
+          }
+        ],
+        "feeForService": {
+          "percentage": 55,
+          "payers": ["Medicare FFS", "Commercial PPO", "Medicaid FFS"]
+        }
+      },
+      "ehrIntegration": {
+        "primaryEHR": "athenahealth",
+        "version": "athenaOne 2024",
+        "modules": [
+          "athenaClinicals",
+          "athenaCollector",
+          "athenaCommunicator"
+        ],
+        "integrationCapabilities": {
+          "hl7v2": true,
+          "fhirR4": true,
+          "ccdaExport": true,
+          "bulkFhir": false,
+          "smartOnFhir": true,
+          "apiGateway": "athenaNet API"
+        },
+        "dataExchanges": [
+          {
+            "partner": "Surescripts",
+            "type": "E-Prescribing",
+            "frequency": "Real-time"
+          },
+          {
+            "partner": "CommonWell",
+            "type": "Document Query",
+            "frequency": "On-demand"
+          }
+        ],
+        "registryIntegrations": [
+          "State Immunization Registry",
+          "MIPS Quality Reporting"
+        ]
+      },
+      "careCoordination": {
+        "resources": {
+          "careManagers": 2,
+          "socialWorkers": 0,
+          "pharmacists": 0,
+          "healthCoaches": 1,
+          "communityHealthWorkers": 0,
+          "nurseNavigators": 1
+        },
+        "programs": [
+          {
+            "name": "Chronic Care Management (CCM)",
+            "enrolledPatients": 450,
+            "eligiblePatients": 3200,
+            "monthlyTouchpoints": 1,
+            "annualRevenue": 270000
+          },
+          {
+            "name": "Transitional Care Management (TCM)",
+            "monthlyDischarges": 35,
+            "captureRate": 45,
+            "annualRevenue": 94500
+          },
+          {
+            "name": "Annual Wellness Visit (AWV)",
+            "completionRate": 45,
+            "annualVisits": 1620,
+            "annualRevenue": 243000
+          }
+        ],
+        "technology": [
+          "EHR-based Care Management",
+          "Patient Portal",
+          "Basic Telehealth (Doxy.me)"
+        ]
+      },
+      "socialDeterminants": {
+        "populationChallenges": [
+          {
+            "sdoh": "Food Insecurity",
+            "prevalence": 15.2,
+            "impactedPatients": 2736,
+            "screeningRate": 25,
+            "interventions": [
+              "Community food bank referrals",
+              "SNAP application assistance"
+            ]
+          },
+          {
+            "sdoh": "Transportation Barriers",
+            "prevalence": 18.5,
+            "impactedPatients": 3330,
+            "screeningRate": 30,
+            "interventions": [
+              "Medicaid transportation benefit",
+              "Telehealth alternatives"
+            ]
+          },
+          {
+            "sdoh": "Health Literacy",
+            "prevalence": 28.0,
+            "impactedPatients": 5040,
+            "screeningRate": 15,
+            "interventions": [
+              "Simplified patient education materials",
+              "Teach-back method training"
+            ]
+          }
+        ],
+        "screeningTools": [
+          "Basic SDOH questions in intake",
+          "athenahealth social history module"
+        ],
+        "communityPartnerships": [
+          "Local Food Bank",
+          "Community Health Center"
+        ]
+      },
+      "useCases": [
+        {
+          "id": "mips-compliance",
+          "name": "MIPS Compliance and Optimization",
+          "description": "Ensure MIPS quality reporting compliance and maximize incentive payments for 8-provider primary care practice",
+          "hdimFeatures": [
+            "Automated measure calculation for 6 MIPS quality measures",
+            "Provider-level performance scorecards",
+            "Gap list generation for care teams",
+            "CMS submission file generation"
+          ],
+          "expectedOutcomes": {
+            "mipsScoreImprovement": 20,
+            "avoidedPenalty": 45000,
+            "qualityBonusEarned": 28000,
+            "staffTimeSaved": 400
+          }
+        },
+        {
+          "id": "diabetes-management",
+          "name": "Diabetes Quality Improvement Program",
+          "description": "Comprehensive diabetes care gap closure and outcomes improvement",
+          "hdimFeatures": [
+            "Diabetes composite measure tracking",
+            "A1c trending and alerts",
+            "Retinal exam gap identification",
+            "Nephropathy screening tracking"
+          ],
+          "expectedOutcomes": {
+            "a1cControlImprovement": 10,
+            "eyeExamComplianceIncrease": 15,
+            "nephropathyScreeningIncrease": 20,
+            "diabetesRevenueIncrease": 85000
+          }
+        },
+        {
+          "id": "awv-optimization",
+          "name": "Annual Wellness Visit Optimization",
+          "description": "Maximize Medicare AWV capture and quality gap closure",
+          "hdimFeatures": [
+            "AWV eligibility identification",
+            "Pre-visit gap analysis",
+            "Personalized health risk assessment",
+            "Post-visit care plan generation"
+          ],
+          "expectedOutcomes": {
+            "awvCaptureIncrease": 25,
+            "gapsClosedPerVisit": 2.5,
+            "additionalAWVRevenue": 182000,
+            "preventiveCareImprovement": 18
+          }
+        },
+        {
+          "id": "patient-outreach",
+          "name": "Proactive Patient Outreach Campaigns",
+          "description": "Automated patient outreach for preventive care and chronic condition management",
+          "hdimFeatures": [
+            "Multi-channel outreach automation",
+            "Personalized messaging based on gaps",
+            "Appointment scheduling integration",
+            "Response tracking and escalation"
+          ],
+          "expectedOutcomes": {
+            "outreachResponseRate": 35,
+            "appointmentConversion": 25,
+            "gapClosureIncrease": 20,
+            "staffEfficiencyGain": 50
+          }
+        }
+      ]
+    },
+    {
+      "id": "solo-small-practice",
+      "name": "Solo/Small Practice",
+      "description": "Independent physician practice with 1-4 providers, often physician-owned, serving local community with personalized care",
+      "characteristics": {
+        "physicianCount": {
+          "min": 1,
+          "max": 4,
+          "typical": 2
+        },
+        "advancedPracticeProviders": {
+          "min": 0,
+          "max": 2,
+          "typical": 1
+        },
+        "specialties": [
+          "Family Medicine",
+          "Internal Medicine"
+        ],
+        "locations": {
+          "min": 1,
+          "max": 1,
+          "typical": 1
+        }
+      },
+      "patientPanel": {
+        "attributedLives": {
+          "min": 1500,
+          "max": 6000,
+          "typical": 3500
+        },
+        "medicareAdvantage": {
+          "percentage": 28,
+          "typicalLives": 980
+        },
+        "medicaid": {
+          "percentage": 8,
+          "typicalLives": 280
+        },
+        "commercialHMO": {
+          "percentage": 22,
+          "typicalLives": 770
+        },
+        "commercialPPO": {
+          "percentage": 32,
+          "typicalLives": 1120
+        },
+        "selfPay": {
+          "percentage": 8,
+          "typicalLives": 280
+        },
+        "dualEligible": {
+          "percentage": 2,
+          "typicalLives": 70
+        }
+      },
+      "annualVisitVolume": {
+        "totalVisits": 12000,
+        "primaryCareVisits": 11500,
+        "specialtyVisits": 0,
+        "urgentCareVisits": 500,
+        "telehealth": {
+          "percentage": 12,
+          "visits": 1440
+        }
+      },
+      "qualityMeasures": {
+        "mips": {
+          "participationType": "Individual",
+          "alternativePaymentModel": false,
+          "qualityMeasures": [
+            {
+              "measureId": "PREV-5",
+              "name": "Colorectal Cancer Screening",
+              "currentPerformance": 55.2,
+              "benchmark": 75.0,
+              "targetPatients": 850,
+              "gapsIdentified": 381
+            },
+            {
+              "measureId": "PREV-7",
+              "name": "Breast Cancer Screening",
+              "currentPerformance": 62.8,
+              "benchmark": 78.0,
+              "targetPatients": 720,
+              "gapsIdentified": 268
+            },
+            {
+              "measureId": "DM-2",
+              "name": "Diabetes: Hemoglobin A1c Poor Control",
+              "currentPerformance": 28.5,
+              "benchmark": 15.0,
+              "targetPatients": 520,
+              "gapsIdentified": 148
+            },
+            {
+              "measureId": "HTN-2",
+              "name": "Controlling High Blood Pressure",
+              "currentPerformance": 52.4,
+              "benchmark": 72.0,
+              "targetPatients": 980,
+              "gapsIdentified": 467
+            },
+            {
+              "measureId": "PREV-10",
+              "name": "Influenza Immunization",
+              "currentPerformance": 42.5,
+              "benchmark": 60.0,
+              "targetPatients": 2800,
+              "gapsIdentified": 1610
+            }
+          ],
+          "improvementActivities": [
+            "Quality Improvement",
+            "Care Coordination"
+          ],
+          "promotingInteroperability": {
+            "ehr": "eClinicalWorks",
+            "score": 65,
+            "eRxBonus": true,
+            "hieParticipation": false
+          }
+        },
+        "payerIncentives": [
+          {
+            "payer": "Local IPA",
+            "program": "Quality Performance Pool",
+            "measures": [
+              "Basic HEDIS Measures",
+              "Generic Prescribing Rate"
+            ],
+            "incentiveStructure": "Quarterly bonus distribution",
+            "annualOpportunity": 35000
+          }
+        ]
+      },
+      "commonCareGaps": {
+        "preventive": [
+          {
+            "measure": "Colorectal Cancer Screening",
+            "gapRate": 44.8,
+            "impactedPatients": 381,
+            "revenueImpact": 11430,
+            "interventionCost": 4500
+          },
+          {
+            "measure": "Breast Cancer Screening",
+            "gapRate": 37.2,
+            "impactedPatients": 268,
+            "revenueImpact": 8040,
+            "interventionCost": 2500
+          },
+          {
+            "measure": "Annual Wellness Visit",
+            "gapRate": 62.0,
+            "impactedPatients": 2170,
+            "revenueImpact": 325500,
+            "interventionCost": 12000
+          }
+        ],
+        "chronic": [
+          {
+            "measure": "Diabetes A1c Control",
+            "gapRate": 28.5,
+            "impactedPatients": 148,
+            "revenueImpact": 17760,
+            "interventionCost": 8000
+          },
+          {
+            "measure": "Blood Pressure Control",
+            "gapRate": 47.6,
+            "impactedPatients": 467,
+            "revenueImpact": 23350,
+            "interventionCost": 7000
+          }
+        ]
+      },
+      "payerContracts": {
+        "valueBasedArrangements": [
+          {
+            "type": "IPA Shared Savings",
+            "payer": "Local IPA/PHO",
+            "riskLevel": "Upside Only",
+            "lives": 2000,
+            "bonusPool": 25000,
+            "qualityGates": [
+              "Basic Quality Measures"
+            ]
+          }
+        ],
+        "feeForService": {
+          "percentage": 75,
+          "payers": ["Medicare FFS", "Commercial PPO", "Medicaid FFS"]
+        }
+      },
+      "ehrIntegration": {
+        "primaryEHR": "eClinicalWorks",
+        "version": "V12",
+        "modules": [
+          "eClinicalWorks EHR",
+          "Patient Portal",
+          "Revenue Cycle"
+        ],
+        "integrationCapabilities": {
+          "hl7v2": true,
+          "fhirR4": true,
+          "ccdaExport": true,
+          "bulkFhir": false,
+          "smartOnFhir": false,
+          "apiGateway": "eCW API"
+        },
+        "dataExchanges": [
+          {
+            "partner": "Surescripts",
+            "type": "E-Prescribing",
+            "frequency": "Real-time"
+          }
+        ],
+        "registryIntegrations": [
+          "State Immunization Registry"
+        ]
+      },
+      "careCoordination": {
+        "resources": {
+          "careManagers": 0,
+          "socialWorkers": 0,
+          "pharmacists": 0,
+          "healthCoaches": 0,
+          "communityHealthWorkers": 0,
+          "nurseNavigators": 0
+        },
+        "programs": [
+          {
+            "name": "Chronic Care Management (CCM)",
+            "enrolledPatients": 45,
+            "eligiblePatients": 580,
+            "monthlyTouchpoints": 1,
+            "annualRevenue": 27000
+          },
+          {
+            "name": "Annual Wellness Visit (AWV)",
+            "completionRate": 38,
+            "annualVisits": 372,
+            "annualRevenue": 55800
+          }
+        ],
+        "technology": [
+          "Basic EHR",
+          "Phone-based coordination"
+        ]
+      },
+      "socialDeterminants": {
+        "populationChallenges": [
+          {
+            "sdoh": "Transportation Barriers",
+            "prevalence": 20.5,
+            "impactedPatients": 717,
+            "screeningRate": 10,
+            "interventions": [
+              "Flexible scheduling",
+              "Phone follow-up"
+            ]
+          },
+          {
+            "sdoh": "Cost/Financial Barriers",
+            "prevalence": 25.0,
+            "impactedPatients": 875,
+            "screeningRate": 15,
+            "interventions": [
+              "Sliding scale fees",
+              "Generic medications"
+            ]
+          }
+        ],
+        "screeningTools": [
+          "Informal assessment during visits"
+        ],
+        "communityPartnerships": []
+      },
+      "useCases": [
+        {
+          "id": "simple-mips-reporting",
+          "name": "Simplified MIPS Reporting",
+          "description": "Low-burden MIPS compliance solution for solo practitioner",
+          "hdimFeatures": [
+            "Automated data extraction from EHR",
+            "Pre-configured measure sets for primary care",
+            "One-click submission file generation",
+            "Penalty avoidance alerts"
+          ],
+          "expectedOutcomes": {
+            "avoidedPenalty": 12000,
+            "reportingTimeSaved": 80,
+            "mipsScore": 60,
+            "complianceConfidence": 95
+          }
+        },
+        {
+          "id": "medicare-gap-closure",
+          "name": "Medicare Patient Gap Closure",
+          "description": "Focus on high-value Medicare quality gaps for maximum impact",
+          "hdimFeatures": [
+            "Medicare-specific gap identification",
+            "AWV opportunity identification",
+            "Simple patient outreach lists",
+            "Quick win prioritization"
+          ],
+          "expectedOutcomes": {
+            "awvCaptureIncrease": 30,
+            "additionalAWVRevenue": 35000,
+            "qualityGapsClosedPerWeek": 8,
+            "medicareReimbursementIncrease": 15
+          }
+        },
+        {
+          "id": "ccm-expansion",
+          "name": "Chronic Care Management Expansion",
+          "description": "Expand CCM enrollment with minimal additional staff",
+          "hdimFeatures": [
+            "CCM eligibility identification",
+            "Billing code optimization",
+            "Care plan templates",
+            "Time tracking integration"
+          ],
+          "expectedOutcomes": {
+            "ccmEnrollmentIncrease": 150,
+            "additionalCCMRevenue": 45000,
+            "patientOutcomesImproved": 20,
+            "practiceEfficiency": 25
+          }
+        }
+      ]
+    },
+    {
+      "id": "fqhc",
+      "name": "Federally Qualified Health Center (FQHC)",
+      "description": "Community health center providing comprehensive primary care to underserved populations regardless of ability to pay, with sliding fee scale",
+      "characteristics": {
+        "physicianCount": {
+          "min": 8,
+          "max": 40,
+          "typical": 18
+        },
+        "advancedPracticeProviders": {
+          "min": 6,
+          "max": 25,
+          "typical": 12
+        },
+        "specialties": [
+          "Family Medicine",
+          "Internal Medicine",
+          "Pediatrics",
+          "OB/GYN",
+          "Behavioral Health",
+          "Dental",
+          "Pharmacy"
+        ],
+        "locations": {
+          "min": 2,
+          "max": 15,
+          "typical": 5
+        }
+      },
+      "patientPanel": {
+        "attributedLives": {
+          "min": 15000,
+          "max": 80000,
+          "typical": 35000
+        },
+        "medicareAdvantage": {
+          "percentage": 8,
+          "typicalLives": 2800
+        },
+        "medicaid": {
+          "percentage": 52,
+          "typicalLives": 18200
+        },
+        "commercialHMO": {
+          "percentage": 8,
+          "typicalLives": 2800
+        },
+        "commercialPPO": {
+          "percentage": 5,
+          "typicalLives": 1750
+        },
+        "selfPay": {
+          "percentage": 22,
+          "typicalLives": 7700
+        },
+        "dualEligible": {
+          "percentage": 5,
+          "typicalLives": 1750
+        }
+      },
+      "annualVisitVolume": {
+        "totalVisits": 120000,
+        "primaryCareVisits": 85000,
+        "specialtyVisits": 15000,
+        "urgentCareVisits": 20000,
+        "telehealth": {
+          "percentage": 20,
+          "visits": 24000
+        },
+        "behavioralHealth": {
+          "visits": 18000
+        },
+        "dental": {
+          "visits": 25000
+        }
+      },
+      "qualityMeasures": {
+        "uds": {
+          "description": "Uniform Data System - HRSA Required Reporting",
+          "reportingPeriod": "Annual",
+          "measures": [
+            {
+              "measureId": "UDS-HTN",
+              "name": "Controlling High Blood Pressure",
+              "currentPerformance": 58.5,
+              "benchmark": 65.0,
+              "targetPatients": 8500,
+              "gapsIdentified": 3527
+            },
+            {
+              "measureId": "UDS-DM-HBA1C",
+              "name": "Diabetes: HbA1c Poor Control (>9%)",
+              "currentPerformance": 32.5,
+              "benchmark": 25.0,
+              "targetPatients": 4200,
+              "gapsIdentified": 1365
+            },
+            {
+              "measureId": "UDS-CCS",
+              "name": "Cervical Cancer Screening",
+              "currentPerformance": 48.2,
+              "benchmark": 58.0,
+              "targetPatients": 9500,
+              "gapsIdentified": 4921
+            },
+            {
+              "measureId": "UDS-BCS",
+              "name": "Breast Cancer Screening",
+              "currentPerformance": 45.8,
+              "benchmark": 55.0,
+              "targetPatients": 6200,
+              "gapsIdentified": 3361
+            },
+            {
+              "measureId": "UDS-CRC",
+              "name": "Colorectal Cancer Screening",
+              "currentPerformance": 42.5,
+              "benchmark": 50.0,
+              "targetPatients": 7800,
+              "gapsIdentified": 4485
+            },
+            {
+              "measureId": "UDS-HIV",
+              "name": "HIV Linkage to Care",
+              "currentPerformance": 85.2,
+              "benchmark": 90.0,
+              "targetPatients": 320,
+              "gapsIdentified": 47
+            },
+            {
+              "measureId": "UDS-WEIGHT",
+              "name": "Weight Assessment and Counseling (Children)",
+              "currentPerformance": 65.8,
+              "benchmark": 75.0,
+              "targetPatients": 5500,
+              "gapsIdentified": 1881
+            },
+            {
+              "measureId": "UDS-DEPRESSION",
+              "name": "Depression Screening and Follow-up",
+              "currentPerformance": 55.2,
+              "benchmark": 65.0,
+              "targetPatients": 28000,
+              "gapsIdentified": 12544
+            }
+          ]
+        },
+        "mips": {
+          "participationType": "Group Reporting",
+          "alternativePaymentModel": false,
+          "qualityMeasures": [
+            {
+              "measureId": "PREV-5",
+              "name": "Colorectal Cancer Screening",
+              "currentPerformance": 42.5,
+              "benchmark": 75.0,
+              "targetPatients": 2100,
+              "gapsIdentified": 1207
+            },
+            {
+              "measureId": "DM-2",
+              "name": "Diabetes: Hemoglobin A1c Poor Control",
+              "currentPerformance": 32.5,
+              "benchmark": 15.0,
+              "targetPatients": 1800,
+              "gapsIdentified": 585
+            },
+            {
+              "measureId": "HTN-2",
+              "name": "Controlling High Blood Pressure",
+              "currentPerformance": 58.5,
+              "benchmark": 72.0,
+              "targetPatients": 2800,
+              "gapsIdentified": 1162
+            }
+          ],
+          "promotingInteroperability": {
+            "ehr": "NextGen Healthcare",
+            "score": 70,
+            "eRxBonus": true,
+            "hieParticipation": true
+          }
+        },
+        "medicaidIncentives": [
+          {
+            "state": "Various",
+            "program": "Medicaid Quality Incentive Program",
+            "measures": [
+              "Well-Child Visits",
+              "Prenatal Care",
+              "Dental Sealants",
+              "Immunizations"
+            ],
+            "incentiveStructure": "Per-visit bonus or PMPM enhancement",
+            "annualOpportunity": 450000
+          }
+        ]
+      },
+      "commonCareGaps": {
+        "preventive": [
+          {
+            "measure": "Cervical Cancer Screening",
+            "gapRate": 51.8,
+            "impactedPatients": 4921,
+            "revenueImpact": 147630,
+            "interventionCost": 75000
+          },
+          {
+            "measure": "Breast Cancer Screening",
+            "gapRate": 54.2,
+            "impactedPatients": 3361,
+            "revenueImpact": 100830,
+            "interventionCost": 45000
+          },
+          {
+            "measure": "Colorectal Cancer Screening",
+            "gapRate": 57.5,
+            "impactedPatients": 4485,
+            "revenueImpact": 134550,
+            "interventionCost": 65000
+          },
+          {
+            "measure": "Childhood Immunizations",
+            "gapRate": 28.5,
+            "impactedPatients": 1850,
+            "revenueImpact": 92500,
+            "interventionCost": 35000
+          },
+          {
+            "measure": "Prenatal Care - First Trimester",
+            "gapRate": 35.2,
+            "impactedPatients": 422,
+            "revenueImpact": 84400,
+            "interventionCost": 25000
+          }
+        ],
+        "chronic": [
+          {
+            "measure": "Diabetes A1c Control",
+            "gapRate": 32.5,
+            "impactedPatients": 1365,
+            "revenueImpact": 163800,
+            "interventionCost": 85000
+          },
+          {
+            "measure": "Blood Pressure Control",
+            "gapRate": 41.5,
+            "impactedPatients": 3527,
+            "revenueImpact": 176350,
+            "interventionCost": 95000
+          },
+          {
+            "measure": "Depression Remission",
+            "gapRate": 44.8,
+            "impactedPatients": 12544,
+            "revenueImpact": 376320,
+            "interventionCost": 125000
+          }
+        ],
+        "behavioral": [
+          {
+            "measure": "Substance Use Screening",
+            "gapRate": 45.5,
+            "impactedPatients": 15925,
+            "revenueImpact": 318500,
+            "interventionCost": 80000
+          },
+          {
+            "measure": "Depression Follow-up",
+            "gapRate": 38.5,
+            "impactedPatients": 10780,
+            "revenueImpact": 215600,
+            "interventionCost": 65000
+          }
+        ]
+      },
+      "payerContracts": {
+        "valueBasedArrangements": [
+          {
+            "type": "FQHC Alternative Payment Model",
+            "payer": "State Medicaid",
+            "riskLevel": "Upside Only with Quality Gates",
+            "lives": 18000,
+            "ppsEnhancement": 12,
+            "qualityGates": [
+              "UDS Clinical Measures",
+              "Patient Satisfaction"
+            ]
+          },
+          {
+            "type": "Medicaid MCO Incentive",
+            "payer": "Molina Healthcare",
+            "riskLevel": "Quality Bonus",
+            "lives": 8500,
+            "bonusPMPM": 3,
+            "measures": [
+              "Well-Child Visits",
+              "Prenatal Care",
+              "Chronic Disease Management"
+            ]
+          }
+        ],
+        "feeForService": {
+          "percentage": 30,
+          "payers": ["Medicare FFS", "Uninsured with Sliding Fee"]
+        },
+        "grantFunding": {
+          "section330Grant": 3500000,
+          "supplementalGrants": [
+            {
+              "name": "Behavioral Health Integration",
+              "amount": 450000
+            },
+            {
+              "name": "Quality Improvement",
+              "amount": 250000
+            },
+            {
+              "name": "Health Center COVID-19 Funding",
+              "amount": 850000
+            }
+          ]
+        }
+      },
+      "ehrIntegration": {
+        "primaryEHR": "NextGen Healthcare",
+        "version": "NextGen Enterprise 2024",
+        "modules": [
+          "NextGen Ambulatory EHR",
+          "Population Health",
+          "Patient Portal",
+          "Practice Management"
+        ],
+        "integrationCapabilities": {
+          "hl7v2": true,
+          "fhirR4": true,
+          "ccdaExport": true,
+          "bulkFhir": true,
+          "smartOnFhir": true,
+          "apiGateway": "NextGen API"
+        },
+        "dataExchanges": [
+          {
+            "partner": "Surescripts",
+            "type": "E-Prescribing",
+            "frequency": "Real-time"
+          },
+          {
+            "partner": "Carequality",
+            "type": "Document Query",
+            "frequency": "On-demand"
+          },
+          {
+            "partner": "State HIE",
+            "type": "ADT Notifications",
+            "frequency": "Real-time"
+          }
+        ],
+        "registryIntegrations": [
+          "State Immunization Registry",
+          "Cancer Registry",
+          "HRSA UDS Reporting",
+          "Prescription Drug Monitoring Program"
+        ]
+      },
+      "careCoordination": {
+        "resources": {
+          "careManagers": 8,
+          "socialWorkers": 5,
+          "pharmacists": 3,
+          "healthCoaches": 4,
+          "communityHealthWorkers": 12,
+          "nurseNavigators": 3,
+          "patientNavigators": 6,
+          "perinatalCareCoordinators": 2
+        },
+        "programs": [
+          {
+            "name": "Chronic Care Management (CCM)",
+            "enrolledPatients": 1200,
+            "eligiblePatients": 8500,
+            "monthlyTouchpoints": 2,
+            "annualRevenue": 720000
+          },
+          {
+            "name": "Behavioral Health Integration",
+            "enrolledPatients": 2500,
+            "screeningRate": 85,
+            "coLocatedBehavioralHealth": true,
+            "annualRevenue": 450000
+          },
+          {
+            "name": "Perinatal Care Coordination",
+            "enrolledPatients": 800,
+            "firstTrimesterCareRate": 65,
+            "postpartumVisitRate": 72,
+            "annualRevenue": 280000
+          },
+          {
+            "name": "Enabling Services",
+            "transportationArranged": 4500,
+            "interpretationServices": 8500,
+            "benefitsEnrollment": 2200,
+            "housingAssistance": 450
+          }
+        ],
+        "technology": [
+          "Care Management Platform (Azara DRVS)",
+          "Patient Engagement (mPulse)",
+          "Telehealth (Doxy.me)",
+          "Language Line for Interpretation"
+        ]
+      },
+      "socialDeterminants": {
+        "populationChallenges": [
+          {
+            "sdoh": "Food Insecurity",
+            "prevalence": 42.5,
+            "impactedPatients": 14875,
+            "screeningRate": 75,
+            "interventions": [
+              "On-site food pantry",
+              "SNAP enrollment assistance",
+              "WIC coordination",
+              "Medically tailored meals",
+              "Produce prescription program"
+            ]
+          },
+          {
+            "sdoh": "Housing Instability",
+            "prevalence": 28.5,
+            "impactedPatients": 9975,
+            "screeningRate": 72,
+            "interventions": [
+              "Housing navigation services",
+              "Medical respite partnerships",
+              "Emergency shelter referrals",
+              "Utility assistance programs"
+            ]
+          },
+          {
+            "sdoh": "Transportation Barriers",
+            "prevalence": 35.8,
+            "impactedPatients": 12530,
+            "screeningRate": 80,
+            "interventions": [
+              "Free patient transportation",
+              "Medicaid NEMT coordination",
+              "Bus pass distribution",
+              "Mobile health units"
+            ]
+          },
+          {
+            "sdoh": "Limited English Proficiency",
+            "prevalence": 38.2,
+            "impactedPatients": 13370,
+            "screeningRate": 95,
+            "interventions": [
+              "On-site interpreters (Spanish, Vietnamese, Arabic)",
+              "Language Line subscription",
+              "Translated patient materials",
+              "Bilingual staff hiring"
+            ]
+          },
+          {
+            "sdoh": "Unemployment/Financial Strain",
+            "prevalence": 48.5,
+            "impactedPatients": 16975,
+            "screeningRate": 65,
+            "interventions": [
+              "Sliding fee scale",
+              "340B pharmacy program",
+              "Financial counseling",
+              "Insurance enrollment assistance"
+            ]
+          },
+          {
+            "sdoh": "Immigration Status Concerns",
+            "prevalence": 22.5,
+            "impactedPatients": 7875,
+            "screeningRate": 45,
+            "interventions": [
+              "Safe space policies",
+              "Legal aid partnerships",
+              "DACA renewal assistance"
+            ]
+          }
+        ],
+        "screeningTools": [
+          "PRAPARE (Protocol for Responding to and Assessing Patients' Assets, Risks, and Experiences)",
+          "AHC-HRSN (Accountable Health Communities)",
+          "Hunger Vital Sign"
+        ],
+        "communityPartnerships": [
+          "United Way 211",
+          "Local Housing Authority",
+          "Community Food Banks",
+          "Legal Aid Society",
+          "Homeless Shelters",
+          "Domestic Violence Services",
+          "Community Mental Health Centers",
+          "Head Start Programs",
+          "Public Schools (School-Based Health)"
+        ]
+      },
+      "useCases": [
+        {
+          "id": "uds-reporting",
+          "name": "UDS Clinical Quality Reporting",
+          "description": "Streamlined HRSA Uniform Data System clinical measure calculation and reporting",
+          "hdimFeatures": [
+            "Automated UDS measure calculation",
+            "Real-time denominator/numerator tracking",
+            "Provider and site-level dashboards",
+            "Year-over-year trend analysis",
+            "HRSA submission file generation"
+          ],
+          "expectedOutcomes": {
+            "reportingAccuracy": 99,
+            "staffTimeSaved": 300,
+            "measurePerformanceImprovement": 8,
+            "hrsaComplianceConfidence": 100
+          }
+        },
+        {
+          "id": "health-equity-gaps",
+          "name": "Health Equity and Disparity Analysis",
+          "description": "Identify and address quality measure disparities across demographic groups",
+          "hdimFeatures": [
+            "Stratified measure reporting by race/ethnicity/language",
+            "Disparity identification alerts",
+            "Targeted intervention recommendations",
+            "SDOH correlation analysis",
+            "Community health needs assessment support"
+          ],
+          "expectedOutcomes": {
+            "disparityReduction": 15,
+            "sdohScreeningIncrease": 25,
+            "communityHealthImprovement": 10,
+            "grantFundingJustification": "Supported"
+          }
+        },
+        {
+          "id": "medicaid-quality",
+          "name": "Medicaid MCO Quality Programs",
+          "description": "Maximize quality incentive payments from multiple Medicaid MCO partners",
+          "hdimFeatures": [
+            "Multi-payer measure tracking",
+            "MCO-specific gap lists",
+            "Incentive optimization recommendations",
+            "Performance comparison dashboards"
+          ],
+          "expectedOutcomes": {
+            "medicaidIncentivesEarned": 450000,
+            "mcoScoreImprovement": 12,
+            "qualityPPSEnhancement": 350000,
+            "totalRevenueImpact": 800000
+          }
+        },
+        {
+          "id": "behavioral-integration",
+          "name": "Behavioral Health Integration Quality",
+          "description": "Track depression screening, follow-up, and integrated care metrics",
+          "hdimFeatures": [
+            "Depression screening rate tracking",
+            "Follow-up appointment compliance",
+            "Collaborative care billing optimization",
+            "Behavioral health outcome tracking"
+          ],
+          "expectedOutcomes": {
+            "depressionScreeningRate": 90,
+            "followUpComplianceIncrease": 25,
+            "collaborativeCareRevenue": 180000,
+            "patientOutcomesImproved": 20
+          }
+        },
+        {
+          "id": "prenatal-outcomes",
+          "name": "Perinatal Care Quality Improvement",
+          "description": "Improve first trimester care access and postpartum visit rates",
+          "hdimFeatures": [
+            "Pregnancy identification alerts",
+            "Trimester-specific care gap tracking",
+            "Postpartum visit scheduling automation",
+            "High-risk pregnancy identification"
+          ],
+          "expectedOutcomes": {
+            "firstTrimesterCareIncrease": 18,
+            "postpartumVisitIncrease": 22,
+            "lowBirthWeightReduction": 8,
+            "maternalOutcomesImproved": 15
+          }
+        }
+      ]
+    },
+    {
+      "id": "specialty-practice",
+      "name": "Specialty Practice",
+      "description": "Focused specialty practices including cardiology, endocrinology, and behavioral health with disease-specific quality measures",
+      "subtypes": [
+        {
+          "id": "cardiology-practice",
+          "name": "Cardiology Practice",
+          "description": "Cardiovascular specialty practice focusing on heart disease prevention, diagnosis, and management",
+          "characteristics": {
+            "physicianCount": {
+              "min": 4,
+              "max": 20,
+              "typical": 8
+            },
+            "advancedPracticeProviders": {
+              "min": 2,
+              "max": 10,
+              "typical": 4
+            },
+            "subspecialties": [
+              "General Cardiology",
+              "Interventional Cardiology",
+              "Electrophysiology",
+              "Heart Failure",
+              "Preventive Cardiology"
+            ],
+            "locations": {
+              "min": 1,
+              "max": 5,
+              "typical": 3
+            }
+          },
+          "patientPanel": {
+            "attributedLives": {
+              "min": 5000,
+              "max": 25000,
+              "typical": 12000
+            },
+            "medicareAdvantage": {
+              "percentage": 35,
+              "typicalLives": 4200
+            },
+            "medicaid": {
+              "percentage": 8,
+              "typicalLives": 960
+            },
+            "commercialHMO": {
+              "percentage": 25,
+              "typicalLives": 3000
+            },
+            "commercialPPO": {
+              "percentage": 28,
+              "typicalLives": 3360
+            },
+            "selfPay": {
+              "percentage": 4,
+              "typicalLives": 480
+            }
+          },
+          "annualVisitVolume": {
+            "totalVisits": 45000,
+            "officeVisits": 32000,
+            "procedures": 8000,
+            "diagnosticStudies": 15000,
+            "telehealth": {
+              "percentage": 12,
+              "visits": 5400
+            }
+          },
+          "qualityMeasures": {
+            "mips": {
+              "participationType": "Group Reporting",
+              "qualityMeasures": [
+                {
+                  "measureId": "CAD-7",
+                  "name": "CAD: ACE/ARB Therapy - LVSD",
+                  "currentPerformance": 82.5,
+                  "benchmark": 90.0,
+                  "targetPatients": 1800,
+                  "gapsIdentified": 315
+                },
+                {
+                  "measureId": "CAD-8",
+                  "name": "CAD: Beta-Blocker Therapy - Prior MI",
+                  "currentPerformance": 88.2,
+                  "benchmark": 95.0,
+                  "targetPatients": 1200,
+                  "gapsIdentified": 142
+                },
+                {
+                  "measureId": "HF-6",
+                  "name": "Heart Failure: Beta-Blocker Therapy for LVSD",
+                  "currentPerformance": 85.8,
+                  "benchmark": 92.0,
+                  "targetPatients": 950,
+                  "gapsIdentified": 135
+                },
+                {
+                  "measureId": "AFIB-1",
+                  "name": "Atrial Fibrillation: Anticoagulation Therapy",
+                  "currentPerformance": 78.5,
+                  "benchmark": 85.0,
+                  "targetPatients": 2200,
+                  "gapsIdentified": 473
+                },
+                {
+                  "measureId": "PREV-13",
+                  "name": "Statin Therapy - CVD Prevention",
+                  "currentPerformance": 72.8,
+                  "benchmark": 80.0,
+                  "targetPatients": 8500,
+                  "gapsIdentified": 2312
+                },
+                {
+                  "measureId": "HTN-2",
+                  "name": "Controlling High Blood Pressure",
+                  "currentPerformance": 68.5,
+                  "benchmark": 72.0,
+                  "targetPatients": 6200,
+                  "gapsIdentified": 1953
+                }
+              ],
+              "promotingInteroperability": {
+                "ehr": "Cerner PowerChart",
+                "score": 80,
+                "eRxBonus": true,
+                "hieParticipation": true
+              }
+            },
+            "payerIncentives": [
+              {
+                "payer": "Blue Cross Blue Shield",
+                "program": "Cardiovascular Excellence Program",
+                "measures": [
+                  "Statin Adherence",
+                  "ACE/ARB Adherence",
+                  "Blood Pressure Control"
+                ],
+                "incentiveStructure": "Outcomes-based bonus",
+                "annualOpportunity": 180000
+              },
+              {
+                "payer": "Humana MA",
+                "program": "Star Rating Support",
+                "measures": [
+                  "Medication Adherence Measures",
+                  "Blood Pressure Control"
+                ],
+                "incentiveStructure": "Per-member bonus",
+                "annualOpportunity": 250000
+              }
+            ]
+          },
+          "commonCareGaps": {
+            "medication": [
+              {
+                "measure": "Statin Therapy Adherence",
+                "gapRate": 27.2,
+                "impactedPatients": 2312,
+                "revenueImpact": 138720,
+                "interventionCost": 35000
+              },
+              {
+                "measure": "ACE/ARB Therapy - Heart Failure",
+                "gapRate": 17.5,
+                "impactedPatients": 315,
+                "revenueImpact": 47250,
+                "interventionCost": 15000
+              },
+              {
+                "measure": "Anticoagulation - AFib",
+                "gapRate": 21.5,
+                "impactedPatients": 473,
+                "revenueImpact": 94600,
+                "interventionCost": 25000
+              }
+            ],
+            "monitoring": [
+              {
+                "measure": "Blood Pressure Control",
+                "gapRate": 31.5,
+                "impactedPatients": 1953,
+                "revenueImpact": 97650,
+                "interventionCost": 40000
+              },
+              {
+                "measure": "Lipid Panel Monitoring",
+                "gapRate": 25.8,
+                "impactedPatients": 2193,
+                "revenueImpact": 65790,
+                "interventionCost": 22000
+              }
+            ],
+            "outcomes": [
+              {
+                "measure": "30-Day Readmission - Heart Failure",
+                "gapRate": 22.5,
+                "impactedPatients": 180,
+                "revenueImpact": 450000,
+                "interventionCost": 85000
+              }
+            ]
+          }
+        },
+        {
+          "id": "endocrinology-practice",
+          "name": "Endocrinology Practice",
+          "description": "Specialty practice focusing on diabetes, thyroid disorders, and metabolic conditions",
+          "characteristics": {
+            "physicianCount": {
+              "min": 2,
+              "max": 10,
+              "typical": 4
+            },
+            "advancedPracticeProviders": {
+              "min": 1,
+              "max": 6,
+              "typical": 3
+            },
+            "subspecialties": [
+              "Diabetes Management",
+              "Thyroid Disorders",
+              "Metabolic Bone Disease",
+              "Pituitary/Adrenal Disorders",
+              "Lipid Management"
+            ],
+            "locations": {
+              "min": 1,
+              "max": 3,
+              "typical": 2
+            }
+          },
+          "patientPanel": {
+            "attributedLives": {
+              "min": 3000,
+              "max": 15000,
+              "typical": 8000
+            },
+            "medicareAdvantage": {
+              "percentage": 30,
+              "typicalLives": 2400
+            },
+            "medicaid": {
+              "percentage": 12,
+              "typicalLives": 960
+            },
+            "commercialHMO": {
+              "percentage": 28,
+              "typicalLives": 2240
+            },
+            "commercialPPO": {
+              "percentage": 25,
+              "typicalLives": 2000
+            },
+            "selfPay": {
+              "percentage": 5,
+              "typicalLives": 400
+            }
+          },
+          "annualVisitVolume": {
+            "totalVisits": 28000,
+            "newPatients": 4200,
+            "followUp": 23800,
+            "diabetesEducation": 3500,
+            "telehealth": {
+              "percentage": 22,
+              "visits": 6160
+            }
+          },
+          "qualityMeasures": {
+            "mips": {
+              "participationType": "Group Reporting",
+              "qualityMeasures": [
+                {
+                  "measureId": "DM-2",
+                  "name": "Diabetes: HbA1c Poor Control (>9%)",
+                  "currentPerformance": 18.5,
+                  "benchmark": 15.0,
+                  "targetPatients": 5200,
+                  "gapsIdentified": 962
+                },
+                {
+                  "measureId": "DM-9",
+                  "name": "Diabetes: Eye Exam",
+                  "currentPerformance": 58.5,
+                  "benchmark": 65.0,
+                  "targetPatients": 5200,
+                  "gapsIdentified": 2158
+                },
+                {
+                  "measureId": "DM-14",
+                  "name": "Diabetes: Medical Attention for Nephropathy",
+                  "currentPerformance": 82.5,
+                  "benchmark": 90.0,
+                  "targetPatients": 5200,
+                  "gapsIdentified": 910
+                },
+                {
+                  "measureId": "DM-15",
+                  "name": "Diabetes: Foot Exam",
+                  "currentPerformance": 72.8,
+                  "benchmark": 80.0,
+                  "targetPatients": 5200,
+                  "gapsIdentified": 1414
+                },
+                {
+                  "measureId": "HTN-2",
+                  "name": "Controlling High Blood Pressure",
+                  "currentPerformance": 65.2,
+                  "benchmark": 72.0,
+                  "targetPatients": 4800,
+                  "gapsIdentified": 1670
+                },
+                {
+                  "measureId": "PREV-13",
+                  "name": "Statin Therapy for Diabetes",
+                  "currentPerformance": 68.5,
+                  "benchmark": 80.0,
+                  "targetPatients": 4500,
+                  "gapsIdentified": 1417
+                }
+              ],
+              "promotingInteroperability": {
+                "ehr": "Practice Fusion",
+                "score": 72,
+                "eRxBonus": true,
+                "hieParticipation": false
+              }
+            },
+            "payerIncentives": [
+              {
+                "payer": "United Healthcare",
+                "program": "Diabetes Care Quality Program",
+                "measures": [
+                  "A1c Control",
+                  "Eye Exam",
+                  "Kidney Monitoring",
+                  "Statin Adherence"
+                ],
+                "incentiveStructure": "Composite score bonus",
+                "annualOpportunity": 120000
+              }
+            ]
+          },
+          "commonCareGaps": {
+            "diabetesCare": [
+              {
+                "measure": "A1c Control (<8%)",
+                "gapRate": 18.5,
+                "impactedPatients": 962,
+                "revenueImpact": 115440,
+                "interventionCost": 48000
+              },
+              {
+                "measure": "Diabetic Retinal Exam",
+                "gapRate": 41.5,
+                "impactedPatients": 2158,
+                "revenueImpact": 107900,
+                "interventionCost": 32000
+              },
+              {
+                "measure": "Foot Exam",
+                "gapRate": 27.2,
+                "impactedPatients": 1414,
+                "revenueImpact": 42420,
+                "interventionCost": 14000
+              },
+              {
+                "measure": "Nephropathy Screening",
+                "gapRate": 17.5,
+                "impactedPatients": 910,
+                "revenueImpact": 45500,
+                "interventionCost": 9000
+              }
+            ],
+            "technology": [
+              {
+                "measure": "CGM Utilization",
+                "gapRate": 55.0,
+                "impactedPatients": 2860,
+                "revenueImpact": 286000,
+                "interventionCost": 45000
+              },
+              {
+                "measure": "Insulin Pump Management",
+                "gapRate": 35.0,
+                "impactedPatients": 455,
+                "revenueImpact": 136500,
+                "interventionCost": 25000
+              }
+            ]
+          }
+        },
+        {
+          "id": "behavioral-health-practice",
+          "name": "Behavioral Health Practice",
+          "description": "Specialty practice focusing on psychiatric care, therapy services, and substance use treatment",
+          "characteristics": {
+            "physicianCount": {
+              "min": 2,
+              "max": 12,
+              "typical": 5
+            },
+            "advancedPracticeProviders": {
+              "min": 2,
+              "max": 15,
+              "typical": 8
+            },
+            "otherProviders": {
+              "psychologists": 4,
+              "licensedClinicalSocialWorkers": 8,
+              "licensedProfessionalCounselors": 6
+            },
+            "subspecialties": [
+              "Adult Psychiatry",
+              "Child/Adolescent Psychiatry",
+              "Addiction Medicine",
+              "Geriatric Psychiatry",
+              "Psychotherapy Services"
+            ],
+            "locations": {
+              "min": 1,
+              "max": 5,
+              "typical": 3
+            }
+          },
+          "patientPanel": {
+            "attributedLives": {
+              "min": 2500,
+              "max": 12000,
+              "typical": 6000
+            },
+            "medicareAdvantage": {
+              "percentage": 15,
+              "typicalLives": 900
+            },
+            "medicaid": {
+              "percentage": 35,
+              "typicalLives": 2100
+            },
+            "commercialHMO": {
+              "percentage": 25,
+              "typicalLives": 1500
+            },
+            "commercialPPO": {
+              "percentage": 18,
+              "typicalLives": 1080
+            },
+            "selfPay": {
+              "percentage": 7,
+              "typicalLives": 420
+            }
+          },
+          "annualVisitVolume": {
+            "totalVisits": 52000,
+            "psychiatricEvaluations": 4500,
+            "medicationManagement": 18000,
+            "individualTherapy": 22000,
+            "groupTherapy": 5500,
+            "intensiveOutpatient": 2000,
+            "telehealth": {
+              "percentage": 45,
+              "visits": 23400
+            }
+          },
+          "qualityMeasures": {
+            "mips": {
+              "participationType": "Group Reporting",
+              "qualityMeasures": [
+                {
+                  "measureId": "MH-1",
+                  "name": "Depression Remission at 12 Months",
+                  "currentPerformance": 32.5,
+                  "benchmark": 40.0,
+                  "targetPatients": 2800,
+                  "gapsIdentified": 1890
+                },
+                {
+                  "measureId": "MH-2",
+                  "name": "Depression Response at 12 Months",
+                  "currentPerformance": 48.5,
+                  "benchmark": 55.0,
+                  "targetPatients": 2800,
+                  "gapsIdentified": 1442
+                },
+                {
+                  "measureId": "ADHD-1",
+                  "name": "ADHD Follow-up Care - Initiation Phase",
+                  "currentPerformance": 42.8,
+                  "benchmark": 50.0,
+                  "targetPatients": 850,
+                  "gapsIdentified": 486
+                },
+                {
+                  "measureId": "SUD-1",
+                  "name": "Initiation of Alcohol/Drug Treatment",
+                  "currentPerformance": 38.5,
+                  "benchmark": 45.0,
+                  "targetPatients": 950,
+                  "gapsIdentified": 584
+                },
+                {
+                  "measureId": "SUD-2",
+                  "name": "Engagement of Alcohol/Drug Treatment",
+                  "currentPerformance": 15.2,
+                  "benchmark": 20.0,
+                  "targetPatients": 950,
+                  "gapsIdentified": 806
+                },
+                {
+                  "measureId": "FUH-7",
+                  "name": "Follow-up After Hospitalization for Mental Illness - 7 Day",
+                  "currentPerformance": 55.8,
+                  "benchmark": 65.0,
+                  "targetPatients": 420,
+                  "gapsIdentified": 186
+                }
+              ],
+              "promotingInteroperability": {
+                "ehr": "Valant",
+                "score": 68,
+                "eRxBonus": true,
+                "hieParticipation": false
+              }
+            },
+            "payerIncentives": [
+              {
+                "payer": "Medicaid MCO",
+                "program": "Behavioral Health Quality Incentive",
+                "measures": [
+                  "Depression Follow-up",
+                  "SUD Engagement",
+                  "Post-hospitalization Follow-up"
+                ],
+                "incentiveStructure": "Quality bonus pool",
+                "annualOpportunity": 95000
+              }
+            ]
+          },
+          "commonCareGaps": {
+            "depression": [
+              {
+                "measure": "Depression Remission",
+                "gapRate": 67.5,
+                "impactedPatients": 1890,
+                "revenueImpact": 189000,
+                "interventionCost": 75000
+              },
+              {
+                "measure": "Depression Screening in Primary Care Referrals",
+                "gapRate": 45.0,
+                "impactedPatients": 1260,
+                "revenueImpact": 63000,
+                "interventionCost": 25000
+              }
+            ],
+            "substanceUse": [
+              {
+                "measure": "SUD Treatment Initiation",
+                "gapRate": 61.5,
+                "impactedPatients": 584,
+                "revenueImpact": 116800,
+                "interventionCost": 45000
+              },
+              {
+                "measure": "SUD Treatment Engagement",
+                "gapRate": 84.8,
+                "impactedPatients": 806,
+                "revenueImpact": 161200,
+                "interventionCost": 65000
+              },
+              {
+                "measure": "MAT Adherence",
+                "gapRate": 35.5,
+                "impactedPatients": 213,
+                "revenueImpact": 85200,
+                "interventionCost": 35000
+              }
+            ],
+            "careTransitions": [
+              {
+                "measure": "7-Day Post-Hospital Follow-up",
+                "gapRate": 44.2,
+                "impactedPatients": 186,
+                "revenueImpact": 93000,
+                "interventionCost": 28000
+              },
+              {
+                "measure": "30-Day Post-ED Follow-up",
+                "gapRate": 52.5,
+                "impactedPatients": 315,
+                "revenueImpact": 94500,
+                "interventionCost": 32000
+              }
+            ]
+          }
+        }
+      ],
+      "sharedCharacteristics": {
+        "ehrIntegration": {
+          "commonEHRs": [
+            "Epic",
+            "Cerner",
+            "athenahealth",
+            "NextGen",
+            "eClinicalWorks",
+            "Valant (BH specific)"
+          ],
+          "integrationCapabilities": {
+            "hl7v2": true,
+            "fhirR4": true,
+            "ccdaExport": true,
+            "specialtySpecificModules": true
+          }
+        },
+        "careCoordination": {
+          "resources": {
+            "careManagers": "1-3 depending on size",
+            "clinicalPharmacist": "Often shared or consulting",
+            "nurseNavigators": "1-2 for larger practices"
+          },
+          "programs": [
+            "Chronic Care Management (specialty-focused)",
+            "Remote Patient Monitoring",
+            "Care Coordination with PCPs"
+          ]
+        },
+        "referralPatterns": {
+          "inboundReferrals": {
+            "primaryCare": 65,
+            "emergencyDepartment": 15,
+            "otherSpecialists": 12,
+            "selfReferred": 8
+          },
+          "outboundReferrals": {
+            "primaryCare": 40,
+            "otherSpecialists": 35,
+            "ancillaryServices": 25
+          }
+        }
+      },
+      "useCases": [
+        {
+          "id": "specialty-mips",
+          "name": "Specialty-Specific MIPS Optimization",
+          "description": "Maximize MIPS performance using specialty-appropriate measures",
+          "hdimFeatures": [
+            "Specialty-specific measure recommendations",
+            "Cross-specialty referral tracking",
+            "Outcome measure trending",
+            "Specialty benchmark comparisons"
+          ],
+          "expectedOutcomes": {
+            "mipsScoreImprovement": 18,
+            "qualityBonusEarned": 85000,
+            "measurePerformanceGain": 12,
+            "reportingEfficiency": 60
+          }
+        },
+        {
+          "id": "chronic-disease-specialty",
+          "name": "Disease-Specific Chronic Care Programs",
+          "description": "Comprehensive tracking for specialty-focused chronic conditions",
+          "hdimFeatures": [
+            "Disease registry functionality",
+            "Treatment protocol adherence tracking",
+            "Outcome measurement dashboards",
+            "Patient engagement tools"
+          ],
+          "expectedOutcomes": {
+            "outcomeImprovement": 15,
+            "patientSatisfactionIncrease": 12,
+            "careGapClosure": 25,
+            "revenueFromCCM": 150000
+          }
+        },
+        {
+          "id": "referral-coordination",
+          "name": "Referral Loop Closure",
+          "description": "Track referrals and ensure care gaps identified by PCPs are addressed",
+          "hdimFeatures": [
+            "Referral quality metrics",
+            "PCP-specialist communication tracking",
+            "Shared care gap visibility",
+            "Results notification automation"
+          ],
+          "expectedOutcomes": {
+            "referralCompletionRate": 85,
+            "pcpSatisfactionIncrease": 20,
+            "patientLeakageReduction": 30,
+            "networkValueDemonstration": "Quantified"
+          }
+        },
+        {
+          "id": "medication-adherence",
+          "name": "Specialty Medication Adherence Programs",
+          "description": "Track and improve adherence to specialty medications",
+          "hdimFeatures": [
+            "Medication adherence tracking",
+            "Refill gap identification",
+            "Patient outreach automation",
+            "Pharmacy coordination"
+          ],
+          "expectedOutcomes": {
+            "adherenceRateImprovement": 18,
+            "payerIncentivesEarned": 120000,
+            "patientOutcomesImproved": 15,
+            "starRatingContribution": "Positive"
+          }
+        },
+        {
+          "id": "telehealth-quality",
+          "name": "Telehealth Quality Assurance",
+          "description": "Ensure quality measure capture during virtual visits",
+          "hdimFeatures": [
+            "Virtual visit quality checklist",
+            "Gap closure during telehealth",
+            "Documentation compliance",
+            "Patient satisfaction tracking"
+          ],
+          "expectedOutcomes": {
+            "telehealthQualityParity": 95,
+            "virtualVisitGapClosure": 70,
+            "patientAccessImprovement": 35,
+            "providerEfficiency": 25
+          }
+        }
+      ]
+    }
+  ],
+  "crossCuttingCapabilities": {
+    "hdimPlatformFeatures": {
+      "measureCalculation": {
+        "description": "Automated quality measure calculation engine",
+        "capabilities": [
+          "HEDIS measure library (90+ measures)",
+          "MIPS/QPP measure sets",
+          "ACO quality measures",
+          "UDS clinical measures",
+          "Custom measure builder"
+        ],
+        "dataSources": [
+          "EHR clinical data (FHIR, HL7)",
+          "Claims/encounter data",
+          "ADT feeds",
+          "Lab results",
+          "Pharmacy data",
+          "Patient-reported outcomes"
+        ]
+      },
+      "gapIdentification": {
+        "description": "Real-time care gap detection and prioritization",
+        "capabilities": [
+          "Patient-level gap lists",
+          "Provider-level dashboards",
+          "Risk stratification",
+          "Intervention recommendations",
+          "ROI prioritization"
+        ]
+      },
+      "reporting": {
+        "description": "Comprehensive quality reporting and submission",
+        "capabilities": [
+          "CMS QRDA I/III generation",
+          "NCQA HEDIS submission",
+          "HRSA UDS reporting",
+          "Custom report builder",
+          "Executive dashboards"
+        ]
+      },
+      "patientEngagement": {
+        "description": "Multi-channel patient outreach automation",
+        "capabilities": [
+          "Personalized outreach campaigns",
+          "SMS/email/voice automation",
+          "Appointment scheduling integration",
+          "Patient portal integration",
+          "Response tracking"
+        ]
+      },
+      "analytics": {
+        "description": "Advanced analytics and insights",
+        "capabilities": [
+          "Trend analysis",
+          "Predictive modeling",
+          "Benchmark comparisons",
+          "Health equity analytics",
+          "Financial impact modeling"
+        ]
+      }
+    },
+    "implementationApproach": {
+      "phases": [
+        {
+          "phase": 1,
+          "name": "Foundation",
+          "duration": "4-6 weeks",
+          "activities": [
+            "EHR integration",
+            "Initial data load",
+            "Measure baseline",
+            "Staff training"
+          ]
+        },
+        {
+          "phase": 2,
+          "name": "Activation",
+          "duration": "4-8 weeks",
+          "activities": [
+            "Gap closure workflows",
+            "Provider dashboards",
+            "Patient outreach launch",
+            "Performance monitoring"
+          ]
+        },
+        {
+          "phase": 3,
+          "name": "Optimization",
+          "duration": "Ongoing",
+          "activities": [
+            "Continuous improvement",
+            "Advanced analytics",
+            "Program expansion",
+            "ROI tracking"
+          ]
+        }
+      ],
+      "successMetrics": [
+        "Measure performance improvement",
+        "Care gap closure rate",
+        "Provider adoption",
+        "Financial ROI",
+        "Patient satisfaction"
+      ]
+    }
+  },
+  "marketSizing": {
+    "totalAddressableMarket": {
+      "largeMultispecialty": {
+        "estimatedCount": 2500,
+        "averageContractValue": 350000,
+        "totalMarket": 875000000
+      },
+      "primaryCarePractice": {
+        "estimatedCount": 45000,
+        "averageContractValue": 45000,
+        "totalMarket": 2025000000
+      },
+      "soloSmallPractice": {
+        "estimatedCount": 180000,
+        "averageContractValue": 8500,
+        "totalMarket": 1530000000
+      },
+      "fqhc": {
+        "estimatedCount": 1400,
+        "averageContractValue": 125000,
+        "totalMarket": 175000000
+      },
+      "specialtyPractice": {
+        "estimatedCount": 85000,
+        "averageContractValue": 35000,
+        "totalMarket": 2975000000
+      }
+    },
+    "totalTAM": 7580000000,
+    "servicableObtainableMarket": {
+      "year1Target": 75800000,
+      "year3Target": 379000000,
+      "year5Target": 758000000
+    }
+  }
+}

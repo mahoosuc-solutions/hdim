@@ -79,6 +79,8 @@ dependencies {
     testImplementation(libs.spring.boot.starter.test)
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation(libs.testcontainers)
+    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.postgresql)  // PostgreSQL JDBC driver for Testcontainers
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.testcontainers.redis)
     testRuntimeOnly("com.h2database:h2")

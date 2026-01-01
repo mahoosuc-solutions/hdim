@@ -1,9 +1,18 @@
-spring:
-  main:
-    allow-bean-definition-overriding: true
-    allow-circular-references: true
+server:
+  port: 0  # Random port for tests
 
-  # Standard Spring datasource (fallback)
+# JWT Authentication Configuration for Tests
+jwt:
+  secret: test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+  access-token-expiration: 1h
+  refresh-token-expiration: 1d
+  issuer: healthdata-in-motion-test
+  audience: healthdata-api-test
+
+spring:
+  application:
+    name: prior-auth-service-test
+
   datasource:
     url: jdbc:tc:postgresql:15-alpine:///testdb
     username: sa
@@ -13,14 +22,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
-    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-        hbm2ddl:
-          create_namespaces: true
-    defer-datasource-initialization: true
+        format_sql: false
+    show-sql: false
 
   liquibase:
     enabled: false
@@ -28,72 +34,28 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaStreamsAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaReactiveAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-
-# HDIM shared persistence module configuration - uses healthdata.persistence.*
-healthdata:
-  persistence:
-    primary:
-      url: jdbc:tc:postgresql:15-alpine:///testdb
-      username: sa
-      password: ""
-      driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-      pool-name: h2-test-pool
-      maximum-pool-size: 5
-      minimum-idle: 1
-    rls-enabled: false
-    jpa:
-      auditing-enabled: true
-
-  data:
-    redis:
-      host: localhost
-      port: 6379
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
 
   cache:
-    type: none
+    type: simple
 
+  # Kafka Configuration (disabled for tests)
   kafka:
-    bootstrap-servers: localhost:9092
+    producer:
+      bootstrap-servers: localhost:9092
     consumer:
+      bootstrap-servers: localhost:9092
       auto-offset-reset: earliest
-      group-id: prior-auth-test
 
-# Disable security for tests
-authentication:
-  controller:
-    enabled: false
-  audit:
-    enabled: false
-  rateLimit:
-    enabled: false
-
-# JWT test configuration
-jwt:
-  secret: test-secret-key-for-unit-testing-only-minimum-32-chars
-  accessTokenExpirationMs: 900000
-  refreshTokenExpirationMs: 604800000
-
-# Disable Feign client connections for tests
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 1000
-        readTimeout: 1000
-
-# Resilience4j disabled for tests
-resilience4j:
-  circuitbreaker:
-    instances:
-      payerApi:
-        registerHealthIndicator: false
-  retry:
-    instances:
-      payerApi:
-        maxAttempts: 1
+# Audit Configuration
+audit:
+  enabled: false
 
 logging:
   level:
-    com.healthdata: DEBUG
-    org.springframework.security: DEBUG
+    root: WARN
+    com.healthdata.priorauth: INFO
+    org.springframework.test: INFO

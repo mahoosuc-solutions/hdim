@@ -98,6 +98,7 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:tracing"))
 
     // Testing
+    testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.bundles.testing)
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation(libs.bundles.testcontainers)

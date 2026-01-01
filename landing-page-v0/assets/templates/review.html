@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review {{ asset_id }} - HDIM Visual Asset Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0066CC',
+                        accent: '#00A5B5',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="/" class="text-gray-600 hover:text-gray-900">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                    </a>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">{{ current.name }}</h1>
+                        <p class="text-gray-600">{{ asset_id }} &middot; Version {{ current.version }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    {% if current.human_review_status == 'APPROVED' %}
+                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">Approved</span>
+                    {% elif current.human_review_status == 'REJECTED' %}
+                    <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">Rejected</span>
+                    {% elif current.human_review_status == 'PENDING' %}
+                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">Pending Review</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Image Comparison -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Current Version -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="bg-gray-800 text-white px-4 py-2 flex justify-between items-center">
+                    <span class="font-medium">Current Version (v{{ current.version }})</span>
+                    <span class="text-sm text-gray-400">{{ current.generated_at }}</span>
+                </div>
+                <div class="aspect-video bg-gray-100">
+                    {% if current.filepath %}
+                    <img src="/preview/{{ current.filepath }}"
+                         alt="{{ current.name }}"
+                         class="w-full h-full object-contain">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-gray-400">
+                        No image generated
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="p-4 text-sm text-gray-600">
+                    {% if current.filepath %}
+                    <a href="/preview/{{ current.filepath }}" target="_blank" class="text-primary hover:underline">
+                        View full size &rarr;
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Previous Version (if exists) -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="bg-gray-600 text-white px-4 py-2 flex justify-between items-center">
+                    <span class="font-medium">
+                        {% if previous %}Previous Version (v{{ previous.version }}){% else %}Previous Version{% endif %}
+                    </span>
+                    {% if previous %}
+                    <span class="text-sm text-gray-400">{{ previous.generated_at }}</span>
+                    {% endif %}
+                </div>
+                <div class="aspect-video bg-gray-100">
+                    {% if previous and previous.filepath %}
+                    <img src="/preview/{{ previous.filepath }}"
+                         alt="{{ current.name }} - Previous"
+                         class="w-full h-full object-contain">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-gray-400">
+                        No previous version
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="p-4 text-sm text-gray-600">
+                    {% if previous and previous.filepath %}
+                    <a href="/preview/{{ previous.filepath }}" target="_blank" class="text-primary hover:underline">
+                        View full size &rarr;
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quality Report -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Quality Report</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Text Accuracy -->
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-900">Text Accuracy</h3>
+                        {% if qc_report and qc_report.text_accuracy %}
+                        {% if qc_report.text_accuracy.status == 'PASS' %}
+                        <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">PASS</span>
+                        {% else %}
+                        <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded">FAIL</span>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                    {% if qc_report and qc_report.text_accuracy %}
+                    <div class="text-sm text-gray-600 space-y-2">
+                        <div>
+                            <span class="font-medium">Extracted Text:</span>
+                            <ul class="list-disc list-inside mt-1">
+                                {% for text in qc_report.text_accuracy.extracted_text %}
+                                <li>{{ text }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% if qc_report.text_accuracy.misspelled %}
+                        <div class="text-red-600">
+                            <span class="font-medium">Misspelled:</span>
+                            {{ qc_report.text_accuracy.misspelled | join(', ') }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-gray-500">Not yet verified</p>
+                    {% endif %}
+                </div>
+
+                <!-- Clarity Score -->
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-900">Clarity Score</h3>
+                        {% if qc_report and qc_report.clarity %}
+                        <span class="text-2xl font-bold
+                            {% if qc_report.clarity.score >= 75 %}text-green-600
+                            {% elif qc_report.clarity.score >= 50 %}text-yellow-600
+                            {% else %}text-red-600{% endif %}">
+                            {{ "%.0f"|format(qc_report.clarity.score) }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% if qc_report and qc_report.clarity %}
+                    <div class="text-sm text-gray-600">
+                        <p class="mb-2">{{ qc_report.clarity.feedback }}</p>
+                        {% if qc_report.clarity.strengths %}
+                        <div class="text-green-600 mt-2">
+                            <span class="font-medium">Strengths:</span>
+                            <ul class="list-disc list-inside">
+                                {% for strength in qc_report.clarity.strengths %}
+                                <li>{{ strength }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        {% if qc_report.clarity.issues %}
+                        <div class="text-red-600 mt-2">
+                            <span class="font-medium">Issues:</span>
+                            <ul class="list-disc list-inside">
+                                {% for issue in qc_report.clarity.issues %}
+                                <li>{{ issue }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-gray-500">Not yet assessed</p>
+                    {% endif %}
+                </div>
+
+                <!-- Technical Validation -->
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-900">Technical</h3>
+                        {% if qc_report and qc_report.technical %}
+                        {% if qc_report.technical.status == 'PASS' %}
+                        <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">PASS</span>
+                        {% elif qc_report.technical.status == 'WARNING' %}
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">WARNING</span>
+                        {% else %}
+                        <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded">FAIL</span>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                    {% if qc_report and qc_report.technical %}
+                    <div class="text-sm text-gray-600 space-y-1">
+                        <div><span class="font-medium">Dimensions:</span> {{ qc_report.technical.dimensions }}</div>
+                        <div><span class="font-medium">Expected:</span> {{ qc_report.technical.expected_dimensions }}</div>
+                        <div><span class="font-medium">File Size:</span> {{ "%.0f"|format(qc_report.technical.file_size_kb) }} KB</div>
+                        <div><span class="font-medium">Format:</span> {{ qc_report.technical.format }}</div>
+                        {% if qc_report.technical.warnings %}
+                        <div class="text-yellow-600">
+                            {% for warning in qc_report.technical.warnings %}
+                            <div>&#9888; {{ warning }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-gray-500">Not yet validated</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Overall Score -->
+            {% if qc_report %}
+            <div class="mt-6 pt-6 border-t">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-gray-600">Overall Quality Score:</span>
+                        <span class="text-3xl font-bold ml-2
+                            {% if qc_report.overall_score >= 75 %}text-green-600
+                            {% elif qc_report.overall_score >= 50 %}text-yellow-600
+                            {% else %}text-red-600{% endif %}">
+                            {{ "%.0f"|format(qc_report.overall_score) }}/100
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Status:</span>
+                        {% if qc_report.overall_status == 'READY_FOR_REVIEW' %}
+                        <span class="ml-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">Ready for Review</span>
+                        {% elif qc_report.overall_status == 'FAILED_QC' %}
+                        <span class="ml-2 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">Failed QC</span>
+                        {% else %}
+                        <span class="ml-2 px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">{{ qc_report.overall_status }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Action Panel -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Review Actions</h2>
+
+            {% if current.human_review_status == 'PENDING' %}
+            <form id="reviewForm" class="space-y-4">
+                <!-- Feedback Input -->
+                <div>
+                    <label for="feedback" class="block text-sm font-medium text-gray-700 mb-1">
+                        Your Feedback (required for rejection)
+                    </label>
+                    <textarea id="feedback" name="feedback" rows="3"
+                              class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                              placeholder="Describe what needs to be improved..."></textarea>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4">
+                    <button type="button" onclick="approveAsset()"
+                            class="flex-1 py-3 px-6 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors">
+                        &#10003; Approve
+                    </button>
+                    <button type="button" onclick="rejectAsset()"
+                            class="flex-1 py-3 px-6 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors">
+                        &#10007; Reject & Regenerate
+                    </button>
+                    <button type="button" onclick="showPromptEditor()"
+                            class="py-3 px-6 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition-colors">
+                        Edit Prompt
+                    </button>
+                </div>
+            </form>
+
+            <!-- Prompt Editor (Hidden by default) -->
+            <div id="promptEditor" class="hidden mt-6 pt-6 border-t">
+                <h3 class="font-medium text-gray-900 mb-2">Edit Generation Prompt</h3>
+                <textarea id="promptText" rows="6"
+                          class="w-full px-3 py-2 border rounded-lg font-mono text-sm focus:ring-2 focus:ring-primary focus:border-primary">{{ current_prompt or 'No prompt available' }}</textarea>
+                <div class="mt-3 flex gap-2">
+                    <button type="button" onclick="regenerateWithPrompt()"
+                            class="py-2 px-4 bg-primary text-white font-medium rounded-lg hover:bg-primary/90">
+                        Regenerate with New Prompt
+                    </button>
+                    <button type="button" onclick="hidePromptEditor()"
+                            class="py-2 px-4 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+
+            {% elif current.human_review_status == 'APPROVED' %}
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="flex items-center gap-3">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div>
+                        <p class="font-medium text-green-800">This asset has been approved</p>
+                        <p class="text-sm text-green-600">Ready for publishing to production</p>
+                    </div>
+                </div>
+                {% if not current.is_published %}
+                <div class="mt-4">
+                    <a href="/publish" class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                        Go to Publishing &rarr;
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            {% elif current.human_review_status == 'REJECTED' %}
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="flex items-center gap-3">
+                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div>
+                        <p class="font-medium text-red-800">This version was rejected</p>
+                        {% if current.human_feedback %}
+                        <p class="text-sm text-red-600">Feedback: {{ current.human_feedback }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <p class="text-sm text-gray-600">A new version should be automatically generated. Refresh to check for updates.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Version History -->
+        {% if version_history %}
+        <div class="bg-white rounded-lg shadow p-6 mt-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Version History</h2>
+            <div class="space-y-3">
+                {% for version in version_history %}
+                <div class="flex items-center justify-between py-2 border-b last:border-b-0">
+                    <div>
+                        <span class="font-medium">Version {{ version.version }}</span>
+                        <span class="text-sm text-gray-500 ml-2">{{ version.generated_at }}</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="text-sm text-gray-600">Quality: {{ "%.0f"|format(version.quality_score) }}/100</span>
+                        {% if version.human_review_status == 'APPROVED' %}
+                        <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">Approved</span>
+                        {% elif version.human_review_status == 'REJECTED' %}
+                        <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded">Rejected</span>
+                        {% elif version.human_review_status == 'PENDING' %}
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">Pending</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </main>
+
+    <script>
+        async function approveAsset() {
+            const response = await fetch('/api/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    asset_id: '{{ asset_id }}',
+                    version: {{ current.version }}
+                })
+            });
+
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Error approving asset');
+            }
+        }
+
+        async function rejectAsset() {
+            const feedback = document.getElementById('feedback').value;
+            if (!feedback.trim()) {
+                alert('Please provide feedback for rejection');
+                return;
+            }
+
+            const response = await fetch('/api/reject', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    asset_id: '{{ asset_id }}',
+                    version: {{ current.version }},
+                    feedback: feedback
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                alert(`Regenerating version ${data.new_version}. This may take a moment...`);
+                setTimeout(() => location.reload(), 5000);
+            } else {
+                alert('Error rejecting asset');
+            }
+        }
+
+        function showPromptEditor() {
+            document.getElementById('promptEditor').classList.remove('hidden');
+        }
+
+        function hidePromptEditor() {
+            document.getElementById('promptEditor').classList.add('hidden');
+        }
+
+        async function regenerateWithPrompt() {
+            const prompt = document.getElementById('promptText').value;
+            if (!prompt.trim()) {
+                alert('Please enter a prompt');
+                return;
+            }
+
+            const response = await fetch('/api/regenerate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    asset_id: '{{ asset_id }}',
+                    prompt: prompt
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                alert(`Generating version ${data.new_version}. This may take a moment...`);
+                setTimeout(() => location.reload(), 5000);
+            } else {
+                alert('Error regenerating asset');
+            }
+        }
+    </script>
+</body>
+</html>

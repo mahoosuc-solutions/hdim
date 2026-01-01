@@ -405,12 +405,26 @@ export class AuthService {
    */
   private handleLoginSuccess(response: LoginResponse): void {
     // Tokens are set as HttpOnly cookies by backend - no localStorage storage needed
-    // Just store user profile for UI display and permission checks
-    this.setUser(response.user);
-    this.currentUserSubject.next(response.user);
+    // Build user object from response data
+    const user: User = {
+      id: '', // ID not returned in login response, will be set from /auth/me if needed
+      username: response.username,
+      email: response.email,
+      firstName: response.username.split('@')[0], // Extract from username as fallback
+      lastName: '',
+      fullName: response.username,
+      roles: (response.roles || []).map(roleName => ({ id: '', name: roleName } as Role)),
+      tenantId: response.tenantIds?.[0] || '', // Use first tenant ID
+      tenantIds: response.tenantIds || [],
+      active: true,
+    };
+
+    // Store user profile for UI display and permission checks
+    this.setUser(user);
+    this.currentUserSubject.next(user);
     this.isAuthenticatedSubject.next(true);
     this.startTokenRefreshTimer();
-    this.log.info('Login successful', { username: response.user.username });
+    this.log.info('Login successful', { username: user.username });
   }
 
   /**
@@ -495,8 +509,12 @@ export interface LoginResponse {
   refreshToken?: string;
   tokenType: string;
   expiresIn: number;
-  user: User;
+  username: string;
+  email: string;
+  roles: string[];
+  tenantIds: string[];
   mfaEnabled?: boolean;
+  message?: string;
 }
 
 export interface MfaRequiredResponse {

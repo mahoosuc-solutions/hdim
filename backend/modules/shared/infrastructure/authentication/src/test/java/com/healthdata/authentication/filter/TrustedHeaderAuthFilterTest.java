@@ -2,6 +2,7 @@ package com.healthdata.authentication.filter;
 
 import com.healthdata.authentication.constants.AuthHeaderConstants;
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter.TrustedHeaderAuthConfig;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -45,6 +46,9 @@ class TrustedHeaderAuthFilterTest {
     @Mock
     private FilterChain filterChain;
 
+    @Mock
+    private MeterRegistry meterRegistry;
+
     private TrustedHeaderAuthFilter filter;
     private TrustedHeaderAuthConfig config;
 
@@ -52,7 +56,7 @@ class TrustedHeaderAuthFilterTest {
     void setUp() {
         SecurityContextHolder.clearContext();
         config = TrustedHeaderAuthConfig.development();
-        filter = new TrustedHeaderAuthFilter(config);
+        filter = new TrustedHeaderAuthFilter(config, meterRegistry);
         // Default stubs for request
         lenient().when(request.getRequestURI()).thenReturn("/api/v1/test");
         // Default all headers to null (to be overridden in specific tests)

@@ -11,7 +11,6 @@ import com.healthdata.quality.persistence.MentalHealthAssessmentEntity;
 import com.healthdata.quality.persistence.MentalHealthAssessmentRepository;
 import com.healthdata.quality.persistence.RiskAssessmentRepository;
 import com.healthdata.quality.service.notification.HealthScoreNotificationTrigger;
-import com.healthdata.quality.websocket.HealthScoreWebSocketHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,9 +57,6 @@ class HealthScoreServiceTest {
     private KafkaTemplate<String, Object> kafkaTemplate;
 
     @Mock
-    private HealthScoreWebSocketHandler webSocketHandler;
-
-    @Mock
     private HealthScoreNotificationTrigger notificationTrigger;
 
     private HealthScoreService service;
@@ -74,7 +70,6 @@ class HealthScoreServiceTest {
             careGapRepository,
             riskAssessmentRepository,
             kafkaTemplate,
-            webSocketHandler,
             notificationTrigger
         );
     }
@@ -1438,39 +1433,7 @@ class HealthScoreServiceTest {
         verify(kafkaTemplate, never()).send(eq("condition.alert.needed"), any(), any());
     }
 
-    @Test
-    void shouldHandleWebSocketBroadcastFailures() {
-        UUID patientId = UUID.randomUUID();
-        String tenantId = "tenant-1";
 
-        HealthScoreEntity previous = HealthScoreEntity.builder()
-            .overallScore(40.0)
-            .build();
-        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
-            .thenReturn(Optional.of(previous));
-        when(healthScoreRepository.save(any(HealthScoreEntity.class))).thenAnswer(invocation -> {
-            HealthScoreEntity entity = invocation.getArgument(0);
-            entity.setId(UUID.randomUUID());
-            return entity;
-        });
-        doThrow(new RuntimeException("ws")).when(webSocketHandler)
-            .broadcastHealthScoreUpdate(any(), eq(tenantId));
-        doThrow(new RuntimeException("ws")).when(webSocketHandler)
-            .broadcastSignificantChange(any(), eq(tenantId));
-
-        HealthScoreComponents components = HealthScoreComponents.builder()
-            .physicalHealthScore(90.0)
-            .mentalHealthScore(90.0)
-            .socialDeterminantsScore(90.0)
-            .preventiveCareScore(90.0)
-            .chronicDiseaseScore(90.0)
-            .build();
-
-        service.calculateHealthScore(tenantId, patientId, components);
-
-        verify(kafkaTemplate).send(eq("health-score.updated"), eq(patientId.toString()), any());
-        verify(kafkaTemplate).send(eq("health-score.significant-change"), eq(patientId.toString()), any());
-    }
 
     @Test
     void shouldExtractPatientIdViaReflection() {

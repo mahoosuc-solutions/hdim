@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publish Assets - HDIM Visual Asset Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0066CC',
+                        accent: '#00A5B5',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="/" class="text-gray-600 hover:text-gray-900">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                    </a>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Publish Assets</h1>
+                        <p class="text-gray-600">Deploy approved assets to production</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Ready to Publish Section -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-900">Ready to Publish</h2>
+                <span class="text-sm text-gray-600">{{ ready_assets | length }} asset(s) ready</span>
+            </div>
+
+            {% if ready_assets %}
+            <form id="publishForm">
+                <div class="space-y-4">
+                    <!-- Select All -->
+                    <div class="border-b pb-4">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="selectAll" class="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
+                                   onchange="toggleSelectAll()">
+                            <span class="font-medium text-gray-900">Select All</span>
+                        </label>
+                    </div>
+
+                    <!-- Asset List -->
+                    {% for asset in ready_assets %}
+                    <div class="flex items-center gap-4 py-3 border-b last:border-b-0">
+                        <input type="checkbox" name="assets" value="{{ asset.asset_id }}"
+                               class="asset-checkbox w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary">
+                        <div class="w-24 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                            {% if asset.filepath %}
+                            <img src="/preview/{{ asset.filepath }}" class="w-full h-full object-cover">
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow">
+                            <div class="font-medium text-gray-900">{{ asset.name }}</div>
+                            <div class="text-sm text-gray-500">{{ asset.asset_id }} v{{ asset.version }}</div>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <span class="text-green-600 font-medium">{{ "%.0f"|format(asset.quality_score) }}/100</span>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            Approved: {{ asset.reviewed_at }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Publish Destination -->
+                <div class="mt-6 pt-6 border-t">
+                    <h3 class="font-medium text-gray-900 mb-3">Publish Destination</h3>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <code class="text-sm text-gray-700">{{ production_dir }}</code>
+                    </div>
+                    <p class="mt-2 text-sm text-gray-500">
+                        Assets will be copied to the production images directory.
+                        Existing files will be backed up before replacement.
+                    </p>
+                </div>
+
+                <!-- Publish Button -->
+                <div class="mt-6">
+                    <button type="button" onclick="publishSelected()"
+                            class="w-full py-3 px-6 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors">
+                        Publish Selected Assets
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <div class="text-center py-12">
+                <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No assets ready to publish</h3>
+                <p class="text-gray-600 mb-4">Approve some assets in the review portal first.</p>
+                <a href="/" class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                    Back to Dashboard
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Recently Published Section -->
+        {% if published_assets %}
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Recently Published</h2>
+            <div class="space-y-3">
+                {% for asset in published_assets %}
+                <div class="flex items-center gap-4 py-2 border-b last:border-b-0">
+                    <div class="w-16 h-12 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                        {% if asset.filepath %}
+                        <img src="/preview/{{ asset.filepath }}" class="w-full h-full object-cover">
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow">
+                        <div class="font-medium text-gray-900">{{ asset.name }}</div>
+                        <div class="text-sm text-gray-500">{{ asset.asset_id }}</div>
+                    </div>
+                    <div class="text-sm text-gray-500">
+                        Published: {{ asset.published_at }}
+                    </div>
+                    <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+                        Live
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Publish Results Modal -->
+        <div id="resultsModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Publish Results</h3>
+                    <div id="resultsContent" class="space-y-3">
+                        <!-- Results will be inserted here via safe DOM methods -->
+                    </div>
+                    <div class="mt-6 flex gap-4">
+                        <button onclick="closeResults()"
+                                class="flex-1 py-2 px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                            Close
+                        </button>
+                        <a href="/" class="flex-1 py-2 px-4 bg-primary text-white text-center rounded-lg hover:bg-primary/90">
+                            Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.asset-checkbox');
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        }
+
+        async function publishSelected() {
+            const checkboxes = document.querySelectorAll('.asset-checkbox:checked');
+            const assetIds = Array.from(checkboxes).map(cb => cb.value);
+
+            if (assetIds.length === 0) {
+                alert('Please select at least one asset to publish');
+                return;
+            }
+
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = 'Publishing...';
+
+            try {
+                const response = await fetch('/api/publish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ asset_ids: assetIds })
+                });
+
+                const results = await response.json();
+                showResults(results);
+            } catch (error) {
+                alert('Error publishing assets: ' + error.message);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Publish Selected Assets';
+            }
+        }
+
+        function showResults(results) {
+            const content = document.getElementById('resultsContent');
+            // Clear existing content safely
+            while (content.firstChild) {
+                content.removeChild(content.firstChild);
+            }
+
+            results.forEach(function(r) {
+                // Create result row
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-3 py-2 border-b last:border-b-0';
+
+                // Create icon
+                const iconSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                iconSvg.setAttribute('class', 'w-6 h-6 ' + (r.status === 'success' ? 'text-green-600' : 'text-red-600'));
+                iconSvg.setAttribute('fill', 'none');
+                iconSvg.setAttribute('stroke', 'currentColor');
+                iconSvg.setAttribute('viewBox', '0 0 24 24');
+
+                const iconPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                iconPath.setAttribute('stroke-linecap', 'round');
+                iconPath.setAttribute('stroke-linejoin', 'round');
+                iconPath.setAttribute('stroke-width', '2');
+                if (r.status === 'success') {
+                    iconPath.setAttribute('d', 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z');
+                } else {
+                    iconPath.setAttribute('d', 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z');
+                }
+                iconSvg.appendChild(iconPath);
+                row.appendChild(iconSvg);
+
+                // Create text container
+                const textDiv = document.createElement('div');
+                textDiv.className = 'flex-grow';
+
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'font-medium ' + (r.status === 'success' ? 'text-green-800' : 'text-red-800');
+                titleDiv.textContent = r.asset_id;
+                textDiv.appendChild(titleDiv);
+
+                const subtitleDiv = document.createElement('div');
+                subtitleDiv.className = 'text-sm ' + (r.status === 'success' ? 'text-gray-500' : 'text-red-600');
+                subtitleDiv.textContent = r.status === 'success' ? ('Published to ' + r.dest_path) : r.error_message;
+                textDiv.appendChild(subtitleDiv);
+
+                row.appendChild(textDiv);
+                content.appendChild(row);
+            });
+
+            document.getElementById('resultsModal').classList.remove('hidden');
+            document.getElementById('resultsModal').classList.add('flex');
+        }
+
+        function closeResults() {
+            document.getElementById('resultsModal').classList.add('hidden');
+            document.getElementById('resultsModal').classList.remove('flex');
+            location.reload();
+        }
+    </script>
+</body>
+</html>

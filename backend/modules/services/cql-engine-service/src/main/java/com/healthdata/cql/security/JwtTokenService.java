@@ -1,5 +1,6 @@
 package com.healthdata.cql.security;
 
+import com.healthdata.authentication.config.JwtConfig;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;

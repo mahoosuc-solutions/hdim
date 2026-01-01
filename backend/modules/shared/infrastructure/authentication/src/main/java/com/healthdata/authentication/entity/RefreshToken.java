@@ -56,6 +56,14 @@ public class RefreshToken {
     private String token;
 
     /**
+     * Hash of the refresh token value.
+     * Used for secure storage - the actual JWT is never stored in plaintext.
+     * SHA-256 or similar hash algorithm should be used.
+     */
+    @Column(nullable = false, length = 255, name = "token_hash")
+    private String tokenHash;
+
+    /**
      * User who owns this refresh token.
      * Foreign key to users table.
      */
@@ -77,6 +85,14 @@ public class RefreshToken {
     @CreationTimestamp
     @Column(nullable = false, updatable = false, name = "created_at")
     private Instant createdAt;
+
+    /**
+     * Flag indicating if this token has been revoked.
+     * Revoked tokens cannot be used to refresh access tokens.
+     */
+    @Column(nullable = false, name = "revoked")
+    @Builder.Default
+    private Boolean revoked = false;
 
     /**
      * When this token was revoked (if revoked).

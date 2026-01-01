@@ -1,0 +1,25 @@
+# AI Image Generation with Quality Control System
+# Dependencies for HDIM GTM Visual Asset Generation
+
+# Core Framework
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# Google Gemini API
+google-generativeai>=0.8.0
+
+# Image Processing
+Pillow>=10.0.0
+
+# Spell Checking
+pyenchant>=3.2.2
+
+# Database
+# SQLite is built into Python standard library
+
+# Testing
+pytest>=8.0.0
+pytest-cov>=4.0.0
+
+# Utilities
+python-dotenv>=1.0.0

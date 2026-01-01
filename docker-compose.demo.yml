@@ -29,7 +29,9 @@ services:
       - demo_postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/01-init-multi-db.sh
       - ./docker/demo/demo-users.sql:/docker-entrypoint-initdb.d/02-demo-users.sql
-      - ./docker/demo/demo-seed-data.sql:/docker-entrypoint-initdb.d/03-demo-seed-data.sql
+      # Note: demo-seed-data.sql requires backend services to create patient_demographics table via migrations
+      # It will be loaded after backend services start
+      # - ./docker/demo/demo-seed-data.sql:/docker-entrypoint-initdb.d/03-demo-seed-data.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U healthdata"]
       interval: 5s
@@ -129,6 +131,11 @@ services:
       BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084/patient
       BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087/quality-measure
       BACKEND_SERVICES_CARE_GAP_URL: http://care-gap-service:8086/care-gap
+      # Cookie Configuration for HTTP development
+      # Allows HttpOnly cookies to be set over HTTP (not just HTTPS)
+      # In production, set AUTHENTICATION_COOKIE_SECURE=true to force HTTPS-only
+      AUTHENTICATION_COOKIE_SECURE: "false"
+      AUTHENTICATION_COOKIE_SAME_SITE: "Lax"
       # HMAC Enforcement: Sign X-Auth-* headers with this secret (Phase 5 testing)
       # When enabled, gateway validates JWT and signs headers with HMAC-SHA256
       # Backend services validate the X-Auth-Validated signature

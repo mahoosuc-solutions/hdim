@@ -1,0 +1,90 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 50
+    show-sql: false
+    open-in-view: false
+  
+  datasource:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:tc:postgresql:15-alpine:///testdb
+    username: test
+    password: test
+  
+  redis:
+    url: redis://localhost:6379/2
+  
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=5m
+  
+  test:
+    mockmvc:
+      print: true
+
+server:
+  port: 0 # Use random port for tests
+
+# CMS API Configuration for Testing
+cms:
+  sandbox-mode: true
+  
+  oauth2:
+    client-id: test-client
+    client-secret: test-secret
+    token-endpoint: http://localhost:8080/oauth/token
+    scopes: beneficiary-claims
+    token-refresh-interval: 3000000
+  
+  bcda:
+    base-url: http://localhost:8080/bcda
+    api-version: v2
+    export-interval-hours: 24
+    timeout-ms: 5000
+  
+  dpc:
+    base-url: http://localhost:8080/dpc
+    api-version: v1
+    timeout-ms: 1000
+    cache-ttl-minutes: 5
+    enable-caching: true
+  
+  blue-button:
+    base-url: http://localhost:8080/blue-button
+    api-version: v2
+    timeout-ms: 5000
+  
+  ab2d:
+    base-url: http://localhost:8080/ab2d
+    api-version: v1
+    export-interval-hours: 24
+    timeout-ms: 5000
+  
+  data:
+    batch-size: 50
+    max-bulk-size-mb: 100
+    enable-deduplication: true
+    enable-validation: true
+    retention-days: 90
+  
+  resilience:
+    circuit-breaker:
+      failure-threshold: 5
+      wait-duration: 30000
+      half-open-calls: 3
+    retry:
+      max-attempts: 2
+      initial-delay: 100
+      max-delay: 1000
+
+logging:
+  level:
+    root: INFO
+    com.healthdata.cms: DEBUG
+    org.springframework.test: DEBUG

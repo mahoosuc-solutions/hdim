@@ -17,8 +17,8 @@ public class ColumnTypeMatcher {
     private static final Map<Class<?>, List<String>> JAVA_TO_PG_TYPES = new LinkedHashMap<>();
 
     static {
-        // String types
-        JAVA_TO_PG_TYPES.put(String.class, Arrays.asList("varchar", "character varying", "text"));
+        // String types (including JSONB for JSON storage)
+        JAVA_TO_PG_TYPES.put(String.class, Arrays.asList("varchar", "character varying", "text", "jsonb", "json"));
 
         // Numeric types
         JAVA_TO_PG_TYPES.put(Integer.class, Arrays.asList("integer", "int", "int4"));
@@ -38,15 +38,15 @@ public class ColumnTypeMatcher {
         JAVA_TO_PG_TYPES.put(boolean.class, Arrays.asList("boolean", "bool"));
 
         // Temporal types
-        JAVA_TO_PG_TYPES.put(java.util.Date.class, Arrays.asList("timestamp", "timestamp without time zone", "timestamp with time zone"));
+        JAVA_TO_PG_TYPES.put(java.util.Date.class, Arrays.asList("timestamp", "timestamp without time zone", "timestamp with time zone", "timestamptz"));
         JAVA_TO_PG_TYPES.put(java.sql.Date.class, Arrays.asList("date"));
-        JAVA_TO_PG_TYPES.put(java.sql.Timestamp.class, Arrays.asList("timestamp", "timestamp without time zone", "timestamp with time zone"));
+        JAVA_TO_PG_TYPES.put(java.sql.Timestamp.class, Arrays.asList("timestamp", "timestamp without time zone", "timestamp with time zone", "timestamptz"));
         JAVA_TO_PG_TYPES.put(LocalDate.class, Arrays.asList("date"));
         JAVA_TO_PG_TYPES.put(LocalTime.class, Arrays.asList("time", "time without time zone"));
         JAVA_TO_PG_TYPES.put(LocalDateTime.class, Arrays.asList("timestamp", "timestamp without time zone"));
-        JAVA_TO_PG_TYPES.put(ZonedDateTime.class, Arrays.asList("timestamp with time zone"));
-        JAVA_TO_PG_TYPES.put(OffsetDateTime.class, Arrays.asList("timestamp with time zone"));
-        JAVA_TO_PG_TYPES.put(Instant.class, Arrays.asList("timestamp", "timestamp without time zone", "timestamp with time zone"));
+        JAVA_TO_PG_TYPES.put(ZonedDateTime.class, Arrays.asList("timestamp with time zone", "timestamptz"));
+        JAVA_TO_PG_TYPES.put(OffsetDateTime.class, Arrays.asList("timestamp with time zone", "timestamptz"));
+        JAVA_TO_PG_TYPES.put(Instant.class, Arrays.asList("timestamp", "timestamp without time zone", "timestamp with time zone", "timestamptz"));
 
         // UUID type
         JAVA_TO_PG_TYPES.put(UUID.class, Arrays.asList("uuid"));
@@ -58,6 +58,7 @@ public class ColumnTypeMatcher {
         // Collections (stored as JSONB)
         JAVA_TO_PG_TYPES.put(Map.class, Arrays.asList("jsonb", "json"));
         JAVA_TO_PG_TYPES.put(List.class, Arrays.asList("jsonb", "json"));
+        JAVA_TO_PG_TYPES.put(Set.class, Arrays.asList("jsonb", "json"));
     }
 
     /**

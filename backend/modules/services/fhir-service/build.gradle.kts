@@ -62,6 +62,8 @@ dependencies {
     testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.bundles.testing)
     testImplementation(libs.bundles.testcontainers)
+    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.postgresql)  // PostgreSQL JDBC driver for Testcontainers
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.testcontainers.redis)
     testImplementation("org.springframework.security:spring-security-test")

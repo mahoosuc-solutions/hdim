@@ -156,12 +156,14 @@ public class EntityMigrationValidator {
 
         // Get PK from entity
         if (entity.hasSingleIdAttribute()) {
-            SingularAttribute<?, ?> idAttr = entity.getIdClassAttributes().iterator().next();
+            // For simple @Id annotation (not IdClass)
+            SingularAttribute<?, ?> idAttr = entity.getId(entity.getIdType().getJavaType());
             String columnName = getColumnName(idAttr);
             if (columnName != null) {
                 entityPkColumns.add(columnName);
             }
-        } else if (entity.getIdClassAttributes() != null) {
+        } else if (!entity.getIdClassAttributes().isEmpty()) {
+            // For composite keys using @IdClass
             for (SingularAttribute<?, ?> idAttr : entity.getIdClassAttributes()) {
                 String columnName = getColumnName(idAttr);
                 if (columnName != null) {
@@ -286,7 +288,32 @@ public class EntityMigrationValidator {
             }
         }
 
-        return attribute.getName();
+        // Apply Hibernate's default naming strategy: convert camelCase to snake_case
+        // This matches Hibernate's PhysicalNamingStrategy behavior
+        return camelCaseToSnakeCase(attribute.getName());
+    }
+
+    /**
+     * Convert camelCase to snake_case (Hibernate's default naming convention).
+     * Examples: firstName → first_name, createdAt → created_at
+     *
+     * @param camelCaseName the camelCase name
+     * @return the snake_case name
+     */
+    private String camelCaseToSnakeCase(String camelCaseName) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < camelCaseName.length(); i++) {
+            char ch = camelCaseName.charAt(i);
+            if (Character.isUpperCase(ch)) {
+                if (i > 0) {
+                    result.append('_');
+                }
+                result.append(Character.toLowerCase(ch));
+            } else {
+                result.append(ch);
+            }
+        }
+        return result.toString();
     }
 
     /**

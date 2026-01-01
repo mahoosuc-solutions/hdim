@@ -13,50 +13,55 @@ dependencyManagement {
 dependencies {
     // Shared modules
     implementation(project(":modules:shared:domain:common"))
+    implementation(project(":modules:shared:domain:fhir-models"))
     implementation(project(":modules:shared:infrastructure:authentication"))
     implementation(project(":modules:shared:infrastructure:security"))
     implementation(project(":modules:shared:infrastructure:audit"))
-    implementation(project(":modules:shared:infrastructure:persistence"))
+    implementation(project(":modules:shared:infrastructure:cache"))
+    implementation(project(":modules:shared:infrastructure:tracing"))
+    implementation(project(":modules:shared:infrastructure:api-docs"))
 
     // Spring Boot
     implementation(libs.bundles.spring.boot.web)
-    implementation(libs.bundles.spring.boot.data)
     implementation(libs.spring.boot.starter.security)
-    implementation(libs.spring.boot.starter.validation)
+    implementation(libs.spring.boot.starter.data.redis)
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
 
-    // Spring Cloud OpenFeign (for Feign clients)
+    // Spring Cloud OpenFeign (for HTTP clients)
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 
-    // OpenAPI/Swagger documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+    // Resilience4j for circuit breaker and retry
+    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
+    implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.2.0")
+    implementation("io.github.resilience4j:resilience4j-retry:2.2.0")
+    implementation("io.github.resilience4j:resilience4j-reactor:2.2.0")
 
-    // CQL Engine dependencies - commented out until CQL Engine service is ready
-    // implementation(libs.bundles.cql)
-
-    // HAPI FHIR Client (for FHIR resource parsing)
+    // HAPI FHIR for FHIR parsing and conversion
     implementation(libs.bundles.hapi.fhir.client)
 
-    // Jackson for JSON processing
+    // OAuth2 Client for CMS APIs
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+    implementation("org.springframework.security:spring-security-oauth2-client")
+
+    // HTTP Client
+    implementation("org.apache.httpcomponents.client5:httpclient5:5.2.1")
+
+    // JSON Processing
     implementation(libs.jackson.databind)
     implementation(libs.jackson.datatype.jsr310)
 
-    // Spring Cache for caching care gap results
-    implementation(libs.spring.boot.starter.data.redis)
+    // Database
+    implementation("org.postgresql:postgresql:42.6.0")
 
-    // Kafka for care gap events
-    implementation(libs.bundles.kafka)
+    // OpenAPI/Swagger
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)
 
-    // Distributed Tracing (uses shared module for W3C + B3 context propagation)
-    implementation(project(":modules:shared:infrastructure:tracing"))
-
-    // Resilience4j for circuit breaker, retry, and rate limiting
-    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-retry:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-ratelimiter:2.1.0")
+    // Validation
+    implementation("org.springframework.boot:spring-boot-starter-validation")
 
     // Lombok for reducing boilerplate
     compileOnly(libs.lombok)
@@ -67,14 +72,23 @@ dependencies {
     implementation(libs.guava)
 
     // Testing
-    testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.bundles.testing)
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.mockito:mockito-core:5.2.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.2.0")
+    testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.1")
+    testImplementation("io.projectreactor:reactor-test")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    testImplementation("org.springframework.kafka:spring-kafka")
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 tasks.withType<Test> {

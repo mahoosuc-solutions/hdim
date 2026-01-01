@@ -1,0 +1,200 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database - Production
+  postgres:
+    image: postgres:15-alpine
+    container_name: cms-postgres-prod
+    environment:
+      POSTGRES_DB: ${DB_NAME:-cms_production}
+      POSTGRES_USER: ${DB_USER:-cms_service}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--locale=en_US.UTF-8 --encoding=UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - postgres_backups:/var/backups/postgresql
+      - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-cms_service} -d ${DB_NAME:-cms_production}"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - cms-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+  # Redis Cache - Production
+  redis:
+    image: redis:7-alpine
+    container_name: cms-redis-prod
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_prod:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - cms-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # CMS Connector Service - Production
+  cms-connector:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_NAMESPACE:-webemo}/${APP_NAME:-cms-connector-service}:${APP_VERSION:-1.0.0}
+    container_name: cms-connector-prod
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Application
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_APPLICATION_NAME: cms-connector-service
+      SPRING_APPLICATION_VERSION: ${APP_VERSION:-1.0.0}
+
+      # Database - Production
+      SPRING_DATASOURCE_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/cms_production}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-cms_service}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_JPA_SHOW_SQL: "false"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 50
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 10
+      SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: 10000
+      SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT: 600000
+      SPRING_DATASOURCE_HIKARI_MAX_LIFETIME: 1800000
+
+      # Redis
+      SPRING_REDIS_HOST: ${REDIS_HOST:-redis}
+      SPRING_REDIS_PORT: ${REDIS_PORT:-6379}
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SPRING_REDIS_TIMEOUT: 2000
+
+      # CMS APIs - Production
+      CMS_BCDA_ENABLED: "true"
+      CMS_BCDA_SANDBOX: "false"
+      CMS_BCDA_BASE_URL: ${BCDA_URL:-https://api.bcda.cms.gov}
+      CMS_BCDA_OAUTH2_TOKEN_ENDPOINT: ${BCDA_TOKEN_URL:-https://api.bcda.cms.gov/auth/token}
+      CMS_BCDA_CLIENT_ID: ${BCDA_CLIENT_ID}
+      CMS_BCDA_CLIENT_SECRET: ${BCDA_CLIENT_SECRET}
+
+      CMS_DPC_ENABLED: "true"
+      CMS_DPC_SANDBOX: "false"
+      CMS_DPC_BASE_URL: ${DPC_URL:-https://api.dpc.cms.gov}
+      CMS_DPC_OAUTH2_TOKEN_ENDPOINT: ${DPC_TOKEN_URL:-https://api.dpc.cms.gov/auth/token}
+      CMS_DPC_CLIENT_ID: ${DPC_CLIENT_ID}
+      CMS_DPC_CLIENT_SECRET: ${DPC_CLIENT_SECRET}
+
+      CMS_AB2D_ENABLED: "true"
+      CMS_AB2D_SANDBOX: "false"
+      CMS_AB2D_BASE_URL: ${AB2D_URL:-https://api.ab2d.cms.gov}
+      CMS_AB2D_OAUTH2_TOKEN_ENDPOINT: ${AB2D_TOKEN_URL:-https://api.ab2d.cms.gov/auth/token}
+      CMS_AB2D_CLIENT_ID: ${AB2D_CLIENT_ID}
+      CMS_AB2D_CLIENT_SECRET: ${AB2D_CLIENT_SECRET}
+
+      # Scheduled Syncs - Production Schedule
+      SCHEDULING_BCDA_SYNC_ENABLED: "true"
+      SCHEDULING_BCDA_SYNC_CRON: "0 0 2 * * ?"
+      SCHEDULING_BCDA_SYNC_BATCH_SIZE: 1000
+      SCHEDULING_BCDA_SYNC_TIMEOUT_MINUTES: 120
+
+      SCHEDULING_AB2D_SYNC_ENABLED: "true"
+      SCHEDULING_AB2D_SYNC_CRON: "0 0 3 * * ?"
+      SCHEDULING_AB2D_SYNC_BATCH_SIZE: 500
+      SCHEDULING_AB2D_SYNC_TIMEOUT_MINUTES: 90
+
+      SCHEDULING_DPC_SYNC_ENABLED: "false"
+
+      # Monitoring - Production
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,metrics,prometheus,info
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
+      MANAGEMENT_HEALTH_LIVENESSSTATE_ENABLED: "true"
+      MANAGEMENT_HEALTH_READINESSSTATE_ENABLED: "true"
+      LOGGING_LEVEL_ROOT: WARN
+      LOGGING_LEVEL_COM_HEALTHDATA_CMS: INFO
+      LOGGING_FILE_NAME: /var/log/cms-connector/cms-connector.log
+      LOGGING_FILE_MAX_SIZE: 100MB
+      LOGGING_FILE_MAX_HISTORY: 30
+      LOGGING_FILE_TOTAL_SIZE_CAP: 10GB
+
+      # Security
+      JWT_ISSUER_URI: ${JWT_ISSUER_URI:-https://auth.cms.gov}
+      JWT_JWK_SET_URI: ${JWT_JWK_SET_URI:-https://auth.cms.gov/.well-known/jwks.json}
+
+      # JVM - Optimized for Production
+      JAVA_OPTS: "-Xms512m -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+ParallelRefProcEnabled"
+
+      # Server
+      SERVER_PORT: 8080
+      SERVER_SERVLET_CONTEXT_PATH: /api/v1
+      SERVER_TOMCAT_THREADS_MAX: 200
+      SERVER_TOMCAT_THREADS_MIN_SPARE: 10
+      SERVER_TOMCAT_CONNECTION_TIMEOUT: 30000
+      SERVER_TOMCAT_MAX_CONNECTIONS: 10000
+
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health/readiness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - cms-network
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+volumes:
+  postgres_data_prod:
+    driver: local
+  postgres_backups:
+    driver: local
+  redis_data_prod:
+    driver: local
+
+networks:
+  cms-network:
+    driver: bridge

@@ -1,0 +1,129 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: cms-postgres-dev
+    environment:
+      POSTGRES_DB: cms_development
+      POSTGRES_USER: cms_dev_user
+      POSTGRES_PASSWORD: dev_password_change_me
+      POSTGRES_INITDB_ARGS: "--locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cms_dev_user -d cms_development"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cms-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: cms-redis-dev
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cms-network
+
+  # CMS Connector Service
+  cms-connector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cms-connector-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Application
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_APPLICATION_NAME: cms-connector-service
+      SPRING_APPLICATION_VERSION: 1.0.0
+
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cms_development
+      SPRING_DATASOURCE_USERNAME: cms_dev_user
+      SPRING_DATASOURCE_PASSWORD: dev_password_change_me
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_JPA_SHOW_SQL: "false"
+
+      # Redis
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: ""
+
+      # CMS APIs - Sandbox Mode for Development
+      CMS_BCDA_ENABLED: "true"
+      CMS_BCDA_SANDBOX: "true"
+      CMS_BCDA_BASE_URL: https://sandbox-api.bcda.cms.gov
+      CMS_BCDA_OAUTH2_TOKEN_ENDPOINT: https://sandbox-api.bcda.cms.gov/auth/token
+      CMS_BCDA_CLIENT_ID: ${BCDA_CLIENT_ID:-dev-client-id}
+      CMS_BCDA_CLIENT_SECRET: ${BCDA_CLIENT_SECRET:-dev-client-secret}
+
+      CMS_DPC_ENABLED: "true"
+      CMS_DPC_SANDBOX: "true"
+      CMS_DPC_BASE_URL: https://sandbox-api.dpc.cms.gov
+      CMS_DPC_OAUTH2_TOKEN_ENDPOINT: https://sandbox-api.dpc.cms.gov/auth/token
+      CMS_DPC_CLIENT_ID: ${DPC_CLIENT_ID:-dev-client-id}
+      CMS_DPC_CLIENT_SECRET: ${DPC_CLIENT_SECRET:-dev-client-secret}
+
+      CMS_AB2D_ENABLED: "true"
+      CMS_AB2D_SANDBOX: "true"
+      CMS_AB2D_BASE_URL: https://sandbox-api.ab2d.cms.gov
+      CMS_AB2D_OAUTH2_TOKEN_ENDPOINT: https://sandbox-api.ab2d.cms.gov/auth/token
+      CMS_AB2D_CLIENT_ID: ${AB2D_CLIENT_ID:-dev-client-id}
+      CMS_AB2D_CLIENT_SECRET: ${AB2D_CLIENT_SECRET:-dev-client-secret}
+
+      # Scheduled Syncs - Disabled in Dev
+      SCHEDULING_BCDA_SYNC_ENABLED: "false"
+      SCHEDULING_AB2D_SYNC_ENABLED: "false"
+      SCHEDULING_DPC_SYNC_ENABLED: "false"
+
+      # Monitoring
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,metrics,prometheus,info,env
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_HEALTHDATA_CMS: DEBUG
+
+      # JVM
+      JAVA_OPTS: "-Xms256m -Xmx1g"
+
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    networks:
+      - cms-network
+    volumes:
+      # For local development - mount source code
+      - .:/app/source:ro
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  cms-network:
+    driver: bridge

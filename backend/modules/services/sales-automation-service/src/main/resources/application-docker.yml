@@ -17,10 +17,11 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
 
   liquibase:
     enabled: ${SPRING_LIQUIBASE_ENABLED:true}
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
 logging:
   level:

@@ -428,4 +428,10 @@
         </createIndex>
     </changeSet>
 
+    <!-- Email Sequence Management -->
+    <include file="0012-create-email-sequences-table.xml"/>
+    <include file="0013-create-email-sequence-steps-table.xml"/>
+    <include file="0014-create-sequence-enrollments-table.xml"/>
+    <include file="0015-create-email-send-logs-table.xml"/>
+
 </databaseChangeLog>

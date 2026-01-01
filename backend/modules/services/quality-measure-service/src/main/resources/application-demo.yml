@@ -1,6 +1,6 @@
 # Demo profile for Quality Measure Service
 # Use with: --spring.profiles.active=demo
-# Tables are created automatically via Hibernate DDL
+# Tables are managed via Liquibase migrations
 
 server:
   port: 8087
@@ -17,16 +17,17 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
     show-sql: false
 
-  # Disable all migration tools - use Hibernate DDL
+  # Use Liquibase for schema management
   liquibase:
-    enabled: false
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
   flyway:
     enabled: false
 

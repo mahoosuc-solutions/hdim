@@ -8,6 +8,7 @@ dependencies {
     // Spring Boot Test
     api(libs.spring.boot.starter.test)
     api(libs.spring.boot.starter.web)
+    api(libs.spring.boot.starter.data.jpa)
 
     // TestContainers
     api(libs.testcontainers)

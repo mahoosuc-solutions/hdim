@@ -1,5 +1,5 @@
-# Test configuration for CQL Engine Service Integration Tests
-# Uses H2 in-memory database with PostgreSQL compatibility mode
+server:
+  port: 0  # Random port for tests
 
 # JWT Authentication Configuration for Tests
 jwt:
@@ -10,6 +10,9 @@ jwt:
   audience: healthdata-api-test
 
 spring:
+  application:
+    name: cql-engine-service-test
+
   datasource:
     url: jdbc:tc:postgresql:15-alpine:///testdb
     username: sa
@@ -18,53 +21,41 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop  # Auto-create schema from entities
-    show-sql: false
+      ddl-auto: create-drop
     properties:
       hibernate:
-        format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        jdbc:
-          time_zone: UTC
-
-  h2:
-    console:
-      enabled: false
+        format_sql: false
+    show-sql: false
 
   liquibase:
-    enabled: false  # Not needed for tests - using JPA auto-schema
+    enabled: false
 
-  cache:
-    type: simple  # Use simple cache instead of Redis for tests
-
-  # Disable Redis autoconfiguration for tests (mock RedisTemplate provided by TestRedisConfiguration)
   autoconfigure:
     exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaStreamsAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaReactiveAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
 
-  # Security Configuration for Tests
-  security:
-    enabled: false  # Security disabled but JWT beans needed for context loading
+  cache:
+    type: simple
 
-  main:
-    allow-bean-definition-overriding: true  # Allow test beans to override production beans
-
-# Visualization/Kafka Configuration for tests
-visualization:
+  # Kafka Configuration (disabled for tests)
   kafka:
-    enabled: false  # Disable Kafka consumer for tests (WebSocket visualization not needed)
-    topics:
-      batch-progress: test-batch-progress
-      evaluation-update: test-evaluation-update
-      evaluation-started: test-evaluation-started
-      evaluation-completed: test-evaluation-completed
-      evaluation-failed: test-evaluation-failed
+    producer:
+      bootstrap-servers: localhost:9092
+    consumer:
+      bootstrap-servers: localhost:9092
+      auto-offset-reset: earliest
+
+# Audit Configuration
+audit:
+  enabled: false
 
 logging:
   level:
     root: WARN
-    com.healthdata.cql: DEBUG
+    com.healthdata.cql: INFO
     org.springframework.test: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

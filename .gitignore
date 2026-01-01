@@ -1,116 +1,20 @@
-# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+# Dependencies
+node_modules/
 
-# compiled output
-dist
-tmp
-out-tsc
+# Generated datasets (too large for git)
+test-harness/datasets/*.json
 
-# dependencies
-node_modules
+# Build outputs
+*.js.map
+dist/
 
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
+# IDE
+.idea/
+.vscode/
 
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-
-# misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
-testem.log
-/typings
-
-# System Files
+# OS
 .DS_Store
 Thumbs.db
 
-.nx/cache
-.nx/workspace-data
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
-
-.angular
-
-# Java / Gradle build artifacts
-**/build/
-**/.gradle/
-**/bin/
-**/out/
-**/*.jar
-!**/gradle/wrapper/gradle-wrapper.jar
-**/app.jar
-**/*.class
-**/*.log
-
-# Spring Boot
-**/target/
-**/spring.log
-
-# IDE - IntelliJ
-**/*.iml
-**/*.iws
-**/*.ipr
-**/out/
-
-# IDE - Eclipse
-**/.settings/
-**/.metadata/
-**/.classpath
-**/.project
-
-# Temporary files
-**/*.tmp
-**/*.temp
-**/*.swp
-**/*.swo
-**/*~
-
-# Environment files with secrets - NEVER commit these
-.env
-.env.local
-.env.*.local
-.env.dev
-.env.staging
-.env.production
-*.env
-
-# Keep example files for reference
-!.env.example
-!.env.*.example
-
-# Secrets and credentials
-**/secrets/
-**/credentials/
-**/*.pem
-**/*.key
-**/*.p12
-**/*.pfx
-
-# Vault tokens
-.vault-token
-vault-token
-
-# GitHub Actions self-hosted runner
-actions-runner/
-
-# Gradle build artifacts (user-specific)
-**/build-user/
-
-# Playwright test artifacts
-**/test-results/
-**/playwright-report/
-**/.last-run.json
+# Logs
+*.log

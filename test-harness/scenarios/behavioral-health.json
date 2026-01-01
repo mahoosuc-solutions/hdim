@@ -1,0 +1,112 @@
+{
+  "id": "behavioral-health",
+  "name": "Behavioral Health Integration",
+  "description": "Depression and anxiety screening with integrated follow-up care",
+  "hedis_measures": ["DMS", "FUA", "FUM", "AMM"],
+  "target_population": {
+    "description": "Adults with behavioral health needs or at-risk populations",
+    "inclusion_criteria": [
+      "Adults 18+ with depression or anxiety diagnosis",
+      "Patients with positive PHQ-9 or GAD-7 screening",
+      "Patients with substance use disorder history"
+    ]
+  },
+  "baseline_metrics": {
+    "population_size": 400,
+    "depression_screening_rate": 0.34,
+    "follow_up_within_30_days": 0.28,
+    "antidepressant_adherence_acute": 0.52,
+    "antidepressant_adherence_continuation": 0.38,
+    "suicide_risk_assessment_rate": 0.45,
+    "integrated_care_coordination": 0.22
+  },
+  "intervention_timeline": [
+    {
+      "month": 0,
+      "action": "Universal Screening Protocol",
+      "description": "PHQ-9 and GAD-7 integrated into all primary care visits"
+    },
+    {
+      "month": 1,
+      "action": "Automated Risk Stratification",
+      "description": "Immediate alerts for PHQ-9 scores >10 or suicide ideation"
+    },
+    {
+      "month": 2,
+      "action": "Care Coordination Workflows",
+      "description": "Behavioral health specialists integrated into care teams"
+    },
+    {
+      "month": 4,
+      "action": "Medication Adherence Support",
+      "description": "Automated check-ins and refill reminders"
+    }
+  ],
+  "post_intervention_metrics": {
+    "population_size": 400,
+    "depression_screening_rate": 0.89,
+    "follow_up_within_30_days": 0.78,
+    "antidepressant_adherence_acute": 0.81,
+    "antidepressant_adherence_continuation": 0.72,
+    "suicide_risk_assessment_rate": 0.94,
+    "integrated_care_coordination": 0.85
+  },
+  "outcomes_summary": {
+    "screening_improvement": "+55%",
+    "follow_up_improvement": "+50%",
+    "adherence_acute_improvement": "+29%",
+    "adherence_continuation_improvement": "+34%",
+    "suicide_assessment_improvement": "+49%",
+    "care_coordination_improvement": "+63%",
+    "er_mental_health_visits_reduction": "-41%"
+  },
+  "clinical_stories": [
+    {
+      "patient_id": "BH-001",
+      "name": "Michael Davis",
+      "age": 42,
+      "baseline": {
+        "phq9_score": 18,
+        "diagnosis": "Major Depressive Disorder",
+        "treatment_status": "Unengaged - missed 3 appointments",
+        "care_gaps": ["Depression follow-up", "Medication adherence"]
+      },
+      "hdim_actions": [
+        "High PHQ-9 score triggered immediate care coordinator alert",
+        "Warm handoff to behavioral health specialist same day",
+        "Teletherapy option offered (transportation barrier identified)",
+        "Weekly medication adherence check-ins initiated"
+      ],
+      "post_intervention": {
+        "phq9_score": 6,
+        "treatment_status": "Active - weekly therapy, stable medication",
+        "engagement_rate": "94%",
+        "care_gaps": []
+      },
+      "outcome": "PHQ-9 reduced from 18 to 6 (remission), returned to work, family functioning improved"
+    },
+    {
+      "patient_id": "BH-002",
+      "name": "Jennifer White",
+      "age": 28,
+      "baseline": {
+        "presenting_complaint": "Routine annual visit",
+        "phq9_score": "Not screened at previous visits",
+        "hidden_symptoms": "Chronic fatigue, weight changes, poor sleep"
+      },
+      "hdim_actions": [
+        "Universal screening protocol administered PHQ-9",
+        "Score of 14 triggered moderate depression protocol",
+        "Same-day behavioral health consultation offered",
+        "Treatment plan initiated within 7 days"
+      ],
+      "post_intervention": {
+        "phq9_score": 4,
+        "treatment": "CBT + low-dose SSRI",
+        "time_to_improvement": "6 weeks",
+        "care_gaps": []
+      },
+      "outcome": "Previously undiagnosed depression identified and treated, quality of life restored"
+    }
+  ]
+}

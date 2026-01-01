@@ -1,0 +1,32 @@
+{
+  "name": "hdim-patient-outcomes-test-harness",
+  "version": "1.0.0",
+  "description": "Test harness for demonstrating HDIM patient care outcomes",
+  "main": "lib/scenario-runner.ts",
+  "scripts": {
+    "demo": "./run-demo.sh",
+    "demo:diabetes": "./run-demo.sh --scenario=diabetes-management",
+    "demo:cardiac": "./run-demo.sh --scenario=cardiac-care",
+    "demo:preventive": "./run-demo.sh --scenario=preventive-care",
+    "demo:behavioral": "./run-demo.sh --scenario=behavioral-health",
+    "demo:transitions": "./run-demo.sh --scenario=care-transitions",
+    "demo:report": "./run-demo.sh --report",
+    "demo:interactive": "./run-demo.sh --interactive",
+    "run:ts": "npx ts-node lib/scenario-runner.ts",
+    "report": "npx ts-node lib/report-generator.ts"
+  },
+  "keywords": [
+    "healthcare",
+    "HEDIS",
+    "quality-measures",
+    "patient-outcomes",
+    "FHIR"
+  ],
+  "author": "HDIM Team",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/node": "^20.19.27",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "customerType": "provider_practice",
+  "profiles": [
+    {
+      "id": "large-multi-specialty",
+      "name": "Large Multi-Specialty Group",
+      "providers": 150,
+      "locations": 25,
+      "patientPopulation": 200000,
+      "annualEncounters": 800000,
+      "specialties": ["family-medicine", "internal-medicine", "cardiology", "endocrinology", "gastroenterology"],
+      "dataVolume": {
+        "encounters": 2400000,
+        "observations": 48000000,
+        "procedures": 3000000,
+        "medications": 15000000,
+        "labResults": 30000000
+      },
+      "qualityMetrics": ["hedis", "mips", "pcmh"],
+      "careGapFocus": ["preventive", "chronic-disease", "care-coordination"]
+    },
+    {
+      "id": "primary-care-network",
+      "name": "Primary Care Network",
+      "providers": 45,
+      "locations": 12,
+      "patientPopulation": 65000,
+      "annualEncounters": 260000,
+      "specialties": ["family-medicine", "internal-medicine", "pediatrics"],
+      "dataVolume": {
+        "encounters": 780000,
+        "observations": 15600000,
+        "procedures": 500000,
+        "medications": 5000000,
+        "labResults": 10000000
+      },
+      "qualityMetrics": ["hedis", "mips"],
+      "careGapFocus": ["preventive", "wellness", "pediatric-immunizations"]
+    },
+    {
+      "id": "specialty-cardiology",
+      "name": "Cardiology Practice",
+      "providers": 12,
+      "locations": 4,
+      "patientPopulation": 25000,
+      "annualEncounters": 75000,
+      "specialties": ["cardiology", "interventional-cardiology", "electrophysiology"],
+      "dataVolume": {
+        "encounters": 225000,
+        "observations": 9000000,
+        "procedures": 400000,
+        "medications": 2000000,
+        "labResults": 5000000
+      },
+      "qualityMetrics": ["hedis", "acc-quality"],
+      "careGapFocus": ["cardiac-care", "medication-adherence", "post-procedure"]
+    },
+    {
+      "id": "fqhc-community",
+      "name": "Federally Qualified Health Center",
+      "providers": 20,
+      "locations": 5,
+      "patientPopulation": 35000,
+      "annualEncounters": 120000,
+      "specialties": ["family-medicine", "pediatrics", "behavioral-health", "dental"],
+      "dataVolume": {
+        "encounters": 360000,
+        "observations": 7200000,
+        "procedures": 250000,
+        "medications": 2500000,
+        "labResults": 4000000
+      },
+      "qualityMetrics": ["hedis", "uds", "hrsa"],
+      "careGapFocus": ["sdoh", "preventive", "chronic-disease", "maternal-health"]
+    }
+  ]
+}

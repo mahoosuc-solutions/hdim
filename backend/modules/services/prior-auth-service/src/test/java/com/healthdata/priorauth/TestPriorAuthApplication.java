@@ -19,7 +19,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
     },
     exclude = {
         org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration.class,
-        org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration.class
+        org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration.class,
+        org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration.class
     }
 )
 @EnableCaching

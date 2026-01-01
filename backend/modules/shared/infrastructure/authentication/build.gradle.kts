@@ -74,6 +74,7 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus")
 
     // Testing
+    testImplementation(project(":platform:test-fixtures"))
     testImplementation("com.github.codemonstur:embedded-redis:1.4.3")
     testImplementation(libs.spring.boot.starter.test)
     testImplementation("org.springframework.security:spring-security-test")

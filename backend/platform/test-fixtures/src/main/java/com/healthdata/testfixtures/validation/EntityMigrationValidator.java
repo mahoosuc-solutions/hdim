@@ -117,8 +117,8 @@ public class EntityMigrationValidator {
                                SchemaIntrospector.ColumnInfo dbColumn, ValidationReport report) {
         report.incrementColumnsChecked();
 
-        // Check type compatibility
-        if (!ColumnTypeMatcher.isTypeCompatible(entityAttr.javaType, dbColumn.getTypeName())) {
+        // Check type compatibility (skip for relationship fields - type is determined by target entity's ID)
+        if (!entityAttr.isRelationship && !ColumnTypeMatcher.isTypeCompatible(entityAttr.javaType, dbColumn.getTypeName())) {
             List<String> expected = ColumnTypeMatcher.getExpectedPgTypes(entityAttr.javaType);
             report.addError(tableName, columnName,
                     String.format("Type mismatch: entity has %s, database has %s (expected: %s)",
@@ -281,7 +281,8 @@ public class EntityMigrationValidator {
                 Field field = attribute.getJavaType().getDeclaredField(attribute.getName());
                 Column col = field.getAnnotation(Column.class);
                 if (col != null && !col.name().isEmpty()) {
-                    return col.name();
+                    // Strip backticks used for escaping reserved words (e.g., `year` -> year)
+                    return stripBackticks(col.name());
                 }
             } catch (Exception e) {
                 // Field not found or not accessible
@@ -291,6 +292,20 @@ public class EntityMigrationValidator {
         // Apply Hibernate's default naming strategy: convert camelCase to snake_case
         // This matches Hibernate's PhysicalNamingStrategy behavior
         return camelCaseToSnakeCase(attribute.getName());
+    }
+
+    /**
+     * Strip backticks from a column name (used for escaping reserved words in SQL).
+     * Examples: `year` -> year, `order` -> order
+     *
+     * @param columnName the column name potentially with backticks
+     * @return the column name without backticks
+     */
+    private String stripBackticks(String columnName) {
+        if (columnName != null && columnName.startsWith("`") && columnName.endsWith("`")) {
+            return columnName.substring(1, columnName.length() - 1);
+        }
+        return columnName;
     }
 
     /**
@@ -347,21 +362,38 @@ public class EntityMigrationValidator {
                 Class<?> javaType = singularAttr.getJavaType();
                 boolean nullable = true;
                 int length = -1;
+                boolean isRelationship = false;
 
                 // Get column metadata from field
                 try {
                     Field field = entity.getJavaType().getDeclaredField(attr.getName());
                     Column col = field.getAnnotation(Column.class);
-                    if (col != null) {
-                        columnName = col.name().isEmpty() ? columnName : col.name();
+                    JoinColumn joinCol = field.getAnnotation(JoinColumn.class);
+
+                    // Handle relationship fields with @JoinColumn
+                    if (joinCol != null) {
+                        columnName = stripBackticks(joinCol.name());
+                        nullable = joinCol.nullable();
+                        isRelationship = true;
+                        // For relationships, use Object.class as placeholder (type is determined by target entity)
+                        javaType = Object.class;
+                    } else if (col != null) {
+                        // Handle regular @Column fields
+                        String colName = col.name().isEmpty() ? columnName : col.name();
+                        columnName = stripBackticks(colName);
                         nullable = col.nullable();
                         length = col.length();
+                    }
+
+                    // @Id fields are always non-nullable (generated primary keys)
+                    if (field.getAnnotation(Id.class) != null) {
+                        nullable = false;
                     }
                 } catch (Exception e) {
                     // Field not found
                 }
 
-                attributes.put(columnName, new AttributeInfo(attr.getName(), javaType, nullable, length));
+                attributes.put(columnName, new AttributeInfo(attr.getName(), javaType, nullable, length, isRelationship));
             }
         }
 
@@ -418,12 +450,18 @@ public class EntityMigrationValidator {
         final Class<?> javaType;
         final boolean nullable;
         final int length;
+        final boolean isRelationship;
 
         AttributeInfo(String name, Class<?> javaType, boolean nullable, int length) {
+            this(name, javaType, nullable, length, false);
+        }
+
+        AttributeInfo(String name, Class<?> javaType, boolean nullable, int length, boolean isRelationship) {
             this.name = name;
             this.javaType = javaType;
             this.nullable = nullable;
             this.length = length;
+            this.isRelationship = isRelationship;
         }
     }
 }

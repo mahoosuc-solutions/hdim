@@ -104,6 +104,14 @@ export function LandingPageClient({ children }: LandingPageClientProps) {
               >
                 Sample Data
               </a>
+              <a
+                href="/pricing"
+                className={`text-sm font-medium transition-colors ${
+                  scrolled ? 'text-gray-600 hover:text-primary' : 'text-white/80 hover:text-white'
+                }`}
+              >
+                Pricing
+              </a>
             </div>
 
             {/* CTA Buttons */}
@@ -150,6 +158,7 @@ export function LandingPageClient({ children }: LandingPageClientProps) {
               <a href="/research" className="block text-gray-600 hover:text-primary">Research</a>
               <a href="/explorer" className="block text-gray-600 hover:text-primary">Data Explorer</a>
               <a href="/downloads" className="block text-gray-600 hover:text-primary">Sample Data</a>
+              <a href="/pricing" className="block text-gray-600 hover:text-primary">Pricing</a>
               <a href="/demo" className="btn-primary w-full text-center mt-4">Try Demo</a>
             </div>
           </div>

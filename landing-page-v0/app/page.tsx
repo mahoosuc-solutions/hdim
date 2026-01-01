@@ -20,6 +20,7 @@ import {
 import { AnimatedCounter } from './components/AnimatedCounter'
 import { CyclingText } from './components/CyclingText'
 import { LandingPageClient } from './components/LandingPageClient'
+import { SegmentSelector } from './components/SegmentSelector'
 
 export default function LandingPage() {
   const features = [
@@ -154,6 +155,9 @@ export default function LandingPage() {
                   <span className="text-sm">HITRUST Certified</span>
                 </div>
               </div>
+
+              {/* Segment Selector */}
+              <SegmentSelector />
             </div>
 
             {/* Right Column - Stats/Visual */}

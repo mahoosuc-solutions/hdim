@@ -23,10 +23,10 @@ export const metadata: Metadata = {
     siteName: 'HDIM',
     images: [
       {
-        url: '/og-image.png',
+        url: '/images/social/linkedin.png',
         width: 1200,
         height: 630,
-        alt: 'HDIM Healthcare Platform',
+        alt: 'HDIM Healthcare Platform - Close Care Gaps 40% Faster',
       },
     ],
     locale: 'en_US',
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'HDIM - Close Care Gaps 40% Faster',
     description: 'The FHIR-native platform for HEDIS excellence.',
-    images: ['/og-image.png'],
+    images: ['/images/social/linkedin.png'],
   },
   robots: {
     index: true,

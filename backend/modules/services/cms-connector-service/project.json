@@ -1,0 +1,30 @@
+{
+  "projectType": "library",
+  "sourceRoot": "src",
+  "prefix": "cms",
+  "targets": {
+    "build": {
+      "executor": "@nx/gradle:run",
+      "options": {
+        "gradle": "build"
+      }
+    },
+    "test": {
+      "executor": "@nx/gradle:run",
+      "options": {
+        "gradle": "test"
+      }
+    },
+    "docker-build": {
+      "executor": "@nx/gradle:run",
+      "options": {
+        "gradle": "bootBuildImage"
+      }
+    }
+  },
+  "tags": [
+    "scope:cms-integration",
+    "type:service",
+    "framework:spring-boot"
+  ]
+}

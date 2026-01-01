@@ -30,3 +30,14 @@ spring:
     enabled: false
     # change-log: classpath:db/changelog/db.changelog-master.xml
     # default-schema: public
+
+# Cookie Configuration for HttpOnly Authentication
+# Development: HTTP (secure=false, same-site=Lax)
+# Production: HTTPS (secure=true, same-site=Strict)
+authentication:
+  cookie:
+    secure: ${COOKIE_SECURE:false}          # Allow HTTP in development
+    same-site: ${COOKIE_SAME_SITE:Lax}     # More permissive in development
+    http-only: true                         # ALWAYS HttpOnly (HIPAA requirement)
+    path: /api/v1/auth                      # Cookie path for auth endpoints
+    max-age: 604800                         # 7 days (matches refresh token TTL)

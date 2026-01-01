@@ -17,6 +17,10 @@
                 <constraints nullable="false" unique="true"/>
             </column>
 
+            <column name="token_hash" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
             <column name="user_id" type="UUID">
                 <constraints nullable="false"
                              foreignKeyName="fk_refresh_tokens_user_id"
@@ -29,6 +33,10 @@
             </column>
 
             <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="revoked" type="BOOLEAN" defaultValue="false">
                 <constraints nullable="false"/>
             </column>
 

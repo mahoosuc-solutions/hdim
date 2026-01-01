@@ -13,6 +13,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -56,9 +59,11 @@ public class RefreshTokenService {
         log.debug("Creating refresh token for user: {}", user.getUsername());
 
         Instant expiresAt = Instant.now().plusMillis(jwtConfig.getRefreshTokenExpirationMillis());
+        String tokenHash = hashToken(jwtToken);
 
         RefreshToken refreshToken = RefreshToken.builder()
             .token(jwtToken)
+            .tokenHash(tokenHash)
             .user(user)
             .expiresAt(expiresAt)
             .ipAddress(request != null ? getClientIpAddress(request) : null)
@@ -251,5 +256,40 @@ public class RefreshTokenService {
         }
 
         return ip;
+    }
+
+    /**
+     * Hash a refresh token using SHA-256.
+     * Provides secure storage of token values in the database.
+     *
+     * @param token token value to hash
+     * @return hex-encoded SHA-256 hash of the token
+     */
+    private String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+            return bytesToHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 not available", e);
+        }
+    }
+
+    /**
+     * Convert byte array to hex string representation.
+     *
+     * @param bytes bytes to convert
+     * @return hex string
+     */
+    private String bytesToHex(byte[] bytes) {
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : bytes) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
     }
 }

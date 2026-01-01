@@ -52,6 +52,9 @@ class GatewayAuthenticationFilterTest {
     private PublicPathRegistry publicPathRegistry;
 
     @Mock
+    private com.healthdata.authentication.service.CookieService cookieService;
+
+    @Mock
     private HttpServletRequest request;
 
     @Mock
@@ -65,7 +68,7 @@ class GatewayAuthenticationFilterTest {
     @BeforeEach
     void setUp() {
         SecurityContextHolder.clearContext();
-        filter = new GatewayAuthenticationFilter(jwtTokenService, authProperties, publicPathRegistry);
+        filter = new GatewayAuthenticationFilter(jwtTokenService, authProperties, publicPathRegistry, cookieService);
     }
 
     @Nested
@@ -282,6 +285,8 @@ class GatewayAuthenticationFilterTest {
             when(request.getMethod()).thenReturn("GET");
             when(request.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
             when(request.getHeader("Authorization")).thenReturn(null);
+            when(request.getCookies()).thenReturn(null);
+            when(cookieService.getAccessTokenFromCookie(request)).thenReturn(java.util.Optional.empty());
             when(publicPathRegistry.isPublicPath("/api/v1/patients")).thenReturn(false);
 
             // When
@@ -306,6 +311,8 @@ class GatewayAuthenticationFilterTest {
             when(request.getMethod()).thenReturn("GET");
             when(request.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
             when(request.getHeader("Authorization")).thenReturn(null);
+            when(request.getCookies()).thenReturn(null);
+            when(cookieService.getAccessTokenFromCookie(request)).thenReturn(java.util.Optional.empty());
             when(publicPathRegistry.isPublicPath("/api/v1/patients")).thenReturn(false);
             when(response.getWriter()).thenReturn(printWriter);
 

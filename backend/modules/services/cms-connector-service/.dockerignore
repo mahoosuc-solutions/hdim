@@ -1,0 +1,13 @@
+.git
+.gitignore
+.gradle
+.idea
+*.iml
+build/
+logs/
+*.log
+target/
+*.class
+.DS_Store
+node_modules/
+npm-debug.log

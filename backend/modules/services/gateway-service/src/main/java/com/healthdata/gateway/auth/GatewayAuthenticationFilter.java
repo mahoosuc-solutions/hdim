@@ -1,6 +1,7 @@
 package com.healthdata.gateway.auth;
 
 import com.healthdata.authentication.constants.AuthHeaderConstants;
+import com.healthdata.authentication.service.CookieService;
 import com.healthdata.authentication.service.JwtTokenService;
 import com.healthdata.gateway.config.GatewayAuthProperties;
 import jakarta.servlet.FilterChain;
@@ -33,7 +34,7 @@ import java.util.stream.Collectors;
  *
  * This filter:
  * 1. Strips any externally-provided X-Auth-* headers (security)
- * 2. Extracts and validates JWT tokens from Authorization header
+ * 2. Extracts and validates JWT tokens from Authorization header OR HttpOnly cookies
  * 3. Injects trusted headers for downstream services:
  *    - X-Auth-User-Id: User's unique identifier
  *    - X-Auth-Username: User's username
@@ -43,11 +44,16 @@ import java.util.stream.Collectors;
  *    - X-Auth-Token-Id: Original JWT ID for audit/revocation
  *    - X-Auth-Token-Expires: Token expiration timestamp
  *
+ * Token Sources (in priority order):
+ * 1. Authorization: Bearer <jwt_token>  (for API clients)
+ * 2. HttpOnly Cookie: hdim_access_token (for browser clients - XSS protected)
+ *
  * Security Features:
  * - Strips external auth headers before processing (prevents header injection)
  * - HMAC signature on validated header prevents forgery
  * - Logs all authentication attempts for audit
  * - Supports public paths that bypass authentication
+ * - HttpOnly cookies provide XSS protection
  *
  * Order: -100 (runs very early in filter chain)
  */
@@ -65,6 +71,7 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenService jwtTokenService;
     private final GatewayAuthProperties authProperties;
     private final PublicPathRegistry publicPathRegistry;
+    private final CookieService cookieService;
 
     @Override
     protected void doFilterInternal(
@@ -282,14 +289,31 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Extract JWT from Authorization header.
+     * Extract JWT from request.
+     *
+     * Priority:
+     * 1. Authorization header: "Bearer <token>" (for API clients)
+     * 2. HttpOnly cookie: hdim_access_token (for browser clients)
+     *
+     * @param request HTTP request
+     * @return JWT token string, or null if not found
      */
     private String extractJwtFromRequest(HttpServletRequest request) {
+        // First check Authorization header (higher priority for API clients)
         String authHeader = request.getHeader(AUTHORIZATION_HEADER);
+
         if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
+            log.trace("JWT found in Authorization header");
             return authHeader.substring(BEARER_PREFIX_LENGTH);
         }
-        return null;
+
+        // Fall back to HttpOnly cookie (for browser clients with XSS protection)
+        return cookieService.getAccessTokenFromCookie(request)
+            .map(token -> {
+                log.trace("JWT found in HttpOnly cookie");
+                return token;
+            })
+            .orElse(null);
     }
 
     /**

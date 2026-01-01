@@ -4,7 +4,6 @@ import com.healthdata.testfixtures.validation.EntityMigrationValidator;
 import com.healthdata.testfixtures.validation.ValidationReport;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.metamodel.EntityType;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @Testcontainers
 @ActiveProfiles("test")
-@Slf4j
 @Tag("entity-migration-validation")
 class EntityMigrationValidationTest {
 
@@ -81,21 +79,12 @@ class EntityMigrationValidationTest {
         // Get all entities from the persistence unit
         Set<EntityType<?>> entities = entityManagerFactory.getMetamodel().getEntities();
 
-        log.info("Validating {} entities against database schema", entities.size());
 
         // Create validator and run validation
         EntityMigrationValidator validator = new EntityMigrationValidator(dataSource);
         ValidationReport report = validator.validate(entities);
 
         // Log report details
-        log.info("Entity-Migration Validation Report:");
-        log.info("  Tables checked: {}", report.getTotalTablesChecked());
-        log.info("  Columns checked: {}", report.getTotalColumnsChecked());
-        log.info("  Indexes checked: {}", report.getTotalIndexesChecked());
-        log.info("  Total issues: {}", report.getTotalIssues());
-        log.info("  Errors: {}", report.getErrors().size());
-        log.info("  Warnings: {}", report.getWarnings().size());
-        log.info("  Infos: {}", report.getInfos().size());
 
         // Assert validation passed (no errors)
         assertTrue(report.isValid(),
@@ -127,7 +116,6 @@ class EntityMigrationValidationTest {
                 })
                 .collect(java.util.stream.Collectors.toSet());
 
-        log.info("Validating {} critical authentication entities", criticalEntities.size());
 
         EntityMigrationValidator validator = new EntityMigrationValidator(dataSource);
         ValidationReport report = validator.validate(criticalEntities);

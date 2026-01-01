@@ -650,7 +650,7 @@ export default function LandingPage() {
                 <div className="flex items-center space-x-4">
                   <div className="w-14 h-14 relative rounded-full overflow-hidden border-2 border-white/30">
                     <Image
-                      src="/images/portraits/sarah.png"
+                      src="/images/portraits/sarah-care-manager-v2.png"
                       alt="Dr. Sarah Chen"
                       fill
                       className="object-cover"
@@ -686,7 +686,7 @@ export default function LandingPage() {
               <div className="flex items-start gap-6">
                 <div className="relative w-20 h-20 flex-shrink-0">
                   <Image
-                    src="/images/portraits/james.png"
+                    src="/images/portraits/james-recovery-v2.png"
                     alt="James Richardson"
                     fill
                     className="object-cover rounded-full"
@@ -731,20 +731,20 @@ export default function LandingPage() {
             <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl">
               <div className="w-16 h-16 relative mb-3">
                 <Image
-                  src="/images/icons/hipaa.png"
-                  alt="HIPAA Compliant"
+                  src="/images/icons/badge-hipaa-5min-v2.png"
+                  alt="HIPAA Compliant - 5 Min PHI Cache"
                   fill
                   className="object-contain"
                   loading="lazy"
                 />
               </div>
               <p className="font-semibold text-gray-900 text-sm text-center">HIPAA</p>
-              <p className="text-xs text-gray-500 text-center">Compliant</p>
+              <p className="text-xs text-gray-500 text-center">5-Min PHI Cache</p>
             </div>
             <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl">
               <div className="w-16 h-16 relative mb-3">
                 <Image
-                  src="/images/icons/fhir.png"
+                  src="/images/icons/badge-fhir-r4-v2.png"
                   alt="FHIR R4 Native"
                   fill
                   className="object-contain"
@@ -757,7 +757,7 @@ export default function LandingPage() {
             <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl">
               <div className="w-16 h-16 relative mb-3">
                 <Image
-                  src="/images/icons/cql.png"
+                  src="/images/icons/badge-cql-v2.png"
                   alt="CQL Engine"
                   fill
                   className="object-contain"

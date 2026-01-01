@@ -41,10 +41,10 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:tracing"))
 
     // Resilience4j for circuit breaker, retry, and rate limiting
-    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-retry:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-ratelimiter:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
+    implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.2.0")
+    implementation("io.github.resilience4j:resilience4j-retry:2.2.0")
+    implementation("io.github.resilience4j:resilience4j-ratelimiter:2.2.0")
 
     // JWT for SMART on FHIR OAuth
     implementation("io.jsonwebtoken:jjwt-api:0.12.3")

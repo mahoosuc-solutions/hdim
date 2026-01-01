@@ -1,0 +1,69 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Version control
+*.md
+LICENSE
+CHANGELOG.md
+
+# Build artifacts
+target/
+*.jar
+*.war
+*.tar.gz
+
+# Dependencies
+.m2/
+node_modules/
+
+# IDE
+.vscode
+.idea
+*.iml
+*.iws
+*.ipr
+.gradle
+.classpath
+.project
+.settings
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+docker-build.sh
+docker-run.sh
+
+# Test files
+src/test
+*.test.js
+coverage/
+
+# Documentation
+docs/
+*.md
+DOCKER-DEPLOYMENT.md
+PHASE-*
+TEST-COVERAGE-SUMMARY.md
+
+# Temporary
+tmp/
+temp/
+.cache

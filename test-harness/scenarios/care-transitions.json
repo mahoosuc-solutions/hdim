@@ -1,0 +1,117 @@
+{
+  "id": "care-transitions",
+  "name": "Care Transitions & Readmission Prevention",
+  "description": "Post-discharge care coordination to reduce preventable readmissions",
+  "hedis_measures": ["TRC", "PCR", "MRP"],
+  "target_population": {
+    "description": "Adults discharged from acute inpatient stay",
+    "high_risk_criteria": [
+      "Multiple chronic conditions",
+      "Prior hospitalization within 6 months",
+      "5+ medications at discharge",
+      "SDOH risk factors (housing, transportation, food insecurity)",
+      "Lives alone or limited support system"
+    ]
+  },
+  "baseline_metrics": {
+    "annual_discharges": 850,
+    "readmission_rate_30_day": 0.18,
+    "med_reconciliation_within_30_days": 0.52,
+    "provider_visit_within_14_days": 0.41,
+    "patient_engagement_post_discharge": 0.38,
+    "avg_days_to_first_contact": 8.2
+  },
+  "intervention_timeline": [
+    {
+      "month": 0,
+      "action": "ADT Integration",
+      "description": "Real-time admission/discharge/transfer notifications"
+    },
+    {
+      "month": 1,
+      "action": "Risk-Stratified Outreach",
+      "description": "High-risk patients contacted within 48 hours of discharge"
+    },
+    {
+      "month": 2,
+      "action": "Medication Reconciliation Workflow",
+      "description": "Pharmacist review triggered for complex medication regimens"
+    },
+    {
+      "month": 3,
+      "action": "SDOH Assessment Integration",
+      "description": "Social needs identified and addressed pre-discharge"
+    }
+  ],
+  "post_intervention_metrics": {
+    "annual_discharges": 850,
+    "readmission_rate_30_day": 0.11,
+    "med_reconciliation_within_30_days": 0.89,
+    "provider_visit_within_14_days": 0.78,
+    "patient_engagement_post_discharge": 0.82,
+    "avg_days_to_first_contact": 1.8
+  },
+  "outcomes_summary": {
+    "readmission_reduction": "-39%",
+    "med_reconciliation_improvement": "+37%",
+    "follow_up_visit_improvement": "+37%",
+    "engagement_improvement": "+44%",
+    "time_to_contact_improvement": "-78%",
+    "estimated_cost_savings_annual": 1850000,
+    "readmissions_prevented": 60
+  },
+  "clinical_stories": [
+    {
+      "patient_id": "CT-001",
+      "name": "Harold Brown",
+      "age": 78,
+      "baseline": {
+        "admission_reason": "Heart failure exacerbation",
+        "comorbidities": ["CHF", "Type 2 Diabetes", "CKD Stage 3"],
+        "medications_at_discharge": 12,
+        "prior_hospitalizations": "3 in past year",
+        "risk_score": "Very High"
+      },
+      "hdim_actions": [
+        "ADT notification triggered care transition protocol",
+        "High-risk flag generated same-day discharge",
+        "Home health visit scheduled within 48 hours",
+        "Pharmacist conducted medication reconciliation",
+        "PCP appointment scheduled for day 3 post-discharge",
+        "Heart failure clinic enrolled patient in telemonitoring"
+      ],
+      "post_intervention": {
+        "follow_up_completed": "Day 2 - home visit, Day 3 - PCP",
+        "medication_issues_identified": "2 duplications, 1 interaction resolved",
+        "telemonitoring_status": "Daily weight, BP monitored",
+        "readmission_status": "None in 90 days"
+      },
+      "outcome": "Avoided readmission, $18,000 saved, quality of life maintained at home"
+    },
+    {
+      "patient_id": "CT-002",
+      "name": "Dorothy Anderson",
+      "age": 82,
+      "baseline": {
+        "admission_reason": "Pneumonia",
+        "sdoh_factors": ["Lives alone", "Food insecurity", "Transportation barriers"],
+        "medications_at_discharge": 8,
+        "risk_score": "High"
+      },
+      "hdim_actions": [
+        "SDOH screening identified food and transportation needs",
+        "Meals on Wheels enrolled pre-discharge",
+        "Medical transportation arranged for follow-up appointments",
+        "Community health worker assigned for weekly check-ins",
+        "Pharmacy delivery service arranged"
+      ],
+      "post_intervention": {
+        "sdoh_needs_addressed": "Food, transportation, medication access",
+        "follow_up_completion": "100% of scheduled visits",
+        "recovery_status": "Full recovery, independent living maintained",
+        "readmission_status": "None in 60 days"
+      },
+      "outcome": "Social determinants addressed prevented decline, maintained independence, avoided SNF placement"
+    }
+  ]
+}

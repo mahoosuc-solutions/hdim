@@ -1,0 +1,113 @@
+{
+  "id": "preventive-care",
+  "name": "Cancer Screening & Preventive Care",
+  "description": "Closing gaps in cancer screening and immunizations to prevent disease",
+  "hedis_measures": ["BCS", "COL", "CIS", "IMA", "FLU"],
+  "target_population": {
+    "description": "Age-appropriate adults for cancer screenings and immunizations",
+    "screening_populations": {
+      "breast_cancer": "Women 50-74",
+      "colorectal_cancer": "Adults 45-75",
+      "cervical_cancer": "Women 21-64",
+      "immunizations": "All ages per ACIP guidelines"
+    }
+  },
+  "baseline_metrics": {
+    "population_size": 1200,
+    "breast_cancer_screening_rate": 0.48,
+    "colorectal_screening_rate": 0.41,
+    "cervical_screening_rate": 0.52,
+    "flu_vaccination_rate": 0.38,
+    "care_gaps_per_patient": 1.9,
+    "late_stage_cancer_detection_rate": 0.34
+  },
+  "intervention_timeline": [
+    {
+      "month": 0,
+      "action": "Screening Gap Analysis",
+      "description": "Identify all patients overdue for age-appropriate screenings"
+    },
+    {
+      "month": 1,
+      "action": "Automated Patient Outreach",
+      "description": "Personalized reminders via preferred communication channel"
+    },
+    {
+      "month": 3,
+      "action": "Provider Dashboard Alerts",
+      "description": "Pre-visit planning shows screening gaps for upcoming appointments"
+    },
+    {
+      "month": 6,
+      "action": "Community Health Integration",
+      "description": "Mobile screening events scheduled for high-gap populations"
+    }
+  ],
+  "post_intervention_metrics": {
+    "population_size": 1200,
+    "breast_cancer_screening_rate": 0.78,
+    "colorectal_screening_rate": 0.71,
+    "cervical_screening_rate": 0.79,
+    "flu_vaccination_rate": 0.64,
+    "care_gaps_per_patient": 0.5,
+    "late_stage_cancer_detection_rate": 0.18
+  },
+  "outcomes_summary": {
+    "breast_screening_improvement": "+30%",
+    "colorectal_improvement": "+30%",
+    "cervical_improvement": "+27%",
+    "flu_vaccination_improvement": "+26%",
+    "care_gaps_reduction": "-74%",
+    "late_stage_detection_reduction": "-47%",
+    "estimated_lives_saved_per_10000": 8
+  },
+  "clinical_stories": [
+    {
+      "patient_id": "PC-001",
+      "name": "Susan Martinez",
+      "age": 54,
+      "baseline": {
+        "last_mammogram": "4 years ago",
+        "last_colonoscopy": "Never",
+        "care_gaps": ["Breast cancer screening", "Colorectal screening"]
+      },
+      "hdim_actions": [
+        "Care gap alert generated for overdue BCS and COL",
+        "Patient outreach via preferred SMS channel",
+        "Dual screening appointment scheduled",
+        "Transportation assistance arranged (SDOH flag)"
+      ],
+      "post_intervention": {
+        "mammogram_result": "Normal - benign calcifications",
+        "colonoscopy_result": "2 polyps removed (adenoma)",
+        "care_gaps": [],
+        "follow_up": "Colonoscopy scheduled in 3 years"
+      },
+      "outcome": "Precancerous polyps detected and removed, potential colon cancer prevented"
+    },
+    {
+      "patient_id": "PC-002",
+      "name": "Linda Johnson",
+      "age": 62,
+      "baseline": {
+        "last_mammogram": "6 years ago",
+        "family_history": "Mother had breast cancer at 58",
+        "risk_score": "Elevated",
+        "care_gaps": ["Breast cancer screening - HIGH PRIORITY"]
+      },
+      "hdim_actions": [
+        "High-risk patient flagged by predictive analytics",
+        "Urgent outreach by care coordinator",
+        "Expedited mammogram + genetic counseling referral",
+        "Enhanced surveillance protocol initiated"
+      ],
+      "post_intervention": {
+        "mammogram_result": "Stage 1 breast cancer detected",
+        "treatment": "Lumpectomy + radiation - excellent prognosis",
+        "care_gaps": [],
+        "survival_outlook": "5-year survival >95%"
+      },
+      "outcome": "Early-stage cancer detected due to proactive outreach, curative treatment possible"
+    }
+  ]
+}

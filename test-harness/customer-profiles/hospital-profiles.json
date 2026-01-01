@@ -1,0 +1,74 @@
+{
+  "customerType": "hospital",
+  "profiles": [
+    {
+      "id": "academic-medical-center",
+      "name": "Academic Medical Center",
+      "beds": 800,
+      "annualAdmissions": 35000,
+      "annualOutpatientVisits": 750000,
+      "patientPopulation": 150000,
+      "specialtyMix": {
+        "primaryCare": 0.25,
+        "specialty": 0.45,
+        "surgical": 0.20,
+        "emergency": 0.10
+      },
+      "dataVolume": {
+        "encounters": 2500000,
+        "observations": 75000000,
+        "procedures": 8000000,
+        "medications": 25000000,
+        "labResults": 50000000
+      },
+      "qualityMetrics": ["hedis", "cms-stars", "leapfrog", "magnet"],
+      "riskProfile": { "highRisk": 0.15, "mediumRisk": 0.35, "lowRisk": 0.50 }
+    },
+    {
+      "id": "community-hospital",
+      "name": "Community Hospital",
+      "beds": 200,
+      "annualAdmissions": 8000,
+      "annualOutpatientVisits": 180000,
+      "patientPopulation": 45000,
+      "specialtyMix": {
+        "primaryCare": 0.40,
+        "specialty": 0.30,
+        "surgical": 0.15,
+        "emergency": 0.15
+      },
+      "dataVolume": {
+        "encounters": 500000,
+        "observations": 15000000,
+        "procedures": 1500000,
+        "medications": 5000000,
+        "labResults": 10000000
+      },
+      "qualityMetrics": ["hedis", "cms-stars"],
+      "riskProfile": { "highRisk": 0.12, "mediumRisk": 0.38, "lowRisk": 0.50 }
+    },
+    {
+      "id": "rural-critical-access",
+      "name": "Rural Critical Access Hospital",
+      "beds": 25,
+      "annualAdmissions": 1200,
+      "annualOutpatientVisits": 25000,
+      "patientPopulation": 12000,
+      "specialtyMix": {
+        "primaryCare": 0.55,
+        "specialty": 0.15,
+        "surgical": 0.10,
+        "emergency": 0.20
+      },
+      "dataVolume": {
+        "encounters": 75000,
+        "observations": 2000000,
+        "procedures": 200000,
+        "medications": 750000,
+        "labResults": 1500000
+      },
+      "qualityMetrics": ["hedis", "rural-health"],
+      "riskProfile": { "highRisk": 0.18, "mediumRisk": 0.42, "lowRisk": 0.40 }
+    }
+  ]
+}

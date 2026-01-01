@@ -1,0 +1,518 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "meta": {
+    "scenario": "diabetes-management",
+    "description": "Diabetes patient cohort showing baseline and intervention states"
+  },
+  "entry": [
+    {
+      "fullUrl": "Patient/DM-001",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "DM-001",
+        "identifier": [
+          {
+            "system": "http://healthdata-in-motion.com/patient-id",
+            "value": "DM-001"
+          }
+        ],
+        "name": [
+          {
+            "family": "Rodriguez",
+            "given": ["Maria"]
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1967-03-15",
+        "address": [
+          {
+            "city": "Springfield",
+            "state": "IL",
+            "postalCode": "62701"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "Condition/DM-001-diabetes",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "DM-001-diabetes",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "E11.9",
+              "display": "Type 2 diabetes mellitus without complications"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/DM-001"
+        },
+        "onsetDateTime": "2019-04-10"
+      }
+    },
+    {
+      "fullUrl": "Observation/DM-001-hba1c-baseline",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "DM-001-hba1c-baseline",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://healthdata-in-motion.com/scenario-state",
+              "code": "baseline"
+            }
+          ]
+        },
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "4548-4",
+              "display": "Hemoglobin A1c/Hemoglobin.total in Blood"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/DM-001"
+        },
+        "effectiveDateTime": "2024-06-15",
+        "valueQuantity": {
+          "value": 9.2,
+          "unit": "%",
+          "system": "http://unitsofmeasure.org",
+          "code": "%"
+        },
+        "interpretation": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": "H",
+                "display": "High"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "Observation/DM-001-hba1c-intervention",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "DM-001-hba1c-intervention",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://healthdata-in-motion.com/scenario-state",
+              "code": "post-intervention"
+            }
+          ]
+        },
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "4548-4",
+              "display": "Hemoglobin A1c/Hemoglobin.total in Blood"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/DM-001"
+        },
+        "effectiveDateTime": "2025-06-15",
+        "valueQuantity": {
+          "value": 7.0,
+          "unit": "%",
+          "system": "http://unitsofmeasure.org",
+          "code": "%"
+        },
+        "interpretation": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": "N",
+                "display": "Normal"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "Observation/DM-001-bp-baseline",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "DM-001-bp-baseline",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://healthdata-in-motion.com/scenario-state",
+              "code": "baseline"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "85354-9",
+              "display": "Blood pressure panel"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/DM-001"
+        },
+        "effectiveDateTime": "2024-06-15",
+        "component": [
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://loinc.org",
+                  "code": "8480-6",
+                  "display": "Systolic blood pressure"
+                }
+              ]
+            },
+            "valueQuantity": {
+              "value": 148,
+              "unit": "mmHg",
+              "system": "http://unitsofmeasure.org",
+              "code": "mm[Hg]"
+            }
+          },
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://loinc.org",
+                  "code": "8462-4",
+                  "display": "Diastolic blood pressure"
+                }
+              ]
+            },
+            "valueQuantity": {
+              "value": 92,
+              "unit": "mmHg",
+              "system": "http://unitsofmeasure.org",
+              "code": "mm[Hg]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "Observation/DM-001-bp-intervention",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "DM-001-bp-intervention",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://healthdata-in-motion.com/scenario-state",
+              "code": "post-intervention"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "85354-9",
+              "display": "Blood pressure panel"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/DM-001"
+        },
+        "effectiveDateTime": "2025-06-15",
+        "component": [
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://loinc.org",
+                  "code": "8480-6",
+                  "display": "Systolic blood pressure"
+                }
+              ]
+            },
+            "valueQuantity": {
+              "value": 128,
+              "unit": "mmHg",
+              "system": "http://unitsofmeasure.org",
+              "code": "mm[Hg]"
+            }
+          },
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://loinc.org",
+                  "code": "8462-4",
+                  "display": "Diastolic blood pressure"
+                }
+              ]
+            },
+            "valueQuantity": {
+              "value": 78,
+              "unit": "mmHg",
+              "system": "http://unitsofmeasure.org",
+              "code": "mm[Hg]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "Procedure/DM-001-eye-exam",
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "DM-001-eye-exam",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://healthdata-in-motion.com/scenario-state",
+              "code": "post-intervention"
+            }
+          ]
+        },
+        "status": "completed",
+        "code": {
+          "coding": [
+            {
+              "system": "http://www.ama-assn.org/go/cpt",
+              "code": "92014",
+              "display": "Ophthalmological examination - comprehensive"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/DM-001"
+        },
+        "performedDateTime": "2025-05-20",
+        "outcome": {
+          "text": "No diabetic retinopathy detected"
+        }
+      }
+    },
+    {
+      "fullUrl": "Patient/DM-002",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "DM-002",
+        "identifier": [
+          {
+            "system": "http://healthdata-in-motion.com/patient-id",
+            "value": "DM-002"
+          }
+        ],
+        "name": [
+          {
+            "family": "Thompson",
+            "given": ["James"]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1958-08-22",
+        "address": [
+          {
+            "city": "Chicago",
+            "state": "IL",
+            "postalCode": "60601"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "Observation/DM-002-hba1c-baseline",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "DM-002-hba1c-baseline",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://healthdata-in-motion.com/scenario-state",
+              "code": "baseline"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "4548-4",
+              "display": "Hemoglobin A1c/Hemoglobin.total in Blood"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/DM-002"
+        },
+        "effectiveDateTime": "2024-06-15",
+        "valueQuantity": {
+          "value": 8.8,
+          "unit": "%",
+          "system": "http://unitsofmeasure.org",
+          "code": "%"
+        }
+      }
+    },
+    {
+      "fullUrl": "Observation/DM-002-hba1c-intervention",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "DM-002-hba1c-intervention",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://healthdata-in-motion.com/scenario-state",
+              "code": "post-intervention"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "4548-4",
+              "display": "Hemoglobin A1c/Hemoglobin.total in Blood"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/DM-002"
+        },
+        "effectiveDateTime": "2025-06-15",
+        "valueQuantity": {
+          "value": 7.2,
+          "unit": "%",
+          "system": "http://unitsofmeasure.org",
+          "code": "%"
+        }
+      }
+    },
+    {
+      "fullUrl": "Observation/DM-002-egfr-baseline",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "DM-002-egfr-baseline",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://healthdata-in-motion.com/scenario-state",
+              "code": "baseline"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "48642-3",
+              "display": "Glomerular filtration rate/1.73 sq M.predicted"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/DM-002"
+        },
+        "effectiveDateTime": "2024-06-15",
+        "valueQuantity": {
+          "value": 52,
+          "unit": "mL/min/1.73m2",
+          "system": "http://unitsofmeasure.org",
+          "code": "mL/min/{1.73_m2}"
+        },
+        "interpretation": [
+          {
+            "text": "Stage 3a CKD - undetected"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "Observation/DM-002-egfr-intervention",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "DM-002-egfr-intervention",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://healthdata-in-motion.com/scenario-state",
+              "code": "post-intervention"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "48642-3",
+              "display": "Glomerular filtration rate/1.73 sq M.predicted"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/DM-002"
+        },
+        "effectiveDateTime": "2025-06-15",
+        "valueQuantity": {
+          "value": 55,
+          "unit": "mL/min/1.73m2",
+          "system": "http://unitsofmeasure.org",
+          "code": "mL/min/{1.73_m2}"
+        },
+        "interpretation": [
+          {
+            "text": "Stage 3a CKD - stable with treatment"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -16,8 +16,8 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
+      maximum-pool-size: 50  # Increased from 10 for better query concurrency
+      minimum-idle: 10       # Increased from 5 for faster connection acquisition
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
@@ -92,7 +92,7 @@ fhir:
     retention-days: 7
     base-url: http://localhost:8085/fhir
     require-access-token: true
-    async-executor-pool-size: 3
+    async-executor-pool-size: 10  # Increased from 3 (results in 10 core, 20 max threads)
 
 # HIPAA Audit Configuration
 audit:

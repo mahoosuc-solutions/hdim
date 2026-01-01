@@ -90,6 +90,8 @@ dependencies {
 
     // Testcontainers for integration tests with real infrastructure
     testImplementation(libs.bundles.testcontainers)
+    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.postgresql)  // PostgreSQL JDBC driver for Testcontainers
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.testcontainers.redis)
 

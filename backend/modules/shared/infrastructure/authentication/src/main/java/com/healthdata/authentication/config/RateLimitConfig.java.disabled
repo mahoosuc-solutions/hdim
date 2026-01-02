@@ -1,0 +1,109 @@
+package com.healthdata.authentication.config;
+
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.validation.annotation.Validated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+
+/**
+ * Configuration for rate limiting.
+ * Allows externalization of rate limit values through application.yml.
+ *
+ * SECURITY CRITICAL: These values determine protection against brute force attacks.
+ * Default values are conservative and should be tuned based on production usage patterns.
+ *
+ * Configuration Example (application.yml):
+ * <pre>
+ * rate-limiting:
+ *   enabled: true
+ *   login:
+ *     per-minute: 5
+ *     per-hour: 20
+ *   register:
+ *     per-hour: 3
+ *   api:
+ *     per-minute: 100
+ * </pre>
+ */
+@Configuration
+@ConfigurationProperties(prefix = "rate-limiting")
+@Data
+@Validated
+public class RateLimitConfig {
+
+    /**
+     * Global enable/disable flag for rate limiting.
+     * Set to false in development if needed, but MUST be true in production.
+     */
+    private boolean enabled = true;
+
+    /**
+     * Rate limits for login endpoint.
+     */
+    @Valid
+    private LoginLimits login = new LoginLimits();
+
+    /**
+     * Rate limits for registration endpoint.
+     */
+    @Valid
+    private RegisterLimits register = new RegisterLimits();
+
+    /**
+     * Rate limits for general API endpoints.
+     */
+    @Valid
+    private ApiLimits api = new ApiLimits();
+
+    /**
+     * Login endpoint rate limits.
+     * Two-tier protection: per-minute for rapid attacks, per-hour for distributed attacks.
+     */
+    @Data
+    public static class LoginLimits {
+        /**
+         * Maximum login attempts per minute per IP address.
+         * Default: 5 (conservative to prevent rapid brute force)
+         */
+        @Min(1)
+        private int perMinute = 5;
+
+        /**
+         * Maximum login attempts per hour per IP address.
+         * Default: 20 (allows legitimate retry scenarios)
+         */
+        @Min(1)
+        private int perHour = 20;
+    }
+
+    /**
+     * Registration endpoint rate limits.
+     * Strict limits to prevent automated account creation.
+     */
+    @Data
+    public static class RegisterLimits {
+        /**
+         * Maximum registration attempts per hour per IP address.
+         * Default: 3 (very restrictive to prevent abuse)
+         */
+        @Min(1)
+        private int perHour = 3;
+    }
+
+    /**
+     * General API endpoint rate limits.
+     * More lenient to support legitimate API usage.
+     */
+    @Data
+    public static class ApiLimits {
+        /**
+         * Maximum API requests per minute per IP address.
+         * Default: 100 (allows normal application usage)
+         */
+        @Min(1)
+        private int perMinute = 100;
+    }
+}

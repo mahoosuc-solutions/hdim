@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDIM - Sales Enablement | Healthcare Data Integration Platform</title>
+    <meta name="description" content="Sales team resources for HDIM healthcare integration platform. ROI calculator, use cases by role, competitive positioning, and objection handling.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #1E3A5F;
+            --secondary: #00A9A5;
+            --success: #2E7D32;
+            --warning: #E65100;
+            --text: #2C3E50;
+            --light: #F5F7FA;
+            --white: #FFFFFF;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: var(--light);
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 1000;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .nav-links a:hover { color: var(--secondary); }
+        .nav-cta {
+            background: var(--secondary);
+            color: white !important;
+            padding: 10px 24px;
+            border-radius: 6px;
+        }
+        .internal-badge {
+            background: var(--warning);
+            color: white;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 140px 40px 60px;
+            background: linear-gradient(135deg, var(--primary) 0%, #2C5282 100%);
+            color: white;
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .hero p {
+            font-size: 18px;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Quick Nav */
+        .quick-nav {
+            background: var(--white);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 60px;
+            z-index: 100;
+        }
+        .quick-nav a {
+            padding: 8px 16px;
+            background: var(--light);
+            border-radius: 20px;
+            text-decoration: none;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .quick-nav a:hover {
+            background: var(--secondary);
+            color: white;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 60px;
+        }
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .section-header h2 {
+            font-size: 32px;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        .section-header p {
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ROI Calculator */
+        .roi-section {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .roi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .roi-card {
+            background: var(--light);
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+        }
+        .roi-card h4 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .roi-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--success);
+        }
+        .roi-value.negative {
+            color: var(--warning);
+        }
+        .roi-subtitle {
+            font-size: 13px;
+            color: #888;
+            margin-top: 5px;
+        }
+        .roi-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .roi-table th, .roi-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .roi-table th {
+            background: var(--light);
+            font-weight: 600;
+            color: var(--primary);
+        }
+        .roi-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        /* Use Cases by Role */
+        .role-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+        }
+        .role-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .role-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .role-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .role-icon.cmo { background: #E8F5E9; }
+        .role-icon.cio { background: #E3F2FD; }
+        .role-icon.cfo { background: #FFF3E0; }
+        .role-icon.clinical { background: #F3E5F5; }
+        .role-icon.quality { background: #E0F7FA; }
+        .role-icon.it { background: #FBE9E7; }
+        .role-title h3 {
+            font-size: 18px;
+            color: var(--primary);
+            margin-bottom: 3px;
+        }
+        .role-title p {
+            font-size: 13px;
+            color: #888;
+        }
+        .pain-points {
+            margin-bottom: 20px;
+        }
+        .pain-points h4 {
+            font-size: 14px;
+            color: var(--warning);
+            margin-bottom: 10px;
+        }
+        .pain-points ul {
+            list-style: none;
+            font-size: 14px;
+        }
+        .pain-points li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        .pain-points li:before {
+            content: "✗";
+            position: absolute;
+            left: 0;
+            color: var(--warning);
+        }
+        .solutions {
+            margin-bottom: 20px;
+        }
+        .solutions h4 {
+            font-size: 14px;
+            color: var(--success);
+            margin-bottom: 10px;
+        }
+        .solutions ul {
+            list-style: none;
+            font-size: 14px;
+        }
+        .solutions li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        .solutions li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+        }
+        .talking-points {
+            background: var(--light);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .talking-points h4 {
+            font-size: 12px;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .talking-points p {
+            font-size: 13px;
+            font-style: italic;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        /* Competitive Positioning */
+        .competitive-table {
+            background: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .competitive-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .competitive-table th, .competitive-table td {
+            padding: 18px 20px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .competitive-table th {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .competitive-table th:first-child {
+            width: 25%;
+        }
+        .competitive-table .hdim-col {
+            background: #E8F5E9;
+            font-weight: 500;
+        }
+        .check { color: var(--success); font-weight: bold; }
+        .partial { color: #FFC107; }
+        .cross { color: #E53935; }
+
+        /* Objection Handling */
+        .objection-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .objection-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .objection-card h4 {
+            font-size: 15px;
+            color: var(--warning);
+            margin-bottom: 15px;
+        }
+        .objection-card h4:before {
+            content: "\"";
+        }
+        .objection-card h4:after {
+            content: "\"";
+        }
+        .response {
+            background: var(--light);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .response h5 {
+            font-size: 12px;
+            color: var(--success);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .response p {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Pricing Summary */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+        .pricing-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            text-align: center;
+            position: relative;
+        }
+        .pricing-card.featured {
+            border: 2px solid var(--secondary);
+        }
+        .pricing-card.featured:before {
+            content: "Most Popular";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--secondary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .pricing-tier {
+            font-size: 14px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .pricing-amount {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .pricing-amount span {
+            font-size: 16px;
+            color: #888;
+            font-weight: 400;
+        }
+        .pricing-desc {
+            font-size: 14px;
+            color: #666;
+            margin: 15px 0 20px;
+        }
+        .pricing-features {
+            list-style: none;
+            text-align: left;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+        .pricing-features li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .pricing-features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, var(--primary) 0%, #2C5282 100%);
+            padding: 60px 40px;
+            text-align: center;
+            color: white;
+            border-radius: 12px;
+        }
+        .cta-section h2 {
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+        .cta-section p {
+            font-size: 18px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 25px;
+        }
+        .cta-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--secondary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #00897B;
+        }
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Downloadable Resources */
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        .resource-card {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+        .resource-card:hover {
+            transform: translateY(-5px);
+        }
+        .resource-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        .resource-card h4 {
+            font-size: 15px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        .resource-card p {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 15px;
+        }
+        .resource-link {
+            display: inline-block;
+            padding: 8px 16px;
+            background: var(--light);
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .resource-link:hover {
+            background: var(--secondary);
+            color: white;
+        }
+
+        @media (max-width: 1024px) {
+            .roi-grid, .role-cards, .pricing-grid { grid-template-columns: repeat(2, 1fr); }
+            .resources-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .roi-grid, .role-cards, .objection-cards, .pricing-grid, .resources-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero h1 { font-size: 32px; }
+            .nav-links { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">HDIM</a>
+        <div class="nav-links">
+            <span class="internal-badge">Sales Internal</span>
+            <a href="features.html">Features</a>
+            <a href="gallery.html">Gallery</a>
+            <a href="pitch-deck.html">Pitch Deck</a>
+            <a href="one-pager.html">One-Pager</a>
+            <a href="landing-page-a.html" class="nav-cta">Book Demo</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>Sales Enablement Kit</h1>
+        <p>Everything you need to sell HDIM: ROI data, use cases by role, competitive positioning, and objection handling</p>
+    </section>
+
+    <div class="quick-nav">
+        <a href="#roi">ROI Calculator</a>
+        <a href="#use-cases">Use Cases by Role</a>
+        <a href="#competitive">Competitive Positioning</a>
+        <a href="#objections">Objection Handling</a>
+        <a href="#pricing">Pricing Summary</a>
+        <a href="#resources">Resources</a>
+    </div>
+
+    <div class="container">
+        <!-- ROI Section -->
+        <section id="roi" class="section">
+            <div class="section-header">
+                <h2>ROI Calculator Highlights</h2>
+                <p>Quantifiable value metrics for sales conversations. Use these data points to build the financial case.</p>
+            </div>
+            <div class="roi-section">
+                <div class="roi-grid">
+                    <div class="roi-card">
+                        <h4>Cost of Status Quo</h4>
+                        <div class="roi-value negative">$2.3M</div>
+                        <div class="roi-subtitle">Average Annual Integration Costs</div>
+                    </div>
+                    <div class="roi-card">
+                        <h4>Revenue at Risk</h4>
+                        <div class="roi-value negative">$5-7M</div>
+                        <div class="roi-subtitle">Quality Incentives Not Captured</div>
+                    </div>
+                    <div class="roi-card">
+                        <h4>HDIM ROI</h4>
+                        <div class="roi-value">327%</div>
+                        <div class="roi-subtitle">3-Year Return on Investment</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 15px; color: var(--primary);">Cost Breakdown by Category</h3>
+                <table class="roi-table">
+                    <thead>
+                        <tr>
+                            <th>Cost Category</th>
+                            <th>Conservative</th>
+                            <th>Moderate</th>
+                            <th>Aggressive</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Direct Integration Costs</td>
+                            <td>$530,000</td>
+                            <td>$910,000</td>
+                            <td>$1,510,000</td>
+                        </tr>
+                        <tr>
+                            <td>Hidden Costs (IT time, delays)</td>
+                            <td>$420,000</td>
+                            <td>$545,000</td>
+                            <td>$845,000</td>
+                        </tr>
+                        <tr>
+                            <td>Revenue Leakage (quality, prior auth)</td>
+                            <td>$520,000</td>
+                            <td>$845,000</td>
+                            <td>$1,200,000</td>
+                        </tr>
+                        <tr style="font-weight: bold; background: #f9f9f9;">
+                            <td>Total Annual Impact</td>
+                            <td>$1,470,000</td>
+                            <td>$2,300,000</td>
+                            <td>$3,555,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin: 30px 0 15px; color: var(--primary);">Key Value Metrics to Quote</h3>
+                <table class="roi-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Before HDIM</th>
+                            <th>With HDIM</th>
+                            <th>Improvement</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Prior Authorization Time</td>
+                            <td>45-60 min</td>
+                            <td>3-5 min</td>
+                            <td><span class="check">93% reduction</span></td>
+                        </tr>
+                        <tr>
+                            <td>Care Gap Identification Rate</td>
+                            <td>65-75%</td>
+                            <td>95%+</td>
+                            <td><span class="check">27% increase</span></td>
+                        </tr>
+                        <tr>
+                            <td>Quality Measure Reporting Time</td>
+                            <td>40+ hours/month</td>
+                            <td>2-4 hours/month</td>
+                            <td><span class="check">90% reduction</span></td>
+                        </tr>
+                        <tr>
+                            <td>Integration Maintenance</td>
+                            <td>40% of IT time</td>
+                            <td>5% of IT time</td>
+                            <td><span class="check">87% reduction</span></td>
+                        </tr>
+                        <tr>
+                            <td>Time to Deployment</td>
+                            <td>6-18 months</td>
+                            <td>4-8 weeks</td>
+                            <td><span class="check">85% faster</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Use Cases by Role -->
+        <section id="use-cases" class="section">
+            <div class="section-header">
+                <h2>Use Cases by Role</h2>
+                <p>Tailor your pitch to the stakeholder's priorities and pain points</p>
+            </div>
+            <div class="role-cards">
+                <!-- CMO -->
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon cmo">&#129657;</div>
+                        <div class="role-title">
+                            <h3>Chief Medical Officer</h3>
+                            <p>Clinical Quality & Patient Safety</p>
+                        </div>
+                    </div>
+                    <div class="pain-points">
+                        <h4>Pain Points</h4>
+                        <ul>
+                            <li>Can't see complete patient picture across systems</li>
+                            <li>Care gaps discovered too late for intervention</li>
+                            <li>Quality scores don't reflect actual care delivered</li>
+                            <li>Physicians frustrated with EHR workflow</li>
+                        </ul>
+                    </div>
+                    <div class="solutions">
+                        <h4>HDIM Solutions</h4>
+                        <ul>
+                            <li>360-degree patient view from all data sources</li>
+                            <li>Real-time care gap alerts at point of care</li>
+                            <li>Automated HEDIS/quality measure tracking</li>
+                            <li>AI assistant reduces documentation burden</li>
+                        </ul>
+                    </div>
+                    <div class="talking-points">
+                        <h4>Key Talking Point</h4>
+                        <p>"Your physicians spend 2 hours documenting for every hour of patient care. HDIM's AI assistant and integrated workflows can cut that in half while improving quality scores."</p>
+                    </div>
+                </div>
+
+                <!-- CIO/CTO -->
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon cio">&#128187;</div>
+                        <div class="role-title">
+                            <h3>CIO / CTO</h3>
+                            <p>Technology & Integration</p>
+                        </div>
+                    </div>
+                    <div class="pain-points">
+                        <h4>Pain Points</h4>
+                        <ul>
+                            <li>40% of team time on interface maintenance</li>
+                            <li>HL7v2 point-to-point spaghetti architecture</li>
+                            <li>FHIR mandate deadline approaching (2026)</li>
+                            <li>Security/HIPAA compliance concerns</li>
+                        </ul>
+                    </div>
+                    <div class="solutions">
+                        <h4>HDIM Solutions</h4>
+                        <ul>
+                            <li>Modern FHIR-native architecture</li>
+                            <li>Pre-built EHR connectors (Epic, Cerner, etc.)</li>
+                            <li>Zero-trust security, SOC 2 Type II ready</li>
+                            <li>Enterprise observability with 15+ service tracing</li>
+                        </ul>
+                    </div>
+                    <div class="talking-points">
+                        <h4>Key Talking Point</h4>
+                        <p>"You're maintaining 30+ point-to-point interfaces. HDIM replaces that with a single integration layer that's FHIR-native and ready for CMS 2026 mandates."</p>
+                    </div>
+                </div>
+
+                <!-- CFO -->
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon cfo">&#128176;</div>
+                        <div class="role-title">
+                            <h3>CFO</h3>
+                            <p>Financial Performance & ROI</p>
+                        </div>
+                    </div>
+                    <div class="pain-points">
+                        <h4>Pain Points</h4>
+                        <ul>
+                            <li>$5-7M quality incentives left on table</li>
+                            <li>Prior auth delays losing $340K-780K/year</li>
+                            <li>Integration project failures (35-45% rate)</li>
+                            <li>No visibility into value-based care ROI</li>
+                        </ul>
+                    </div>
+                    <div class="solutions">
+                        <h4>HDIM Solutions</h4>
+                        <ul>
+                            <li>Automated quality reporting captures more incentives</li>
+                            <li>92% prior auth time reduction</li>
+                            <li>Predictable SaaS pricing, no failed projects</li>
+                            <li>Real-time VBC contract performance dashboards</li>
+                        </ul>
+                    </div>
+                    <div class="talking-points">
+                        <h4>Key Talking Point</h4>
+                        <p>"You're leaving $5-7M in quality incentives on the table because data fragmentation prevents accurate reporting. HDIM pays for itself in captured incentives alone."</p>
+                    </div>
+                </div>
+
+                <!-- Quality Director -->
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon quality">&#128202;</div>
+                        <div class="role-title">
+                            <h3>VP Quality / Director</h3>
+                            <p>Quality Measures & Reporting</p>
+                        </div>
+                    </div>
+                    <div class="pain-points">
+                        <h4>Pain Points</h4>
+                        <ul>
+                            <li>Manual chart abstraction taking 40+ hrs/month</li>
+                            <li>HEDIS supplemental data is incomplete</li>
+                            <li>Audit season is a nightmare</li>
+                            <li>Measure specifications change constantly</li>
+                        </ul>
+                    </div>
+                    <div class="solutions">
+                        <h4>HDIM Solutions</h4>
+                        <ul>
+                            <li>Automated measure calculation engine (CQL)</li>
+                            <li>Full 92+ HEDIS measure support</li>
+                            <li>Continuous audit readiness with documentation</li>
+                            <li>Measure specification updates handled automatically</li>
+                        </ul>
+                    </div>
+                    <div class="talking-points">
+                        <h4>Key Talking Point</h4>
+                        <p>"Your quality team spends 40 hours a month on chart abstraction. HDIM automates 90% of that work and keeps you audit-ready year-round."</p>
+                    </div>
+                </div>
+
+                <!-- Clinical Informatics -->
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon clinical">&#129658;</div>
+                        <div class="role-title">
+                            <h3>Clinical Informaticist / CMIO</h3>
+                            <p>Clinical Decision Support</p>
+                        </div>
+                    </div>
+                    <div class="pain-points">
+                        <h4>Pain Points</h4>
+                        <ul>
+                            <li>Alert fatigue overwhelming clinicians</li>
+                            <li>CDS rules outdated and hard to maintain</li>
+                            <li>No single source of truth for protocols</li>
+                            <li>AI hype but no practical implementation</li>
+                        </ul>
+                    </div>
+                    <div class="solutions">
+                        <h4>HDIM Solutions</h4>
+                        <ul>
+                            <li>Intelligent alert prioritization reduces fatigue</li>
+                            <li>Measure Builder for custom CQL rules</li>
+                            <li>Centralized clinical knowledge base</li>
+                            <li>Practical AI assistant for clinical queries</li>
+                        </ul>
+                    </div>
+                    <div class="talking-points">
+                        <h4>Key Talking Point</h4>
+                        <p>"Clinicians ignore 96% of alerts because they're not relevant. HDIM's intelligent prioritization ensures only actionable alerts surface at the right time."</p>
+                    </div>
+                </div>
+
+                <!-- IT Director -->
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon it">&#9881;</div>
+                        <div class="role-title">
+                            <h3>IT Director / Manager</h3>
+                            <p>Day-to-Day Operations</p>
+                        </div>
+                    </div>
+                    <div class="pain-points">
+                        <h4>Pain Points</h4>
+                        <ul>
+                            <li>On-call for interface failures every weekend</li>
+                            <li>Documentation is outdated or missing</li>
+                            <li>Each integration is a custom snowflake</li>
+                            <li>No visibility into what's breaking before it breaks</li>
+                        </ul>
+                    </div>
+                    <div class="solutions">
+                        <h4>HDIM Solutions</h4>
+                        <ul>
+                            <li>24/7 monitoring with proactive alerts</li>
+                            <li>Auto-generated documentation</li>
+                            <li>Standardized integration patterns</li>
+                            <li>Live Monitor dashboard with predictive analytics</li>
+                        </ul>
+                    </div>
+                    <div class="talking-points">
+                        <h4>Key Talking Point</h4>
+                        <p>"You're on call every weekend for interface fires. HDIM's Live Monitor catches issues before they become outages, and our standardized patterns eliminate custom maintenance."</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Competitive Positioning -->
+        <section id="competitive" class="section">
+            <div class="section-header">
+                <h2>Competitive Positioning</h2>
+                <p>How HDIM compares to common alternatives</p>
+            </div>
+            <div class="competitive-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Capability</th>
+                            <th class="hdim-col">HDIM</th>
+                            <th>Legacy Integration Engine</th>
+                            <th>EHR-Native Tools</th>
+                            <th>Point Solutions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>FHIR R4 Native</td>
+                            <td class="hdim-col"><span class="check">&#10004; Full</span></td>
+                            <td><span class="partial">&#9898; Partial</span></td>
+                            <td><span class="partial">&#9898; Partial</span></td>
+                            <td><span class="cross">&#10008; No</span></td>
+                        </tr>
+                        <tr>
+                            <td>Pre-built EHR Connectors</td>
+                            <td class="hdim-col"><span class="check">&#10004; 15+</span></td>
+                            <td><span class="cross">&#10008; Custom build</span></td>
+                            <td><span class="partial">&#9898; Own system only</span></td>
+                            <td><span class="partial">&#9898; Limited</span></td>
+                        </tr>
+                        <tr>
+                            <td>Quality Measure Automation</td>
+                            <td class="hdim-col"><span class="check">&#10004; 92+ HEDIS</span></td>
+                            <td><span class="cross">&#10008; No</span></td>
+                            <td><span class="partial">&#9898; Basic</span></td>
+                            <td><span class="partial">&#9898; Some</span></td>
+                        </tr>
+                        <tr>
+                            <td>AI Clinical Assistant</td>
+                            <td class="hdim-col"><span class="check">&#10004; Built-in</span></td>
+                            <td><span class="cross">&#10008; No</span></td>
+                            <td><span class="partial">&#9898; Coming</span></td>
+                            <td><span class="cross">&#10008; No</span></td>
+                        </tr>
+                        <tr>
+                            <td>Enterprise Observability</td>
+                            <td class="hdim-col"><span class="check">&#10004; 15+ services</span></td>
+                            <td><span class="partial">&#9898; Basic logs</span></td>
+                            <td><span class="partial">&#9898; Own system</span></td>
+                            <td><span class="cross">&#10008; No</span></td>
+                        </tr>
+                        <tr>
+                            <td>Time to Deploy</td>
+                            <td class="hdim-col"><span class="check">4-8 weeks</span></td>
+                            <td><span class="cross">6-18 months</span></td>
+                            <td><span class="partial">2-6 months</span></td>
+                            <td><span class="partial">1-3 months</span></td>
+                        </tr>
+                        <tr>
+                            <td>HIPAA/SOC 2 Ready</td>
+                            <td class="hdim-col"><span class="check">&#10004; Zero bypasses</span></td>
+                            <td><span class="partial">&#9898; Varies</span></td>
+                            <td><span class="check">&#10004; Yes</span></td>
+                            <td><span class="partial">&#9898; Varies</span></td>
+                        </tr>
+                        <tr>
+                            <td>Vendor Lock-in Risk</td>
+                            <td class="hdim-col"><span class="check">Low - FHIR portable</span></td>
+                            <td><span class="cross">High - proprietary</span></td>
+                            <td><span class="cross">High - ecosystem</span></td>
+                            <td><span class="partial">Medium</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Objection Handling -->
+        <section id="objections" class="section">
+            <div class="section-header">
+                <h2>Objection Handling</h2>
+                <p>Common objections and suggested responses</p>
+            </div>
+            <div class="objection-cards">
+                <div class="objection-card">
+                    <h4>We already have an integration engine</h4>
+                    <div class="response">
+                        <h5>Response</h5>
+                        <p>Your integration engine moves data, but does it understand healthcare? HDIM isn't just another interface engine - it's a healthcare intelligence layer that normalizes data to FHIR, automatically identifies care gaps, and calculates quality measures. Your Rhapsody/MuleSoft moves HL7 messages; HDIM makes that data actionable for clinical and quality outcomes.</p>
+                    </div>
+                </div>
+                <div class="objection-card">
+                    <h4>Our EHR vendor offers similar features</h4>
+                    <div class="response">
+                        <h5>Response</h5>
+                        <p>EHR-native tools only see data in that EHR. Your patients receive care across your network, external specialists, labs, pharmacies, and other facilities. HDIM aggregates ALL that data into a unified view. Plus, EHR vendor roadmaps are driven by their priorities, not yours - with HDIM, you control your data strategy.</p>
+                    </div>
+                </div>
+                <div class="objection-card">
+                    <h4>This seems expensive for what it does</h4>
+                    <div class="response">
+                        <h5>Response</h5>
+                        <p>Let's look at what you're spending today: $910K average on integration maintenance, $5-7M in missed quality incentives, $340K-780K in prior auth delays. HDIM typically delivers 327% ROI over 3 years. The question isn't whether you can afford HDIM - it's whether you can afford to keep losing that revenue.</p>
+                    </div>
+                </div>
+                <div class="objection-card">
+                    <h4>We don't have IT bandwidth for another project</h4>
+                    <div class="response">
+                        <h5>Response</h5>
+                        <p>That's exactly why you need HDIM. Your IT team is spending 40% of their time on integration maintenance. HDIM's pre-built connectors and managed service model mean we handle the heavy lifting. Most customers deploy in 4-8 weeks with minimal IT involvement. And once live, your team's maintenance burden drops dramatically.</p>
+                    </div>
+                </div>
+                <div class="objection-card">
+                    <h4>What about security and HIPAA compliance?</h4>
+                    <div class="response">
+                        <h5>Response</h5>
+                        <p>Security is built into our architecture, not bolted on. We're SOC 2 Type II ready with zero security bypasses - no demo modes, no backdoors. Full HIPAA compliance with 6-year audit logs, AES-256 encryption, and multi-tenant isolation. We'll sign a BAA today. Check our security case study for the technical details.</p>
+                    </div>
+                </div>
+                <div class="objection-card">
+                    <h4>Can you really deploy in 4-8 weeks?</h4>
+                    <div class="response">
+                        <h5>Response</h5>
+                        <p>Yes, and here's why: pre-built connectors for Epic, Cerner, and other major EHRs; standardized FHIR-based integration patterns; cloud-native deployment; and a proven implementation methodology. We're not building from scratch - we're configuring a platform that's already built for healthcare.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Summary -->
+        <section id="pricing" class="section">
+            <div class="section-header">
+                <h2>Pricing Summary</h2>
+                <p>Land and expand model: Start small, grow with value</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pricing-tier">Starter</div>
+                    <div class="pricing-amount">$50K<span>/year</span></div>
+                    <p class="pricing-desc">Single facility, core features</p>
+                    <ul class="pricing-features">
+                        <li>Up to 10,000 patients</li>
+                        <li>2 EHR integrations</li>
+                        <li>Core quality measures</li>
+                        <li>Standard support</li>
+                        <li>Basic dashboards</li>
+                    </ul>
+                </div>
+                <div class="pricing-card featured">
+                    <div class="pricing-tier">Professional</div>
+                    <div class="pricing-amount">$150K<span>/year</span></div>
+                    <p class="pricing-desc">Multi-facility, full platform</p>
+                    <ul class="pricing-features">
+                        <li>Up to 50,000 patients</li>
+                        <li>5 EHR integrations</li>
+                        <li>Full HEDIS measure suite</li>
+                        <li>AI Assistant</li>
+                        <li>Priority support</li>
+                        <li>Custom dashboards</li>
+                    </ul>
+                </div>
+                <div class="pricing-card">
+                    <div class="pricing-tier">Enterprise</div>
+                    <div class="pricing-amount">$500K<span>/year</span></div>
+                    <p class="pricing-desc">Health system, unlimited scale</p>
+                    <ul class="pricing-features">
+                        <li>Unlimited patients</li>
+                        <li>Unlimited integrations</li>
+                        <li>Custom measures</li>
+                        <li>Dedicated success manager</li>
+                        <li>24/7 premium support</li>
+                        <li>On-premise option</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resources -->
+        <section id="resources" class="section">
+            <div class="section-header">
+                <h2>Sales Resources</h2>
+                <p>Downloadable materials for customer conversations</p>
+            </div>
+            <div class="resources-grid">
+                <div class="resource-card">
+                    <div class="resource-icon">&#128196;</div>
+                    <h4>One-Pager</h4>
+                    <p>High-level overview for initial conversations</p>
+                    <a href="one-pager.html" class="resource-link">View</a>
+                </div>
+                <div class="resource-card">
+                    <div class="resource-icon">&#127916;</div>
+                    <h4>Pitch Deck</h4>
+                    <p>Full investor/customer presentation</p>
+                    <a href="pitch-deck.html" class="resource-link">View</a>
+                </div>
+                <div class="resource-card">
+                    <div class="resource-icon">&#128248;</div>
+                    <h4>Screenshot Gallery</h4>
+                    <p>Product visuals and UI screenshots</p>
+                    <a href="gallery.html" class="resource-link">View</a>
+                </div>
+                <div class="resource-card">
+                    <div class="resource-icon">&#128736;</div>
+                    <h4>Features Guide</h4>
+                    <p>Detailed platform capabilities</p>
+                    <a href="features.html" class="resource-link">View</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta-section">
+            <h2>Ready to Close Your Next Deal?</h2>
+            <p>Book a demo for your prospect or get technical support for your opportunity</p>
+            <div class="cta-buttons">
+                <a href="landing-page-a.html" class="btn btn-primary">Book Demo for Prospect</a>
+                <a href="mailto:sales@healthdata-in-motion.com" class="btn btn-secondary">Sales Support</a>
+            </div>
+        </section>
+    </div>
+
+    <footer style="background: var(--primary); color: white; padding: 40px; text-align: center; margin-top: 60px;">
+        <p style="opacity: 0.9;">HDIM - Healthcare Data Integration Made Intelligent</p>
+        <p style="font-size: 13px; opacity: 0.7; margin-top: 10px;">Internal Sales Resource - Not for external distribution</p>
+    </footer>
+</body>
+</html>

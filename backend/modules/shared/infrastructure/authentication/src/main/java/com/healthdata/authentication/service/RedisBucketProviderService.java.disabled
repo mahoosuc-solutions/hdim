@@ -1,0 +1,245 @@
+package com.healthdata.authentication.service;
+
+import com.healthdata.authentication.config.RedisRateLimitConfig;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.codec.ByteArrayCodec;
+import io.lettuce.core.codec.RedisCodec;
+import io.lettuce.core.codec.StringCodec;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+/**
+ * Service for managing Redis-backed rate limiting buckets.
+ * Provides bucket creation, retrieval, and management operations.
+ *
+ * ARCHITECTURE:
+ * - Uses Bucket4j ProxyManager to store buckets in Redis
+ * - Each bucket is identified by a unique key (e.g., "rate-limit:192.168.1.1:/api/v1/auth/login")
+ * - Buckets are automatically expired by Redis after inactivity period
+ * - Thread-safe operations guaranteed by Redis atomic operations
+ *
+ * KEY FORMAT:
+ * {keyPrefix}{clientIP}:{endpoint}
+ * Example: "rate-limit:192.168.1.1:/api/v1/auth/login"
+ *
+ * This service abstracts the complexity of distributed bucket management
+ * and provides a clean interface for the rate limiting filter.
+ */
+@Service
+@Slf4j
+@RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "rate-limiting.redis", name = "enabled", havingValue = "true", matchIfMissing = true)
+public class RedisBucketProviderService {
+
+    private final ProxyManager<String> proxyManager;
+    private final RedisClient redisClient;
+    private final RedisTemplate<String, Object> rateLimitRedisTemplate;
+    private final RedisRateLimitConfig.RedisRateLimitProperties properties;
+
+    /**
+     * Gets or creates a bucket for the given key with the specified configuration.
+     * This is the primary method for rate limiting operations.
+     *
+     * BEHAVIOR:
+     * - If bucket exists in Redis, returns it
+     * - If bucket doesn't exist, creates it with the provided configuration
+     * - Configuration is provided lazily to avoid unnecessary calculations
+     *
+     * @param key Unique key for the bucket (e.g., "192.168.1.1:/api/v1/auth/login")
+     * @param configSupplier Supplier that provides bucket configuration (called only if bucket doesn't exist)
+     * @return Bucket for rate limiting
+     */
+    public Bucket getBucket(String key, Supplier<BucketConfiguration> configSupplier) {
+        String fullKey = properties.getKeyPrefix() + key;
+
+        log.debug("Getting bucket for key: {}", fullKey);
+
+        try {
+            // ProxyManager.builder() creates or retrieves a bucket from Redis
+            // The configuration supplier is only called if the bucket needs to be created
+            Bucket bucket = proxyManager.builder().build(fullKey, configSupplier);
+
+            log.debug("Successfully retrieved/created bucket for key: {}", fullKey);
+
+            return bucket;
+
+        } catch (Exception e) {
+            log.error("Error getting bucket from Redis for key: {}. Error: {}", fullKey, e.getMessage(), e);
+            throw new RuntimeException("Failed to get rate limiting bucket from Redis", e);
+        }
+    }
+
+    /**
+     * Removes a bucket from Redis.
+     * Used for admin operations to reset rate limits for specific keys.
+     *
+     * SECURITY: This should only be called by admin endpoints with proper authorization.
+     *
+     * @param key Unique key for the bucket to remove
+     * @return true if bucket was removed, false if it didn't exist
+     */
+    public boolean removeBucket(String key) {
+        String fullKey = properties.getKeyPrefix() + key;
+
+        log.info("Removing rate limit bucket for key: {}", fullKey);
+
+        try {
+            // Use Lettuce client directly with same codec as Bucket4j
+            var connection = redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE));
+            try {
+                var commands = connection.sync();
+                Long deleted = commands.del(fullKey);
+
+                if (deleted != null && deleted > 0) {
+                    log.info("Successfully removed bucket for key: {}", fullKey);
+                    return true;
+                } else {
+                    log.debug("Bucket did not exist for key: {}", fullKey);
+                    return false;
+                }
+            } finally {
+                connection.close();
+            }
+
+        } catch (Exception e) {
+            log.error("Error removing bucket from Redis for key: {}. Error: {}", fullKey, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Gets statistics for a specific bucket.
+     * Returns available tokens, capacity, and other bucket state.
+     *
+     * @param key Unique key for the bucket
+     * @return Optional containing bucket if it exists, empty otherwise
+     */
+    public Optional<Bucket> getBucketStats(String key) {
+        String fullKey = properties.getKeyPrefix() + key;
+
+        log.debug("Getting stats for bucket key: {}", fullKey);
+
+        try {
+            // Check if bucket exists in Redis
+            Boolean exists = rateLimitRedisTemplate.hasKey(fullKey);
+            if (Boolean.TRUE.equals(exists)) {
+                log.debug("Bucket exists for key: {}", fullKey);
+                return Optional.empty(); // Cannot retrieve without config
+            } else {
+                log.debug("Bucket does not exist for key: {}", fullKey);
+                return Optional.empty();
+            }
+
+        } catch (Exception e) {
+            log.error("Error getting bucket stats for key: {}. Error: {}", fullKey, e.getMessage(), e);
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Gets all bucket keys currently in Redis.
+     * Used for monitoring and admin operations.
+     *
+     * WARNING: This can be expensive on large Redis instances.
+     * Use with caution in production.
+     *
+     * @return Set of all bucket keys (with prefix)
+     */
+    public Set<String> getAllBucketKeys() {
+        log.debug("Getting all bucket keys with prefix: {}", properties.getKeyPrefix());
+
+        try {
+            String pattern = properties.getKeyPrefix() + "*";
+
+            // Use Lettuce client directly with same codec as Bucket4j
+            // Bucket4j uses StringCodec for keys and ByteArrayCodec for values
+            var connection = redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE));
+            try {
+                var commands = connection.sync();
+
+                var keys = commands.keys(pattern);
+
+                log.debug("Found {} bucket keys using Lettuce (database: {})",
+                        keys != null ? keys.size() : 0, properties.getDatabase());
+
+                return keys != null ? Set.copyOf(keys) : Set.of();
+            } finally {
+                connection.close();
+            }
+
+        } catch (Exception e) {
+            log.error("Error getting all bucket keys. Error: {}", e.getMessage(), e);
+            return Set.of();
+        }
+    }
+
+    /**
+     * Removes all rate limit buckets from Redis.
+     * DANGER: This resets ALL rate limits across all service instances.
+     *
+     * SECURITY: This should only be called by SUPER_ADMIN with extreme caution.
+     *
+     * @return Number of buckets removed
+     */
+    public int removeAllBuckets() {
+        log.warn("Removing ALL rate limit buckets - this will reset all rate limits!");
+
+        try {
+            String pattern = properties.getKeyPrefix() + "*";
+
+            // Use Lettuce client directly with same codec as Bucket4j
+            var connection = redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE));
+            try {
+                var commands = connection.sync();
+                var keys = commands.keys(pattern);
+
+                if (keys == null || keys.isEmpty()) {
+                    return 0;
+                }
+
+                Long deleted = commands.del(keys.toArray(new String[0]));
+
+                int count = deleted != null ? deleted.intValue() : 0;
+
+                log.warn("Removed {} rate limit buckets", count);
+
+                return count;
+            } finally {
+                connection.close();
+            }
+
+        } catch (Exception e) {
+            log.error("Error removing all buckets. Error: {}", e.getMessage(), e);
+            return 0;
+        }
+    }
+
+    /**
+     * Checks if Redis connection is available.
+     * Used for health checks and fallback logic.
+     *
+     * @return true if Redis is reachable, false otherwise
+     */
+    public boolean isRedisAvailable() {
+        try {
+            // Try to execute a simple Redis command
+            rateLimitRedisTemplate.hasKey("rate-limit:health-check");
+            return true;
+        } catch (Exception e) {
+            log.warn("Redis not available: {}", e.getMessage());
+            return false;
+        }
+    }
+}

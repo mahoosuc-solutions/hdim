@@ -1,0 +1,103 @@
+{
+  "name": "HDIM API Authentication",
+  "meta": {
+    "description": "Reusable sub-workflow for HDIM OAuth 2.0 authentication",
+    "templateId": "hdim-common-auth-v1",
+    "version": "1.0.0"
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "id": "get-token",
+      "name": "Get OAuth Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://auth.healthdatainmotion.com/oauth/token",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/x-www-form-urlencoded" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "grant_type=client_credentials&scope=fhir:read fhir:write"
+      },
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "hdim-client-credentials",
+          "name": "HDIM Client Credentials"
+        }
+      }
+    },
+    {
+      "id": "validate-token",
+      "name": "Validate Token",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.access_token }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "return-token",
+      "name": "Return Token",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 200],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const tokenResponse = $input.item.json;\n\nreturn {\n  json: {\n    accessToken: tokenResponse.access_token,\n    tokenType: tokenResponse.token_type,\n    expiresIn: tokenResponse.expires_in,\n    expiresAt: new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString(),\n    scope: tokenResponse.scope\n  }\n};"
+      }
+    },
+    {
+      "id": "throw-error",
+      "name": "Authentication Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 400],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "throw new Error('HDIM OAuth authentication failed: ' + JSON.stringify($input.item.json));"
+      }
+    }
+  ],
+  "connections": {
+    "start": {
+      "main": [[{ "node": "get-token", "type": "main", "index": 0 }]]
+    },
+    "get-token": {
+      "main": [[{ "node": "validate-token", "type": "main", "index": 0 }]]
+    },
+    "validate-token": {
+      "main": [
+        [{ "node": "return-token", "type": "main", "index": 0 }],
+        [{ "node": "throw-error", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["hdim", "common", "auth", "oauth"]
+}

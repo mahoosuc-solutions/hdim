@@ -1,0 +1,60 @@
+spring:
+  config:
+    activate:
+      on-profile: test-redis
+
+  # Redis Configuration (provided by Testcontainers)
+  redis:
+    host: localhost
+    port: 6379
+    database: 0  # Use default database (will be overridden by rate-limiting.redis.database for Bucket4j)
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 10
+        max-idle: 5
+        min-idle: 2
+        max-wait: 2000ms
+
+# Enable Rate Limiting for Redis Tests
+rate-limiting:
+  enabled: true
+
+  redis:
+    enabled: true
+    database: 0  # Use database 0 for tests (simpler)
+    key-prefix: "rate-limit:"  # Changed to match default to avoid confusion
+    connection-pool-size: 10
+    connection-minimum-idle-size: 2
+    connect-timeout: 5000
+    timeout: 3000
+
+  # Test-friendly rate limits (lower limits for faster testing)
+  login:
+    per-minute: 5
+    per-hour: 20
+    per-day: 100
+
+  register:
+    per-hour: 3
+    per-day: 10
+
+  password-reset:
+    per-hour: 2
+    per-day: 5
+
+  api:
+    per-minute: 100
+    per-hour: 1000
+
+# Logging Configuration for Redis Tests
+logging:
+  level:
+    root: WARN
+    com.healthdata.authentication: DEBUG
+    com.healthdata.authentication.service.RedisBucketProviderService: DEBUG
+    com.healthdata.authentication.service.RateLimitStatsService: DEBUG
+    io.lettuce: DEBUG
+    io.github.bucket4j: DEBUG
+    org.springframework.data.redis: DEBUG
+    org.testcontainers: INFO

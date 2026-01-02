@@ -1,0 +1,31 @@
+{
+  "name": "n8n-nodes-hdim-approval-gate",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "n8n-nodes/hdim-approval-gate/src",
+  "tags": ["frontend", "tooling"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
+      "options": {
+        "command": "npm run build",
+        "cwd": "n8n-nodes/hdim-approval-gate"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm run lint",
+        "cwd": "n8n-nodes/hdim-approval-gate"
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm run dev",
+        "cwd": "n8n-nodes/hdim-approval-gate"
+      }
+    }
+  }
+}

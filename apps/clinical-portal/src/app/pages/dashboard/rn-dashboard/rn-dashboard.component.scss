@@ -1,0 +1,283 @@
+// Registered Nurse Dashboard Styles
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+// Quick Actions Card
+.quick-actions-card {
+  margin-bottom: 24px;
+
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 500;
+
+      mat-icon {
+        color: #ff9800;
+      }
+    }
+  }
+
+  .quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    .action-btn {
+      flex: 1;
+      min-width: 180px;
+      height: 56px;
+      font-size: 14px;
+      font-weight: 500;
+
+      mat-icon {
+        margin-right: 8px;
+      }
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: all 0.2s ease;
+      }
+    }
+  }
+}
+
+// Dashboard Tabs
+.dashboard-tabs {
+  ::ng-deep .mat-mdc-tab-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 0 24px;
+
+    mat-icon {
+      margin-right: 4px;
+    }
+
+    .tab-badge {
+      background-color: #1976d2;
+      color: white;
+      border-radius: 12px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+  }
+
+  ::ng-deep .mat-mdc-tab-body-wrapper {
+    padding-top: 24px;
+  }
+}
+
+.tab-content-card {
+  box-shadow: none;
+  border: 1px solid #e0e0e0;
+}
+
+// Care Gap Table
+.care-gap-table,
+.outreach-table {
+  width: 100%;
+
+  th {
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.87);
+    background-color: #f5f5f5;
+  }
+
+  td {
+    padding: 16px 12px;
+  }
+
+  .patient-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    strong {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.87);
+    }
+
+    .mrn-text {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  .gap-text {
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  mat-chip {
+    font-weight: 500;
+    font-size: 12px;
+  }
+
+  .category-cell,
+  .type-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    span {
+      font-weight: 500;
+    }
+  }
+
+  .date-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.7);
+
+    mat-icon {
+      color: #1976d2;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .status-badge {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+
+    &.status-pending,
+    &.status-scheduled {
+      background-color: #e3f2fd;
+      color: #1976d2;
+    }
+
+    &.status-in-progress {
+      background-color: #fff3e0;
+      color: #f57c00;
+    }
+
+    &.status-completed {
+      background-color: #e8f5e9;
+      color: #388e3c;
+    }
+
+    &.status-missed {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    button {
+      &:hover {
+        transform: scale(1.05);
+        transition: transform 0.2s ease;
+      }
+    }
+  }
+}
+
+.gap-row,
+.outreach-row {
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+}
+
+// Loading State
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  gap: 16px;
+
+  p {
+    color: rgba(0, 0, 0, 0.6);
+    margin: 0;
+  }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-actions {
+    .action-btn {
+      min-width: 100% !important;
+    }
+  }
+
+  .care-gap-table,
+  .outreach-table {
+    .patient-cell,
+    .category-cell,
+    .type-cell,
+    .date-cell {
+      font-size: 12px;
+
+      mat-icon {
+        font-size: 16px;
+      }
+    }
+
+    .action-buttons {
+      flex-direction: column;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+
+  .dashboard-tabs {
+    ::ng-deep .mat-mdc-tab-label {
+      font-size: 12px;
+      padding: 0 12px;
+
+      mat-icon {
+        font-size: 18px;
+      }
+
+      .tab-badge {
+        font-size: 10px;
+        padding: 1px 6px;
+      }
+    }
+  }
+}

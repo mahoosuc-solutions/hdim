@@ -1,0 +1,61 @@
+# Kubernetes profile configuration for gateway-service
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/healthdata_cql}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:healthdata_dev_password}
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+
+# JWT Configuration
+# ⚠️ SECURITY: JWT_SECRET must be provided via Kubernetes secret
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+
+# Gateway Security Configuration (Production-grade)
+gateway:
+  auth:
+    enabled: true
+    enforced: true  # CRITICAL: No demo mode in K8s
+    # ⚠️ SECURITY: GATEWAY_AUTH_SIGNING_SECRET must be provided via K8s secret
+    header-signing-secret: ${GATEWAY_AUTH_SIGNING_SECRET}
+    signature-validity-seconds: 300
+    strip-external-auth-headers: true
+    audit-logging: true
+    rate-limit:
+      enabled: true
+      login-attempts-per-minute: 5
+      refresh-attempts-per-minute: 10
+      block-duration-seconds: 600
+  rate-limit:
+    enabled: true
+    requests-per-second: 50
+    burst-capacity: 100
+
+# Actuator endpoints for K8s probes
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true

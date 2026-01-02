@@ -1,0 +1,174 @@
+# HealthData Platform - Code Owners Configuration
+# This file defines the code ownership and review requirements for the repository
+# Lines starting with '#' are comments
+# Each line is a file pattern followed by one or more owners
+
+# ==============================================================================
+# DEFAULT OWNERS
+# ==============================================================================
+# These owners will be the default owners for everything in the repo
+# Unless a later match takes precedence
+* @healthdata-platform/core-team
+
+# ==============================================================================
+# BACKEND - Java/Spring Boot Services
+# ==============================================================================
+
+# Backend root and shared modules
+/backend/ @healthdata-platform/backend-team
+/backend/modules/shared/ @healthdata-platform/backend-team @healthdata-platform/architecture-team
+
+# FHIR Service
+/backend/modules/services/fhir-service/ @healthdata-platform/backend-team @healthdata-platform/fhir-experts
+
+# Quality Measure Service
+/backend/modules/services/quality-measure-service/ @healthdata-platform/backend-team @healthdata-platform/quality-measures-team
+
+# CQL Engine Service
+/backend/modules/services/cql-engine-service/ @healthdata-platform/backend-team @healthdata-platform/cql-experts
+
+# Patient Service
+/backend/modules/services/patient-service/ @healthdata-platform/backend-team
+
+# Care Gap Service
+/backend/modules/services/care-gap-service/ @healthdata-platform/backend-team @healthdata-platform/quality-measures-team
+
+# Event Processing Service
+/backend/modules/services/event-processing-service/ @healthdata-platform/backend-team @healthdata-platform/integration-team
+
+# Gateway Service
+/backend/modules/services/gateway-service/ @healthdata-platform/backend-team @healthdata-platform/security-team
+
+# ==============================================================================
+# FRONTEND - Angular/React Applications
+# ==============================================================================
+
+# Clinical Portal (Angular)
+/apps/clinical-portal/ @healthdata-platform/frontend-team
+/apps/clinical-portal/src/app/pages/ @healthdata-platform/frontend-team @healthdata-platform/ux-team
+/apps/clinical-portal/src/app/visualization/ @healthdata-platform/frontend-team @healthdata-platform/data-viz-team
+
+# React Frontend
+/frontend/ @healthdata-platform/frontend-team
+/frontend/src/components/ @healthdata-platform/frontend-team @healthdata-platform/ux-team
+
+# ==============================================================================
+# INFRASTRUCTURE & DEVOPS
+# ==============================================================================
+
+# Docker files
+Dockerfile @healthdata-platform/devops-team
+docker-compose*.yml @healthdata-platform/devops-team
+/docker/ @healthdata-platform/devops-team
+
+# Kubernetes manifests
+/k8s/ @healthdata-platform/devops-team @healthdata-platform/sre-team
+/helm/ @healthdata-platform/devops-team @healthdata-platform/sre-team
+
+# GitHub Actions workflows
+/.github/workflows/ @healthdata-platform/devops-team @healthdata-platform/ci-cd-team
+/.github/actions/ @healthdata-platform/devops-team
+
+# Deployment scripts
+/scripts/ @healthdata-platform/devops-team
+/scripts/deploy*.sh @healthdata-platform/devops-team @healthdata-platform/sre-team
+/scripts/rollback.sh @healthdata-platform/devops-team @healthdata-platform/sre-team
+
+# ==============================================================================
+# SECURITY
+# ==============================================================================
+
+# Security configurations
+/backend/modules/shared/infrastructure/security/ @healthdata-platform/security-team
+/backend/modules/shared/infrastructure/authentication/ @healthdata-platform/security-team
+
+# Security policies and configurations
+/.github/dependabot.yml @healthdata-platform/security-team @healthdata-platform/devops-team
+/.github/workflows/security.yml @healthdata-platform/security-team @healthdata-platform/devops-team
+SECURITY.md @healthdata-platform/security-team
+
+# ==============================================================================
+# DATABASE & MIGRATIONS
+# ==============================================================================
+
+# Database migrations and schemas
+**/db/changelog/ @healthdata-platform/backend-team @healthdata-platform/dba-team
+**/liquibase/ @healthdata-platform/backend-team @healthdata-platform/dba-team
+**/*.sql @healthdata-platform/dba-team
+
+# ==============================================================================
+# TESTING
+# ==============================================================================
+
+# Test files
+**/*.spec.ts @healthdata-platform/qa-team
+**/*.test.ts @healthdata-platform/qa-team
+**/*.spec.js @healthdata-platform/qa-team
+**/*.test.js @healthdata-platform/qa-team
+**/src/test/ @healthdata-platform/qa-team
+
+# E2E tests
+**/e2e/ @healthdata-platform/qa-team @healthdata-platform/frontend-team
+**/*-e2e/ @healthdata-platform/qa-team
+
+# Integration tests
+**/integration/ @healthdata-platform/qa-team @healthdata-platform/backend-team
+
+# ==============================================================================
+# CONFIGURATION FILES
+# ==============================================================================
+
+# Build configurations
+/backend/build.gradle.kts @healthdata-platform/backend-team @healthdata-platform/devops-team
+/backend/settings.gradle.kts @healthdata-platform/backend-team @healthdata-platform/devops-team
+package.json @healthdata-platform/frontend-team @healthdata-platform/devops-team
+package-lock.json @healthdata-platform/frontend-team
+tsconfig*.json @healthdata-platform/frontend-team
+
+# Application configurations
+**/application.yml @healthdata-platform/backend-team @healthdata-platform/devops-team
+**/application-*.yml @healthdata-platform/backend-team @healthdata-platform/devops-team
+**/.env.example @healthdata-platform/devops-team
+
+# ==============================================================================
+# DOCUMENTATION
+# ==============================================================================
+
+# Documentation files
+*.md @healthdata-platform/tech-writers @healthdata-platform/core-team
+/docs/ @healthdata-platform/tech-writers
+
+# API documentation
+/backend/**/openapi.yml @healthdata-platform/backend-team @healthdata-platform/tech-writers
+/backend/**/swagger.yml @healthdata-platform/backend-team @healthdata-platform/tech-writers
+
+# Architecture documentation
+/docs/architecture/ @healthdata-platform/architecture-team @healthdata-platform/tech-writers
+/docs/design/ @healthdata-platform/architecture-team @healthdata-platform/tech-writers
+
+# ==============================================================================
+# SPECIAL FILES
+# ==============================================================================
+
+# Root configuration files
+/.gitignore @healthdata-platform/devops-team
+/.dockerignore @healthdata-platform/devops-team
+/README.md @healthdata-platform/tech-writers @healthdata-platform/core-team
+/LICENSE @healthdata-platform/legal-team
+
+# GitHub configuration
+/.github/CODEOWNERS @healthdata-platform/devops-team @healthdata-platform/core-team
+/.github/ISSUE_TEMPLATE/ @healthdata-platform/product-team
+/.github/PULL_REQUEST_TEMPLATE.md @healthdata-platform/core-team
+
+# ==============================================================================
+# COMPLIANCE & LEGAL
+# ==============================================================================
+
+# HIPAA compliance related files
+**/*hipaa*.* @healthdata-platform/security-team @healthdata-platform/compliance-team
+**/*compliance*.* @healthdata-platform/compliance-team
+
+# Legal documents
+LICENSE @healthdata-platform/legal-team
+/legal/ @healthdata-platform/legal-team

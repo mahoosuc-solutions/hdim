@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Review - HDIM Visual Asset Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0066CC',
+                        accent: '#00A5B5',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="/" class="text-gray-600 hover:text-gray-900">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                    </a>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Batch Review</h1>
+                        <p class="text-gray-600">Review multiple assets at once</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        {% if pending_assets %}
+        <!-- Batch Actions -->
+        <div class="bg-white rounded-lg shadow p-4 mb-6 flex items-center justify-between">
+            <div class="text-sm text-gray-600">
+                {{ pending_assets | length }} asset(s) pending review
+            </div>
+            <div class="flex gap-4">
+                <button onclick="approveAll()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    Approve All Visible
+                </button>
+            </div>
+        </div>
+
+        <!-- Asset Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for asset in pending_assets %}
+            <div class="bg-white rounded-lg shadow overflow-hidden" id="asset-{{ asset.asset_id }}">
+                <!-- Image Preview -->
+                <div class="aspect-video bg-gray-100 relative">
+                    {% if asset.filepath %}
+                    <img src="/preview/{{ asset.filepath }}"
+                         alt="{{ asset.name }}"
+                         class="w-full h-full object-cover">
+                    {% endif %}
+                    <div class="absolute top-2 right-2 flex gap-1">
+                        <span class="px-2 py-1 bg-white/90 text-gray-700 text-xs font-medium rounded">
+                            v{{ asset.version }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Asset Info -->
+                <div class="p-4">
+                    <h3 class="font-semibold text-gray-900">{{ asset.name }}</h3>
+                    <p class="text-sm text-gray-500 mb-3">{{ asset.asset_id }}</p>
+
+                    <!-- Quality Metrics -->
+                    <div class="grid grid-cols-2 gap-2 text-sm mb-4">
+                        <div>
+                            <span class="text-gray-600">Quality:</span>
+                            <span class="font-medium {% if asset.quality_score >= 75 %}text-green-600{% else %}text-yellow-600{% endif %}">
+                                {{ "%.0f"|format(asset.quality_score) }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Clarity:</span>
+                            <span class="font-medium {% if asset.clarity_score >= 75 %}text-green-600{% else %}text-yellow-600{% endif %}">
+                                {{ "%.0f"|format(asset.clarity_score) }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Text Accuracy -->
+                    <div class="text-sm mb-4">
+                        {% if asset.text_accuracy_status == 'PASS' %}
+                        <span class="text-green-600">&#10003; Text OK</span>
+                        {% else %}
+                        <span class="text-red-600">&#10007; Text Issues</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="flex gap-2">
+                        <button onclick="quickApprove('{{ asset.asset_id }}', {{ asset.version }})"
+                                class="flex-1 py-2 px-3 bg-green-600 text-white text-sm rounded hover:bg-green-700">
+                            &#10003; Approve
+                        </button>
+                        <button onclick="quickReject('{{ asset.asset_id }}', {{ asset.version }})"
+                                class="flex-1 py-2 px-3 bg-red-600 text-white text-sm rounded hover:bg-red-700">
+                            &#10007; Reject
+                        </button>
+                        <a href="/review/{{ asset.asset_id }}"
+                           class="py-2 px-3 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300">
+                            Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Rejection Feedback Modal -->
+        <div id="rejectModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Rejection Feedback</h3>
+                    <input type="hidden" id="rejectAssetId">
+                    <input type="hidden" id="rejectVersion">
+                    <textarea id="rejectFeedback" rows="3"
+                              class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
+                              placeholder="What needs to be improved?"></textarea>
+                    <div class="mt-4 flex gap-4">
+                        <button onclick="closeRejectModal()"
+                                class="flex-1 py-2 px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                            Cancel
+                        </button>
+                        <button onclick="submitRejection()"
+                                class="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                            Reject & Regenerate
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="bg-white rounded-lg shadow p-12 text-center">
+            <svg class="w-16 h-16 mx-auto text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">All caught up!</h3>
+            <p class="text-gray-600 mb-4">No assets pending review.</p>
+            <a href="/" class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                Back to Dashboard
+            </a>
+        </div>
+        {% endif %}
+    </main>
+
+    <script>
+        async function quickApprove(assetId, version) {
+            const response = await fetch('/api/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ asset_id: assetId, version: version })
+            });
+
+            if (response.ok) {
+                const card = document.getElementById('asset-' + assetId);
+                if (card) {
+                    card.style.opacity = '0.5';
+                    card.style.pointerEvents = 'none';
+                    // Add approved badge
+                    const badge = document.createElement('div');
+                    badge.className = 'absolute inset-0 bg-green-500/20 flex items-center justify-center';
+                    const text = document.createElement('span');
+                    text.className = 'text-green-800 font-bold text-2xl';
+                    text.textContent = 'APPROVED';
+                    badge.appendChild(text);
+                    card.querySelector('.aspect-video').appendChild(badge);
+                }
+            }
+        }
+
+        function quickReject(assetId, version) {
+            document.getElementById('rejectAssetId').value = assetId;
+            document.getElementById('rejectVersion').value = version;
+            document.getElementById('rejectModal').classList.remove('hidden');
+            document.getElementById('rejectModal').classList.add('flex');
+        }
+
+        function closeRejectModal() {
+            document.getElementById('rejectModal').classList.add('hidden');
+            document.getElementById('rejectModal').classList.remove('flex');
+            document.getElementById('rejectFeedback').value = '';
+        }
+
+        async function submitRejection() {
+            const assetId = document.getElementById('rejectAssetId').value;
+            const version = parseInt(document.getElementById('rejectVersion').value);
+            const feedback = document.getElementById('rejectFeedback').value;
+
+            if (!feedback.trim()) {
+                alert('Please provide feedback');
+                return;
+            }
+
+            const response = await fetch('/api/reject', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    asset_id: assetId,
+                    version: version,
+                    feedback: feedback
+                })
+            });
+
+            if (response.ok) {
+                closeRejectModal();
+                const card = document.getElementById('asset-' + assetId);
+                if (card) {
+                    card.style.opacity = '0.5';
+                    card.style.pointerEvents = 'none';
+                }
+                alert('Asset rejected. Regeneration started.');
+            }
+        }
+
+        async function approveAll() {
+            const cards = document.querySelectorAll('[id^="asset-"]');
+            for (const card of cards) {
+                const assetId = card.id.replace('asset-', '');
+                const versionText = card.querySelector('.aspect-video span').textContent;
+                const version = parseInt(versionText.replace('v', ''));
+                await quickApprove(assetId, version);
+                await new Promise(resolve => setTimeout(resolve, 200)); // Small delay between approvals
+            }
+        }
+    </script>
+</body>
+</html>

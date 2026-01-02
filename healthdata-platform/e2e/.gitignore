@@ -1,0 +1,53 @@
+# Test artifacts
+/test-results/
+/playwright-report/
+/test-results.json
+/junit.xml
+
+# Authentication state
+/.auth/
+
+# Screenshots and videos
+*.png
+*.jpg
+*.webm
+*.mp4
+
+# Dependencies
+/node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Traces
+/traces/
+
+# Coverage
+/coverage/
+
+# Allure
+/allure-results/
+/allure-report/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temp files
+*.tmp
+.temp/

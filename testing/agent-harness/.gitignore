@@ -1,0 +1,24 @@
+# Environment and secrets
+.env
+
+# Python virtual environment
+venv/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest cache
+.pytest_cache/
+
+# DeepEval cache
+.deepeval/
+
+# Log files
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp

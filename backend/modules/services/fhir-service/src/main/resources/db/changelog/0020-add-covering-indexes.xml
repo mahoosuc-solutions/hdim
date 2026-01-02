@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="015-add-fhir-covering-indexes" author="hdim-performance">
+        <comment>
+        Add covering indexes to improve FHIR query performance
+        - Patient queries by tenant and resource type
+        - Observation queries by patient and date
+        - Condition queries by patient and onset date
+        These composite indexes eliminate index scans and reduce I/O operations.
+        </comment>
+
+        <sql>
+            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_patients_tenant_resource
+            ON patients(tenant_id, resource_type, id);
+        </sql>
+
+        <sql>
+            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_observations_patient_tenant
+            ON observations(patient_id, tenant_id, effective_date DESC);
+        </sql>
+
+        <sql>
+            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conditions_patient_tenant
+            ON conditions(patient_id, tenant_id, onset_date DESC);
+        </sql>
+
+        <rollback>
+            DROP INDEX IF EXISTS idx_patients_tenant_resource;
+            DROP INDEX IF EXISTS idx_observations_patient_tenant;
+            DROP INDEX IF EXISTS idx_conditions_patient_tenant;
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

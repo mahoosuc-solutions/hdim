@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+    HDIM Dependency Check Suppression File
+
+    This file contains false positives and accepted risks for the OWASP Dependency Check.
+    Each suppression must be documented with:
+    - Reason for suppression
+    - Date added
+    - Reviewer
+    - Expiration date (if temporary)
+    -->
+
+    <!-- Example suppression template:
+    <suppress>
+        <notes><![CDATA[
+            Reason: [Explain why this is suppressed]
+            Added: [Date]
+            Reviewer: [Name]
+            Expires: [Date or "Permanent"]
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.example/.*@.*$</packageUrl>
+        <cve>CVE-XXXX-XXXXX</cve>
+    </suppress>
+    -->
+
+    <!-- Spring Framework false positives -->
+    <suppress>
+        <notes><![CDATA[
+            Reason: Spring Boot 3.x is not affected by this CVE which targets older versions
+            Added: 2025-12-23
+            Reviewer: Security Team
+            Expires: Permanent
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.boot/.*@3\..*$</packageUrl>
+        <cve>CVE-2022-22965</cve>
+    </suppress>
+
+    <!-- Test dependencies - not in production -->
+    <suppress>
+        <notes><![CDATA[
+            Reason: H2 database is only used for testing, not production
+            Added: 2025-12-23
+            Reviewer: Security Team
+            Expires: Permanent
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.h2database/h2@.*$</packageUrl>
+        <vulnerabilityName regex="true">.*</vulnerabilityName>
+    </suppress>
+
+    <!-- Development tools - not in production -->
+    <suppress>
+        <notes><![CDATA[
+            Reason: Lombok is compile-time only, not included in runtime
+            Added: 2025-12-23
+            Reviewer: Security Team
+            Expires: Permanent
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.projectlombok/lombok@.*$</packageUrl>
+        <vulnerabilityName regex="true">.*</vulnerabilityName>
+    </suppress>
+
+</suppressions>

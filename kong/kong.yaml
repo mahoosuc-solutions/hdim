@@ -1,0 +1,82 @@
+_format_version: "3.0"
+_transform: true
+
+plugins:
+  - name: correlation-id
+    config:
+      header_name: X-Request-ID
+      generator: uuid
+      echo_downstream: true
+
+  # Global logging of user/tenant/patient context to Kafka
+  - name: user-patient-kafka
+    config:
+      kafka:
+        brokers:
+          - "kafka-0:9092"
+          - "kafka-1:9092"
+        topic: request_audit
+        timeout_ms: 1000
+        required_acks: 1
+        compression: gzip
+        batch_num: 200
+        flush_time: 1000
+      user_claim: sub
+      tenant_claim: tenant
+      user_header_fallback: X-User-ID
+      tenant_header_fallback: X-Tenant-ID
+      request_id_header: X-Request-ID
+      require_patient: false              # tighten per-route below
+      patient_sources:
+        - type: header
+          name: X-Patient-Ids
+          format: json_array
+          fields:
+            id_key: patient_id
+            assigning_key: assigning_authority
+
+services:
+  - name: quality-measure
+    url: http://quality-measure-service:8080
+    routes:
+      - name: quality-measure-api
+        paths:
+          - /quality-measure
+        strip_path: false
+        methods: [GET, POST, PUT, DELETE]
+        plugins:
+          - name: user-patient-kafka
+            config:
+              require_patient: true        # enforce patient context
+              patient_sources:
+                - type: header
+                  name: X-Patient-Ids
+                  format: json_array
+                  fields:
+                    id_key: patient_id
+                    assigning_key: assigning_authority
+                - type: path_regex
+                  regex: "/patients/(?<patient_id>[0-9a-f\\-]+)/"
+                  assigning_authority: default
+                - type: query
+                  param: patient
+                  assigning_authority: default
+
+  - name: patient-service
+    url: http://patient-service:8080
+    routes:
+      - name: patient-api
+        paths:
+          - /patients
+        strip_path: false
+        methods: [GET, POST, PUT, DELETE]
+        plugins:
+          - name: user-patient-kafka
+            config:
+              require_patient: false       # read-only endpoints may not send patient_id
+              patient_sources:
+                - type: path_regex
+                  regex: "/patients/(?<patient_id>[0-9a-f\\-]+)/"
+                  assigning_authority: default
+
+# Add other services/routes as needed; override require_patient where appropriate.

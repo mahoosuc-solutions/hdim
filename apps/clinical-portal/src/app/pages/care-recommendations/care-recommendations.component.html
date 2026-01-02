@@ -1,0 +1,418 @@
+<div class="care-recommendations-dashboard">
+  <!-- Page Header -->
+  <app-page-header
+    title="Care Recommendations"
+    subtitle="Manage patient care recommendations and interventions"
+    [breadcrumbs]="breadcrumbs">
+    <div class="header-actions">
+      <button mat-button type="button" (click)="refreshData()" [disabled]="loading$ | async" aria-label="Refresh care recommendations data">
+        <mat-icon aria-hidden="true">refresh</mat-icon>
+        Refresh
+      </button>
+      <mat-button-toggle-group
+        [value]="viewMode"
+        (change)="onViewModeChange($event.value)"
+        aria-label="View mode">
+        <mat-button-toggle value="list" matTooltip="List view">
+          <mat-icon>view_list</mat-icon>
+        </mat-button-toggle>
+        <mat-button-toggle value="grid" matTooltip="Grid view">
+          <mat-icon>grid_view</mat-icon>
+        </mat-button-toggle>
+        <mat-button-toggle value="kanban" matTooltip="Kanban view">
+          <mat-icon>view_kanban</mat-icon>
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+  </app-page-header>
+
+  <!-- Loading Overlay -->
+  @if (loading$ | async) {
+    <app-loading-overlay></app-loading-overlay>
+  }
+
+  <!-- Stats Panel -->
+  @if (stats$ | async; as stats) {
+    <app-recommendation-stats-panel
+      [stats]="stats"
+      (statClick)="onStatClick($event)">
+    </app-recommendation-stats-panel>
+  }
+
+  <!-- Filter Section -->
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <div class="filter-row">
+        <!-- Search -->
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search patients</mat-label>
+          <input
+            matInput
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="onSearchChange($event)"
+            placeholder="Search by name or MRN">
+          <mat-icon matPrefix>search</mat-icon>
+          @if (searchTerm) {
+            <button matSuffix mat-icon-button type="button" (click)="searchTerm = ''; onSearchChange('')" aria-label="Clear search">
+              <mat-icon aria-hidden="true">close</mat-icon>
+            </button>
+          }
+        </mat-form-field>
+
+        <!-- Urgency Filter -->
+        <mat-form-field appearance="outline">
+          <mat-label>Urgency</mat-label>
+          <mat-select
+            multiple
+            [(ngModel)]="activeUrgencyFilters"
+            (selectionChange)="onUrgencyFilterChange($event.value)">
+            @for (urgency of urgencyOptions; track urgency) {
+              <mat-option [value]="urgency">
+                <mat-icon [style.color]="URGENCY_COLORS[urgency]">{{ URGENCY_ICONS[urgency] }}</mat-icon>
+                {{ urgency | titlecase }}
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Category Filter -->
+        <mat-form-field appearance="outline">
+          <mat-label>Category</mat-label>
+          <mat-select
+            multiple
+            [(ngModel)]="activeCategoryFilters"
+            (selectionChange)="onCategoryFilterChange($event.value)">
+            @for (category of categoryOptions; track category) {
+              <mat-option [value]="category">
+                <mat-icon>{{ getCategoryIcon(category) }}</mat-icon>
+                {{ CATEGORY_DISPLAY_NAMES[category] }}
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Risk Level Filter -->
+        <mat-form-field appearance="outline">
+          <mat-label>Patient Risk</mat-label>
+          <mat-select
+            multiple
+            [(ngModel)]="activeRiskFilters"
+            (selectionChange)="onRiskFilterChange($event.value)">
+            @for (risk of riskLevelOptions; track risk) {
+              <mat-option [value]="risk">{{ risk | titlecase }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Status Filter -->
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select
+            multiple
+            [(ngModel)]="activeStatusFilters"
+            (selectionChange)="onStatusFilterChange($event.value)">
+            @for (status of statusOptions; track status) {
+              <mat-option [value]="status">{{ status | titlecase }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Clear Filters -->
+        @if (hasActiveFilters$ | async) {
+          <button mat-button type="button" color="primary" (click)="clearFilters()" aria-label="Clear all filters">
+            <mat-icon aria-hidden="true">filter_alt_off</mat-icon>
+            Clear Filters
+          </button>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Bulk Actions Toolbar -->
+  @if ((selectedCount$ | async) ?? 0 > 0) {
+    <app-bulk-actions-toolbar
+      [selectedCount]="(selectedCount$ | async) ?? 0"
+      (accept)="bulkAccept()"
+      (decline)="bulkDecline()"
+      (complete)="bulkComplete()"
+      (clearSelection)="clearSelection()">
+    </app-bulk-actions-toolbar>
+  }
+
+  <!-- Main Content Area -->
+  <div class="recommendations-content" [ngSwitch]="viewMode">
+
+    <!-- List View -->
+    <div *ngSwitchCase="'list'" class="list-view">
+      <mat-card>
+        <table
+          mat-table
+          [dataSource]="dataSource"
+          matSort
+          (matSortChange)="onSortChange($event)"
+          class="recommendations-table">
+
+          <!-- Checkbox Column -->
+          <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef>
+              <mat-checkbox
+                (change)="$event ? masterToggle() : null"
+                [checked]="(isAllSelected$ | async) ?? false"
+                [indeterminate]="(isIndeterminate$ | async) ?? false"
+                aria-label="Select all">
+              </mat-checkbox>
+            </th>
+            <td mat-cell *matCellDef="let row">
+              <mat-checkbox
+                (click)="$event.stopPropagation()"
+                (change)="toggleSelection(row)"
+                [checked]="isSelected(row)"
+                aria-label="Select row">
+              </mat-checkbox>
+            </td>
+          </ng-container>
+
+          <!-- Urgency Column -->
+          <ng-container matColumnDef="urgency">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Urgency</th>
+            <td mat-cell *matCellDef="let row">
+              <app-status-badge
+                [status]="row.urgency"
+                [type]="getUrgencyBadgeType(row.urgency)">
+              </app-status-badge>
+            </td>
+          </ng-container>
+
+          <!-- Patient Name Column -->
+          <ng-container matColumnDef="patientName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Patient</th>
+            <td mat-cell *matCellDef="let row">
+              <a class="patient-link" (click)="viewPatient(row.patientId); $event.stopPropagation()">
+                {{ row.patientName }}
+              </a>
+            </td>
+          </ng-container>
+
+          <!-- MRN Column -->
+          <ng-container matColumnDef="mrn">
+            <th mat-header-cell *matHeaderCellDef>MRN</th>
+            <td mat-cell *matCellDef="let row">{{ row.mrn }}</td>
+          </ng-container>
+
+          <!-- Category Column -->
+          <ng-container matColumnDef="category">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
+            <td mat-cell *matCellDef="let row">
+              <div class="category-cell">
+                <mat-icon class="category-icon">{{ getCategoryIcon(row.category) }}</mat-icon>
+                <span>{{ getCategoryDisplayName(row.category) }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Title Column -->
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef>Recommendation</th>
+            <td mat-cell *matCellDef="let row">
+              <div class="title-cell">
+                <span class="title">{{ row.title }}</span>
+                @if (row.description) {
+                  <span class="description">{{ row.description }}</span>
+                }
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Patient Risk Level Column -->
+          <ng-container matColumnDef="patientRiskLevel">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Risk</th>
+            <td mat-cell *matCellDef="let row">
+              <app-status-badge
+                [status]="row.patientRiskLevel"
+                [type]="getRiskLevelBadgeType(row.patientRiskLevel)">
+              </app-status-badge>
+            </td>
+          </ng-container>
+
+          <!-- Due Date Column -->
+          <ng-container matColumnDef="dueDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Due Date</th>
+            <td mat-cell *matCellDef="let row">
+              @if (row.dueDate) {
+                <div class="due-date-cell" [class.overdue]="row.daysOverdue">
+                  <span>{{ row.dueDate | date:'shortDate' }}</span>
+                  @if (row.daysOverdue) {
+                    <span class="overdue-badge">{{ row.daysOverdue }}d overdue</span>
+                  }
+                </div>
+              } @else {
+                <span class="no-date">-</span>
+              }
+            </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let row">
+              <app-status-badge [status]="row.status" type="info"></app-status-badge>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let row">
+              <button mat-icon-button type="button" [matMenuTriggerFor]="actionMenu" (click)="$event.stopPropagation()" aria-label="More actions">
+                <mat-icon aria-hidden="true">more_vert</mat-icon>
+              </button>
+              <mat-menu #actionMenu="matMenu">
+                <button mat-menu-item (click)="acceptRecommendation(row)" [disabled]="row.status !== 'pending'">
+                  <mat-icon>check_circle</mat-icon>
+                  <span>Accept</span>
+                </button>
+                <button mat-menu-item (click)="declineRecommendation(row)" [disabled]="row.status !== 'pending'">
+                  <mat-icon>cancel</mat-icon>
+                  <span>Decline</span>
+                </button>
+                <button mat-menu-item (click)="completeRecommendation(row)" [disabled]="row.status !== 'in-progress'">
+                  <mat-icon>task_alt</mat-icon>
+                  <span>Complete</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="viewPatient(row.patientId)">
+                  <mat-icon>person</mat-icon>
+                  <span>View Patient</span>
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: displayedColumns;"
+            (click)="toggleSelection(row)"
+            [class.selected]="isSelected(row)">
+          </tr>
+
+          <!-- No Data Row -->
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+              No recommendations found
+            </td>
+          </tr>
+        </table>
+
+        <mat-paginator
+          [pageSizeOptions]="[10, 25, 50, 100]"
+          [pageSize]="25"
+          (page)="onPageChange($event)"
+          showFirstLastButtons
+          aria-label="Select page">
+        </mat-paginator>
+      </mat-card>
+    </div>
+
+    <!-- Grid View -->
+    <div *ngSwitchCase="'grid'" class="grid-view">
+      <div class="recommendations-grid">
+        @for (rec of paginatedRecommendations$ | async; track trackById($index, rec)) {
+          <mat-card class="recommendation-card" [class.selected]="isSelected(rec)" (click)="toggleSelection(rec)">
+            <mat-card-header>
+              <mat-icon mat-card-avatar [style.color]="URGENCY_COLORS[rec.urgency]">
+                {{ URGENCY_ICONS[rec.urgency] }}
+              </mat-icon>
+              <mat-card-title>{{ rec.patientName }}</mat-card-title>
+              <mat-card-subtitle>MRN: {{ rec.mrn }}</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="card-badges">
+                <app-status-badge [status]="rec.urgency" [type]="getUrgencyBadgeType(rec.urgency)"></app-status-badge>
+                <app-status-badge [status]="rec.patientRiskLevel" [type]="getRiskLevelBadgeType(rec.patientRiskLevel)"></app-status-badge>
+              </div>
+              <h4>{{ rec.title }}</h4>
+              @if (rec.description) {
+                <p class="description">{{ rec.description }}</p>
+              }
+              <div class="card-meta">
+                <span class="category">
+                  <mat-icon>{{ getCategoryIcon(rec.category) }}</mat-icon>
+                  {{ getCategoryDisplayName(rec.category) }}
+                </span>
+                @if (rec.dueDate) {
+                  <span class="due-date" [class.overdue]="rec.daysOverdue">
+                    Due: {{ rec.dueDate | date:'shortDate' }}
+                  </span>
+                }
+              </div>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button type="button" color="primary" (click)="acceptRecommendation(rec); $event.stopPropagation()" [disabled]="rec.status !== 'pending'" [attr.aria-disabled]="rec.status !== 'pending'" aria-label="Accept recommendation">
+                Accept
+              </button>
+              <button mat-button type="button" (click)="viewPatient(rec.patientId); $event.stopPropagation()" aria-label="View patient details">
+                View Patient
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    </div>
+
+    <!-- Kanban View -->
+    <div *ngSwitchCase="'kanban'" class="kanban-view">
+      <div class="kanban-controls">
+        <mat-form-field appearance="outline">
+          <mat-label>Group by</mat-label>
+          <mat-select [(ngModel)]="groupBy" (selectionChange)="onGroupByChange($event.value)">
+            <mat-option value="urgency">Urgency</mat-option>
+            <mat-option value="category">Category</mat-option>
+            <mat-option value="patientRiskLevel">Patient Risk</mat-option>
+            <mat-option value="status">Status</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="kanban-board">
+        @for (group of groupedRecommendations$ | async | keyvalue; track group.key) {
+          <div class="kanban-column">
+            <div class="kanban-header">
+              <h3>{{ getGroupLabel(group.key) }}</h3>
+              <span class="count-badge">{{ group.value.length }}</span>
+            </div>
+            <div class="kanban-cards">
+              @for (rec of group.value; track trackById($index, rec)) {
+                <mat-card class="kanban-card" (click)="toggleSelection(rec)">
+                  <div class="kanban-card-header">
+                    <span class="patient-name">{{ rec.patientName }}</span>
+                    <app-status-badge [status]="rec.urgency" [type]="getUrgencyBadgeType(rec.urgency)"></app-status-badge>
+                  </div>
+                  <p class="kanban-card-title">{{ rec.title }}</p>
+                  <div class="kanban-card-footer">
+                    <span class="category">
+                      <mat-icon>{{ getCategoryIcon(rec.category) }}</mat-icon>
+                    </span>
+                    @if (rec.daysOverdue) {
+                      <span class="overdue">{{ rec.daysOverdue }}d overdue</span>
+                    }
+                  </div>
+                </mat-card>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  @if (!(loading$ | async) && (filteredRecommendations$ | async)?.length === 0) {
+    <app-empty-state
+      icon="recommend"
+      title="No Recommendations Found"
+      message="No care recommendations match your current filters. Try adjusting your search criteria."
+      actionText="Clear Filters"
+      (action)="clearFilters()">
+    </app-empty-state>
+  }
+</div>

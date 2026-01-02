@@ -1,0 +1,318 @@
+package com.healthdata.authentication.filter;
+
+import com.healthdata.authentication.config.RateLimitConfig;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+
+import java.io.IOException;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
+
+/**
+ * Unit tests for RateLimitingFilter.
+ * Tests rate limiting enforcement for login, register, and API endpoints.
+ *
+ * SECURITY CRITICAL: These tests validate protection against brute force attacks.
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName("RateLimitingFilter Tests")
+class RateLimitingFilterTest {
+
+    @Mock
+    private FilterChain filterChain;
+
+    private RateLimitConfig config;
+    private RateLimitingFilter filter;
+
+    @BeforeEach
+    void setUp() {
+        // Initialize configuration with default values
+        config = new RateLimitConfig();
+        config.setEnabled(true);
+
+        // Set login limits
+        RateLimitConfig.LoginLimits loginLimits = new RateLimitConfig.LoginLimits();
+        loginLimits.setPerMinute(5);
+        loginLimits.setPerHour(20);
+        config.setLogin(loginLimits);
+
+        // Set register limits
+        RateLimitConfig.RegisterLimits registerLimits = new RateLimitConfig.RegisterLimits();
+        registerLimits.setPerHour(3);
+        config.setRegister(registerLimits);
+
+        // Set API limits
+        RateLimitConfig.ApiLimits apiLimits = new RateLimitConfig.ApiLimits();
+        apiLimits.setPerMinute(100);
+        config.setApi(apiLimits);
+
+        // Create filter with configuration
+        filter = new RateLimitingFilter(config);
+    }
+
+    @Test
+    @DisplayName("Should allow requests within rate limit")
+    void shouldAllowRequestsWithinRateLimit() throws ServletException, IOException {
+        // Given: A login request
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/api/v1/auth/login");
+        request.setRemoteAddr("192.168.1.1");
+
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        // When: Making request within limit
+        filter.doFilterInternal(request, response, filterChain);
+
+        // Then: Request should be allowed
+        verify(filterChain, times(1)).doFilter(request, response);
+        assertThat(response.getStatus()).isNotEqualTo(429);
+    }
+
+    @Test
+    @DisplayName("Should enforce rate limit on login endpoint after 5 requests per minute")
+    void shouldEnforceRateLimitOnLoginEndpoint() throws ServletException, IOException {
+        // Given: Multiple login requests from same IP
+        String clientIP = "192.168.1.100";
+
+        // When: Making 6 login requests rapidly
+        for (int i = 1; i <= 6; i++) {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/api/v1/auth/login");
+            request.setRemoteAddr(clientIP);
+
+            MockHttpServletResponse response = new MockHttpServletResponse();
+
+            filter.doFilterInternal(request, response, filterChain);
+
+            if (i <= 5) {
+                // First 5 requests should succeed
+                assertThat(response.getStatus()).isNotEqualTo(429);
+            } else {
+                // 6th request should be rate limited
+                assertThat(response.getStatus()).isEqualTo(429);
+                assertThat(response.getContentAsString()).contains("Too Many Requests");
+                assertThat(response.getContentAsString()).contains("Rate limit exceeded");
+            }
+        }
+
+        // Then: Filter chain should be called only 5 times (not for 6th request)
+        verify(filterChain, times(5)).doFilter(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should enforce rate limit on register endpoint after 3 requests per hour")
+    void shouldEnforceRateLimitOnRegisterEndpoint() throws ServletException, IOException {
+        // Given: Multiple registration requests from same IP
+        String clientIP = "192.168.1.101";
+
+        // When: Making 4 registration requests
+        for (int i = 1; i <= 4; i++) {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/api/v1/auth/register");
+            request.setRemoteAddr(clientIP);
+
+            MockHttpServletResponse response = new MockHttpServletResponse();
+
+            filter.doFilterInternal(request, response, filterChain);
+
+            if (i <= 3) {
+                // First 3 requests should succeed
+                assertThat(response.getStatus()).isNotEqualTo(429);
+            } else {
+                // 4th request should be rate limited
+                assertThat(response.getStatus()).isEqualTo(429);
+                assertThat(response.getContentAsString()).contains("Too Many Requests");
+            }
+        }
+
+        // Then: Filter chain should be called only 3 times
+        verify(filterChain, times(3)).doFilter(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should apply different rate limits to different endpoints")
+    void shouldApplyDifferentRateLimitsToDifferentEndpoints() throws ServletException, IOException {
+        // Given: Same IP making requests to different endpoints
+        String clientIP = "192.168.1.102";
+
+        // When: Making 5 login requests (max for login)
+        for (int i = 1; i <= 5; i++) {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/api/v1/auth/login");
+            request.setRemoteAddr(clientIP);
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            filter.doFilterInternal(request, response, filterChain);
+        }
+
+        // And: Making 3 register requests (max for register)
+        for (int i = 1; i <= 3; i++) {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/api/v1/auth/register");
+            request.setRemoteAddr(clientIP);
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            filter.doFilterInternal(request, response, filterChain);
+        }
+
+        // Then: All requests should succeed (different buckets per endpoint)
+        verify(filterChain, times(8)).doFilter(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should isolate rate limits by IP address")
+    void shouldIsolateRateLimitsByIPAddress() throws ServletException, IOException {
+        // Given: Two different IPs
+        String ip1 = "192.168.1.103";
+        String ip2 = "192.168.1.104";
+
+        // When: First IP exhausts rate limit (5 login requests)
+        for (int i = 1; i <= 5; i++) {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/api/v1/auth/login");
+            request.setRemoteAddr(ip1);
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            filter.doFilterInternal(request, response, filterChain);
+        }
+
+        // And: Second IP makes request
+        MockHttpServletRequest request2 = new MockHttpServletRequest();
+        request2.setRequestURI("/api/v1/auth/login");
+        request2.setRemoteAddr(ip2);
+        MockHttpServletResponse response2 = new MockHttpServletResponse();
+        filter.doFilterInternal(request2, response2, filterChain);
+
+        // Then: Second IP should not be rate limited
+        assertThat(response2.getStatus()).isNotEqualTo(429);
+        verify(filterChain, times(6)).doFilter(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should handle X-Forwarded-For header correctly")
+    void shouldHandleXForwardedForHeader() throws ServletException, IOException {
+        // Given: Request with X-Forwarded-For header (behind proxy/load balancer)
+        String realClientIP = "203.0.113.45";
+        String proxyIP = "10.0.0.1";
+
+        // When: Making requests with X-Forwarded-For
+        for (int i = 1; i <= 6; i++) {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/api/v1/auth/login");
+            request.setRemoteAddr(proxyIP); // Proxy IP
+            request.addHeader("X-Forwarded-For", realClientIP + ", " + proxyIP); // Real client IP
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            filter.doFilterInternal(request, response, filterChain);
+
+            if (i == 6) {
+                // 6th request should be rate limited based on real client IP
+                assertThat(response.getStatus()).isEqualTo(429);
+            }
+        }
+
+        // Then: Rate limiting should be based on real client IP, not proxy IP
+        verify(filterChain, times(5)).doFilter(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should apply general API rate limit to non-auth endpoints")
+    void shouldApplyGeneralApiRateLimitToNonAuthEndpoints() throws ServletException, IOException {
+        // Given: Requests to general API endpoint
+        String clientIP = "192.168.1.105";
+
+        // When: Making requests to general API (limit is 100/minute)
+        for (int i = 1; i <= 10; i++) {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/api/v1/patients/123");
+            request.setRemoteAddr(clientIP);
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            filter.doFilterInternal(request, response, filterChain);
+        }
+
+        // Then: All requests should succeed (well under 100/minute limit)
+        verify(filterChain, times(10)).doFilter(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should return proper JSON error response when rate limited")
+    void shouldReturnProperJsonErrorResponse() throws ServletException, IOException {
+        // Given: Multiple requests to exhaust rate limit
+        String clientIP = "192.168.1.106";
+
+        // Exhaust rate limit (5 requests)
+        for (int i = 1; i <= 5; i++) {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/api/v1/auth/login");
+            request.setRemoteAddr(clientIP);
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            filter.doFilterInternal(request, response, filterChain);
+        }
+
+        // When: Making 6th request (rate limited)
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/api/v1/auth/login");
+        request.setRemoteAddr(clientIP);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        // Then: Response should be proper JSON with 429 status
+        assertThat(response.getStatus()).isEqualTo(429);
+        assertThat(response.getContentType()).contains("application/json");
+        assertThat(response.getCharacterEncoding()).isEqualTo("UTF-8");
+
+        String responseBody = response.getContentAsString();
+        assertThat(responseBody).contains("\"error\":\"Too Many Requests\"");
+        assertThat(responseBody).contains("\"status\":429");
+        assertThat(responseBody).contains("\"path\":\"/api/v1/auth/login\"");
+        assertThat(responseBody).contains("\"message\":\"Rate limit exceeded");
+    }
+
+    @Test
+    @DisplayName("Should skip rate limiting for health check endpoints")
+    void shouldSkipRateLimitingForHealthCheckEndpoints() throws ServletException, IOException {
+        // Given: Requests to health check endpoints
+        String clientIP = "192.168.1.107";
+
+        // When: Making many requests to health endpoint
+        for (int i = 1; i <= 10; i++) {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/actuator/health");
+            request.setRemoteAddr(clientIP);
+            MockHttpServletResponse response = new MockHttpServletResponse();
+
+            // Filter should skip these requests
+            boolean shouldNotFilter = filter.shouldNotFilter(request);
+            assertThat(shouldNotFilter).isTrue();
+        }
+    }
+
+    @Test
+    @DisplayName("Should enforce rate limits when disabled is false")
+    void shouldEnforceRateLimitsWhenEnabled() throws ServletException, IOException {
+        // Given: Rate limiting is enabled (default configuration)
+        assertThat(config.isEnabled()).isTrue();
+
+        String clientIP = "192.168.1.108";
+
+        // When: Exhausting login rate limit
+        for (int i = 1; i <= 6; i++) {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/api/v1/auth/login");
+            request.setRemoteAddr(clientIP);
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            filter.doFilterInternal(request, response, filterChain);
+
+            if (i == 6) {
+                // Then: 6th request should be blocked
+                assertThat(response.getStatus()).isEqualTo(429);
+            }
+        }
+    }
+}

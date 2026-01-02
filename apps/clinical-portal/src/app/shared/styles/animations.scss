@@ -1,0 +1,398 @@
+/**
+ * Animations
+ *
+ * Global animations and transitions for the HealthData Platform.
+ */
+
+@import './variables.scss';
+
+// Fade Animations
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.fade-in {
+  animation: fade-in $transition-base $transition-ease;
+}
+
+.fade-out {
+  animation: fade-out $transition-base $transition-ease;
+}
+
+// Slide Animations
+@keyframes slide-in-top {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-bottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.slide-in-top {
+  animation: slide-in-top $transition-slow $transition-ease;
+}
+
+.slide-in-bottom {
+  animation: slide-in-bottom $transition-slow $transition-ease;
+}
+
+.slide-in-left {
+  animation: slide-in-left $transition-slow $transition-ease;
+}
+
+.slide-in-right {
+  animation: slide-in-right $transition-slow $transition-ease;
+}
+
+// Scale Animations
+@keyframes scale-in {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes scale-out {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+.scale-in {
+  animation: scale-in $transition-base $transition-ease;
+}
+
+.scale-out {
+  animation: scale-out $transition-base $transition-ease;
+}
+
+// Rotate Animations
+@keyframes rotate-360 {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotate-bounce {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(90deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  75% {
+    transform: rotate(270deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.rotate-360 {
+  animation: rotate-360 1s linear infinite;
+}
+
+.rotate-bounce {
+  animation: rotate-bounce 2s ease-in-out infinite;
+}
+
+// Pulse Animation
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+// Bounce Animation
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.bounce {
+  animation: bounce 1s ease-in-out infinite;
+}
+
+// Shake Animation
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-10px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(10px);
+  }
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+// Spin Animation
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+// Loading Skeleton
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-loading {
+  background: linear-gradient(
+    90deg,
+    $gray-200 25%,
+    $gray-300 50%,
+    $gray-200 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+// Ripple Effect
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.ripple-effect {
+  animation: ripple 0.6s ease-out;
+}
+
+// Heartbeat Animation
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  10%, 30% {
+    transform: scale(1.1);
+  }
+  20%, 40% {
+    transform: scale(0.9);
+  }
+}
+
+.heartbeat {
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+// Glow Animation
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba($primary, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba($primary, 1);
+  }
+}
+
+.glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+// Progress Bar Animation
+@keyframes progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.progress-animate {
+  animation: progress 2s ease-in-out;
+}
+
+// Transition Utilities
+.transition-all {
+  transition: all $transition-base $transition-ease;
+}
+
+.transition-colors {
+  transition: color $transition-base $transition-ease,
+              background-color $transition-base $transition-ease,
+              border-color $transition-base $transition-ease;
+}
+
+.transition-opacity {
+  transition: opacity $transition-base $transition-ease;
+}
+
+.transition-transform {
+  transition: transform $transition-base $transition-ease;
+}
+
+.transition-shadow {
+  transition: box-shadow $transition-base $transition-ease;
+}
+
+// Hover Effects
+.hover-lift {
+  transition: transform $transition-base $transition-ease,
+              box-shadow $transition-base $transition-ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-lg;
+  }
+}
+
+.hover-scale {
+  transition: transform $transition-base $transition-ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.hover-opacity {
+  transition: opacity $transition-base $transition-ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.hover-glow {
+  transition: box-shadow $transition-base $transition-ease;
+
+  &:hover {
+    box-shadow: 0 0 20px rgba($primary, 0.5);
+  }
+}
+
+// Delayed Animations
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+.delay-1000 {
+  animation-delay: 1000ms;
+}
+
+// Duration Utilities
+.duration-fast {
+  animation-duration: $transition-fast;
+  transition-duration: $transition-fast;
+}
+
+.duration-base {
+  animation-duration: $transition-base;
+  transition-duration: $transition-base;
+}
+
+.duration-slow {
+  animation-duration: $transition-slow;
+  transition-duration: $transition-slow;
+}

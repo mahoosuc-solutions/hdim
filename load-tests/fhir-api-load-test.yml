@@ -1,0 +1,83 @@
+# FHIR API Load Test - Artillery Configuration
+# Tests FHIR service endpoints for performance under load
+#
+# Usage: artillery run fhir-api-load-test.yml
+
+config:
+  target: 'http://localhost:8085/fhir/fhir'
+  phases:
+    - duration: 30
+      arrivalRate: 5
+      name: "Warm up"
+    - duration: 60
+      arrivalRate: 20
+      name: "Sustained load"
+    - duration: 30
+      arrivalRate: 10
+      name: "Cool down"
+
+  defaults:
+    headers:
+      Content-Type: "application/fhir+json"
+      Accept: "application/fhir+json"
+      X-Tenant-ID: "demo-tenant"
+  
+  variables:
+    patientIds:
+      - "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+      - "b2c3d4e5-f6a7-8901-bcde-f23456789012"
+      - "c3d4e5f6-a7b8-9012-cdef-345678901234"
+      - "d4e5f6a7-b8c9-0123-def0-456789012345"
+      - "e5f6a7b8-c9d0-1234-ef01-567890123456"
+
+scenarios:
+  # Scenario 1: Patient Search (60% of traffic)
+  - name: "FHIR Patient Search"
+    weight: 60
+    flow:
+      - get:
+          url: "/Patient?name=Smith"
+          capture:
+            - json: "$.entry[0].resource.id"
+              as: "patientId"
+      - think: 1
+
+  # Scenario 2: Read Patient by ID (20% of traffic)
+  - name: "FHIR Read Patient"
+    weight: 20
+    flow:
+      - get:
+          url: "/Patient/{{ $randomString() }}"
+          beforeRequest: "setRandomPatientId"
+      - think: 1
+
+  # Scenario 3: Create Observation (10% of traffic)
+  - name: "FHIR Create Observation"
+    weight: 10
+    flow:
+      - post:
+          url: "/Observation"
+          json:
+            resourceType: "Observation"
+            status: "final"
+            code:
+              coding:
+                - system: "http://loinc.org"
+                  code: "4548-4"
+                  display: "Hemoglobin A1c/Hemoglobin.total in Blood"
+            subject:
+              reference: "Patient/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            valueQuantity:
+              value: 7.5
+              unit: "%"
+              system: "http://unitsofmeasure.org"
+              code: "%"
+      - think: 2
+
+  # Scenario 4: Search Observations (10% of traffic)
+  - name: "FHIR Search Observations"
+    weight: 10
+    flow:
+      - get:
+          url: "/Observation?patient=Patient/a1b2c3d4-e5f6-7890-abcd-ef1234567890&code=4548-4"
+      - think: 1

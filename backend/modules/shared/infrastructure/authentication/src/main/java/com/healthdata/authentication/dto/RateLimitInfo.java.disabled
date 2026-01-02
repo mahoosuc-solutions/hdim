@@ -1,0 +1,59 @@
+package com.healthdata.authentication.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.Instant;
+
+/**
+ * DTO containing rate limit information for a specific IP and endpoint.
+ * Used for monitoring and admin operations.
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class RateLimitInfo {
+
+    /**
+     * Client IP address
+     */
+    private String ip;
+
+    /**
+     * API endpoint
+     */
+    private String endpoint;
+
+    /**
+     * Whether a rate limit bucket exists for this IP/endpoint combination
+     */
+    private boolean exists;
+
+    /**
+     * Number of tokens currently available (if bucket exists)
+     */
+    private Long availableTokens;
+
+    /**
+     * Bucket capacity (maximum tokens)
+     */
+    private Long capacity;
+
+    /**
+     * When the bucket was last accessed
+     */
+    private Instant lastAccessed;
+
+    /**
+     * When the bucket will be fully refilled
+     */
+    private Instant resetTime;
+
+    /**
+     * Whether this IP is currently blocked (no tokens available)
+     */
+    private boolean blocked;
+}

@@ -1,0 +1,114 @@
+@switch (variant) {
+  @case ('raised') {
+    <button
+      mat-raised-button
+      [type]="type"
+      [color]="color"
+      [disabled]="disabled || loading || success"
+      [attr.aria-busy]="loading"
+      [attr.aria-label]="ariaLabel || text"
+      [matTooltip]="tooltip"
+      [class]="customClass"
+      (click)="handleClick($event)">
+      @if (loading) {
+        <mat-spinner diameter="20" class="inline-spinner" aria-hidden="true"></mat-spinner>
+        <span class="button-text">{{ loadingText || text }}</span>
+      } @else if (success) {
+        <mat-icon class="success-icon" aria-hidden="true">check_circle</mat-icon>
+        <span class="button-text">{{ successText || 'Success!' }}</span>
+      } @else {
+        @if (icon) {<mat-icon aria-hidden="true">{{ icon }}</mat-icon>}
+        <span class="button-text">{{ text }}</span>
+      }
+    </button>
+  }
+  @case ('stroked') {
+    <button
+      mat-stroked-button
+      [type]="type"
+      [color]="color"
+      [disabled]="disabled || loading || success"
+      [attr.aria-busy]="loading"
+      [attr.aria-label]="ariaLabel || text"
+      [matTooltip]="tooltip"
+      [class]="customClass"
+      (click)="handleClick($event)">
+      @if (loading) {
+        <mat-spinner diameter="20" class="inline-spinner" aria-hidden="true"></mat-spinner>
+        <span class="button-text">{{ loadingText || text }}</span>
+      } @else if (success) {
+        <mat-icon class="success-icon" aria-hidden="true">check_circle</mat-icon>
+        <span class="button-text">{{ successText || 'Success!' }}</span>
+      } @else {
+        @if (icon) {<mat-icon aria-hidden="true">{{ icon }}</mat-icon>}
+        <span class="button-text">{{ text }}</span>
+      }
+    </button>
+  }
+  @case ('flat') {
+    <button
+      mat-flat-button
+      [type]="type"
+      [color]="color"
+      [disabled]="disabled || loading || success"
+      [attr.aria-busy]="loading"
+      [attr.aria-label]="ariaLabel || text"
+      [matTooltip]="tooltip"
+      [class]="customClass"
+      (click)="handleClick($event)">
+      @if (loading) {
+        <mat-spinner diameter="20" class="inline-spinner" aria-hidden="true"></mat-spinner>
+        <span class="button-text">{{ loadingText || text }}</span>
+      } @else if (success) {
+        <mat-icon class="success-icon" aria-hidden="true">check_circle</mat-icon>
+        <span class="button-text">{{ successText || 'Success!' }}</span>
+      } @else {
+        @if (icon) {<mat-icon aria-hidden="true">{{ icon }}</mat-icon>}
+        <span class="button-text">{{ text }}</span>
+      }
+    </button>
+  }
+  @case ('icon') {
+    <button
+      mat-icon-button
+      [type]="type"
+      [color]="color"
+      [disabled]="disabled || loading || success"
+      [attr.aria-busy]="loading"
+      [attr.aria-label]="ariaLabel || text"
+      [matTooltip]="tooltip"
+      [class]="customClass"
+      (click)="handleClick($event)">
+      @if (loading) {
+        <mat-spinner diameter="24" aria-hidden="true"></mat-spinner>
+      } @else if (success) {
+        <mat-icon [style.color]="'#4caf50'" aria-label="Success">check_circle</mat-icon>
+      } @else {
+        <mat-icon aria-hidden="true">{{ icon }}</mat-icon>
+      }
+    </button>
+  }
+  @default {
+    <button
+      mat-button
+      [type]="type"
+      [color]="color"
+      [disabled]="disabled || loading || success"
+      [attr.aria-busy]="loading"
+      [attr.aria-label]="ariaLabel || text"
+      [matTooltip]="tooltip"
+      [class]="customClass"
+      (click)="handleClick($event)">
+      @if (loading) {
+        <mat-spinner diameter="20" class="inline-spinner" aria-hidden="true"></mat-spinner>
+        <span class="button-text">{{ loadingText || text }}</span>
+      } @else if (success) {
+        <mat-icon class="success-icon" aria-hidden="true">check_circle</mat-icon>
+        <span class="button-text">{{ successText || 'Success!' }}</span>
+      } @else {
+        @if (icon) {<mat-icon aria-hidden="true">{{ icon }}</mat-icon>}
+        <span class="button-text">{{ text }}</span>
+      }
+    </button>
+  }
+}

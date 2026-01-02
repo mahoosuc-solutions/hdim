@@ -1,0 +1,316 @@
+<app-page-header
+  title="Nurse Dashboard"
+  subtitle="Care Coordination & Patient Education"
+  icon="local_hospital">
+  <button mat-raised-button color="primary" (click)="refreshData()">
+    <mat-icon>refresh</mat-icon>
+    Refresh
+  </button>
+</app-page-header>
+
+<!-- Dashboard Metrics -->
+<div class="metrics-grid">
+  <app-stat-card
+    title="Care Gaps Assigned"
+    [value]="careGapsAssigned.toString()"
+    icon="assignment"
+    color="primary"
+    [clickable]="true"
+    (click)="viewAllCareGaps()">
+  </app-stat-card>
+
+  <app-stat-card
+    title="Patient Calls Pending"
+    [value]="patientCallsPending.toString()"
+    icon="phone"
+    color="warn"
+    [clickable]="true"
+    (click)="viewAllOutreach()">
+  </app-stat-card>
+
+  <app-stat-card
+    title="Med Reconciliations"
+    [value]="medReconciliationsNeeded.toString()"
+    icon="medication"
+    color="accent">
+  </app-stat-card>
+
+  <app-stat-card
+    title="Patient Education Due"
+    [value]="patientEducationDue.toString()"
+    icon="school"
+    color="success">
+  </app-stat-card>
+</div>
+
+<!-- Quick Actions -->
+<mat-card class="quick-actions-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>bolt</mat-icon>
+      Quick Actions
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="quick-actions">
+      <button mat-raised-button color="primary" class="action-btn">
+        <mat-icon>assignment</mat-icon>
+        Update Care Plan
+      </button>
+      <button mat-raised-button color="accent" class="action-btn">
+        <mat-icon>phone</mat-icon>
+        Patient Outreach
+      </button>
+      <button mat-raised-button class="action-btn">
+        <mat-icon>medication</mat-icon>
+        Med Reconciliation
+      </button>
+      <button mat-raised-button class="action-btn">
+        <mat-icon>school</mat-icon>
+        Patient Education
+      </button>
+      <button mat-raised-button class="action-btn">
+        <mat-icon>send</mat-icon>
+        Coordinate Referral
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<!-- Tabs for Care Gaps and Outreach -->
+<mat-tab-group class="dashboard-tabs" animationDuration="300ms">
+  <!-- Care Gaps Tab -->
+  <mat-tab>
+    <ng-template mat-tab-label>
+      <mat-icon>assignment</mat-icon>
+      <span>Care Gaps</span>
+      <span class="tab-badge">{{ careGaps.length }}</span>
+    </ng-template>
+
+    <mat-card class="tab-content-card">
+      @if (loading) {
+        <div class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Loading care gaps...</p>
+        </div>
+      } @else if (careGaps.length === 0) {
+        <app-empty-state
+          icon="check_circle"
+          title="No care gaps assigned"
+          message="All care gaps have been addressed.">
+        </app-empty-state>
+      } @else {
+        <table mat-table [dataSource]="careGaps" class="care-gap-table">
+          <!-- Patient Column -->
+          <ng-container matColumnDef="patient">
+            <th mat-header-cell *matHeaderCellDef>Patient</th>
+            <td mat-cell *matCellDef="let gap">
+              <div class="patient-cell">
+                <strong>{{ gap.patientName }}</strong>
+                <span class="mrn-text">{{ gap.patientMRN }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Gap Column -->
+          <ng-container matColumnDef="gap">
+            <th mat-header-cell *matHeaderCellDef>Care Gap</th>
+            <td mat-cell *matCellDef="let gap">
+              <span class="gap-text">{{ gap.gapType }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Priority Column -->
+          <ng-container matColumnDef="priority">
+            <th mat-header-cell *matHeaderCellDef>Priority</th>
+            <td mat-cell *matCellDef="let gap">
+              <mat-chip [color]="getPriorityColor(gap.priority)">
+                {{ gap.priority | titlecase }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Category Column -->
+          <ng-container matColumnDef="category">
+            <th mat-header-cell *matHeaderCellDef>Category</th>
+            <td mat-cell *matCellDef="let gap">
+              <div class="category-cell">
+                <mat-icon [style.color]="getCategoryColor(gap.category)">
+                  {{ getCategoryIcon(gap.category) }}
+                </mat-icon>
+                <span>{{ gap.category | titlecase }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Due Date Column -->
+          <ng-container matColumnDef="dueDate">
+            <th mat-header-cell *matHeaderCellDef>Due Date</th>
+            <td mat-cell *matCellDef="let gap">
+              <div class="date-cell">
+                <mat-icon>event</mat-icon>
+                {{ gap.dueDate }}
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let gap">
+              <div class="action-buttons">
+                <button
+                  mat-mini-fab
+                  color="primary"
+                  (click)="addressCareGap(gap)"
+                  matTooltip="Address Care Gap">
+                  <mat-icon>task_alt</mat-icon>
+                </button>
+                @if (gap.category === 'education') {
+                  <button
+                    mat-mini-fab
+                    color="accent"
+                    (click)="provideEducation(gap)"
+                    matTooltip="Provide Education">
+                    <mat-icon>school</mat-icon>
+                  </button>
+                }
+                @if (gap.category === 'medication') {
+                  <button
+                    mat-mini-fab
+                    color="warn"
+                    (click)="reconcileMedications(gap)"
+                    matTooltip="Reconcile Medications">
+                    <mat-icon>medication</mat-icon>
+                  </button>
+                }
+                <button
+                  mat-icon-button
+                  (click)="viewPatient(gap.id)"
+                  matTooltip="View Patient">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="careGapColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: careGapColumns" class="gap-row"></tr>
+        </table>
+      }
+    </mat-card>
+  </mat-tab>
+
+  <!-- Patient Outreach Tab -->
+  <mat-tab>
+    <ng-template mat-tab-label>
+      <mat-icon>phone</mat-icon>
+      <span>Patient Outreach</span>
+      <span class="tab-badge">{{ outreachTasks.length }}</span>
+    </ng-template>
+
+    <mat-card class="tab-content-card">
+      @if (loading) {
+        <div class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Loading outreach tasks...</p>
+        </div>
+      } @else if (outreachTasks.length === 0) {
+        <app-empty-state
+          icon="check_circle"
+          title="No outreach tasks scheduled"
+          message="All patient outreach has been completed.">
+        </app-empty-state>
+      } @else {
+        <table mat-table [dataSource]="outreachTasks" class="outreach-table">
+          <!-- Patient Column -->
+          <ng-container matColumnDef="patient">
+            <th mat-header-cell *matHeaderCellDef>Patient</th>
+            <td mat-cell *matCellDef="let task">
+              <div class="patient-cell">
+                <strong>{{ task.patientName }}</strong>
+                <span class="mrn-text">{{ task.patientMRN }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Type Column -->
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let task">
+              <div class="type-cell">
+                <mat-icon>{{ getOutreachIcon(task.outreachType) }}</mat-icon>
+                <span>{{ task.outreachType | titlecase }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Reason Column -->
+          <ng-container matColumnDef="reason">
+            <th mat-header-cell *matHeaderCellDef>Reason</th>
+            <td mat-cell *matCellDef="let task">
+              {{ task.reason }}
+            </td>
+          </ng-container>
+
+          <!-- Date Column -->
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>Scheduled</th>
+            <td mat-cell *matCellDef="let task">
+              <div class="date-cell">
+                <mat-icon>event</mat-icon>
+                {{ task.scheduledDate }}
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let task">
+              <span class="status-badge status-{{ task.status }}">
+                {{ task.status | titlecase }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let task">
+              <div class="action-buttons">
+                @if (task.outreachType === 'call') {
+                  <button
+                    mat-mini-fab
+                    color="primary"
+                    (click)="makePatientCall(task)"
+                    matTooltip="Make Call">
+                    <mat-icon>phone</mat-icon>
+                  </button>
+                }
+                @if (task.outreachType === 'email' || task.outreachType === 'letter') {
+                  <button
+                    mat-mini-fab
+                    color="accent"
+                    (click)="sendCommunication(task)"
+                    matTooltip="Send Communication">
+                    <mat-icon>send</mat-icon>
+                  </button>
+                }
+                <button
+                  mat-icon-button
+                  (click)="viewPatient(task.id)"
+                  matTooltip="View Patient">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="outreachColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: outreachColumns" class="outreach-row"></tr>
+        </table>
+      }
+    </mat-card>
+  </mat-tab>
+</mat-tab-group>

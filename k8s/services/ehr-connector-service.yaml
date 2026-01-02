@@ -1,0 +1,76 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ehr-connector-service
+  namespace: hdim
+  labels:
+    app: ehr-connector-service
+    app.kubernetes.io/part-of: hdim-platform
+    tier: integration
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ehr-connector-service
+  template:
+    metadata:
+      labels:
+        app: ehr-connector-service
+        tier: integration
+    spec:
+      containers:
+        - name: ehr-connector-service
+          image: hdim/ehr-connector-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8100
+          envFrom:
+            - configMapRef:
+                name: hdim-common-config
+            - configMapRef:
+                name: hdim-service-urls
+            - secretRef:
+                name: hdim-db-credentials
+            - secretRef:
+                name: hdim-redis-credentials
+            - secretRef:
+                name: hdim-kafka-credentials
+            - secretRef:
+                name: hdim-jwt-credentials
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8100
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8100
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ehr-connector-service
+  namespace: hdim
+  labels:
+    app: ehr-connector-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8100
+      targetPort: 8100
+  selector:
+    app: ehr-connector-service

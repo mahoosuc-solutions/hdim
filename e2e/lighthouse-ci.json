@@ -1,0 +1,69 @@
+{
+  "ci": {
+    "collect": {
+      "url": [
+        "http://localhost:4200/login",
+        "http://localhost:4200/dashboard",
+        "http://localhost:4200/patients",
+        "http://localhost:4200/care-gaps"
+      ],
+      "numberOfRuns": 3,
+      "settings": {
+        "preset": "desktop",
+        "throttling": {
+          "cpuSlowdownMultiplier": 1
+        },
+        "screenEmulation": {
+          "mobile": false,
+          "width": 1350,
+          "height": 940
+        },
+        "formFactor": "desktop"
+      }
+    },
+    "assert": {
+      "preset": "lighthouse:recommended",
+      "assertions": {
+        "categories:performance": ["error", { "minScore": 0.8 }],
+        "categories:accessibility": ["error", { "minScore": 0.9 }],
+        "categories:best-practices": ["error", { "minScore": 0.8 }],
+        "categories:seo": ["warn", { "minScore": 0.7 }],
+
+        "first-contentful-paint": ["error", { "maxNumericValue": 1800 }],
+        "largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
+        "total-blocking-time": ["error", { "maxNumericValue": 300 }],
+        "speed-index": ["warn", { "maxNumericValue": 3400 }],
+        "interactive": ["error", { "maxNumericValue": 3800 }],
+
+        "uses-responsive-images": "warn",
+        "uses-optimized-images": "warn",
+        "uses-text-compression": "warn",
+        "uses-rel-preconnect": "warn",
+        "render-blocking-resources": "warn",
+
+        "color-contrast": "error",
+        "document-title": "error",
+        "html-has-lang": "error",
+        "meta-viewport": "error",
+        "bypass": "warn",
+        "link-name": "error",
+        "button-name": "error",
+        "image-alt": "error",
+        "label": "error",
+
+        "errors-in-console": "warn",
+        "no-unload-listeners": "warn",
+        "js-libraries": "off",
+        "csp-xss": "off",
+
+        "http-status-code": "error",
+        "is-crawlable": "off",
+        "robots-txt": "off"
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

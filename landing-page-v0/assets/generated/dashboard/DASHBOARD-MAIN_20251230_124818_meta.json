@@ -1,0 +1,9 @@
+{
+  "prompt_id": "DASHBOARD-MAIN",
+  "name": "Real-Time Care Gap Dashboard",
+  "category": "dashboard",
+  "dimensions": "1440x900",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a modern, clean healthcare analytics dashboard UI mockup showing REAL-TIME insights at SCALE.\n\nLayout:\n- Top bar with HDIM logo, navigation, user menu\n- Subtle \"LIVE\" indicator with green pulse dot (showing real-time updates)\n- Left sidebar with navigation: Dashboard, Patients, Measures, Integrations, Settings\n\nMain content area showing:\n- Header: \"Care Gap Command Center\" with last updated timestamp (seconds ago)\n- Summary stats row with LIVE indicators:\n  - Connected Systems: 47 (showin..."
+}

@@ -1,0 +1,159 @@
+<div class="advanced-filter-dialog">
+  <h2 mat-dialog-title>
+    <mat-icon>filter_alt</mat-icon>
+    Advanced Filters
+  </h2>
+
+  <mat-dialog-content>
+    <form [formGroup]="filterForm">
+      <!-- Filter Logic Toggle -->
+      <div class="logic-selector">
+        <label>Apply filters with:</label>
+        <mat-button-toggle-group formControlName="logic" (change)="updatePreview()">
+          <mat-button-toggle value="AND">
+            <mat-icon>all_inclusive</mat-icon>
+            Match ALL
+          </mat-button-toggle>
+          <mat-button-toggle value="OR">
+            <mat-icon>join_inner</mat-icon>
+            Match ANY
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+
+      <!-- Filter Rows -->
+      <div class="filters-container" formArrayName="filters">
+        @for (filter of filters.controls; track $index; let i = $index) {
+          <div class="filter-row" [formGroupName]="i">
+            @if (i > 0) {
+              <div class="logic-indicator">
+                {{ filterForm.get('logic')?.value }}
+              </div>
+            }
+
+            <mat-form-field appearance="outline" class="field-select">
+              <mat-label>Field</mat-label>
+              <mat-select formControlName="field" (selectionChange)="onFieldChange(i)">
+                @for (field of data.availableFields; track field.name) {
+                  <mat-option [value]="field.name">
+                    {{ field.label }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="operator-select">
+              <mat-label>Operator</mat-label>
+              <mat-select formControlName="operator" (selectionChange)="updatePreview()">
+                @for (op of getOperatorsForField(i); track op.value) {
+                  <mat-option [value]="op.value">
+                    {{ op.label }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            @if (isDateField(i)) {
+              <mat-form-field appearance="outline" class="value-input">
+                <mat-label>Value</mat-label>
+                <input matInput [matDatepicker]="picker" formControlName="value" (dateChange)="updatePreview()" />
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+            } @else if (isSelectField(i)) {
+              <mat-form-field appearance="outline" class="value-input">
+                <mat-label>Value</mat-label>
+                <mat-select formControlName="value" (selectionChange)="updatePreview()">
+                  @for (option of getSelectOptions(i); track option.value) {
+                    <mat-option [value]="option.value">
+                      {{ option.label }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            } @else {
+              <mat-form-field appearance="outline" class="value-input">
+                <mat-label>Value</mat-label>
+                <input matInput formControlName="value" (input)="updatePreview()" />
+              </mat-form-field>
+            }
+
+            @if (requiresSecondValue(i)) {
+              <span class="between-label">and</span>
+              <mat-form-field appearance="outline" class="value-input">
+                <mat-label>Second Value</mat-label>
+                <input matInput formControlName="value2" (input)="updatePreview()" />
+              </mat-form-field>
+            }
+
+            <button
+              mat-icon-button
+              type="button"
+              color="warn"
+              (click)="removeFilter(i)"
+              [disabled]="filters.length === 1"
+              aria-label="Remove filter"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        }
+      </div>
+
+      <button mat-stroked-button type="button" (click)="addFilter()" class="add-filter-btn">
+        <mat-icon>add</mat-icon>
+        Add Filter
+      </button>
+
+      <!-- Preview Count -->
+      @if (previewCount() !== null || isLoadingPreview()) {
+        <div class="preview-section">
+          @if (isLoadingPreview()) {
+            <mat-spinner diameter="20"></mat-spinner>
+            <span>Calculating results...</span>
+          } @else {
+            <mat-icon>info</mat-icon>
+            <span>{{ previewCount() }} results match these filters</span>
+          }
+        </div>
+      }
+
+      <!-- Saved Filters -->
+      @if (savedFilters.length > 0) {
+        <div class="saved-filters-section">
+          <h4>Saved Filters</h4>
+          <mat-chip-set>
+            @for (savedFilter of savedFilters; track savedFilter.name) {
+              <mat-chip (click)="loadSavedFilter(savedFilter)">
+                <mat-icon matChipAvatar>bookmark</mat-icon>
+                {{ savedFilter.name }}
+              </mat-chip>
+            }
+          </mat-chip-set>
+        </div>
+      }
+
+      <!-- Save Filter Name -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Save filter as (optional)</mat-label>
+        <input matInput formControlName="name" placeholder="My custom filter" />
+        <mat-icon matPrefix>label</mat-icon>
+      </mat-form-field>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onReset()">
+      <mat-icon>refresh</mat-icon>
+      Reset
+    </button>
+    <button mat-button (click)="onCancel()">
+      <mat-icon>close</mat-icon>
+      Cancel
+    </button>
+    <button mat-raised-button color="primary" (click)="onApply()">
+      <mat-icon>check</mat-icon>
+      Apply Filters
+    </button>
+  </mat-dialog-actions>
+</div>

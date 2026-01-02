@@ -1,0 +1,90 @@
+# Population Calculation Load Test - Artillery Configuration
+# Tests quality measure population calculations at scale
+#
+# Usage: artillery run population-calculation-load-test.yml
+
+config:
+  target: 'http://localhost:8087'
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up - light load"
+    - duration: 300
+      arrivalRate: 20
+      name: "Sustained load - population calculations"
+    - duration: 120
+      arrivalRate: 50
+      name: "Peak load"
+  
+  defaults:
+    headers:
+      Content-Type: "application/json"
+      Accept: "application/json"
+      X-Tenant-ID: "test-tenant-001"
+      Authorization: "Bearer test-token"
+  
+  variables:
+    measureIds:
+      - "CMS122v12"   # Diabetes HbA1c Control
+      - "CMS130v12"   # Colorectal Cancer Screening
+      - "CMS165v12"   # Blood Pressure Control
+      - "CMS125v12"   # Breast Cancer Screening
+    
+    periodStart: "2024-01-01"
+    periodEnd: "2024-12-31"
+
+scenarios:
+  # Scenario 1: Trigger Population Calculation (40% of traffic)
+  - name: "Trigger Population Calculation"
+    weight: 40
+    flow:
+      - post:
+          url: "/api/v1/quality-measures/calculate"
+          json:
+            measureId: "CMS122v12"
+            periodStart: "{{ periodStart }}"
+            periodEnd: "{{ periodEnd }}"
+            tenantId: "test-tenant-001"
+          capture:
+            - json: "$.calculationId"
+              as: "calculationId"
+      - think: 5
+      - get:
+          url: "/api/v1/quality-measures/calculations/{{ calculationId }}/status"
+      - think: 10
+
+  # Scenario 2: Get Population Results (30% of traffic)
+  - name: "Get Population Results"
+    weight: 30
+    flow:
+      - get:
+          url: "/api/v1/quality-measures/CMS122v12/results?periodStart={{ periodStart }}&periodEnd={{ periodEnd }}"
+      - think: 2
+      - get:
+          url: "/api/v1/quality-measures/CMS122v12/patients?status=non-compliant&limit=100"
+      - think: 2
+
+  # Scenario 3: Care Gap Analysis (20% of traffic)
+  - name: "Care Gap Analysis"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/v1/care-gaps?status=open&priority=high&limit=50"
+      - think: 1
+      - get:
+          url: "/api/v1/care-gaps/summary"
+      - think: 1
+      - get:
+          url: "/api/v1/care-gaps/patient/patient-001"
+      - think: 2
+
+  # Scenario 4: Risk Stratification (10% of traffic)
+  - name: "Risk Stratification Query"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/v1/patients/risk-stratification?riskLevel=high&limit=100"
+      - think: 2
+      - get:
+          url: "/api/v1/patients/patient-001/risk-history"
+      - think: 2

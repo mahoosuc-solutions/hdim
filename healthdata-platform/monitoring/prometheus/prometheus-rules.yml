@@ -1,0 +1,697 @@
+# Prometheus Alert Rules for HealthData Platform
+# Production-grade alerting with critical and warning thresholds
+
+groups:
+  # ============================================================
+  # APPLICATION HEALTH ALERTS
+  # ============================================================
+  - name: application-health
+    interval: 15s
+    rules:
+      - alert: ApplicationDown
+        expr: up{job=~".*-service"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: application
+          category: availability
+        annotations:
+          summary: "{{ $labels.job }} is down"
+          description: "Application {{ $labels.job }} has been unreachable for 2 minutes. Instance: {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/application-down"
+
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (job, uri)
+            /
+            sum(rate(http_server_requests_seconds_count[5m])) by (job, uri)
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: application
+          category: errors
+        annotations:
+          summary: "High error rate on {{ $labels.job }}"
+          description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.uri }} on {{ $labels.job }}"
+          runbook_url: "https://runbooks.healthdata.io/high-error-rate"
+
+      - alert: CriticalErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (job)
+            /
+            sum(rate(http_server_requests_seconds_count[5m])) by (job)
+          ) > 0.10
+        for: 3m
+        labels:
+          severity: critical
+          component: application
+          category: errors
+        annotations:
+          summary: "CRITICAL: Very high error rate on {{ $labels.job }}"
+          description: "Error rate is {{ $value | humanizePercentage }} on {{ $labels.job }}. Immediate investigation required."
+          runbook_url: "https://runbooks.healthdata.io/critical-error-rate"
+
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job, uri)
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: application
+          category: performance
+        annotations:
+          summary: "High response time on {{ $labels.job }}"
+          description: "P95 response time is {{ $value }}s for {{ $labels.uri }} on {{ $labels.job }}"
+          runbook_url: "https://runbooks.healthdata.io/high-response-time"
+
+      - alert: VeryHighResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job, uri)
+          ) > 3
+        for: 3m
+        labels:
+          severity: critical
+          component: application
+          category: performance
+        annotations:
+          summary: "CRITICAL: Very high response time on {{ $labels.job }}"
+          description: "P95 response time is {{ $value }}s for {{ $labels.uri }}. Performance degradation detected."
+          runbook_url: "https://runbooks.healthdata.io/very-high-response-time"
+
+      - alert: HighRequestRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count[5m])) by (job) > 1000
+        for: 10m
+        labels:
+          severity: warning
+          component: application
+          category: traffic
+        annotations:
+          summary: "High request rate on {{ $labels.job }}"
+          description: "Request rate is {{ $value }} req/s on {{ $labels.job }}"
+          runbook_url: "https://runbooks.healthdata.io/high-request-rate"
+
+  # ============================================================
+  # JVM HEALTH ALERTS
+  # ============================================================
+  - name: jvm-health
+    interval: 15s
+    rules:
+      - alert: HighHeapMemoryUsage
+        expr: |
+          (
+            jvm_memory_used_bytes{area="heap"}
+            /
+            jvm_memory_max_bytes{area="heap"}
+          ) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          component: jvm
+          category: memory
+        annotations:
+          summary: "High JVM heap memory usage on {{ $labels.job }}"
+          description: "Heap memory usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/high-heap-memory"
+
+      - alert: CriticalHeapMemoryUsage
+        expr: |
+          (
+            jvm_memory_used_bytes{area="heap"}
+            /
+            jvm_memory_max_bytes{area="heap"}
+          ) > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          component: jvm
+          category: memory
+        annotations:
+          summary: "CRITICAL: JVM heap memory almost exhausted on {{ $labels.job }}"
+          description: "Heap memory usage is {{ $value | humanizePercentage }}. OOM risk on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/critical-heap-memory"
+
+      - alert: HighGCPauseTime
+        expr: |
+          rate(jvm_gc_pause_seconds_sum[5m]) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          component: jvm
+          category: gc
+        annotations:
+          summary: "High GC pause time on {{ $labels.job }}"
+          description: "GC pause time is {{ $value }}s/s on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/high-gc-pause"
+
+      - alert: HighGCFrequency
+        expr: |
+          rate(jvm_gc_pause_seconds_count[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: jvm
+          category: gc
+        annotations:
+          summary: "High GC frequency on {{ $labels.job }}"
+          description: "GC is running {{ $value }} times/s on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/high-gc-frequency"
+
+      - alert: HighThreadCount
+        expr: |
+          jvm_threads_live_threads > 500
+        for: 5m
+        labels:
+          severity: warning
+          component: jvm
+          category: threads
+        annotations:
+          summary: "High thread count on {{ $labels.job }}"
+          description: "Thread count is {{ $value }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/high-thread-count"
+
+      - alert: ThreadDeadlock
+        expr: |
+          jvm_threads_deadlocked_threads > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: jvm
+          category: threads
+        annotations:
+          summary: "Thread deadlock detected on {{ $labels.job }}"
+          description: "{{ $value }} deadlocked threads detected on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/thread-deadlock"
+
+  # ============================================================
+  # DATABASE ALERTS
+  # ============================================================
+  - name: database-health
+    interval: 15s
+    rules:
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: database
+          category: availability
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "Database {{ $labels.database }} connection failed on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/postgres-down"
+
+      - alert: HighDatabaseConnections
+        expr: |
+          (
+            pg_stat_activity_count
+            /
+            pg_settings_max_connections
+          ) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+          category: connections
+        annotations:
+          summary: "High database connection usage"
+          description: "Database connections are {{ $value | humanizePercentage }} on {{ $labels.database }}"
+          runbook_url: "https://runbooks.healthdata.io/high-db-connections"
+
+      - alert: DatabaseConnectionPoolExhausted
+        expr: |
+          hikaricp_connections_active >= hikaricp_connections_max
+        for: 2m
+        labels:
+          severity: critical
+          component: database
+          category: connections
+        annotations:
+          summary: "Database connection pool exhausted on {{ $labels.job }}"
+          description: "All {{ $value }} connections are in use on {{ $labels.pool }}"
+          runbook_url: "https://runbooks.healthdata.io/connection-pool-exhausted"
+
+      - alert: SlowQueries
+        expr: |
+          pg_slow_queries > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+          category: performance
+        annotations:
+          summary: "Slow queries detected on {{ $labels.database }}"
+          description: "{{ $value }} slow queries in the last 5 minutes on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/slow-queries"
+
+      - alert: HighDatabaseReplicationLag
+        expr: |
+          pg_replication_lag_seconds > 60
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+          category: replication
+        annotations:
+          summary: "High replication lag on {{ $labels.database }}"
+          description: "Replication lag is {{ $value }}s on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/replication-lag"
+
+      - alert: DatabaseDiskSpaceLow
+        expr: |
+          (
+            pg_database_size_bytes
+            /
+            node_filesystem_size_bytes{mountpoint="/var/lib/postgresql"}
+          ) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+          category: storage
+        annotations:
+          summary: "Database disk space low"
+          description: "Database disk usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/db-disk-space-low"
+
+  # ============================================================
+  # REDIS CACHE ALERTS
+  # ============================================================
+  - name: redis-health
+    interval: 15s
+    rules:
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: cache
+          category: availability
+        annotations:
+          summary: "Redis is down"
+          description: "Cache server is unreachable on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/redis-down"
+
+      - alert: HighRedisMemoryUsage
+        expr: |
+          (
+            redis_memory_used_bytes
+            /
+            redis_memory_max_bytes
+          ) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+          category: memory
+        annotations:
+          summary: "High Redis memory usage"
+          description: "Cache memory usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/high-redis-memory"
+
+      - alert: RedisCacheMissRate
+        expr: |
+          (
+            rate(redis_keyspace_misses_total[5m])
+            /
+            (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m]))
+          ) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: cache
+          category: performance
+        annotations:
+          summary: "High Redis cache miss rate"
+          description: "Cache miss rate is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/high-cache-miss-rate"
+
+      - alert: RedisRejectedConnections
+        expr: |
+          increase(redis_rejected_connections_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          component: cache
+          category: connections
+        annotations:
+          summary: "Redis rejecting connections"
+          description: "{{ $value }} connections rejected in last 5 minutes on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/redis-rejected-connections"
+
+  # ============================================================
+  # KAFKA MESSAGING ALERTS
+  # ============================================================
+  - name: kafka-health
+    interval: 15s
+    rules:
+      - alert: KafkaDown
+        expr: kafka_up == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: messaging
+          category: availability
+        annotations:
+          summary: "Kafka is down"
+          description: "Message broker is unreachable on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/kafka-down"
+
+      - alert: HighKafkaConsumerLag
+        expr: |
+          kafka_consumergroup_lag > 100000
+        for: 10m
+        labels:
+          severity: warning
+          component: messaging
+          category: lag
+        annotations:
+          summary: "High Kafka consumer lag"
+          description: "Consumer {{ $labels.consumergroup }} has lag of {{ $value }} on {{ $labels.topic }}"
+          runbook_url: "https://runbooks.healthdata.io/high-consumer-lag"
+
+      - alert: CriticalKafkaConsumerLag
+        expr: |
+          kafka_consumergroup_lag > 1000000
+        for: 5m
+        labels:
+          severity: critical
+          component: messaging
+          category: lag
+        annotations:
+          summary: "CRITICAL: Very high Kafka consumer lag"
+          description: "Consumer {{ $labels.consumergroup }} has lag of {{ $value }} on {{ $labels.topic }}"
+          runbook_url: "https://runbooks.healthdata.io/critical-consumer-lag"
+
+      - alert: KafkaPartitionUnderReplicated
+        expr: |
+          kafka_topic_partition_under_replicated_partition > 0
+        for: 5m
+        labels:
+          severity: warning
+          component: messaging
+          category: replication
+        annotations:
+          summary: "Kafka partition under-replicated"
+          description: "Topic {{ $labels.topic }} has {{ $value }} under-replicated partitions"
+          runbook_url: "https://runbooks.healthdata.io/under-replicated-partition"
+
+      - alert: KafkaOfflinePartitions
+        expr: |
+          sum(kafka_controller_kafkacontroller_offlinepartitionscount) > 0
+        for: 2m
+        labels:
+          severity: critical
+          component: messaging
+          category: availability
+        annotations:
+          summary: "Kafka has offline partitions"
+          description: "{{ $value }} partitions are offline"
+          runbook_url: "https://runbooks.healthdata.io/offline-partitions"
+
+  # ============================================================
+  # BUSINESS LOGIC ALERTS
+  # ============================================================
+  - name: business-metrics
+    interval: 30s
+    rules:
+      - alert: HighMeasureCalculationFailures
+        expr: |
+          (
+            sum(rate(measure_calculations_failed_total[5m]))
+            /
+            sum(rate(measure_calculations_total[5m]))
+          ) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+          business: quality
+          category: calculations
+        annotations:
+          summary: "High measure calculation failure rate"
+          description: "{{ $value | humanizePercentage }} of measure calculations are failing"
+          runbook_url: "https://runbooks.healthdata.io/measure-calc-failures"
+
+      - alert: NoMeasureCalculations
+        expr: |
+          rate(measure_calculations_total[30m]) == 0
+        for: 30m
+        labels:
+          severity: warning
+          business: quality
+          category: calculations
+        annotations:
+          summary: "No measure calculations in last 30 minutes"
+          description: "Quality measure calculations have stopped"
+          runbook_url: "https://runbooks.healthdata.io/no-measure-calcs"
+
+      - alert: LowCareGapDetectionRate
+        expr: |
+          rate(care_gaps_detected_total[1h]) < 1
+        for: 1h
+        labels:
+          severity: warning
+          business: caregaps
+          category: detection
+        annotations:
+          summary: "Low care gap detection rate"
+          description: "Only {{ $value }} gaps detected per hour on average"
+          runbook_url: "https://runbooks.healthdata.io/low-gap-detection"
+
+      - alert: HighCareGapClosureFailures
+        expr: |
+          (
+            sum(rate(care_gaps_closure_failed_total[5m]))
+            /
+            sum(rate(care_gaps_closure_attempts_total[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          business: caregaps
+          category: closure
+        annotations:
+          summary: "High care gap closure failure rate"
+          description: "{{ $value | humanizePercentage }} of gap closures are failing"
+          runbook_url: "https://runbooks.healthdata.io/gap-closure-failures"
+
+      - alert: LowPatientProcessingRate
+        expr: |
+          rate(patients_processed_total[1h]) < 10
+        for: 1h
+        labels:
+          severity: warning
+          business: patients
+          category: processing
+        annotations:
+          summary: "Low patient processing rate"
+          description: "Only {{ $value }} patients processed per hour"
+          runbook_url: "https://runbooks.healthdata.io/low-patient-processing"
+
+      - alert: HighFHIRValidationFailures
+        expr: |
+          (
+            sum(rate(fhir_validation_failed_total[5m]))
+            /
+            sum(rate(fhir_validation_total[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          business: fhir
+          category: validation
+        annotations:
+          summary: "High FHIR validation failure rate"
+          description: "{{ $value | humanizePercentage }} of FHIR validations are failing"
+          runbook_url: "https://runbooks.healthdata.io/fhir-validation-failures"
+
+  # ============================================================
+  # SYSTEM RESOURCE ALERTS
+  # ============================================================
+  - name: system-resources
+    interval: 15s
+    rules:
+      - alert: HighCPUUsage
+        expr: |
+          (1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m]))) > 0.85
+        for: 10m
+        labels:
+          severity: warning
+          component: system
+          category: cpu
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/high-cpu"
+
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.85
+        for: 10m
+        labels:
+          severity: warning
+          component: system
+          category: memory
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/high-memory"
+
+      - alert: DiskSpaceLow
+        expr: |
+          (
+            node_filesystem_avail_bytes{mountpoint="/"}
+            /
+            node_filesystem_size_bytes{mountpoint="/"}
+          ) < 0.15
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+          category: disk
+        annotations:
+          summary: "Disk space low on {{ $labels.instance }}"
+          description: "Only {{ $value | humanizePercentage }} disk space available on {{ $labels.mountpoint }}"
+          runbook_url: "https://runbooks.healthdata.io/disk-space-low"
+
+      - alert: DiskSpaceCritical
+        expr: |
+          (
+            node_filesystem_avail_bytes{mountpoint="/"}
+            /
+            node_filesystem_size_bytes{mountpoint="/"}
+          ) < 0.05
+        for: 2m
+        labels:
+          severity: critical
+          component: system
+          category: disk
+        annotations:
+          summary: "CRITICAL: Disk space critically low on {{ $labels.instance }}"
+          description: "Only {{ $value | humanizePercentage }} disk space available on {{ $labels.mountpoint }}"
+          runbook_url: "https://runbooks.healthdata.io/disk-space-critical"
+
+      - alert: HighDiskIOWait
+        expr: |
+          rate(node_cpu_seconds_total{mode="iowait"}[5m]) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: system
+          category: disk
+        annotations:
+          summary: "High disk I/O wait on {{ $labels.instance }}"
+          description: "Disk I/O wait is {{ $value }}s/s on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.healthdata.io/high-io-wait"
+
+      - alert: HighNetworkErrors
+        expr: |
+          rate(node_network_receive_errs_total[5m]) + rate(node_network_transmit_errs_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+          category: network
+        annotations:
+          summary: "High network errors on {{ $labels.instance }}"
+          description: "{{ $value }} network errors per second on {{ $labels.device }}"
+          runbook_url: "https://runbooks.healthdata.io/network-errors"
+
+  # ============================================================
+  # KUBERNETES ALERTS (if applicable)
+  # ============================================================
+  - name: kubernetes-health
+    interval: 15s
+    rules:
+      - alert: PodCrashLooping
+        expr: |
+          increase(kube_pod_container_status_restarts_total[15m]) > 5
+        for: 5m
+        labels:
+          severity: critical
+          component: kubernetes
+          category: pods
+        annotations:
+          summary: "Pod is crash looping"
+          description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in 15 minutes"
+          runbook_url: "https://runbooks.healthdata.io/pod-crash-loop"
+
+      - alert: PodNotReady
+        expr: |
+          sum by (namespace, pod) (kube_pod_status_phase{phase!="Running"}) > 0
+        for: 10m
+        labels:
+          severity: warning
+          component: kubernetes
+          category: pods
+        annotations:
+          summary: "Pod not ready"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is not running"
+          runbook_url: "https://runbooks.healthdata.io/pod-not-ready"
+
+      - alert: DeploymentReplicasMismatch
+        expr: |
+          kube_deployment_spec_replicas != kube_deployment_status_replicas_available
+        for: 10m
+        labels:
+          severity: warning
+          component: kubernetes
+          category: deployments
+        annotations:
+          summary: "Deployment replicas mismatch"
+          description: "Deployment {{ $labels.deployment }} has {{ $value }} replica mismatch"
+          runbook_url: "https://runbooks.healthdata.io/replicas-mismatch"
+
+      - alert: HighPodMemoryUsage
+        expr: |
+          (
+            sum(container_memory_working_set_bytes{pod!=""}) by (pod)
+            /
+            sum(container_spec_memory_limit_bytes{pod!=""}) by (pod)
+          ) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          component: kubernetes
+          category: resources
+        annotations:
+          summary: "High pod memory usage"
+          description: "Pod {{ $labels.pod }} memory usage is {{ $value | humanizePercentage }}"
+          runbook_url: "https://runbooks.healthdata.io/high-pod-memory"
+
+  # ============================================================
+  # DEPLOYMENT ALERTS
+  # ============================================================
+  - name: deployment-health
+    interval: 30s
+    rules:
+      - alert: FailedDeployment
+        expr: |
+          increase(deployment_status_total{status="failed"}[15m]) > 0
+        labels:
+          severity: critical
+          component: deployment
+          category: ci-cd
+        annotations:
+          summary: "Deployment failed"
+          description: "Recent deployment attempt failed for {{ $labels.service }}"
+          runbook_url: "https://runbooks.healthdata.io/failed-deployment"
+
+      - alert: LongRunningDeployment
+        expr: |
+          deployment_duration_seconds > 600
+        for: 5m
+        labels:
+          severity: warning
+          component: deployment
+          category: ci-cd
+        annotations:
+          summary: "Long running deployment"
+          description: "Deployment for {{ $labels.service }} has been running for {{ $value }}s"
+          runbook_url: "https://runbooks.healthdata.io/long-deployment"

@@ -1,0 +1,319 @@
+<div class="quality-constellation">
+  <!-- Header -->
+  <div class="header">
+    <h1 class="title">
+      <mat-icon class="title-icon">scatter_plot</mat-icon>
+      Quality Constellation
+    </h1>
+
+    <div class="header-actions">
+      <!-- Color Scheme Toggle -->
+      <mat-form-field class="color-scheme-select">
+        <mat-label>Color By</mat-label>
+        <mat-select [(ngModel)]="colorScheme" (selectionChange)="changeColorScheme()">
+          <mat-option value="compliance">Compliance Status</mat-option>
+          <mat-option value="category">Measure Category</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button
+        mat-raised-button
+        (click)="resetCamera()"
+        matTooltip="Reset camera view"
+      >
+        <mat-icon>3d_rotation</mat-icon>
+        Reset View
+      </button>
+
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="exportImage()"
+        matTooltip="Export as PNG"
+      >
+        <mat-icon>photo_camera</mat-icon>
+        Export
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <!-- Filters Panel -->
+    <div class="filters-panel">
+      <mat-card class="filters-card">
+        <mat-card-header>
+          <mat-card-title>Filters</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <!-- Search -->
+          <mat-form-field class="filter-field">
+            <mat-label>Search Patients</mat-label>
+            <input
+              matInput
+              [(ngModel)]="filters.searchTerm"
+              (input)="applyFilters()"
+              placeholder="Name or ID"
+            />
+            <mat-icon matPrefix>search</mat-icon>
+          </mat-form-field>
+
+          <!-- Measure Category -->
+          <mat-form-field class="filter-field">
+            <mat-label>Measure Category</mat-label>
+            <mat-select [(ngModel)]="filters.measureCategory" (selectionChange)="applyFilters()">
+              @for (category of measureCategories; track category) {
+                <mat-option [value]="category">{{ category }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Compliance Status -->
+          <mat-form-field class="filter-field">
+            <mat-label>Compliance Status</mat-label>
+            <mat-select [(ngModel)]="filters.complianceStatus" (selectionChange)="applyFilters()">
+              @for (status of complianceStatuses; track status) {
+                <mat-option [value]="status">{{ status.replace('_', ' ') }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Compliance Rate Range -->
+          <div class="range-filter">
+            <label>Compliance Rate Range</label>
+            <div class="range-inputs">
+              <mat-form-field class="range-input">
+                <mat-label>Min</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  [(ngModel)]="filters.minComplianceRate"
+                  (input)="applyFilters()"
+                  min="0"
+                  max="100"
+                />
+              </mat-form-field>
+              <span class="range-separator">-</span>
+              <mat-form-field class="range-input">
+                <mat-label>Max</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  [(ngModel)]="filters.maxComplianceRate"
+                  (input)="applyFilters()"
+                  min="0"
+                  max="100"
+                />
+              </mat-form-field>
+            </div>
+          </div>
+
+          <!-- Reset Button -->
+          <button
+            mat-raised-button
+            color="accent"
+            (click)="resetFilters()"
+            class="reset-button"
+          >
+            <mat-icon>refresh</mat-icon>
+            Reset Filters
+          </button>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Statistics Panel -->
+      @if (stats) {
+        <mat-card class="stats-card">
+          <mat-card-header>
+            <mat-card-title>Statistics</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="stat-item">
+              <div class="stat-label">Total Patients</div>
+              <div class="stat-value">{{ stats.totalPatients }}</div>
+            </div>
+
+            <div class="stat-item">
+              <div class="stat-label">Visible</div>
+              <div class="stat-value">{{ stats.visiblePatients }}</div>
+            </div>
+
+            <div class="stat-divider"></div>
+
+            <div class="stat-item success">
+              <mat-icon>check_circle</mat-icon>
+              <div class="stat-content">
+                <div class="stat-label">Compliant</div>
+                <div class="stat-value">{{ stats.compliantPatients }}</div>
+              </div>
+            </div>
+
+            <div class="stat-item warning">
+              <mat-icon>warning</mat-icon>
+              <div class="stat-content">
+                <div class="stat-label">Non-Compliant</div>
+                <div class="stat-value">{{ stats.nonCompliantPatients }}</div>
+              </div>
+            </div>
+
+            <div class="stat-item neutral">
+              <mat-icon>remove_circle</mat-icon>
+              <div class="stat-content">
+                <div class="stat-label">Not Eligible</div>
+                <div class="stat-value">{{ stats.notEligiblePatients }}</div>
+              </div>
+            </div>
+
+            <div class="stat-divider"></div>
+
+            <div class="stat-item">
+              <div class="stat-label">Avg Compliance Rate</div>
+              <div class="stat-value" [style.color]="getComplianceColor(stats.avgComplianceRate)">
+                {{ formatPercent(stats.avgComplianceRate) }}
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <!-- Legend -->
+      <mat-card class="legend-card">
+        <mat-card-header>
+          <mat-card-title>Legend</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (colorScheme === 'compliance') {
+            <div class="legend-items">
+              <div class="legend-item">
+                <div class="legend-color" style="background-color: #4caf50;"></div>
+                <span>Compliant (80%+)</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background-color: #ff9800;"></div>
+                <span>Non-Compliant</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background-color: #9e9e9e;"></div>
+                <span>Not Eligible</span>
+              </div>
+            </div>
+          } @else {
+            <div class="legend-items">
+              <div class="legend-item">
+                <div class="legend-color" style="background-color: #2196f3;"></div>
+                <span>HEDIS</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background-color: #9c27b0;"></div>
+                <span>CMS</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background-color: #009688;"></div>
+                <span>CUSTOM</span>
+              </div>
+            </div>
+          }
+
+          <div class="legend-divider"></div>
+
+          <div class="legend-info">
+            <mat-icon>info</mat-icon>
+            <div class="legend-text">
+              <strong>Axes:</strong>
+              <div>X: Compliance Rate</div>
+              <div>Y: Data Richness</div>
+              <div>Z: Measure Count</div>
+            </div>
+          </div>
+
+          <div class="legend-info">
+            <mat-icon>touch_app</mat-icon>
+            <div class="legend-text">
+              <div>Hover: View details</div>
+              <div>Click: Focus on patient</div>
+              <div>Drag: Rotate view</div>
+              <div>Scroll: Zoom in/out</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Visualization -->
+    <mat-card class="visualization-card">
+      <mat-card-content>
+        @if (isLoading) {
+          <div class="loading-overlay">
+            <mat-spinner diameter="60"></mat-spinner>
+            <p>{{ loadingMessage }}</p>
+          </div>
+        }
+
+        <!-- Scene Container -->
+        <div #sceneContainer class="scene-container"></div>
+
+        <!-- Tooltip -->
+        <div
+          #tooltip
+          class="tooltip"
+          [class.visible]="tooltipVisible"
+          [style.left.px]="tooltipX + 10"
+          [style.top.px]="tooltipY + 10"
+        >
+          @if (tooltipPatient) {
+            <div class="tooltip-content">
+              <div class="tooltip-header">
+                <mat-icon>person</mat-icon>
+                <strong>{{ tooltipPatient.patientName }}</strong>
+              </div>
+
+              <div class="tooltip-divider"></div>
+
+              <div class="tooltip-row">
+                <span class="tooltip-label">Patient ID:</span>
+                <span class="tooltip-value">{{ tooltipPatient.patientId }}</span>
+              </div>
+
+              <div class="tooltip-row">
+                <span class="tooltip-label">Compliance Rate:</span>
+                <span
+                  class="tooltip-value"
+                  [style.color]="getComplianceColor(tooltipPatient.complianceRate)"
+                >
+                  {{ formatPercent(tooltipPatient.complianceRate) }}
+                </span>
+              </div>
+
+              <div class="tooltip-row">
+                <span class="tooltip-label">Measures:</span>
+                <span class="tooltip-value">
+                  {{ tooltipPatient.compliantCount }} / {{ tooltipPatient.measureCount }}
+                </span>
+              </div>
+
+              <div class="tooltip-row">
+                <span class="tooltip-label">Category:</span>
+                <span class="tooltip-value">{{ tooltipPatient.measureCategory }}</span>
+              </div>
+
+              <div class="tooltip-footer">
+                <mat-icon>mouse</mat-icon>
+                <span>Click to focus</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Performance Indicator -->
+        <div class="performance-indicator">
+          @if (stats) {
+            <mat-chip>
+              <mat-icon>visibility</mat-icon>
+              {{ stats.visiblePatients }} points
+            </mat-chip>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDIM - Product Screenshots Gallery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #1E3A5F;
+            --secondary: #00A9A5;
+            --text: #2C3E50;
+            --light: #F5F7FA;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--light);
+            min-height: 100vh;
+        }
+        nav {
+            background: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 14px;
+            margin-left: 30px;
+        }
+        .nav-links a:hover { color: var(--secondary); }
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, #2C5282 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 15px;
+        }
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .gallery {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 40px;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+        }
+        .gallery-item {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        .gallery-item.featured {
+            grid-column: 1 / -1;
+        }
+        .gallery-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .gallery-info {
+            padding: 25px;
+        }
+        .gallery-info h3 {
+            font-size: 18px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        .gallery-info p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+        .gallery-tag {
+            display: inline-block;
+            background: var(--light);
+            color: var(--secondary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+        .cta-section {
+            text-align: center;
+            padding: 60px 40px;
+            background: white;
+        }
+        .cta-section h2 {
+            font-size: 28px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        .cta-section p {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 25px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 16px 32px;
+            background: var(--secondary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #00897B; }
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        footer .logo { color: white; }
+        footer p {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-top: 15px;
+        }
+        @media (max-width: 768px) {
+            .gallery-grid { grid-template-columns: 1fr; }
+            .gallery-item.featured { grid-column: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="/" class="logo">HDIM</a>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/demo">Demo</a>
+            <a href="/investors">Investors</a>
+        </div>
+    </nav>
+
+    <div class="header">
+        <h1>Product Screenshots</h1>
+        <p>Explore the HDIM Clinical Portal - a modern, AI-native healthcare integration platform</p>
+    </div>
+
+    <div class="gallery">
+        <div class="gallery-grid">
+
+            <!-- Featured: Dashboard -->
+            <div class="gallery-item featured">
+                <img src="assets/screenshots/dashboard.png" alt="HDIM Dashboard">
+                <div class="gallery-info">
+                    <h3>Clinical Portal Dashboard</h3>
+                    <p>The main dashboard provides role-based views for Medical Assistants, Registered Nurses, Providers, and Administrators. Key metrics include patients today, results to review, high priority gaps, and overall quality score.</p>
+                    <span class="gallery-tag">Dashboard</span>
+                </div>
+            </div>
+
+            <!-- Patient Management -->
+            <div class="gallery-item">
+                <img src="assets/screenshots/patients.png" alt="Patient Management">
+                <div class="gallery-info">
+                    <h3>Patient Management</h3>
+                    <p>Comprehensive patient list with statistics, master record management, duplicate detection, and advanced filtering by demographics and status.</p>
+                    <span class="gallery-tag">Patient Data</span>
+                </div>
+            </div>
+
+            <!-- Quality Evaluations -->
+            <div class="gallery-item">
+                <img src="assets/screenshots/evaluations.png" alt="Quality Evaluations">
+                <div class="gallery-info">
+                    <h3>Quality Measure Evaluations</h3>
+                    <p>3-step wizard for quality measure assessment: select measure, select patient, and view results. Supports all HEDIS and custom quality measures.</p>
+                    <span class="gallery-tag">Quality Measures</span>
+                </div>
+            </div>
+
+            <!-- Compliance Results -->
+            <div class="gallery-item">
+                <img src="assets/screenshots/results.png" alt="Compliance Results">
+                <div class="gallery-info">
+                    <h3>Compliance Results</h3>
+                    <p>Real-time compliance tracking with visual metrics for compliant, non-compliant, and not eligible patients. Includes outcome distribution charts and compliance by category breakdowns.</p>
+                    <span class="gallery-tag">Analytics</span>
+                </div>
+            </div>
+
+            <!-- Reports -->
+            <div class="gallery-item">
+                <img src="assets/screenshots/reports.png" alt="Quality Reports">
+                <div class="gallery-info">
+                    <h3>Quality Reports</h3>
+                    <p>Generate patient-level and population-level reports. Export capabilities for regulatory compliance, payer reporting, and internal quality improvement initiatives.</p>
+                    <span class="gallery-tag">Reporting</span>
+                </div>
+            </div>
+
+            <!-- Mobile View -->
+            <div class="gallery-item">
+                <img src="assets/screenshots/mobile.png" alt="Mobile Dashboard">
+                <div class="gallery-info">
+                    <h3>Mobile Responsive</h3>
+                    <p>Fully responsive design for access on tablets and mobile devices. Clinicians can review data and take action from anywhere in the facility.</p>
+                    <span class="gallery-tag">Mobile</span>
+                </div>
+            </div>
+
+            <!-- Care Gaps -->
+            <div class="gallery-item">
+                <img src="assets/screenshots/care-gaps.png" alt="Care Gap Management">
+                <div class="gallery-info">
+                    <h3>Care Gap Management</h3>
+                    <p>Identify and track care gaps across your patient population. Prioritize interventions and close gaps to improve quality scores and patient outcomes.</p>
+                    <span class="gallery-tag">Care Gaps</span>
+                </div>
+            </div>
+
+            <!-- Live Monitor -->
+            <div class="gallery-item">
+                <img src="assets/screenshots/live-monitor.png" alt="Live System Monitor">
+                <div class="gallery-info">
+                    <h3>Live System Monitor</h3>
+                    <p>Real-time visibility into system health, service status, and integration connectivity. Proactive monitoring across 15+ microservices with distributed tracing.</p>
+                    <span class="gallery-tag">Observability</span>
+                </div>
+            </div>
+
+            <!-- AI Assistant -->
+            <div class="gallery-item">
+                <img src="assets/screenshots/ai-assistant.png" alt="AI Clinical Assistant">
+                <div class="gallery-info">
+                    <h3>AI Clinical Assistant</h3>
+                    <p>Natural language interface for clinical queries. Ask questions about patients, measures, or guidelines and get instant, contextual answers.</p>
+                    <span class="gallery-tag">AI</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Marketing Visuals Section -->
+    <div class="header" style="margin-top: 60px;">
+        <h1>Marketing Visuals</h1>
+        <p>AI-generated marketing imagery for the HDIM healthcare integration platform</p>
+    </div>
+
+    <div class="gallery">
+        <div class="gallery-grid">
+            <!-- Hero Images -->
+            <div class="gallery-item featured">
+                <img src="assets/marketing/hero/data-flow.png" alt="Data Flow Visualization">
+                <div class="gallery-info">
+                    <h3>Healthcare Data Flow</h3>
+                    <p>Elegant visualization of healthcare data flowing seamlessly between connected systems - hospitals, clinics, and payers.</p>
+                    <span class="gallery-tag">Hero</span>
+                </div>
+            </div>
+
+            <div class="gallery-item">
+                <img src="assets/marketing/hero/platform-architecture.png" alt="Platform Architecture">
+                <div class="gallery-info">
+                    <h3>Platform Architecture</h3>
+                    <p>Isometric visualization of HDIM as the central integration hub connecting Epic, Cerner, payers, labs, and pharmacies.</p>
+                    <span class="gallery-tag">Hero</span>
+                </div>
+            </div>
+
+            <div class="gallery-item">
+                <img src="assets/marketing/hero/ai-healthcare.png" alt="AI Healthcare Fusion">
+                <div class="gallery-info">
+                    <h3>AI-Powered Healthcare</h3>
+                    <p>Abstract representation of AI intelligence transforming healthcare technology and patient care.</p>
+                    <span class="gallery-tag">Hero</span>
+                </div>
+            </div>
+
+            <!-- LinkedIn Ads -->
+            <div class="gallery-item">
+                <img src="assets/marketing/ads/pain-point.png" alt="Integration Pain Point">
+                <div class="gallery-info">
+                    <h3>The Integration Nightmare</h3>
+                    <p>Visualizing the $500K/year integration burden facing hospital IT teams today.</p>
+                    <span class="gallery-tag">LinkedIn</span>
+                </div>
+            </div>
+
+            <div class="gallery-item">
+                <img src="assets/marketing/ads/solution-dashboard.png" alt="Modern Dashboard Solution">
+                <div class="gallery-info">
+                    <h3>The HDIM Solution</h3>
+                    <p>Healthcare IT transformation - calm, controlled, and efficient operations.</p>
+                    <span class="gallery-tag">LinkedIn</span>
+                </div>
+            </div>
+
+            <div class="gallery-item">
+                <img src="assets/marketing/ads/before-after.png" alt="Before and After">
+                <div class="gallery-info">
+                    <h3>Before & After</h3>
+                    <p>Dramatic comparison: Legacy chaos (3.5 days) vs. HDIM efficiency (6 hours).</p>
+                    <span class="gallery-tag">LinkedIn</span>
+                </div>
+            </div>
+
+            <!-- Pitch Deck Visuals -->
+            <div class="gallery-item">
+                <img src="assets/marketing/pitch/problem-maze.png" alt="Problem Maze">
+                <div class="gallery-info">
+                    <h3>The Problem Maze</h3>
+                    <p>Investor pitch visual showing the complexity and scale of healthcare integration challenges.</p>
+                    <span class="gallery-tag">Pitch</span>
+                </div>
+            </div>
+
+            <div class="gallery-item">
+                <img src="assets/marketing/pitch/market-opportunity.png" alt="Market Opportunity">
+                <div class="gallery-info">
+                    <h3>$24.8B Market Opportunity</h3>
+                    <p>Visualizing the massive healthcare interoperability market growth potential.</p>
+                    <span class="gallery-tag">Pitch</span>
+                </div>
+            </div>
+
+            <div class="gallery-item">
+                <img src="assets/marketing/pitch/traction-momentum.png" alt="Traction Momentum">
+                <div class="gallery-info">
+                    <h3>Startup Momentum</h3>
+                    <p>Stylized visualization of HDIM's growth trajectory and market traction.</p>
+                    <span class="gallery-tag">Pitch</span>
+                </div>
+            </div>
+
+            <!-- Social Proof -->
+            <div class="gallery-item">
+                <img src="assets/marketing/social/hospital-success.png" alt="Hospital Success">
+                <div class="gallery-info">
+                    <h3>Hospital Transformation</h3>
+                    <p>Healthcare teams celebrating successful technology transformation and improved operations.</p>
+                    <span class="gallery-tag">Social</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- People Helping People Section -->
+    <div class="header" style="margin-top: 60px;">
+        <h1>People Helping People</h1>
+        <p>How HDIM empowers healthcare providers to deliver better care through unified insights</p>
+    </div>
+
+    <div class="gallery">
+        <div class="gallery-grid">
+            <div class="gallery-item featured">
+                <img src="assets/marketing/people/doctor-patient-insights.png" alt="Doctor-Patient Consultation">
+                <div class="gallery-info">
+                    <h3>Informed Care Conversations</h3>
+                    <p>Physicians confidently share insights with patients, enabled by unified data that tells the complete health story.</p>
+                    <span class="gallery-tag">Patient Care</span>
+                </div>
+            </div>
+
+            <div class="gallery-item">
+                <img src="assets/marketing/people/care-team-collaboration.png" alt="Care Team Collaboration">
+                <div class="gallery-info">
+                    <h3>Care Team Collaboration</h3>
+                    <p>Doctors, nurses, and coordinators work together with shared visibility into patient needs and care gaps.</p>
+                    <span class="gallery-tag">Teamwork</span>
+                </div>
+            </div>
+
+            <div class="gallery-item">
+                <img src="assets/marketing/people/nurse-bedside-access.png" alt="Nurse Bedside Access">
+                <div class="gallery-info">
+                    <h3>Bedside Confidence</h3>
+                    <p>Nurses access critical patient information instantly, focusing on care instead of hunting for data.</p>
+                    <span class="gallery-tag">Nursing</span>
+                </div>
+            </div>
+
+            <div class="gallery-item">
+                <img src="assets/marketing/people/family-consultation.png" alt="Family Consultation">
+                <div class="gallery-info">
+                    <h3>Answering Family Questions</h3>
+                    <p>Providers reassure worried families with clear explanations, backed by comprehensive health records.</p>
+                    <span class="gallery-tag">Communication</span>
+                </div>
+            </div>
+
+            <div class="gallery-item">
+                <img src="assets/marketing/people/population-health-discovery.png" alt="Population Health Discovery">
+                <div class="gallery-info">
+                    <h3>Insights Discovery</h3>
+                    <p>Healthcare leaders uncover hidden patterns and opportunities to improve care across patient populations.</p>
+                    <span class="gallery-tag">Analytics</span>
+                </div>
+            </div>
+
+            <div class="gallery-item">
+                <img src="assets/marketing/people/medical-assistant-empowered.png" alt="Medical Assistant Empowered">
+                <div class="gallery-info">
+                    <h3>Empowered Front-Line Staff</h3>
+                    <p>Medical assistants efficiently serve patients with tools that work, not frustrate.</p>
+                    <span class="gallery-tag">Workflow</span>
+                </div>
+            </div>
+
+            <div class="gallery-item">
+                <img src="assets/marketing/people/care-coordinator-remote.png" alt="Care Coordinator Remote">
+                <div class="gallery-info">
+                    <h3>Care Without Boundaries</h3>
+                    <p>Coordinators connect with patients from anywhere, with full access to their health journey.</p>
+                    <span class="gallery-tag">Coordination</span>
+                </div>
+            </div>
+
+            <div class="gallery-item">
+                <img src="assets/marketing/people/specialist-prepared.png" alt="Specialist Prepared">
+                <div class="gallery-info">
+                    <h3>Specialists Ready to Help</h3>
+                    <p>Specialists review complete patient histories before consultations - no missing records, no surprises.</p>
+                    <span class="gallery-tag">Specialty Care</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cta-section">
+        <h2>Ready to See It In Action?</h2>
+        <p>Schedule a personalized demo to see how HDIM can transform your healthcare integration workflows.</p>
+        <a href="/demo" class="btn">Request Demo</a>
+    </div>
+
+    <footer>
+        <a href="/" class="logo">HDIM</a>
+        <p>Healthcare Data Integration Made Intelligent | HIPAA Compliant | SOC 2 (In Progress)</p>
+        <p style="margin-top: 10px; font-size: 12px;">&copy; 2025 HDIM. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>

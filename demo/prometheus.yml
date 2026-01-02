@@ -1,0 +1,52 @@
+# HDIM Demo - Prometheus Configuration
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Gateway Service
+  - job_name: 'gateway-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['gateway-service:8080']
+    scrape_interval: 15s
+
+  # FHIR Service
+  - job_name: 'fhir-service'
+    metrics_path: '/fhir/actuator/prometheus'
+    static_configs:
+      - targets: ['fhir-service:8085']
+    scrape_interval: 15s
+
+  # Patient Service
+  - job_name: 'patient-service'
+    metrics_path: '/patient/actuator/prometheus'
+    static_configs:
+      - targets: ['patient-service:8084']
+    scrape_interval: 15s
+
+  # Care Gap Service
+  - job_name: 'care-gap-service'
+    metrics_path: '/care-gap/actuator/prometheus'
+    static_configs:
+      - targets: ['care-gap-service:8086']
+    scrape_interval: 15s
+
+  # Quality Measure Service
+  - job_name: 'quality-measure-service'
+    metrics_path: '/quality-measure/actuator/prometheus'
+    static_configs:
+      - targets: ['quality-measure-service:8087']
+    scrape_interval: 15s
+
+  # CQL Engine Service
+  - job_name: 'cql-engine-service'
+    metrics_path: '/cql-engine/actuator/prometheus'
+    static_configs:
+      - targets: ['cql-engine-service:8081']
+    scrape_interval: 15s

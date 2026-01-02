@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="001-create-sdoh-schema" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <schemaExists schemaName="sdoh"/>
+            </not>
+        </preConditions>
+        <sql>CREATE SCHEMA IF NOT EXISTS sdoh;</sql>
+    </changeSet>
+
+    <!-- CMS SDOH-1/SDOH-2 Compliant HRSN Screening Sessions Table -->
+    <changeSet id="002-create-hrsn-screening-sessions-table" author="hdim">
+        <createTable tableName="hrsn_screening_sessions" schemaName="sdoh">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="encounter_id" type="UUID"/>
+            <column name="screening_date" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="screening_tool" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Domain 1: Food Insecurity -->
+            <column name="food_insecurity_completed" type="BOOLEAN"/>
+            <column name="food_insecurity_positive" type="BOOLEAN"/>
+            <column name="food_insecurity_response" type="JSONB"/>
+
+            <!-- Domain 2: Housing Instability -->
+            <column name="housing_instability_completed" type="BOOLEAN"/>
+            <column name="housing_instability_positive" type="BOOLEAN"/>
+            <column name="housing_instability_response" type="JSONB"/>
+
+            <!-- Domain 3: Transportation -->
+            <column name="transportation_completed" type="BOOLEAN"/>
+            <column name="transportation_positive" type="BOOLEAN"/>
+            <column name="transportation_response" type="JSONB"/>
+
+            <!-- Domain 4: Utilities -->
+            <column name="utilities_completed" type="BOOLEAN"/>
+            <column name="utilities_positive" type="BOOLEAN"/>
+            <column name="utilities_response" type="JSONB"/>
+
+            <!-- Domain 5: Interpersonal Safety -->
+            <column name="interpersonal_safety_completed" type="BOOLEAN"/>
+            <column name="interpersonal_safety_positive" type="BOOLEAN"/>
+            <column name="interpersonal_safety_response" type="JSONB"/>
+
+            <!-- Computed Fields -->
+            <column name="all_domains_screened" type="BOOLEAN"/>
+            <column name="any_domain_positive" type="BOOLEAN"/>
+            <column name="positive_domain_count" type="INTEGER"/>
+
+            <!-- Billing -->
+            <column name="billing_code" type="VARCHAR(20)"/>
+            <column name="billing_applied" type="BOOLEAN"/>
+
+            <!-- Status & Metadata -->
+            <column name="status" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="screened_by" type="VARCHAR(100)"/>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="hrsn_screening_sessions" schemaName="sdoh"
+            indexName="idx_hrsn_session_tenant_patient">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex tableName="hrsn_screening_sessions" schemaName="sdoh"
+            indexName="idx_hrsn_session_date">
+            <column name="tenant_id"/>
+            <column name="screening_date"/>
+        </createIndex>
+
+        <createIndex tableName="hrsn_screening_sessions" schemaName="sdoh"
+            indexName="idx_hrsn_session_status">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="hrsn_screening_sessions" schemaName="sdoh"
+            indexName="idx_hrsn_session_all_domains">
+            <column name="tenant_id"/>
+            <column name="all_domains_screened"/>
+        </createIndex>
+
+        <createIndex tableName="hrsn_screening_sessions" schemaName="sdoh"
+            indexName="idx_hrsn_session_positive">
+            <column name="tenant_id"/>
+            <column name="any_domain_positive"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- SDOH Interventions Table -->
+    <changeSet id="003-create-sdoh-interventions-table" author="hdim">
+        <createTable tableName="sdoh_interventions" schemaName="sdoh">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="screening_session_id" type="UUID">
+                <constraints foreignKeyName="fk_intervention_screening_session"
+                    references="sdoh.hrsn_screening_sessions(id)"/>
+            </column>
+            <column name="domain" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="intervention_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_id" type="UUID"/>
+            <column name="resource_name" type="VARCHAR(255)"/>
+            <column name="resource_organization" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referred_by" type="VARCHAR(100)"/>
+            <column name="referred_at" type="TIMESTAMP"/>
+            <column name="scheduled_at" type="TIMESTAMP"/>
+            <column name="completed_at" type="TIMESTAMP"/>
+            <column name="outcome" type="VARCHAR(100)"/>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="sdoh_interventions" schemaName="sdoh"
+            indexName="idx_sdoh_intervention_session">
+            <column name="screening_session_id"/>
+        </createIndex>
+
+        <createIndex tableName="sdoh_interventions" schemaName="sdoh"
+            indexName="idx_sdoh_intervention_patient">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex tableName="sdoh_interventions" schemaName="sdoh"
+            indexName="idx_sdoh_intervention_status">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="sdoh_interventions" schemaName="sdoh"
+            indexName="idx_sdoh_intervention_domain">
+            <column name="tenant_id"/>
+            <column name="domain"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Add comments for CMS compliance documentation -->
+    <changeSet id="004-add-table-comments" author="hdim">
+        <sql>
+            COMMENT ON TABLE sdoh.hrsn_screening_sessions IS
+                'CMS SDOH-1/SDOH-2 compliant HRSN screening sessions tracking all 5 mandatory domains';
+
+            COMMENT ON COLUMN sdoh.hrsn_screening_sessions.all_domains_screened IS
+                'SDOH-1 Numerator: TRUE when all 5 HRSN domains have been screened';
+
+            COMMENT ON COLUMN sdoh.hrsn_screening_sessions.any_domain_positive IS
+                'SDOH-2 Numerator: TRUE when at least one domain has positive result';
+
+            COMMENT ON COLUMN sdoh.hrsn_screening_sessions.billing_code IS
+                'HCPCS G0136: Administration of standardized SDOH risk assessment tool';
+
+            COMMENT ON TABLE sdoh.sdoh_interventions IS
+                'Tracks interventions and referrals for patients with positive HRSN screens';
+        </sql>
+    </changeSet>
+
+    <changeSet id="005-create-sdoh-extended-tables" author="hdim">
+        <comment>Create SDOH extended domain tables</comment>
+
+        <createTable tableName="community_resources" schemaName="sdoh">
+            <column name="resource_id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="organization_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="address" type="VARCHAR(255)"/>
+            <column name="city" type="VARCHAR(100)"/>
+            <column name="state" type="VARCHAR(50)"/>
+            <column name="zip_code" type="VARCHAR(20)"/>
+            <column name="phone_number" type="VARCHAR(50)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="website" type="VARCHAR(255)"/>
+            <column name="services_provided_json" type="TEXT"/>
+            <column name="eligibility_criteria" type="TEXT"/>
+            <column name="hours_of_operation" type="VARCHAR(255)"/>
+            <column name="latitude" type="DOUBLE PRECISION"/>
+            <column name="longitude" type="DOUBLE PRECISION"/>
+            <column name="accepts_walk_ins" type="BOOLEAN"/>
+            <column name="requires_referral" type="BOOLEAN"/>
+            <column name="language" type="VARCHAR(50)"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="sdoh_assessments" schemaName="sdoh">
+            <column name="assessment_id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assessment_date" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="screening_tool" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="responses_json" type="TEXT"/>
+            <column name="identified_needs_json" type="TEXT"/>
+            <column name="identified_z_codes_json" type="TEXT"/>
+            <column name="risk_score" type="DOUBLE PRECISION"/>
+            <column name="assessed_by" type="VARCHAR(100)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="sdoh_diagnoses" schemaName="sdoh">
+            <column name="diagnosis_id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="z_code" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="z_code_description" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="clinical_note" type="TEXT"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="diagnosis_date" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="diagnosed_by" type="VARCHAR(100)"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="resource_referrals" schemaName="sdoh">
+            <column name="referral_id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referral_reason" type="TEXT"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referred_by" type="VARCHAR(100)"/>
+            <column name="referral_date" type="TIMESTAMP"/>
+            <column name="contact_date" type="TIMESTAMP"/>
+            <column name="outcome" type="TEXT"/>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="sdoh_risk_scores" schemaName="sdoh">
+            <column name="score_id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_score" type="DOUBLE PRECISION">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category_scores_json" type="TEXT"/>
+            <column name="risk_level" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assessment_id" type="VARCHAR(100)"/>
+            <column name="calculated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="TEXT"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

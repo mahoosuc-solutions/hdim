@@ -1,0 +1,42 @@
+# Gradle
+.gradle/
+build/
+gradle-home/
+!gradle-wrapper.jar
+*.class
+*.log
+*.pid
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Spring Boot
+application-local.properties
+application-local.yml
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+*~
+# SSL Certificates - Never commit private keys
+ssl/
+*.p12
+*.pem
+*.key
+*.crt
+*.csr

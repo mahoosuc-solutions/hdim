@@ -1,0 +1,9 @@
+{
+  "prompt_id": "STORY-SQUARE",
+  "name": "5-Minute Story Square",
+  "category": "story",
+  "dimensions": "1080x1080",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a square format version of the \"code that saves lives\" concept.\n\nSame concept as split screen, but in square format for Instagram/social.\n\nTOP THIRD:\nA computer terminal showing the commit message:\n\"fix(hipaa): Reduce PHI cache TTL to <=5min for HIPAA compliance\"\nDark code editor background, authentic syntax highlighting.\n\nBOTTOM TWO-THIRDS:\nA warm family image - grandmother with grandchildren, or father with kids.\nNatural lighting, genuine happiness, representing \"what we're protecting.\"..."
+}

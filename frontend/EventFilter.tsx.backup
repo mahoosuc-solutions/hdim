@@ -1,0 +1,242 @@
+/**
+ * EventFilter component
+ * Provides filtering UI for evaluation events by type, measure, and status
+ * Now fully controlled by Zustand store - no local state
+ */
+
+import React, { useState } from 'react';
+import {
+  Box,
+  Chip,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Button,
+  Typography,
+  Badge,
+  Collapse,
+  IconButton,
+  Paper,
+  Stack,
+} from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material/Select';
+import {
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  FilterList as FilterListIcon,
+} from '@mui/icons-material';
+import { EventType } from '../types/events';
+import { useEvaluationStore } from '../store/evaluationStore';
+import type { EventFilters } from '../store/evaluationStore';
+
+// Re-export for backward compatibility
+export type { EventFilters };
+
+interface EventFilterProps {
+  availableEventTypes: EventType[];
+  availableMeasures: string[];
+}
+
+const EventFilterComponent: React.FC<EventFilterProps> = ({
+  availableEventTypes,
+  availableMeasures,
+}) => {
+  const [expanded, setExpanded] = useState(true);
+
+  // Get filters from store (single source of truth)
+  const filters = useEvaluationStore(state => state.eventFilters);
+  const setFilters = useEvaluationStore(state => state.setEventFilters);
+  const updateFilter = useEvaluationStore(state => state.updateEventFilter);
+
+  /**
+   * Toggle an event type in the selection
+   */
+  const handleEventTypeToggle = (eventType: EventType) => {
+    const isSelected = filters.eventTypes.includes(eventType);
+    const newEventTypes = isSelected
+      ? filters.eventTypes.filter((type) => type !== eventType)
+      : [...filters.eventTypes, eventType];
+
+    updateFilter('eventTypes', newEventTypes);
+  };
+
+  /**
+   * Handle measure selection change
+   */
+  const handleMeasureChange = (event: SelectChangeEvent<string>) => {
+    const value = event.target.value;
+    updateFilter('measureId', value === 'all' ? null : value);
+  };
+
+  /**
+   * Quick filter: All
+   */
+  const handleAllFilter = () => {
+    setFilters({
+      eventTypes: [],
+      measureId: null,
+      statusFilter: 'all',
+    });
+  };
+
+  /**
+   * Quick filter: Errors Only
+   */
+  const handleErrorsOnlyFilter = () => {
+    setFilters({
+      ...filters,
+      eventTypes: [EventType.EVALUATION_FAILED],
+      statusFilter: 'errors',
+    });
+  };
+
+  /**
+   * Quick filter: Success Only
+   */
+  const handleSuccessOnlyFilter = () => {
+    setFilters({
+      ...filters,
+      eventTypes: [EventType.EVALUATION_COMPLETED],
+      statusFilter: 'success',
+    });
+  };
+
+  /**
+   * Clear all filters
+   */
+  const handleClearAll = () => {
+    setFilters({
+      eventTypes: [],
+      measureId: null,
+      statusFilter: 'all',
+    });
+  };
+
+  /**
+   * Calculate active filter count
+   */
+  const activeFilterCount =
+    filters.eventTypes.length + (filters.measureId ? 1 : 0);
+
+  return (
+    <Paper elevation={2} sx={{ p: 2, mb: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+        <FilterListIcon sx={{ mr: 1 }} />
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          Event Filters
+        </Typography>
+        <Badge badgeContent={activeFilterCount} color="primary" sx={{ mr: 2 }}>
+          <Box sx={{ width: 24, height: 24 }} />
+        </Badge>
+        <IconButton
+          onClick={() => setExpanded(!expanded)}
+          aria-label={expanded ? 'Collapse filters' : 'Expand filters'}
+          size="small"
+        >
+          {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+        </IconButton>
+      </Box>
+
+      <Collapse in={expanded}>
+        <Stack spacing={2}>
+          {/* Quick Filter Buttons */}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              size="small"
+              variant={filters.statusFilter === 'all' ? 'contained' : 'outlined'}
+              onClick={handleAllFilter}
+            >
+              All
+            </Button>
+            <Button
+              size="small"
+              variant={filters.statusFilter === 'errors' ? 'contained' : 'outlined'}
+              color="error"
+              onClick={handleErrorsOnlyFilter}
+            >
+              Errors Only
+            </Button>
+            <Button
+              size="small"
+              variant={filters.statusFilter === 'success' ? 'contained' : 'outlined'}
+              color="success"
+              onClick={handleSuccessOnlyFilter}
+            >
+              Success Only
+            </Button>
+          </Box>
+
+          {/* Event Type Chips */}
+          <Box>
+            <Typography variant="subtitle2" gutterBottom>
+              Event Types
+            </Typography>
+            {availableEventTypes.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                No event types available
+              </Typography>
+            ) : (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {availableEventTypes.map((eventType) => (
+                  <Chip
+                    key={eventType}
+                    label={eventType}
+                    onClick={() => handleEventTypeToggle(eventType)}
+                    color={
+                      filters.eventTypes.includes(eventType) ? 'primary' : 'default'
+                    }
+                    variant={
+                      filters.eventTypes.includes(eventType) ? 'filled' : 'outlined'
+                    }
+                    className={
+                      filters.eventTypes.includes(eventType)
+                        ? 'MuiChip-filled'
+                        : undefined
+                    }
+                  />
+                ))}
+              </Box>
+            )}
+          </Box>
+
+          {/* Measure Dropdown */}
+          <FormControl fullWidth size="small">
+            <InputLabel id="measure-select-label">Measure</InputLabel>
+            <Select
+              labelId="measure-select-label"
+              id="measure-select"
+              value={filters.measureId === null ? 'all' : filters.measureId}
+              label="Measure"
+              onChange={handleMeasureChange}
+            >
+              <MenuItem value="all">All Measures</MenuItem>
+              {availableMeasures.map((measure) => (
+                <MenuItem key={measure} value={measure}>
+                  {measure}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* Clear All Button */}
+          <Box>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handleClearAll}
+              disabled={activeFilterCount === 0}
+            >
+              Clear All Filters
+            </Button>
+          </Box>
+        </Stack>
+      </Collapse>
+    </Paper>
+  );
+};
+
+// Memoize the component to prevent unnecessary re-renders when props haven't changed
+// This is critical for the MUI Select to work properly without infinite loops
+export const EventFilter = React.memo(EventFilterComponent);
+EventFilter.displayName = 'EventFilter';

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDIM Visual Asset Review Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0066CC',
+                        accent: '#00A5B5',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .status-pending { border-left: 4px solid #EAB308; }
+        .status-approved { border-left: 4px solid #22C55E; }
+        .status-rejected { border-left: 4px solid #EF4444; }
+        .status-published { border-left: 4px solid #3B82F6; }
+        .status-failed { border-left: 4px solid #DC2626; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">HDIM Visual Asset Review Portal</h1>
+                    <p class="text-gray-600 mt-1">Quality control for GTM visual assets</p>
+                </div>
+                <div class="flex gap-4">
+                    <a href="/batch" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                        Batch Review
+                    </a>
+                    <a href="/publish" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                        Publish Assets
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="text-3xl font-bold text-gray-900">{{ stats.total_assets }}</div>
+                <div class="text-sm text-gray-600">Total Assets</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="text-3xl font-bold text-gray-900">{{ stats.total_versions }}</div>
+                <div class="text-sm text-gray-600">Versions Generated</div>
+            </div>
+            <div class="bg-yellow-50 p-4 rounded-lg shadow border border-yellow-200">
+                <div class="text-3xl font-bold text-yellow-700">{{ stats.pending_review }}</div>
+                <div class="text-sm text-yellow-600">Pending Review</div>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg shadow border border-green-200">
+                <div class="text-3xl font-bold text-green-700">{{ stats.approved }}</div>
+                <div class="text-sm text-green-600">Approved</div>
+            </div>
+            <div class="bg-red-50 p-4 rounded-lg shadow border border-red-200">
+                <div class="text-3xl font-bold text-red-700">{{ stats.rejected }}</div>
+                <div class="text-sm text-red-600">Rejected</div>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg shadow border border-blue-200">
+                <div class="text-3xl font-bold text-blue-700">{{ stats.published }}</div>
+                <div class="text-sm text-blue-600">Published</div>
+            </div>
+        </div>
+
+        <!-- Quality Metrics -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Quality Metrics</h2>
+            <div class="grid grid-cols-3 gap-8">
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">Average Quality Score</div>
+                    <div class="flex items-center">
+                        <div class="text-2xl font-bold text-gray-900">{{ "%.1f"|format(stats.avg_quality_score) }}</div>
+                        <div class="text-gray-400 ml-1">/100</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">Average Clarity Score</div>
+                    <div class="flex items-center">
+                        <div class="text-2xl font-bold text-gray-900">{{ "%.1f"|format(stats.avg_clarity_score) }}</div>
+                        <div class="text-gray-400 ml-1">/100</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">Average Iterations</div>
+                    <div class="flex items-center">
+                        <div class="text-2xl font-bold text-gray-900">{{ "%.1f"|format(stats.avg_iterations) }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Asset Grid by Category -->
+        {% for category, category_assets in assets_by_category.items() %}
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4 capitalize">{{ category.replace('-', ' ') }}</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for asset in category_assets %}
+                <div class="bg-white rounded-lg shadow overflow-hidden
+                    {% if asset.human_review_status == 'APPROVED' %}status-approved
+                    {% elif asset.human_review_status == 'REJECTED' %}status-rejected
+                    {% elif asset.human_review_status == 'PENDING' %}status-pending
+                    {% elif asset.is_published %}status-published
+                    {% else %}status-failed{% endif %}">
+
+                    <!-- Image Preview -->
+                    <div class="aspect-video bg-gray-100 relative">
+                        {% if asset.filepath %}
+                        <img src="/preview/{{ asset.filepath }}"
+                             alt="{{ asset.name }}"
+                             class="w-full h-full object-cover">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center text-gray-400">
+                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        {% endif %}
+
+                        <!-- Status Badge -->
+                        <div class="absolute top-2 right-2">
+                            {% if asset.is_published %}
+                            <span class="px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded">Published</span>
+                            {% elif asset.human_review_status == 'APPROVED' %}
+                            <span class="px-2 py-1 bg-green-500 text-white text-xs font-medium rounded">Approved</span>
+                            {% elif asset.human_review_status == 'REJECTED' %}
+                            <span class="px-2 py-1 bg-red-500 text-white text-xs font-medium rounded">Rejected</span>
+                            {% elif asset.human_review_status == 'PENDING' %}
+                            <span class="px-2 py-1 bg-yellow-500 text-white text-xs font-medium rounded">Pending</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-gray-500 text-white text-xs font-medium rounded">Not Generated</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Asset Info -->
+                    <div class="p-4">
+                        <h3 class="font-semibold text-gray-900">{{ asset.name }}</h3>
+                        <p class="text-sm text-gray-500">{{ asset.asset_id }} v{{ asset.version }}</p>
+
+                        {% if asset.version > 0 %}
+                        <!-- Quality Scores -->
+                        <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                                <span class="text-gray-600">Quality:</span>
+                                <span class="font-medium {% if asset.quality_score >= 75 %}text-green-600{% elif asset.quality_score >= 50 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                                    {{ "%.0f"|format(asset.quality_score) }}/100
+                                </span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Clarity:</span>
+                                <span class="font-medium {% if asset.clarity_score >= 75 %}text-green-600{% elif asset.clarity_score >= 50 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                                    {{ "%.0f"|format(asset.clarity_score) }}/100
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Text Accuracy Indicator -->
+                        <div class="mt-2 text-sm">
+                            {% if asset.text_accuracy_status == 'PASS' %}
+                            <span class="text-green-600">&#10003; Text Accuracy: PASS</span>
+                            {% elif asset.text_accuracy_status == 'FAIL' %}
+                            <span class="text-red-600">&#10007; Text Accuracy: FAIL</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Review Button -->
+                        <a href="/review/{{ asset.asset_id }}"
+                           class="mt-4 block w-full text-center py-2 px-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                            Review
+                        </a>
+                        {% else %}
+                        <p class="mt-3 text-sm text-gray-500">Not yet generated</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Empty State -->
+        {% if not assets_by_category %}
+        <div class="bg-white rounded-lg shadow p-12 text-center">
+            <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No assets generated yet</h3>
+            <p class="text-gray-600 mb-4">Run the generation script to create visual assets.</p>
+            <code class="bg-gray-100 px-4 py-2 rounded text-sm">
+                python3 generate_with_qc.py --asset HERO-01
+            </code>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-auto">
+        <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600 text-sm">
+            HDIM Visual Asset Review Portal &middot; Local Development Tool
+        </div>
+    </footer>
+
+    <script>
+        // Auto-refresh every 30 seconds when there are pending assets
+        {% if stats.pending_review > 0 %}
+        setTimeout(() => location.reload(), 30000);
+        {% endif %}
+    </script>
+</body>
+</html>

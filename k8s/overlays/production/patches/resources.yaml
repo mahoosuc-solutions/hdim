@@ -1,0 +1,422 @@
+# Resource limits patch for production environment
+# Higher resources for production workloads
+
+# Gateway Service - production resources
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: gateway-service
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2"
+              memory: "2Gi"
+
+# FHIR Service - high traffic
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fhir-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: fhir-service
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2"
+              memory: "2Gi"
+
+# Patient Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: patient-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: patient-service
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "768Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1536Mi"
+
+# Care Gap Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: care-gap-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: care-gap-service
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "768Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1536Mi"
+
+# Quality Measure Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quality-measure-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: quality-measure-service
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "768Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1536Mi"
+
+# CQL Engine Service - CPU intensive for CQL processing
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cql-engine-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: cql-engine-service
+          resources:
+            requests:
+              cpu: "750m"
+              memory: "1536Mi"
+            limits:
+              cpu: "3"
+              memory: "3Gi"
+
+# Consent Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consent-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: consent-service
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+
+# Event Processing Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-processing-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: event-processing-service
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "768Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1536Mi"
+
+# Event Router Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-router-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: event-router-service
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "768Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1536Mi"
+
+# Agent Runtime Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-runtime-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: agent-runtime-service
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "768Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1536Mi"
+
+# AI Assistant Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-assistant-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: ai-assistant-service
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "768Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1536Mi"
+
+# Agent Builder Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-builder-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: agent-builder-service
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+
+# Analytics Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: analytics-service
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "768Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1536Mi"
+
+# Predictive Analytics Service - ML workloads need more resources
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: predictive-analytics-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: predictive-analytics-service
+          resources:
+            requests:
+              cpu: "750m"
+              memory: "1536Mi"
+            limits:
+              cpu: "3"
+              memory: "4Gi"
+
+# SDOH Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sdoh-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: sdoh-service
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+
+# Approval Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: approval-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: approval-service
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+
+# Payer Workflows Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payer-workflows-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: payer-workflows-service
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "768Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1536Mi"
+
+# CDR Processor Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdr-processor-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: cdr-processor-service
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "768Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1536Mi"
+
+# Data Enrichment Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-enrichment-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: data-enrichment-service
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "768Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1536Mi"
+
+# EHR Connector Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ehr-connector-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: ehr-connector-service
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "768Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1536Mi"
+
+# Documentation Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: documentation-service
+  namespace: hdim
+spec:
+  template:
+    spec:
+      containers:
+        - name: documentation-service
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"

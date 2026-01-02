@@ -1,0 +1,363 @@
+{
+  "name": "FQHC Quest Lab Import",
+  "meta": {
+    "description": "Imports Quest Diagnostics lab results via SFTP and transforms to FHIR Observations for HDIM",
+    "templateId": "hdim-fqhc-quest-lab-v1",
+    "customer": "Community Health Partners",
+    "version": "1.0.0"
+  },
+  "nodes": [
+    {
+      "id": "trigger-sftp",
+      "name": "SFTP Poll Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "sftp-list-files",
+      "name": "List SFTP Files",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "parameters": {
+        "protocol": "sftp",
+        "operation": "list",
+        "path": "/exports/labs/",
+        "options": {
+          "filePattern": "CHP_LABS_*.csv"
+        }
+      },
+      "credentials": {
+        "sftp": {
+          "id": "quest-sftp-credentials",
+          "name": "Quest SFTP"
+        }
+      }
+    },
+    {
+      "id": "filter-new-files",
+      "name": "Filter New Files",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-processed",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notContains",
+                "rightType": "all"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "download-csv",
+      "name": "Download CSV File",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "parameters": {
+        "protocol": "sftp",
+        "operation": "download",
+        "path": "={{ '/exports/labs/' + $json.name }}"
+      },
+      "credentials": {
+        "sftp": {
+          "id": "quest-sftp-credentials",
+          "name": "Quest SFTP"
+        }
+      }
+    },
+    {
+      "id": "parse-csv",
+      "name": "Parse Lab CSV",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [1050, 300],
+      "parameters": {
+        "operation": "fromFile",
+        "fileFormat": "csv",
+        "options": {
+          "headerRow": true,
+          "delimiter": ","
+        }
+      }
+    },
+    {
+      "id": "validate-row",
+      "name": "Validate Required Fields",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1250, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-patient-id",
+              "leftValue": "={{ $json.PATIENT_ID }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "has-test-code",
+              "leftValue": "={{ $json.TEST_CODE }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "has-result",
+              "leftValue": "={{ $json.RESULT }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "map-loinc-codes",
+      "name": "Map LOINC Codes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 300],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// LOINC code mapping for common Quest tests\nconst loincMapping = {\n  '83036': { loinc: '4548-4', display: 'Hemoglobin A1c/Hemoglobin.total in Blood' },\n  '2089-1': { loinc: '2089-1', display: 'LDL Cholesterol Direct' },\n  '2085-9': { loinc: '2085-9', display: 'HDL Cholesterol' },\n  '2093-3': { loinc: '2093-3', display: 'Cholesterol Total' },\n  '2571-8': { loinc: '2571-8', display: 'Triglycerides' },\n  '36916-5': { loinc: '36916-5', display: 'HIV 1+2 Ab+Ag' },\n  '718-7': { loinc: '718-7', display: 'Hemoglobin' },\n  '787-2': { loinc: '787-2', display: 'MCV' },\n  '777-3': { loinc: '777-3', display: 'Platelet count' },\n  '26464-8': { loinc: '26464-8', display: 'WBC count' },\n  '789-8': { loinc: '789-8', display: 'RBC count' },\n  '2345-7': { loinc: '2345-7', display: 'Glucose' },\n  '2160-0': { loinc: '2160-0', display: 'Creatinine' },\n  '3094-0': { loinc: '3094-0', display: 'BUN' },\n  '17861-6': { loinc: '17861-6', display: 'Calcium' },\n  '2951-2': { loinc: '2951-2', display: 'Sodium' },\n  '2823-3': { loinc: '2823-3', display: 'Potassium' },\n  '2075-0': { loinc: '2075-0', display: 'Chloride' },\n  '1920-8': { loinc: '1920-8', display: 'AST' },\n  '1742-6': { loinc: '1742-6', display: 'ALT' }\n};\n\nconst testCode = $input.item.json.TEST_CODE;\nconst mapping = loincMapping[testCode];\n\nreturn {\n  json: {\n    ...$input.item.json,\n    LOINC_CODE: mapping?.loinc || testCode,\n    LOINC_DISPLAY: mapping?.display || $input.item.json.TEST_NAME\n  }\n};"
+      }
+    },
+    {
+      "id": "transform-to-fhir",
+      "name": "Transform to FHIR Observation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1650, 300],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const row = $input.item.json;\n\n// Determine interpretation based on reference range\nlet interpretation = null;\nif (row.REF_HIGH && row.REF_LOW) {\n  const value = parseFloat(row.RESULT);\n  const high = parseFloat(row.REF_HIGH);\n  const low = parseFloat(row.REF_LOW);\n  \n  if (!isNaN(value)) {\n    if (value > high) {\n      interpretation = { code: 'H', display: 'High' };\n    } else if (value < low) {\n      interpretation = { code: 'L', display: 'Low' };\n    } else {\n      interpretation = { code: 'N', display: 'Normal' };\n    }\n  }\n}\n\n// Handle qualitative results (Positive/Negative)\nlet valueComponent = {};\nconst resultValue = row.RESULT;\n\nif (['Positive', 'Negative', 'Reactive', 'Non-Reactive', 'Detected', 'Not Detected'].includes(resultValue)) {\n  valueComponent = {\n    valueString: resultValue\n  };\n} else if (!isNaN(parseFloat(resultValue))) {\n  valueComponent = {\n    valueQuantity: {\n      value: parseFloat(resultValue),\n      unit: row.UNIT || '',\n      system: 'http://unitsofmeasure.org',\n      code: row.UNIT || ''\n    }\n  };\n} else {\n  valueComponent = {\n    valueString: resultValue\n  };\n}\n\n// Build reference range if available\nlet referenceRange = [];\nif (row.REF_LOW || row.REF_HIGH) {\n  const range = {};\n  if (row.REF_LOW) {\n    range.low = { value: parseFloat(row.REF_LOW), unit: row.UNIT };\n  }\n  if (row.REF_HIGH) {\n    range.high = { value: parseFloat(row.REF_HIGH), unit: row.UNIT };\n  }\n  referenceRange.push(range);\n}\n\n// Create unique observation ID\nconst observationId = `quest-${row.TEST_CODE}-${row.PATIENT_ID}-${row.RESULT_DATE.replace(/-/g, '')}`;\n\nconst observation = {\n  resourceType: 'Observation',\n  id: observationId,\n  meta: {\n    source: 'Quest Diagnostics via n8n',\n    lastUpdated: new Date().toISOString()\n  },\n  identifier: [\n    {\n      system: 'http://quest.com/accession',\n      value: `${row.PATIENT_ID}-${row.RESULT_DATE}-${row.TEST_CODE}`\n    }\n  ],\n  status: row.STATUS === 'F' ? 'final' : 'preliminary',\n  category: [\n    {\n      coding: [\n        {\n          system: 'http://terminology.hl7.org/CodeSystem/observation-category',\n          code: 'laboratory',\n          display: 'Laboratory'\n        }\n      ]\n    }\n  ],\n  code: {\n    coding: [\n      {\n        system: 'http://loinc.org',\n        code: row.LOINC_CODE,\n        display: row.LOINC_DISPLAY\n      }\n    ],\n    text: row.TEST_NAME\n  },\n  subject: {\n    reference: `Patient/${row.PATIENT_ID}`,\n    display: `${row.FIRST_NAME} ${row.LAST_NAME}`\n  },\n  effectiveDateTime: row.RESULT_DATE,\n  issued: new Date().toISOString(),\n  ...valueComponent\n};\n\n// Add interpretation if determined\nif (interpretation) {\n  observation.interpretation = [\n    {\n      coding: [\n        {\n          system: 'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation',\n          code: interpretation.code,\n          display: interpretation.display\n        }\n      ]\n    }\n  ];\n}\n\n// Add reference range if available\nif (referenceRange.length > 0) {\n  observation.referenceRange = referenceRange;\n}\n\nreturn { json: observation };"
+      }
+    },
+    {
+      "id": "batch-observations",
+      "name": "Batch into Bundle",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1850, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const observations = $input.all().map(item => item.json);\n\n// Split into batches of 100 for API efficiency\nconst BATCH_SIZE = 100;\nconst batches = [];\n\nfor (let i = 0; i < observations.length; i += BATCH_SIZE) {\n  const batchObservations = observations.slice(i, i + BATCH_SIZE);\n  \n  const bundle = {\n    resourceType: 'Bundle',\n    type: 'batch',\n    timestamp: new Date().toISOString(),\n    entry: batchObservations.map(obs => ({\n      fullUrl: `urn:uuid:${obs.id}`,\n      resource: obs,\n      request: {\n        method: 'PUT',\n        url: `Observation/${obs.id}`\n      }\n    }))\n  };\n  \n  batches.push({ json: bundle });\n}\n\nreturn batches;"
+      }
+    },
+    {
+      "id": "upload-to-hdim",
+      "name": "Upload to HDIM FHIR API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2050, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.healthdatainmotion.com/v1/fhir",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/fhir+json"
+            },
+            {
+              "name": "X-Tenant-ID",
+              "value": "={{ $env.HDIM_TENANT_ID }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "timeout": 60000,
+          "retry": {
+            "enabled": true,
+            "maxRetries": 3,
+            "retryInterval": 2000
+          }
+        }
+      },
+      "credentials": {
+        "oAuth2Api": {
+          "id": "hdim-oauth-credentials",
+          "name": "HDIM API"
+        }
+      }
+    },
+    {
+      "id": "log-success",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2250, 200],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst successCount = items.length;\n\nconst logEntry = {\n  timestamp: new Date().toISOString(),\n  workflow: 'FQHC Quest Lab Import',\n  status: 'SUCCESS',\n  bundlesProcessed: successCount,\n  message: `Successfully uploaded ${successCount} observation bundles to HDIM`\n};\n\nconsole.log(JSON.stringify(logEntry));\n\nreturn [{ json: logEntry }];"
+      }
+    },
+    {
+      "id": "archive-file",
+      "name": "Archive Processed File",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [2250, 400],
+      "parameters": {
+        "protocol": "sftp",
+        "operation": "rename",
+        "oldPath": "={{ $('Download CSV File').item.json.path }}",
+        "newPath": "={{ '/exports/labs/processed/' + $('Download CSV File').item.json.name }}"
+      },
+      "credentials": {
+        "sftp": {
+          "id": "quest-sftp-credentials",
+          "name": "Quest SFTP"
+        }
+      }
+    },
+    {
+      "id": "error-handler",
+      "name": "Handle Errors",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2050, 500],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const error = $input.first().json;\n\nconst errorLog = {\n  timestamp: new Date().toISOString(),\n  workflow: 'FQHC Quest Lab Import',\n  status: 'ERROR',\n  error: error.message || 'Unknown error',\n  details: error\n};\n\n// This would be sent to error tracking/alerting system\nconsole.error(JSON.stringify(errorLog));\n\n// Return for downstream error handling\nreturn [{ json: errorLog }];"
+      }
+    },
+    {
+      "id": "send-alert",
+      "name": "Send Error Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [2250, 500],
+      "parameters": {
+        "fromEmail": "hdim-integration@healthdatainmotion.com",
+        "toEmail": "={{ $env.ALERT_EMAIL }}",
+        "subject": "[HDIM] Quest Lab Import Error - Community Health Partners",
+        "emailType": "text",
+        "message": "An error occurred in the Quest Lab Import workflow:\n\nTimestamp: {{ $json.timestamp }}\nError: {{ $json.error }}\n\nPlease check the n8n dashboard for details.\n\n--\nHDIM Integration Alerts"
+      },
+      "credentials": {
+        "smtp": {
+          "id": "hdim-smtp-credentials",
+          "name": "HDIM SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "trigger-sftp": {
+      "main": [
+        [{ "node": "sftp-list-files", "type": "main", "index": 0 }]
+      ]
+    },
+    "sftp-list-files": {
+      "main": [
+        [{ "node": "filter-new-files", "type": "main", "index": 0 }]
+      ]
+    },
+    "filter-new-files": {
+      "main": [
+        [{ "node": "download-csv", "type": "main", "index": 0 }]
+      ]
+    },
+    "download-csv": {
+      "main": [
+        [{ "node": "parse-csv", "type": "main", "index": 0 }]
+      ]
+    },
+    "parse-csv": {
+      "main": [
+        [{ "node": "validate-row", "type": "main", "index": 0 }]
+      ]
+    },
+    "validate-row": {
+      "main": [
+        [{ "node": "map-loinc-codes", "type": "main", "index": 0 }]
+      ]
+    },
+    "map-loinc-codes": {
+      "main": [
+        [{ "node": "transform-to-fhir", "type": "main", "index": 0 }]
+      ]
+    },
+    "transform-to-fhir": {
+      "main": [
+        [{ "node": "batch-observations", "type": "main", "index": 0 }]
+      ]
+    },
+    "batch-observations": {
+      "main": [
+        [{ "node": "upload-to-hdim", "type": "main", "index": 0 }]
+      ]
+    },
+    "upload-to-hdim": {
+      "main": [
+        [{ "node": "log-success", "type": "main", "index": 0 }],
+        [{ "node": "archive-file", "type": "main", "index": 0 }]
+      ],
+      "error": [
+        [{ "node": "error-handler", "type": "main", "index": 0 }]
+      ]
+    },
+    "error-handler": {
+      "main": [
+        [{ "node": "send-alert", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "error-handler-workflow"
+  },
+  "staticData": null,
+  "tags": ["hdim", "fqhc", "lab-import", "quest", "fhir"]
+}

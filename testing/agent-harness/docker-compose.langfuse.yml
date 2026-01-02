@@ -1,0 +1,74 @@
+# Langfuse v2 Self-Hosted Stack for Agent Testing
+# Based on: https://langfuse.com/self-hosting/v2/docker-compose
+#
+# Usage:
+#   docker compose -f docker-compose.langfuse.yml up -d
+#   Access UI: http://localhost:3100
+#
+# Note: Using v2 for simplicity (no ClickHouse cluster required)
+
+services:
+  # PostgreSQL for Langfuse
+  langfuse-postgres:
+    image: postgres:16-alpine
+    container_name: langfuse-postgres
+    environment:
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: langfuse_secret_password  # CHANGEME in production
+      POSTGRES_DB: langfuse
+    volumes:
+      - langfuse-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "25434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - langfuse-net
+
+  # Langfuse Web Application (v2)
+  langfuse-web:
+    image: langfuse/langfuse:2
+    container_name: langfuse-web
+    depends_on:
+      langfuse-postgres:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://langfuse:langfuse_secret_password@langfuse-postgres:5432/langfuse
+      DIRECT_URL: postgresql://langfuse:langfuse_secret_password@langfuse-postgres:5432/langfuse
+
+      # Security - CHANGEME in production
+      NEXTAUTH_SECRET: your-nextauth-secret-at-least-32-chars-long-changeme
+      SALT: your-salt-for-api-keys-at-least-32-chars-long-changeme
+      ENCRYPTION_KEY: af155451e310c5f706e44e7f3728f4dc1956058ea2ea2d70fdaa4956d81509e5
+
+      # App config
+      NEXTAUTH_URL: http://localhost:3100
+      HOSTNAME: 0.0.0.0
+      PORT: 3100
+
+      # Telemetry (optional - disable for privacy)
+      TELEMETRY_ENABLED: "false"
+
+      # Enable sign-up for initial setup
+      AUTH_DISABLE_SIGNUP: "false"
+    ports:
+      - "3100:3100"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/api/public/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - langfuse-net
+
+volumes:
+  langfuse-postgres-data:
+
+networks:
+  langfuse-net:
+    driver: bridge

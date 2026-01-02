@@ -1,18 +1,20 @@
 # Multi-stage build for CMS Connector Service
 # Stage 1: Build
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM maven:3.8-openjdk-17 AS builder
 
 WORKDIR /app
 
 # Copy Maven files
 COPY pom.xml .
-COPY .mvn .mvn
+
+# Download dependencies (leverage Docker cache)
+RUN mvn dependency:resolve dependency:resolve-plugins
 
 # Copy source code
 COPY src src
 
 # Build application
-RUN ./mvn/bin/mvn clean package -DskipTests -q
+RUN mvn clean package -DskipTests -q
 
 # Stage 2: Runtime
 FROM eclipse-temurin:17-jre-alpine
@@ -25,7 +27,7 @@ LABEL version="1.0.0"
 RUN apk add --no-cache curl
 
 # Create app user (security best practice)
-RUN addgroup -g 1000 app && adduser -u 1000 -G app -s /sbin/nologin app
+RUN addgroup -g 1000 app && adduser -D -u 1000 -G app -s /sbin/nologin app
 
 WORKDIR /app
 

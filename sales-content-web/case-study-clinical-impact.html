@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Study: Clinical Impact - HDIM</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; line-height: 1.7; color: #333; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; background: white; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #1e40af; text-decoration: none; font-size: 0.95em; }
+        .back-link:hover { text-decoration: underline; }
+        .print-button { background: #1e40af; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 20px 0; }
+        .print-button:hover { background: #1e3a8a; }
+        
+        header {
+            border-bottom: 3px solid #1e40af;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            color: #1e40af;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        header .subtitle {
+            color: #666;
+            font-size: 1.05em;
+        }
+
+        h2 {
+            color: #1e40af;
+            font-size: 1.5em;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #dbeafe;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #1e3a8a;
+            font-size: 1.1em;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        p { margin-bottom: 15px; }
+
+        ul, ol { margin-left: 30px; margin-bottom: 15px; }
+        li { margin-bottom: 10px; }
+
+        strong { color: #1e40af; }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .metric-box {
+            background: #f0f9ff;
+            border: 2px solid #bfdbfe;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .metric-box .label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .metric-box .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #1e40af;
+        }
+
+        .metric-box .change {
+            font-size: 0.95em;
+            color: #10b981;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+        .quote-box {
+            background: #f3f4f6;
+            border-left: 4px solid #1e40af;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-style: italic;
+        }
+
+        .quote-attribution {
+            font-style: normal;
+            color: #666;
+            margin-top: 10px;
+            font-size: 0.95em;
+        }
+
+        .timeline {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .timeline-item {
+            margin-bottom: 15px;
+            padding-left: 30px;
+            border-left: 3px solid #1e40af;
+            position: relative;
+        }
+
+        .timeline-item:before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: #1e40af;
+            border-radius: 50%;
+            position: absolute;
+            left: -8px;
+            top: 5px;
+        }
+
+        .timeline-item strong {
+            color: #1e3a8a;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        table th {
+            background: #f3f4f6;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #1e40af;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .highlight {
+            background: #fef3c7;
+            padding: 20px;
+            border-left: 4px solid #f59e0b;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        @media print {
+            .back-link, .print-button { display: none; }
+            .container { background: white; padding: 20px; }
+            body { background: white; }
+        }
+
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.85em;
+            color: #999;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to All Documents</a>
+        <button class="print-button" onclick="window.print()">🖨️ Print as PDF</button>
+
+        <header>
+            <h1>Case Study: Clinical Impact at Regional Care Organization</h1>
+            <div class="subtitle">How real-time gap detection improved quality metrics and generated $265K in Year 1 ROI</div>
+        </header>
+
+        <h2>Organization Profile</h2>
+        <table>
+            <tr>
+                <th>Metric</th>
+                <th>Value</th>
+            </tr>
+            <tr>
+                <td><strong>Organization Type</strong></td>
+                <td>Regional integrated care network</td>
+            </tr>
+            <tr>
+                <td><strong>Attributed Patients</strong></td>
+                <td>15,000</td>
+            </tr>
+            <tr>
+                <td><strong>Network Providers</strong></td>
+                <td>45 (primary care + specialists)</td>
+            </tr>
+            <tr>
+                <td><strong>Care Coordinators</strong></td>
+                <td>10 FTE</td>
+            </tr>
+            <tr>
+                <td><strong>Annual Org Budget</strong></td>
+                <td>$180M</td>
+            </tr>
+            <tr>
+                <td><strong>Payer Mix</strong></td>
+                <td>60% Medicare Advantage, 40% commercial</td>
+            </tr>
+        </table>
+
+        <h2>The Challenge</h2>
+        <p>This organization was performing well on Star ratings (3.4 out of 5) but knew they were leaving gaps—both clinical and financial—on the table.</p>
+
+        <div class="highlight">
+            <strong>The Specific Problem:</strong> Care coordinators were spending 3-4 hours per week hunting for gaps across fragmented systems (Epic EHR, external claims, lab results). They identified only 45% of eligible patients for intervention. The rest were missed entirely—meaning quality measures went unclosed and revenue bonuses went unrealized.
+        </div>
+
+        <h2>The Solution Deployed</h2>
+        <p>The organization implemented Health Data In Motion to:</p>
+        <ul>
+            <li>Identify care gaps in real time (not batch reports)</li>
+            <li>Integrate with existing Epic EHR without disruption</li>
+            <li>Prioritize gaps by impact (highest-value first)</li>
+            <li>Automate care coordinator workflow and tracking</li>
+            <li>Ensure compliance audit trail for every decision</li>
+        </ul>
+
+        <h3>Implementation Timeline</h3>
+        <div class="timeline">
+            <div class="timeline-item">
+                <strong>Weeks 1-2 (Discovery):</strong> Current state assessment, workflow mapping, ROI assumptions confirmed with finance and medical leadership
+            </div>
+            <div class="timeline-item">
+                <strong>Weeks 3-6 (Build):</strong> Data integrations (Epic, claims, external labs), 52 HEDIS measures configured, care coordinator dashboard built
+            </div>
+            <div class="timeline-item">
+                <strong>Weeks 7-8 (Test):</strong> Pilot testing with 3 care coordinators, workflow refinement, user feedback integration
+            </div>
+            <div class="timeline-item">
+                <strong>Weeks 9-10 (Deploy):</strong> Full care coordination team trained, go-live, daily monitoring and support
+            </div>
+            <div class="timeline-item">
+                <strong>Month 3+ (Optimize):</strong> Performance analysis, workflow optimization, expansion planning
+            </div>
+        </div>
+
+        <h2>Results: Year 1</h2>
+
+        <div class="metrics-grid">
+            <div class="metric-box">
+                <div class="label">Gap Closure Rate</div>
+                <div class="number">68%</div>
+                <div class="change">↑ from 45% (+23 points)</div>
+            </div>
+            <div class="metric-box">
+                <div class="label">Star Rating</div>
+                <div class="number">4.0</div>
+                <div class="change">↑ from 3.4 (+0.6 points)</div>
+            </div>
+            <div class="metric-box">
+                <div class="label">Avg HbA1c Attainment</div>
+                <div class="number">78%</div>
+                <div class="change">↑ from 62% (+16 points)</div>
+            </div>
+            <div class="metric-box">
+                <div class="label">BP Control</div>
+                <div class="number">84%</div>
+                <div class="change">↑ from 68% (+16 points)</div>
+            </div>
+        </div>
+
+        <h2>Financial Impact</h2>
+
+        <table>
+            <tr>
+                <th>Benefit Category</th>
+                <th>Year 1 Impact</th>
+                <th>Calculation</th>
+            </tr>
+            <tr>
+                <td><strong>Quality Bonuses</strong></td>
+                <td><strong>$270K</strong></td>
+                <td>Star improvement (3.4→4.0) generates $45K per 0.1 points × 6 points = $270K</td>
+            </tr>
+            <tr>
+                <td><strong>Labor Savings</strong></td>
+                <td><strong>$45K</strong></td>
+                <td>2-3 hrs/week freed × 10 coordinators × $62.5K annual salary</td>
+            </tr>
+            <tr>
+                <td><strong>Shared Savings</strong></td>
+                <td><strong>$120K</strong></td>
+                <td>Fewer ED visits, readmissions from improved gap closure</td>
+            </tr>
+            <tr>
+                <td><strong>Compliance Efficiency</strong></td>
+                <td><strong>$30K</strong></td>
+                <td>Audit prep time: 40 hours → 2 hours per audit</td>
+            </tr>
+            <tr style="background: #f0f9ff; font-weight: bold;">
+                <td>TOTAL GROSS BENEFIT</td>
+                <td>$465K</td>
+                <td>—</td>
+            </tr>
+            <tr>
+                <td><strong>Software License (Year 1)</strong></td>
+                <td><strong>($100K)</strong></td>
+                <td>Annual SaaS fee (negotiated)</td>
+            </tr>
+            <tr>
+                <td><strong>Implementation & Training</strong></td>
+                <td><strong>($50K)</strong></td>
+                <td>One-time setup, data integration, team training</td>
+            </tr>
+            <tr>
+                <td><strong>Integration & Customization</strong></td>
+                <td><strong>($50K)</strong></td>
+                <td>Epic workflow customization, alerts tuning</td>
+            </tr>
+            <tr style="background: #f0f9ff; font-weight: bold;">
+                <td>TOTAL COST</td>
+                <td>($200K)</td>
+                <td>—</td>
+            </tr>
+            <tr style="background: #dcfce7; font-weight: bold;">
+                <td>NET YEAR 1 BENEFIT</td>
+                <td>$265K</td>
+                <td>147% ROI | 4.9-month payback</td>
+            </tr>
+        </table>
+
+        <h2>Year 2+ Projection</h2>
+        <p>With repeating annual benefit (~$400K) and only maintenance costs (~$100K/year):</p>
+        <ul>
+            <li><strong>Year 2 Net Benefit:</strong> $300K (300% ROI)</li>
+            <li><strong>Year 3 Net Benefit:</strong> $300K (300% ROI)</li>
+            <li><strong>3-Year Total Benefit:</strong> $865K (net of all costs)</li>
+        </ul>
+
+        <h2>Voice of the Customer</h2>
+
+        <h3>Care Coordinator</h3>
+        <div class="quote-box">
+            "Before HDIM, I spent 3-4 hours a week hunting for gaps. I'd manually review charts, check claims, call external providers for labs. Now? The system tells me exactly who needs what, and I can focus on actually helping patients. It's freed up real time in my day."
+            <div class="quote-attribution">— Senior Care Coordinator, Medicare Advantage Team</div>
+        </div>
+
+        <h3>Physician (Primary Care)</h3>
+        <div class="quote-box">
+            "I like that it's evidence-based. All the measures are based on HEDIS guidelines and clinical evidence. And it integrates right into my workflow—I'm not jumping between systems. The coordinators tell me what's missing, I fix it during the visit."
+            <div class="quote-attribution">— Primary Care Physician, Network Provider</div>
+        </div>
+
+        <h3>Director of Operations</h3>
+        <div class="quote-box">
+            "The financial ROI is what sold me. $265K net benefit in Year 1? That pays for the system and then some. But what I didn't expect was how much it improves our quality rankings and payer relationships. The combination is huge for the organization."
+            <div class="quote-attribution">— Director of Operations, Regional Network</div>
+        </div>
+
+        <h3>Compliance Officer</h3>
+        <div class="quote-box">
+            "Our audits used to take 2 weeks of prep—pulling documents, proving decisions. Now it's 2 hours. Everything is logged. Every access, every policy enforcement, every alert and action. We're audit-ready 365 days a year."
+            <div class="quote-attribution">— Chief Compliance Officer</div>
+        </div>
+
+        <h2>Key Success Factors</h2>
+        <ul>
+            <li><strong>Leadership alignment:</strong> CEO, CFO, Chief Medical Officer all aligned on ROI and timeline before launch</li>
+            <li><strong>Care coordinator adoption:</strong> Workflow designed with coordinators' input, not imposed on them</li>
+            <li><strong>Realistic ROI assumptions:</strong> Validated with finance team before implementation</li>
+            <li><strong>Phased rollout:</strong> Pilot with 3 coordinators before full team deployment</li>
+            <li><strong>Daily monitoring:</strong> First month had daily check-ins to catch issues early</li>
+            <li><strong>Measure-driven optimization:</strong> Alerts tuned based on actual coordinator feedback and action rates</li>
+        </ul>
+
+        <h2>Lessons Learned</h2>
+        <ul>
+            <li><strong>Speed matters:</strong> Real-time alerts create urgency. Batch reports do not. Coordinators act on 80% of real-time alerts vs 20% of batch reports.</li>
+            <li><strong>Integration is critical:</strong> When HDIM alerts appear in the Epic workflow instead of a separate system, adoption is immediate.</li>
+            <li><strong>Prioritization reduces alert fatigue:</strong> 20-30 prioritized alerts/day have 80% action rate vs 100+ random alerts/day with 5% action rate.</li>
+            <li><strong>Compliance is a hidden benefit:</strong> Customer didn't expect the audit efficiency gain, but it's been transformative.</li>
+            <li><strong>Measure results fast:</strong> They were seeing gap closure improvements in Week 4 (after go-live). This builds momentum for expansion.</li>
+        </ul>
+
+        <h2>Future Expansion (Year 2)</h2>
+        <p>Based on Year 1 success, the organization is planning to:</p>
+        <ul>
+            <li>Expand to 3 additional specialty practices (orthopedics, cardiology, behavioral health)</li>
+            <li>Add chronic disease management workflows (diabetes, hypertension, COPD)</li>
+            <li>Implement patient-facing engagement (text alerts, patient portals)</li>
+            <li>Build predictive risk scoring (identify at-risk patients before they gap)</li>
+        </ul>
+
+        <p>These expansions are expected to add an additional $200K+ Year 2 benefit with minimal additional cost.</p>
+
+        <h2>Bottom Line</h2>
+        <div class="highlight">
+            <p><strong>Health Data In Motion delivered exactly what was promised:</strong> 68% gap closure (vs 45% baseline), +0.6 Star rating improvement, $265K net Year 1 ROI, and a 4.9-month payback period.</p>
+            <p>For a 15K-patient organization, that translates to $270K in quality bonuses, $45K in labor savings, and $120K in shared savings—all from a tool that cost $200K to implement.</p>
+            <p><strong>Recommendation:</strong> Deploy in organizations with 10,000+ attributed patients, value-based contracts, and an already-strong care coordination team. ROI and implementation success are highest in this segment.</p>
+        </div>
+
+        <footer>
+            <p>HDIM Case Study | November 19, 2025</p>
+            <p><a href="index.html">← Back to All Documents</a></p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{
+  "name": "ai-assistant-service",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "backend/modules/services/ai-assistant-service/src",
+  "tags": [
+    "backend",
+    "service"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/modules/services/ai-assistant-service/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:ai-assistant-service:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:ai-assistant-service:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:ai-assistant-service:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:ai-assistant-service:test :modules:services:ai-assistant-service:jacocoTestReport :modules:services:ai-assistant-service:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

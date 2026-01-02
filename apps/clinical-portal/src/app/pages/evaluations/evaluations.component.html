@@ -1,0 +1,636 @@
+<div class="evaluations-container">
+  <div class="page-header">
+    <h1 class="page-title">Quality Measure Evaluations</h1>
+  </div>
+
+  <!-- Quick Access: Favorites & Recent Measures -->
+  @if (measureFavorites.favoritesCount() > 0 || measureFavorites.hasRecent()) {
+    <mat-card class="quick-access-card">
+      <mat-card-header>
+        <mat-icon class="card-header-icon">bolt</mat-icon>
+        <mat-card-title>Quick Access</mat-card-title>
+        <mat-card-subtitle>Select from your favorites or recently used measures</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <!-- Favorite Measures -->
+        @if (measureFavorites.favoritesCount() > 0) {
+          <div class="quick-access-section">
+            <div class="section-header">
+              <mat-icon class="section-icon favorite-icon">star</mat-icon>
+              <span class="section-title">Favorites</span>
+              <span class="section-count">({{ measureFavorites.favoritesCount() }})</span>
+            </div>
+            <div class="quick-chips">
+              @for (measure of getFavoriteMeasures(); track measure.id) {
+                <button
+                  mat-stroked-button
+                  class="quick-chip favorite-chip"
+                  (click)="quickSelectMeasure(measure)"
+                  [matTooltip]="measure.displayName"
+                  aria-label="Quick select {{ measure.displayName }}">
+                  <mat-icon class="chip-icon">star</mat-icon>
+                  <span class="chip-label">{{ measure.name }}</span>
+                  <button
+                    mat-icon-button
+                    class="chip-remove"
+                    (click)="toggleFavorite(measure, $event)"
+                    matTooltip="Remove from favorites"
+                    aria-label="Remove {{ measure.name }} from favorites">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Recent Measures -->
+        @if (measureFavorites.hasRecent()) {
+          <div class="quick-access-section">
+            <div class="section-header">
+              <mat-icon class="section-icon recent-icon">history</mat-icon>
+              <span class="section-title">Recently Used</span>
+              <button
+                mat-icon-button
+                class="clear-recent-btn"
+                (click)="measureFavorites.clearRecent()"
+                matTooltip="Clear recent history"
+                aria-label="Clear recent measures history">
+                <mat-icon>clear_all</mat-icon>
+              </button>
+            </div>
+            <div class="quick-chips">
+              @for (measure of getRecentMeasures(); track measure.id; let i = $index) {
+                @if (i < 5) {
+                  <button
+                    mat-stroked-button
+                    class="quick-chip recent-chip"
+                    (click)="quickSelectMeasure(measure)"
+                    [matTooltip]="measure.displayName"
+                    aria-label="Quick select {{ measure.displayName }}">
+                    <mat-icon class="chip-icon">schedule</mat-icon>
+                    <span class="chip-label">{{ measure.name }}</span>
+                  </button>
+                }
+              }
+            </div>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Evaluation Form Card -->
+  <mat-card class="evaluation-form-card">
+    <mat-card-header>
+      <mat-card-title>Submit New Evaluation</mat-card-title>
+      <mat-card-subtitle>
+        Select a quality measure and patient to evaluate compliance
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Form Progress Indicator -->
+      <div class="form-progress">
+        <div class="progress-step" [class.completed]="evaluationForm.get('measureId')?.value" [class.active]="!evaluationForm.get('measureId')?.value">
+          <div class="step-number">1</div>
+          <div class="step-label">Select Measure</div>
+        </div>
+        <div class="progress-connector" [class.completed]="evaluationForm.get('measureId')?.value"></div>
+        <div class="progress-step" [class.completed]="selectedPatient" [class.active]="evaluationForm.get('measureId')?.value && !selectedPatient">
+          <div class="step-number">2</div>
+          <div class="step-label">Select Patient</div>
+        </div>
+        <div class="progress-connector" [class.completed]="selectedPatient"></div>
+        <div class="progress-step" [class.completed]="evaluationResult" [class.active]="selectedPatient && !evaluationResult">
+          <div class="step-number">3</div>
+          <div class="step-label">View Results</div>
+        </div>
+      </div>
+
+      <!-- Error Messages -->
+      @if (measuresError) {
+        <app-error-banner
+          [message]="measuresError"
+          [dismissible]="true"
+          (dismiss)="measuresError = null">
+        </app-error-banner>
+      }
+      @if (patientsError) {
+        <app-error-banner
+          [message]="patientsError"
+          [dismissible]="true"
+          (dismiss)="patientsError = null">
+        </app-error-banner>
+      }
+
+      <!-- Evaluation Form -->
+      <form [formGroup]="evaluationForm" (ngSubmit)="submitEvaluation()" aria-label="Quality measure evaluation form">
+        <div class="form-row form-step" [class.step-active]="!evaluationForm.get('measureId')?.value">
+          <div class="step-indicator">
+            <span class="step-badge" aria-label="Step 1 of 3">Step 1</span>
+          </div>
+
+          <!-- Measure Filter Section -->
+          <div class="measure-filter-section">
+            <!-- Measure Search Input -->
+            <mat-form-field class="measure-search-field" appearance="outline">
+              <mat-label>
+                Search Measures
+                <mat-icon
+                  matTooltip="Search by measure name, display name, or description"
+                  matTooltipPosition="above"
+                  class="help-icon"
+                  aria-hidden="true">search</mat-icon>
+              </mat-label>
+              <input
+                matInput
+                [(ngModel)]="measureSearchTerm"
+                [ngModelOptions]="{standalone: true}"
+                (ngModelChange)="onMeasureSearchChange($event)"
+                placeholder="Type to search measures..."
+                aria-label="Search measures by name or description"
+                type="search"
+              />
+              <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+              @if (measureSearchTerm) {
+                <button
+                  mat-icon-button
+                  matSuffix
+                  (click)="clearMeasureSearch()"
+                  matTooltip="Clear search"
+                  aria-label="Clear measure search">
+                  <mat-icon>close</mat-icon>
+                </button>
+              }
+            </mat-form-field>
+
+            <!-- Category Filter -->
+            <mat-form-field class="category-filter" appearance="outline">
+              <mat-label>
+                Filter by Category
+                <mat-icon
+                  matTooltip="Filter measures by clinical category to narrow down your selection"
+                  matTooltipPosition="above"
+                  class="help-icon"
+                  aria-hidden="true">filter_list</mat-icon>
+              </mat-label>
+              <mat-select
+                [(value)]="selectedCategory"
+                (selectionChange)="onCategoryChange($event.value)"
+                aria-label="Filter measures by category">
+                @for (category of measureCategories; track category.value) {
+                  <mat-option [value]="category.value">
+                    {{ category.label }}
+                    @if (getCategoryCount(category.value) > 0) {
+                      <span class="category-count">({{ getCategoryCount(category.value) }})</span>
+                    }
+                  </mat-option>
+                }
+              </mat-select>
+              <mat-icon matPrefix aria-hidden="true">category</mat-icon>
+            </mat-form-field>
+
+            <!-- Filter Status -->
+            @if (measureSearchTerm || selectedCategory) {
+              <div class="filter-status">
+                <mat-icon>filter_alt</mat-icon>
+                <span>Showing {{ getFilteredMeasureCount() }} of {{ allMeasures.length }} measures</span>
+                <button
+                  mat-button
+                  color="primary"
+                  (click)="clearAllMeasureFilters()"
+                  aria-label="Clear all filters">
+                  Clear Filters
+                </button>
+              </div>
+            }
+          </div>
+
+          <!-- Measure Selection -->
+          <mat-form-field class="full-width" appearance="outline">
+            <mat-label>
+              Quality Measure
+              <mat-icon
+                matTooltip="Select a HEDIS quality measure to evaluate patient compliance. Each measure has specific clinical criteria that determine if a patient meets quality standards."
+                matTooltipPosition="above"
+                class="help-icon"
+                aria-hidden="true">help_outline</mat-icon>
+            </mat-label>
+            <mat-select
+              formControlName="measureId"
+              aria-label="Select a quality measure to evaluate"
+              aria-required="true"
+              [attr.aria-invalid]="evaluationForm.get('measureId')?.invalid && evaluationForm.get('measureId')?.touched">
+              @if (loadingMeasures) {
+                <mat-option value="">
+                  <mat-spinner diameter="20" aria-hidden="true"></mat-spinner>
+                  Loading measures...
+                </mat-option>
+              }
+              @for (measure of measures; track measure.id) {
+                <mat-option [value]="measure.name">
+                  <span class="measure-option">
+                    <button
+                      mat-icon-button
+                      class="favorite-toggle"
+                      (click)="toggleFavorite(measure, $event)"
+                      [matTooltip]="isFavorite(measure.id) ? 'Remove from favorites' : 'Add to favorites'"
+                      [attr.aria-label]="isFavorite(measure.id) ? 'Remove ' + measure.name + ' from favorites' : 'Add ' + measure.name + ' to favorites'">
+                      <mat-icon [class.favorited]="isFavorite(measure.id)">
+                        {{ isFavorite(measure.id) ? 'star' : 'star_border' }}
+                      </mat-icon>
+                    </button>
+                    <span class="measure-name">{{ measure.displayName }}</span>
+                    @if (measure.category) {
+                      <span class="measure-category-badge">{{ measure.category }}</span>
+                    }
+                  </span>
+                </mat-option>
+              }
+              @if (!loadingMeasures && measures.length === 0) {
+                <mat-option value="" disabled>
+                  No measures available
+                  @if (selectedCategory) {
+                    in this category
+                  }
+                </mat-option>
+              }
+            </mat-select>
+            <mat-icon matPrefix aria-hidden="true">assessment</mat-icon>
+            <mat-hint id="measure-hint">
+              @if (selectedCategory) {
+                Showing {{ measures.length }} measures in {{ selectedCategory }} category
+              } @else {
+                Select from {{ measures.length }} available HEDIS measures
+              }
+            </mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row form-step" [class.step-active]="evaluationForm.get('measureId')?.value && !selectedPatient">
+          <div class="step-indicator">
+            <span class="step-badge" aria-label="Step 2 of 3">Step 2</span>
+          </div>
+          <!-- Patient Search with Autocomplete -->
+          <mat-form-field class="full-width" appearance="outline">
+            <mat-label>
+              Search Patient
+              <mat-icon
+                matTooltip="Search for a patient by name or Medical Record Number (MRN). Start typing to see matching patients from your registry."
+                matTooltipPosition="above"
+                class="help-icon"
+                aria-hidden="true">help_outline</mat-icon>
+            </mat-label>
+            <input
+              type="text"
+              matInput
+              formControlName="patientSearch"
+              [matAutocomplete]="auto"
+              placeholder="Type name or MRN..."
+              aria-label="Search for a patient by name or medical record number"
+              aria-required="true"
+              [attr.aria-invalid]="evaluationForm.get('patientSearch')?.invalid && evaluationForm.get('patientSearch')?.touched"
+              role="combobox"
+              aria-autocomplete="list"
+              [attr.aria-expanded]="auto.isOpen"
+            />
+            <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+            @if (selectedPatient) {
+              <mat-icon matSuffix color="primary" aria-label="Patient selected">check_circle</mat-icon>
+            }
+            <mat-hint id="patient-hint">Search by patient name or MRN</mat-hint>
+
+            <mat-autocomplete
+              #auto="matAutocomplete"
+              [displayWith]="displayPatient"
+              (optionSelected)="onPatientSelected($event.option.value)"
+            >
+              @for (patient of filteredPatients | async; track patient.id) {
+                <mat-option [value]="patient">
+                  <div class="patient-option">
+                    <span class="patient-name">{{ patient.fullName }}</span>
+                    <span class="patient-details">
+                      @if (patient.mrn) {
+                        MRN: {{ patient.mrn }} |
+                      }
+                      @if (patient.age) {
+                        Age: {{ patient.age }} |
+                      }
+                      {{ patient.gender }}
+                    </span>
+                  </div>
+                </mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+
+        <!-- Selected Patient Info -->
+        @if (selectedPatient) {
+          <div class="selected-patient-card">
+            <h4>Selected Patient</h4>
+            <div class="patient-info">
+              <p><strong>Name:</strong> {{ selectedPatient.fullName }}</p>
+              @if (selectedPatient.mrn) {
+                <p><strong>MRN:</strong> {{ selectedPatient.mrn }}</p>
+              }
+              @if (selectedPatient.dateOfBirth) {
+                <p><strong>DOB:</strong> {{ selectedPatient.dateOfBirth }}</p>
+              }
+              @if (selectedPatient.age) {
+                <p><strong>Age:</strong> {{ selectedPatient.age }} years</p>
+              }
+              <p><strong>Gender:</strong> {{ selectedPatient.gender }}</p>
+              <p><strong>Status:</strong> {{ selectedPatient.status }}</p>
+            </div>
+          </div>
+        }
+
+        <!-- Action Buttons -->
+        <div class="form-actions">
+          <app-loading-button
+            [loading]="submitting"
+            [disabled]="evaluationForm.invalid || !selectedPatient"
+            [color]="'primary'"
+            [type]="'submit'"
+            (buttonClick)="submitEvaluation()">
+            <mat-icon>play_arrow</mat-icon>
+            Submit Evaluation
+          </app-loading-button>
+
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="resetForm()"
+            [disabled]="submitting"
+            [attr.aria-disabled]="submitting"
+            aria-label="Reset evaluation form"
+          >
+            <mat-icon aria-hidden="true">refresh</mat-icon>
+            Reset
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Evaluation Result Card -->
+  @if (evaluationResult) {
+    <mat-card class="result-card mt-3">
+      <mat-card-header>
+        <mat-card-title>Evaluation Result</mat-card-title>
+        <mat-icon [class]="getStatusClass(evaluationResult)" class="result-icon">
+          {{ evaluationResult.numeratorCompliant ? 'check_circle' : 'cancel' }}
+        </mat-icon>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="result-summary">
+          <h3 [class]="getStatusClass(evaluationResult)">
+            {{ getStatusText(evaluationResult) }}
+          </h3>
+
+          <div class="result-details">
+            <div class="result-row">
+              <span class="label">Measure:</span>
+              <span class="value">{{ evaluationResult.measureName }}</span>
+            </div>
+            <div class="result-row">
+              <span class="label">Category:</span>
+              <span class="value">{{ evaluationResult.measureCategory }}</span>
+            </div>
+            <div class="result-row">
+              <span class="label">Denominator Eligible:</span>
+              <span class="value">
+                <mat-icon [class]="evaluationResult.denominatorEligible ? 'status-success' : 'status-error'">
+                  {{ evaluationResult.denominatorEligible ? 'check' : 'close' }}
+                </mat-icon>
+                {{ evaluationResult.denominatorEligible ? 'Yes' : 'No' }}
+              </span>
+            </div>
+            <div class="result-row">
+              <span class="label">Numerator Compliant:</span>
+              <span class="value">
+                <mat-icon [class]="evaluationResult.numeratorCompliant ? 'status-success' : 'status-error'">
+                  {{ evaluationResult.numeratorCompliant ? 'check' : 'close' }}
+                </mat-icon>
+                {{ evaluationResult.numeratorCompliant ? 'Yes' : 'No' }}
+              </span>
+            </div>
+            <div class="result-row">
+              <span class="label">Compliance Rate:</span>
+              <span class="value">
+                {{
+                  evaluationResult.complianceRate !== undefined &&
+                  evaluationResult.complianceRate !== null
+                    ? evaluationResult.complianceRate.toFixed(1)
+                    : 'N/A'
+                }}%
+              </span>
+            </div>
+            <div class="result-row">
+              <span class="label">Score:</span>
+              <span class="value">{{ evaluationResult.score !== undefined ? evaluationResult.score.toFixed(2) : (evaluationResult.complianceRate !== undefined ? evaluationResult.complianceRate.toFixed(2) : 'N/A') }}</span>
+            </div>
+            <div class="result-row">
+              <span class="label">Calculation Date:</span>
+              <span class="value">{{ evaluationResult.calculationDate | date: 'short' }}</span>
+            </div>
+            @if (evaluationResult.cqlLibrary) {
+              <div class="result-row">
+                <span class="label">CQL Library:</span>
+                <span class="value">{{ evaluationResult.cqlLibrary }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Evaluation Error -->
+  @if (evaluationError) {
+    <app-error-banner
+      [message]="evaluationError"
+      [title]="'Evaluation Failed'"
+      [dismissible]="true"
+      (dismiss)="evaluationError = null">
+    </app-error-banner>
+  }
+
+  <!-- Evaluations History Table -->
+  <mat-card class="evaluations-table-card mt-3">
+    <mat-card-header>
+      <mat-card-title>Evaluation History</mat-card-title>
+      <mat-card-subtitle>
+        View and manage past quality measure evaluations
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Bulk Actions Toolbar -->
+      @if (selection.hasValue()) {
+        <div class="bulk-actions-toolbar">
+          <div class="selection-info">
+            <mat-icon>check_circle</mat-icon>
+            <span>{{ getSelectionCount() }} row(s) selected</span>
+          </div>
+          <div class="bulk-actions">
+            <app-loading-button
+              text="Export Selected"
+              icon="download"
+              variant="raised"
+              color="primary"
+              ariaLabel="Export selected evaluations to CSV"
+              (buttonClick)="exportSelectedToCSV()">
+            </app-loading-button>
+            <app-loading-button
+              text="Delete Selected"
+              icon="delete"
+              variant="raised"
+              color="warn"
+              ariaLabel="Delete selected evaluations"
+              (buttonClick)="deleteSelected()">
+            </app-loading-button>
+            <app-loading-button
+              text="Clear Selection"
+              icon="clear"
+              variant="raised"
+              ariaLabel="Clear selection"
+              (buttonClick)="clearSelection()">
+            </app-loading-button>
+          </div>
+        </div>
+      }
+
+      <!-- Table -->
+      <div class="table-container">
+        <table mat-table [dataSource]="dataSource" matSort class="evaluations-table">
+          <!-- Checkbox Column -->
+          <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef>
+              <mat-checkbox
+                (change)="$event ? masterToggle() : null"
+                [checked]="selection.hasValue() && isAllSelected()"
+                [indeterminate]="selection.hasValue() && !isAllSelected()"
+                [aria-label]="checkboxLabel()"
+                matTooltip="Select all evaluations">
+              </mat-checkbox>
+            </th>
+            <td mat-cell *matCellDef="let evaluation">
+              <mat-checkbox
+                (click)="$event.stopPropagation()"
+                (change)="$event ? selection.toggle(evaluation) : null"
+                [checked]="selection.isSelected(evaluation)"
+                [aria-label]="checkboxLabel(evaluation)"
+                matTooltip="Select this evaluation">
+              </mat-checkbox>
+            </td>
+          </ng-container>
+
+          <!-- Calculation Date Column -->
+          <ng-container matColumnDef="calculationDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header matTooltip="Date when the evaluation was performed">
+              Evaluation Date
+            </th>
+            <td mat-cell *matCellDef="let evaluation">
+              {{ formatDate(evaluation.calculationDate) }}
+            </td>
+          </ng-container>
+
+          <!-- Patient ID Column -->
+          <ng-container matColumnDef="patientId">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header matTooltip="Patient identifier">
+              Patient ID
+            </th>
+            <td mat-cell *matCellDef="let evaluation">
+              {{ evaluation.patientId }}
+            </td>
+          </ng-container>
+
+          <!-- Measure Name Column -->
+          <ng-container matColumnDef="measureName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header matTooltip="Name of the quality measure">
+              Measure
+            </th>
+            <td mat-cell *matCellDef="let evaluation">
+              {{ evaluation.measureName }}
+            </td>
+          </ng-container>
+
+          <!-- Measure Category Column -->
+          <ng-container matColumnDef="measureCategory">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header matTooltip="Category of the quality measure">
+              Category
+            </th>
+            <td mat-cell *matCellDef="let evaluation">
+              <span class="category-badge">{{ evaluation.measureCategory }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Outcome Column -->
+          <ng-container matColumnDef="outcome">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header matTooltip="Evaluation outcome status">
+              Outcome
+            </th>
+            <td mat-cell *matCellDef="let evaluation">
+              <span [class]="getStatusClass(evaluation)" class="status-badge">
+                {{ getOutcomeText(evaluation) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Compliance Rate Column -->
+          <ng-container matColumnDef="complianceRate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header matTooltip="Compliance percentage">
+              Compliance Rate
+            </th>
+            <td mat-cell *matCellDef="let evaluation">
+              {{ evaluation.complianceRate }}%
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef matTooltip="Available actions">
+              Actions
+            </th>
+            <td mat-cell *matCellDef="let evaluation">
+              <button
+                mat-icon-button
+                [matTooltip]="'View details'"
+                aria-label="View evaluation details">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+          <!-- No Data Row -->
+          <tr class="mat-row no-data-row" *matNoDataRow>
+            <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+              <div class="no-data">
+                <mat-icon>assessment</mat-icon>
+                <p>No evaluations found. Submit an evaluation to see results here.</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Paginator -->
+        <mat-paginator
+          [pageSizeOptions]="[10, 25, 50, 100]"
+          [pageSize]="25"
+          showFirstLastButtons
+          aria-label="Select page of evaluations">
+        </mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading Overlay -->
+  <app-loading-overlay [isLoading]="loadingMeasures || loadingPatients"></app-loading-overlay>
+</div>

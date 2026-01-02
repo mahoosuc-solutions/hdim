@@ -1,0 +1,371 @@
+# HealthData Platform - Production Docker Compose Configuration
+# Version: 2.0.0
+
+version: '3.9'
+
+services:
+  # Main Application Service
+  healthdata-platform:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      args:
+        BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
+        VCS_REF: ${VCS_REF:-$(git rev-parse --short HEAD)}
+    image: healthdata/platform:${VERSION:-2.0.0}
+    container_name: healthdata-platform-prod
+    hostname: healthdata-platform
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      # Spring Boot Configuration
+      SPRING_PROFILES_ACTIVE: production
+      SPRING_APPLICATION_NAME: healthdata-platform
+
+      # Database Configuration
+      SPRING_DATASOURCE_URL: jdbc:postgresql://healthdata-postgres:5432/${DB_NAME:-healthdata}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-healthdata}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?Database password required}
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 20
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 5
+      SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: 30000
+      SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT: 600000
+      SPRING_DATASOURCE_HIKARI_MAX_LIFETIME: 1800000
+
+      # JPA/Hibernate Configuration
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_JPA_SHOW_SQL: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_USE_SQL_COMMENTS: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_BATCH_SIZE: 25
+      SPRING_JPA_PROPERTIES_HIBERNATE_ORDER_INSERTS: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_ORDER_UPDATES: "true"
+
+      # Liquibase Configuration
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
+
+      # Redis Configuration
+      SPRING_DATA_REDIS_HOST: healthdata-redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:?Redis password required}
+      SPRING_DATA_REDIS_TIMEOUT: 60000
+      SPRING_CACHE_TYPE: redis
+      SPRING_CACHE_REDIS_TIME_TO_LIVE: 3600000
+
+      # Security Configuration
+      JWT_SECRET: ${JWT_SECRET:?JWT secret required}
+      JWT_EXPIRATION: 86400000
+      JWT_REFRESH_EXPIRATION: 604800000
+
+      # Kafka Configuration
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: healthdata-kafka:9092
+      SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
+      SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.springframework.kafka.support.serializer.JsonSerializer
+      SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: org.apache.kafka.common.serialization.StringDeserializer
+      SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: org.springframework.kafka.support.serializer.JsonDeserializer
+      SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: earliest
+      SPRING_KAFKA_CONSUMER_GROUP_ID: healthdata-platform
+
+      # Actuator Configuration
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: when_authorized
+      MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED: "true"
+
+      # Logging Configuration
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_HEALTHDATA: DEBUG
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: INFO
+      LOGGING_LEVEL_ORG_HIBERNATE: WARN
+      LOGGING_PATTERN_CONSOLE: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+      LOGGING_FILE_NAME: /app/logs/healthdata-platform.log
+      LOGGING_FILE_MAX_SIZE: 100MB
+      LOGGING_FILE_MAX_HISTORY: 30
+    depends_on:
+      healthdata-postgres:
+        condition: service_healthy
+      healthdata-redis:
+        condition: service_healthy
+      healthdata-kafka:
+        condition: service_started
+    networks:
+      - healthdata-network
+    volumes:
+      - app-logs:/app/logs
+      - app-tmp:/app/tmp
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # PostgreSQL Database
+  healthdata-postgres:
+    image: postgres:16-alpine
+    container_name: healthdata-postgres-prod
+    hostname: healthdata-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-healthdata}
+      POSTGRES_USER: ${DB_USER:-healthdata}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Database password required}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+      PGDATA: /var/lib/postgresql/data/pgdata
+      # Performance tuning
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_INITDB_WALDIR: /var/lib/postgresql/data/pg_wal
+    command: >
+      postgres
+      -c max_connections=300
+      -c shared_buffers=512MB
+      -c effective_cache_size=2GB
+      -c maintenance_work_mem=128MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=8MB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+      -c max_worker_processes=8
+      -c max_parallel_workers_per_gather=4
+      -c max_parallel_workers=8
+      -c log_destination=stderr
+      -c logging_collector=on
+      -c log_directory=/var/log/postgresql
+      -c log_filename=postgresql-%Y-%m-%d.log
+      -c log_rotation_age=1d
+      -c log_rotation_size=100MB
+      -c log_min_duration_statement=1000
+      -c log_line_prefix='%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+    volumes:
+      - postgres-data-prod:/var/lib/postgresql/data
+      - postgres-logs:/var/log/postgresql
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - healthdata-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-healthdata} -d ${DB_NAME:-healthdata}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis Cache
+  healthdata-redis:
+    image: redis:7-alpine
+    container_name: healthdata-redis-prod
+    hostname: healthdata-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --requirepass ${REDIS_PASSWORD:?Redis password required}
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --loglevel notice
+      --logfile /var/log/redis/redis.log
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data-prod:/data
+      - redis-logs:/var/log/redis
+    networks:
+      - healthdata-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Kafka Message Broker
+  healthdata-kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: healthdata-kafka-prod
+    hostname: healthdata-kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: healthdata-zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://healthdata-kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_COMPRESSION_TYPE: snappy
+    depends_on:
+      - healthdata-zookeeper
+    ports:
+      - "${KAFKA_PORT:-9092}:9092"
+    volumes:
+      - kafka-data-prod:/var/lib/kafka/data
+    networks:
+      - healthdata-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+  # Zookeeper for Kafka
+  healthdata-zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: healthdata-zookeeper-prod
+    hostname: healthdata-zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SYNC_LIMIT: 5
+      ZOOKEEPER_INIT_LIMIT: 10
+      ZOOKEEPER_MAX_CLIENT_CNXNS: 60
+      ZOOKEEPER_AUTOPURGE_SNAP_RETAIN_COUNT: 3
+      ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: 24
+    ports:
+      - "${ZOOKEEPER_PORT:-2181}:2181"
+    volumes:
+      - zookeeper-data-prod:/var/lib/zookeeper/data
+      - zookeeper-logs-prod:/var/lib/zookeeper/log
+    networks:
+      - healthdata-network
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+  # Nginx Reverse Proxy (Optional - for production frontend)
+  healthdata-nginx:
+    image: nginx:1.25-alpine
+    container_name: healthdata-nginx-prod
+    hostname: healthdata-nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx-cache:/var/cache/nginx
+      - nginx-logs:/var/log/nginx
+    depends_on:
+      - healthdata-platform
+    networks:
+      - healthdata-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+volumes:
+  # Application volumes
+  app-logs:
+    driver: local
+  app-tmp:
+    driver: local
+
+  # Database volumes
+  postgres-data-prod:
+    driver: local
+  postgres-logs:
+    driver: local
+
+  # Cache volumes
+  redis-data-prod:
+    driver: local
+  redis-logs:
+    driver: local
+
+  # Kafka volumes
+  kafka-data-prod:
+    driver: local
+  zookeeper-data-prod:
+    driver: local
+  zookeeper-logs-prod:
+    driver: local
+
+  # Nginx volumes
+  nginx-cache:
+    driver: local
+  nginx-logs:
+    driver: local
+
+networks:
+  healthdata-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+          gateway: 172.28.0.1

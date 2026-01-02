@@ -1,0 +1,62 @@
+{
+  "ci": {
+    "collect": {
+      "startServerCommand": "npm run build && npm run start",
+      "startServerReadyPattern": "ready on",
+      "url": [
+        "http://localhost:3000/",
+        "http://localhost:3000/features",
+        "http://localhost:3000/pricing",
+        "http://localhost:3000/demo",
+        "http://localhost:3000/about",
+        "http://localhost:3000/contact"
+      ],
+      "numberOfRuns": 3,
+      "settings": {
+        "preset": "desktop",
+        "chromeFlags": "--no-sandbox --disable-dev-shm-usage"
+      }
+    },
+    "assert": {
+      "preset": "lighthouse:recommended",
+      "assertions": {
+        "categories:performance": ["error", { "minScore": 0.9 }],
+        "categories:accessibility": ["error", { "minScore": 0.95 }],
+        "categories:best-practices": ["error", { "minScore": 0.9 }],
+        "categories:seo": ["error", { "minScore": 0.95 }],
+        "first-contentful-paint": ["warn", { "maxNumericValue": 2000 }],
+        "largest-contentful-paint": ["warn", { "maxNumericValue": 2500 }],
+        "cumulative-layout-shift": ["warn", { "maxNumericValue": 0.1 }],
+        "total-blocking-time": ["warn", { "maxNumericValue": 300 }],
+        "speed-index": ["warn", { "maxNumericValue": 3000 }],
+        "interactive": ["warn", { "maxNumericValue": 3500 }],
+        "uses-responsive-images": "warn",
+        "offscreen-images": "warn",
+        "unminified-css": "error",
+        "unminified-javascript": "error",
+        "unused-css-rules": "warn",
+        "modern-image-formats": "warn",
+        "uses-optimized-images": "warn",
+        "uses-text-compression": "error",
+        "uses-rel-preconnect": "warn",
+        "font-display": "warn",
+        "meta-description": "error",
+        "http-status-code": "error",
+        "robots-txt": "warn",
+        "viewport": "error",
+        "document-title": "error",
+        "html-has-lang": "error",
+        "meta-viewport": "error",
+        "aria-allowed-attr": "error",
+        "aria-required-attr": "error",
+        "button-name": "error",
+        "image-alt": "error",
+        "label": "error",
+        "link-name": "error"
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

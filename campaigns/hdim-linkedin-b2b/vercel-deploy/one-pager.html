@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDIM - Investor One-Pager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @page {
+            size: letter;
+            margin: 0.4in;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 9pt;
+            line-height: 1.4;
+            color: #2C3E50;
+            background: #ffffff;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.4in;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #1E3A5F;
+            margin-bottom: 12px;
+        }
+
+        .logo {
+            font-size: 28pt;
+            font-weight: 700;
+            color: #1E3A5F;
+            letter-spacing: -1px;
+        }
+
+        .tagline {
+            font-size: 11pt;
+            color: #00A9A5;
+            margin-top: 2px;
+        }
+
+        .subtitle {
+            font-size: 9pt;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Section Styling */
+        .section {
+            margin-bottom: 10px;
+        }
+
+        .section-title {
+            font-size: 10pt;
+            font-weight: 700;
+            color: #1E3A5F;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #E0E0E0;
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+        }
+
+        /* Problem/Solution */
+        .problem-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 4px;
+        }
+
+        .problem-item .icon {
+            color: #E65100;
+            font-weight: 700;
+            margin-right: 6px;
+            flex-shrink: 0;
+        }
+
+        .solution-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 4px;
+        }
+
+        .solution-item .icon {
+            color: #2E7D32;
+            font-weight: 700;
+            margin-right: 6px;
+            flex-shrink: 0;
+        }
+
+        /* CMS Mandate Box */
+        .mandate-box {
+            background: linear-gradient(135deg, #1E3A5F 0%, #2C5282 100%);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .mandate-title {
+            font-size: 9pt;
+            font-weight: 600;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .mandate-date {
+            font-size: 14pt;
+            font-weight: 700;
+        }
+
+        .mandate-subtitle {
+            font-size: 8pt;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+
+        .mandate-penalty {
+            font-size: 7pt;
+            opacity: 0.75;
+            margin-top: 2px;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .metric-box {
+            background: #F5F7FA;
+            border-radius: 4px;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 18pt;
+            font-weight: 700;
+            color: #2E7D32;
+            line-height: 1.1;
+        }
+
+        .metric-label {
+            font-size: 7pt;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-top: 2px;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8pt;
+        }
+
+        th {
+            background: #F5F7FA;
+            padding: 6px 8px;
+            text-align: left;
+            font-weight: 600;
+            color: #1E3A5F;
+            border-bottom: 1px solid #E0E0E0;
+        }
+
+        td {
+            padding: 5px 8px;
+            border-bottom: 1px solid #F0F0F0;
+        }
+
+        /* Market Stats */
+        .market-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px dotted #E0E0E0;
+        }
+
+        .market-stat:last-child {
+            border-bottom: none;
+        }
+
+        .market-value {
+            font-size: 14pt;
+            font-weight: 700;
+            color: #1E3A5F;
+        }
+
+        .market-label {
+            font-size: 8pt;
+            color: #666;
+        }
+
+        /* Business Model */
+        .model-phase {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            padding: 6px 8px;
+            background: #F5F7FA;
+            border-radius: 4px;
+        }
+
+        .model-phase .arrow {
+            color: #00A9A5;
+            font-weight: 700;
+            margin: 0 8px;
+        }
+
+        .model-phase .label {
+            font-weight: 600;
+            color: #1E3A5F;
+        }
+
+        .model-phase .value {
+            margin-left: auto;
+            font-weight: 700;
+            color: #2E7D32;
+        }
+
+        /* Team */
+        .team-member {
+            margin-bottom: 8px;
+        }
+
+        .team-name {
+            font-weight: 700;
+            color: #1E3A5F;
+        }
+
+        .team-role {
+            font-size: 8pt;
+            color: #666;
+        }
+
+        .team-details {
+            font-size: 8pt;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        /* The Ask */
+        .ask-box {
+            background: #F5F7FA;
+            border: 2px solid #1E3A5F;
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .ask-amount {
+            font-size: 20pt;
+            font-weight: 700;
+            color: #1E3A5F;
+        }
+
+        .ask-terms {
+            font-size: 9pt;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .use-of-funds {
+            margin-top: 10px;
+        }
+
+        .fund-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .fund-label {
+            width: 80px;
+            font-size: 8pt;
+        }
+
+        .fund-bar-outer {
+            flex: 1;
+            height: 8px;
+            background: #E0E0E0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .fund-bar-inner {
+            height: 100%;
+            background: #00A9A5;
+            border-radius: 4px;
+        }
+
+        .fund-percent {
+            width: 30px;
+            text-align: right;
+            font-size: 8pt;
+            font-weight: 600;
+        }
+
+        /* Milestones */
+        .milestone {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3px;
+        }
+
+        .milestone-check {
+            color: #00A9A5;
+            margin-right: 6px;
+        }
+
+        /* Vision */
+        .vision-box {
+            background: linear-gradient(135deg, #00A9A5 0%, #00897B 100%);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .vision-quote {
+            font-style: italic;
+            font-size: 10pt;
+            line-height: 1.5;
+        }
+
+        .vision-tagline {
+            font-weight: 700;
+            font-size: 9pt;
+            margin-top: 6px;
+            opacity: 0.95;
+        }
+
+        /* Contact Footer */
+        .footer {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 2px solid #1E3A5F;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .contact-info {
+            font-size: 9pt;
+        }
+
+        .contact-name {
+            font-weight: 700;
+            color: #1E3A5F;
+        }
+
+        .contact-details {
+            color: #666;
+        }
+
+        .footer-logo {
+            font-size: 14pt;
+            font-weight: 700;
+            color: #1E3A5F;
+        }
+
+        /* Traction bullets */
+        .traction-bullets {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            margin-top: 6px;
+            font-size: 8pt;
+        }
+
+        .traction-bullet {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .traction-bullet .dot {
+            color: #00A9A5;
+            margin-right: 4px;
+        }
+
+        /* HIPAA Badge */
+        .hipaa-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #1E3A5F 0%, #2C5282 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 8pt;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .hipaa-badge .shield {
+            font-size: 10pt;
+        }
+
+        /* Clinical Features Box */
+        .clinical-features-box {
+            background: #F0FFF4;
+            border: 1px solid #2E7D32;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-top: 10px;
+        }
+
+        .clinical-features-box .title {
+            font-size: 9pt;
+            font-weight: 700;
+            color: #2E7D32;
+            margin-bottom: 6px;
+        }
+
+        .clinical-feature-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 3px;
+            font-size: 8pt;
+        }
+
+        .clinical-feature-item .check {
+            color: #2E7D32;
+            margin-right: 5px;
+            font-weight: 700;
+        }
+
+        /* Enterprise Badge */
+        .enterprise-badge {
+            background: #E8F4FD;
+            border: 1px solid #1E3A5F;
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-top: 8px;
+        }
+
+        .enterprise-badge .title {
+            font-size: 8pt;
+            font-weight: 700;
+            color: #1E3A5F;
+            margin-bottom: 4px;
+        }
+
+        .enterprise-badge .items {
+            font-size: 7pt;
+            color: #666;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                padding: 0;
+            }
+
+            .mandate-box,
+            .vision-box,
+            .hipaa-badge {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">HDIM</div>
+        <div class="tagline">Healthcare Data Integration Made Intelligent</div>
+        <div class="subtitle">AI-Native FHIR Integration Platform</div>
+        <div class="hipaa-badge">
+            <span class="shield">&#128737;</span>
+            <span>HIPAA Compliant | SOC 2 Ready | BAA Available | Production Ready</span>
+        </div>
+    </header>
+
+    <!-- Problem / Solution Grid -->
+    <div class="grid">
+        <div class="section">
+            <div class="section-title">The Problem</div>
+            <p style="margin-bottom: 8px; font-size: 9pt;">Every hospital spends <strong>$300-500K/year</strong> maintaining brittle point-to-point interfaces:</p>
+            <div class="problem-item">
+                <span class="icon">✗</span>
+                <span>6-month backlog for new integrations</span>
+            </div>
+            <div class="problem-item">
+                <span class="icon">✗</span>
+                <span>3-4 day prior authorization delays</span>
+            </div>
+            <div class="problem-item">
+                <span class="icon">✗</span>
+                <span>40% of IT budget on maintenance</span>
+            </div>
+            <div class="problem-item">
+                <span class="icon">✗</span>
+                <span>EHR updates break existing workflows</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">The Solution</div>
+            <p style="margin-bottom: 8px; font-size: 9pt;"><strong>HDIM</strong> is an AI-native FHIR platform that eliminates integration debt:</p>
+            <div class="solution-item">
+                <span class="icon">✓</span>
+                <span><strong>82% faster</strong> prior authorizations</span>
+            </div>
+            <div class="solution-item">
+                <span class="icon">✓</span>
+                <span><strong>85% reduction</strong> in IT maintenance</span>
+            </div>
+            <div class="solution-item">
+                <span class="icon">✓</span>
+                <span><strong>60-90 day</strong> deployment (vs. 12-18 mo)</span>
+            </div>
+            <div class="solution-item">
+                <span class="icon">✓</span>
+                <span><strong>Zero tech debt</strong> architecture</span>
+            </div>
+            <div class="solution-item">
+                <span class="icon">✓</span>
+                <span><strong>All EHRs</strong> (Epic, Cerner, AllScripts)</span>
+            </div>
+            <div style="margin-top: 8px; border-radius: 4px; overflow: hidden; border: 1px solid #E0E0E0;">
+                <img src="assets/screenshots/dashboard.png" alt="HDIM Clinical Portal" style="width: 100%; height: auto; display: block;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Clinical Features Box -->
+    <div class="clinical-features-box full-width">
+        <div class="title">New Clinical Features - Production Ready</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+            <div class="clinical-feature-item"><span class="check">✓</span> Advanced Doctor Workflows (Phase 4)</div>
+            <div class="clinical-feature-item"><span class="check">✓</span> CMS/HEDIS Report Templates Library</div>
+            <div class="clinical-feature-item"><span class="check">✓</span> Patient Health Services Integration</div>
+            <div class="clinical-feature-item"><span class="check">✓</span> Automated Compliance Reporting</div>
+        </div>
+    </div>
+
+    <!-- CMS Mandate -->
+    <div class="mandate-box full-width">
+        <div class="mandate-title">CMS Interoperability & Prior Authorization Final Rule (CMS-0057-F)</div>
+        <div class="mandate-date">All payers MUST implement FHIR APIs by January 1, 2026</div>
+        <div class="mandate-subtitle">Largest healthcare IT mandate since HITECH (2009) | Hospitals making purchasing decisions NOW</div>
+    </div>
+
+    <!-- Traction Metrics -->
+    <div class="section full-width">
+        <div class="section-title">Traction</div>
+        <div class="metrics-grid">
+            <div class="metric-box">
+                <div class="metric-value">82%</div>
+                <div class="metric-label">Faster Prior Auth</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-value">85%</div>
+                <div class="metric-label">Fewer IT Tickets</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-value">60-90</div>
+                <div class="metric-label">Days to Deploy</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-value">100%</div>
+                <div class="metric-label">FHIR Compliant</div>
+            </div>
+        </div>
+        <div class="traction-bullets">
+            <div class="traction-bullet"><span class="dot">●</span> 2+ pilot customers live</div>
+            <div class="traction-bullet"><span class="dot">●</span> 5+ enterprise deals in pipeline</div>
+            <div class="traction-bullet"><span class="dot">●</span> Regional Medical Center: 3.5 days → 6 hours</div>
+            <div class="traction-bullet"><span class="dot">●</span> IT tickets: 340/mo → 52/mo</div>
+        </div>
+        <div class="enterprise-badge">
+            <div class="title">Enterprise-Grade Infrastructure</div>
+            <div class="items">Distributed Tracing (15+ Services) | Production Monitoring with AlertManager | AI Agent Testing with Langfuse Observability</div>
+        </div>
+    </div>
+
+    <!-- Market / Business Model Grid -->
+    <div class="grid">
+        <div class="section">
+            <div class="section-title">Market Opportunity</div>
+            <div class="market-stat">
+                <span class="market-value">$24.8B</span>
+                <span class="market-label">TAM - Interoperability (2035)</span>
+            </div>
+            <div class="market-stat">
+                <span class="market-value">$8.2B</span>
+                <span class="market-label">SAM - US Hospitals (2030)</span>
+            </div>
+            <div class="market-stat">
+                <span class="market-value">15.2%</span>
+                <span class="market-label">CAGR (2025-2035)</span>
+            </div>
+            <div class="market-stat">
+                <span class="market-value">5,000+</span>
+                <span class="market-label">US hospitals need solutions</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Business Model</div>
+            <div class="model-phase">
+                <span class="label">LAND</span>
+                <span class="arrow">→</span>
+                <span>Prior Auth Automation</span>
+                <span class="value">$50-100K</span>
+            </div>
+            <div class="model-phase">
+                <span class="label">EXPAND</span>
+                <span class="arrow">→</span>
+                <span>All Clinical Workflows + CMS/HEDIS</span>
+                <span class="value">$300-600K</span>
+            </div>
+            <table style="margin-top: 8px;">
+                <tr>
+                    <td>Gross Margin</td>
+                    <td style="text-align: right; font-weight: 600;">75-80%</td>
+                </tr>
+                <tr>
+                    <td>LTV:CAC</td>
+                    <td style="text-align: right; font-weight: 600;">15-25x</td>
+                </tr>
+                <tr>
+                    <td>Payback Period</td>
+                    <td style="text-align: right; font-weight: 600;">6-9 months</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Competition -->
+    <div class="section full-width">
+        <div class="section-title">Competitive Advantage</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Competitor</th>
+                    <th>Their Approach</th>
+                    <th>Why HDIM Wins</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Mirth / Rhapsody</strong></td>
+                    <td>Legacy integration engine</td>
+                    <td>Creates tech debt; 12-18 mo implementations</td>
+                </tr>
+                <tr>
+                    <td><strong>InterSystems</strong></td>
+                    <td>Enterprise platform</td>
+                    <td>Expensive, complex, vendor lock-in</td>
+                </tr>
+                <tr>
+                    <td><strong>Redox</strong></td>
+                    <td>API-first developer tool</td>
+                    <td>Developer tool, not complete workflows</td>
+                </tr>
+                <tr>
+                    <td><strong>Epic / Cerner</strong></td>
+                    <td>Native integration</td>
+                    <td>Only works within their ecosystem</td>
+                </tr>
+            </tbody>
+        </table>
+        <p style="margin-top: 6px; font-size: 8pt; font-weight: 600; color: #1E3A5F;">HDIM: Only AI-native, HIPAA-compliant, vendor-agnostic, zero-tech-debt platform with BAA available</p>
+    </div>
+
+    <!-- Team / Ask Grid -->
+    <div class="grid">
+        <div class="section">
+            <div class="section-title">The Team</div>
+            <div class="team-member">
+                <div class="team-name">[Founder/CEO Name]</div>
+                <div class="team-details">• [XX] years healthcare IT • Previously: [Company]</div>
+            </div>
+            <div class="team-member">
+                <div class="team-name">[CTO Name]</div>
+                <div class="team-details">• [XX] years engineering • Previously: [Company]</div>
+            </div>
+            <div class="team-member">
+                <div class="team-name" style="font-size: 8pt;">Advisors</div>
+                <div class="team-details">[Healthcare CIO], [Technical Expert]</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">The Ask</div>
+            <div class="ask-box">
+                <div class="ask-amount">$1.5 - 2.5M</div>
+                <div class="ask-terms">SAFE @ $10-12M Cap | 20% Discount</div>
+                <div class="use-of-funds">
+                    <div class="fund-bar">
+                        <span class="fund-label">Engineering</span>
+                        <div class="fund-bar-outer"><div class="fund-bar-inner" style="width: 50%;"></div></div>
+                        <span class="fund-percent">50%</span>
+                    </div>
+                    <div class="fund-bar">
+                        <span class="fund-label">Sales/Mktg</span>
+                        <div class="fund-bar-outer"><div class="fund-bar-inner" style="width: 30%;"></div></div>
+                        <span class="fund-percent">30%</span>
+                    </div>
+                    <div class="fund-bar">
+                        <span class="fund-label">Operations</span>
+                        <div class="fund-bar-outer"><div class="fund-bar-inner" style="width: 20%;"></div></div>
+                        <span class="fund-percent">20%</span>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 8px; font-size: 8pt;">
+                <strong>18-Month Milestones:</strong>
+                <div class="milestone"><span class="milestone-check">✓</span> 15-20 enterprise customers</div>
+                <div class="milestone"><span class="milestone-check">✓</span> $2M+ ARR</div>
+                <div class="milestone"><span class="milestone-check">✓</span> Series A ready</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vision -->
+    <div class="vision-box full-width">
+        <div class="vision-quote">"A world where healthcare data flows seamlessly between every system, enabling AI to deliver better care at lower cost - with enterprise-grade security and full HIPAA compliance."</div>
+        <div class="vision-tagline">HDIM is the secure, compliant integration layer for AI-enabled healthcare.</div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="contact-info">
+            <div class="contact-name">[Founder Name]</div>
+            <div class="contact-details">[email@company.com] | [phone] | [website]</div>
+        </div>
+        <div class="footer-logo">HDIM</div>
+    </footer>
+
+</body>
+</html>

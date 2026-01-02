@@ -1,0 +1,122 @@
+<mat-expansion-panel [expanded]="expanded" class="filter-panel">
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      {{ title }}
+      <span class="filter-count" *ngIf="getActiveFilterChips().length > 0">
+        ({{ getActiveFilterChips().length }})
+      </span>
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <div class="filter-panel-content">
+    <!-- Filter Fields -->
+    <div class="filter-fields">
+      <ng-container *ngFor="let filter of filters; trackBy: trackByKey">
+        <!-- Text Input -->
+        <mat-form-field *ngIf="filter.type === 'text'" appearance="outline">
+          <mat-label>{{ filter.label }}</mat-label>
+          <input
+            matInput
+            [(ngModel)]="filterValues[filter.key]"
+            [placeholder]="filter.placeholder || ''"
+            [attr.aria-label]="filter.label">
+        </mat-form-field>
+
+        <!-- Select -->
+        <mat-form-field *ngIf="filter.type === 'select'" appearance="outline">
+          <mat-label>{{ filter.label }}</mat-label>
+          <mat-select
+            [(ngModel)]="filterValues[filter.key]"
+            [placeholder]="filter.placeholder || ''"
+            [attr.aria-label]="filter.label">
+            <mat-option [value]="undefined">All</mat-option>
+            <mat-option
+              *ngFor="let option of filter.options"
+              [value]="option.value">
+              {{ option.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Date Range -->
+        <div *ngIf="filter.type === 'date-range'" class="date-range-filter">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ filter.label }} - Start</mat-label>
+            <input
+              matInput
+              [matDatepicker]="startPicker"
+              [(ngModel)]="filterValues[filter.key + '_start']"
+              [attr.aria-label]="filter.label + ' start date'">
+            <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ filter.label }} - End</mat-label>
+            <input
+              matInput
+              [matDatepicker]="endPicker"
+              [(ngModel)]="filterValues[filter.key + '_end']"
+              [attr.aria-label]="filter.label + ' end date'">
+            <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        <!-- Number Range -->
+        <div *ngIf="filter.type === 'number-range'" class="number-range-filter">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ filter.label }} - Min</mat-label>
+            <input
+              matInput
+              type="number"
+              [(ngModel)]="filterValues[filter.key + '_min']"
+              [attr.aria-label]="filter.label + ' minimum'">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ filter.label }} - Max</mat-label>
+            <input
+              matInput
+              type="number"
+              [(ngModel)]="filterValues[filter.key + '_max']"
+              [attr.aria-label]="filter.label + ' maximum'">
+          </mat-form-field>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- Actions -->
+    <div class="filter-actions">
+      <button
+        mat-stroked-button
+        (click)="onReset()"
+        aria-label="Reset all filters">
+        Reset
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="onApply()"
+        aria-label="Apply filters">
+        Apply Filters
+      </button>
+    </div>
+
+    <!-- Active Filter Chips -->
+    <div class="active-filters" *ngIf="getActiveFilterChips().length > 0">
+      <div class="active-filters-label">Active Filters:</div>
+      <mat-chip-set aria-label="Active filters">
+        <mat-chip
+          *ngFor="let chip of getActiveFilterChips()"
+          (removed)="onRemoveChip(chip.key)"
+          [attr.aria-label]="'Filter: ' + chip.label + ' is ' + chip.value">
+          <strong>{{ chip.label }}:</strong> {{ chip.value }}
+          <button matChipRemove [attr.aria-label]="'Remove ' + chip.label + ' filter'">
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </mat-chip>
+      </mat-chip-set>
+    </div>
+  </div>
+</mat-expansion-panel>

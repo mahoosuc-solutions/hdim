@@ -1,0 +1,293 @@
+<app-page-header
+  title="Agent Builder"
+  icon="smart_toy"
+  [showBackButton]="false">
+  <ng-container actions>
+    <button mat-stroked-button type="button" (click)="loadAgents()" [disabled]="loading" [attr.aria-disabled]="loading" aria-label="Refresh agents list">
+      <mat-icon aria-hidden="true">refresh</mat-icon>
+      Refresh
+    </button>
+    <button mat-flat-button type="button" color="primary" (click)="openCreateDialog()" aria-label="Create new agent">
+      <mat-icon aria-hidden="true">add</mat-icon>
+      Create Agent
+    </button>
+  </ng-container>
+</app-page-header>
+
+<!-- Runtime Health Warning -->
+@if (!runtimeHealthy) {
+  <div class="health-warning">
+    <mat-icon>warning</mat-icon>
+    <span>Agent runtime is unavailable. Testing and publishing may be affected.</span>
+  </div>
+}
+
+<!-- Stats Cards -->
+<div class="stats-row">
+  <mat-card class="stat-card">
+    <mat-card-content>
+      <div class="stat-value">{{ statusCounts.all }}</div>
+      <div class="stat-label">Total Agents</div>
+    </mat-card-content>
+  </mat-card>
+  <mat-card class="stat-card">
+    <mat-card-content>
+      <div class="stat-value">{{ statusCounts.active }}</div>
+      <div class="stat-label">Active</div>
+    </mat-card-content>
+  </mat-card>
+  <mat-card class="stat-card">
+    <mat-card-content>
+      <div class="stat-value">{{ statusCounts.draft }}</div>
+      <div class="stat-label">Draft</div>
+    </mat-card-content>
+  </mat-card>
+  <mat-card class="stat-card">
+    <mat-card-content>
+      <div class="stat-value">{{ statusCounts.deprecated }}</div>
+      <div class="stat-label">Deprecated</div>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<!-- Main Content Card -->
+<mat-card class="agents-card">
+  <mat-card-content>
+    <!-- Tabs and Search -->
+    <div class="toolbar">
+      <mat-tab-group
+        [selectedIndex]="selectedTab"
+        (selectedIndexChange)="onTabChange($event)"
+        class="status-tabs">
+        <mat-tab>
+          <ng-template mat-tab-label>
+            All
+            <span class="tab-badge">{{ statusCounts.all }}</span>
+          </ng-template>
+        </mat-tab>
+        <mat-tab>
+          <ng-template mat-tab-label>
+            Active
+            <span class="tab-badge active">{{ statusCounts.active }}</span>
+          </ng-template>
+        </mat-tab>
+        <mat-tab>
+          <ng-template mat-tab-label>
+            Draft
+            <span class="tab-badge draft">{{ statusCounts.draft }}</span>
+          </ng-template>
+        </mat-tab>
+        <mat-tab>
+          <ng-template mat-tab-label>
+            Deprecated
+            <span class="tab-badge deprecated">{{ statusCounts.deprecated }}</span>
+          </ng-template>
+        </mat-tab>
+      </mat-tab-group>
+
+      <div class="search-container">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search agents</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput placeholder="Search agents..." [formControl]="searchControl" aria-label="Search agents" />
+          @if (searchControl.value) {
+            <button matSuffix mat-icon-button (click)="searchControl.reset()" aria-label="Clear search">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    @if (selection.hasValue()) {
+      <div class="bulk-actions">
+        <span class="selection-count">{{ selection.selected.length }} selected</span>
+        <button mat-stroked-button type="button" (click)="publishSelected()" [disabled]="publishLoading" [attr.aria-disabled]="publishLoading" aria-label="Publish selected agents">
+          <mat-icon aria-hidden="true">publish</mat-icon>
+          Publish Selected
+        </button>
+        <button mat-stroked-button type="button" color="warn" (click)="deleteSelected()" [disabled]="deleteLoading" [attr.aria-disabled]="deleteLoading" aria-label="Delete selected agents">
+          <mat-icon aria-hidden="true">delete</mat-icon>
+          Delete Selected
+        </button>
+        <button mat-button type="button" (click)="selection.clear()" aria-label="Clear agent selection">Clear Selection</button>
+      </div>
+    }
+
+    <!-- Loading Overlay -->
+    @if (loading) {
+      <div class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span>Loading agents...</span>
+      </div>
+    }
+
+    <!-- Agents Table -->
+    <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange($event)" class="agents-table">
+      <!-- Checkbox Column -->
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-checkbox
+            (change)="$event ? toggleAllRows() : null"
+            [checked]="selection.hasValue() && isAllSelected()"
+            [indeterminate]="selection.hasValue() && !isAllSelected()"
+            aria-label="Select all agents">
+          </mat-checkbox>
+        </th>
+        <td mat-cell *matCellDef="let row">
+          <mat-checkbox
+            (click)="$event.stopPropagation()"
+            (change)="$event ? selection.toggle(row) : null"
+            [checked]="selection.isSelected(row)"
+            [attr.aria-label]="'Select ' + row.name">
+          </mat-checkbox>
+        </td>
+      </ng-container>
+
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+        <td mat-cell *matCellDef="let agent">
+          <div class="agent-name-cell">
+            <div class="agent-avatar">
+              <mat-icon>smart_toy</mat-icon>
+            </div>
+            <div class="agent-info">
+              <span class="agent-name">{{ agent.name }}</span>
+              @if (agent.personaRole) {
+                <span class="agent-role">{{ agent.personaRole }}</span>
+              }
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+        <td mat-cell *matCellDef="let agent">
+          <mat-chip [color]="getStatusColor(agent.status)">
+            <mat-icon class="status-icon">{{ getStatusIcon(agent.status) }}</mat-icon>
+            {{ agent.status }}
+          </mat-chip>
+        </td>
+      </ng-container>
+
+      <!-- Provider Column -->
+      <ng-container matColumnDef="modelProvider">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Provider</th>
+        <td mat-cell *matCellDef="let agent">
+          <div class="provider-cell">
+            <mat-icon>{{ getProviderIcon(agent.modelProvider) }}</mat-icon>
+            <span>{{ agent.modelProvider }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Version Column -->
+      <ng-container matColumnDef="version">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Version</th>
+        <td mat-cell *matCellDef="let agent">
+          <span class="version-badge">v{{ agent.version }}</span>
+        </td>
+      </ng-container>
+
+      <!-- Updated Column -->
+      <ng-container matColumnDef="updatedAt">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Updated</th>
+        <td mat-cell *matCellDef="let agent">
+          {{ formatDate(agent.updatedAt || agent.createdAt) }}
+        </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let agent">
+          <div class="actions-cell">
+            <button
+              mat-icon-button
+              matTooltip="Test Agent"
+              aria-label="Test agent"
+              (click)="openTestDialog(agent); $event.stopPropagation()">
+              <mat-icon>science</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              matTooltip="Edit Agent"
+              aria-label="Edit agent"
+              (click)="openEditDialog(agent.id); $event.stopPropagation()">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button [matMenuTriggerFor]="agentMenu" (click)="$event.stopPropagation()" aria-label="More actions">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #agentMenu="matMenu">
+              <button mat-menu-item (click)="cloneAgent(agent)">
+                <mat-icon>content_copy</mat-icon>
+                <span>Clone</span>
+              </button>
+              @if (agent.status === 'DRAFT' || agent.status === 'TESTING') {
+                <button mat-menu-item (click)="publishAgent(agent)">
+                  <mat-icon>publish</mat-icon>
+                  <span>Publish</span>
+                </button>
+              }
+              @if (agent.status === 'ACTIVE') {
+                <button mat-menu-item (click)="deprecateAgent(agent)">
+                  <mat-icon>archive</mat-icon>
+                  <span>Deprecate</span>
+                </button>
+              }
+              <button mat-menu-item (click)="viewVersions(agent)">
+                <mat-icon>history</mat-icon>
+                <span>Version History</span>
+              </button>
+              <mat-divider></mat-divider>
+              <button mat-menu-item class="delete-action" (click)="deleteAgent(agent)">
+                <mat-icon color="warn">delete</mat-icon>
+                <span>Delete</span>
+              </button>
+            </mat-menu>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        (click)="openEditDialog(row.id)"
+        class="clickable-row">
+      </tr>
+
+      <!-- Empty State -->
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell empty-state" [attr.colspan]="displayedColumns.length">
+          @if (!loading) {
+            <div class="empty-content">
+              <mat-icon aria-hidden="true">smart_toy</mat-icon>
+              <h3>No agents found</h3>
+              <p>Create your first AI agent to get started</p>
+              <button mat-flat-button type="button" color="primary" (click)="openCreateDialog()" aria-label="Create your first agent">
+                <mat-icon aria-hidden="true">add</mat-icon>
+                Create Agent
+              </button>
+            </div>
+          }
+        </td>
+      </tr>
+    </table>
+
+    <!-- Paginator -->
+    <mat-paginator
+      [length]="totalElements"
+      [pageSize]="pageSize"
+      [pageIndex]="pageIndex"
+      [pageSizeOptions]="[10, 20, 50, 100]"
+      (page)="onPageChange($event)"
+      showFirstLastButtons>
+    </mat-paginator>
+  </mat-card-content>
+</mat-card>

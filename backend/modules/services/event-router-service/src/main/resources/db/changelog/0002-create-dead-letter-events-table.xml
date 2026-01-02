@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0002-create-dead-letter-events-table" author="system">
+        <createTable tableName="dead_letter_events">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_topic" type="VARCHAR(255)"/>
+            <column name="original_payload" type="TEXT"/>
+            <column name="failure_reason" type="TEXT"/>
+            <column name="retry_count" type="INTEGER" defaultValue="0"/>
+            <column name="failed_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_retry_at" type="TIMESTAMP WITH TIME ZONE"/>
+        </createTable>
+
+        <createIndex indexName="idx_tenant_failed_at" tableName="dead_letter_events">
+            <column name="tenant_id"/>
+            <column name="failed_at"/>
+        </createIndex>
+
+        <createIndex indexName="idx_event_type" tableName="dead_letter_events">
+            <column name="event_type"/>
+        </createIndex>
+
+        <createIndex indexName="idx_retry_count" tableName="dead_letter_events">
+            <column name="retry_count"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

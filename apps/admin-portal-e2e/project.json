@@ -1,0 +1,22 @@
+{
+  "name": "admin-portal-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/admin-portal-e2e/src",
+  "implicitDependencies": ["admin-portal"],
+  "// targets": "to see all targets run: nx show project admin-portal-e2e --web",
+  "targets": {
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "apps/admin-portal-e2e/playwright.config.ts"
+      }
+    },
+    "coverage": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "apps/admin-portal-e2e/playwright.config.ts"
+      }
+    }
+  }
+}

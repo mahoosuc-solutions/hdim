@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd">
+
+    <changeSet id="007-001-create-audit-log-table" author="healthdata">
+        <comment>Create audit log table for compliance and tracking</comment>
+        <createTable tableName="audit_log" schemaName="audit">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_audit_log"/>
+            </column>
+            <column name="entity_type" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entity_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="action" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(100)"/>
+            <column name="user_name" type="VARCHAR(255)"/>
+            <column name="tenant_id" type="VARCHAR(50)"/>
+            <column name="timestamp" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ip_address" type="VARCHAR(45)"/>
+            <column name="user_agent" type="TEXT"/>
+            <column name="old_values" type="JSONB"/>
+            <column name="new_values" type="JSONB"/>
+            <column name="metadata" type="JSONB"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="007-002-create-audit-log-indexes" author="healthdata">
+        <comment>Create indexes on audit log table</comment>
+        <createIndex tableName="audit_log" schemaName="audit" indexName="idx_audit_entity">
+            <column name="entity_type"/>
+            <column name="entity_id"/>
+        </createIndex>
+        <createIndex tableName="audit_log" schemaName="audit" indexName="idx_audit_user">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="audit_log" schemaName="audit" indexName="idx_audit_timestamp">
+            <column name="timestamp" descending="true"/>
+        </createIndex>
+        <createIndex tableName="audit_log" schemaName="audit" indexName="idx_audit_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="007-003-create-audit-action-index" author="healthdata">
+        <comment>Create index on action for quick filtering</comment>
+        <createIndex tableName="audit_log" schemaName="audit" indexName="idx_audit_action">
+            <column name="action"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="007-004-create-access-log-table" author="healthdata">
+        <comment>Create access log table for authentication and authorization tracking</comment>
+        <createTable tableName="access_log" schemaName="audit">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_access_log"/>
+            </column>
+            <column name="user_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="login_time" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="logout_time" type="TIMESTAMP"/>
+            <column name="ip_address" type="VARCHAR(45)"/>
+            <column name="user_agent" type="TEXT"/>
+            <column name="session_id" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="failure_reason" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="007-005-create-access-log-indexes" author="healthdata">
+        <comment>Create indexes on access log table</comment>
+        <createIndex tableName="access_log" schemaName="audit" indexName="idx_access_user">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="access_log" schemaName="audit" indexName="idx_access_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="access_log" schemaName="audit" indexName="idx_access_login_time">
+            <column name="login_time" descending="true"/>
+        </createIndex>
+        <createIndex tableName="access_log" schemaName="audit" indexName="idx_access_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="007-006-create-data-change-log-table" author="healthdata">
+        <comment>Create detailed data change log for sensitive data tracking</comment>
+        <createTable tableName="data_change_log" schemaName="audit">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_data_change_log"/>
+            </column>
+            <column name="table_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="record_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="column_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="old_value" type="TEXT"/>
+            <column name="new_value" type="TEXT"/>
+            <column name="changed_by" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="change_timestamp" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="007-007-create-data-change-log-indexes" author="healthdata">
+        <comment>Create indexes on data change log table</comment>
+        <createIndex tableName="data_change_log" schemaName="audit" indexName="idx_data_change_table_record">
+            <column name="table_name"/>
+            <column name="record_id"/>
+        </createIndex>
+        <createIndex tableName="data_change_log" schemaName="audit" indexName="idx_data_change_timestamp">
+            <column name="change_timestamp" descending="true"/>
+        </createIndex>
+        <createIndex tableName="data_change_log" schemaName="audit" indexName="idx_data_change_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="data_change_log" schemaName="audit" indexName="idx_data_change_user">
+            <column name="changed_by"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,120 @@
+server:
+  port: 8107
+  servlet:
+    context-path: /notification
+
+spring:
+  application:
+    name: notification-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5435/healthdata_notification
+    username: healthdata
+    password: healthdata
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6380
+      password: ""
+      timeout: 2000ms
+
+  kafka:
+    bootstrap-servers: localhost:9094
+    consumer:
+      group-id: notification-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  mail:
+    host: localhost
+    port: 1025
+    username: ""
+    password: ""
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000
+
+# Notification configuration
+notification:
+  email:
+    enabled: true
+    from-address: noreply@healthdata.com
+    from-name: HealthData Platform
+  retry:
+    max-attempts: 3
+    delay-ms: 60000
+
+# Kafka topics
+kafka:
+  topics:
+    clinical-alerts: clinical-alerts
+    care-gaps: care-gap-events
+    approvals: approval-events
+
+# Security
+security:
+  jwt:
+    secret: ${JWT_SECRET:default-dev-secret-key-change-in-production-must-be-at-least-256-bits}
+    expiration-ms: 900000
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: WARN
+
+# OpenAPI
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html

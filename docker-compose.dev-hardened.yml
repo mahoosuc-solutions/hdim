@@ -1,0 +1,429 @@
+version: '3.9'
+
+# HealthData-in-Motion - Hardened Development Stack
+# Non-standard ports for enhanced security in development
+# Version: 1.0.1
+
+services:
+  # ============================================================================
+  # PostgreSQL Database - Port 6000 (instead of 5432)
+  # ============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: healthdata-postgres
+    restart: unless-stopped
+    ports:
+      - "6000:5432"  # External: 6000, Internal: 5432
+    environment:
+      POSTGRES_DB: healthdata_cql
+      POSTGRES_USER: healthdata
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthdata -d healthdata_cql"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - healthdata-network
+
+  # ============================================================================
+  # Redis Cache - Port 6001 (instead of 6379)
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: healthdata-redis
+    restart: unless-stopped
+    ports:
+      - "6001:6379"  # External: 6001, Internal: 6379
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1000
+      --requirepass dev_redis_password
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "dev_redis_password", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - healthdata-network
+
+  # ============================================================================
+  # Zookeeper - Port 6002 (instead of 2181)
+  # ============================================================================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: healthdata-zookeeper
+    restart: unless-stopped
+    ports:
+      - "6002:2181"  # External: 6002, Internal: 2181
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SYNC_LIMIT: 2
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - healthdata-network
+
+  # ============================================================================
+  # Kafka - Port 6003 (instead of 9092)
+  # ============================================================================
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: healthdata-kafka
+    restart: unless-stopped
+    ports:
+      - "6003:9092"  # External: 6003, Internal: 9092
+      - "6004:9093"  # External: 6004, Internal: 9093
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Advertise both internal and external addresses
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:6003
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 300000
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - healthdata-network
+
+  # ============================================================================
+  # FHIR Service (HAPI FHIR) - Port 6005 (instead of 8080)
+  # ============================================================================
+  fhir-service-mock:
+    image: hapiproject/hapi:v7.0.2
+    container_name: healthdata-fhir
+    restart: unless-stopped
+    ports:
+      - "6005:8080"  # External: 6005, Internal: 8080
+    environment:
+      # HAPI FHIR R4 configuration
+      hapi.fhir.fhir_version: R4
+      hapi.fhir.subscription.resthook_enabled: "true"
+      hapi.fhir.allow_external_references: "true"
+      hapi.fhir.allow_multiple_delete: "true"
+      hapi.fhir.reuse_cached_search_results_millis: 60000
+      # Use H2 in-memory database for development
+      spring.datasource.url: jdbc:h2:mem:fhir_dev
+      spring.datasource.username: sa
+      spring.datasource.password: ""
+      spring.datasource.driverClassName: org.h2.Driver
+      spring.jpa.properties.hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirH2Dialect
+      # Enable CORS for development
+      hapi.fhir.cors.allowed_origin: "*"
+    volumes:
+      - fhir_data:/data/hapi
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/fhir/metadata"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================================================
+  # CQL Engine Service - Port 6006 (instead of 8081)
+  # ============================================================================
+  cql-engine-service:
+    image: healthdata/cql-engine-service:1.0.14
+    container_name: healthdata-cql-engine
+    restart: unless-stopped
+    ports:
+      - "6006:8081"  # External: 6006, Internal: 8081
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      fhir-service-mock:
+        condition: service_started
+    environment:
+      # Spring Boot
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8081
+
+      # Database (internal connection)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_cql
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: dev_password
+
+      # Redis (internal connection with password)
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: dev_redis_password
+      SPRING_CACHE_TYPE: redis
+      SPRING_CACHE_REDIS_TIME_TO_LIVE: 86400000
+
+      # Kafka (internal connection)
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
+      SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.springframework.kafka.support.serializer.JsonSerializer
+
+      # FHIR Server (internal connection)
+      FHIR_SERVICE_URL: http://fhir-service-mock:8080/fhir
+
+      # JWT Authentication
+      JWT_SECRET: dev_jwt_secret_key_for_docker_environment_minimum_256_bits_required_for_hs512_algorithm
+
+      # Thread Pool
+      MEASURE_EVALUATION_CORE_POOL_SIZE: 10
+      MEASURE_EVALUATION_MAX_POOL_SIZE: 50
+      MEASURE_EVALUATION_QUEUE_CAPACITY: 500
+
+      # Actuator
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+
+      # Logging
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_HEALTHDATA_CQL: DEBUG
+
+      # JVM
+      JAVA_OPTS: >
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -XX:InitialRAMPercentage=50.0
+        -XX:+UseG1GC
+        -XX:+ExitOnOutOfMemoryError
+    volumes:
+      - ./logs/cql-engine:/app/logs
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "--spider", "http://localhost:8081/cql-engine/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================================================
+  # Quality Measure Service - Port 6007 (instead of 8087)
+  # ============================================================================
+  quality-measure-service:
+    image: healthdata/quality-measure-service:1.0.14
+    container_name: healthdata-quality-measure
+    restart: unless-stopped
+    ports:
+      - "6007:8087"  # External: 6007, Internal: 8087
+    depends_on:
+      postgres:
+        condition: service_healthy
+      cql-engine-service:
+        condition: service_healthy
+    environment:
+      # Spring Boot
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8087
+
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_cql
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: dev_password
+
+      # Service URLs (internal connections)
+      CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8081/cql-engine
+      FHIR_SERVICE_URL: http://fhir-service-mock:8080/fhir
+
+      # JWT Authentication
+      JWT_SECRET: dev_jwt_secret_key_for_docker_environment_minimum_256_bits_required_for_hs512_algorithm
+
+      # Actuator
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+
+      # Logging
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_HEALTHDATA_QUALITY: DEBUG
+
+      # JVM
+      JAVA_OPTS: >
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -XX:InitialRAMPercentage=50.0
+        -XX:+UseG1GC
+    volumes:
+      - ./logs/quality-measure:/app/logs
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "--spider", "http://localhost:8087/quality-measure/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================================================
+  # FHIR Service - Port 6008 (instead of 8082)
+  # ============================================================================
+  fhir-service:
+    image: healthdata/fhir-service:1.0.0
+    container_name: healthdata-fhir-service
+    restart: unless-stopped
+    ports:
+      - "6008:8082"  # External: 6008, Internal: 8082
+    depends_on:
+      postgres:
+        condition: service_healthy
+      fhir-service-mock:
+        condition: service_started
+    environment:
+      # Spring Boot
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8082
+
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_cql
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: dev_password
+
+      # External FHIR Server
+      FHIR_SERVER_BASE_URL: http://fhir-service-mock:8080/fhir
+
+      # JWT
+      JWT_SECRET: dev_jwt_secret_key_for_docker_environment_minimum_256_bits_required_for_hs512_algorithm
+
+      # Logging
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_HEALTHDATA_FHIR: DEBUG
+    volumes:
+      - ./logs/fhir-service:/app/logs
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "--spider", "http://localhost:8082/fhir-service/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================================================
+  # Patient Service - Port 6009 (instead of 8083)
+  # ============================================================================
+  patient-service:
+    image: healthdata/patient-service:1.0.0
+    container_name: healthdata-patient
+    restart: unless-stopped
+    ports:
+      - "6009:8083"  # External: 6009, Internal: 8083
+    depends_on:
+      postgres:
+        condition: service_healthy
+      fhir-service:
+        condition: service_healthy
+    environment:
+      # Spring Boot
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8083
+
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_cql
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: dev_password
+
+      # Service URLs
+      FHIR_SERVICE_URL: http://fhir-service:8082/fhir-service
+
+      # JWT
+      JWT_SECRET: dev_jwt_secret_key_for_docker_environment_minimum_256_bits_required_for_hs512_algorithm
+
+      # Logging
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_HEALTHDATA_PATIENT: DEBUG
+    volumes:
+      - ./logs/patient-service:/app/logs
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "--spider", "http://localhost:8083/patient-service/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  healthdata-network:
+    name: healthdata-network
+    driver: bridge
+
+# ============================================================================
+# Volumes
+# ============================================================================
+volumes:
+  postgres_data:
+    name: healthdata-postgres-data
+  redis_data:
+    name: healthdata-redis-data
+  zookeeper_data:
+    name: healthdata-zookeeper-data
+  zookeeper_logs:
+    name: healthdata-zookeeper-logs
+  kafka_data:
+    name: healthdata-kafka-data
+  fhir_data:
+    name: healthdata-fhir-data
+
+# ============================================================================
+# PORT MAPPING SUMMARY (External:Internal)
+# ============================================================================
+# PostgreSQL:              6000:5432
+# Redis:                   6001:6379
+# Zookeeper:               6002:2181
+# Kafka:                   6003:9092, 6004:9093
+# FHIR Server (HAPI):      6005:8080
+# CQL Engine Service:      6006:8081
+# Quality Measure Service: 6007:8087
+# FHIR Service:            6008:8082
+# Patient Service:         6009:8083
+#
+# Frontend (Angular):      4200 (via nx serve, not containerized)
+#
+# All services communicate internally using standard container ports.
+# External access uses hardened non-standard ports (6000-6009 range).
+#
+# To connect from host:
+#   psql -h localhost -p 6000 -U healthdata -d healthdata_cql
+#   redis-cli -h localhost -p 6001 -a dev_redis_password
+#   curl http://localhost:6006/cql-engine/actuator/health
+#   curl http://localhost:6007/quality-measure/actuator/health
+#
+# ============================================================================

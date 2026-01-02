@@ -1,0 +1,98 @@
+# Pull Request Labeler Configuration
+# Automatically add labels to pull requests based on modified files
+
+# Backend labels
+backend:
+  - backend/**/*
+  - '**/*.java'
+  - '**/*.gradle.kts'
+
+backend:fhir-service:
+  - backend/modules/services/fhir-service/**/*
+
+backend:quality-measure:
+  - backend/modules/services/quality-measure-service/**/*
+
+backend:cql-engine:
+  - backend/modules/services/cql-engine-service/**/*
+
+backend:patient-service:
+  - backend/modules/services/patient-service/**/*
+
+# Frontend labels
+frontend:
+  - apps/clinical-portal/**/*
+  - frontend/**/*
+  - '**/*.ts'
+  - '**/*.tsx'
+  - '**/*.jsx'
+  - '**/*.css'
+  - '**/*.scss'
+
+frontend:angular:
+  - apps/clinical-portal/**/*
+
+frontend:react:
+  - frontend/**/*
+
+# DevOps labels
+devops:
+  - .github/workflows/**/*
+  - scripts/**/*
+  - docker-compose*.yml
+  - Dockerfile*
+  - k8s/**/*
+  - helm/**/*
+
+ci-cd:
+  - .github/workflows/**/*
+
+docker:
+  - Dockerfile*
+  - docker-compose*.yml
+  - docker/**/*
+
+kubernetes:
+  - k8s/**/*
+  - helm/**/*
+
+# Database labels
+database:
+  - '**/**/db/changelog/**/*'
+  - '**/*.sql'
+  - '**/liquibase/**/*'
+
+# Security labels
+security:
+  - backend/modules/shared/infrastructure/security/**/*
+  - backend/modules/shared/infrastructure/authentication/**/*
+  - .github/workflows/security.yml
+
+# Testing labels
+testing:
+  - '**/*.spec.ts'
+  - '**/*.test.ts'
+  - '**/*.spec.js'
+  - '**/*.test.js'
+  - '**/src/test/**/*'
+  - '**/*-e2e/**/*'
+
+# Documentation labels
+documentation:
+  - '**/*.md'
+  - docs/**/*
+
+# Configuration labels
+configuration:
+  - '**/application.yml'
+  - '**/application-*.yml'
+  - '**/.env.example'
+  - '**/tsconfig*.json'
+  - '**/package.json'
+
+# Dependencies labels
+dependencies:
+  - package-lock.json
+  - package.json
+  - '**/build.gradle.kts'
+  - '**/settings.gradle.kts'

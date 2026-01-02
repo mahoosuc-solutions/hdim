@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0012-create-medication-administrations-table" author="codex">
+        <createTable tableName="medication_administrations">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_json" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="encounter_id" type="uuid"/>
+            <column name="medication_request_id" type="uuid"/>
+            <column name="medication_code" type="varchar(128)"/>
+            <column name="medication_system" type="varchar(128)"/>
+            <column name="medication_display" type="varchar(512)"/>
+            <column name="status" type="varchar(32)"/>
+            <column name="category" type="varchar(64)"/>
+            <column name="effective_date_time" type="timestamp"/>
+            <column name="effective_period_start" type="timestamp"/>
+            <column name="effective_period_end" type="timestamp"/>
+            <column name="performer_id" type="varchar(255)"/>
+            <column name="reason_code" type="varchar(128)"/>
+            <column name="route_code" type="varchar(64)"/>
+            <column name="route_display" type="varchar(255)"/>
+            <column name="site_code" type="varchar(64)"/>
+            <column name="site_display" type="varchar(255)"/>
+            <column name="dose_value" type="double precision"/>
+            <column name="dose_unit" type="varchar(64)"/>
+            <column name="rate_value" type="double precision"/>
+            <column name="rate_unit" type="varchar(64)"/>
+            <column name="lot_number" type="varchar(64)"/>
+            <column name="expiration_date" type="timestamp"/>
+            <column name="dosage" type="jsonb"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Index for tenant + patient lookups -->
+        <createIndex indexName="idx_medadmin_tenant_patient" tableName="medication_administrations">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="effective_date_time" descending="true"/>
+        </createIndex>
+
+        <!-- Index for tenant + patient + medication code lookups -->
+        <createIndex indexName="idx_medadmin_tenant_patient_code" tableName="medication_administrations">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="medication_code"/>
+        </createIndex>
+
+        <!-- Index for status queries -->
+        <createIndex indexName="idx_medadmin_status" tableName="medication_administrations">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Index for encounter queries -->
+        <createIndex indexName="idx_medadmin_encounter" tableName="medication_administrations">
+            <column name="tenant_id"/>
+            <column name="encounter_id"/>
+            <column name="effective_date_time" descending="true"/>
+        </createIndex>
+
+        <!-- Index for medication request (prescription) queries -->
+        <createIndex indexName="idx_medadmin_request" tableName="medication_administrations">
+            <column name="tenant_id"/>
+            <column name="medication_request_id"/>
+            <column name="effective_date_time"/>
+        </createIndex>
+
+        <!-- Index for medication code lookups -->
+        <createIndex indexName="idx_medadmin_medication_code" tableName="medication_administrations">
+            <column name="tenant_id"/>
+            <column name="medication_code"/>
+        </createIndex>
+
+        <!-- Index for performer queries -->
+        <createIndex indexName="idx_medadmin_performer" tableName="medication_administrations">
+            <column name="tenant_id"/>
+            <column name="performer_id"/>
+        </createIndex>
+
+        <!-- Index for lot number queries (for drug recalls) -->
+        <createIndex indexName="idx_medadmin_lot" tableName="medication_administrations">
+            <column name="tenant_id"/>
+            <column name="lot_number"/>
+        </createIndex>
+
+        <!-- Index for date range queries -->
+        <createIndex indexName="idx_medadmin_date_range" tableName="medication_administrations">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="effective_date_time"/>
+        </createIndex>
+
+        <!-- Index for route queries -->
+        <createIndex indexName="idx_medadmin_route" tableName="medication_administrations">
+            <column name="tenant_id"/>
+            <column name="route_code"/>
+        </createIndex>
+
+        <!-- Foreign key to patients table -->
+        <addForeignKeyConstraint
+            baseTableName="medication_administrations"
+            baseColumnNames="patient_id"
+            constraintName="fk_medication_administration_patient"
+            referencedTableName="patients"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <!-- Foreign key to encounters table (optional) -->
+        <addForeignKeyConstraint
+            baseTableName="medication_administrations"
+            baseColumnNames="encounter_id"
+            constraintName="fk_medication_administration_encounter"
+            referencedTableName="encounters"
+            referencedColumnNames="id"
+            onDelete="SET NULL"/>
+
+        <!-- Foreign key to medication_requests table (optional) -->
+        <addForeignKeyConstraint
+            baseTableName="medication_administrations"
+            baseColumnNames="medication_request_id"
+            constraintName="fk_medication_administration_request"
+            referencedTableName="medication_requests"
+            referencedColumnNames="id"
+            onDelete="SET NULL"/>
+
+    </changeSet>
+
+</databaseChangeLog>

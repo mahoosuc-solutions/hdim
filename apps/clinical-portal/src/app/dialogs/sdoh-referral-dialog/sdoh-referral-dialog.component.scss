@@ -1,0 +1,456 @@
+::ng-deep .mat-mdc-dialog-container {
+  max-height: 90vh;
+}
+
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--divider-color, #e0e0e0);
+
+  mat-icon {
+    color: var(--primary-color, #1976d2);
+  }
+}
+
+mat-dialog-content {
+  padding: 0 !important;
+  max-height: calc(90vh - 140px);
+  overflow-y: auto;
+}
+
+.step-content {
+  padding: 24px;
+}
+
+.step-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 24px 0;
+  font-size: 18px;
+  font-weight: 500;
+
+  mat-icon {
+    color: var(--primary-color, #1976d2);
+  }
+}
+
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--divider-color, #e0e0e0);
+}
+
+// Step 1: Need Selection
+.selection-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+
+  .selection-count {
+    margin-left: auto;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+}
+
+.needs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+
+  .need-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+
+    &:hover {
+      background: var(--hover-background, rgba(0, 0, 0, 0.04));
+    }
+
+    &.selected {
+      border-color: var(--primary-color, #1976d2);
+      background: var(--selection-background, rgba(25, 118, 210, 0.08));
+    }
+
+    .category-icon {
+      color: var(--primary-color, #1976d2);
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+
+    .need-content {
+      flex: 1;
+
+      h4 {
+        margin: 0 0 4px 0;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      p {
+        margin: 0 0 8px 0;
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+
+      .need-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .z-code {
+          font-size: 12px;
+          color: var(--text-secondary);
+          font-family: monospace;
+        }
+      }
+    }
+  }
+}
+
+.no-needs-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px;
+  color: var(--text-secondary);
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+  }
+}
+
+// Step 2: Destination Selection
+.tab-content {
+  padding: 24px 0;
+}
+
+.tab-description {
+  color: var(--text-secondary);
+  margin: 0 0 16px 0;
+}
+
+.internal-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .internal-option {
+    padding: 12px;
+    border: 1px solid var(--divider-color, #e0e0e0);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--hover-background, rgba(0, 0, 0, 0.04));
+    }
+
+    mat-icon {
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+  }
+}
+
+.staff-selection {
+  margin-top: 24px;
+
+  h4 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .staff-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+
+    .staff-name {
+      font-weight: 500;
+    }
+
+    .staff-department {
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .staff-capacity {
+      margin-left: auto;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: #e8f5e9;
+      color: #2e7d32;
+
+      &.low {
+        background: #fff3e0;
+        color: #e65100;
+      }
+    }
+  }
+}
+
+.search-controls {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+
+  .search-field {
+    flex: 1;
+  }
+
+  .source-toggle {
+    margin-top: 8px;
+  }
+}
+
+.search-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  color: var(--text-secondary);
+}
+
+.resource-list {
+  max-height: 300px;
+  overflow-y: auto;
+
+  .resource-item {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+
+    .resource-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .resource-name {
+        font-weight: 500;
+      }
+
+      .resource-description {
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+
+      .resource-contact {
+        font-size: 12px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        mat-icon {
+          font-size: 14px;
+          width: 14px;
+          height: 14px;
+        }
+      }
+    }
+  }
+}
+
+.no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px;
+  color: var(--text-secondary);
+
+  mat-icon {
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 8px;
+  }
+}
+
+// Step 3: Details Form
+.details-form {
+  .form-section {
+    margin-bottom: 24px;
+
+    h4 {
+      margin: 0 0 12px 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+  }
+
+  .full-width {
+    width: 100%;
+  }
+
+  .urgency-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .urgency-option {
+      padding: 12px;
+      border: 1px solid var(--divider-color, #e0e0e0);
+      border-radius: 4px;
+
+      .urgency-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        mat-icon {
+          font-size: 24px;
+        }
+
+        .urgency-label {
+          font-weight: 500;
+          min-width: 80px;
+        }
+
+        .urgency-description {
+          font-size: 13px;
+          color: var(--text-secondary);
+        }
+      }
+    }
+  }
+
+  .consent-row,
+  .communication-row,
+  .followup-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+
+    mat-form-field {
+      flex: 1;
+      min-width: 200px;
+    }
+  }
+}
+
+// Step 4: Review
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summary-card {
+  mat-card-header {
+    mat-icon[mat-card-avatar] {
+      background: var(--primary-color, #1976d2);
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    button {
+      margin-left: auto;
+    }
+  }
+
+  mat-card-content {
+    padding-top: 16px;
+
+    .secondary-text {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin: 4px 0 0 0;
+    }
+
+    .detail-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+
+      .label {
+        font-weight: 500;
+        min-width: 80px;
+      }
+    }
+  }
+}
+
+.warning-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  margin-top: 16px;
+  background: #fff3e0;
+  border-left: 4px solid #ff9800;
+
+  mat-icon {
+    color: #ff9800;
+  }
+}
+
+// Dialog Actions
+mat-dialog-actions {
+  padding: 8px 16px;
+  border-top: 1px solid var(--divider-color, #e0e0e0);
+}
+
+// Dark mode
+:host-context(.dark-theme) {
+  .need-card {
+    &:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    &.selected {
+      background: rgba(144, 202, 249, 0.16);
+    }
+  }
+
+  .internal-option:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .staff-capacity {
+    background: #1b5e20;
+    color: #a5d6a7;
+
+    &.low {
+      background: #e65100;
+      color: #ffcc80;
+    }
+  }
+
+  .warning-card {
+    background: #3e2723;
+  }
+}

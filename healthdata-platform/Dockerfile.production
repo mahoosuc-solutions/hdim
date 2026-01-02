@@ -1,0 +1,103 @@
+# HealthData Platform Production Dockerfile
+# Multi-stage build for optimal security and performance
+
+# Stage 1: Builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
+
+LABEL stage=builder
+
+WORKDIR /build
+
+# Copy Gradle wrapper and configuration files
+COPY gradle gradle
+COPY gradlew .
+COPY gradlew.bat .
+COPY build.gradle.kts .
+COPY settings.gradle.kts .
+COPY gradle.properties .
+
+# Copy source code
+COPY src src
+
+# Build the application (skip tests for production build - tests run in CI/CD)
+RUN ./gradlew clean build -x test --no-daemon --parallel
+
+# Verify JAR was created
+RUN ls -lh /build/build/libs/*.jar
+
+# Stage 2: Runtime
+FROM eclipse-temurin:21-jre-alpine
+
+LABEL maintainer="HealthData Platform Team <team@healthdata-platform.io>"
+LABEL version="2.0.0"
+LABEL description="HealthData Platform - FHIR-based Clinical Quality Measurement System"
+LABEL org.opencontainers.image.source="https://github.com/healthdata-in-motion/healthdata-platform"
+LABEL org.opencontainers.image.vendor="HealthData In Motion"
+LABEL org.opencontainers.image.licenses="MIT"
+
+# Security: Create non-root user and group
+RUN addgroup -g 1000 -S healthdata && \
+    adduser -u 1000 -S healthdata -G healthdata
+
+# Install runtime utilities for health checks and debugging
+RUN apk add --no-cache \
+    curl=~8 \
+    jq=~1.7 \
+    tzdata=~2024 \
+    tini=~0.19 && \
+    rm -rf /var/cache/apk/*
+
+# Set timezone to UTC
+ENV TZ=UTC
+
+# Set working directory
+WORKDIR /app
+
+# Copy JAR from builder stage
+COPY --from=builder /build/build/libs/*.jar /app/app.jar
+
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/logs /app/tmp /app/config && \
+    chown -R healthdata:healthdata /app
+
+# JVM optimization flags for containerized environments
+ENV JAVA_OPTS="\
+-XX:+UseG1GC \
+-XX:MaxGCPauseMillis=200 \
+-XX:InitiatingHeapOccupancyPercent=35 \
+-XX:G1HeapRegionSize=16M \
+-XX:MinMetaspaceSize=128M \
+-XX:MaxMetaspaceSize=512M \
+-XX:+UseStringDeduplication \
+-XX:+ParallelRefProcEnabled \
+-XX:+UseContainerSupport \
+-XX:MaxRAMPercentage=75.0 \
+-XX:InitialRAMPercentage=50.0 \
+-XX:+HeapDumpOnOutOfMemoryError \
+-XX:HeapDumpPath=/app/logs/heapdump.hprof \
+-XX:+ExitOnOutOfMemoryError \
+-Djava.security.egd=file:/dev/./urandom \
+-Djava.awt.headless=true \
+-Dfile.encoding=UTF-8 \
+-Duser.timezone=UTC"
+
+# Spring Boot configuration
+ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \
+    SPRING_PROFILES_ACTIVE=production \
+    SERVER_PORT=8080
+
+# Health check configuration
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
+
+# Switch to non-root user
+USER healthdata:healthdata
+
+# Expose application port
+EXPOSE 8080
+
+# Use tini as init system for proper signal handling
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Start the application
+CMD ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]

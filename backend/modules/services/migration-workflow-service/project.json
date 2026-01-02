@@ -1,0 +1,39 @@
+{
+  "name": "migration-workflow-service",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "backend/modules/services/migration-workflow-service/src",
+  "tags": [
+    "backend",
+    "service"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/modules/services/migration-workflow-service/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:migration-workflow-service:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:migration-workflow-service:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:migration-workflow-service:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:migration-workflow-service:test :modules:services:migration-workflow-service:jacocoTestReport :modules:services:migration-workflow-service:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

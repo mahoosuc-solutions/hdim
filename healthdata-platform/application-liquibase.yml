@@ -1,0 +1,159 @@
+# HealthData Platform - Liquibase Configuration Example
+# Add these settings to your application.yml or application-prod.yml
+
+spring:
+  datasource:
+    # PostgreSQL Connection
+    url: jdbc:postgresql://localhost:5432/healthdata
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  liquibase:
+    # Enable Liquibase migration
+    enabled: true
+
+    # Location of master changelog
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+    # Liquibase context (for conditional migrations)
+    contexts: prod
+
+    # Liquibase labels (for selective migration)
+    labels:
+
+    # Default schema for migrations
+    default-schema: public
+
+    # Drop all database objects on startup (development only!)
+    drop-first: false
+
+    # Liquibase table name for tracking changes
+    databaseChangeLogTable: databasechangelog
+    databaseChangeLogLockTable: databasechangeloglock
+
+  jpa:
+    hibernate:
+      # Use 'validate' when using Liquibase (don't let Hibernate create tables)
+      ddl-auto: validate
+
+    database-platform: org.hibernate.dialect.PostgreSQL15Dialect
+
+    properties:
+      hibernate:
+        # Enable batch processing
+        jdbc:
+          batch_size: 20
+          fetch_size: 50
+
+        # Performance tuning
+        format_sql: false
+        use_sql_comments: false
+        order_inserts: true
+        order_updates: true
+
+# Logging
+logging:
+  level:
+    liquibase: info
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
+
+# Database Connection Pool Monitoring (Optional)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,datasource
+
+  metrics:
+    export:
+      simple:
+        enabled: true
+
+---
+# Profile for Development
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/healthdata_dev
+    username: postgres
+    password: password
+
+  liquibase:
+    enabled: true
+    drop-first: false  # Don't drop on each restart
+
+---
+# Profile for Testing
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  liquibase:
+    enabled: true
+    drop-first: true  # Start fresh for each test
+    # Can use h2 format for faster test execution
+    # change-log: classpath:db/changelog/db.changelog-h2-test.xml
+
+---
+# Profile for Staging
+spring:
+  config:
+    activate:
+      on-profile: staging
+
+  datasource:
+    url: jdbc:postgresql://staging-db.example.com:5432/healthdata
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  liquibase:
+    enabled: true
+    drop-first: false
+
+---
+# Profile for Production
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/healthdata
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 900000
+      max-lifetime: 1800000
+
+  liquibase:
+    enabled: true
+    drop-first: false
+    # Optional: Use multiple contexts in production
+    contexts: prod,analytics
+
+logging:
+  level:
+    liquibase: warn
+    org.hibernate.SQL: warn
+    org.hibernate.type.descriptor.sql.BasicBinder: warn

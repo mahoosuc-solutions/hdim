@@ -1,0 +1,185 @@
+[versions]
+# Core
+java = "21"
+kotlin = "2.0.21"
+
+# Spring Framework
+spring-boot = "3.3.11"
+spring-cloud = "2023.0.5"
+spring-dependency-management = "1.1.7"
+
+# Healthcare Libraries
+hapi-fhir = "7.6.0"
+cql-engine = "3.3.1"
+cql-evaluator = "3.3.1"
+
+# Databases & Persistence
+postgresql = "42.7.7"
+hikaricp = "6.0.0"
+hibernate = "6.6.1.Final"
+liquibase = "4.29.2"
+
+# Caching & Messaging
+redis = "3.3.5"
+kafka = "3.8.0"
+spring-kafka = "3.3.0"
+
+# API & Documentation
+springdoc-openapi = "2.6.0"
+swagger = "2.2.25"
+jackson = "2.17.2"  # Must match Spring Boot BOM version
+
+# Security
+spring-security = "6.3.8"
+jjwt = "0.12.6"
+bouncycastle = "1.78.1"
+
+# Testing
+junit = "5.11.2"
+mockito = "5.2.0"
+testcontainers = "1.20.4"
+rest-assured = "5.5.0"
+testcontainers-redis = "2.2.2"
+
+# Utilities
+lombok = "1.18.34"
+mapstruct = "1.6.2"
+commons-lang3 = "3.17.0"
+guava = "33.3.1-jre"
+
+# Monitoring & Observability
+micrometer = "1.13.6"
+prometheus = "1.13.6"
+micrometer-tracing = "1.3.5"
+opentelemetry = "1.32.0"
+
+# Build Tools
+openapi-generator = "7.9.0"
+gradle-versions-plugin = "0.51.0"
+
+# Security Patches (override transitive dependencies)
+logback = "1.5.16"
+jetty = "12.0.19"
+reactor-netty = "1.2.4"
+netty = "4.1.118.Final"
+commons-fileupload = "1.6.0"
+lz4-java = "1.8.1"
+ucum = "1.0.9"
+
+[libraries]
+# Spring Boot Starters
+spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "spring-boot" }
+spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa", version.ref = "spring-boot" }
+spring-boot-starter-data-redis = { module = "org.springframework.boot:spring-boot-starter-data-redis", version.ref = "spring-boot" }
+spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security", version.ref = "spring-boot" }
+spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation", version.ref = "spring-boot" }
+spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator", version.ref = "spring-boot" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot" }
+
+# Spring Cloud
+spring-cloud-starter-config = { module = "org.springframework.cloud:spring-cloud-starter-config", version.ref = "spring-cloud" }
+spring-cloud-starter-netflix-eureka-client = { module = "org.springframework.cloud:spring-cloud-starter-netflix-eureka-client", version.ref = "spring-cloud" }
+spring-cloud-starter-vault-config = { module = "org.springframework.cloud:spring-cloud-starter-vault-config" }
+
+# HAPI FHIR
+hapi-fhir-base = { module = "ca.uhn.hapi.fhir:hapi-fhir-base", version.ref = "hapi-fhir" }
+hapi-fhir-structures-r4 = { module = "ca.uhn.hapi.fhir:hapi-fhir-structures-r4", version.ref = "hapi-fhir" }
+hapi-fhir-validation = { module = "ca.uhn.hapi.fhir:hapi-fhir-validation", version.ref = "hapi-fhir" }
+hapi-fhir-validation-resources-r4 = { module = "ca.uhn.hapi.fhir:hapi-fhir-validation-resources-r4", version.ref = "hapi-fhir" }
+hapi-fhir-client = { module = "ca.uhn.hapi.fhir:hapi-fhir-client", version.ref = "hapi-fhir" }
+hapi-fhir-server = { module = "ca.uhn.hapi.fhir:hapi-fhir-server", version.ref = "hapi-fhir" }
+hapi-fhir-jpaserver-base = { module = "ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base", version.ref = "hapi-fhir" }
+
+# CQL Engine
+cql-engine = { module = "org.opencds.cqf.cql:engine", version.ref = "cql-engine" }
+cql-engine-fhir = { module = "org.opencds.cqf.cql:engine.fhir", version.ref = "cql-engine" }
+cql-evaluator-fhir = { module = "com.alphora:cql-evaluator-fhir", version.ref = "cql-evaluator" }
+
+# Databases
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+liquibase = { module = "org.liquibase:liquibase-core", version.ref = "liquibase" }
+
+# Kafka
+spring-kafka = { module = "org.springframework.kafka:spring-kafka", version.ref = "spring-kafka" }
+kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
+
+# Redis
+spring-data-redis = { module = "org.springframework.data:spring-data-redis", version.ref = "redis" }
+
+# API Documentation
+springdoc-openapi-starter-webmvc-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc-openapi" }
+swagger-annotations = { module = "io.swagger.core.v3:swagger-annotations", version.ref = "swagger" }
+
+# JSON Processing
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
+
+# Security
+spring-security-core = { module = "org.springframework.security:spring-security-core", version.ref = "spring-security" }
+spring-security-config = { module = "org.springframework.security:spring-security-config", version.ref = "spring-security" }
+spring-security-web = { module = "org.springframework.security:spring-security-web", version.ref = "spring-security" }
+jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
+jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }
+jjwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jjwt" }
+bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+
+# Testing
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
+mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito" }
+testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
+testcontainers-kafka = { module = "org.testcontainers:kafka", version.ref = "testcontainers" }
+testcontainers-redis = { module = "com.redis:testcontainers-redis", version.ref = "testcontainers-redis" }
+rest-assured = { module = "io.rest-assured:rest-assured", version.ref = "rest-assured" }
+
+# Utilities
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
+mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
+commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
+
+# Monitoring
+micrometer-core = { module = "io.micrometer:micrometer-core", version.ref = "micrometer" }
+micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "prometheus" }
+
+# Security Patches
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+logback-core = { module = "ch.qos.logback:logback-core", version.ref = "logback" }
+jetty-http = { module = "org.eclipse.jetty:jetty-http", version.ref = "jetty" }
+jetty-io = { module = "org.eclipse.jetty:jetty-io", version.ref = "jetty" }
+jetty-server = { module = "org.eclipse.jetty:jetty-server", version.ref = "jetty" }
+reactor-netty-http = { module = "io.projectreactor.netty:reactor-netty-http", version.ref = "reactor-netty" }
+
+# Distributed Tracing
+micrometer-tracing = { module = "io.micrometer:micrometer-tracing", version.ref = "micrometer-tracing" }
+micrometer-tracing-bridge-otel = { module = "io.micrometer:micrometer-tracing-bridge-otel", version.ref = "micrometer-tracing" }
+opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp", version.ref = "opentelemetry" }
+opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk", version.ref = "opentelemetry" }
+
+[bundles]
+spring-boot-web = ["spring-boot-starter-web", "spring-boot-starter-validation", "spring-boot-starter-actuator"]
+spring-boot-data = ["spring-boot-starter-data-jpa", "postgresql", "hikaricp", "liquibase"]
+spring-boot-redis = ["spring-boot-starter-data-redis"]
+spring-boot-security = ["spring-boot-starter-security", "jjwt-api", "jjwt-impl", "jjwt-jackson"]
+hapi-fhir-server = ["hapi-fhir-base", "hapi-fhir-structures-r4", "hapi-fhir-validation", "hapi-fhir-validation-resources-r4", "hapi-fhir-server", "hapi-fhir-jpaserver-base"]
+hapi-fhir-client = ["hapi-fhir-base", "hapi-fhir-structures-r4", "hapi-fhir-client"]
+cql = ["cql-engine", "cql-engine-fhir", "cql-evaluator-fhir"]
+kafka = ["spring-kafka", "kafka-clients"]
+testing = ["spring-boot-starter-test", "junit-jupiter", "mockito-core", "mockito-junit-jupiter", "rest-assured"]
+testcontainers = ["testcontainers", "testcontainers-postgresql", "testcontainers-kafka", "testcontainers-redis"]
+utilities = ["lombok", "mapstruct", "commons-lang3", "guava"]
+monitoring = ["micrometer-core", "micrometer-registry-prometheus"]
+tracing = ["micrometer-tracing", "micrometer-tracing-bridge-otel", "opentelemetry-exporter-otlp", "opentelemetry-sdk"]
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+openapi-generator = { id = "org.openapi.generator", version.ref = "openapi-generator" }
+versions = { id = "com.github.ben-manes.versions", version.ref = "gradle-versions-plugin" }

@@ -1,0 +1,39 @@
+{
+  "name": "cdr-processor-service",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "backend/modules/services/cdr-processor-service/src",
+  "tags": [
+    "backend",
+    "service"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/modules/services/cdr-processor-service/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:cdr-processor-service:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:cdr-processor-service:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:cdr-processor-service:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:cdr-processor-service:test :modules:services:cdr-processor-service:jacocoTestReport :modules:services:cdr-processor-service:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

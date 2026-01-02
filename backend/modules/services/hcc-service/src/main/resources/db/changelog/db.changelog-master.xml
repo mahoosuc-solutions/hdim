@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+    <changeSet id="001-create-hcc-schema" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name = 'hcc'
+            </sqlCheck>
+        </preConditions>
+        <sql>CREATE SCHEMA IF NOT EXISTS hcc;</sql>
+    </changeSet>
+
+    <!-- Diagnosis to HCC Crosswalk Table -->
+    <changeSet id="002-create-diagnosis-hcc-map" author="hdim">
+        <createTable tableName="diagnosis_hcc_map" schemaName="hcc">
+            <column name="icd10_code" type="VARCHAR(10)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="icd10_description" type="VARCHAR(500)"/>
+            <column name="hcc_code_v24" type="VARCHAR(10)"/>
+            <column name="hcc_name_v24" type="VARCHAR(255)"/>
+            <column name="hcc_code_v28" type="VARCHAR(10)"/>
+            <column name="hcc_name_v28" type="VARCHAR(255)"/>
+            <column name="coefficient_v24" type="DECIMAL(8,5)"/>
+            <column name="coefficient_v28" type="DECIMAL(8,5)"/>
+            <column name="requires_specificity" type="BOOLEAN"/>
+            <column name="specificity_guidance" type="VARCHAR(500)"/>
+            <column name="changed_in_v28" type="BOOLEAN"/>
+            <column name="v28_change_description" type="VARCHAR(500)"/>
+        </createTable>
+
+        <createIndex tableName="diagnosis_hcc_map" schemaName="hcc" indexName="idx_hcc_v24">
+            <column name="hcc_code_v24"/>
+        </createIndex>
+        <createIndex tableName="diagnosis_hcc_map" schemaName="hcc" indexName="idx_hcc_v28">
+            <column name="hcc_code_v28"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Patient HCC Profiles Table -->
+    <changeSet id="003-create-patient-hcc-profiles" author="hdim">
+        <createTable tableName="patient_hcc_profiles" schemaName="hcc">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="profile_year" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="raf_score_v24" type="DECIMAL(8,5)"/>
+            <column name="raf_score_v28" type="DECIMAL(8,5)"/>
+            <column name="raf_score_blended" type="DECIMAL(8,5)"/>
+            <column name="hccs_v24" type="JSONB"/>
+            <column name="hccs_v28" type="JSONB"/>
+            <column name="diagnosis_codes" type="JSONB"/>
+            <column name="documentation_gaps" type="JSONB"/>
+            <column name="documentation_gap_count" type="INTEGER"/>
+            <column name="potential_raf_uplift" type="DECIMAL(8,5)"/>
+            <column name="recapture_opportunities_count" type="INTEGER"/>
+            <column name="recapture_raf_value" type="DECIMAL(8,5)"/>
+            <column name="last_calculated_at" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint tableName="patient_hcc_profiles" schemaName="hcc"
+            columnNames="tenant_id, patient_id, profile_year"
+            constraintName="uk_patient_hcc_profile"/>
+
+        <createIndex tableName="patient_hcc_profiles" schemaName="hcc"
+            indexName="idx_hcc_profile_tenant_patient">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Documentation Gaps Table -->
+    <changeSet id="004-create-documentation-gaps" author="hdim">
+        <createTable tableName="documentation_gaps" schemaName="hcc">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="profile_year" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_icd10" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_icd10_description" type="VARCHAR(500)"/>
+            <column name="current_hcc_v24" type="VARCHAR(10)"/>
+            <column name="current_hcc_v28" type="VARCHAR(10)"/>
+            <column name="recommended_icd10" type="VARCHAR(10)"/>
+            <column name="recommended_icd10_description" type="VARCHAR(500)"/>
+            <column name="recommended_hcc_v24" type="VARCHAR(10)"/>
+            <column name="recommended_hcc_v28" type="VARCHAR(10)"/>
+            <column name="gap_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="raf_impact_v24" type="DECIMAL(8,5)"/>
+            <column name="raf_impact_v28" type="DECIMAL(8,5)"/>
+            <column name="raf_impact_blended" type="DECIMAL(8,5)"/>
+            <column name="priority" type="VARCHAR(20)"/>
+            <column name="clinical_guidance" type="TEXT"/>
+            <column name="required_documentation" type="TEXT"/>
+            <column name="status" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="addressed_by" type="VARCHAR(100)"/>
+            <column name="addressed_at" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="documentation_gaps" schemaName="hcc"
+            indexName="idx_doc_gap_tenant_patient">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+        <createIndex tableName="documentation_gaps" schemaName="hcc"
+            indexName="idx_doc_gap_status">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Recapture Opportunities Table -->
+    <changeSet id="005-create-recapture-opportunities" author="hdim">
+        <createTable tableName="recapture_opportunities" schemaName="hcc">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="prior_year" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_year" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hcc_code" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hcc_name" type="VARCHAR(255)"/>
+            <column name="prior_year_icd10" type="VARCHAR(10)"/>
+            <column name="prior_year_icd10_description" type="VARCHAR(500)"/>
+            <column name="raf_value_v24" type="DECIMAL(8,5)"/>
+            <column name="raf_value_v28" type="DECIMAL(8,5)"/>
+            <column name="is_recaptured" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="recaptured_icd10" type="VARCHAR(10)"/>
+            <column name="recaptured_at" type="TIMESTAMP"/>
+            <column name="clinical_guidance" type="TEXT"/>
+            <column name="priority" type="VARCHAR(20)"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="recapture_opportunities" schemaName="hcc"
+            indexName="idx_recapture_tenant_patient">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Comments -->
+    <changeSet id="006-add-table-comments" author="hdim">
+        <sql>
+            COMMENT ON TABLE hcc.diagnosis_hcc_map IS
+                'ICD-10-CM to HCC crosswalk mapping for V24 and V28 models';
+            COMMENT ON TABLE hcc.patient_hcc_profiles IS
+                'Patient RAF scores and HCC profiles with dual V24/V28 support';
+            COMMENT ON TABLE hcc.documentation_gaps IS
+                'Documentation gaps that could improve RAF score if addressed';
+            COMMENT ON TABLE hcc.recapture_opportunities IS
+                'Chronic condition HCCs from prior year needing annual recapture';
+        </sql>
+    </changeSet>
+
+    <!-- HCC V24/V28 Crosswalk Seed Data -->
+    <changeSet id="007-load-hcc-crosswalk-seed-data" author="hdim">
+        <comment>Load representative HCC V24/V28 crosswalk mapping data for development/testing.
+            Includes high-impact conditions: Diabetes, CHF, COPD, CKD, Cancer, Depression, Stroke, RA, HIV, Vascular Disease.
+            Production systems should use official CMS data files.</comment>
+        <sqlFile path="classpath:data/hcc-crosswalk/V1_hcc_crosswalk_seed_data.sql"
+                 splitStatements="true"
+                 stripComments="true"/>
+        <rollback>
+            <sql>DELETE FROM hcc.diagnosis_hcc_map;</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

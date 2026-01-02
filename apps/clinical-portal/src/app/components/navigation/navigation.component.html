@@ -1,0 +1,60 @@
+<mat-sidenav-container class="sidenav-container">
+  <!-- Side Navigation -->
+  <mat-sidenav
+    #sidenav
+    [(opened)]="sidenavOpened"
+    mode="side"
+    class="sidenav">
+    <div class="sidenav-header">
+      <h2>Clinical Portal</h2>
+      <p class="subtitle">Quality Measure Management</p>
+    </div>
+
+    <mat-nav-list class="nav-list">
+      @for (item of navigationItems; track item.route) {
+        <a
+          mat-list-item
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: item.route === '/'}"
+          class="nav-item">
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+          <span matListItemLine class="nav-description">{{ item.description }}</span>
+        </a>
+      }
+    </mat-nav-list>
+
+    <div class="sidenav-footer">
+      <p class="version">Version 1.0.0</p>
+      <p class="copyright">&copy; 2025 HealthData In Motion</p>
+    </div>
+  </mat-sidenav>
+
+  <!-- Main Content Area -->
+  <mat-sidenav-content class="main-content">
+    <!-- Top Toolbar -->
+    <mat-toolbar color="primary" class="top-toolbar">
+      <button
+        mat-icon-button
+        (click)="toggleSidenav()"
+        aria-label="Toggle navigation">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="toolbar-spacer"></span>
+      <span class="app-title">Clinical Portal</span>
+      <span class="toolbar-spacer"></span>
+      <button mat-icon-button aria-label="Notifications">
+        <mat-icon>notifications</mat-icon>
+      </button>
+      <button mat-icon-button aria-label="User menu">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+    </mat-toolbar>
+
+    <!-- Page Content -->
+    <div class="content-wrapper">
+      <ng-content></ng-content>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

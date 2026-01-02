@@ -1,0 +1,167 @@
+# =============================================================================
+# HealthData-in-Motion - High Availability Configuration
+# =============================================================================
+# PostgreSQL Primary-Replica setup for read scaling
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.ha.yml up
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ===========================================================================
+  # PostgreSQL Primary (Read-Write)
+  # ===========================================================================
+  postgres-primary:
+    image: postgres:16-alpine
+    container_name: healthdata-postgres-primary
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-healthdata}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-healthdata_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      # Replication settings
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      - postgres_primary_data:/var/lib/postgresql/data
+      - ./docker/postgres/primary/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./docker/postgres/primary/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - ./docker/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh:ro
+      - ./docker/postgres/init-replication.sh:/docker-entrypoint-initdb.d/init-replication.sh:ro
+    command: >
+      postgres
+      -c config_file=/etc/postgresql/postgresql.conf
+      -c hba_file=/etc/postgresql/pg_hba.conf
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-healthdata}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - healthdata-network
+
+  # ===========================================================================
+  # PostgreSQL Replica 1 (Read-Only)
+  # ===========================================================================
+  postgres-replica-1:
+    image: postgres:16-alpine
+    container_name: healthdata-postgres-replica-1
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-healthdata}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      # Replication settings
+      POSTGRES_PRIMARY_HOST: postgres-primary
+      POSTGRES_PRIMARY_PORT: 5432
+      POSTGRES_REPLICATION_USER: ${REPLICATION_USER:-replicator}
+      POSTGRES_REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
+    volumes:
+      - postgres_replica_1_data:/var/lib/postgresql/data
+      - ./docker/postgres/replica/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./docker/postgres/replica/recovery.conf:/var/lib/postgresql/data/recovery.signal:ro
+    command: >
+      postgres
+      -c config_file=/etc/postgresql/postgresql.conf
+      -c primary_conninfo='host=postgres-primary port=5432 user=${REPLICATION_USER:-replicator} password=${REPLICATION_PASSWORD}'
+      -c primary_slot_name='replica_1_slot'
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-healthdata}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ===========================================================================
+  # PostgreSQL Replica 2 (Read-Only) - Optional for HA
+  # ===========================================================================
+  postgres-replica-2:
+    image: postgres:16-alpine
+    container_name: healthdata-postgres-replica-2
+    restart: always
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-healthdata}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_PRIMARY_HOST: postgres-primary
+      POSTGRES_PRIMARY_PORT: 5432
+      POSTGRES_REPLICATION_USER: ${REPLICATION_USER:-replicator}
+      POSTGRES_REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
+    volumes:
+      - postgres_replica_2_data:/var/lib/postgresql/data
+      - ./docker/postgres/replica/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command: >
+      postgres
+      -c config_file=/etc/postgresql/postgresql.conf
+      -c primary_conninfo='host=postgres-primary port=5432 user=${REPLICATION_USER:-replicator} password=${REPLICATION_PASSWORD}'
+      -c primary_slot_name='replica_2_slot'
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-healthdata}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+    profiles:
+      - ha-extended
+
+  # ===========================================================================
+  # PgBouncer - Connection Pooling & Load Balancing
+  # ===========================================================================
+  pgbouncer:
+    image: edoburu/pgbouncer:1.21.0
+    container_name: healthdata-pgbouncer
+    restart: always
+    ports:
+      - "6432:6432"
+    environment:
+      DATABASE_URL: "postgres://${POSTGRES_USER:-healthdata}:${POSTGRES_PASSWORD}@postgres-primary:5432/${POSTGRES_DB:-healthdata_db}"
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 50
+      MIN_POOL_SIZE: 10
+      RESERVE_POOL_SIZE: 25
+      RESERVE_POOL_TIMEOUT: 5
+      SERVER_RESET_QUERY: "DISCARD ALL"
+      SERVER_CHECK_DELAY: 30
+      SERVER_CHECK_QUERY: "SELECT 1"
+      SERVER_LIFETIME: 3600
+      SERVER_IDLE_TIMEOUT: 600
+      LOG_CONNECTIONS: 1
+      LOG_DISCONNECTIONS: 1
+      LOG_POOLER_ERRORS: 1
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 6432"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - healthdata-network
+
+volumes:
+  postgres_primary_data:
+  postgres_replica_1_data:
+  postgres_replica_2_data:
+
+networks:
+  healthdata-network:
+    external: true

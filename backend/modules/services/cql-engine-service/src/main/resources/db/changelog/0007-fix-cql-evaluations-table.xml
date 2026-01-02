@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0007-fix-cql-evaluations-schema-alignment" author="healthdata-system">
+        <comment>Fix CqlEvaluation entity-schema misalignments identified in Phase 17 audit</comment>
+
+        <!-- Issue 1: Rename result to evaluation_result -->
+        <renameColumn tableName="cql_evaluations"
+                      oldColumnName="result"
+                      newColumnName="evaluation_result"
+                      columnDataType="text"/>
+
+        <!-- Issue 2: Change evaluation_result to JSONB type -->
+        <modifyDataType tableName="cql_evaluations"
+                        columnName="evaluation_result"
+                        newDataType="jsonb"/>
+
+        <!-- Issue 3: Change context_data to JSONB type -->
+        <modifyDataType tableName="cql_evaluations"
+                        columnName="context_data"
+                        newDataType="jsonb"/>
+
+        <!-- Issue 4: Add created_at column -->
+        <addColumn tableName="cql_evaluations">
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <!-- Issue 5: Remove measure_name column (not in entity) -->
+        <dropColumn tableName="cql_evaluations" columnName="measure_name"/>
+
+        <!-- Issue 6: Drop old indexes that need to be replaced -->
+        <dropIndex indexName="idx_cql_eval_library" tableName="cql_evaluations"/>
+
+        <!-- Check if idx_cql_eval_measure exists before dropping -->
+        <sql>
+            DROP INDEX IF EXISTS idx_cql_eval_measure;
+        </sql>
+
+        <!-- Issue 7: Add correct composite index on library_id, evaluation_date -->
+        <createIndex indexName="idx_eval_library" tableName="cql_evaluations">
+            <column name="library_id"/>
+            <column name="evaluation_date"/>
+        </createIndex>
+
+        <!-- Issue 8: Add composite index on patient_id, evaluation_date -->
+        <createIndex indexName="idx_eval_patient" tableName="cql_evaluations">
+            <column name="patient_id"/>
+            <column name="evaluation_date"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex indexName="idx_eval_patient" tableName="cql_evaluations"/>
+            <dropIndex indexName="idx_eval_library" tableName="cql_evaluations"/>
+            <createIndex indexName="idx_cql_eval_library" tableName="cql_evaluations">
+                <column name="library_id"/>
+            </createIndex>
+            <addColumn tableName="cql_evaluations">
+                <column name="measure_name" type="varchar(255)"/>
+            </addColumn>
+            <dropColumn tableName="cql_evaluations" columnName="created_at"/>
+            <modifyDataType tableName="cql_evaluations" columnName="context_data" newDataType="text"/>
+            <modifyDataType tableName="cql_evaluations" columnName="evaluation_result" newDataType="text"/>
+            <renameColumn tableName="cql_evaluations" oldColumnName="evaluation_result" newColumnName="result" columnDataType="text"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

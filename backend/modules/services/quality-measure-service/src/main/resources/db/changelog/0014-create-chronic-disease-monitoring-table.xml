@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0010-create-chronic-disease-monitoring-table" author="healthdata-team">
+        <comment>Create chronic disease monitoring table for continuous disease deterioration detection</comment>
+
+        <createTable tableName="chronic_disease_monitoring">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="tenant_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="patient_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Disease information -->
+            <column name="disease_code" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="disease_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Monitoring values -->
+            <column name="latest_value" type="decimal(10,2)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="previous_value" type="decimal(10,2)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Trend analysis -->
+            <column name="trend" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Alert status -->
+            <column name="alert_triggered" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Monitoring schedule -->
+            <column name="monitored_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="next_monitoring_due" type="timestamp with time zone">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Audit fields -->
+            <column name="created_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Unique constraint: One monitoring record per patient per disease -->
+        <addUniqueConstraint
+            tableName="chronic_disease_monitoring"
+            columnNames="tenant_id, patient_id, disease_code"
+            constraintName="uk_cdm_tenant_patient_disease"/>
+
+        <!-- Index for tenant isolation -->
+        <createIndex indexName="idx_cdm_tenant" tableName="chronic_disease_monitoring">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <!-- Index for patient queries -->
+        <createIndex indexName="idx_cdm_patient" tableName="chronic_disease_monitoring">
+            <column name="patient_id"/>
+        </createIndex>
+
+        <!-- Composite index for tenant + patient queries -->
+        <createIndex indexName="idx_cdm_tenant_patient" tableName="chronic_disease_monitoring">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <!-- Index for alert queries -->
+        <createIndex indexName="idx_cdm_alerts" tableName="chronic_disease_monitoring">
+            <column name="tenant_id"/>
+            <column name="alert_triggered"/>
+            <column name="monitored_at" descending="true"/>
+        </createIndex>
+
+        <!-- Index for deteriorating trends -->
+        <createIndex indexName="idx_cdm_trend" tableName="chronic_disease_monitoring">
+            <column name="tenant_id"/>
+            <column name="trend"/>
+        </createIndex>
+
+        <!-- Index for monitoring schedule -->
+        <createIndex indexName="idx_cdm_next_monitoring" tableName="chronic_disease_monitoring">
+            <column name="tenant_id"/>
+            <column name="next_monitoring_due"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="chronic_disease_monitoring"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Add chronic_condition_count to risk_assessments if missing -->
+    <changeSet id="0010-add-chronic-condition-count-to-risk-assessments" author="healthdata-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="risk_assessments" columnName="chronic_condition_count"/>
+            </not>
+        </preConditions>
+
+        <comment>Add chronic_condition_count column to risk_assessments table</comment>
+
+        <addColumn tableName="risk_assessments">
+            <column name="chronic_condition_count" type="integer" defaultValueNumeric="0">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="risk_assessments" columnName="chronic_condition_count"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

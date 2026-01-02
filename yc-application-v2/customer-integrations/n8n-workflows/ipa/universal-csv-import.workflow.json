@@ -1,0 +1,332 @@
+{
+  "name": "IPA Universal CSV Import",
+  "meta": {
+    "description": "Weekly CSV import for 28 practices using various EHRs (DrChrono, Practice Fusion, Kareo, Elation)",
+    "templateId": "hdim-ipa-csv-v1",
+    "customer": "Valley Physicians Network",
+    "practices": 28,
+    "version": "1.0.0"
+  },
+  "nodes": [
+    {
+      "id": "weekly-trigger",
+      "name": "Weekly Trigger Monday 6AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 400],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "cronExpression": "0 6 * * 1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "list-upload-folders",
+      "name": "List Practice Upload Folders",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [450, 400],
+      "parameters": {
+        "protocol": "sftp",
+        "operation": "list",
+        "path": "/vpn/practice-uploads/"
+      },
+      "credentials": {
+        "sftp": {
+          "id": "vpn-sftp-credentials",
+          "name": "VPN SFTP"
+        }
+      }
+    },
+    {
+      "id": "filter-new-uploads",
+      "name": "Filter New Uploads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 400],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const folders = $input.all().map(item => item.json);\n\n// Practice configuration with EHR type for proper parsing\nconst practiceConfig = {\n  'VPN-019': { name: 'Burbank Family Medicine', ehr: 'drchrono' },\n  'VPN-020': { name: 'Glendale Primary Care', ehr: 'drchrono' },\n  'VPN-021': { name: 'Pasadena Internal Med', ehr: 'drchrono' },\n  'VPN-022': { name: 'Arcadia Family Health', ehr: 'drchrono' },\n  'VPN-023': { name: 'Monrovia Primary', ehr: 'drchrono' },\n  'VPN-024': { name: 'Duarte Medical Group', ehr: 'drchrono' },\n  'VPN-025': { name: 'Azusa Family Practice', ehr: 'drchrono' },\n  'VPN-026': { name: 'Covina Health Center', ehr: 'drchrono' },\n  'VPN-027': { name: 'West Covina Primary', ehr: 'practice-fusion' },\n  'VPN-028': { name: 'Pomona Family Medicine', ehr: 'practice-fusion' },\n  'VPN-029': { name: 'Claremont Medical', ehr: 'practice-fusion' },\n  'VPN-030': { name: 'La Verne Primary', ehr: 'practice-fusion' },\n  'VPN-031': { name: 'San Dimas Health', ehr: 'practice-fusion' },\n  'VPN-032': { name: 'Glendora Family', ehr: 'practice-fusion' },\n  'VPN-033': { name: 'Diamond Bar Medical', ehr: 'practice-fusion' },\n  'VPN-034': { name: 'Walnut Primary Care', ehr: 'kareo' },\n  'VPN-035': { name: 'Rowland Heights Med', ehr: 'kareo' },\n  'VPN-036': { name: 'Hacienda Heights', ehr: 'kareo' },\n  'VPN-037': { name: 'La Puente Family', ehr: 'kareo' },\n  'VPN-038': { name: 'Industry Health', ehr: 'kareo' },\n  'VPN-039': { name: 'Baldwin Park Med', ehr: 'kareo' },\n  'VPN-040': { name: 'El Monte Primary', ehr: 'elation' },\n  'VPN-041': { name: 'South El Monte', ehr: 'elation' },\n  'VPN-042': { name: 'Rosemead Family', ehr: 'elation' },\n  'VPN-043': { name: 'Temple City Health', ehr: 'elation' },\n  'VPN-044': { name: 'San Gabriel Medical', ehr: 'elation' },\n  'VPN-045': { name: 'Alhambra Primary', ehr: 'elation' },\n  'VPN-046': { name: 'Monterey Park Med', ehr: 'elation' }\n};\n\n// Filter for folders with new files\nconst practicesWithUploads = folders\n  .filter(folder => folder.type === 'directory' && practiceConfig[folder.name])\n  .map(folder => ({\n    json: {\n      practiceId: folder.name,\n      ...practiceConfig[folder.name],\n      folderPath: `/vpn/practice-uploads/${folder.name}/`\n    }\n  }));\n\nreturn practicesWithUploads;"
+      }
+    },
+    {
+      "id": "process-each-practice",
+      "name": "Process Each Practice",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [850, 400],
+      "parameters": {
+        "batchSize": 1
+      }
+    },
+    {
+      "id": "list-practice-files",
+      "name": "List Practice Files",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [1050, 400],
+      "parameters": {
+        "protocol": "sftp",
+        "operation": "list",
+        "path": "={{ $json.folderPath }}"
+      },
+      "credentials": {
+        "sftp": {
+          "id": "vpn-sftp-credentials",
+          "name": "VPN SFTP"
+        }
+      }
+    },
+    {
+      "id": "filter-csv-files",
+      "name": "Filter CSV Files",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1250, 400],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.name }}",
+              "rightValue": ".csv",
+              "operator": { "type": "string", "operation": "endsWith" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "download-csv",
+      "name": "Download CSV",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [1450, 400],
+      "parameters": {
+        "protocol": "sftp",
+        "operation": "download",
+        "path": "={{ $('Process Each Practice').item.json.folderPath + $json.name }}"
+      },
+      "credentials": {
+        "sftp": {
+          "id": "vpn-sftp-credentials",
+          "name": "VPN SFTP"
+        }
+      }
+    },
+    {
+      "id": "parse-csv",
+      "name": "Parse CSV",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [1650, 400],
+      "parameters": {
+        "operation": "fromFile",
+        "fileFormat": "csv",
+        "options": {
+          "headerRow": true
+        }
+      }
+    },
+    {
+      "id": "detect-file-type",
+      "name": "Detect File Type",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1850, 400],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const rows = $input.all().map(item => item.json);\nconst practice = $('Process Each Practice').item.json;\nconst fileName = $('Filter CSV Files').item.json.name.toLowerCase();\n\n// Detect file type from name or columns\nlet fileType = 'unknown';\nconst firstRow = rows[0] || {};\nconst columns = Object.keys(firstRow).map(c => c.toLowerCase());\n\nif (fileName.includes('patient') || columns.includes('patient_id') || columns.includes('mrn')) {\n  fileType = 'Patient';\n} else if (fileName.includes('condition') || fileName.includes('diagnosis') || columns.includes('icd_code')) {\n  fileType = 'Condition';\n} else if (fileName.includes('lab') || fileName.includes('result') || columns.includes('loinc')) {\n  fileType = 'Observation';\n} else if (fileName.includes('med') || columns.includes('ndc') || columns.includes('rxnorm')) {\n  fileType = 'MedicationRequest';\n} else if (fileName.includes('encounter') || fileName.includes('visit')) {\n  fileType = 'Encounter';\n} else if (fileName.includes('procedure') || columns.includes('cpt')) {\n  fileType = 'Procedure';\n} else if (fileName.includes('immunization') || fileName.includes('vaccine') || columns.includes('cvx')) {\n  fileType = 'Immunization';\n}\n\nreturn rows.map(row => ({\n  json: {\n    ...row,\n    _metadata: {\n      practiceId: practice.practiceId,\n      practiceName: practice.name,\n      ehr: practice.ehr,\n      fileType: fileType,\n      fileName: fileName\n    }\n  }\n}));"
+      }
+    },
+    {
+      "id": "route-by-type",
+      "name": "Route by File Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [2050, 400],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json._metadata.fileType }}",
+        "rules": {
+          "rules": [
+            { "value2": "Patient", "outputKey": "patient" },
+            { "value2": "Condition", "outputKey": "condition" },
+            { "value2": "Observation", "outputKey": "observation" },
+            { "value2": "MedicationRequest", "outputKey": "medication" },
+            { "value2": "Encounter", "outputKey": "encounter" },
+            { "value2": "Procedure", "outputKey": "procedure" },
+            { "value2": "Immunization", "outputKey": "immunization" }
+          ]
+        },
+        "fallbackOutput": "none"
+      }
+    },
+    {
+      "id": "transform-patient",
+      "name": "Transform Patient",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2300, 100],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const row = $input.item.json;\nconst meta = row._metadata;\n\n// EHR-specific column mapping\nconst columnMaps = {\n  'drchrono': {\n    mrn: 'chart_id',\n    firstName: 'first_name',\n    lastName: 'last_name',\n    dob: 'date_of_birth',\n    gender: 'gender',\n    phone: 'cell_phone',\n    email: 'email'\n  },\n  'practice-fusion': {\n    mrn: 'PatientID',\n    firstName: 'FirstName',\n    lastName: 'LastName',\n    dob: 'DOB',\n    gender: 'Sex',\n    phone: 'Phone',\n    email: 'Email'\n  },\n  'kareo': {\n    mrn: 'patient_id',\n    firstName: 'first',\n    lastName: 'last',\n    dob: 'birth_date',\n    gender: 'sex',\n    phone: 'phone_number',\n    email: 'email_address'\n  },\n  'elation': {\n    mrn: 'patient_id',\n    firstName: 'given_name',\n    lastName: 'family_name',\n    dob: 'birthdate',\n    gender: 'sex',\n    phone: 'phone',\n    email: 'email'\n  }\n};\n\nconst cols = columnMaps[meta.ehr] || columnMaps['drchrono'];\n\n// Normalize gender\nconst genderMap = {\n  'm': 'male', 'male': 'male', 'f': 'female', 'female': 'female',\n  'o': 'other', 'other': 'other', 'u': 'unknown', 'unknown': 'unknown'\n};\nconst rawGender = (row[cols.gender] || '').toLowerCase();\n\nconst patient = {\n  resourceType: 'Patient',\n  id: `${meta.practiceId}-${row[cols.mrn]}`,\n  meta: {\n    source: `${meta.ehr} via n8n`,\n    tag: [{\n      system: 'http://vpn.example.com/practice',\n      code: meta.practiceId,\n      display: meta.practiceName\n    }]\n  },\n  identifier: [{\n    system: `http://vpn.example.com/${meta.practiceId}/mrn`,\n    value: row[cols.mrn]\n  }],\n  name: [{\n    family: row[cols.lastName],\n    given: [row[cols.firstName]]\n  }],\n  gender: genderMap[rawGender] || 'unknown',\n  birthDate: row[cols.dob]\n};\n\nif (row[cols.phone]) {\n  patient.telecom = [{ system: 'phone', value: row[cols.phone] }];\n}\nif (row[cols.email]) {\n  patient.telecom = patient.telecom || [];\n  patient.telecom.push({ system: 'email', value: row[cols.email] });\n}\n\nreturn { json: patient };"
+      }
+    },
+    {
+      "id": "transform-condition",
+      "name": "Transform Condition",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2300, 250],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const row = $input.item.json;\nconst meta = row._metadata;\n\n// Find ICD code and description columns (varies by EHR)\nconst icdCode = row.icd_code || row.ICD10 || row.diagnosis_code || row.code;\nconst icdDesc = row.diagnosis || row.description || row.name || row.diagnosis_name;\nconst mrn = row.patient_id || row.PatientID || row.chart_id || row.mrn;\nconst status = (row.status || 'active').toLowerCase();\n\nconst condition = {\n  resourceType: 'Condition',\n  id: `${meta.practiceId}-cond-${mrn}-${icdCode.replace(/\\./g, '')}`,\n  meta: {\n    source: `${meta.ehr} via n8n`,\n    tag: [{\n      system: 'http://vpn.example.com/practice',\n      code: meta.practiceId\n    }]\n  },\n  clinicalStatus: {\n    coding: [{\n      system: 'http://terminology.hl7.org/CodeSystem/condition-clinical',\n      code: status.includes('resolv') || status.includes('inact') ? 'resolved' : 'active'\n    }]\n  },\n  code: {\n    coding: [{\n      system: 'http://hl7.org/fhir/sid/icd-10-cm',\n      code: icdCode,\n      display: icdDesc\n    }],\n    text: icdDesc\n  },\n  subject: {\n    reference: `Patient/${meta.practiceId}-${mrn}`\n  },\n  onsetDateTime: row.onset_date || row.diagnosis_date || row.date\n};\n\nreturn { json: condition };"
+      }
+    },
+    {
+      "id": "transform-observation",
+      "name": "Transform Observation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2300, 400],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const row = $input.item.json;\nconst meta = row._metadata;\n\nconst mrn = row.patient_id || row.PatientID || row.chart_id || row.mrn;\nconst loincCode = row.loinc || row.loinc_code || row.code;\nconst testName = row.test_name || row.name || row.description;\nconst resultValue = row.result || row.value;\nconst resultUnit = row.unit || row.units || '';\nconst resultDate = row.date || row.result_date || row.collected_date;\n\nconst observation = {\n  resourceType: 'Observation',\n  id: `${meta.practiceId}-obs-${mrn}-${loincCode}-${resultDate.replace(/[^0-9]/g, '')}`,\n  meta: {\n    source: `${meta.ehr} via n8n`,\n    tag: [{\n      system: 'http://vpn.example.com/practice',\n      code: meta.practiceId\n    }]\n  },\n  status: 'final',\n  category: [{\n    coding: [{\n      system: 'http://terminology.hl7.org/CodeSystem/observation-category',\n      code: 'laboratory'\n    }]\n  }],\n  code: {\n    coding: [{\n      system: 'http://loinc.org',\n      code: loincCode,\n      display: testName\n    }],\n    text: testName\n  },\n  subject: {\n    reference: `Patient/${meta.practiceId}-${mrn}`\n  },\n  effectiveDateTime: resultDate\n};\n\n// Handle numeric vs string results\nconst numValue = parseFloat(resultValue);\nif (!isNaN(numValue)) {\n  observation.valueQuantity = {\n    value: numValue,\n    unit: resultUnit,\n    system: 'http://unitsofmeasure.org'\n  };\n} else {\n  observation.valueString = resultValue;\n}\n\nreturn { json: observation };"
+      }
+    },
+    {
+      "id": "merge-all",
+      "name": "Merge All Resources",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [2550, 400],
+      "parameters": {
+        "mode": "append"
+      }
+    },
+    {
+      "id": "batch-and-upload",
+      "name": "Batch and Upload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2750, 400],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const resources = $input.all().map(item => item.json);\nconst BATCH_SIZE = 100;\nconst batches = [];\n\nfor (let i = 0; i < resources.length; i += BATCH_SIZE) {\n  const batch = resources.slice(i, i + BATCH_SIZE);\n  batches.push({\n    json: {\n      resourceType: 'Bundle',\n      type: 'batch',\n      timestamp: new Date().toISOString(),\n      entry: batch.map(r => ({\n        resource: r,\n        request: { method: 'PUT', url: `${r.resourceType}/${r.id}` }\n      }))\n    }\n  });\n}\n\nreturn batches;"
+      }
+    },
+    {
+      "id": "upload-to-hdim",
+      "name": "Upload to HDIM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2950, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.healthdatainmotion.com/v1/fhir",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/fhir+json" },
+            { "name": "X-Tenant-ID", "value": "={{ $env.HDIM_TENANT_ID }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}"
+      },
+      "credentials": {
+        "oAuth2Api": {
+          "id": "hdim-oauth-credentials",
+          "name": "HDIM API"
+        }
+      }
+    },
+    {
+      "id": "archive-files",
+      "name": "Archive Processed Files",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [3150, 400],
+      "parameters": {
+        "protocol": "sftp",
+        "operation": "rename",
+        "oldPath": "={{ $('Process Each Practice').item.json.folderPath + $('Filter CSV Files').item.json.name }}",
+        "newPath": "={{ $('Process Each Practice').item.json.folderPath + 'processed/' + $now.format('YYYYMMDD') + '_' + $('Filter CSV Files').item.json.name }}"
+      },
+      "credentials": {
+        "sftp": {
+          "id": "vpn-sftp-credentials",
+          "name": "VPN SFTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "weekly-trigger": {
+      "main": [[{ "node": "list-upload-folders", "type": "main", "index": 0 }]]
+    },
+    "list-upload-folders": {
+      "main": [[{ "node": "filter-new-uploads", "type": "main", "index": 0 }]]
+    },
+    "filter-new-uploads": {
+      "main": [[{ "node": "process-each-practice", "type": "main", "index": 0 }]]
+    },
+    "process-each-practice": {
+      "main": [[{ "node": "list-practice-files", "type": "main", "index": 0 }]]
+    },
+    "list-practice-files": {
+      "main": [[{ "node": "filter-csv-files", "type": "main", "index": 0 }]]
+    },
+    "filter-csv-files": {
+      "main": [[{ "node": "download-csv", "type": "main", "index": 0 }]]
+    },
+    "download-csv": {
+      "main": [[{ "node": "parse-csv", "type": "main", "index": 0 }]]
+    },
+    "parse-csv": {
+      "main": [[{ "node": "detect-file-type", "type": "main", "index": 0 }]]
+    },
+    "detect-file-type": {
+      "main": [[{ "node": "route-by-type", "type": "main", "index": 0 }]]
+    },
+    "route-by-type": {
+      "main": [
+        [{ "node": "transform-patient", "type": "main", "index": 0 }],
+        [{ "node": "transform-condition", "type": "main", "index": 0 }],
+        [{ "node": "transform-observation", "type": "main", "index": 0 }]
+      ]
+    },
+    "transform-patient": {
+      "main": [[{ "node": "merge-all", "type": "main", "index": 0 }]]
+    },
+    "transform-condition": {
+      "main": [[{ "node": "merge-all", "type": "main", "index": 1 }]]
+    },
+    "transform-observation": {
+      "main": [[{ "node": "merge-all", "type": "main", "index": 2 }]]
+    },
+    "merge-all": {
+      "main": [[{ "node": "batch-and-upload", "type": "main", "index": 0 }]]
+    },
+    "batch-and-upload": {
+      "main": [[{ "node": "upload-to-hdim", "type": "main", "index": 0 }]]
+    },
+    "upload-to-hdim": {
+      "main": [[{ "node": "archive-files", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "timezone": "America/Los_Angeles"
+  },
+  "tags": ["hdim", "ipa", "csv", "multi-ehr", "weekly"]
+}

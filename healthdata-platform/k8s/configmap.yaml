@@ -1,0 +1,153 @@
+---
+# HealthData Platform Configuration
+# Application-level configuration as environment variables
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: healthdata-config
+  namespace: healthdata
+  labels:
+    app.kubernetes.io/name: healthdata-platform
+    app.kubernetes.io/component: configuration
+    app.kubernetes.io/version: "2.0.0"
+data:
+  # Spring Boot Profile
+  SPRING_PROFILES_ACTIVE: "production"
+  SPRING_APPLICATION_NAME: "healthdata-platform"
+
+  # Database Configuration
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://healthdata-postgres:5432/healthdata"
+  SPRING_DATASOURCE_USERNAME: "healthdata"
+  SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "20"
+  SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "5"
+  SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: "30000"
+  SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT: "600000"
+  SPRING_DATASOURCE_HIKARI_MAX_LIFETIME: "1800000"
+
+  # JPA/Hibernate Configuration
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
+  SPRING_JPA_SHOW_SQL: "false"
+  SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: "org.hibernate.dialect.PostgreSQLDialect"
+  SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "false"
+  SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_BATCH_SIZE: "25"
+  SPRING_JPA_PROPERTIES_HIBERNATE_ORDER_INSERTS: "true"
+  SPRING_JPA_PROPERTIES_HIBERNATE_ORDER_UPDATES: "true"
+
+  # Liquibase Configuration
+  SPRING_LIQUIBASE_ENABLED: "true"
+  SPRING_LIQUIBASE_CHANGE_LOG: "classpath:db/changelog/db.changelog-master.xml"
+
+  # Redis Configuration
+  SPRING_DATA_REDIS_HOST: "healthdata-redis"
+  SPRING_DATA_REDIS_PORT: "6379"
+  SPRING_DATA_REDIS_TIMEOUT: "60000"
+  SPRING_CACHE_TYPE: "redis"
+  SPRING_CACHE_REDIS_TIME_TO_LIVE: "3600000"
+
+  # Kafka Configuration
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "healthdata-kafka:9092"
+  SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: "org.apache.kafka.common.serialization.StringSerializer"
+  SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: "org.springframework.kafka.support.serializer.JsonSerializer"
+  SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
+  SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: "org.springframework.kafka.support.serializer.JsonDeserializer"
+  SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: "earliest"
+  SPRING_KAFKA_CONSUMER_GROUP_ID: "healthdata-platform"
+
+  # Security Configuration
+  JWT_EXPIRATION: "86400000"
+  JWT_REFRESH_EXPIRATION: "604800000"
+
+  # Actuator Configuration
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
+  MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: "when_authorized"
+  MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED: "true"
+  MANAGEMENT_HEALTH_LIVENESSSTATE_ENABLED: "true"
+  MANAGEMENT_HEALTH_READINESSSTATE_ENABLED: "true"
+
+  # Logging Configuration
+  LOGGING_LEVEL_ROOT: "INFO"
+  LOGGING_LEVEL_COM_HEALTHDATA: "DEBUG"
+  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: "INFO"
+  LOGGING_LEVEL_ORG_HIBERNATE: "WARN"
+  LOGGING_PATTERN_CONSOLE: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+  # Server Configuration
+  SERVER_PORT: "8080"
+  SERVER_COMPRESSION_ENABLED: "true"
+  SERVER_HTTP2_ENABLED: "true"
+
+---
+# Application properties file as ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: healthdata-app-config
+  namespace: healthdata
+  labels:
+    app.kubernetes.io/name: healthdata-platform
+    app.kubernetes.io/component: configuration
+data:
+  application.yml: |
+    spring:
+      application:
+        name: healthdata-platform
+      profiles:
+        active: production
+      jpa:
+        open-in-view: false
+        properties:
+          hibernate:
+            enable_lazy_load_no_trans: false
+            jdbc:
+              batch_size: 25
+            order_inserts: true
+            order_updates: true
+      cache:
+        type: redis
+      session:
+        store-type: redis
+        timeout: 30m
+
+    server:
+      port: 8080
+      compression:
+        enabled: true
+        mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+        min-response-size: 1024
+      http2:
+        enabled: true
+      shutdown: graceful
+
+    management:
+      endpoints:
+        web:
+          base-path: /actuator
+          exposure:
+            include: health,info,metrics,prometheus
+      endpoint:
+        health:
+          probes:
+            enabled: true
+          show-details: when-authorized
+      metrics:
+        export:
+          prometheus:
+            enabled: true
+        distribution:
+          percentiles-histogram:
+            http.server.requests: true
+      health:
+        livenessstate:
+          enabled: true
+        readinessstate:
+          enabled: true
+
+    logging:
+      level:
+        root: INFO
+        com.healthdata: DEBUG
+        org.springframework.web: INFO
+        org.hibernate: WARN
+      pattern:
+        console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0008-add-jsonb-gin-indexes" author="data-model-validation">
+        <comment>Add GIN indexes on JSONB columns for complex JSON queries</comment>
+
+        <sql dbms="postgresql">
+            -- GIN indexes for JSONB columns
+            CREATE INDEX IF NOT EXISTS idx_qm_results_cql_result_gin ON quality_measure_results USING GIN (cql_result);
+            CREATE INDEX IF NOT EXISTS idx_custom_measures_value_sets_gin ON custom_measures USING GIN (value_sets);
+            CREATE INDEX IF NOT EXISTS idx_risk_assessments_risk_factors_gin ON risk_assessments USING GIN (risk_factors);
+            CREATE INDEX IF NOT EXISTS idx_risk_assessments_predicted_outcomes_gin ON risk_assessments USING GIN (predicted_outcomes);
+            CREATE INDEX IF NOT EXISTS idx_risk_assessments_recommendations_gin ON risk_assessments USING GIN (recommendations);
+        </sql>
+
+        <rollback>
+            <sql dbms="postgresql">
+                DROP INDEX IF EXISTS idx_qm_results_cql_result_gin;
+                DROP INDEX IF EXISTS idx_custom_measures_value_sets_gin;
+                DROP INDEX IF EXISTS idx_risk_assessments_risk_factors_gin;
+                DROP INDEX IF EXISTS idx_risk_assessments_predicted_outcomes_gin;
+                DROP INDEX IF EXISTS idx_risk_assessments_recommendations_gin;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0008-add-updated-at-column" author="data-model-validation">
+        <comment>Add updated_at column to quality_measure_results for change tracking</comment>
+
+        <addColumn tableName="quality_measure_results">
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <!-- Initialize updated_at with created_at for existing records -->
+        <sql>
+            UPDATE quality_measure_results SET updated_at = created_at WHERE updated_at IS NULL;
+        </sql>
+
+        <rollback>
+            <dropColumn tableName="quality_measure_results" columnName="updated_at"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0008-add-composite-index" author="data-model-validation">
+        <comment>Add composite index for common quality measure queries</comment>
+
+        <createIndex indexName="idx_qm_results_composite" tableName="quality_measure_results">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="measure_id"/>
+            <column name="measure_year"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="quality_measure_results" indexName="idx_qm_results_composite"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0008-add-compliance-index" author="data-model-validation">
+        <comment>Add index for compliance tracking and reporting</comment>
+
+        <sql dbms="postgresql">
+            CREATE INDEX IF NOT EXISTS idx_qm_results_compliance ON quality_measure_results
+            (tenant_id, measure_id, numerator_compliant, calculation_date DESC);
+        </sql>
+
+        <rollback>
+            <sql dbms="postgresql">
+                DROP INDEX IF EXISTS idx_qm_results_compliance;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,59 @@
+<mat-toolbar class="page-header" [class]="customClass">
+  <div class="page-header-container">
+    <!-- Back Button (optional) -->
+    <button
+      *ngIf="showBackButton"
+      mat-icon-button
+      class="back-button"
+      routerLink=".."
+      aria-label="Go back">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+
+    <!-- Header Content -->
+    <div class="page-header-content">
+      <!-- Breadcrumbs -->
+      <nav
+        *ngIf="breadcrumbs.length > 0"
+        class="breadcrumbs"
+        aria-label="Breadcrumb navigation">
+        <ol class="breadcrumb-list">
+          <ng-container *ngFor="let crumb of getParentBreadcrumbs(); let i = index">
+            <li class="breadcrumb-item">
+              <a
+                *ngIf="hasRoute(crumb)"
+                [routerLink]="crumb.route"
+                class="breadcrumb-link"
+                [attr.aria-label]="'Navigate to ' + crumb.label">
+                <mat-icon *ngIf="crumb.icon" class="breadcrumb-icon">{{ crumb.icon }}</mat-icon>
+                <span>{{ crumb.label }}</span>
+              </a>
+              <span *ngIf="!hasRoute(crumb)" class="breadcrumb-text">
+                <mat-icon *ngIf="crumb.icon" class="breadcrumb-icon">{{ crumb.icon }}</mat-icon>
+                <span>{{ crumb.label }}</span>
+              </span>
+            </li>
+            <li class="breadcrumb-separator" aria-hidden="true">/</li>
+          </ng-container>
+          <li class="breadcrumb-item breadcrumb-current" *ngIf="getLastBreadcrumb() as lastCrumb">
+            <span class="breadcrumb-text" aria-current="page">
+              <mat-icon *ngIf="lastCrumb.icon" class="breadcrumb-icon">{{ lastCrumb.icon }}</mat-icon>
+              <span>{{ lastCrumb.label }}</span>
+            </span>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- Title and Subtitle -->
+      <div class="page-title-section">
+        <h1 class="page-title">{{ title }}</h1>
+        <p *ngIf="subtitle" class="page-subtitle">{{ subtitle }}</p>
+      </div>
+    </div>
+
+    <!-- Actions (Content Projection) -->
+    <div class="page-header-actions">
+      <ng-content></ng-content>
+    </div>
+  </div>
+</mat-toolbar>

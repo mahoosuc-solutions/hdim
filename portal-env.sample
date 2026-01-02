@@ -1,0 +1,16 @@
+# Clinical Portal Environment Template
+# Copy to portal-env.sh or .env and update values before running nx serve/build/e2e.
+
+export API_GATEWAY_URL="https://api.hdim.local"
+export CQL_ENGINE_URL="https://cql-engine.hdim.local"
+export QUALITY_MEASURE_URL="https://quality-measure.hdim.local"
+export FHIR_SERVER_URL="https://fhir.hdim.local"
+export DEFAULT_TENANT_ID="default"
+export GA_MEASUREMENT_ID="G-XXXXXXXXXX"
+export SENTRY_DSN="https://examplePublicKey@o0.ingest.sentry.io/0"
+
+# Optional overrides for local mocks
+# export AUTH_BYPASS="true"
+# export FEATURE_FLAGS="measureBuilder,aiRouting"
+
+printf "Loaded Clinical Portal env vars.\n"

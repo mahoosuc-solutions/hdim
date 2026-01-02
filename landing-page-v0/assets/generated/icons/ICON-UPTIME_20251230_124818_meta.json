@@ -1,0 +1,9 @@
+{
+  "prompt_id": "ICON-UPTIME",
+  "name": "Uptime SLA Icon",
+  "category": "icons",
+  "dimensions": "128x128",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a modern icon for Uptime/Reliability (99.9% SLA).\n\nDesign: A clock face or circular gauge showing excellent performance, suggesting\nreliability and always-on availability.\n\nStyle guidelines:\n- Minimal line art, consistent 2px stroke weight\n- Modern, clean, professional aesthetic\n- Primary color: Deep blue (#0066CC)\n- Accent/highlight: Teal (#00A5B5)\n- Transparent background\n\nDimensions: 128x128 pixels with transparent background...."
+}

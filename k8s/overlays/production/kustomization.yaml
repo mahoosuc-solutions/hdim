@@ -1,0 +1,133 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Production environment overlay for HDIM Platform
+# Deploy with: kubectl apply -k k8s/overlays/production/
+
+namespace: hdim-production
+
+resources:
+  # Production-specific namespace and HA configs
+  - namespace.yaml
+  - hpa.yaml
+  - pdb.yaml
+
+  # Base resources (secrets and configmap)
+  - ../../base
+
+  # Infrastructure
+  - ../../infrastructure/postgres.yaml
+  - ../../infrastructure/redis.yaml
+  - ../../infrastructure/kafka.yaml
+
+  # Core services
+  - ../../services/gateway-service.yaml
+  - ../../services/fhir-service.yaml
+  - ../../services/patient-service.yaml
+  - ../../services/care-gap-service.yaml
+  - ../../services/quality-measure-service.yaml
+  - ../../services/cql-engine-service.yaml
+  - ../../services/consent-service.yaml
+  - ../../services/event-processing-service.yaml
+  - ../../services/event-router-service.yaml
+
+  # AI services
+  - ../../services/agent-runtime-service.yaml
+  - ../../services/ai-assistant-service.yaml
+  - ../../services/agent-builder-service.yaml
+
+  # Analytics services
+  - ../../services/analytics-service.yaml
+  - ../../services/predictive-analytics-service.yaml
+  - ../../services/sdoh-service.yaml
+
+  # Workflow services
+  - ../../services/approval-service.yaml
+  - ../../services/payer-workflows-service.yaml
+
+  # Data services
+  - ../../services/cdr-processor-service.yaml
+  - ../../services/data-enrichment-service.yaml
+
+  # Integration services
+  - ../../services/ehr-connector-service.yaml
+
+  # Support services
+  - ../../services/documentation-service.yaml
+
+# Strategic merge patches for production environment
+patches:
+  - path: patches/resources.yaml
+  - path: patches/replicas.yaml
+
+# ConfigMap generator for production-specific configs
+configMapGenerator:
+  - name: hdim-environment-config
+    literals:
+      - SPRING_PROFILES_ACTIVE=kubernetes,production
+      - LOG_LEVEL=INFO
+      - ENABLE_DEMO_DATA=false
+      - ENABLE_SWAGGER_UI=false
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_SERVICE_NAME_PREFIX=prod-
+      - CACHE_TTL_SECONDS=300
+      - CONNECTION_POOL_SIZE=20
+
+# Labels for production
+labels:
+  - pairs:
+      app.kubernetes.io/managed-by: kustomize
+      app.kubernetes.io/part-of: hdim-platform
+      environment: production
+
+# Annotations
+commonAnnotations:
+  deployment.kubernetes.io/environment: production
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+  prometheus.io/path: "/actuator/prometheus"
+
+# Images - production uses versioned tags
+images:
+  - name: hdim/gateway-service
+    newTag: latest
+  - name: hdim/fhir-service
+    newTag: latest
+  - name: hdim/patient-service
+    newTag: latest
+  - name: hdim/care-gap-service
+    newTag: latest
+  - name: hdim/quality-measure-service
+    newTag: latest
+  - name: hdim/cql-engine-service
+    newTag: latest
+  - name: hdim/consent-service
+    newTag: latest
+  - name: hdim/event-processing-service
+    newTag: latest
+  - name: hdim/event-router-service
+    newTag: latest
+  - name: hdim/agent-runtime-service
+    newTag: latest
+  - name: hdim/ai-assistant-service
+    newTag: latest
+  - name: hdim/agent-builder-service
+    newTag: latest
+  - name: hdim/analytics-service
+    newTag: latest
+  - name: hdim/predictive-analytics-service
+    newTag: latest
+  - name: hdim/sdoh-service
+    newTag: latest
+  - name: hdim/approval-service
+    newTag: latest
+  - name: hdim/payer-workflows-service
+    newTag: latest
+  - name: hdim/cdr-processor-service
+    newTag: latest
+  - name: hdim/data-enrichment-service
+    newTag: latest
+  - name: hdim/ehr-connector-service
+    newTag: latest
+  - name: hdim/documentation-service
+    newTag: latest

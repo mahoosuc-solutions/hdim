@@ -1,0 +1,42 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: hdim-v1.6.0
+
+namespace: hdim-production
+
+labels:
+- pairs:
+    app.kubernetes.io/version: "1.6.0"
+    compliance: hipaa
+
+resources:
+- namespace.yaml
+- configmap.yaml
+- cql-engine-deployment.yaml
+# Add more deployments as they are created:
+# - fhir-service-deployment.yaml
+# - patient-service-deployment.yaml
+# - quality-measure-deployment.yaml
+
+# Images - override tags here for different environments
+images:
+- name: healthdata-cql-engine-service
+  newTag: "1.6.0"
+- name: healthdata-fhir-service
+  newTag: "1.6.0"
+- name: healthdata-patient-service
+  newTag: "1.6.0"
+- name: healthdata-quality-measure-service
+  newTag: "1.6.0"
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize
+  app.kubernetes.io/part-of: hdim
+
+# Common annotations
+commonAnnotations:
+  hdim.healthdata.com/hipaa-compliant: "true"
+  hdim.healthdata.com/cache-ttl-max: "300000ms"

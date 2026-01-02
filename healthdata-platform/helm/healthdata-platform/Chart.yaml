@@ -1,0 +1,46 @@
+apiVersion: v2
+name: healthdata-platform
+description: HealthData Platform - FHIR-based Clinical Quality Measurement System
+type: application
+version: 2.0.0
+appVersion: "2.0.0"
+
+keywords:
+  - healthcare
+  - clinical
+  - quality-measures
+  - fhir
+  - hl7
+  - hedis
+  - cms
+  - patient-care
+
+home: https://healthdata-platform.io
+sources:
+  - https://github.com/healthdata-in-motion/healthdata-platform
+
+maintainers:
+  - name: HealthData Platform Team
+    email: team@healthdata-platform.io
+    url: https://healthdata-platform.io
+
+icon: https://healthdata-platform.io/assets/logo.png
+
+dependencies:
+  # Optional: Use external charts for dependencies
+  # - name: postgresql
+  #   version: "12.x.x"
+  #   repository: https://charts.bitnami.com/bitnami
+  #   condition: postgresql.enabled
+  # - name: redis
+  #   version: "17.x.x"
+  #   repository: https://charts.bitnami.com/bitnami
+  #   condition: redis.enabled
+  # - name: kafka
+  #   version: "22.x.x"
+  #   repository: https://charts.bitnami.com/bitnami
+  #   condition: kafka.enabled
+
+annotations:
+  category: Healthcare
+  licenses: MIT

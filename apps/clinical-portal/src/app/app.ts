@@ -1,0 +1,190 @@
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatListModule } from '@angular/material/list';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { BreadcrumbComponent } from './shared/components/breadcrumb/breadcrumb.component';
+import { GlobalSearchService } from './shared/services/global-search.service';
+import { ThemeService } from './services/theme.service';
+import { AuthService } from './services/auth.service';
+import { Subscription } from 'rxjs';
+
+@Component({
+  selector: 'app-root',
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatToolbarModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSidenavModule,
+    MatListModule,
+    MatBadgeModule,
+    MatMenuModule,
+    MatTooltipModule,
+    BreadcrumbComponent,
+  ],
+  templateUrl: './app.html',
+  styleUrl: './app.scss',
+})
+export class App implements OnInit, OnDestroy {
+  protected title = 'Clinical Portal';
+  protected practiceName = 'Main Street Clinic';
+  protected sidenavOpened = true;
+
+  // Session timeout configuration (15 minutes of inactivity)
+  private readonly SESSION_TIMEOUT_MS = 15 * 60 * 1000;
+  private readonly SESSION_WARNING_MS = 2 * 60 * 1000; // Warn 2 minutes before timeout
+  private sessionTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private sessionWarningId: ReturnType<typeof setTimeout> | null = null;
+  private lastActivityTime = Date.now();
+  protected showSessionWarning = false;
+  protected sessionTimeRemaining = 0;
+  private sessionCountdownId: ReturnType<typeof setInterval> | null = null;
+  private authSubscription: Subscription | null = null;
+
+  protected navItems = [
+    { path: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
+    { path: '/patients', icon: 'people', label: 'Patients' },
+    { path: '/evaluations', icon: 'assessment', label: 'Evaluations' },
+    { path: '/results', icon: 'analytics', label: 'Results' },
+    { path: '/reports', icon: 'description', label: 'Reports' },
+    { path: '/measure-builder', icon: 'build_circle', label: 'Measure Builder' },
+    { path: '/visualization/live-monitor', icon: '3d_rotation', label: 'Live Monitor' },
+    { path: '/ai-assistant', icon: 'smart_toy', label: 'AI Assistant' },
+    { path: '/knowledge-base', icon: 'menu_book', label: 'Knowledge Base' },
+  ];
+
+  constructor(
+    private globalSearchService: GlobalSearchService,
+    protected themeService: ThemeService,
+    private authService: AuthService,
+    protected router: Router
+  ) {}
+
+  ngOnInit(): void {
+    // Initialize theme system - automatically detects browser preference
+    this.themeService.initialize();
+
+    // Start session timeout monitoring if user is authenticated
+    this.authSubscription = this.authService.isAuthenticated$.subscribe((isAuth) => {
+      if (isAuth) {
+        this.resetSessionTimeout();
+      } else {
+        this.clearSessionTimeout();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.clearSessionTimeout();
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
+    }
+  }
+
+  // Listen for user activity to reset session timeout
+  @HostListener('document:click')
+  @HostListener('document:keypress')
+  @HostListener('document:mousemove')
+  @HostListener('document:scroll')
+  onUserActivity(): void {
+    if (this.authService.isAuthenticated()) {
+      this.resetSessionTimeout();
+    }
+  }
+
+  /**
+   * Reset the session timeout on user activity
+   */
+  private resetSessionTimeout(): void {
+    this.lastActivityTime = Date.now();
+    this.showSessionWarning = false;
+    this.clearSessionTimeout();
+
+    // Set warning timer (fires 2 minutes before timeout)
+    this.sessionWarningId = setTimeout(() => {
+      this.showSessionWarning = true;
+      this.sessionTimeRemaining = Math.floor(this.SESSION_WARNING_MS / 1000);
+      // Start countdown
+      this.sessionCountdownId = setInterval(() => {
+        this.sessionTimeRemaining--;
+        if (this.sessionTimeRemaining <= 0) {
+          this.clearSessionCountdown();
+        }
+      }, 1000);
+    }, this.SESSION_TIMEOUT_MS - this.SESSION_WARNING_MS);
+
+    // Set actual timeout
+    this.sessionTimeoutId = setTimeout(() => {
+      this.onSessionTimeout();
+    }, this.SESSION_TIMEOUT_MS);
+  }
+
+  /**
+   * Clear session timeout timers
+   */
+  private clearSessionTimeout(): void {
+    if (this.sessionTimeoutId) {
+      clearTimeout(this.sessionTimeoutId);
+      this.sessionTimeoutId = null;
+    }
+    if (this.sessionWarningId) {
+      clearTimeout(this.sessionWarningId);
+      this.sessionWarningId = null;
+    }
+    this.clearSessionCountdown();
+  }
+
+  private clearSessionCountdown(): void {
+    if (this.sessionCountdownId) {
+      clearInterval(this.sessionCountdownId);
+      this.sessionCountdownId = null;
+    }
+  }
+
+  /**
+   * Handle session timeout - log out the user
+   */
+  private onSessionTimeout(): void {
+    this.showSessionWarning = false;
+    this.clearSessionTimeout();
+    console.warn('Session timeout - logging out user due to inactivity');
+    this.authService.logout();
+  }
+
+  /**
+   * Extend the session (called when user clicks "Stay Logged In")
+   */
+  extendSession(): void {
+    this.showSessionWarning = false;
+    this.resetSessionTimeout();
+  }
+
+  toggleSidenav(): void {
+    this.sidenavOpened = !this.sidenavOpened;
+  }
+
+  openGlobalSearch(): void {
+    this.globalSearchService.openSearch();
+  }
+
+  toggleTheme(): void {
+    this.themeService.toggleTheme();
+  }
+
+  get isDarkMode(): boolean {
+    return this.themeService.currentTheme() === 'dark';
+  }
+
+  logout(): void {
+    this.clearSessionTimeout();
+    this.authService.logout();
+  }
+}

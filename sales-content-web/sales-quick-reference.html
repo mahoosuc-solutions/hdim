@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Quick Reference - HDIM</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; background: white; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #1e40af; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+        .print-button { background: #1e40af; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 20px 0; }
+        .print-button:hover { background: #1e3a8a; }
+        
+        header {
+            border-bottom: 3px solid #1e40af;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            color: #1e40af;
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        h2 {
+            color: #1e40af;
+            font-size: 1.4em;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            border-left: 4px solid #1e40af;
+            padding-left: 12px;
+        }
+
+        h3 {
+            color: #1e3a8a;
+            font-size: 1.05em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .pitch-box {
+            background: #f0f9ff;
+            border: 2px solid #bfdbfe;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+
+        .pitch-label {
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 8px;
+            font-size: 0.85em;
+        }
+
+        .objection-box {
+            background: #fee2e2;
+            border-left: 4px solid #dc2626;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .objection-title {
+            font-weight: 600;
+            color: #b91c1c;
+            margin-bottom: 8px;
+        }
+
+        .objection-response {
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .question-box {
+            background: #dbeafe;
+            border-left: 4px solid #0284c7;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+
+        .talking-points {
+            background: #f3f4f6;
+            border-left: 4px solid #4b5563;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .talking-points ul {
+            margin-left: 20px;
+        }
+
+        .talking-points li {
+            margin-bottom: 8px;
+        }
+
+        .email-template {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .email-field {
+            color: #666;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        table th {
+            background: #f3f4f6;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #1e40af;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        ul, ol { margin-left: 20px; margin-bottom: 15px; }
+        li { margin-bottom: 8px; }
+
+        strong { color: #1e40af; }
+
+        .highlight {
+            background: #fef3c7;
+            padding: 15px;
+            border-left: 4px solid #f59e0b;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        @media print {
+            .back-link, .print-button { display: none; }
+            .container { background: white; padding: 20px; }
+            body { background: white; }
+            h2 { page-break-after: avoid; }
+        }
+
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.85em;
+            color: #999;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to All Documents</a>
+        <button class="print-button" onclick="window.print()">🖨️ Print as PDF</button>
+
+        <header>
+            <h1>Sales Quick Reference</h1>
+            <p>Everything you need for discovery calls, objection handling, and closing deals</p>
+        </header>
+
+        <h2>30-Second Elevator Pitch</h2>
+        <div class="pitch-box">
+            "HDIM helps care organizations identify and close quality measure gaps in real-time. Result: +0.5 to +0.7 Star rating improvement, $300K+ annual revenue gain, and 8-12 week implementation. Perfect if you're leaving gaps or Star rating points on the table."
+        </div>
+
+        <h2>3-Minute Elevator Pitch</h2>
+        <div class="pitch-box">
+            <p><strong>The Problem:</strong> Care coordinators are drowning in manual work hunting for gaps. Only 45% of eligible patients get identified. Meanwhile, you're leaving $300K+ annually on the table in unrealized quality bonuses.</p>
+            <p style="margin-top: 10px;"><strong>The Solution:</strong> Real-time gap alerts integrated into your existing workflow. Your coordinators stop hunting and start closing. Smart prioritization means 20-30 actionable alerts per day, not 100+.</p>
+            <p style="margin-top: 10px;"><strong>The Result:</strong> 68% gap closure (up from 45%), +0.6 Star rating improvement, $265K Year 1 ROI for a 15K-patient organization.</p>
+            <p style="margin-top: 10px;"><strong>Speed:</strong> Go-live in 8-12 weeks. ROI in 5 months. Proven track record.</p>
+        </div>
+
+        <h2>Discovery Questions (11)</h2>
+        <p>Ask these in discovery calls to understand fit and build the business case:</p>
+
+        <div class="question-box">
+            <strong>1. What's your current gap closure rate?</strong><br>
+            (If <50%, you're a perfect fit. If >70%, less urgent.)
+        </div>
+
+        <div class="question-box">
+            <strong>2. How much time do your coordinators spend hunting for gaps?</strong><br>
+            (If 2+ hours/week, the labor savings ROI is strong.)
+        </div>
+
+        <div class="question-box">
+            <strong>3. What's your current Star rating?</strong><br>
+            (Each 0.1-point improvement = $45K+ for a 15K-patient org. Big incentive.)
+        </div>
+
+        <div class="question-box">
+            <strong>4. Which HEDIS measures are you furthest from closing?</strong><br>
+            (Tells you where to focus and what the biggest opportunity is.)
+        </div>
+
+        <div class="question-box">
+            <strong>5. What systems are your care coordinators currently using?</strong><br>
+            (Epic/Cerner? Good. Fragmented custom system? Even better fit for us.)
+        </div>
+
+        <div class="question-box">
+            <strong>6. Who are your biggest competitors on quality?</strong><br>
+            (If they're ahead on Star rating, urgency increases.)
+        </div>
+
+        <div class="question-box">
+            <strong>7. Do you have compliance audit requirements?</strong><br>
+            (If yes, emphasize our audit trail + policy enforcement features.)
+        </div>
+
+        <div class="question-box">
+            <strong>8. What would happen if you improved your Star rating by 0.5 points?</strong><br>
+            (Let them do the math on quality bonus revenue. Usually eye-opening.)
+        </div>
+
+        <div class="question-box">
+            <strong>9. Have you looked at other solutions?</strong><br>
+            (If they've tried competitors: "What was your biggest frustration?")
+        </div>
+
+        <div class="question-box">
+            <strong>10. How long would it take you to implement a new system?</strong><br>
+            (If they're slow decision-makers, emphasize our 8-12 week timeline.)
+        </div>
+
+        <div class="question-box">
+            <strong>11. Who needs to approve this decision?</strong><br>
+            (Identify all stakeholders: CMO, CFO, CIO, compliance. Plan accordingly.)
+        </div>
+
+        <h2>Objection Responses</h2>
+
+        <div class="objection-box">
+            <div class="objection-title">Objection: "Our EHR already does this"</div>
+            <div class="objection-response">
+                <strong>Response:</strong> "Most EHRs have gap functionality, but it's usually batch reporting—you get alerts weeks later. We do real-time alerts that appear in your workflow within hours. Plus, our system works across EHRs (if you're on Cerner and use some external data). Also, we add consent policy enforcement—that's not in any EHR. Let me show you the difference. You'll see why dedicated is better than built-in."
+            </div>
+        </div>
+
+        <div class="objection-box">
+            <div class="objection-title">Objection: "We don't have budget for new software"</div>
+            <div class="objection-response">
+                <strong>Response:</strong> "I totally understand. But here's the thing—a 15K-patient organization leaves $300K+ on the table annually in unrealized quality bonuses. Our system costs $180K to implement and $100K annually. So in Year 1, you're at break-even or better. Year 2+, it's pure profit. So it's not a cost—it's an investment that pays for itself. The conversation isn't 'can you afford this'—it's 'can you afford to wait another year to capture that $300K?'"
+            </div>
+        </div>
+
+        <div class="objection-box">
+            <div class="objection-title">Objection: "We need more time to evaluate"</div>
+            <div class="objection-response">
+                <strong>Response:</strong> "That's fair. And we can definitely take time. But I'll point out—every month you wait, you're leaving ~$25K in quality bonus opportunity on the table (assuming $300K/year gap). So while evaluation is smart, speed matters here. How about we schedule a working session next week to map out your current state and confirm the ROI for your organization specifically? If it makes sense, we can move fast. If it doesn't, no harm done."
+            </div>
+        </div>
+
+        <div class="objection-box">
+            <div class="objection-title">Objection: "Competitors offer better pricing"</div>
+            <div class="objection-response">
+                <strong>Response:</strong> "Pricing definitely matters, and I'd love to see their proposal. But the question isn't cheapest—it's best ROI. Our competitors usually charge less upfront but take 12-24 weeks to implement. We do 8-12 weeks. Their systems do batch reporting. We do real-time. And they don't have consent policy enforcement. So when you factor in faster go-live = faster ROI + better clinical outcomes, we usually end up ahead. What specific features do they have that we don't?"
+            </div>
+        </div>
+
+        <div class="objection-box">
+            <div class="objection-title">Objection: "Our IT team says it's too complex to integrate"</div>
+            <div class="objection-response">
+                <strong>Response:</strong> "I hear you. IT integration can be a concern. That's actually why we built HDIM to be EHR-agnostic—we integrate with whatever system you have without major modifications. Can I set up a tech call with your IT team? They usually find it's much simpler than they expected. We handle most of the heavy lifting."
+            </div>
+        </div>
+
+        <div class="objection-box">
+            <div class="objection-title">Objection: "We tried something similar and it didn't work"</div>
+            <div class="objection-response">
+                <strong>Response:</strong> "What happened? [Listen carefully] OK, that's helpful context. Most failures I see come down to one of a few things: alerts were too noisy (100+ per day with 5% action rate), implementation took too long (stretched timelines = user resistance), or the workflow didn't match how coordinators actually work. That's exactly what we fixed with HDIM. We focus on quality over quantity for alerts, we go live in 8-12 weeks, and we design with coordinators' input. I'd love to show you how we address what went wrong before."
+            </div>
+        </div>
+
+        <div class="objection-box">
+            <div class="objection-title">Objection: "We're worried about user adoption"</div>
+            <div class="objection-response">
+                <strong>Response:</strong> "That's the right concern. And frankly, if coordinators hate using it, it won't work. That's why we design with them from day one. We do workflow design workshops, pilot with a small group first, and tune the system based on actual usage patterns. Our success metric isn't 'is it implemented'—it's 'are coordinators actually using it.' We have 95%+ adoption rates because we make it easy, not because we force it."
+            </div>
+        </div>
+
+        <h2>Key ROI Numbers to Memorize</h2>
+        <div class="talking-points">
+            <ul>
+                <li><strong>Gap closure improvement:</strong> 45% → 68% (+23 points, or 50% relative improvement)</li>
+                <li><strong>Star rating improvement:</strong> +0.5 to +0.7 points is typical (3.4 → 4.0 realistic)</li>
+                <li><strong>Financial ROI (15K-patient org):</strong> $265K Year 1 net benefit (147% ROI)</li>
+                <li><strong>Time savings:</strong> 2-3 hours/week per care coordinator freed up</li>
+                <li><strong>Payback period:</strong> 4.9 months (usually 5-6 months)</li>
+                <li><strong>Implementation speed:</strong> 8-12 weeks (competitors: 12-24 weeks)</li>
+                <li><strong>Annual subscription cost:</strong> ~$100K for 15K-patient organization</li>
+                <li><strong>Implementation cost:</strong> ~$80K one-time</li>
+                <li><strong>Quality bonus revenue per 0.1 Star improvement:</strong> $45K for 15K-patient org</li>
+                <li><strong>Labor savings:</strong> ~$6,500 per coordinator per year (2-3 hrs/week freed)</li>
+            </ul>
+        </div>
+
+        <h2>Problem-Solution Mapping</h2>
+        <table>
+            <tr>
+                <th>Clinical Problem</th>
+                <th>HDIM Solution</th>
+                <th>Benefit</th>
+            </tr>
+            <tr>
+                <td>Coordinators spend 3-4 hrs/week hunting for gaps</td>
+                <td>Real-time gap alerts delivered automatically</td>
+                <td>$6,500+ labor savings per coordinator/year</td>
+            </tr>
+            <tr>
+                <td>Only 45% of eligible gaps identified</td>
+                <td>Automated gap detection across 52 HEDIS measures</td>
+                <td>68% gap closure (50% improvement), +$250K annual revenue</td>
+            </tr>
+            <tr>
+                <td>Gaps identified 3-5 days too late</td>
+                <td>Real-time alerts (hours vs days)</td>
+                <td>Same-day intervention possible, better patient outcomes</td>
+            </tr>
+            <tr>
+                <td>100+ alert fatigue (95% ignored)</td>
+                <td>Smart prioritization (20-30 alerts/day, 80% action rate)</td>
+                <td>Coordinators actually act on alerts</td>
+            </tr>
+            <tr>
+                <td>Audit prep takes 2 weeks per audit</td>
+                <td>Compliance audit trail + policy enforcement automated</td>
+                <td>Audit prep: 2 weeks → 2 hours</td>
+            </tr>
+            <tr>
+                <td>Care coordination fragmented across systems</td>
+                <td>Unified dashboard, integrated workflows, care tracking</td>
+                <td>Clear ownership, faster gap closure, measurable outcomes</td>
+            </tr>
+        </table>
+
+        <h2>Email Templates (Copy-Paste Ready)</h2>
+
+        <h3>Template #1: Initial Outreach</h3>
+        <div class="email-template">
+            <div class="email-field">Subject: [First Name] - $250K+ opportunity in gap closure</div>
+            <div class="email-field" style="margin-top: 15px;">Hi [First Name],</div>
+            <p style="margin: 10px 0;">I was looking at [Organization]'s quality metrics vs. [Competitor], and I noticed a gap (pun intended). Your gap closure rate is around 45%, but it could be 68%. That difference is worth $250K+ in annual revenue.</p>
+            <p style="margin: 10px 0;">We help organizations like yours close that gap using real-time alerts (not batch reports) integrated into your existing workflow. Typical result: +0.6 Star rating in 12 months, $265K net ROI in Year 1.</p>
+            <p style="margin: 10px 0;">Worth 20 minutes to explore? I can show you the numbers specific to [Organization] in our working session.</p>
+            <p style="margin: 10px 0;">Thanks,<br>[Your Name]</p>
+        </div>
+
+        <h3>Template #2: Follow-Up After Content View</h3>
+        <div class="email-template">
+            <div class="email-field">Subject: Re: Your HDIM working session</div>
+            <div class="email-field" style="margin-top: 15px;">Hi [First Name],</div>
+            <p style="margin: 10px 0;">Thanks for reviewing the case study. [Organization] had similar challenges—45% gap closure, coordinators stuck in manual work. 12 months later, they were at 68% gap closure and had freed up 2-3 hours per coordinator per week.</p>
+            <p style="margin: 10px 0;">I'm thinking about your situation, and I'd like to walk through your specific numbers to see if the ROI holds for [Your Organization]. 30 minutes, and you'll know exactly what's possible.</p>
+            <p style="margin: 10px 0;">Does Thursday or Friday work better for a call?</p>
+            <p style="margin: 10px 0;">Thanks,<br>[Your Name]</p>
+        </div>
+
+        <h3>Template #3: Working Session Confirmation</h3>
+        <div class="email-template">
+            <div class="email-field">Subject: Working session confirmed - [Date] at [Time]</div>
+            <div class="email-field" style="margin-top: 15px;">Hi [First Name],</div>
+            <p style="margin: 10px 0;">Great! Looking forward to our call on [Date] at [Time].</p>
+            <p style="margin: 10px 0;">Here's what we'll cover:<br>
+            • Your current gap closure rate and where you're leaving gaps<br>
+            • Star rating improvement opportunity ($$ potential)<br>
+            • ROI model specific to [Organization]<br>
+            • Implementation timeline and adoption plan<br>
+            • Next steps if it makes sense</p>
+            <p style="margin: 10px 0;">Please have handy: current Star rating, estimated gap closure %, number of attributed patients, and number of care coordinators. That'll make our conversation much richer.</p>
+            <p style="margin: 10px 0;">See you then!<br>[Your Name]</p>
+        </div>
+
+        <h2>Presentation Outline (30 Minutes)</h2>
+        <ol>
+            <li><strong>Problem (5 min):</strong> Their specific gaps, time spent, financial impact. Make it personal to their org.</li>
+            <li><strong>Solution (5 min):</strong> Real-time alerts, workflow integration, compliance automation. How it works.</li>
+            <li><strong>Proof (5 min):</strong> Case study matching their size/type. Real numbers. Customer quotes.</li>
+            <li><strong>ROI (8 min):</strong> Conservative model first, then best case. Let them see the numbers. Answer questions.</li>
+            <li><strong>Next Steps (2 min):</strong> If they're interested: proposal → pilot → full deployment. If not: no pressure, stay in touch.</li>
+        </ol>
+
+        <h2>Talking Points by Audience</h2>
+        <h3>For Clinical Teams (Coordinators, Nurses)</h3>
+        <div class="talking-points">
+            <ul>
+                <li>"Stop hunting for gaps. Start closing them."</li>
+                <li>"Alerts come to you. You don't hunt for them."</li>
+                <li>"20-30 alerts/day that matter. Not 100 you ignore."</li>
+                <li>"Real-time means same-day intervention. Patients benefit."</li>
+                <li>"Coordinator quote: 'Freed up 3 hours/week to actually help patients.'"</li>
+            </ul>
+        </div>
+
+        <h3>For Physicians</h3>
+        <div class="talking-points">
+            <ul>
+                <li>"Know patients' gaps before they walk in the room."</li>
+                <li>"Evidence-based recommendations (HEDIS-based)."</li>
+                <li>"Integrated into your workflow—no extra work."</li>
+                <li>"Point-of-visit intervention = better outcomes."</li>
+            </ul>
+        </div>
+
+        <h3>For Finance/CFO</h3>
+        <div class="talking-points">
+            <ul>
+                <li>"$265K Year 1 ROI for 15K-patient org."</li>
+                <li>"Payback in 4.9 months."</li>
+                <li>"$300K+ annual opportunity—this captures it."</li>
+                <li>"3-year cumulative benefit: $865K net."</li>
+                <li>"Conservative estimates. Best case is $530K Year 1."</li>
+            </ul>
+        </div>
+
+        <h3>For Compliance</h3>
+        <div class="talking-points">
+            <ul>
+                <li>"Every access logged. Every decision tracked."</li>
+                <li>"Policy enforcement automated—no human error."</li>
+                <li>"Audit-ready 365 days a year."</li>
+                <li>"Audit prep: 2 weeks → 2 hours."</li>
+                <li>"Zero-trust compliance by design."</li>
+            </ul>
+        </div>
+
+        <footer>
+            <p>HDIM Sales Quick Reference | November 19, 2025 | Print & Laminate for Daily Use</p>
+            <p><a href="index.html">← Back to All Documents</a></p>
+        </footer>
+    </div>
+</body>
+</html>

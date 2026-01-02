@@ -1,0 +1,54 @@
+{
+  "name": "n8n-nodes-hdim-approval-gate",
+  "version": "0.1.0",
+  "description": "HDIM Approval Gate node for n8n - pause workflows until human approval",
+  "keywords": [
+    "n8n-community-node-package",
+    "hdim",
+    "approval",
+    "hitl",
+    "human-in-the-loop",
+    "healthcare"
+  ],
+  "license": "MIT",
+  "homepage": "https://hdim.health",
+  "author": {
+    "name": "HDIM Healthcare",
+    "email": "support@hdim.health"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hdim-health/n8n-nodes-hdim-approval-gate.git"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc && gulp build:icons",
+    "dev": "tsc --watch",
+    "lint": "eslint . --ext .ts",
+    "lintfix": "eslint . --ext .ts --fix",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/HdimApprovalApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/HdimApprovalGate/HdimApprovalGate.node.js",
+      "dist/nodes/HdimApprovalTrigger/HdimApprovalTrigger.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "eslint": "^8.0.0",
+    "gulp": "^4.0.2",
+    "n8n-workflow": "^1.0.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}

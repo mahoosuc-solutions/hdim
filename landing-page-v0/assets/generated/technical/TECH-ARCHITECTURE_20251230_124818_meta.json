@@ -1,0 +1,9 @@
+{
+  "prompt_id": "TECH-ARCHITECTURE",
+  "name": "Integration Platform Architecture",
+  "category": "technical",
+  "dimensions": "1200x800",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create an elegant, modern technical diagram showing a healthcare integration platform.\n\nLayout: LEFT TO RIGHT data flow showing the \"Connect Anything \u2192 Understand Everything \u2192 Act Immediately\" story.\n\nLEFT SECTION - \"Connect Anything\" (Data Sources):\n- Multiple system icons representing: Epic, Cerner, Labs, Claims, Devices, Payers\n- Each with subtle connection lines flowing rightward\n- Slightly muted colors suggesting disparate, siloed systems\n\nCENTER SECTION - \"The Platform\" (three layers):\n1. ..."
+}

@@ -1,0 +1,48 @@
+version: '3.8'
+
+# Chaos Engineering Stack
+# Uses Chaos Mesh for Kubernetes or Pumba for Docker-based chaos testing
+
+services:
+  # Toxiproxy - Simulates network conditions
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.7.0
+    container_name: toxiproxy
+    ports:
+      - "8474:8474"   # API port
+      - "5432:5432"   # PostgreSQL proxy
+      - "6379:6379"   # Redis proxy
+      - "9092:9092"   # Kafka proxy
+    volumes:
+      - ./toxiproxy.json:/config/toxiproxy.json
+    command: ["-config", "/config/toxiproxy.json"]
+    networks:
+      - chaos-net
+
+  # Chaos Monkey for Spring Boot
+  chaos-monkey:
+    image: codecentric/spring-boot-admin:3.1.8
+    container_name: chaos-monkey-admin
+    environment:
+      - SPRING_BOOT_ADMIN_CLIENT_URL=http://gateway-service:9000/actuator
+    ports:
+      - "8090:8080"
+    networks:
+      - chaos-net
+
+  # Gremlin Agent (if using Gremlin)
+  # gremlin:
+  #   image: gremlin/gremlin:latest
+  #   container_name: gremlin
+  #   environment:
+  #     - GREMLIN_TEAM_ID=${GREMLIN_TEAM_ID}
+  #     - GREMLIN_TEAM_SECRET=${GREMLIN_TEAM_SECRET}
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   networks:
+  #     - chaos-net
+
+networks:
+  chaos-net:
+    driver: bridge
+    external: true

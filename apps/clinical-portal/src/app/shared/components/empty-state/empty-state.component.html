@@ -1,0 +1,34 @@
+<div
+  class="empty-state-container"
+  [class]="customClass"
+  role="status"
+  aria-live="polite">
+  <div class="empty-state-content">
+    <div class="empty-state-icon-wrapper">
+      <mat-icon
+        class="empty-state-icon"
+        [attr.aria-hidden]="true">
+        {{ icon }}
+      </mat-icon>
+    </div>
+
+    <h2 class="empty-state-title" *ngIf="title">
+      {{ title }}
+    </h2>
+
+    <p class="empty-state-message" *ngIf="message">
+      {{ message }}
+    </p>
+
+    <div class="empty-state-action" *ngIf="actionText">
+      <app-loading-button
+        [text]="actionText"
+        [icon]="actionIcon"
+        [loading]="actionLoading"
+        [color]="actionColor"
+        variant="raised"
+        (buttonClick)="onActionClick()">
+      </app-loading-button>
+    </div>
+  </div>
+</div>

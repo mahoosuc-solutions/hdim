@@ -1,0 +1,167 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "healthdata-platform.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "healthdata-platform.labels" . | nindent 4 }}
+    app.kubernetes.io/component: application
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      {{- include "healthdata-platform.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: application
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "healthdata-platform.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: application
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "healthdata-platform.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if or .Values.initContainers.waitForPostgres.enabled .Values.initContainers.waitForRedis.enabled }}
+      initContainers:
+      {{- if .Values.initContainers.waitForPostgres.enabled }}
+      - name: wait-for-postgres
+        image: {{ .Values.initContainers.waitForPostgres.image }}
+        command:
+          {{- toYaml .Values.initContainers.waitForPostgres.command | nindent 10 }}
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+      {{- end }}
+      {{- if .Values.initContainers.waitForRedis.enabled }}
+      - name: wait-for-redis
+        image: {{ .Values.initContainers.waitForRedis.image }}
+        command:
+          {{- toYaml .Values.initContainers.waitForRedis.command | nindent 10 }}
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+      {{- end }}
+      {{- end }}
+      containers:
+      - name: {{ .Chart.Name }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: {{ .Values.application.profile }}
+        - name: SPRING_APPLICATION_NAME
+          value: {{ .Values.application.name }}
+        - name: SPRING_DATASOURCE_URL
+          value: {{ include "healthdata-platform.databaseUrl" . }}
+        - name: SPRING_DATASOURCE_USERNAME
+          value: {{ .Values.database.user }}
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "healthdata-platform.fullname" . }}-secrets
+              key: db-password
+        - name: SPRING_DATA_REDIS_HOST
+          value: {{ include "healthdata-platform.redisHost" . }}
+        - name: SPRING_DATA_REDIS_PORT
+          value: {{ .Values.redis.port | quote }}
+        - name: SPRING_DATA_REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "healthdata-platform.fullname" . }}-secrets
+              key: redis-password
+        - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+          value: {{ include "healthdata-platform.kafkaBootstrapServers" . }}
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "healthdata-platform.fullname" . }}-secrets
+              key: jwt-secret
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        livenessProbe:
+          {{- toYaml .Values.livenessProbe | nindent 12 }}
+        readinessProbe:
+          {{- toYaml .Values.readinessProbe | nindent 12 }}
+        startupProbe:
+          {{- toYaml .Values.startupProbe | nindent 12 }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: app-tmp
+          mountPath: /app/tmp
+        - name: app-logs
+          mountPath: /app/logs
+        - name: cache
+          mountPath: /app/cache
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: {{ .Values.volumes.tmp.sizeLimit }}
+      - name: app-tmp
+        emptyDir:
+          sizeLimit: {{ .Values.volumes.appTmp.sizeLimit }}
+      - name: app-logs
+        emptyDir:
+          sizeLimit: {{ .Values.volumes.appLogs.sizeLimit }}
+      - name: cache
+        emptyDir:
+          sizeLimit: {{ .Values.volumes.cache.sizeLimit }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

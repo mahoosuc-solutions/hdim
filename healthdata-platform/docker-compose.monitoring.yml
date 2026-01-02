@@ -1,0 +1,404 @@
+version: '3.9'
+
+# ============================================================
+# HealthData Platform - Monitoring Infrastructure
+# Complete observability stack with Prometheus, Grafana, ELK
+# ============================================================
+
+services:
+  # ============================================================
+  # PROMETHEUS - Metrics Collection
+  # ============================================================
+  prometheus:
+    image: prom/prometheus:v2.40.7
+    container_name: healthdata-prometheus
+    hostname: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/prometheus-rules.yml:/etc/prometheus/rules/application.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=50GB'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================================
+  # GRAFANA - Visualization & Dashboards
+  # ============================================================
+  grafana:
+    image: grafana/grafana:9.3.6
+    container_name: healthdata-grafana
+    hostname: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-clock-panel,grafana-simple-json-datasource
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=https://grafana.healthdata-platform.io
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_LOG_MODE=console file
+      - GF_LOG_LEVEL=info
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================================
+  # ALERTMANAGER - Alert Routing & Notification
+  # ============================================================
+  alertmanager:
+    image: prom/alertmanager:v0.25.0
+    container_name: healthdata-alertmanager
+    hostname: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+      - '--cluster.advertise-address=0.0.0.0:9093'
+    environment:
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - PAGERDUTY_SERVICE_KEY=${PAGERDUTY_SERVICE_KEY}
+      - PAGERDUTY_DB_KEY=${PAGERDUTY_DB_KEY}
+      - PAGERDUTY_INFRA_KEY=${PAGERDUTY_INFRA_KEY}
+      - PAGERDUTY_SECURITY_KEY=${PAGERDUTY_SECURITY_KEY}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================
+  # ELASTICSEARCH - Log Storage & Search
+  # ============================================================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.0
+    container_name: healthdata-elasticsearch
+    hostname: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - cluster.name=healthdata-cluster
+      - node.name=es-node-1
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - xpack.security.enabled=false
+      - xpack.monitoring.collection.enabled=true
+      - ELASTIC_USER=${ELASTIC_USER:-elastic}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-changeme}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - ./monitoring/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ============================================================
+  # KIBANA - Log Visualization
+  # ============================================================
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.6.0
+    container_name: healthdata-kibana
+    hostname: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=${ELASTIC_USER:-elastic}
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD:-changeme}
+      - SERVER_NAME=healthdata-kibana
+      - SERVER_HOST=0.0.0.0
+      - KIBANA_ENCRYPTION_KEY=${KIBANA_ENCRYPTION_KEY:-a-32-character-long-encryption-key}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+    volumes:
+      - ./monitoring/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+      - kibana-data:/usr/share/kibana/data
+    networks:
+      - monitoring
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5601/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ============================================================
+  # LOGSTASH - Log Processing Pipeline
+  # ============================================================
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.6.0
+    container_name: healthdata-logstash
+    hostname: logstash
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+      - "5044:5044"
+      - "5514:5514"
+      - "9600:9600"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTIC_USER=${ELASTIC_USER:-elastic}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-changeme}
+      - ENVIRONMENT=${ENVIRONMENT:-prod}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - "LS_JAVA_OPTS=-Xmx1g -Xms1g"
+    volumes:
+      - ./monitoring/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - logstash-data:/usr/share/logstash/data
+    networks:
+      - monitoring
+    depends_on:
+      - elasticsearch
+      - kafka
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9600"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ============================================================
+  # NODE EXPORTER - System Metrics
+  # ============================================================
+  node-exporter:
+    image: prom/node-exporter:v1.5.0
+    container_name: healthdata-node-exporter
+    hostname: node-exporter
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # ============================================================
+  # POSTGRES EXPORTER - Database Metrics
+  # ============================================================
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.11.1
+    container_name: healthdata-postgres-exporter
+    hostname: postgres-exporter
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-healthdata}?sslmode=disable
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # ============================================================
+  # REDIS EXPORTER - Cache Metrics
+  # ============================================================
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.45.0
+    container_name: healthdata-redis-exporter
+    hostname: redis-exporter
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # ============================================================
+  # KAFKA EXPORTER - Messaging Metrics
+  # ============================================================
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:v1.6.0
+    container_name: healthdata-kafka-exporter
+    hostname: kafka-exporter
+    ports:
+      - "9308:9308"
+    command:
+      - '--kafka.server=kafka:9092'
+      - '--web.listen-address=:9308'
+    networks:
+      - monitoring
+    depends_on:
+      - kafka
+    restart: unless-stopped
+
+  # ============================================================
+  # LOKI - Log Aggregation
+  # ============================================================
+  loki:
+    image: grafana/loki:2.7.3
+    container_name: healthdata-loki
+    hostname: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki-data:/loki
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # ============================================================
+  # PROMTAIL - Log Shipper for Loki
+  # ============================================================
+  promtail:
+    image: grafana/promtail:2.7.3
+    container_name: healthdata-promtail
+    hostname: promtail
+    volumes:
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+  # ============================================================
+  # KAFKA - Message Broker (for log streaming)
+  # ============================================================
+  kafka:
+    image: confluentinc/cp-kafka:7.3.1
+    container_name: healthdata-kafka
+    hostname: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - monitoring
+    depends_on:
+      - zookeeper
+    restart: unless-stopped
+
+  # ============================================================
+  # ZOOKEEPER - Kafka Coordination
+  # ============================================================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.1
+    container_name: healthdata-zookeeper
+    hostname: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-logs:/var/lib/zookeeper/log
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+# ============================================================
+# NETWORKS
+# ============================================================
+networks:
+  monitoring:
+    driver: bridge
+    name: healthdata-monitoring
+
+# ============================================================
+# VOLUMES
+# ============================================================
+volumes:
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  alertmanager-data:
+    driver: local
+  elasticsearch-data:
+    driver: local
+  kibana-data:
+    driver: local
+  logstash-data:
+    driver: local
+  loki-data:
+    driver: local
+  kafka-data:
+    driver: local
+  zookeeper-data:
+    driver: local
+  zookeeper-logs:
+    driver: local

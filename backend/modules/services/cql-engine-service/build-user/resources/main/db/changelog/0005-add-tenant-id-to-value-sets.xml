@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0005-add-tenant-id-to-value-sets" author="healthdata-system">
+        <comment>Add tenant_id column to value_sets table for multi-tenant isolation</comment>
+
+        <addColumn tableName="value_sets">
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Set a default tenant_id for existing rows if any -->
+        <sql>
+            UPDATE value_sets SET tenant_id = 'SYSTEM' WHERE tenant_id IS NULL;
+        </sql>
+
+        <!-- Now make it NOT NULL -->
+        <addNotNullConstraint tableName="value_sets" columnName="tenant_id" columnDataType="varchar(64)"/>
+
+        <!-- Add index for tenant filtering -->
+        <createIndex indexName="idx_value_sets_tenant_id" tableName="value_sets">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <!-- Update the unique constraint to include tenant_id -->
+        <dropUniqueConstraint tableName="value_sets" constraintName="value_sets_oid_key"/>
+
+        <addUniqueConstraint
+            tableName="value_sets"
+            columnNames="tenant_id, oid"
+            constraintName="uk_value_sets_tenant_oid"/>
+
+        <rollback>
+            <dropUniqueConstraint tableName="value_sets" constraintName="uk_value_sets_tenant_oid"/>
+            <addUniqueConstraint tableName="value_sets" columnNames="oid" constraintName="value_sets_oid_key"/>
+            <dropIndex tableName="value_sets" indexName="idx_value_sets_tenant_id"/>
+            <dropNotNullConstraint tableName="value_sets" columnName="tenant_id" columnDataType="varchar(64)"/>
+            <dropColumn tableName="value_sets" columnName="tenant_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

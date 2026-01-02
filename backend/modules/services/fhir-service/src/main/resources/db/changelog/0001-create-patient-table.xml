@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0001-create-patient-table" author="codex">
+        <createTable tableName="patients">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_json" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="first_name" type="varchar(128)"/>
+            <column name="last_name" type="varchar(128)"/>
+            <column name="gender" type="varchar(32)"/>
+            <column name="birth_date" type="date"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted_at" type="timestamp with time zone"/>
+            <column name="deleted_by" type="varchar(100)"/>
+        </createTable>
+
+        <createIndex indexName="idx_patients_tenant_lastname" tableName="patients">
+            <column name="tenant_id"/>
+            <column name="last_name"/>
+        </createIndex>
+
+        <createIndex indexName="idx_patients_tenant_birthdate" tableName="patients">
+            <column name="tenant_id"/>
+            <column name="birth_date"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

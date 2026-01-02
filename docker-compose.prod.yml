@@ -1,0 +1,195 @@
+# HDIM Healthcare Platform - Production Security Overrides
+#
+# This file provides security hardening for production deployments.
+# Use together with docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile core up -d
+#
+# Security Measures:
+# 1. Database ports bound to localhost only (not exposed externally)
+# 2. Redis ports bound to localhost only
+# 3. Kafka/Zookeeper ports bound to localhost only
+# 4. Encryption keys via environment variables (not hardcoded)
+# 5. Actuator endpoints secured (configured in application.yml)
+#
+# HIPAA Compliance Notes:
+# - All PHI is encrypted at rest using AES-256-GCM
+# - All communications use TLS 1.2+
+# - Audit logging enabled for all PHI access
+# - Session timeout: 15 minutes for HIPAA compliance
+
+services:
+  # ============================================
+  # INFRASTRUCTURE SERVICES - SECURE PORTS
+  # ============================================
+
+  postgres:
+    ports:
+      # Bind to localhost only - prevents external access to database
+      - "127.0.0.1:5435:5432"
+    environment:
+      # Use environment variables for credentials in production
+      POSTGRES_USER: ${POSTGRES_USER:-healthdata}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-healthdata_db}
+
+  redis:
+    ports:
+      # Bind to localhost only - prevents external access to cache
+      - "127.0.0.1:6380:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:-}
+
+  zookeeper:
+    ports:
+      # Bind to localhost only - prevents external Kafka management
+      - "127.0.0.1:2182:2181"
+
+  kafka:
+    ports:
+      # Bind to localhost only - prevents external message queue access
+      - "127.0.0.1:9094:9092"
+      - "127.0.0.1:9095:9093"
+
+  # ============================================
+  # JAEGER - SECURE ACCESS
+  # ============================================
+
+  jaeger:
+    ports:
+      # Only expose Jaeger UI locally
+      - "127.0.0.1:16686:16686"
+      # OTLP ports for internal service communication only
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:4318:4318"
+      - "127.0.0.1:14250:14250"
+      - "127.0.0.1:6831:6831/udp"
+
+  # ============================================
+  # CORE CLINICAL SERVICES - PRODUCTION CONFIG
+  # ============================================
+
+  gateway-service:
+    environment:
+      # Use environment variable for JWT secret in production
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      # Enable encryption
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+      ENCRYPTION_SALT: ${ENCRYPTION_SALT:-hdim-phi-salt-production}
+
+  cql-engine-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+      ENCRYPTION_SALT: ${ENCRYPTION_SALT:-hdim-phi-salt-production}
+
+  consent-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+      ENCRYPTION_SALT: ${ENCRYPTION_SALT:-hdim-phi-salt-production}
+
+  event-processing-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+      ENCRYPTION_SALT: ${ENCRYPTION_SALT:-hdim-phi-salt-production}
+
+  patient-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+      ENCRYPTION_SALT: ${ENCRYPTION_SALT:-hdim-phi-salt-production}
+
+  fhir-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+      ENCRYPTION_SALT: ${ENCRYPTION_SALT:-hdim-phi-salt-production}
+
+  care-gap-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+      ENCRYPTION_SALT: ${ENCRYPTION_SALT:-hdim-phi-salt-production}
+
+  quality-measure-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+      ENCRYPTION_SALT: ${ENCRYPTION_SALT:-hdim-phi-salt-production}
+      # WebSocket allowed origins for production
+      WEBSOCKET_ALLOWED_ORIGINS: ${WEBSOCKET_ALLOWED_ORIGINS:-https://your-domain.com}
+
+  # ============================================
+  # AI SERVICES - PRODUCTION CONFIG
+  # ============================================
+
+  agent-runtime-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      HDIM_AGENT_SECURITY_ENCRYPTION_MASTER_KEY: ${AGENT_ENCRYPTION_KEY}
+      HDIM_AGENT_SECURITY_ENCRYPTION_SALT: ${AGENT_ENCRYPTION_SALT:-hdim-agent-salt-production}
+
+  ai-assistant-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
+  agent-builder-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
+  # ============================================
+  # ANALYTICS & REMAINING SERVICES - PRODUCTION CONFIG
+  # ============================================
+
+  analytics-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+
+  predictive-analytics-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
+  sdoh-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
+  ecr-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      AUDIT_ENABLED: "true"
+
+  qrda-export-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      AUDIT_ENABLED: "true"
+
+  hcc-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      AUDIT_ENABLED: "true"
+
+  prior-auth-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      HEALTHDATA_SECURITY_JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      HEALTHDATA_PERSISTENCE_PRIMARY_PASSWORD: ${POSTGRES_PASSWORD}
+      AUDIT_ENABLED: "true"

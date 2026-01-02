@@ -1,0 +1,104 @@
+# Grafana Datasource Configuration
+# Auto-provisioned datasources for HealthData Platform
+
+apiVersion: 1
+
+datasources:
+  # Prometheus - Primary metrics datasource
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus-healthdata
+    url: http://prometheus:9090
+    access: proxy
+    isDefault: true
+    jsonData:
+      httpMethod: POST
+      timeInterval: 15s
+      queryTimeout: 60s
+      customQueryParameters: ''
+      manageAlerts: true
+      prometheusType: Prometheus
+      prometheusVersion: 2.40.0
+      incrementalQuerying: false
+      disableRecordingRules: false
+      cacheLevel: 'High'
+    editable: false
+    version: 1
+
+  # Loki - Log aggregation datasource
+  - name: Loki
+    type: loki
+    uid: loki-healthdata
+    url: http://loki:3100
+    access: proxy
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        - datasourceUid: tempo-healthdata
+          matcherRegex: "traceID=(\\w+)"
+          name: TraceID
+          url: '$${__value.raw}'
+    editable: false
+    version: 1
+
+  # Tempo - Distributed tracing datasource
+  - name: Tempo
+    type: tempo
+    uid: tempo-healthdata
+    url: http://tempo:3200
+    access: proxy
+    jsonData:
+      httpMethod: GET
+      tracesToLogs:
+        datasourceUid: loki-healthdata
+        tags: ['job', 'instance', 'pod', 'namespace']
+        mappedTags: [{ key: 'service.name', value: 'service' }]
+        mapTagNamesEnabled: true
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '1h'
+        filterByTraceID: true
+        filterBySpanID: false
+      serviceMap:
+        datasourceUid: prometheus-healthdata
+      search:
+        hide: false
+      nodeGraph:
+        enabled: true
+      lokiSearch:
+        datasourceUid: loki-healthdata
+    editable: false
+    version: 1
+
+  # Elasticsearch - Full-text log search
+  - name: Elasticsearch
+    type: elasticsearch
+    uid: elasticsearch-healthdata
+    url: http://elasticsearch:9200
+    access: proxy
+    database: "healthdata-*"
+    jsonData:
+      esVersion: "8.0.0"
+      timeField: "@timestamp"
+      logMessageField: message
+      logLevelField: level
+      interval: Daily
+      timeInterval: 10s
+      maxConcurrentShardRequests: 5
+      includeFrozen: false
+    editable: false
+    version: 1
+
+  # TestData - For dashboard development and testing
+  - name: TestData
+    type: testdata
+    uid: testdata
+    access: proxy
+    isDefault: false
+    editable: false
+    version: 1
+
+deleteDatasources:
+  - name: Old Prometheus
+    orgId: 1
+  - name: Old Loki
+    orgId: 1

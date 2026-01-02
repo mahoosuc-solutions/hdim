@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: cql-engine-base
+
+namespace: healthdata
+
+commonLabels:
+  app.kubernetes.io/name: cql-engine-service
+  app.kubernetes.io/component: backend
+  app.kubernetes.io/part-of: healthdata-in-motion
+  app.kubernetes.io/managed-by: kustomize
+
+resources:
+  - cql-engine-deployment.yaml
+  - cql-engine-service.yaml
+  - cql-engine-configmap.yaml
+  - cql-engine-secret.yaml
+  - cql-engine-ingress.yaml
+  - cql-engine-hpa.yaml
+  - cql-engine-serviceaccount.yaml
+  - cql-engine-pdb.yaml
+
+images:
+  - name: healthdata/cql-engine-service
+    newTag: 1.0.0
+
+configMapGenerator:
+  - name: cql-engine-env-config
+    literals:
+      - SPRING_PROFILES_ACTIVE=production
+      - SERVER_PORT=8081
+      - JAVA_OPTS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
+
+generatorOptions:
+  disableNameSuffixHash: true

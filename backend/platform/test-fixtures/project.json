@@ -1,0 +1,39 @@
+{
+  "name": "platform-test-fixtures",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "backend/platform/test-fixtures/src",
+  "tags": [
+    "backend",
+    "lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/platform/test-fixtures/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:test-fixtures:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:test-fixtures:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:test-fixtures:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:test-fixtures:test :platform:test-fixtures:jacocoTestReport :platform:test-fixtures:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

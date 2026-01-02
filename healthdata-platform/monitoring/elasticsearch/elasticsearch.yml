@@ -1,0 +1,157 @@
+# Elasticsearch Configuration for HealthData Platform
+# Production-grade log aggregation and search
+
+# ======================== Elasticsearch Configuration =========================
+
+# ---------------------------------- Cluster -----------------------------------
+cluster.name: healthdata-cluster
+node.name: ${HOSTNAME}
+node.roles: [master, data, ingest, ml]
+
+# ----------------------------------- Paths ------------------------------------
+path.data: /usr/share/elasticsearch/data
+path.logs: /usr/share/elasticsearch/logs
+path.repo: /usr/share/elasticsearch/backups
+
+# ---------------------------------- Network -----------------------------------
+network.host: 0.0.0.0
+http.port: 9200
+transport.port: 9300
+
+# --------------------------------- Discovery ----------------------------------
+discovery.type: single-node
+# For multi-node clusters:
+# discovery.seed_hosts: ["es-node-1", "es-node-2", "es-node-3"]
+# cluster.initial_master_nodes: ["es-node-1", "es-node-2", "es-node-3"]
+
+# ---------------------------------- Gateway -----------------------------------
+gateway.recover_after_nodes: 1
+gateway.expected_nodes: 1
+gateway.recover_after_time: 5m
+
+# ----------------------------------- Memory -----------------------------------
+bootstrap.memory_lock: true
+
+# ---------------------------------- Index -------------------------------------
+# Default index settings
+index.number_of_shards: 3
+index.number_of_replicas: 1
+index.refresh_interval: 30s
+index.codec: best_compression
+index.max_result_window: 10000
+
+# Indexing performance
+index.translog.durability: async
+index.translog.sync_interval: 30s
+index.translog.flush_threshold_size: 512mb
+
+# ---------------------------------- Query -------------------------------------
+# Query circuit breakers
+indices.breaker.total.limit: 70%
+indices.breaker.fielddata.limit: 40%
+indices.breaker.request.limit: 40%
+
+# Search pool configuration
+thread_pool.search.queue_size: 5000
+thread_pool.search.size: 13
+
+# ---------------------------------- Write -------------------------------------
+# Write pool configuration
+thread_pool.write.queue_size: 1000
+thread_pool.write.size: 8
+
+# --------------------------------- Transport ----------------------------------
+transport.tcp.compress: true
+transport.ping_schedule: 5s
+
+# ---------------------------------- HTTP --------------------------------------
+http.max_content_length: 100mb
+http.cors.enabled: true
+http.cors.allow-origin: "*"
+http.cors.allow-headers: "X-Requested-With,Content-Type,Content-Length,Authorization"
+
+# ---------------------------------- Security ----------------------------------
+xpack.security.enabled: true
+xpack.security.enrollment.enabled: true
+xpack.security.http.ssl.enabled: false
+xpack.security.transport.ssl.enabled: false
+
+# Authentication
+xpack.security.authc.api_key.enabled: true
+xpack.security.authc.token.enabled: true
+
+# --------------------------------- Monitoring ---------------------------------
+xpack.monitoring.enabled: true
+xpack.monitoring.collection.enabled: true
+xpack.monitoring.collection.interval: 30s
+xpack.monitoring.elasticsearch.collection.enabled: true
+
+# ---------------------------------- Watcher -----------------------------------
+xpack.watcher.enabled: true
+xpack.watcher.history.cleaner_service.enabled: true
+
+# ------------------------------------ ML --------------------------------------
+xpack.ml.enabled: true
+xpack.ml.max_model_memory_limit: 2gb
+
+# ---------------------------------- Alerting ----------------------------------
+xpack.notification.email.account:
+  healthdata_alerts:
+    profile: standard
+    email_defaults:
+      from: elasticsearch@healthdata-platform.io
+    smtp:
+      auth: true
+      starttls.enable: true
+      host: smtp.gmail.com
+      port: 587
+      user: ${SMTP_USER}
+      password: ${SMTP_PASSWORD}
+
+# ---------------------------------- Logging -----------------------------------
+logger.org.elasticsearch.cluster.metadata: INFO
+logger.org.elasticsearch.discovery: INFO
+logger.org.elasticsearch.indices.recovery: INFO
+logger.org.elasticsearch.action: INFO
+logger.org.elasticsearch.gateway: INFO
+
+# --------------------------------- Snapshots ----------------------------------
+# Repository for automated backups
+# snapshot.max_concurrent_operations: 5
+
+# --------------------------------- ILM Policy ---------------------------------
+# Index Lifecycle Management
+xpack.ilm.enabled: true
+
+# ---------------------------------- Scripts -----------------------------------
+script.allowed_types: inline
+script.allowed_contexts: search, update
+
+# -------------------------------- Allocation ----------------------------------
+# Disk-based shard allocation
+cluster.routing.allocation.disk.threshold_enabled: true
+cluster.routing.allocation.disk.watermark.low: 85%
+cluster.routing.allocation.disk.watermark.high: 90%
+cluster.routing.allocation.disk.watermark.flood_stage: 95%
+
+# Shard allocation awareness
+cluster.routing.allocation.awareness.attributes: rack_id
+
+# -------------------------------- Performance ---------------------------------
+# Cache sizes
+indices.queries.cache.size: 10%
+indices.fielddata.cache.size: 20%
+indices.requests.cache.size: 2%
+
+# Merge policy
+index.merge.scheduler.max_thread_count: 1
+index.merge.policy.max_merged_segment: 5gb
+
+# ---------------------------------- Misc --------------------------------------
+action.destructive_requires_name: true
+action.auto_create_index: true
+cluster.max_shards_per_node: 3000
+
+# Custom settings for HealthData Platform
+healthdata.retention.days: 30
+healthdata.index.template: healthdata-*

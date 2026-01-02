@@ -1,0 +1,29 @@
+# GitHub Actions Local Runner (act) Configuration
+# Optimized for WSL with memory constraints
+#
+# Usage:
+#   act -j build                    # Run specific job
+#   act --list                      # List available workflows
+#   act -n                          # Dry run (no containers)
+#   act --env-file .env.local       # Use local env file
+
+# Platform images (lightweight alternatives available)
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+-P ubuntu-22.04=catthehacker/ubuntu:act-22.04
+
+# Container settings
+--container-architecture linux/amd64
+--artifact-server-path /tmp/artifacts
+
+# Resource constraints to prevent WSL crashes
+# Limit each act container to 4GB memory (leaves room for Gradle)
+--container-options --memory=4g --memory-swap=4g --cpus=4
+
+# Use host Docker socket (more efficient than docker-in-docker)
+--container-daemon-socket /var/run/docker.sock
+
+# Reuse containers between runs (faster, less memory churn)
+--reuse
+
+# Bind local .m2 and .gradle caches (reduces downloads, saves memory)
+--bind

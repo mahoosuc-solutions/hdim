@@ -1,0 +1,138 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files: []
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # HDIM Backend Services
+  - job_name: 'hdim-services'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      # Core Services
+      - targets: ['gateway-service:8080']
+        labels:
+          service: 'gateway-service'
+          tier: 'gateway'
+      - targets: ['cql-engine-service:8081']
+        labels:
+          service: 'cql-engine-service'
+          tier: 'core'
+      - targets: ['fhir-service:8085']
+        labels:
+          service: 'fhir-service'
+          tier: 'core'
+      - targets: ['patient-service:8084']
+        labels:
+          service: 'patient-service'
+          tier: 'core'
+
+      # Quality & Analytics
+      - targets: ['quality-measure-service:8087']
+        labels:
+          service: 'quality-measure-service'
+          tier: 'analytics'
+      - targets: ['care-gap-service:8086']
+        labels:
+          service: 'care-gap-service'
+          tier: 'analytics'
+      - targets: ['analytics-service:8092']
+        labels:
+          service: 'analytics-service'
+          tier: 'analytics'
+      - targets: ['predictive-analytics-service:8093']
+        labels:
+          service: 'predictive-analytics-service'
+          tier: 'analytics'
+
+      # Clinical Services
+      - targets: ['consent-service:8082']
+        labels:
+          service: 'consent-service'
+          tier: 'clinical'
+      - targets: ['documentation-service:8091']
+        labels:
+          service: 'documentation-service'
+          tier: 'clinical'
+      - targets: ['sdoh-service:8094']
+        labels:
+          service: 'sdoh-service'
+          tier: 'clinical'
+
+      # Integration Services
+      - targets: ['ehr-connector-service:8088']
+        labels:
+          service: 'ehr-connector-service'
+          tier: 'integration'
+      - targets: ['cdr-processor-service:8089']
+        labels:
+          service: 'cdr-processor-service'
+          tier: 'integration'
+      - targets: ['migration-workflow-service:8103']
+        labels:
+          service: 'migration-workflow-service'
+          tier: 'integration'
+
+      # Payer Services
+      - targets: ['prior-auth-service:8102']
+        labels:
+          service: 'prior-auth-service'
+          tier: 'payer'
+      - targets: ['payer-workflows-service:8099']
+        labels:
+          service: 'payer-workflows-service'
+          tier: 'payer'
+      - targets: ['hcc-service:8105']
+        labels:
+          service: 'hcc-service'
+          tier: 'payer'
+
+      # Reporting Services
+      - targets: ['qrda-export-service:8104']
+        labels:
+          service: 'qrda-export-service'
+          tier: 'reporting'
+      - targets: ['ecr-service:8101']
+        labels:
+          service: 'ecr-service'
+          tier: 'reporting'
+
+      # Event Services
+      - targets: ['event-router-service:8097']
+        labels:
+          service: 'event-router-service'
+          tier: 'events'
+      - targets: ['event-processing-service:8098']
+        labels:
+          service: 'event-processing-service'
+          tier: 'events'
+
+      # AI Services
+      - targets: ['agent-runtime-service:8095']
+        labels:
+          service: 'agent-runtime-service'
+          tier: 'ai'
+      - targets: ['agent-builder-service:8096']
+        labels:
+          service: 'agent-builder-service'
+          tier: 'ai'
+      - targets: ['ai-assistant-service:8100']
+        labels:
+          service: 'ai-assistant-service'
+          tier: 'ai'
+
+      # Workflow Services
+      - targets: ['approval-service:8090']
+        labels:
+          service: 'approval-service'
+          tier: 'workflow'

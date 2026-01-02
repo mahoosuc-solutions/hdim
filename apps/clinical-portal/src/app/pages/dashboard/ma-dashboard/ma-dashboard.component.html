@@ -1,0 +1,205 @@
+<app-page-header
+  title="Medical Assistant Dashboard"
+  subtitle="Patient Check-in & Preparation"
+  icon="medical_services">
+  <button mat-raised-button color="primary" (click)="refreshData()">
+    <mat-icon>refresh</mat-icon>
+    Refresh
+  </button>
+</app-page-header>
+
+<!-- Dashboard Metrics -->
+<div class="metrics-grid">
+  <app-stat-card
+    title="Scheduled Today"
+    [value]="patientsScheduledToday.toString()"
+    icon="event"
+    color="primary">
+  </app-stat-card>
+
+  <app-stat-card
+    title="Checked In"
+    [value]="patientsCheckedIn.toString()"
+    icon="how_to_reg"
+    color="success">
+  </app-stat-card>
+
+  <app-stat-card
+    title="Vitals Pending"
+    [value]="vitalsPending.toString()"
+    icon="favorite"
+    color="warn"
+    [clickable]="true"
+    (click)="viewAllPatients()">
+  </app-stat-card>
+
+  <app-stat-card
+    title="Rooms Ready"
+    [value]="roomsReady.toString()"
+    icon="meeting_room"
+    color="accent">
+  </app-stat-card>
+</div>
+
+<!-- Quick Actions -->
+<mat-card class="quick-actions-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>bolt</mat-icon>
+      Quick Actions
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="quick-actions">
+      <button mat-raised-button color="primary" class="action-btn">
+        <mat-icon>how_to_reg</mat-icon>
+        Patient Check-in
+      </button>
+      <button mat-raised-button color="accent" class="action-btn">
+        <mat-icon>favorite</mat-icon>
+        Record Vitals
+      </button>
+      <button mat-raised-button class="action-btn">
+        <mat-icon>event</mat-icon>
+        View Schedule
+      </button>
+      <button mat-raised-button class="action-btn">
+        <mat-icon>meeting_room</mat-icon>
+        Room Status
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<!-- Today's Schedule -->
+<mat-card class="schedule-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>today</mat-icon>
+      Today's Schedule
+    </mat-card-title>
+    <div class="header-actions">
+      <button mat-icon-button (click)="viewSchedule()">
+        <mat-icon>open_in_new</mat-icon>
+      </button>
+    </div>
+  </mat-card-header>
+  <mat-card-content>
+    @if (loading) {
+      <div class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading schedule...</p>
+      </div>
+    } @else if (todaySchedule.length === 0) {
+      <app-empty-state
+        icon="event_available"
+        title="No appointments scheduled"
+        message="There are no patient appointments scheduled for today.">
+      </app-empty-state>
+    } @else {
+      <table mat-table [dataSource]="todaySchedule" class="schedule-table">
+        <!-- Time Column -->
+        <ng-container matColumnDef="time">
+          <th mat-header-cell *matHeaderCellDef>Time</th>
+          <td mat-cell *matCellDef="let task">
+            <div class="time-cell">
+              <mat-icon class="time-icon">schedule</mat-icon>
+              <span class="time-text">{{ task.appointmentTime }}</span>
+              @if (task.priority === 'high') {
+                <mat-icon class="priority-icon" color="warn">priority_high</mat-icon>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Patient Column -->
+        <ng-container matColumnDef="patient">
+          <th mat-header-cell *matHeaderCellDef>Patient</th>
+          <td mat-cell *matCellDef="let task">
+            <div class="patient-cell">
+              <strong>{{ task.patientName }}</strong>
+              <span class="mrn-text">{{ task.patientMRN }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Task Column -->
+        <ng-container matColumnDef="task">
+          <th mat-header-cell *matHeaderCellDef>Task</th>
+          <td mat-cell *matCellDef="let task">
+            <mat-chip [color]="getStatusColor(task.status)">
+              <mat-icon>{{ getTaskIcon(task.taskType) }}</mat-icon>
+              {{ getTaskLabel(task.taskType) }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <!-- Room Column -->
+        <ng-container matColumnDef="room">
+          <th mat-header-cell *matHeaderCellDef>Room</th>
+          <td mat-cell *matCellDef="let task">
+            <div class="room-cell">
+              <mat-icon>meeting_room</mat-icon>
+              {{ task.room }}
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let task">
+            <span class="status-badge status-{{ task.status }}">
+              {{ task.status | titlecase }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let task">
+            <div class="action-buttons">
+              @if (task.taskType === 'check-in' && task.status === 'pending') {
+                <button
+                  mat-mini-fab
+                  color="primary"
+                  (click)="checkInPatient(task)"
+                  matTooltip="Check In">
+                  <mat-icon>how_to_reg</mat-icon>
+                </button>
+              }
+              @if (task.taskType === 'vitals') {
+                <button
+                  mat-mini-fab
+                  color="accent"
+                  (click)="recordVitals(task)"
+                  matTooltip="Record Vitals">
+                  <mat-icon>favorite</mat-icon>
+                </button>
+              }
+              @if (task.taskType === 'prep') {
+                <button
+                  mat-mini-fab
+                  color="warn"
+                  (click)="prepareRoom(task)"
+                  matTooltip="Prepare Room">
+                  <mat-icon>meeting_room</mat-icon>
+                </button>
+              }
+              <button
+                mat-icon-button
+                (click)="viewPatient(task)"
+                matTooltip="View Patient">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="schedule-row"></tr>
+      </table>
+    }
+  </mat-card-content>
+</mat-card>

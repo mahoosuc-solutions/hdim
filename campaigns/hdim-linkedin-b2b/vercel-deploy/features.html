@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDIM Features - Clinical Portal Capabilities</title>
+    <meta name="description" content="Explore HDIM's comprehensive healthcare integration features: Clinical Dashboard, Quality Measures, AI Assistant, and more.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #1E3A5F;
+            --secondary: #00A9A5;
+            --success: #2E7D32;
+            --warning: #E65100;
+            --text: #2C3E50;
+            --light: #F5F7FA;
+            --white: #FFFFFF;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 1000;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .nav-links a:hover { color: var(--secondary); }
+        .nav-cta {
+            background: var(--secondary);
+            color: white !important;
+            padding: 10px 24px;
+            border-radius: 6px;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 140px 40px 80px;
+            background: linear-gradient(135deg, var(--primary) 0%, #2C5282 100%);
+            color: white;
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .hero p {
+            font-size: 20px;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Feature Categories */
+        .features-nav {
+            background: var(--white);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 60px;
+            z-index: 100;
+        }
+        .features-nav a {
+            padding: 8px 16px;
+            background: var(--light);
+            border-radius: 20px;
+            text-decoration: none;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .features-nav a:hover {
+            background: var(--secondary);
+            color: white;
+        }
+
+        /* Feature Sections */
+        .feature-section {
+            padding: 80px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .feature-section:nth-child(even) {
+            background: var(--light);
+        }
+        .feature-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--secondary), #00897B);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .feature-icon svg {
+            width: 40px;
+            height: 40px;
+            stroke: white;
+            fill: none;
+            stroke-width: 2;
+        }
+        .feature-header h2 {
+            font-size: 32px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        .feature-header p {
+            font-size: 18px;
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Feature Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        .feature-card {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .feature-card h3 {
+            font-size: 18px;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .feature-card h3 .badge {
+            font-size: 10px;
+            background: var(--secondary);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+        .feature-card p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .feature-card .benefit {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        /* Stats */
+        .stats-bar {
+            background: var(--primary);
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            flex-wrap: wrap;
+        }
+        .stat {
+            text-align: center;
+            color: white;
+        }
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* CTA */
+        .cta-section {
+            padding: 80px 40px;
+            text-align: center;
+            background: linear-gradient(135deg, var(--secondary), #00897B);
+            color: white;
+        }
+        .cta-section h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        .cta-section p {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 16px 32px;
+            background: white;
+            color: var(--primary);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); }
+
+        /* Footer */
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        footer a { color: var(--secondary); }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 32px; }
+            .features-nav { position: relative; top: 0; }
+            .stats-bar { gap: 30px; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">HDIM</a>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/features.html">Features</a>
+            <a href="/gallery.html">Screenshots</a>
+            <a href="/pitch-deck.html">Investors</a>
+            <a href="/landing-page-a.html" class="nav-cta">Request Demo</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>Platform Features</h1>
+        <p>A comprehensive clinical integration platform that empowers healthcare teams to deliver better care, faster.</p>
+    </section>
+
+    <div class="features-nav">
+        <a href="#dashboard">Dashboard</a>
+        <a href="#patients">Patient Management</a>
+        <a href="#quality">Quality Measures</a>
+        <a href="#analytics">Analytics</a>
+        <a href="#reports">Reports</a>
+        <a href="#measure-builder">Measure Builder</a>
+        <a href="#monitoring">Live Monitor</a>
+        <a href="#ai">AI Assistant</a>
+        <a href="#knowledge">Knowledge Base</a>
+    </div>
+
+    <!-- Clinical Dashboard -->
+    <section class="feature-section" id="dashboard">
+        <div class="feature-header">
+            <div class="feature-icon">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            </div>
+            <h2>Clinical Dashboard</h2>
+            <p>Role-based command center that surfaces the most relevant information for each team member's workflow.</p>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Role-Based Views <span class="badge">4 Roles</span></h3>
+                <p>Customized dashboards for Medical Assistants, Registered Nurses, Providers, and Administrators. Each sees exactly what they need.</p>
+                <div class="benefit">Saves 35-45 min/day on chart prep</div>
+            </div>
+            <div class="feature-card">
+                <h3>Real-Time Metrics</h3>
+                <p>Live display of Patients Today, Results to Review, High Priority Gaps, and Quality Score - updated continuously.</p>
+                <div class="benefit">Eliminates manual task compilation</div>
+            </div>
+            <div class="feature-card">
+                <h3>Clinical Decision Support</h3>
+                <p>Intelligent alerts and recommendations surface at the point of care, helping providers make informed decisions.</p>
+                <div class="benefit">Reduces missed care opportunities</div>
+            </div>
+            <div class="feature-card">
+                <h3>One-Click Refresh</h3>
+                <p>Instant data refresh from all connected systems. No waiting, no stale data, no logging into multiple applications.</p>
+                <div class="benefit">Real-time operational visibility</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Patient Management -->
+    <section class="feature-section" id="patients">
+        <div class="feature-header">
+            <div class="feature-icon">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h2>Patient Management</h2>
+            <p>Comprehensive patient registry with intelligent duplicate detection and master record management.</p>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Master Patient Index <span class="badge">MPI</span></h3>
+                <p>Enterprise-grade patient matching that identifies and links records across all connected systems with 99.2% accuracy.</p>
+                <div class="benefit">Eliminates duplicate records</div>
+            </div>
+            <div class="feature-card">
+                <h3>Duplicate Detection</h3>
+                <p>AI-powered probabilistic matching flags potential duplicates for review, preventing fragmented patient records.</p>
+                <div class="benefit">Prevents data fragmentation</div>
+            </div>
+            <div class="feature-card">
+                <h3>Advanced Search</h3>
+                <p>Search by name, MRN, demographics, status, and more. Filter by gender, age range, and patient status.</p>
+                <div class="benefit">Find any patient in seconds</div>
+            </div>
+            <div class="feature-card">
+                <h3>Population Statistics</h3>
+                <p>Real-time population overview showing total patients, active patients, demographics, and care status distribution.</p>
+                <div class="benefit">Understand your patient panel</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quality Measures -->
+    <section class="feature-section" id="quality">
+        <div class="feature-header">
+            <div class="feature-icon">
+                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <h2>Quality Measure Evaluations</h2>
+            <p>Automated quality measure calculation powered by industry-standard CQL (Clinical Quality Language) engine.</p>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>3-Step Wizard</h3>
+                <p>Simple workflow: Select Measure, Select Patient, View Results. Evaluate compliance in under 30 seconds per patient.</p>
+                <div class="benefit">85% reduction in chart review time</div>
+            </div>
+            <div class="feature-card">
+                <h3>HEDIS Measure Library <span class="badge">2024</span></h3>
+                <p>Pre-built library of HEDIS measures ready to use. No manual specification coding required.</p>
+                <div class="benefit">Instant quality program launch</div>
+            </div>
+            <div class="feature-card">
+                <h3>CQL Execution Engine</h3>
+                <p>Industry-standard Clinical Quality Language engine evaluates measures against patient data in 50-200ms per evaluation.</p>
+                <div class="benefit">Real-time quality assessment</div>
+            </div>
+            <div class="feature-card">
+                <h3>Batch & Individual Evaluation</h3>
+                <p>Evaluate single patients at point of care or run population-wide batch evaluations for reporting.</p>
+                <div class="benefit">Flexible evaluation modes</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics -->
+    <section class="feature-section" id="analytics">
+        <div class="feature-header">
+            <div class="feature-icon">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <h2>Compliance Results & Analytics</h2>
+            <p>Real-time compliance tracking with visual analytics to identify trends and improvement opportunities.</p>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Compliance Scorecards</h3>
+                <p>Visual breakdown of Compliant, Non-Compliant, and Not Eligible patients with overall compliance percentage.</p>
+                <div class="benefit">At-a-glance performance view</div>
+            </div>
+            <div class="feature-card">
+                <h3>Outcome Distribution</h3>
+                <p>Charts showing distribution of evaluation outcomes across your population, segmented by measure category.</p>
+                <div class="benefit">Identify improvement priorities</div>
+            </div>
+            <div class="feature-card">
+                <h3>Advanced Filtering</h3>
+                <p>Filter results by date range, measure type, and compliance status to drill into specific populations.</p>
+                <div class="benefit">Actionable insights on demand</div>
+            </div>
+            <div class="feature-card">
+                <h3>Export Capabilities</h3>
+                <p>Export results to Excel, CSV, PDF for external reporting, payer submissions, and board presentations.</p>
+                <div class="benefit">Seamless external reporting</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reports -->
+    <section class="feature-section" id="reports">
+        <div class="feature-header">
+            <div class="feature-icon">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <h2>Quality Reports</h2>
+            <p>Automated report generation for regulators, payers, and internal quality improvement initiatives.</p>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>CMS/HEDIS Reports <span class="badge">Automated</span></h3>
+                <p>Pre-formatted reports aligned with CMS and NCQA HEDIS specifications. Generate in one click.</p>
+                <div class="benefit">Saves 300-450 hours annually</div>
+            </div>
+            <div class="feature-card">
+                <h3>Payer Submissions</h3>
+                <p>Reports formatted for value-based care contract submissions, Medicare Advantage Stars, and ACO reporting.</p>
+                <div class="benefit">Maximize incentive capture</div>
+            </div>
+            <div class="feature-card">
+                <h3>Patient-Level Detail</h3>
+                <p>Drill down to individual patient results with full clinical evidence supporting each compliance determination.</p>
+                <div class="benefit">Audit-ready documentation</div>
+            </div>
+            <div class="feature-card">
+                <h3>Custom Reports</h3>
+                <p>Build custom reports for board presentations, quality committees, and internal improvement tracking.</p>
+                <div class="benefit">Flexible reporting framework</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Measure Builder -->
+    <section class="feature-section" id="measure-builder">
+        <div class="feature-header">
+            <div class="feature-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+            </div>
+            <h2>Measure Builder</h2>
+            <p>Create custom quality measures using an intuitive builder - no coding experience required.</p>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Visual CQL Builder</h3>
+                <p>Drag-and-drop interface generates CQL expressions automatically. Define criteria, set logic, preview results.</p>
+                <div class="benefit">No programming required</div>
+            </div>
+            <div class="feature-card">
+                <h3>Measure Testing</h3>
+                <p>Test measures against sample populations before deployment. Validate logic and expected outcomes.</p>
+                <div class="benefit">Catch errors before go-live</div>
+            </div>
+            <div class="feature-card">
+                <h3>Version Control</h3>
+                <p>Track measure changes over time. Roll back to previous versions. Audit trail for compliance.</p>
+                <div class="benefit">Full measure lifecycle management</div>
+            </div>
+            <div class="feature-card">
+                <h3>Measure Library</h3>
+                <p>Save custom measures to your organization's library for reuse across programs and departments.</p>
+                <div class="benefit">Build once, use everywhere</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Monitor -->
+    <section class="feature-section" id="monitoring">
+        <div class="feature-header">
+            <div class="feature-icon">
+                <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+            <h2>Live Monitor</h2>
+            <p>Real-time system health monitoring with integration status and data pipeline visibility.</p>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>System Health Dashboard</h3>
+                <p>Live status of all platform services. Green/yellow/red indicators show health at a glance.</p>
+                <div class="benefit">Proactive issue detection</div>
+            </div>
+            <div class="feature-card">
+                <h3>Integration Status</h3>
+                <p>Monitor connectivity to EHRs, labs, pharmacies, and payers. See last sync time and data freshness.</p>
+                <div class="benefit">Ensure data is current</div>
+            </div>
+            <div class="feature-card">
+                <h3>Data Pipeline Monitoring</h3>
+                <p>Track data as it flows through ingestion, transformation, and storage. Identify bottlenecks instantly.</p>
+                <div class="benefit">Operational transparency</div>
+            </div>
+            <div class="feature-card">
+                <h3>Alert Management</h3>
+                <p>Configure alerts for system issues, integration failures, and data quality problems. Email and SMS notifications.</p>
+                <div class="benefit">Never miss critical issues</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Assistant -->
+    <section class="feature-section" id="ai">
+        <div class="feature-header">
+            <div class="feature-icon">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
+            </div>
+            <h2>AI Assistant</h2>
+            <p>Natural language interface for querying patient data, generating insights, and getting recommendations.</p>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Natural Language Queries</h3>
+                <p>Ask questions in plain English: "Show me diabetic patients with an A1C over 9 who haven't been seen in 6 months."</p>
+                <div class="benefit">No query language needed</div>
+            </div>
+            <div class="feature-card">
+                <h3>Care Gap Recommendations</h3>
+                <p>AI analyzes patient records and suggests specific care gaps to address, prioritized by clinical impact.</p>
+                <div class="benefit">AI-powered prioritization</div>
+            </div>
+            <div class="feature-card">
+                <h3>Documentation Assistance</h3>
+                <p>Generate draft documentation, care plan summaries, and patient communication from structured data.</p>
+                <div class="benefit">Reduce documentation burden</div>
+            </div>
+            <div class="feature-card">
+                <h3>Clinical Insights</h3>
+                <p>Surface patterns and trends across your population that might not be visible through standard reports.</p>
+                <div class="benefit">Discover hidden insights</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Knowledge Base -->
+    <section class="feature-section" id="knowledge">
+        <div class="feature-header">
+            <div class="feature-icon">
+                <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <h2>Knowledge Base</h2>
+            <p>Comprehensive documentation, clinical guidelines, and measure specifications at your fingertips.</p>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Clinical Guidelines</h3>
+                <p>Evidence-based clinical guidelines linked to quality measures. Reference materials at point of care.</p>
+                <div class="benefit">Evidence at your fingertips</div>
+            </div>
+            <div class="feature-card">
+                <h3>Measure Specifications</h3>
+                <p>Full HEDIS and CMS measure specifications with denominator, numerator, and exclusion criteria explained.</p>
+                <div class="benefit">Understand measure requirements</div>
+            </div>
+            <div class="feature-card">
+                <h3>Platform Documentation</h3>
+                <p>Searchable user guides, tutorials, and best practices for getting the most from HDIM.</p>
+                <div class="benefit">Self-service learning</div>
+            </div>
+            <div class="feature-card">
+                <h3>Training Materials</h3>
+                <p>Role-specific training content for onboarding new staff and ongoing education.</p>
+                <div class="benefit">Accelerate time-to-value</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+        <div class="stat">
+            <div class="stat-value">82%</div>
+            <div class="stat-label">Faster Prior Authorizations</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">85%</div>
+            <div class="stat-label">Reduction in Chart Review</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">3.5 hrs</div>
+            <div class="stat-label">Saved Per Provider/Day</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">$280K</div>
+            <div class="stat-label">Annual Value Per Provider</div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <h2>Ready to Transform Your Clinical Operations?</h2>
+        <p>See how HDIM can help your organization deliver better care while saving time and money.</p>
+        <a href="/landing-page-a.html" class="btn">Request a Demo</a>
+    </section>
+
+    <footer>
+        <p><strong>HDIM</strong> - Healthcare Data Integration Made Intelligent</p>
+        <p style="margin-top: 10px; font-size: 14px;">HIPAA Compliant | SOC 2 Type II Ready | BAA Available</p>
+        <p style="margin-top: 15px; font-size: 12px;">&copy; 2025 HDIM. All rights reserved.</p>
+    </footer>
+</body>
+</html>

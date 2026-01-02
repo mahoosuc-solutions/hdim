@@ -1,0 +1,60 @@
+# Health Score WebSocket Load Test - Artillery Configuration
+# Tests real-time health score updates via WebSocket
+#
+# Usage: artillery run health-score-websocket-load-test.yml
+
+config:
+  target: 'http://localhost:8087'
+  phases:
+    - duration: 30
+      arrivalRate: 50
+      name: "Initial connections"
+    - duration: 300
+      arrivalRate: 100
+      name: "Sustained connections"
+    - duration: 120
+      arrivalRate: 200
+      name: "Peak connections"
+  
+  defaults:
+    headers:
+      X-Tenant-ID: "test-tenant-001"
+      Authorization: "Bearer test-token"
+  
+  ws:
+    rejectUnauthorized: false
+
+scenarios:
+  # Scenario 1: WebSocket Health Score Subscription
+  - name: "WebSocket Health Score Updates"
+    weight: 70
+    engine: ws
+    flow:
+      - connect: "ws://localhost:8087/ws/health-scores"
+      - send:
+          channel: "subscribe"
+          payload:
+            type: "SUBSCRIBE"
+            channel: "health-scores"
+            tenantId: "test-tenant-001"
+      - think: 5
+      - loop:
+          - think: 1
+          - log: "Waiting for health score update..."
+        count: 60
+      - send:
+          channel: "unsubscribe"
+          payload:
+            type: "UNSUBSCRIBE"
+            channel: "health-scores"
+
+  # Scenario 2: REST API Health Score Query  
+  - name: "REST Health Score Query"
+    weight: 30
+    flow:
+      - get:
+          url: "/api/v1/health-scores/patient/patient-001"
+      - think: 2
+      - get:
+          url: "/api/v1/health-scores/population/summary"
+      - think: 2

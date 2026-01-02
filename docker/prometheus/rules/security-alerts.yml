@@ -1,0 +1,108 @@
+groups:
+  - name: authentication_alerts
+    interval: 30s
+    rules:
+      # High authentication failure rate - indicates potential brute force or misconfiguration
+      - alert: HighAuthenticationFailureRate
+        expr: rate(auth_failure_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          category: authentication
+        annotations:
+          summary: "High authentication failure rate detected"
+          description: "Service {{ $labels.instance }} has {{ $value }} failed authentications per second over the last 5 minutes. This may indicate a brute force attack or misconfigured clients."
+
+      # HMAC validation failures - critical security issue
+      - alert: HMACValidationFailures
+        expr: rate(hmac_validation_failures_total[1m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "HMAC validation failures detected - possible attack or misconfiguration"
+          description: "Service {{ $labels.instance }} detected {{ $value }} HMAC validation failures per second. This may indicate header injection attempts or mismatched signing secrets between gateway and backend."
+
+      # Authentication latency spike - degraded performance
+      - alert: AuthenticationLatencyHigh
+        expr: histogram_quantile(0.95, rate(auth_latency_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "Authentication latency is high"
+          description: "Service {{ $labels.instance }} has 95th percentile authentication latency of {{ $value }}s. Expected: <0.1s. This may indicate gateway performance issues or network latency."
+
+      # Tenant isolation violations - critical security issue
+      - alert: TenantIsolationViolation
+        expr: rate(tenant_violations_total[1m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "Tenant isolation violation detected - cross-tenant access attempt"
+          description: "Service {{ $labels.instance }} detected {{ $value }} tenant isolation violations per second. Users are attempting to access unauthorized tenants. Immediate investigation required."
+
+      # Missing tenant context - configuration error
+      - alert: MissingTenantContext
+        expr: rate(missing_tenant_context_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          category: configuration
+        annotations:
+          summary: "High rate of missing tenant context"
+          description: "Service {{ $labels.instance }} has {{ $value }} requests per second with missing tenant context. Ensure TrustedHeaderAuthFilter is properly configured in the filter chain."
+
+      # Authentication success rate too low - service degradation
+      - alert: AuthenticationSuccessRateLow
+        expr: (rate(auth_success_total[5m]) / (rate(auth_success_total[5m]) + rate(auth_failure_total[5m])) < 0.95) and (rate(auth_success_total[5m]) > 0)
+        for: 10m
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "Authentication success rate is below 95%"
+          description: "Service {{ $labels.instance }} has an authentication success rate of {{ $value | humanizePercentage }}. Expected: >95%. Investigate failed authentications."
+
+  - name: gateway_authentication_alerts
+    interval: 30s
+    rules:
+      # Gateway is not available to validate tokens
+      - alert: GatewayAuthenticationDown
+        expr: up{job="gateway-service"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Gateway authentication service is down"
+          description: "The API Gateway is not responding. Backend services cannot validate requests. Service availability is at risk."
+
+      # Multiple services unable to communicate with gateway
+      - alert: GatewayHeaderInjectionFailures
+        expr: rate(auth_failure_total{filter="trusted_header_auth"}[5m]) > 0.1 and count(up{job=~".*-service"} == 0) > 3
+        for: 5m
+        labels:
+          severity: warning
+          category: integration
+        annotations:
+          summary: "Multiple services unable to validate gateway headers"
+          description: "{{ $value | humanize }} services are reporting authentication failures while {{ $value }} backend services are unavailable. Check gateway health and network connectivity."
+
+  - name: sla_compliance_alerts
+    interval: 1m
+    rules:
+      # Tracking authentication SLA - 99.9% success rate required for HIPAA
+      - alert: AuthenticationSLAViolation
+        expr: (count_over_time((rate(auth_success_total[5m]) / (rate(auth_success_total[5m]) + rate(auth_failure_total[5m])) < 0.999)[1h:1m]) / 60) > 0.5
+        for: 5m
+        labels:
+          severity: critical
+          category: compliance
+        annotations:
+          summary: "Authentication SLA violation - HIPAA compliance at risk"
+          description: "Authentication success rate has been below 99.9% for more than 30 minutes. This violates HIPAA availability requirements (§164.308(a)(7)). Immediate escalation required."

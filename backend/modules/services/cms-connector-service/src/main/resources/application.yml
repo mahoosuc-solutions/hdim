@@ -51,6 +51,15 @@ logging:
     root: INFO
     com.healthdata.cms: DEBUG
 
+# CMS OAuth2 Configuration (Development)
+cms:
+  oauth2:
+    client-id: ${CMS_OAUTH2_CLIENT_ID:dev-client-id}
+    client-secret: ${CMS_OAUTH2_CLIENT_SECRET:dev-client-secret}
+    token-endpoint: https://sandbox.cms.gov/oauth/token
+    scopes: beneficiary-claims
+    token-refresh-interval: 3000000  # 50 minutes in ms
+
 ---
 
 # Production Profile
@@ -88,6 +97,15 @@ logging:
     root: WARN
     com.healthdata.cms: INFO
 
+# CMS OAuth2 Configuration (Production)
+cms:
+  oauth2:
+    client-id: ${CMS_OAUTH2_CLIENT_ID}
+    client-secret: ${CMS_OAUTH2_CLIENT_SECRET}
+    token-endpoint: https://api.cms.gov/oauth/token
+    scopes: beneficiary-claims
+    token-refresh-interval: 3000000  # 50 minutes in ms
+
 ---
 
 # Test Profile
@@ -113,6 +131,15 @@ spring:
 
 server:
   port: 8080
+
+# CMS OAuth2 Configuration (Test)
+cms:
+  oauth2:
+    client-id: test-client-id
+    client-secret: test-client-secret
+    token-endpoint: http://localhost:8888/oauth/token
+    scopes: test-scope
+    token-refresh-interval: 3000000  # 50 minutes in ms
 
 logging:
   level:

@@ -1,167 +1,119 @@
 spring:
   application:
     name: cms-connector-service
-  
+    version: 1.0.1-SNAPSHOT
+
+  # Default profile configuration
+  profiles:
+    active: dev
+
+---
+
+# Development Profile
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cms_development
+    username: cms_dev_user
+    password: dev_password_change_me
+    driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: validate
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        jdbc:
-          batch_size: 50
-        order_inserts: true
-        order_updates: true
     show-sql: false
-    open-in-view: false
-  
-  datasource:
-    url: jdbc:postgresql://localhost:5435/hdim_cms
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
-    hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
-      connection-timeout: 30000
-  
+
   redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6380}
-    timeout: 2000
-    database: 2
-    lettuce:
-      pool:
-        max-active: 10
-        max-idle: 5
-        min-idle: 0
-  
-  cache:
-    type: redis
-    redis:
-      time-to-live: 300000 # 5 minutes
-  
-  security:
-    oauth2:
-      client:
-        registration:
-          cms-bcda:
-            client-id: ${CMS_BCDA_CLIENT_ID:}
-            client-secret: ${CMS_BCDA_CLIENT_SECRET:}
-            authorization-grant-type: client_credentials
-            provider: cms
-          cms-dpc:
-            client-id: ${CMS_DPC_CLIENT_ID:}
-            client-secret: ${CMS_DPC_CLIENT_SECRET:}
-            authorization-grant-type: client_credentials
-            provider: cms
-        provider:
-          cms:
-            token-uri: https://auth.cms.gov/oauth/token
-  
-  servlet:
-    multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
+    host: localhost
+    port: 6379
 
 server:
-  port: 8089
+  port: 8080
   servlet:
-    context-path: /api
-  compression:
-    enabled: true
-    min-response-size: 1024
-  error:
-    include-message: always
+    context-path: /api/v1
 
-# CMS API Configuration
-cms:
-  sandbox-mode: ${CMS_SANDBOX_MODE:true}
-  
-  # OAuth2
-  oauth2:
-    client-id: ${CMS_OAUTH2_CLIENT_ID:}
-    client-secret: ${CMS_OAUTH2_CLIENT_SECRET:}
-    token-endpoint: ${CMS_OAUTH2_TOKEN_ENDPOINT:https://auth.sandbox.cms.gov/oauth/token}
-    scopes: beneficiary-claims openid
-    token-refresh-interval: 3000000 # 50 minutes in milliseconds (for 60-minute tokens)
-  
-  # BCDA Configuration
-  bcda:
-    base-url: ${CMS_BCDA_BASE_URL:https://sandbox.bcda.cms.gov}
-    api-version: v2
-    export-interval-hours: 24
-    timeout-ms: 30000
-  
-  # DPC Configuration
-  dpc:
-    base-url: ${CMS_DPC_BASE_URL:https://sandbox.dpc.cms.gov}
-    api-version: v1
-    timeout-ms: 5000 # Must be < 500ms for real-time queries
-    cache-ttl-minutes: 5
-    enable-caching: true
-  
-  # Blue Button 2.0 Configuration
-  blue-button:
-    base-url: ${CMS_BLUE_BUTTON_BASE_URL:https://sandbox.bluebutton.cms.gov}
-    api-version: v2
-    timeout-ms: 10000
-  
-  # AB2D Configuration
-  ab2d:
-    base-url: ${CMS_AB2D_BASE_URL:https://sandbox.ab2d.cms.gov}
-    api-version: v1
-    export-interval-hours: 24
-    timeout-ms: 30000
-  
-  # Data Processing
-  data:
-    batch-size: 100
-    max-bulk-size-mb: 500
-    enable-deduplication: true
-    enable-validation: true
-    retention-days: 90
-  
-  # Resilience
-  resilience:
-    circuit-breaker:
-      failure-threshold: 5
-      wait-duration: 60000 # 1 minute
-      half-open-calls: 3
-    retry:
-      max-attempts: 3
-      initial-delay: 1000
-      max-delay: 10000
-
-# Logging
-logging:
-  level:
-    root: INFO
-    com.healthdata.cms: DEBUG
-    org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-  file:
-    name: logs/cms-connector-service.log
-    max-size: 10MB
-    max-history: 30
-
-# Actuator Endpoints
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
-  metrics:
-    export:
-      prometheus:
-        enabled: true
-  endpoint:
-    health:
-      show-details: always
+        include: health,metrics,prometheus,info
   health:
     livenessState:
       enabled: true
     readinessState:
       enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.healthdata.cms: DEBUG
+
+---
+
+# Production Profile
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/cms_production}
+    username: ${SPRING_DATASOURCE_USERNAME:cms_service}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  redis:
+    host: ${SPRING_REDIS_HOST:redis}
+    port: ${SPRING_REDIS_PORT:6379}
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,info
+
+logging:
+  level:
+    root: WARN
+    com.healthdata.cms: INFO
+
+---
+
+# Test Profile
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+
+  redis:
+    host: localhost
+    port: 6379
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: WARN

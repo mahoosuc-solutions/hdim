@@ -66,7 +66,6 @@ dependencies {
 
     // Testing
     testImplementation(libs.testcontainers)
-    testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.bundles.testing)

@@ -79,7 +79,6 @@ dependencies {
 
     // Testing
     testImplementation(libs.bundles.testing)
-    testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.spring.boot.starter.test)
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.springframework.kafka:spring-kafka-test")

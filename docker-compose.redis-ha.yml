@@ -1,0 +1,137 @@
+version: '3.8'
+
+# Redis Sentinel High Availability Configuration
+# This provides automatic failover for Redis with 1 master, 2 replicas, and 3 sentinels
+
+services:
+  # Redis Master
+  redis-master:
+    image: redis:7-alpine
+    container_name: redis-master
+    command: >
+      redis-server
+      --port 6379
+      --requirepass ${REDIS_PASSWORD:-}
+      --masterauth ${REDIS_PASSWORD:-}
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-master-data:/data
+    networks:
+      - redis-sentinel-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Replica 1
+  redis-replica-1:
+    image: redis:7-alpine
+    container_name: redis-replica-1
+    command: >
+      redis-server
+      --port 6379
+      --replicaof redis-master 6379
+      --requirepass ${REDIS_PASSWORD:-}
+      --masterauth ${REDIS_PASSWORD:-}
+      --appendonly yes
+      --replica-read-only yes
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    volumes:
+      - redis-replica-1-data:/data
+    networks:
+      - redis-sentinel-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Replica 2
+  redis-replica-2:
+    image: redis:7-alpine
+    container_name: redis-replica-2
+    command: >
+      redis-server
+      --port 6379
+      --replicaof redis-master 6379
+      --requirepass ${REDIS_PASSWORD:-}
+      --masterauth ${REDIS_PASSWORD:-}
+      --appendonly yes
+      --replica-read-only yes
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    volumes:
+      - redis-replica-2-data:/data
+    networks:
+      - redis-sentinel-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Sentinel 1
+  redis-sentinel-1:
+    image: redis:7-alpine
+    container_name: redis-sentinel-1
+    command: >
+      redis-sentinel /etc/redis/sentinel.conf
+    volumes:
+      - ./docker/redis/sentinel.conf:/etc/redis/sentinel.conf:ro
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    ports:
+      - "26379:26379"
+    networks:
+      - redis-sentinel-net
+
+  # Sentinel 2
+  redis-sentinel-2:
+    image: redis:7-alpine
+    container_name: redis-sentinel-2
+    command: >
+      redis-sentinel /etc/redis/sentinel.conf
+    volumes:
+      - ./docker/redis/sentinel.conf:/etc/redis/sentinel.conf:ro
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    ports:
+      - "26380:26379"
+    networks:
+      - redis-sentinel-net
+
+  # Sentinel 3
+  redis-sentinel-3:
+    image: redis:7-alpine
+    container_name: redis-sentinel-3
+    command: >
+      redis-sentinel /etc/redis/sentinel.conf
+    volumes:
+      - ./docker/redis/sentinel.conf:/etc/redis/sentinel.conf:ro
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    ports:
+      - "26381:26379"
+    networks:
+      - redis-sentinel-net
+
+volumes:
+  redis-master-data:
+  redis-replica-1-data:
+  redis-replica-2-data:
+
+networks:
+  redis-sentinel-net:
+    driver: bridge

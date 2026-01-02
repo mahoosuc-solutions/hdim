@@ -1,0 +1,42 @@
+[
+  {
+    "name": "HEDIS-CDC",
+    "version": "1.0.0",
+    "status": "ACTIVE",
+    "description": "Comprehensive Diabetes Care - HbA1c Control. Measures the percentage of members 18-75 years of age with diabetes (type 1 and type 2) whose most recent HbA1c level is >9.0% (poor control).",
+    "publisher": "HealthData In Motion",
+    "cqlContent": "library HEDIS_CDC version '2024.1'\n\nusing FHIR version '4.0.1'\n\ninclude FHIRHelpers version '4.0.1'\n\ncontext Patient\n\ndefine \"Patient Age in Years\":\n  AgeInYearsAt(Today())\n\ndefine \"Is Diabetic Patient\":\n  exists (\n    [Condition: Code 'E11' from SNOMED] C\n      where C.clinicalStatus ~ \"active\"\n  )\n\ndefine \"Has Recent HbA1c\":\n  exists (\n    [Observation: Code '4548-4' from LOINC] O\n      where O.status = 'final'\n        and O.effective during Interval[Today() - 1 year, Today()]\n  )\n\ndefine \"HbA1c Poor Control\":\n  exists (\n    [Observation: Code '4548-4' from LOINC] O\n      where O.status = 'final'\n        and O.effective during Interval[Today() - 1 year, Today()]\n        and (O.value as Quantity) > 9.0 '%'\n  )\n\ndefine \"In Denominator\":\n  \"Patient Age in Years\" >= 18\n    and \"Patient Age in Years\" <= 75\n    and \"Is Diabetic Patient\"\n\ndefine \"In Numerator\":\n  \"In Denominator\"\n    and \"Has Recent HbA1c\"\n    and not \"HbA1c Poor Control\""
+  },
+  {
+    "name": "HEDIS-CBP",
+    "version": "1.0.0",
+    "status": "ACTIVE",
+    "description": "Controlling High Blood Pressure. Measures the percentage of members 18-85 years of age who had a diagnosis of hypertension and whose BP was adequately controlled (<140/90 mm Hg) during the measurement year.",
+    "publisher": "HealthData In Motion",
+    "cqlContent": "library HEDIS_CBP version '2024.1'\n\nusing FHIR version '4.0.1'\n\ninclude FHIRHelpers version '4.0.1'\n\ncontext Patient\n\ndefine \"Patient Age in Years\":\n  AgeInYearsAt(Today())\n\ndefine \"Has Hypertension Diagnosis\":\n  exists (\n    [Condition: Code 'I10' from ICD10] C\n      where C.clinicalStatus ~ \"active\"\n  )\n\ndefine \"Recent Blood Pressure Readings\":\n  [Observation: Code '85354-9' from LOINC] O\n    where O.status = 'final'\n      and O.effective during Interval[Today() - 1 year, Today()]\n\ndefine \"BP Controlled\":\n  exists (\n    \"Recent Blood Pressure Readings\" BP\n      where (BP.component[0].value as Quantity) < 140 'mm[Hg]'\n        and (BP.component[1].value as Quantity) < 90 'mm[Hg]'\n  )\n\ndefine \"In Denominator\":\n  \"Patient Age in Years\" >= 18\n    and \"Patient Age in Years\" <= 85\n    and \"Has Hypertension Diagnosis\"\n\ndefine \"In Numerator\":\n  \"In Denominator\"\n    and \"BP Controlled\""
+  },
+  {
+    "name": "HEDIS-COL",
+    "version": "1.0.0",
+    "status": "ACTIVE",
+    "description": "Colorectal Cancer Screening. Measures the percentage of members 50-75 years of age who had appropriate screening for colorectal cancer.",
+    "publisher": "HealthData In Motion",
+    "cqlContent": "library HEDIS_COL version '2024.1'\n\nusing FHIR version '4.0.1'\n\ninclude FHIRHelpers version '4.0.1'\n\ncontext Patient\n\ndefine \"Patient Age in Years\":\n  AgeInYearsAt(Today())\n\ndefine \"Colonoscopy Last 10 Years\":\n  exists (\n    [Procedure: Code '73761001' from SNOMED] P\n      where P.status = 'completed'\n        and P.performed during Interval[Today() - 10 years, Today()]\n  )\n\ndefine \"FIT Test Last Year\":\n  exists (\n    [Observation: Code '27396-1' from LOINC] O\n      where O.status = 'final'\n        and O.effective during Interval[Today() - 1 year, Today()]\n  )\n\ndefine \"Flexible Sigmoidoscopy Last 5 Years\":\n  exists (\n    [Procedure: Code '44441009' from SNOMED] P\n      where P.status = 'completed'\n        and P.performed during Interval[Today() - 5 years, Today()]\n  )\n\ndefine \"In Denominator\":\n  \"Patient Age in Years\" >= 50\n    and \"Patient Age in Years\" <= 75\n\ndefine \"In Numerator\":\n  \"In Denominator\"\n    and (\n      \"Colonoscopy Last 10 Years\"\n      or \"FIT Test Last Year\"\n      or \"Flexible Sigmoidoscopy Last 5 Years\"\n    )"
+  },
+  {
+    "name": "HEDIS-BCS",
+    "version": "1.0.0",
+    "status": "ACTIVE",
+    "description": "Breast Cancer Screening. Measures the percentage of women 50-74 years of age who had a mammogram to screen for breast cancer in the past 2 years.",
+    "publisher": "HealthData In Motion",
+    "cqlContent": "library HEDIS_BCS version '2024.1'\n\nusing FHIR version '4.0.1'\n\ninclude FHIRHelpers version '4.0.1'\n\ncontext Patient\n\ndefine \"Patient Age in Years\":\n  AgeInYearsAt(Today())\n\ndefine \"Is Female\":\n  Patient.gender = 'female'\n\ndefine \"Mammogram Last 2 Years\":\n  exists (\n    [Procedure: Code '71651007' from SNOMED] P\n      where P.status = 'completed'\n        and P.performed during Interval[Today() - 2 years, Today()]\n  )\n\ndefine \"Bilateral Mastectomy\":\n  exists (\n    [Procedure: Code '27865001' from SNOMED] P\n      where P.status = 'completed'\n  )\n\ndefine \"In Denominator\":\n  \"Is Female\"\n    and \"Patient Age in Years\" >= 50\n    and \"Patient Age in Years\" <= 74\n    and not \"Bilateral Mastectomy\"\n\ndefine \"In Numerator\":\n  \"In Denominator\"\n    and \"Mammogram Last 2 Years\""
+  },
+  {
+    "name": "HEDIS-CIS",
+    "version": "1.0.0",
+    "status": "ACTIVE",
+    "description": "Childhood Immunization Status. Measures the percentage of children 2 years of age who had four diphtheria, tetanus and acellular pertussis (DTaP); three polio (IPV); one measles, mumps and rubella (MMR); three H influenza type B (HiB); three hepatitis B (HepB); one chicken pox (VZV); four pneumococcal conjugate (PCV); one hepatitis A (HepA); two or three rotavirus (RV); and two influenza (flu) vaccines by their second birthday.",
+    "publisher": "HealthData In Motion",
+    "cqlContent": "library HEDIS_CIS version '2024.1'\n\nusing FHIR version '4.0.1'\n\ninclude FHIRHelpers version '4.0.1'\n\ncontext Patient\n\ndefine \"Patient Age in Years\":\n  AgeInYearsAt(Today())\n\ndefine \"DTaP Vaccines\":\n  [Immunization: Code '107' from CVX] I\n    where I.status = 'completed'\n      and I.occurrence before Today()\n\ndefine \"Has 4 DTaP\":\n  Count(\"DTaP Vaccines\") >= 4\n\ndefine \"IPV Vaccines\":\n  [Immunization: Code '10' from CVX] I\n    where I.status = 'completed'\n      and I.occurrence before Today()\n\ndefine \"Has 3 IPV\":\n  Count(\"IPV Vaccines\") >= 3\n\ndefine \"MMR Vaccines\":\n  [Immunization: Code '03' from CVX] I\n    where I.status = 'completed'\n      and I.occurrence before Today()\n\ndefine \"Has 1 MMR\":\n  Count(\"MMR Vaccines\") >= 1\n\ndefine \"HiB Vaccines\":\n  [Immunization: Code '17' from CVX] I\n    where I.status = 'completed'\n      and I.occurrence before Today()\n\ndefine \"Has 3 HiB\":\n  Count(\"HiB Vaccines\") >= 3\n\ndefine \"In Denominator\":\n  \"Patient Age in Years\" = 2\n\ndefine \"In Numerator\":\n  \"In Denominator\"\n    and \"Has 4 DTaP\"\n    and \"Has 3 IPV\"\n    and \"Has 1 MMR\"\n    and \"Has 3 HiB\""
+  }
+]

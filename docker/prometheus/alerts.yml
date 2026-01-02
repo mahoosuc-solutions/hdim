@@ -1,0 +1,284 @@
+# Prometheus Alerting Rules for HealthData-in-Motion
+# These rules define conditions that trigger alerts
+
+groups:
+  - name: service_health
+    interval: 30s
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.job }} has been down for more than 2 minutes."
+          runbook_url: "https://docs.healthdata.example.com/runbooks/service-down"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.90
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 90% for more than 5 minutes."
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80% for more than 10 minutes."
+
+  - name: application_performance
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) / rate(http_server_requests_seconds_count[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: application
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 5% for service {{ $labels.job }} on endpoint {{ $labels.uri }}"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/high-error-rate"
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is above 500ms for {{ $labels.job }}"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/high-latency"
+
+      - alert: LowEvaluationThroughput
+        expr: rate(cql_evaluations_total[5m]) < 1
+        for: 10m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "Low evaluation throughput"
+          description: "Evaluation throughput is below 1 eval/second for 10 minutes"
+
+  - name: database_health
+    interval: 30s
+    rules:
+      - alert: DatabaseConnectionPoolExhausted
+        expr: hikaricp_connections_active / hikaricp_connections_max > 0.90
+        for: 5m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "Connection pool usage is above 90% for {{ $labels.pool }}"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/connection-pool"
+
+      - alert: DatabaseHighQueryTime
+        expr: rate(postgresql_query_duration_seconds_sum[5m]) / rate(postgresql_query_duration_seconds_count[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "High database query time"
+          description: "Average query time is above 1 second"
+
+      - alert: DatabaseDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "PostgreSQL has been unavailable for more than 1 minute"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/database-down"
+
+  - name: cache_health
+    interval: 30s
+    rules:
+      - alert: LowCacheHitRate
+        expr: redis_keyspace_hits / (redis_keyspace_hits + redis_keyspace_misses) < 0.80
+        for: 10m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Redis cache hit rate is below 80% for 10 minutes"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/low-cache-hit-rate"
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis has been unavailable for more than 2 minutes"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/redis-down"
+
+      - alert: RedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.90
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis is using over 90% of allocated memory"
+
+  - name: kafka_health
+    interval: 30s
+    rules:
+      - alert: KafkaConsumerLag
+        expr: kafka_consumergroup_lag > 1000
+        for: 10m
+        labels:
+          severity: warning
+          component: messaging
+        annotations:
+          summary: "High Kafka consumer lag"
+          description: "Consumer group {{ $labels.consumergroup }} has lag > 1000 for topic {{ $labels.topic }}"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/kafka-lag"
+
+      - alert: KafkaDown
+        expr: up{job="kafka"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: messaging
+        annotations:
+          summary: "Kafka broker is down"
+          description: "Kafka has been unavailable for more than 2 minutes"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/kafka-down"
+
+  - name: websocket_health
+    interval: 30s
+    rules:
+      - alert: HighWebSocketDisconnectRate
+        expr: rate(websocket_disconnections_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: websocket
+        annotations:
+          summary: "High WebSocket disconnect rate"
+          description: "WebSocket disconnect rate is above 10/second"
+
+      - alert: TooManyWebSocketConnections
+        expr: websocket_connections_active > 1000
+        for: 5m
+        labels:
+          severity: warning
+          component: websocket
+        annotations:
+          summary: "High number of WebSocket connections"
+          description: "Active WebSocket connections exceed 1000"
+
+  - name: business_metrics
+    interval: 1m
+    rules:
+      - alert: NoEvaluationsProcessed
+        expr: rate(cql_evaluations_total[10m]) == 0
+        for: 30m
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "No evaluations processed"
+          description: "No measure evaluations have been processed in the last 30 minutes"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/no-evaluations"
+
+      - alert: HighFailureRate
+        expr: rate(cql_evaluations_failed_total[5m]) / rate(cql_evaluations_total[5m]) > 0.10
+        for: 10m
+        labels:
+          severity: critical
+          component: business
+        annotations:
+          summary: "High evaluation failure rate"
+          description: "Evaluation failure rate is above 10% for tenant {{ $labels.tenant_id }}"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/high-failure-rate"
+
+      - alert: LowComplianceRate
+        expr: avg_over_time(measure_compliance_rate[1h]) < 0.50
+        for: 2h
+        labels:
+          severity: info
+          component: business
+        annotations:
+          summary: "Low compliance rate detected"
+          description: "Compliance rate for measure {{ $labels.measure_id }} is below 50%"
+
+  - name: security_alerts
+    interval: 30s
+    rules:
+      - alert: HighFailedLoginRate
+        expr: rate(authentication_failures_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "High rate of failed login attempts"
+          description: "More than 5 failed login attempts per second detected"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/failed-logins"
+
+      - alert: UnauthorizedAccessAttempts
+        expr: rate(http_server_requests_seconds_count{status="401"}[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "High rate of unauthorized access attempts"
+          description: "More than 10 unauthorized (401) requests per second"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/unauthorized-access"
+
+      - alert: RateLimitExceeded
+        expr: rate(rate_limit_exceeded_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: info
+          component: security
+        annotations:
+          summary: "High rate limit violations"
+          description: "Rate limits are being exceeded frequently"
+
+  - name: disk_space
+    interval: 1m
+    rules:
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.10
+        for: 5m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk space is below 10% on mount point {{ $labels.mountpoint }}"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/low-disk-space"
+
+      - alert: DatabaseDiskSpaceWarning
+        expr: (node_filesystem_avail_bytes{mountpoint="/var/lib/postgresql"} / node_filesystem_size_bytes{mountpoint="/var/lib/postgresql"}) < 0.20
+        for: 10m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Database disk space running low"
+          description: "Database disk space is below 20%"

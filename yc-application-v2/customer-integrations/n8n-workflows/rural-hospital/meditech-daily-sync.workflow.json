@@ -1,0 +1,356 @@
+{
+  "name": "Rural Hospital Meditech Daily Sync",
+  "meta": {
+    "description": "Daily import of patient demographics, conditions, medications, labs, and encounters from Meditech Expanse via SFTP CSV exports",
+    "templateId": "hdim-rural-meditech-v1",
+    "customer": "Mountain View CAH",
+    "version": "1.0.0"
+  },
+  "nodes": [
+    {
+      "id": "daily-trigger",
+      "name": "Daily Trigger 4AM MT",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 400],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "cronExpression": "0 4 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "get-file-list",
+      "name": "List Export Files",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [450, 400],
+      "parameters": {
+        "protocol": "sftp",
+        "operation": "list",
+        "path": "/exports/hdim/",
+        "options": {}
+      },
+      "credentials": {
+        "sftp": {
+          "id": "meditech-sftp-credentials",
+          "name": "Mountain View SFTP"
+        }
+      }
+    },
+    {
+      "id": "filter-today-files",
+      "name": "Filter Today's Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 400],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const files = $input.all().map(item => item.json);\nconst today = new Date().toISOString().split('T')[0].replace(/-/g, '');\n\nconst fileTypes = [\n  { pattern: `patients_${today}.csv`, type: 'Patient' },\n  { pattern: `conditions_${today}.csv`, type: 'Condition' },\n  { pattern: `meds_${today}.csv`, type: 'MedicationRequest' },\n  { pattern: `labs_${today}.csv`, type: 'Observation' },\n  { pattern: `encounters_${today}.csv`, type: 'Encounter' }\n];\n\nconst matchedFiles = files\n  .filter(file => fileTypes.some(ft => file.name === ft.pattern))\n  .map(file => {\n    const fileType = fileTypes.find(ft => ft.pattern === file.name);\n    return {\n      json: {\n        ...file,\n        resourceType: fileType.type,\n        fullPath: `/exports/hdim/${file.name}`\n      }\n    };\n  });\n\nif (matchedFiles.length === 0) {\n  throw new Error(`No export files found for date ${today}`);\n}\n\nreturn matchedFiles;"
+      }
+    },
+    {
+      "id": "process-each-file",
+      "name": "Process Each File Type",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [850, 400],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "download-file",
+      "name": "Download CSV",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [1050, 400],
+      "parameters": {
+        "protocol": "sftp",
+        "operation": "download",
+        "path": "={{ $json.fullPath }}"
+      },
+      "credentials": {
+        "sftp": {
+          "id": "meditech-sftp-credentials",
+          "name": "Mountain View SFTP"
+        }
+      }
+    },
+    {
+      "id": "parse-csv-file",
+      "name": "Parse CSV",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [1250, 400],
+      "parameters": {
+        "operation": "fromFile",
+        "fileFormat": "csv",
+        "options": {
+          "headerRow": true,
+          "delimiter": ","
+        }
+      }
+    },
+    {
+      "id": "route-by-type",
+      "name": "Route by Resource Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [1450, 400],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $('Process Each File Type').item.json.resourceType }}",
+        "rules": {
+          "rules": [
+            { "value2": "Patient", "outputKey": "patient" },
+            { "value2": "Condition", "outputKey": "condition" },
+            { "value2": "MedicationRequest", "outputKey": "medication" },
+            { "value2": "Observation", "outputKey": "observation" },
+            { "value2": "Encounter", "outputKey": "encounter" }
+          ]
+        },
+        "fallbackOutput": "none"
+      }
+    },
+    {
+      "id": "transform-patient",
+      "name": "Transform Patient",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1700, 100],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const row = $input.item.json;\n\nconst patient = {\n  resourceType: 'Patient',\n  id: row.MRN,\n  meta: {\n    source: 'Meditech Expanse via n8n',\n    lastUpdated: new Date().toISOString()\n  },\n  identifier: [\n    {\n      use: 'usual',\n      type: {\n        coding: [{\n          system: 'http://terminology.hl7.org/CodeSystem/v2-0203',\n          code: 'MR'\n        }]\n      },\n      system: 'http://mountainviewcah.org/mrn',\n      value: row.MRN\n    }\n  ],\n  active: true,\n  name: [\n    {\n      use: 'official',\n      family: row.PATIENT_NAME.split(' ')[0],\n      given: row.PATIENT_NAME.split(' ').slice(1)\n    }\n  ],\n  gender: row.GENDER === 'M' ? 'male' : row.GENDER === 'F' ? 'female' : 'unknown',\n  birthDate: row.DOB\n};\n\n// Add phone if present\nif (row.PHONE) {\n  patient.telecom = [{\n    system: 'phone',\n    value: row.PHONE,\n    use: 'home'\n  }];\n}\n\n// Add address if present\nif (row.ADDRESS) {\n  patient.address = [{\n    use: 'home',\n    line: [row.ADDRESS],\n    city: row.CITY,\n    state: row.STATE,\n    postalCode: row.ZIP\n  }];\n}\n\nreturn { json: patient };"
+      }
+    },
+    {
+      "id": "transform-condition",
+      "name": "Transform Condition",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1700, 250],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const row = $input.item.json;\n\nconst condition = {\n  resourceType: 'Condition',\n  id: `mv-cond-${row.MRN}-${row.ICD_CODE.replace(/\\./g, '')}`,\n  meta: {\n    source: 'Meditech Expanse via n8n',\n    lastUpdated: new Date().toISOString()\n  },\n  clinicalStatus: {\n    coding: [{\n      system: 'http://terminology.hl7.org/CodeSystem/condition-clinical',\n      code: row.STATUS === 'ACTIVE' ? 'active' : 'resolved'\n    }]\n  },\n  verificationStatus: {\n    coding: [{\n      system: 'http://terminology.hl7.org/CodeSystem/condition-ver-status',\n      code: 'confirmed'\n    }]\n  },\n  category: [{\n    coding: [{\n      system: 'http://terminology.hl7.org/CodeSystem/condition-category',\n      code: 'problem-list-item'\n    }]\n  }],\n  code: {\n    coding: [{\n      system: 'http://hl7.org/fhir/sid/icd-10-cm',\n      code: row.ICD_CODE,\n      display: row.DIAGNOSIS_NAME\n    }],\n    text: row.DIAGNOSIS_NAME\n  },\n  subject: {\n    reference: `Patient/${row.MRN}`\n  },\n  onsetDateTime: row.ONSET_DATE,\n  recordedDate: row.RECORDED_DATE\n};\n\nreturn { json: condition };"
+      }
+    },
+    {
+      "id": "transform-medication",
+      "name": "Transform Medication",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1700, 400],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const row = $input.item.json;\n\nconst medication = {\n  resourceType: 'MedicationRequest',\n  id: `mv-med-${row.MRN}-${row.MED_ID}`,\n  meta: {\n    source: 'Meditech Expanse via n8n',\n    lastUpdated: new Date().toISOString()\n  },\n  status: row.STATUS === 'ACTIVE' ? 'active' : 'stopped',\n  intent: 'order',\n  medicationCodeableConcept: {\n    coding: row.NDC ? [{\n      system: 'http://hl7.org/fhir/sid/ndc',\n      code: row.NDC,\n      display: row.MED_NAME\n    }] : [],\n    text: row.MED_NAME\n  },\n  subject: {\n    reference: `Patient/${row.MRN}`\n  },\n  authoredOn: row.START_DATE,\n  dosageInstruction: [{\n    text: row.SIG || `${row.DOSE} ${row.ROUTE} ${row.FREQUENCY}`,\n    timing: {\n      code: {\n        text: row.FREQUENCY\n      }\n    },\n    route: {\n      text: row.ROUTE\n    },\n    doseAndRate: [{\n      doseQuantity: {\n        value: parseFloat(row.DOSE) || null,\n        unit: row.DOSE_UNIT\n      }\n    }]\n  }]\n};\n\nreturn { json: medication };"
+      }
+    },
+    {
+      "id": "transform-observation",
+      "name": "Transform Lab Observation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1700, 550],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const row = $input.item.json;\n\n// Map common Meditech lab codes to LOINC\nconst loincMap = {\n  'HBA1C': '4548-4',\n  'GLUCOSE': '2345-7',\n  'BUN': '3094-0',\n  'CREAT': '2160-0',\n  'NA': '2951-2',\n  'K': '2823-3',\n  'CL': '2075-0',\n  'CO2': '2028-9',\n  'WBC': '26464-8',\n  'RBC': '789-8',\n  'HGB': '718-7',\n  'HCT': '4544-3',\n  'PLT': '777-3',\n  'MCV': '787-2',\n  'CHOL': '2093-3',\n  'TRIG': '2571-8',\n  'HDL': '2085-9',\n  'LDL': '2089-1'\n};\n\nconst loincCode = loincMap[row.TEST_CODE] || row.TEST_CODE;\n\nconst observation = {\n  resourceType: 'Observation',\n  id: `mv-lab-${row.MRN}-${row.TEST_CODE}-${row.RESULT_DATE.replace(/-/g, '')}`,\n  meta: {\n    source: 'Meditech Expanse via n8n',\n    lastUpdated: new Date().toISOString()\n  },\n  status: row.STATUS === 'F' ? 'final' : 'preliminary',\n  category: [{\n    coding: [{\n      system: 'http://terminology.hl7.org/CodeSystem/observation-category',\n      code: 'laboratory'\n    }]\n  }],\n  code: {\n    coding: [{\n      system: 'http://loinc.org',\n      code: loincCode,\n      display: row.TEST_NAME\n    }],\n    text: row.TEST_NAME\n  },\n  subject: {\n    reference: `Patient/${row.MRN}`\n  },\n  effectiveDateTime: row.RESULT_DATE\n};\n\n// Handle numeric vs string results\nconst numValue = parseFloat(row.RESULT);\nif (!isNaN(numValue)) {\n  observation.valueQuantity = {\n    value: numValue,\n    unit: row.UNIT || '',\n    system: 'http://unitsofmeasure.org',\n    code: row.UNIT || ''\n  };\n  \n  // Add reference range if available\n  if (row.REF_LOW || row.REF_HIGH) {\n    observation.referenceRange = [{\n      low: row.REF_LOW ? { value: parseFloat(row.REF_LOW), unit: row.UNIT } : undefined,\n      high: row.REF_HIGH ? { value: parseFloat(row.REF_HIGH), unit: row.UNIT } : undefined\n    }];\n  }\n  \n  // Add interpretation\n  if (row.ABNORMAL_FLAG === 'H') {\n    observation.interpretation = [{\n      coding: [{ system: 'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation', code: 'H', display: 'High' }]\n    }];\n  } else if (row.ABNORMAL_FLAG === 'L') {\n    observation.interpretation = [{\n      coding: [{ system: 'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation', code: 'L', display: 'Low' }]\n    }];\n  }\n} else {\n  observation.valueString = row.RESULT;\n}\n\nreturn { json: observation };"
+      }
+    },
+    {
+      "id": "transform-encounter",
+      "name": "Transform Encounter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1700, 700],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const row = $input.item.json;\n\n// Map admit types to FHIR class codes\nconst classMap = {\n  'EMERGENCY': { code: 'EMER', display: 'emergency' },\n  'ELECTIVE': { code: 'IMP', display: 'inpatient encounter' },\n  'URGENT': { code: 'EMER', display: 'emergency' },\n  'OBSERVATION': { code: 'OBSENC', display: 'observation encounter' },\n  'OUTPATIENT': { code: 'AMB', display: 'ambulatory' }\n};\n\n// Map discharge dispositions\nconst dispMap = {\n  'HOME': { code: 'home', display: 'Home' },\n  'SNF': { code: 'snf', display: 'Skilled nursing facility' },\n  'REHAB': { code: 'rehab', display: 'Rehabilitation' },\n  'AMA': { code: 'aadvice', display: 'Left against advice' },\n  'EXPIRED': { code: 'exp', display: 'Expired' },\n  'TRANSFER': { code: 'other-hcf', display: 'Other healthcare facility' }\n};\n\nconst encounterClass = classMap[row.ADMIT_TYPE] || { code: 'IMP', display: 'inpatient encounter' };\nconst disposition = dispMap[row.DISCHARGE_DISP] || { code: 'oth', display: 'Other' };\n\nconst encounter = {\n  resourceType: 'Encounter',\n  id: `mv-enc-${row.MRN}-${row.ADMIT_DATE.replace(/-/g, '')}`,\n  meta: {\n    source: 'Meditech Expanse via n8n',\n    lastUpdated: new Date().toISOString()\n  },\n  status: row.DISCHARGE_DATE ? 'finished' : 'in-progress',\n  class: {\n    system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',\n    code: encounterClass.code,\n    display: encounterClass.display\n  },\n  type: [{\n    coding: [{\n      system: 'http://terminology.hl7.org/CodeSystem/encounter-type',\n      code: row.ADMIT_TYPE.toLowerCase(),\n      display: row.ADMIT_TYPE\n    }]\n  }],\n  subject: {\n    reference: `Patient/${row.MRN}`,\n    display: row.PATIENT_NAME\n  },\n  period: {\n    start: row.ADMIT_DATE,\n    end: row.DISCHARGE_DATE || undefined\n  }\n};\n\n// Add diagnosis if present\nif (row.PRIMARY_DX) {\n  encounter.diagnosis = [{\n    condition: {\n      reference: `Condition/mv-cond-${row.MRN}-${row.PRIMARY_DX.replace(/\\./g, '')}`\n    },\n    use: {\n      coding: [{\n        system: 'http://terminology.hl7.org/CodeSystem/diagnosis-role',\n        code: 'billing'\n      }]\n    },\n    rank: 1\n  }];\n}\n\n// Add length of stay if discharged\nif (row.LOS && row.DISCHARGE_DATE) {\n  encounter.length = {\n    value: parseInt(row.LOS),\n    unit: 'days',\n    system: 'http://unitsofmeasure.org',\n    code: 'd'\n  };\n  \n  encounter.hospitalization = {\n    dischargeDisposition: {\n      coding: [{\n        system: 'http://terminology.hl7.org/CodeSystem/discharge-disposition',\n        code: disposition.code,\n        display: disposition.display\n      }]\n    }\n  };\n}\n\nreturn { json: encounter };"
+      }
+    },
+    {
+      "id": "merge-resources",
+      "name": "Merge All Resources",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1950, 400],
+      "parameters": {
+        "mode": "append"
+      }
+    },
+    {
+      "id": "create-bundle",
+      "name": "Create FHIR Bundle",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2150, 400],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const resources = $input.all().map(item => item.json);\n\n// Group resources by type for ordered processing\nconst grouped = {\n  Patient: [],\n  Condition: [],\n  MedicationRequest: [],\n  Observation: [],\n  Encounter: []\n};\n\nresources.forEach(resource => {\n  if (grouped[resource.resourceType]) {\n    grouped[resource.resourceType].push(resource);\n  }\n});\n\n// Create ordered entries (Patients first, then dependent resources)\nconst orderedResources = [\n  ...grouped.Patient,\n  ...grouped.Condition,\n  ...grouped.MedicationRequest,\n  ...grouped.Observation,\n  ...grouped.Encounter\n];\n\n// Split into batches of 100\nconst BATCH_SIZE = 100;\nconst batches = [];\n\nfor (let i = 0; i < orderedResources.length; i += BATCH_SIZE) {\n  const batchResources = orderedResources.slice(i, i + BATCH_SIZE);\n  \n  const bundle = {\n    resourceType: 'Bundle',\n    type: 'batch',\n    timestamp: new Date().toISOString(),\n    entry: batchResources.map(resource => ({\n      fullUrl: `urn:uuid:${resource.id}`,\n      resource: resource,\n      request: {\n        method: 'PUT',\n        url: `${resource.resourceType}/${resource.id}`\n      }\n    }))\n  };\n  \n  batches.push({ json: bundle });\n}\n\nconsole.log(`Created ${batches.length} bundles from ${orderedResources.length} resources`);\nreturn batches;"
+      }
+    },
+    {
+      "id": "upload-bundle",
+      "name": "Upload to HDIM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2350, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.healthdatainmotion.com/v1/fhir",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/fhir+json"
+            },
+            {
+              "name": "X-Tenant-ID",
+              "value": "={{ $env.HDIM_TENANT_ID }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "timeout": 120000,
+          "retry": {
+            "enabled": true,
+            "maxRetries": 3
+          }
+        }
+      },
+      "credentials": {
+        "oAuth2Api": {
+          "id": "hdim-oauth-credentials",
+          "name": "HDIM API"
+        }
+      }
+    },
+    {
+      "id": "archive-files",
+      "name": "Archive Processed Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2550, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Get list of processed files from earlier in workflow\nconst processedFiles = $('Filter Today\\'s Files').all().map(item => item.json);\n\nconst archiveDate = new Date().toISOString().split('T')[0];\n\nreturn processedFiles.map(file => ({\n  json: {\n    originalPath: file.fullPath,\n    archivePath: `/exports/hdim/archive/${archiveDate}/${file.name}`,\n    fileName: file.name,\n    resourceType: file.resourceType\n  }\n}));"
+      }
+    },
+    {
+      "id": "move-to-archive",
+      "name": "Move to Archive",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [2750, 300],
+      "parameters": {
+        "protocol": "sftp",
+        "operation": "rename",
+        "oldPath": "={{ $json.originalPath }}",
+        "newPath": "={{ $json.archivePath }}"
+      },
+      "credentials": {
+        "sftp": {
+          "id": "meditech-sftp-credentials",
+          "name": "Mountain View SFTP"
+        }
+      }
+    },
+    {
+      "id": "send-summary",
+      "name": "Send Daily Summary",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [2550, 500],
+      "parameters": {
+        "fromEmail": "hdim-integration@healthdatainmotion.com",
+        "toEmail": "{{ $env.SUMMARY_EMAIL }}",
+        "subject": "[HDIM] Mountain View CAH - Daily Sync Complete",
+        "emailType": "html",
+        "message": "<h2>HDIM Daily Sync Complete</h2><p><strong>Date:</strong> {{ $now.format('YYYY-MM-DD') }}</p><p><strong>Status:</strong> Success</p><p>All Meditech export files have been processed and uploaded to HDIM.</p><p><a href=\"https://app.healthdatainmotion.com/dashboard\">View Dashboard</a></p><hr><p style=\"color: #666; font-size: 12px;\">HDIM Integration Notifications</p>"
+      },
+      "credentials": {
+        "smtp": {
+          "id": "hdim-smtp-credentials",
+          "name": "HDIM SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "daily-trigger": {
+      "main": [[{ "node": "get-file-list", "type": "main", "index": 0 }]]
+    },
+    "get-file-list": {
+      "main": [[{ "node": "filter-today-files", "type": "main", "index": 0 }]]
+    },
+    "filter-today-files": {
+      "main": [[{ "node": "process-each-file", "type": "main", "index": 0 }]]
+    },
+    "process-each-file": {
+      "main": [[{ "node": "download-file", "type": "main", "index": 0 }]]
+    },
+    "download-file": {
+      "main": [[{ "node": "parse-csv-file", "type": "main", "index": 0 }]]
+    },
+    "parse-csv-file": {
+      "main": [[{ "node": "route-by-type", "type": "main", "index": 0 }]]
+    },
+    "route-by-type": {
+      "main": [
+        [{ "node": "transform-patient", "type": "main", "index": 0 }],
+        [{ "node": "transform-condition", "type": "main", "index": 0 }],
+        [{ "node": "transform-medication", "type": "main", "index": 0 }],
+        [{ "node": "transform-observation", "type": "main", "index": 0 }],
+        [{ "node": "transform-encounter", "type": "main", "index": 0 }]
+      ]
+    },
+    "transform-patient": {
+      "main": [[{ "node": "merge-resources", "type": "main", "index": 0 }]]
+    },
+    "transform-condition": {
+      "main": [[{ "node": "merge-resources", "type": "main", "index": 1 }]]
+    },
+    "transform-medication": {
+      "main": [[{ "node": "merge-resources", "type": "main", "index": 2 }]]
+    },
+    "transform-observation": {
+      "main": [[{ "node": "merge-resources", "type": "main", "index": 3 }]]
+    },
+    "transform-encounter": {
+      "main": [[{ "node": "merge-resources", "type": "main", "index": 4 }]]
+    },
+    "merge-resources": {
+      "main": [[{ "node": "create-bundle", "type": "main", "index": 0 }]]
+    },
+    "create-bundle": {
+      "main": [[{ "node": "upload-bundle", "type": "main", "index": 0 }]]
+    },
+    "upload-bundle": {
+      "main": [
+        [{ "node": "archive-files", "type": "main", "index": 0 }],
+        [{ "node": "send-summary", "type": "main", "index": 0 }]
+      ]
+    },
+    "archive-files": {
+      "main": [[{ "node": "move-to-archive", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "timezone": "America/Denver"
+  },
+  "tags": ["hdim", "rural-hospital", "meditech", "daily-sync", "fhir"]
+}

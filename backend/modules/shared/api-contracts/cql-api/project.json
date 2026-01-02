@@ -1,0 +1,39 @@
+{
+  "name": "modules-shared-api-contracts-cql-api",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "backend/modules/shared/api-contracts/cql-api/src",
+  "tags": [
+    "backend",
+    "lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/modules/shared/api-contracts/cql-api/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:api-contracts:cql-api:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:api-contracts:cql-api:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:api-contracts:cql-api:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:api-contracts:cql-api:test :modules:shared:api-contracts:cql-api:jacocoTestReport :modules:shared:api-contracts:cql-api:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

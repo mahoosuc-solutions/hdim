@@ -1,0 +1,412 @@
+{
+  "name": "HDIM DLQ Approval Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerInterval": 60,
+        "unit": "seconds"
+      },
+      "id": "schedule-trigger",
+      "name": "Check DLQ Every Minute",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.DLQ_SERVICE_URL}}/api/v1/dlq/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "status",
+                "value": "FAILED"
+              },
+              {
+                "name": "limit",
+                "value": "50"
+              }
+            ]
+          }
+        }
+      },
+      "id": "fetch-dlq",
+      "name": "Fetch Failed Messages from DLQ",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dlq-api-creds",
+          "name": "DLQ API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.length}}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "check-has-messages",
+      "name": "Has Failed Messages?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "={{$json}}"
+      },
+      "id": "split-messages",
+      "name": "Split Messages",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.retryCount}}",
+              "operation": "largerEqual",
+              "value2": 3
+            }
+          ]
+        }
+      },
+      "id": "check-retry-count",
+      "name": "Exceeded Retry Limit?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "operation": "createAndWait",
+        "requestType": "DLQ_REPROCESS",
+        "riskLevel": "={{$json.errorSeverity === 'HIGH' ? 'HIGH' : 'LOW'}}",
+        "entityType": "={{$json.messageType}}",
+        "entityId": "={{$json.messageId}}",
+        "actionRequested": "EXECUTE",
+        "payload": "={{JSON.stringify({ messageId: $json.messageId, messageType: $json.messageType, source: $json.source, originalPayload: $json.payload, errorMessage: $json.errorMessage, retryCount: $json.retryCount, failedAt: $json.failedAt })}}",
+        "requestedBy": "n8n-dlq-handler",
+        "timeoutHours": 24,
+        "pollingInterval": 60,
+        "maxWaitMinutes": 1440,
+        "sourceService": "n8n-dlq-workflow",
+        "correlationId": "={{$json.correlationId || $json.messageId}}"
+      },
+      "id": "create-approval",
+      "name": "HDIM Approval Gate",
+      "type": "n8n-nodes-hdim-approval-gate.hdimApprovalGate",
+      "typeVersion": 1,
+      "position": [1340, 100],
+      "credentials": {
+        "hdimApprovalApi": {
+          "id": "hdim-approval-creds",
+          "name": "HDIM Approval API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.DLQ_SERVICE_URL}}/api/v1/dlq/messages/{{$json.messageId}}/reprocess",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "approvedBy",
+              "value": "={{$('HDIM Approval Gate').item.json.decidedBy}}"
+            },
+            {
+              "name": "approvalId",
+              "value": "={{$('HDIM Approval Gate').item.json.requestId}}"
+            }
+          ]
+        }
+      },
+      "id": "reprocess-approved",
+      "name": "Reprocess Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1560, 0],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dlq-api-creds",
+          "name": "DLQ API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.DLQ_SERVICE_URL}}/api/v1/dlq/messages/{{$json.messageId}}/archive",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "reason",
+              "value": "Rejected by human reviewer"
+            },
+            {
+              "name": "rejectedBy",
+              "value": "={{$('HDIM Approval Gate').item.json.decidedBy}}"
+            },
+            {
+              "name": "approvalId",
+              "value": "={{$('HDIM Approval Gate').item.json.requestId}}"
+            }
+          ]
+        }
+      },
+      "id": "archive-rejected",
+      "name": "Archive Rejected Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1560, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dlq-api-creds",
+          "name": "DLQ API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.DLQ_SERVICE_URL}}/api/v1/dlq/messages/{{$json.messageId}}/timeout",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "timeout-handler",
+      "name": "Mark as Timed Out",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1560, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dlq-api-creds",
+          "name": "DLQ API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.DLQ_SERVICE_URL}}/api/v1/dlq/messages/{{$json.messageId}}/retry",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "auto-retry",
+      "name": "Auto Retry (Under Limit)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1340, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dlq-api-creds",
+          "name": "DLQ API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "no-messages",
+      "name": "No Messages - Do Nothing",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "channel": "#hdim-dlq-alerts",
+        "text": "=:white_check_mark: DLQ Message Reprocessed\n\n*Message ID:* {{$json.messageId}}\n*Type:* {{$json.messageType}}\n*Approved By:* {{$('HDIM Approval Gate').item.json.decidedBy}}\n*Reprocess Status:* Success"
+      },
+      "id": "slack-success",
+      "name": "Notify Slack - Success",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [1780, 0],
+      "credentials": {
+        "slackApi": {
+          "id": "slack-creds",
+          "name": "Slack"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channel": "#hdim-dlq-alerts",
+        "text": "=:x: DLQ Message Rejected\n\n*Message ID:* {{$json.messageId}}\n*Type:* {{$json.messageType}}\n*Rejected By:* {{$('HDIM Approval Gate').item.json.decidedBy}}\n*Reason:* {{$('HDIM Approval Gate').item.json.decisionReason || 'No reason provided'}}"
+      },
+      "id": "slack-rejected",
+      "name": "Notify Slack - Rejected",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [1780, 200],
+      "credentials": {
+        "slackApi": {
+          "id": "slack-creds",
+          "name": "Slack"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Check DLQ Every Minute": {
+      "main": [
+        [
+          {
+            "node": "Fetch Failed Messages from DLQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Failed Messages from DLQ": {
+      "main": [
+        [
+          {
+            "node": "Has Failed Messages?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Failed Messages?": {
+      "main": [
+        [
+          {
+            "node": "Split Messages",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Messages - Do Nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Messages": {
+      "main": [
+        [
+          {
+            "node": "Exceeded Retry Limit?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exceeded Retry Limit?": {
+      "main": [
+        [
+          {
+            "node": "HDIM Approval Gate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Auto Retry (Under Limit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HDIM Approval Gate": {
+      "main": [
+        [
+          {
+            "node": "Reprocess Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Archive Rejected Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark as Timed Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reprocess Message": {
+      "main": [
+        [
+          {
+            "node": "Notify Slack - Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Archive Rejected Message": {
+      "main": [
+        [
+          {
+            "node": "Notify Slack - Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "HDIM",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "updatedAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "DLQ",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "updatedAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "Approval",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "updatedAt": "2025-01-01T00:00:00.000Z"
+    }
+  ],
+  "pinData": {},
+  "versionId": "1"
+}

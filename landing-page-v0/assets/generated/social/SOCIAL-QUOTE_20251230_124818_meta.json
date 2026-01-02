@@ -1,0 +1,9 @@
+{
+  "prompt_id": "SOCIAL-QUOTE",
+  "name": "Quote Card Template",
+  "category": "social",
+  "dimensions": "1080x1080",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a quote card template for Instagram/social media.\n\nDesign:\n- Large quotation mark graphic in top left\n- Space for quote text (center)\n- Attribution line (bottom)\n- HDIM branding (bottom)\n- Gradient background: deep blue (#0066CC) to teal (#00A5B5)\n- White text\n\nDimensions: 1080x1080 pixels, square format...."
+}

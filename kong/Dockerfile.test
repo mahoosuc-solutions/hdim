@@ -1,0 +1,7 @@
+FROM kong:3.6
+USER root
+# Optional: install lua-resty-kafka; ignore failure in test image
+RUN luarocks install lua-resty-kafka || true
+COPY kong/plugins/user-patient-kafka /usr/local/share/lua/5.1/kong/plugins/user-patient-kafka
+USER kong
+ENV KONG_PLUGINS=bundled,user-patient-kafka

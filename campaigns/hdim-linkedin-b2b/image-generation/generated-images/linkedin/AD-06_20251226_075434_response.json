@@ -1,0 +1,29 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "Absolutely, here's the image you requested:\n\n"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 117,
+    "candidatesTokenCount": 11,
+    "totalTokenCount": 128,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 117
+      }
+    ]
+  },
+  "modelVersion": "gemini-2.5-flash-image",
+  "responseId": "i4VOaYG-PO2t_uMP7qGHwAM"
+}

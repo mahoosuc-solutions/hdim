@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(./gradlew :modules:services:agent-builder-service:compileJava:*)",
+      "Bash(docker logs:*)",
+      "Bash(curl:*)",
+      "Bash(./gradlew:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker ps:*)",
+      "Bash(git commit:*)",
+      "Bash(git tag:*)",
+      "Bash(git remote add:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(docker images:*)",
+      "Bash(xargs -r docker rmi -f)",
+      "Bash(docker system prune:*)",
+      "Bash(docker volume prune:*)",
+      "WebSearch"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,183 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║                    DEMO DAY QUICK REFERENCE CARD                         ║
+║                         November 24, 2025                                ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+┌─ DEMO EXECUTION ──────────────────────────────────────────────────────────┐
+│                                                                            │
+│   cd /home/webemo-aaron/projects/healthdata-in-motion                     │
+│   ./run-full-demo.sh                                                      │
+│                                                                            │
+│   Duration: 15-20 minutes | Sections: 10 | Interactive: Press ENTER      │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ SYSTEM STATUS ───────────────────────────────────────────────────────────┐
+│                                                                            │
+│   ✓ Gateway:         http://localhost:9000        (Healthy)              │
+│   ✓ FHIR Server:     http://localhost:8083/fhir   (Responding)           │
+│   ✓ CQL Engine:      http://localhost:8081        (Operational)          │
+│   ✓ Quality Measure: http://localhost:8087        (Direct access)        │
+│   ✓ PostgreSQL:      localhost:5432               (3 databases)          │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ DEMO DATA ───────────────────────────────────────────────────────────────┐
+│                                                                            │
+│   Patients:    73 | Conditions: 37 | Observations: 39 | Meds: 20         │
+│                                                                            │
+│   ★ STAR PATIENT: John Doe (ID: 1)                                        │
+│     • Age 65, DOB: 1959-11-14                                             │
+│     • Conditions: Diabetes Type 2, Hypertension                           │
+│     • HbA1c: 7.2% (Compliant with CMS122)                                 │
+│     • Meds: Metformin 500mg, Lisinopril 10mg                              │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ KEY DEMO USERS ──────────────────────────────────────────────────────────┐
+│                                                                            │
+│   All passwords: demo123                                                  │
+│                                                                            │
+│   demo.doctor   (EVALUATOR)    - Execute quality measures, view results  │
+│   demo.analyst  (ANALYST)      - View reports, analytics, trends         │
+│   demo.admin    (ADMIN)        - Manage users, configure system          │
+│   demo.viewer   (VIEWER)       - Read-only access to data                │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ TALKING POINTS ──────────────────────────────────────────────────────────┐
+│                                                                            │
+│   1. FHIR R4 Standards                                                    │
+│      "Industry-standard healthcare data exchange. LOINC, SNOMED, RxNorm  │
+│       coding throughout. Not proprietary—this is how EHRs communicate."   │
+│                                                                            │
+│   2. Automated Quality Measures                                           │
+│      "CQL engine retrieves FHIR data in real-time. No batch ETL, no      │
+│       manual processes. Live clinical data evaluated automatically."      │
+│                                                                            │
+│   3. Care Gap Intelligence                                                │
+│      "System identifies patients needing intervention. High priority =    │
+│       immediate action. Becomes your clinical team's work queue."         │
+│                                                                            │
+│   4. ROI Impact                                                           │
+│      "5,000 patient practice, 10% improvement in diabetes scores =        │
+│       $25,000 annual additional reimbursement. Plus staff efficiency."    │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ QUALITY MEASURES ────────────────────────────────────────────────────────┐
+│                                                                            │
+│   CMS2   - Depression Screening (PHQ-9)                                  │
+│   CMS122 - Diabetes HbA1c Testing (target: <8%)                          │
+│   CMS134 - Diabetic Nephropathy Screening                                │
+│   CMS165 - Hypertension BP Control (<140/90)                             │
+│                                                                            │
+│   Current Demo: 67% compliance rate (realistic scenario)                 │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ FHIR CODING STANDARDS ───────────────────────────────────────────────────┐
+│                                                                            │
+│   SNOMED-CT (Conditions)                                                  │
+│     44054006 - Diabetes mellitus type 2                                   │
+│     59621000 - Essential hypertension                                     │
+│                                                                            │
+│   LOINC (Observations)                                                    │
+│     4548-4   - Hemoglobin A1c                                             │
+│     8480-6   - Systolic BP                                                │
+│     44249-1  - PHQ-9 depression screening                                 │
+│                                                                            │
+│   RxNorm (Medications)                                                    │
+│     860975   - Metformin 500mg                                            │
+│     314076   - Lisinopril 10mg                                            │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ LIVE QUERIES (BACKUP) ───────────────────────────────────────────────────┐
+│                                                                            │
+│   Get Patient 1:                                                          │
+│   curl http://localhost:8083/fhir/Patient/1                              │
+│                                                                            │
+│   Get Patient Conditions:                                                 │
+│   curl http://localhost:8083/fhir/Condition?patient=1                    │
+│                                                                            │
+│   Get HbA1c Results:                                                      │
+│   curl 'http://localhost:8083/fhir/Observation?patient=1&code=4548-4'   │
+│                                                                            │
+│   Quality Measures (Database):                                            │
+│   docker exec healthdata-postgres psql -U healthdata -d healthdata_cql \ │
+│     -c "SELECT measure_id, measure_name, numerator_compliant,           │
+│         total_patients FROM quality_measure_results                      │
+│         WHERE tenant_id='demo-clinic';"                                  │
+│                                                                            │
+│   Care Gaps (Database):                                                   │
+│   docker exec healthdata-postgres psql -U healthdata -d healthdata_cql \ │
+│     -c "SELECT patient_id, gap_type, priority, description              │
+│         FROM care_gaps WHERE tenant_id='demo-clinic' LIMIT 5;"          │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ TROUBLESHOOTING ─────────────────────────────────────────────────────────┐
+│                                                                            │
+│   FHIR Server Not Responding:                                             │
+│     docker compose restart fhir-service-mock                              │
+│     Wait 30 seconds, then: curl http://localhost:8083/fhir/metadata      │
+│                                                                            │
+│   Authentication Fails:                                                   │
+│     All demo users password: demo123                                      │
+│     Check: docker exec healthdata-postgres psql -U healthdata             │
+│            -d healthdata_users -c "SELECT username, role FROM users       │
+│            WHERE username LIKE 'demo.%';"                                 │
+│                                                                            │
+│   Services Check:                                                         │
+│     docker compose ps                                                     │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ DEMO FLOW (10 SECTIONS) ─────────────────────────────────────────────────┐
+│                                                                            │
+│   1. System Health & Architecture      - Show all services running       │
+│   2. Authentication & Security          - JWT tokens, RBAC               │
+│   3. FHIR Standards-Based Data         - R4, LOINC, SNOMED, RxNorm       │
+│   4. Patient Clinical Data             - John Doe example                │
+│   5. Quality Measure Calculation       - CMS measures, compliance        │
+│   6. Care Gap Identification           - High/medium/low priority        │
+│   7. Data Model & Multi-Tenancy        - PostgreSQL, tenant isolation    │
+│   8. Role-Based Access Control         - 5 user roles                    │
+│   9. System Performance & Scalability  - Docker stats, architecture      │
+│   10. Summary & Business Value         - ROI, implementation timeline    │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ BUSINESS VALUE SUMMARY ──────────────────────────────────────────────────┐
+│                                                                            │
+│   💰 Revenue    - Improve quality scores → Higher reimbursement          │
+│   ⏱️  Efficiency - Automate care gaps → Save staff time                  │
+│   📊 Insights   - Real-time analytics → Data-driven decisions            │
+│   🔒 Compliance - Audit trails, security → Meet regulations              │
+│   🚀 Scalable   - Cloud-ready architecture → Grow with confidence        │
+│                                                                            │
+│   ROI EXAMPLE: 5,000 patients × 10% improvement × $50/patient = $25K/yr  │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ DOCUMENTATION REFERENCE ─────────────────────────────────────────────────┐
+│                                                                            │
+│   DEMO_CHECKLIST_TODAY.md      - Complete demo guide with troubleshooting│
+│   FHIR_QUICK_START.md          - FHIR queries and API examples           │
+│   FHIR_INTEGRATION_PLAN.md     - Comprehensive technical strategy        │
+│   run-full-demo.sh             - Interactive demo script (execute this)  │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║   ✅ SYSTEM STATUS: READY FOR DEMO                                        ║
+║                                                                            ║
+║   All services operational | FHIR data populated | Scripts tested        ║
+║                                                                            ║
+║   EXECUTE: ./run-full-demo.sh                                            ║
+║                                                                            ║
+║   Good luck! 🚀                                                           ║
+║                                                                            ║
+╚══════════════════════════════════════════════════════════════════════════╝

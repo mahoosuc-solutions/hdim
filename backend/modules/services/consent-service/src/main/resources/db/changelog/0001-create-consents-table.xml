@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0001-create-consents-table-v2" author="codex">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="consents"/>
+            </not>
+        </preConditions>
+
+        <comment>
+            Create consents table for HIPAA 42 CFR Part 2 and GDPR compliance.
+            Tracks patient consent for data access and sharing.
+        </comment>
+
+        <createTable tableName="consents">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Consent scope and status -->
+            <column name="scope" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="purpose" type="TEXT"/>
+
+            <!-- Authorized party -->
+            <column name="authorized_party_type" type="varchar(64)"/>
+            <column name="authorized_party_id" type="varchar(255)"/>
+            <column name="authorized_party_name" type="varchar(512)"/>
+
+            <!-- Data class and policy -->
+            <column name="data_class" type="varchar(128)"/>
+            <column name="policy_rule" type="varchar(128)"/>
+            <column name="provision_type" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Validity period -->
+            <column name="valid_from" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valid_to" type="date"/>
+            <column name="consent_date" type="date">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Verification -->
+            <column name="verification_method" type="varchar(64)"/>
+            <column name="verified_by" type="varchar(255)"/>
+            <column name="verification_date" type="date"/>
+
+            <!-- Source document -->
+            <column name="source_attachment_id" type="varchar(255)"/>
+            <column name="source_attachment_url" type="varchar(512)"/>
+            <column name="consent_form_version" type="varchar(64)"/>
+            <column name="language" type="varchar(16)"/>
+            <column name="notes" type="TEXT"/>
+
+            <!-- Revocation details -->
+            <column name="revocation_date" type="date"/>
+            <column name="revocation_reason" type="TEXT"/>
+            <column name="revoked_by" type="varchar(255)"/>
+
+            <!-- Audit fields -->
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Index for tenant + patient lookups -->
+        <createIndex indexName="idx_consent_tenant_patient" tableName="consents">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="consent_date" descending="true"/>
+        </createIndex>
+
+        <!-- Index for active consent queries -->
+        <createIndex indexName="idx_consent_status" tableName="consents">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="status"/>
+            <column name="valid_from"/>
+            <column name="valid_to"/>
+        </createIndex>
+
+        <!-- Index for scope queries -->
+        <createIndex indexName="idx_consent_scope" tableName="consents">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="scope"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Index for category queries -->
+        <createIndex indexName="idx_consent_category" tableName="consents">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="category"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Index for data class queries (42 CFR Part 2) -->
+        <createIndex indexName="idx_consent_data_class" tableName="consents">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="data_class"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Index for authorized party queries -->
+        <createIndex indexName="idx_consent_authorized_party" tableName="consents">
+            <column name="tenant_id"/>
+            <column name="authorized_party_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Index for policy rule queries -->
+        <createIndex indexName="idx_consent_policy_rule" tableName="consents">
+            <column name="tenant_id"/>
+            <column name="policy_rule"/>
+        </createIndex>
+
+        <!-- Index for expiring consents -->
+        <createIndex indexName="idx_consent_expiry" tableName="consents">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="valid_to"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Index for revoked consents -->
+        <createIndex indexName="idx_consent_revocation" tableName="consents">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="revocation_date" descending="true"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="consents"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

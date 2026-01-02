@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approval Request Assigned</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 32px 40px; border-bottom: 1px solid #e5e7eb;">
+                            <table role="presentation" style="width: 100%;">
+                                <tr>
+                                    <td>
+                                        <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #111827;">HDIM Approvals</h1>
+                                    </td>
+                                    <td align="right">
+                                        <span th:style="'display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; color: #ffffff; background-color: ' + ${riskLevelColor}"
+                                              th:text="${riskLevel}">HIGH</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 32px 40px;">
+                            <p style="margin: 0 0 24px; font-size: 16px; color: #374151;">
+                                Hi <span th:text="${recipientName}">Reviewer</span>,
+                            </p>
+                            <p style="margin: 0 0 24px; font-size: 16px; color: #374151;">
+                                A new approval request has been assigned to you and requires your attention.
+                            </p>
+
+                            <!-- Request Details Box -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f9fafb; border-radius: 8px; margin-bottom: 24px;">
+                                <tr>
+                                    <td style="padding: 24px;">
+                                        <table role="presentation" style="width: 100%;">
+                                            <tr>
+                                                <td style="padding-bottom: 12px;">
+                                                    <span style="font-size: 12px; color: #6b7280; text-transform: uppercase;">Entity Type</span><br>
+                                                    <span style="font-size: 16px; font-weight: 600; color: #111827;" th:text="${entityType}">MedicationTool</span>
+                                                </td>
+                                                <td style="padding-bottom: 12px;">
+                                                    <span style="font-size: 12px; color: #6b7280; text-transform: uppercase;">Action Requested</span><br>
+                                                    <span style="font-size: 16px; font-weight: 600; color: #111827;" th:text="${actionRequested}">EXECUTE</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding-bottom: 12px;">
+                                                    <span style="font-size: 12px; color: #6b7280; text-transform: uppercase;">Requested By</span><br>
+                                                    <span style="font-size: 16px; color: #111827;" th:text="${requestedBy}">user-001</span>
+                                                </td>
+                                                <td style="padding-bottom: 12px;">
+                                                    <span style="font-size: 12px; color: #6b7280; text-transform: uppercase;">Requested At</span><br>
+                                                    <span style="font-size: 16px; color: #111827;" th:text="${requestedAt}">Jan 1, 2025 at 10:00 AM EST</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <span style="font-size: 12px; color: #6b7280; text-transform: uppercase;">Expires</span><br>
+                                                    <span style="font-size: 16px; color: #dc2626; font-weight: 500;" th:text="${expiresAt} + ' (' + ${timeRemaining} + ' remaining)'">Jan 2, 2025 at 10:00 AM EST (24 hours remaining)</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- CTA Button -->
+                            <table role="presentation" style="width: 100%;">
+                                <tr>
+                                    <td align="center">
+                                        <a th:href="${approvalUrl}"
+                                           style="display: inline-block; padding: 14px 32px; background-color: #4f46e5; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">
+                                            Review Request
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 24px 0 0; font-size: 14px; color: #6b7280; text-align: center;">
+                                Or view all pending approvals on the <a th:href="${dashboardUrl}" style="color: #4f46e5;">Approval Dashboard</a>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 24px 40px; background-color: #f9fafb; border-top: 1px solid #e5e7eb; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+                            <p style="margin: 0; font-size: 12px; color: #6b7280; text-align: center;">
+                                This is an automated notification from HDIM Healthcare Data Platform.<br>
+                                Request ID: <span th:text="${requestId}">abc-123</span>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

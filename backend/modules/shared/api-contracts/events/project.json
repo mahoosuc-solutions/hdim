@@ -1,0 +1,39 @@
+{
+  "name": "modules-shared-api-contracts-events",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "backend/modules/shared/api-contracts/events/src",
+  "tags": [
+    "backend",
+    "lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/modules/shared/api-contracts/events/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:api-contracts:events:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:api-contracts:events:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:api-contracts:events:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:shared:api-contracts:events:test :modules:shared:api-contracts:events:jacocoTestReport :modules:shared:api-contracts:events:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

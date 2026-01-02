@@ -1,0 +1,180 @@
+server:
+  port: 8087
+  servlet:
+    context-path: /quality-measure
+
+spring:
+  application:
+    name: quality-measure-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5435/healthdata_quality_measure
+    username: healthdata
+    password: ${DB_PASSWORD:healthdata_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+# FHIR Server Configuration
+fhir:
+  server:
+    url: http://localhost:8085/fhir
+
+# Patient Service Configuration
+patient:
+  service:
+    url: http://localhost:8084/patient
+
+# Care Gap Service Configuration
+care-gap:
+  service:
+    url: http://localhost:8086/care-gap
+
+# CQL Engine Configuration
+cql:
+  engine:
+    url: http://localhost:8081/cql-engine
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:dev_secret_key_for_local_testing_only_change_in_production}
+  expiration: 3600000  # 1 hour
+
+# Feign Client Configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 15000
+        loggerLevel: basic
+      patient-service:
+        url: http://localhost:8084
+        connectTimeout: 5000
+        readTimeout: 15000
+      care-gap-service:
+        url: http://localhost:8086
+        connectTimeout: 5000
+        readTimeout: 15000
+      cql-engine-service:
+        url: http://localhost:8081
+        connectTimeout: 5000
+        readTimeout: 30000  # CQL evaluation can take longer
+
+# Cache Configuration (Redis)
+# ⚠️ CRITICAL HIPAA COMPLIANCE SETTING - DO NOT INCREASE TTL ⚠️
+# TTL reduced from 10 minutes to 2 minutes to comply with HIPAA data minimization
+# See: /backend/HIPAA-CACHE-COMPLIANCE.md for full documentation
+spring.cache:
+  type: redis
+  redis:
+    time-to-live: 120000  # 2 minutes for measure results (HIPAA compliant for PHI)
+
+# Kafka Configuration
+spring.kafka:
+  bootstrap-servers: localhost:9092
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  consumer:
+    group-id: quality-measure-service
+    auto-offset-reset: earliest
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+# HIPAA Audit Configuration
+audit:
+  enabled: true
+  encryption:
+    enabled: true
+
+# Rate Limiting Configuration
+rate-limiting:
+  enabled: true
+  login:
+    per-minute: 5
+    per-hour: 20
+  register:
+    per-hour: 3
+  api:
+    per-minute: 100
+
+# WebSocket Configuration
+# HIPAA-Compliant WebSocket Security Settings
+websocket:
+  enabled: true
+
+  # CORS - Allowed Origins (development only - use WSS in production)
+  # ⚠️ WARNING: http:// URLs are for LOCAL DEVELOPMENT ONLY
+  # ⚠️ PRODUCTION MUST USE https:// URLs with WSS protocol
+  allowed-origins: http://localhost:4200,http://localhost:4201,http://localhost:4202,http://localhost:3000,http://localhost:8082
+
+  # Security Settings
+  security:
+    # Enforce WSS (WebSocket Secure) in production
+    # Development: ws:// allowed
+    # Production: Only wss:// (TLS encrypted) connections accepted
+    require-ssl: ${WEBSOCKET_REQUIRE_SSL:false}  # Set to true in production
+
+    # Session Timeout (HIPAA §164.312(a)(2)(iii) - Automatic Logoff)
+    # Maximum connection duration before automatic disconnect
+    session-timeout-minutes: 15  # HIPAA recommended: 15 minutes of inactivity
+
+    # Maximum number of concurrent connections per user (prevent resource exhaustion)
+    max-connections-per-user: 3
+
+    # Maximum message size (prevent DoS attacks)
+    max-message-size-kb: 64  # 64KB maximum message size
+
+    # Rate Limiting (prevent brute-force and DoS attacks)
+    rate-limit:
+      enabled: true
+      connections-per-minute: 10  # Max connection attempts per IP per minute
+
+# Notification Configuration
+notification:
+  email:
+    # Default email recipient for notifications when no specific recipient is found
+    # This is a fallback address (e.g., care team distribution list)
+    default-recipient: care-team@example.com
+  mental-health:
+    default-recipients:
+      email: care-team@hospital.com
+      sms: "+12345678900"
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.healthdata.quality: DEBUG
+    ca.uhn.fhir: INFO
+    com.healthdata.quality.websocket: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

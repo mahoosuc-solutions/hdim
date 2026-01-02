@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDIM - See How Regional Medical Center Reduced Prior Auth Time by 82%</title>
+    <meta name="description" content="Download the case study and schedule your personalized demo. Learn how hospitals are eliminating integration debt with HDIM.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1E3A5F;
+            --secondary: #00A9A5;
+            --success: #2E7D32;
+            --warning: #E65100;
+            --text: #2C3E50;
+            --light: #F5F7FA;
+            --white: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--white);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-trust {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .nav-trust span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Hero Section */
+        .hero {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: calc(100vh - 70px);
+        }
+
+        .hero-content {
+            padding: 80px 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: var(--light);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+
+        .hero-content h1 {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+
+        .hero-content h1 span {
+            color: var(--secondary);
+        }
+
+        .hero-content p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .hero-metrics {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .hero-metric {
+            text-align: center;
+        }
+
+        .hero-metric-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        .hero-metric-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hero-form {
+            background: var(--primary);
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .hero-form h2 {
+            color: white;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .hero-form p {
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: rgba(255,255,255,0.9);
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: 2px solid var(--secondary);
+        }
+
+        .form-group select {
+            appearance: none;
+            background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 16px center;
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            background: #00897B;
+        }
+
+        .form-trust {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Pain Points Section */
+        .pain-section {
+            padding: 80px 60px;
+            background: var(--light);
+        }
+
+        .pain-section h2 {
+            font-size: 32px;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .pain-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .pain-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 4px solid var(--warning);
+        }
+
+        .pain-card .icon {
+            font-size: 36px;
+            margin-bottom: 15px;
+        }
+
+        .pain-card h3 {
+            font-size: 16px;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .pain-card p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Solution Section */
+        .solution-section {
+            padding: 80px 60px;
+        }
+
+        .solution-section h2 {
+            font-size: 32px;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .benefit-card {
+            text-align: center;
+        }
+
+        .benefit-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--secondary), #00897B);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 36px;
+        }
+
+        .benefit-card h3 {
+            font-size: 20px;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .benefit-card p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Case Study Section */
+        .case-study-section {
+            padding: 80px 60px;
+            background: var(--primary);
+            color: white;
+        }
+
+        .case-study-section h2 {
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .case-study-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .case-metric {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+        }
+
+        .case-metric-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .case-metric-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+
+        .case-quote {
+            max-width: 800px;
+            margin: 50px auto 0;
+            text-align: center;
+        }
+
+        .case-quote blockquote {
+            font-size: 20px;
+            font-style: italic;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .case-quote cite {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Process Section */
+        .process-section {
+            padding: 80px 60px;
+        }
+
+        .process-section h2 {
+            font-size: 32px;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .process-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .process-step {
+            text-align: center;
+            position: relative;
+        }
+
+        .process-step::after {
+            content: '→';
+            position: absolute;
+            right: -25px;
+            top: 30px;
+            font-size: 24px;
+            color: #ccc;
+        }
+
+        .process-step:last-child::after {
+            display: none;
+        }
+
+        .process-number {
+            width: 60px;
+            height: 60px;
+            background: var(--secondary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 auto 20px;
+        }
+
+        .process-step h3 {
+            font-size: 18px;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .process-step p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 60px;
+            background: linear-gradient(135deg, var(--secondary), #00897B);
+            color: white;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 36px;
+            margin-bottom: 15px;
+        }
+
+        .cta-section p {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .cta-section .btn {
+            background: white;
+            color: var(--primary);
+            padding: 18px 40px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+
+        .cta-section .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            padding: 80px 60px;
+            background: var(--light);
+        }
+
+        .faq-section h2 {
+            font-size: 32px;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .faq-grid {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .faq-item h3 {
+            font-size: 16px;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .faq-item p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: 40px 60px;
+            text-align: center;
+        }
+
+        footer .logo {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        footer p {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-content {
+                padding: 40px 30px;
+            }
+
+            .hero-content h1 {
+                font-size: 32px;
+            }
+
+            .hero-form {
+                padding: 40px 30px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .pain-grid,
+            .benefits-grid,
+            .case-study-grid,
+            .process-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .process-step::after {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="/" class="logo">HDIM</a>
+        <div class="nav-trust">
+            <span style="background: #2E7D32; color: white; padding: 4px 10px; border-radius: 4px; font-weight: 600;">HIPAA Compliant</span>
+            <span style="background: #1565C0; color: white; padding: 4px 10px; border-radius: 4px; font-weight: 600;">BAA Ready</span>
+            <span style="background: #6A1B9A; color: white; padding: 4px 10px; border-radius: 4px; font-weight: 600;">SOC 2 Type II Ready</span>
+            <span>Production Ready</span>
+        </div>
+    </nav>
+
+    <!-- Security Trust Bar -->
+    <div style="background: linear-gradient(90deg, #1E3A5F 0%, #2C5282 100%); padding: 12px 40px; display: flex; justify-content: center; align-items: center; gap: 40px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 8px; color: white; font-size: 13px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00A9A5" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+            <span><strong>HIPAA Compliant</strong> - Full PHI Protection</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; color: white; font-size: 13px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00A9A5" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg>
+            <span><strong>BAA Ready</strong> - Execute in 24 Hours</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; color: white; font-size: 13px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00A9A5" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+            <span><strong>SOC 2 Type II Ready</strong></span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; color: white; font-size: 13px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00A9A5" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span><strong>Enterprise-Grade Security</strong></span>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <span class="hero-badge">PRODUCTION-READY PLATFORM - Case Study + Free Demo</span>
+            <h1>See How Regional Medical Center Reduced Prior Auth Time by <span>82%</span></h1>
+            <p>Download the full case study and schedule your personalized 15-minute demo to see how HDIM can transform your integration workflows.</p>
+
+            <div class="hero-metrics">
+                <div class="hero-metric">
+                    <div class="hero-metric-value">82%</div>
+                    <div class="hero-metric-label">Faster Prior Auth</div>
+                </div>
+                <div class="hero-metric">
+                    <div class="hero-metric-value">85%</div>
+                    <div class="hero-metric-label">Fewer IT Tickets</div>
+                </div>
+                <div class="hero-metric">
+                    <div class="hero-metric-value">78</div>
+                    <div class="hero-metric-label">Days to Deploy</div>
+                </div>
+            </div>
+            <div style="margin-top: 30px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                <img src="assets/screenshots/dashboard.png" alt="HDIM Clinical Portal Dashboard" style="width: 100%; height: auto; display: block;">
+            </div>
+        </div>
+
+        <div class="hero-form">
+            <h2>Get Your Free Case Study + Demo</h2>
+            <p>Fill out the form below and we'll send you the full case study and schedule your personalized demo.</p>
+
+            <form action="#" method="POST">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name *</label>
+                        <input type="text" id="firstName" name="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name *</label>
+                        <input type="text" id="lastName" name="lastName" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Work Email *</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="company">Hospital/Health System Name *</label>
+                    <input type="text" id="company" name="company" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="bedCount">Hospital Bed Count *</label>
+                        <select id="bedCount" name="bedCount" required>
+                            <option value="">Select...</option>
+                            <option value="under-100">Under 100</option>
+                            <option value="100-250">100-250</option>
+                            <option value="250-500">250-500</option>
+                            <option value="500-1000">500-1,000</option>
+                            <option value="over-1000">Over 1,000</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ehr">Current EHR System *</label>
+                        <select id="ehr" name="ehr" required>
+                            <option value="">Select...</option>
+                            <option value="epic">Epic</option>
+                            <option value="cerner">Cerner/Oracle Health</option>
+                            <option value="meditech">MEDITECH</option>
+                            <option value="allscripts">AllScripts</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="challenge">Biggest Integration Challenge (Optional)</label>
+                    <input type="text" id="challenge" name="challenge" placeholder="e.g., Prior auth delays, lab results integration...">
+                </div>
+
+                <button type="submit" class="submit-btn">Download Case Study & Book Demo</button>
+
+                <div class="form-trust">
+                    <span>🔒 HIPAA Compliant</span>
+                    <span>📧 No Spam</span>
+                    <span>🚫 No Obligations</span>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Pain Points Section -->
+    <section class="pain-section">
+        <h2>Are You Spending $500K+/Year on EHR Integration Maintenance?</h2>
+        <div class="pain-grid">
+            <div class="pain-card">
+                <div class="icon">❌</div>
+                <h3>Prior Auth Delays</h3>
+                <p>3-4 day processing time for authorizations that should take hours</p>
+            </div>
+            <div class="pain-card">
+                <div class="icon">❌</div>
+                <h3>Interface Breaks</h3>
+                <p>Every EHR update breaks existing point-to-point integrations</p>
+            </div>
+            <div class="pain-card">
+                <div class="icon">❌</div>
+                <h3>6-Month Backlog</h3>
+                <p>New integration requests wait months while IT fights fires</p>
+            </div>
+            <div class="pain-card">
+                <div class="icon">❌</div>
+                <h3>IT Firefighting</h3>
+                <p>40% of IT budget on maintenance instead of strategic tools</p>
+            </div>
+        </div>
+        <!-- Pain Point Visual -->
+        <div style="margin-top: 50px; max-width: 700px; margin-left: auto; margin-right: auto;">
+            <img src="assets/marketing/ads/pain-point.png" alt="Healthcare IT Integration Challenges" style="width: 100%; height: auto; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section class="solution-section">
+        <h2>AI-Native FHIR Integration Platform Built for Healthcare</h2>
+        <div class="benefits-grid">
+            <div class="benefit-card">
+                <div class="benefit-icon">⚡</div>
+                <h3>80%+ Faster Prior Authorizations</h3>
+                <p>Automated workflows reduce 3-day processes to 8 hours</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon">🔧</div>
+                <h3>Zero Tech Debt</h3>
+                <p>AI-customizable per organization, no legacy code to maintain</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon">🔗</div>
+                <h3>Vendor-Agnostic</h3>
+                <p>Works with Epic, Cerner, AllScripts, and any FHIR-compliant system</p>
+            </div>
+        </div>
+
+        <!-- Solution Visual -->
+        <div style="margin-top: 50px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 1000px; margin-left: auto; margin-right: auto;">
+            <div>
+                <img src="assets/marketing/ads/solution-dashboard.png" alt="HDIM Modern Healthcare Dashboard" style="width: 100%; height: auto; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+                <p style="text-align: center; margin-top: 15px; color: #666; font-size: 14px;"><strong>Unified Data Platform</strong><br>Calm, controlled, efficient</p>
+            </div>
+            <div>
+                <img src="assets/marketing/people/doctor-patient-insights.png" alt="Doctor sharing insights with patient" style="width: 100%; height: auto; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+                <p style="text-align: center; margin-top: 15px; color: #666; font-size: 14px;"><strong>People Helping People</strong><br>Technology enables human connection</p>
+            </div>
+        </div>
+
+        <!-- New Clinical Capabilities Section -->
+        <div style="margin-top: 60px; padding: 40px; background: var(--light); border-radius: 16px;">
+            <h3 style="text-align: center; font-size: 24px; color: var(--primary); margin-bottom: 40px;">Advanced Clinical & Compliance Capabilities</h3>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px;">
+                <div style="background: white; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #1565C0, #1E88E5); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M12 11v6"/><path d="M9 14h6"/></svg>
+                    </div>
+                    <h4 style="font-size: 14px; color: var(--primary); margin-bottom: 8px;">Advanced Doctor Workflows</h4>
+                    <p style="font-size: 12px; color: #666;">Streamlined clinical decision support and care coordination</p>
+                </div>
+                <div style="background: white; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #2E7D32, #43A047); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+                    </div>
+                    <h4 style="font-size: 14px; color: var(--primary); margin-bottom: 8px;">CMS/HEDIS Report Templates</h4>
+                    <p style="font-size: 12px; color: #666;">Automated compliance reporting for quality measures</p>
+                </div>
+                <div style="background: white; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #E65100, #FB8C00); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    </div>
+                    <h4 style="font-size: 14px; color: var(--primary); margin-bottom: 8px;">Care Gap Analytics</h4>
+                    <p style="font-size: 12px; color: #666;">Identify and close gaps in patient care automatically</p>
+                </div>
+                <div style="background: white; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #6A1B9A, #8E24AA); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>
+                    </div>
+                    <h4 style="font-size: 14px; color: var(--primary); margin-bottom: 8px;">Enhanced Patient Services</h4>
+                    <p style="font-size: 12px; color: #666;">360-degree patient view with real-time health data</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enterprise Platform Section -->
+        <div style="margin-top: 40px; padding: 40px; background: linear-gradient(135deg, var(--primary), #2C5282); border-radius: 16px; color: white;">
+            <h3 style="text-align: center; font-size: 24px; margin-bottom: 40px;">Enterprise-Grade Platform Infrastructure</h3>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px;">
+                <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 28px; margin-bottom: 10px;">📊</div>
+                    <h4 style="font-size: 14px; margin-bottom: 5px;">Distributed Tracing</h4>
+                    <p style="font-size: 12px; opacity: 0.8;">End-to-end observability across all integrations</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 28px; margin-bottom: 10px;">🔍</div>
+                    <h4 style="font-size: 14px; margin-bottom: 5px;">Production Monitoring</h4>
+                    <p style="font-size: 12px; opacity: 0.8;">24/7 real-time system health monitoring</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 28px; margin-bottom: 10px;">🤖</div>
+                    <h4 style="font-size: 14px; margin-bottom: 5px;">AI-Powered Testing</h4>
+                    <p style="font-size: 12px; opacity: 0.8;">Automated test infrastructure with ML validation</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 28px; margin-bottom: 10px;">🏢</div>
+                    <h4 style="font-size: 14px; margin-bottom: 5px;">Multi-Tenant Architecture</h4>
+                    <p style="font-size: 12px; opacity: 0.8;">Secure isolation for health systems</p>
+                </div>
+            </div>
+        </div>
+        <div style="max-width: 900px; margin: 50px auto 0; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <img src="assets/screenshots/results.png" alt="HDIM Compliance Results Dashboard" style="width: 100%; height: auto; display: block;">
+            <div style="background: var(--light); padding: 15px; text-align: center; font-size: 14px; color: #666;">
+                <strong>Real-time compliance tracking</strong> — See quality measure outcomes at a glance
+            </div>
+        </div>
+    </section>
+
+    <!-- Case Study Section -->
+    <section class="case-study-section">
+        <h2>Trusted by 50+ Hospitals and Health Systems</h2>
+        <div class="case-study-grid">
+            <div class="case-metric">
+                <div class="case-metric-value">82%</div>
+                <div class="case-metric-label">Faster Prior Authorizations<br>Regional Medical Center</div>
+            </div>
+            <div class="case-metric">
+                <div class="case-metric-value">$420K</div>
+                <div class="case-metric-label">Annual Savings<br>Community Hospital Network</div>
+            </div>
+            <div class="case-metric">
+                <div class="case-metric-value">90</div>
+                <div class="case-metric-label">Days to Eliminate Backlog<br>Academic Medical Center</div>
+            </div>
+        </div>
+        <div class="case-quote">
+            <blockquote>"We eliminated our 6-month integration backlog in 90 days. Our IT team now builds strategic tools instead of fighting fires."</blockquote>
+            <cite>— CIO, Regional Medical Center</cite>
+        </div>
+        <div style="max-width: 800px; margin: 50px auto 0; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <img src="assets/screenshots/evaluations.png" alt="HDIM Quality Measure Evaluation Workflow" style="width: 100%; height: auto; display: block;">
+            <div style="background: rgba(255,255,255,0.1); padding: 15px; text-align: center; font-size: 14px;">
+                <strong>Streamlined quality evaluation</strong> — 3-step wizard for rapid compliance assessment
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Section -->
+    <section class="process-section">
+        <h2>How It Works</h2>
+        <div class="process-grid">
+            <div class="process-step">
+                <div class="process-number">1</div>
+                <h3>15-Minute Demo</h3>
+                <p>See HDIM in action with your specific use cases</p>
+            </div>
+            <div class="process-step">
+                <div class="process-number">2</div>
+                <h3>30-Day Pilot</h3>
+                <p>Test with one workflow (prior auth, lab results, medications)</p>
+            </div>
+            <div class="process-step">
+                <div class="process-number">3</div>
+                <h3>Full Deployment</h3>
+                <p>Scale across all systems in 60-90 days</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <h2>Ready to Eliminate Your Integration Nightmare?</h2>
+        <p>Get your free integration cost assessment + personalized demo</p>
+        <a href="#" class="btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;">Schedule My Demo</a>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        <div class="faq-grid">
+            <div class="faq-item">
+                <h3>How long does implementation take?</h3>
+                <p>60-90 days typical for full deployment. We start with a 30-day pilot on one workflow to prove value quickly.</p>
+            </div>
+            <div class="faq-item">
+                <h3>Does HDIM replace our EHR?</h3>
+                <p>No - HDIM integrates with your existing EHR system. We connect to Epic, Cerner, MEDITECH, AllScripts, and other FHIR-compliant systems.</p>
+            </div>
+            <div class="faq-item">
+                <h3>What if we're already using Epic App Orchard?</h3>
+                <p>HDIM is complementary. We handle cross-system integrations that App Orchard doesn't cover, especially payer connectivity and prior authorization.</p>
+            </div>
+            <div class="faq-item">
+                <h3>Is HDIM FHIR-compliant?</h3>
+                <p>Yes - built on HL7 FHIR R4 standards. We're fully compliant with the CMS 2026 interoperability mandate.</p>
+            </div>
+            <div class="faq-item">
+                <h3>Is HDIM HIPAA compliant and BAA-ready?</h3>
+                <p>Absolutely. HDIM is fully HIPAA compliant with enterprise-grade security. We can execute a Business Associate Agreement (BAA) within 24 hours. Our platform includes end-to-end encryption, audit logging, and role-based access controls.</p>
+            </div>
+            <div class="faq-item">
+                <h3>Is this a production-ready platform or demo software?</h3>
+                <p>HDIM is 100% production-ready. There are no demo modes or bypasses. Our platform is deployed with distributed tracing, production monitoring, and AI-powered testing infrastructure for enterprise reliability.</p>
+            </div>
+            <div class="faq-item">
+                <h3>What's the pricing model?</h3>
+                <p>Contact us for a custom quote based on your facility size and needs. We offer both subscription and per-transaction models.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <a href="/" class="logo">HDIM</a>
+        <p>Healthcare Data Integration Made Intelligent</p>
+        <div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
+            <span style="background: #2E7D32; color: white; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600;">HIPAA Compliant</span>
+            <span style="background: #1565C0; color: white; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600;">BAA Ready</span>
+            <span style="background: #6A1B9A; color: white; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600;">SOC 2 Type II Ready</span>
+            <span style="background: #E65100; color: white; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600;">Production Ready</span>
+        </div>
+        <p style="margin-top: 20px; font-size: 12px;">© 2025 HDIM. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>

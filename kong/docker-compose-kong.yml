@@ -1,0 +1,134 @@
+version: '3.9'
+
+#
+# Kong API Gateway Configuration for HealthData In Motion HIE Platform
+#
+# This configuration provides:
+# - Centralized authentication (OIDC/OAuth2)
+# - Rate limiting and security
+# - SSL/TLS termination
+# - Service routing and load balancing
+# - Request/response transformation
+#
+
+services:
+  # Kong Database (PostgreSQL)
+  kong-database:
+    image: postgres:15-alpine
+    container_name: healthdata-kong-db
+    environment:
+      POSTGRES_DB: kong
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong_password_change_in_production
+    volumes:
+      - kong-postgres-data:/var/lib/postgresql/data
+    networks:
+      - healthdata-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Kong Database Migration
+  kong-migration:
+    image: kong:3.4
+    container_name: healthdata-kong-migration
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_PORT: 5432
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong_password_change_in_production
+      KONG_PG_DATABASE: kong
+    command: kong migrations bootstrap
+    depends_on:
+      kong-database:
+        condition: service_healthy
+    networks:
+      - healthdata-network
+    restart: on-failure
+
+  # Kong API Gateway
+  kong:
+    image: kong:3.4
+    container_name: healthdata-kong
+    environment:
+      # Database
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_PORT: 5432
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong_password_change_in_production
+      KONG_PG_DATABASE: kong
+
+      # Proxy Configuration
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+
+      # Admin API
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_ADMIN_GUI_URL: http://localhost:8002
+
+      # Proxy Ports
+      KONG_PROXY_LISTEN: 0.0.0.0:8000, 0.0.0.0:8443 ssl
+
+      # DNS Resolver (for service discovery)
+      KONG_DNS_RESOLVER: 127.0.0.11
+
+      # Plugins
+      KONG_PLUGINS: bundled
+
+      # Logging
+      KONG_LOG_LEVEL: info
+    ports:
+      - "8000:8000"  # HTTP Proxy
+      - "8443:8443"  # HTTPS Proxy
+      - "8001:8001"  # Admin API
+      - "8002:8002"  # Admin GUI
+    depends_on:
+      kong-database:
+        condition: service_healthy
+      kong-migration:
+        condition: service_completed_successfully
+    networks:
+      - healthdata-network
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+
+  # Konga - Kong Admin UI (Optional but recommended)
+  konga:
+    image: pantsel/konga:latest
+    container_name: healthdata-konga
+    environment:
+      DB_ADAPTER: postgres
+      DB_HOST: kong-database
+      DB_PORT: 5432
+      DB_USER: kong
+      DB_PASSWORD: kong_password_change_in_production
+      DB_DATABASE: konga
+      NODE_ENV: production
+      KONGA_HOOK_TIMEOUT: 120000
+    ports:
+      - "1337:1337"  # Konga Admin UI
+    depends_on:
+      kong-database:
+        condition: service_healthy
+    networks:
+      - healthdata-network
+    restart: unless-stopped
+
+volumes:
+  kong-postgres-data:
+    driver: local
+
+networks:
+  healthdata-network:
+    name: healthdata-in-motion_healthdata-network
+    external: true

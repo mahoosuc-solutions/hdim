@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Nurture Sequence - HDIM</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; background: white; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #1e40af; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+        .print-button { background: #1e40af; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 20px 0; }
+        
+        header {
+            border-bottom: 3px solid #1e40af;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        header h1 { color: #1e40af; font-size: 1.8em; margin-bottom: 5px; }
+        header p { color: #666; }
+
+        h2 { color: #1e40af; font-size: 1.4em; margin-top: 40px; margin-bottom: 15px; border-left: 4px solid #1e40af; padding-left: 12px; }
+
+        .email {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 8px;
+            page-break-inside: avoid;
+        }
+
+        .email-header {
+            background: #f0f9ff;
+            border: 1px solid #bfdbfe;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .email-field {
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .email-field strong {
+            color: #1e40af;
+            display: inline-block;
+            min-width: 100px;
+        }
+
+        .email-body {
+            background: white;
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            font-family: 'Georgia', serif;
+            font-size: 0.95em;
+            line-height: 1.8;
+        }
+
+        .email-body p { margin-bottom: 12px; }
+
+        .cta-text {
+            background: #fef3c7;
+            padding: 8px;
+            border-radius: 4px;
+            color: #92400e;
+            font-weight: 600;
+            display: inline-block;
+            margin: 8px 0;
+        }
+
+        .overview {
+            background: #f0f9ff;
+            border: 2px solid #bfdbfe;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .overview h3 { color: #1e40af; margin-bottom: 10px; }
+
+        .stats { background: #f3f4f6; padding: 15px; border-radius: 4px; margin: 15px 0; }
+
+        @media print {
+            .back-link, .print-button { display: none; }
+            .container { background: white; padding: 20px; }
+            body { background: white; }
+        }
+
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.85em;
+            color: #999;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to All Documents</a>
+        <button class="print-button" onclick="window.print()">🖨️ Print as PDF</button>
+
+        <header>
+            <h1>Email Nurture Sequence</h1>
+            <p>7-email 14-21 day buyer journey | Copy-paste ready for marketing automation</p>
+        </header>
+
+        <div class="overview">
+            <h3>📊 Sequence Overview</h3>
+            <p><strong>Duration:</strong> 14-21 days (3 emails per week)<br>
+            <strong>Format:</strong> Copy-paste ready (no template code needed)<br>
+            <strong>Personalization:</strong> [First Name], [Company], [Industry] fields<br>
+            <strong>Expected Performance:</strong> 25-35% open rate, 5-12% click rate, 1-2% demo booking rate<br>
+            <strong>Deployment:</strong> HubSpot, Marketo, Klaviyo, or any email marketing platform</p>
+        </div>
+
+        <div class="stats">
+            <strong>🎯 Sequence Logic:</strong><br>
+            Email 1: Hook (opportunity) → Email 2: Problem empathy → Email 3: Social proof (competitive pressure) → Email 4: Solution demo → Email 5: ROI proof → Email 6: Risk mitigation → Email 7: Direct CTA (working session)
+        </div>
+
+        <!-- EMAIL 1 -->
+        <div class="email">
+            <div class="email-header">
+                <div class="email-field"><strong>Email #1</strong></div>
+                <div class="email-field"><strong>Send Day:</strong> Day 1 (immediate after lead capture)</div>
+                <div class="email-field"><strong>Goal:</strong> Hook with opportunity, get them to read ROI article</div>
+                <div class="email-field"><strong>Estimated Open Rate:</strong> 35-40% (subject line novelty)</div>
+            </div>
+
+            <div class="email-field" style="font-weight: 600; margin-bottom: 12px;">
+                Subject: [First Name] - $250K+ opportunity in gap closure
+            </div>
+            <div class="email-field" style="font-size: 0.85em; color: #666;">
+                Preview: Your care coordinators might be missing gaps. See the financial impact.
+            </div>
+
+            <div class="email-body">
+                <p>Hi [First Name],</p>
+
+                <p>I was looking at [Company]'s quality metrics, and I noticed something: you're closing ~45% of eligible care gaps.</p>
+
+                <p>That's not unusual—most organizations are in that range. But here's the opportunity: the organizations we work with close ~68% of gaps after 12 months.</p>
+
+                <p>For a [Company Size] organization, that gap in gap-closure rate is worth <span class="cta-text">$250K-$400K annually</span> in unrealized quality bonuses.</p>
+
+                <p>Want to see the math? I broke down how we help care coordinators identify and close gaps faster—with the financial model attached.</p>
+
+                <p style="margin-top: 20px;"><span class="cta-text">👉 Read: Why Care Gaps Cost $250K+ (and how to close them)</span></p>
+
+                <p style="margin-top: 20px;">If that's interesting, let me know.</p>
+
+                <p>Thanks,<br>[Your Name]<br>Health Data In Motion</p>
+            </div>
+        </div>
+
+        <!-- EMAIL 2 -->
+        <div class="email">
+            <div class="email-header">
+                <div class="email-field"><strong>Email #2</strong></div>
+                <div class="email-field"><strong>Send Day:</strong> Day 3 (2 days after Email 1)</div>
+                <div class="email-field"><strong>Goal:</strong> Share care coordinator's pain, get them to watch demo</div>
+                <div class="email-field"><strong>Trigger:</strong> If they opened Email 1 (optional, can be sent regardless)</div>
+            </div>
+
+            <div class="email-field" style="font-weight: 600; margin-bottom: 12px;">
+                Subject: A day in the life of your care coordinator
+            </div>
+            <div class="email-field" style="font-size: 0.85em; color: #666;">
+                Preview: Why gap hunting is stealing 3 hours from your team.
+            </div>
+
+            <div class="email-body">
+                <p>Hi [First Name],</p>
+
+                <p>So here's what a typical day looks like for your care coordinators:</p>
+
+                <p><strong>9 AM:</strong> Open Epic to find gaps. Scan 30 patient charts manually.<br>
+                <strong>10:30 AM:</strong> Cross-reference with external claims system (system 2 of 3). Find 8 potential gaps.<br>
+                <strong>11:15 AM:</strong> Check lab results (system 3 of 3). Confirm which gaps are real.<br>
+                <strong>12:30 PM:</strong> Done. Found 12 actual gaps. Started identifying them at 9 AM. 3.5 hours gone.</p>
+
+                <p>And that's just one coordinator, one day.</p>
+
+                <p>Multiply that by 10 coordinators × 5 days = <strong>175 hours/month spent hunting</strong>. At $62.5K/year salary, that's <strong>$5,400+ per coordinator annually</strong> spent looking for information that should be right in front of them.</p>
+
+                <p>What if your coordinators got a real-time alert the moment a gap appeared? No hunting. Just alerts showing exactly what needs to be done.</p>
+
+                <p style="margin-top: 20px;"><span class="cta-text">👉 Watch 3-minute demo of the care coordinator workflow</span></p>
+
+                <p style="margin-top: 20px;">I think you'll see why coordinators love this approach.</p>
+
+                <p>Thanks,<br>[Your Name]</p>
+            </div>
+        </div>
+
+        <!-- EMAIL 3 -->
+        <div class="email">
+            <div class="email-header">
+                <div class="email-field"><strong>Email #3</strong></div>
+                <div class="email-field"><strong>Send Day:</strong> Day 5 (2 days after Email 2)</div>
+                <div class="email-field"><strong>Goal:</strong> Create urgency via competitive pressure</div>
+                <div class="email-field"><strong>Estimated Open Rate:</strong> 20-25% (third consecutive email)</div>
+            </div>
+
+            <div class="email-field" style="font-weight: 600; margin-bottom: 12px;">
+                Subject: Your competitors are closing more gaps than you
+            </div>
+            <div class="email-field" style="font-size: 0.85em; color: #666;">
+                Preview: Are they ahead on Star rating too?
+            </div>
+
+            <div class="email-body">
+                <p>Hi [First Name],</p>
+
+                <p>Quick question: How is [Company]'s Star rating trending vs. competitors?</p>
+
+                <p>I ask because the gap in gap-closure shows up in the metrics. Organizations stuck at 45% gap closure typically have Star ratings around 3.4-3.6. Organizations using real-time gap management hit 3.8-4.0+.</p>
+
+                <p>That 0.4-0.6 point difference is <strong>$180K-$270K annually</strong> in quality bonus variance—just from gap management approach.</p>
+
+                <p>Your team is capable. You just need the right tool to surface gaps before your competitors do.</p>
+
+                <p style="margin-top: 20px;"><span class="cta-text">👉 See competitive positioning breakdown</span></p>
+
+                <p style="margin-top: 20px;">It might be eye-opening.</p>
+
+                <p>Thanks,<br>[Your Name]</p>
+            </div>
+        </div>
+
+        <!-- EMAIL 4 -->
+        <div class="email">
+            <div class="email-header">
+                <div class="email-field"><strong>Email #4</strong></div>
+                <div class="email-field"><strong>Send Day:</strong> Day 7 (2 days after Email 3)</div>
+                <div class="email-field"><strong>Goal:</strong> Product demo, book working session</div>
+                <div class="email-field"><strong>Trigger:</strong> If they clicked previous emails (optional)</div>
+            </div>
+
+            <div class="email-field" style="font-weight: 600; margin-bottom: 12px;">
+                Subject: How HDIM finds gaps 3x faster
+            </div>
+            <div class="email-field" style="font-size: 0.85em; color: #666;">
+                Preview: Real-time alerts in your care coordinator workflow.
+            </div>
+
+            <div class="email-body">
+                <p>Hi [First Name],</p>
+
+                <p>You've probably seen the general case for gap management by now. But the real question is: How?</p>
+
+                <p>Here's what makes HDIM different from what your EHR probably does:</p>
+
+                <p><strong>1. Real-time alerts</strong> (not batch reports 3 weeks later)<br>
+                Gaps surface within hours of the eligible event. Not days. Not weeks.<br><br>
+
+                <strong>2. Smart prioritization</strong> (not alert fatigue)<br>
+                20-30 alerts/day that matter, not 100+ you ignore. 80% action rate vs 5%.<br><br>
+
+                <strong>3. Integrated workflow</strong> (not context switching)<br>
+                Alerts appear in your care coordinator dashboard. No system jumping.<br><br>
+
+                <strong>4. 52 HEDIS measures</strong> (all your quality metrics)<br>
+                Every measure you care about, all updated in real time.<br><br>
+
+                <strong>5. Compliance proof</strong> (audit-ready)<br>
+                Every access logged. Every decision tracked. Every policy enforced.</p>
+
+                <p style="margin-top: 20px;">I'd love to show you how this works specifically for [Company]'s workflow and patient population.</p>
+
+                <p style="margin-top: 20px;"><span class="cta-text">👉 Book a 30-minute working session</span></p>
+
+                <p style="margin-top: 20px;">We'll map your current state, confirm the ROI for your org size, and outline an implementation timeline.</p>
+
+                <p>Thanks,<br>[Your Name]</p>
+            </div>
+        </div>
+
+        <!-- EMAIL 5 -->
+        <div class="email">
+            <div class="email-header">
+                <div class="email-field"><strong>Email #5</strong></div>
+                <div class="email-field"><strong>Send Day:</strong> Day 10 (3 days after Email 4)</div>
+                <div class="email-field"><strong>Goal:</strong> ROI proof via case study + calculator</div>
+                <div class="email-field"><strong>Estimated Open Rate:</strong> 18-22% (fifth email)</div>
+            </div>
+
+            <div class="email-field" style="font-weight: 600; margin-bottom: 12px;">
+                Subject: Real numbers: $265K Year 1 ROI (transparent breakdown)
+            </div>
+            <div class="email-field" style="font-size: 0.85em; color: #666;">
+                Preview: Here's exactly how we calculate and achieve ROI.
+            </div>
+
+            <div class="email-body">
+                <p>Hi [First Name],</p>
+
+                <p>I get asked a lot: "Is that $250K-$300K ROI realistic?"</p>
+
+                <p>Yes. Here's the breakdown for a typical 15,000-patient organization:</p>
+
+                <p><strong>Quality Bonuses:</strong> $270K (Star improvement 3.4→4.0)<br>
+                <strong>Labor Savings:</strong> $45K (2-3 hrs/week × 10 coordinators)<br>
+                <strong>Compliance Savings:</strong> $120K (audit prep time cut by 90%)<br>
+                <strong>Implementation Cost:</strong> -$170K<br>
+                <strong>Net Year 1 Benefit:</strong> $265K (147% ROI)</p>
+
+                <p>We built a calculator that models YOUR specific numbers. Patient volume, coordinator count, current Star rating, gap closure %, implementation timeline—all factored in.</p>
+
+                <p style="margin-top: 20px;"><span class="cta-text">👉 Use ROI calculator (customized for your org)</span></p>
+
+                <p style="margin-top: 20px;">Attached is also our case study showing a regional care org that hit exactly these numbers (and exceeded them in Year 2).</p>
+
+                <p>Questions on the math? Let's talk.</p>
+
+                <p>Thanks,<br>[Your Name]</p>
+            </div>
+        </div>
+
+        <!-- EMAIL 6 -->
+        <div class="email">
+            <div class="email-header">
+                <div class="email-field"><strong>Email #6</strong></div>
+                <div class="email-field"><strong>Send Day:</strong> Day 12 (2 days after Email 5)</div>
+                <div class="email-field"><strong>Goal:</strong> Risk mitigation, create urgency</div>
+                <div class="email-field"><strong>Estimated Open Rate:</strong> 15-20%</div>
+            </div>
+
+            <div class="email-field" style="font-weight: 600; margin-bottom: 12px;">
+                Subject: The cost of waiting 12 more months
+            </div>
+            <div class="email-field" style="font-size: 0.85em; color: #666;">
+                Preview: What you're leaving on the table by delaying.
+            </div>
+
+            <div class="email-body">
+                <p>Hi [First Name],</p>
+
+                <p>I know buying decisions take time. And evaluating new systems is smart. But let me paint a picture of what "waiting" costs:</p>
+
+                <p><strong>If you wait 12 more months:</strong></p>
+
+                <p>• Miss $250K-$400K in quality bonus revenue<br>
+                • Your competitors gain Star rating ground<br>
+                • Coordinators continue hunting gaps (waste 3-4 hrs/week each)<br>
+                • Audit prep continues taking 40 hours per audit<br>
+                • You're further behind on gap closure, further behind on Star<br><br>
+
+                <strong>If you act now:</strong></p>
+
+                <p>• Implement in 8-12 weeks<br>
+                • ROI kicks in by month 5<br>
+                • Year 1 net benefit: $265K<br>
+                • Competitive advantage: Real-time gaps before competitors see them<br>
+                • Team impact: Coordinators freed up to do meaningful work<br><br>
+
+                The financial opportunity is real. The implementation timeline is fast. The risk is low.</p>
+
+                <p style="margin-top: 20px;"><span class="cta-text">👉 Let's schedule the working session</span></p>
+
+                <p style="margin-top: 20px;">30 minutes. We confirm the numbers for your org. You make the decision from there.</p>
+
+                <p>Thanks,<br>[Your Name]</p>
+            </div>
+        </div>
+
+        <!-- EMAIL 7 -->
+        <div class="email">
+            <div class="email-header">
+                <div class="email-field"><strong>Email #7</strong></div>
+                <div class="email-field"><strong>Send Day:</strong> Day 14 (2 days after Email 6)</div>
+                <div class="email-field"><strong>Goal:</strong> Direct CTA, pilot proposal</div>
+                <div class="email-field"><strong>Estimated Open Rate:</strong> 12-18% (final email)</div>
+            </div>
+
+            <div class="email-field" style="font-weight: 600; margin-bottom: 12px;">
+                Subject: Let's move forward [First Name]
+            </div>
+            <div class="email-field" style="font-size: 0.85em; color: #666;">
+                Preview: Pilot framework + next steps.
+            </div>
+
+            <div class="email-body">
+                <p>Hi [First Name],</p>
+
+                <p>If you're still interested in exploring gap management, I want to make next steps super simple.</p>
+
+                <p>Here's what we typically recommend for a pilot:</p>
+
+                <p><strong>Phase 1: Discovery (Week 1-2)</strong><br>
+                Map your current workflow, identify key gaps, validate ROI assumptions<br><br>
+
+                <strong>Phase 2: Build (Week 3-8)</strong><br>
+                Implement, integrate, train your care coordination team<br><br>
+
+                <strong>Phase 3: Launch & Measure (Week 9-12)</strong><br>
+                Go live, measure gap closure improvement, plan expansion<br><br>
+
+                <strong>Expected Year 1 Result:</strong> +0.6 Star rating, 68% gap closure, $265K+ net ROI</p>
+
+                <p>Timeline: 12 weeks to full deployment. ROI kicks in by month 5-6.</p>
+
+                <p style="margin-top: 20px;"><span class="cta-text">👉 Schedule 30-minute working session to discuss pilot</span></p>
+
+                <p style="margin-top: 20px;">Or if you want to take a different approach, we can talk through that too. No pressure.</p>
+
+                <p>But I do think there's real opportunity here for [Company].</p>
+
+                <p>Thanks,<br>[Your Name]<br>Health Data In Motion</p>
+            </div>
+        </div>
+
+        <h2>Deployment Notes</h2>
+
+        <div class="stats">
+            <strong>✓ Copy-Paste Instructions:</strong><br><br>
+            1. For each email, copy the body text (from "Hi [First Name]" to signature)<br>
+            2. Paste into your email marketing platform<br>
+            3. Replace [First Name], [Company], [Company Size] with merge fields<br>
+            4. Set send times (e.g., 10 AM on send days)<br>
+            5. Attach PDFs where indicated (One-Pager for Email 1, Demo link for Email 2, Case Study for Email 5)<br>
+            6. Schedule sequence based on lead entry date
+        </div>
+
+        <div class="stats">
+            <strong>✓ Performance Tracking:</strong><br><br>
+            • Watch open rates (target: 25-35%)<br>
+            • Track clicks (target: 5-12% per email)<br>
+            • Monitor demo booking from Email #4 and #7 CTAs<br>
+            • A/B test subject lines if desired (Email #1 & #7 are highest ROI)<br>
+            • Measure working session booking rate (target: 1-2% of send list)
+        </div>
+
+        <footer>
+            <p>HDIM Email Nurture Sequence | November 19, 2025</p>
+            <p><a href="index.html">← Back to All Documents</a></p>
+        </footer>
+    </div>
+</body>
+</html>

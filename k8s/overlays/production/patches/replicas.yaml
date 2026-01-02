@@ -1,0 +1,213 @@
+# Replica count patch for production environment
+# Multiple replicas for high availability
+# Note: HPA will override these as minReplicas
+
+# Gateway Service - primary entry point, 3 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-service
+  namespace: hdim
+spec:
+  replicas: 3
+
+# FHIR Service - high traffic, 3 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fhir-service
+  namespace: hdim
+spec:
+  replicas: 3
+
+# Patient Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: patient-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# Care Gap Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: care-gap-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# Quality Measure Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quality-measure-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# CQL Engine Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cql-engine-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# Consent Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consent-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# Event Processing Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-processing-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# Event Router Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-router-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# Agent Runtime Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-runtime-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# AI Assistant Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-assistant-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# Agent Builder Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-builder-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# Analytics Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# Predictive Analytics Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: predictive-analytics-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# SDOH Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sdoh-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# Approval Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: approval-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# Payer Workflows Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payer-workflows-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# CDR Processor Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdr-processor-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# Data Enrichment Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-enrichment-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# EHR Connector Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ehr-connector-service
+  namespace: hdim
+spec:
+  replicas: 2
+
+# Documentation Service - 2 replicas
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: documentation-service
+  namespace: hdim
+spec:
+  replicas: 2

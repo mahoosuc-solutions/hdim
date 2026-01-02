@@ -1,0 +1,246 @@
+/**
+ * Dark Theme
+ *
+ * Dark color scheme for the HealthData Platform.
+ */
+
+@import './variables.scss';
+
+// Dark Theme Variables
+$dark-bg-primary: #1e1e1e;
+$dark-bg-secondary: #2d2d2d;
+$dark-bg-tertiary: #383838;
+$dark-bg-card: #424242;
+
+$dark-text-primary: rgba(255, 255, 255, 0.87);
+$dark-text-secondary: rgba(255, 255, 255, 0.7);
+$dark-text-disabled: rgba(255, 255, 255, 0.5);
+$dark-text-hint: rgba(255, 255, 255, 0.5);
+
+$dark-border-color: #616161;
+$dark-divider-color: rgba(255, 255, 255, 0.12);
+
+// Dark Theme Application
+@media (prefers-color-scheme: dark) {
+  body, .app-container {
+    background-color: $dark-bg-primary;
+    color: $dark-text-primary;
+  }
+
+  // Card Backgrounds
+  .mat-card,
+  .card,
+  mat-card {
+    background-color: $dark-bg-card;
+    color: $dark-text-primary;
+  }
+
+  // Input Fields
+  .mat-form-field,
+  input,
+  textarea,
+  select {
+    color: $dark-text-primary;
+    background-color: $dark-bg-tertiary;
+    border-color: $dark-border-color;
+  }
+
+  .mat-form-field-label,
+  label {
+    color: $dark-text-secondary;
+  }
+
+  // Tables
+  .mat-table,
+  table {
+    background-color: $dark-bg-card;
+    color: $dark-text-primary;
+  }
+
+  .mat-row:hover,
+  tr:hover {
+    background-color: $dark-bg-tertiary;
+  }
+
+  .mat-header-row,
+  thead {
+    background-color: $dark-bg-secondary;
+  }
+
+  // Borders
+  .mat-divider,
+  hr,
+  .border {
+    border-color: $dark-border-color;
+  }
+
+  // Shadows (reduced in dark mode)
+  .shadow-sm {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  .shadow {
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+  }
+
+  .shadow-lg {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  // Navigation
+  .mat-sidenav,
+  .sidebar {
+    background-color: $dark-bg-card;
+    border-color: $dark-border-color;
+  }
+
+  .mat-toolbar {
+    background-color: $dark-bg-secondary;
+  }
+
+  // Menu Items
+  .mat-menu-panel,
+  .mat-select-panel {
+    background-color: $dark-bg-card;
+  }
+
+  .mat-menu-item,
+  .mat-option {
+    color: $dark-text-primary;
+
+    &:hover {
+      background-color: $dark-bg-tertiary;
+    }
+  }
+
+  // Dialogs
+  .mat-dialog-container {
+    background-color: $dark-bg-card;
+    color: $dark-text-primary;
+  }
+
+  // Tooltips
+  .mat-tooltip {
+    background-color: $dark-bg-tertiary;
+    color: $dark-text-primary;
+  }
+
+  // Progress Bars
+  .mat-progress-bar-background {
+    background-color: $dark-bg-tertiary;
+  }
+
+  // Chips
+  .mat-chip {
+    background-color: $dark-bg-tertiary;
+    color: $dark-text-primary;
+  }
+
+  // Scrollbars
+  ::-webkit-scrollbar-track {
+    background: $dark-bg-secondary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: $dark-bg-tertiary;
+
+    &:hover {
+      background: $dark-border-color;
+    }
+  }
+
+  // Empty States
+  .empty-state,
+  .no-data {
+    color: $dark-text-secondary;
+  }
+
+  // Loading States
+  .skeleton-loading {
+    background: linear-gradient(
+      90deg,
+      $dark-bg-secondary 25%,
+      $dark-bg-tertiary 50%,
+      $dark-bg-secondary 75%
+    );
+  }
+
+  // Status Colors (slightly adjusted for dark mode)
+  .status-active,
+  .text-success {
+    color: lighten($success, 10%);
+  }
+
+  .status-warning,
+  .text-warning {
+    color: lighten($warning, 10%);
+  }
+
+  .status-error,
+  .text-danger {
+    color: lighten($danger, 10%);
+  }
+
+  // Code Blocks
+  code,
+  pre {
+    background-color: $dark-bg-secondary;
+    color: $dark-text-primary;
+    border-color: $dark-border-color;
+  }
+
+  // Links
+  a {
+    color: lighten($primary, 20%);
+
+    &:hover {
+      color: lighten($primary, 30%);
+    }
+  }
+
+  // Disabled States
+  .disabled,
+  [disabled] {
+    color: $dark-text-disabled;
+    opacity: 0.6;
+  }
+
+  // Focus States
+  input:focus,
+  textarea:focus,
+  select:focus,
+  button:focus {
+    outline-color: lighten($primary, 20%);
+  }
+}
+
+// Dark Theme Class (for manual toggle)
+.dark-theme {
+  background-color: $dark-bg-primary;
+  color: $dark-text-primary;
+
+  .mat-card,
+  .card {
+    background-color: $dark-bg-card;
+  }
+
+  .mat-toolbar {
+    background-color: $dark-bg-secondary;
+  }
+
+  input,
+  textarea,
+  select {
+    background-color: $dark-bg-tertiary;
+    color: $dark-text-primary;
+    border-color: $dark-border-color;
+  }
+
+  .border {
+    border-color: $dark-border-color;
+  }
+
+  a {
+    color: lighten($primary, 20%);
+  }
+}

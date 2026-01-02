@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    { "source": "/demo", "destination": "/landing-page-a.html" },
+    { "source": "/calculator", "destination": "/landing-page-b.html" },
+    { "source": "/investors", "destination": "/one-pager.html" },
+    { "source": "/deck", "destination": "/pitch-deck.html" },
+    { "source": "/holiday", "destination": "/holiday-card.html" },
+    { "source": "/gallery", "destination": "/gallery.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" }
+      ]
+    }
+  ]
+}

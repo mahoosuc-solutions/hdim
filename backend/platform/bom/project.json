@@ -1,0 +1,39 @@
+{
+  "name": "platform-bom",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "backend/platform/bom/src",
+  "tags": [
+    "backend",
+    "lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/platform/bom/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:bom:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:bom:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:bom:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :platform:bom:test :platform:bom:jacocoTestReport :platform:bom:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

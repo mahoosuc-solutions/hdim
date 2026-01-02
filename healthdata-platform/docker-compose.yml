@@ -1,0 +1,81 @@
+services:
+  # Single PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: healthdata-postgres
+    environment:
+      POSTGRES_USER: healthdata
+      POSTGRES_PASSWORD: healthdata_password
+      POSTGRES_DB: healthdata
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthdata"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Caching
+  redis:
+    image: redis:7-alpine
+    container_name: healthdata-redis
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Single Application - Modular Monolith
+  healthdata-platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: healthdata-platform
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456}
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Frontend (Optional - can be deployed separately)
+  clinical-portal:
+    image: node:20-alpine
+    container_name: healthdata-frontend
+    working_dir: /app
+    volumes:
+      - ../apps/clinical-portal:/app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "4200:4200"
+    environment:
+      API_URL: http://healthdata-platform:8080
+
+volumes:
+  postgres_data:
+
+# That's it! Just 4 services instead of 12+
+# - 1 Database (instead of 6)
+# - 1 Cache
+# - 1 Application (instead of 9 microservices)
+# - 1 Frontend

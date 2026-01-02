@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0010-create-users-table" author="fhir-service">
+        <createTable tableName="users">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="varchar(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="email" type="varchar(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password_hash" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="first_name" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email_verified" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_login_at" type="timestamp with time zone"/>
+            <column name="failed_login_attempts" type="integer"/>
+            <column name="account_locked_until" type="timestamp with time zone"/>
+            <column name="notes" type="varchar(500)"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted_at" type="timestamp with time zone"/>
+        </createTable>
+
+        <createIndex indexName="idx_users_username" tableName="users" unique="true">
+            <column name="username"/>
+        </createIndex>
+
+        <createIndex indexName="idx_users_email" tableName="users" unique="true">
+            <column name="email"/>
+        </createIndex>
+
+        <createIndex indexName="idx_users_active" tableName="users">
+            <column name="active"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="0010-create-user-tenants-table" author="fhir-service">
+        <createTable tableName="user_tenants">
+            <column name="user_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="user_tenants" columnNames="user_id,tenant_id" constraintName="pk_user_tenants"/>
+
+        <addForeignKeyConstraint
+            constraintName="fk_user_tenants_user"
+            baseTableName="user_tenants"
+            baseColumnNames="user_id"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <createIndex indexName="idx_user_tenants_tenant_id" tableName="user_tenants">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="0010-create-user-roles-table" author="fhir-service">
+        <createTable tableName="user_roles">
+            <column name="user_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="user_roles" columnNames="user_id,role" constraintName="pk_user_roles"/>
+
+        <addForeignKeyConstraint
+            constraintName="fk_user_roles_user"
+            baseTableName="user_roles"
+            baseColumnNames="user_id"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="0010-create-refresh-tokens-table" author="fhir-service">
+        <createTable tableName="refresh_tokens">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="token" type="varchar(1000)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="user_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="revoked_at" type="timestamp with time zone"/>
+            <column name="ip_address" type="varchar(45)"/>
+            <column name="user_agent" type="varchar(500)"/>
+        </createTable>
+
+        <createIndex indexName="idx_refresh_tokens_token" tableName="refresh_tokens" unique="true">
+            <column name="token"/>
+        </createIndex>
+
+        <createIndex indexName="idx_refresh_tokens_user_id" tableName="refresh_tokens">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_refresh_tokens_expires_at" tableName="refresh_tokens">
+            <column name="expires_at"/>
+        </createIndex>
+
+        <addForeignKeyConstraint
+            constraintName="fk_refresh_tokens_user"
+            baseTableName="refresh_tokens"
+            baseColumnNames="user_id"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+</databaseChangeLog>

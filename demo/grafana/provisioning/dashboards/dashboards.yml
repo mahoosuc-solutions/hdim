@@ -1,0 +1,14 @@
+# HDIM Demo - Grafana Dashboard Provisioning
+apiVersion: 1
+
+providers:
+  - name: 'HDIM Dashboards'
+    orgId: 1
+    folder: 'HDIM Demo'
+    folderUid: 'hdim-demo'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

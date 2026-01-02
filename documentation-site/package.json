@@ -1,0 +1,13 @@
+{
+  "name": "hdim-documentation",
+  "version": "1.0.0",
+  "description": "HealthData-in-Motion Clinical Portal Documentation",
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "vitepress": "^1.0.0"
+  }
+}

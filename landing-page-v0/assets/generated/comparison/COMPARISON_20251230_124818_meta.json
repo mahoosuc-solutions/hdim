@@ -1,0 +1,9 @@
+{
+  "prompt_id": "COMPARISON",
+  "name": "Fragmented vs Connected Healthcare",
+  "category": "comparison",
+  "dimensions": "1200x600",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a powerful side-by-side comparison visual showing healthcare data transformation.\n\nLEFT SIDE - \"The Fragmentation Problem\":\n- Darker, grayer, chaotic color palette\n- Multiple disconnected system logos (Epic, Cerner, Labs) with broken/no connection lines\n- Frustrated healthcare worker surrounded by multiple screens, each showing different systems\n- Red \"X\" marks showing failed data transfers\n- Clock showing \"3 MONTHS LATER\" - reactive, batch-based\n- Patient chart marked \"OUTDATED\" or \"INCO..."
+}

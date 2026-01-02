@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDIM Clinical Sales Content Suite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            margin-bottom: 40px;
+            border-radius: 8px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+
+        nav {
+            background: white;
+            padding: 0;
+            margin-bottom: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        nav li {
+            border-right: 1px solid #e5e7eb;
+        }
+
+        nav li:last-child {
+            border-right: none;
+        }
+
+        nav a {
+            display: block;
+            padding: 12px 16px;
+            color: #1e40af;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95em;
+            transition: background 0.3s;
+        }
+
+        nav a:hover {
+            background: #f3f4f6;
+        }
+
+        .document-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .document-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .document-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+
+        .document-card h3 {
+            color: #1e40af;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .document-card .type {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .document-card p {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 12px;
+        }
+
+        .document-card .stats {
+            display: flex;
+            gap: 12px;
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 12px;
+        }
+
+        .document-card .stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .document-card a {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: #1e40af;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .document-card a:hover {
+            background: #1e3a8a;
+        }
+
+        .info-box {
+            background: #f0f9ff;
+            border-left: 4px solid #1e40af;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info-box h4 {
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        .info-box p {
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-card .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .print-only {
+            display: none;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            nav, .document-grid, header .status-badge {
+                display: none;
+            }
+
+            .print-only {
+                display: block;
+            }
+
+            .document-card {
+                page-break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #e5e7eb;
+            }
+
+            header {
+                background: white;
+                color: #1e40af;
+                border: 2px solid #1e40af;
+                padding: 20px;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            header p {
+                font-size: 0.95em;
+            }
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 40px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 10px;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            nav a {
+                padding: 10px 12px;
+                font-size: 0.85em;
+            }
+
+            .document-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>HDIM Clinical Sales Content Suite</h1>
+        <p>Complete, production-ready materials for selling Health Data In Motion to clinical users</p>
+        <div class="status-badge">✓ Ready for Deployment</div>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#documents">Documents</a></li>
+            <li><a href="#stats">Key Metrics</a></li>
+            <li><a href="#quick-access">Quick Access</a></li>
+            <li><a href="#next-steps">Next Steps</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <!-- Overview Section -->
+        <section id="overview">
+            <h2>📋 About This Suite</h2>
+            <p style="font-size: 1.05em; margin: 20px 0; color: #555;">A complete, production-ready sales content suite specifically designed to sell Health Data In Motion to busy clinical users. Everything you need to close deals—from initial outreach to proposal.</p>
+            
+            <div class="info-box">
+                <h4>✓ What's Included</h4>
+                <p><strong>21 comprehensive documents + webinar assets + 4 thought leadership blogs:</strong> Sales strategy, case study, one-pager, email sequence, quick reference playbook, 2 specialized collateral (mental health + risk stratification), webinar outline & speaker plan, sales training toolkit, 15-template email library, full webinar speaker notes, marketing implementation guide, completion summary, plus 4 production-ready blog posts targeting CMOs, CIOs, COOs, and clinical leaders. All ready to deploy immediately.</p>
+            </div>
+
+            <div class="info-box">
+                <h4>💡 Key Insight</h4>
+                <p>Busy clinical users care about one thing: <strong>time and money</strong>. Our messaging focuses on freeing 2-3 hours/week per care coordinator and generating $300K+ annual revenue. Everything flows from that value prop.</p>
+            </div>
+        </section>
+
+        <!-- Documents Section -->
+        <section id="documents" style="margin: 40px 0;">
+            <h2>📚 All Documents</h2>
+            <p style="margin-bottom: 30px; color: #666;">Click any document to view or use the buttons below for specific use cases.</p>
+
+            <div class="document-grid">
+                <!-- Strategy Document -->
+                <div class="document-card">
+                    <div class="type">STRATEGY</div>
+                    <h3>Clinical Sales Strategy</h3>
+                    <p>Complete sales and marketing framework with pain points, ROI model, competitive analysis, and persona-specific messaging.</p>
+                    <div class="stats">
+                        <div class="stat">📄 8,000 words</div>
+                        <div class="stat">📊 13 sections</div>
+                    </div>
+                    <a href="clinical-sales-strategy.html">View Document →</a>
+                </div>
+
+                <!-- Case Study -->
+                <div class="document-card">
+                    <div class="type">PROOF</div>
+                    <h3>Case Study - Clinical Impact</h3>
+                    <p>Real customer success story with quantified results, customer quotes, and reusable template for capturing future wins.</p>
+                    <div class="stats">
+                        <div class="stat">📄 5,000 words</div>
+                        <div class="stat">💰 +$265K ROI</div>
+                    </div>
+                    <a href="case-study-clinical-impact.html">View Document →</a>
+                </div>
+
+                <!-- One-Pager -->
+                <div class="document-card">
+                    <div class="type">SALES COLLATERAL</div>
+                    <h3>Clinical Overview One-Pager</h3>
+                    <p>2-page executive summary for busy prospects. Problem-Solution-Numbers-Proof-CTA flow. Print and email ready.</p>
+                    <div class="stats">
+                        <div class="stat">📄 2 pages</div>
+                        <div class="stat">🖨️ Print-ready</div>
+                    </div>
+                    <a href="clinical-overview-onepager.html">View Document →</a>
+                </div>
+
+                <!-- Email Sequence -->
+                <div class="document-card">
+                    <div class="type">AUTOMATION</div>
+                    <h3>Email Nurture Sequence</h3>
+                    <p>7-email 14-21 day buyer journey. From awareness to action. Copy-paste ready with subject lines and preview text.</p>
+                    <div class="stats">
+                        <div class="stat">📧 7 emails</div>
+                        <div class="stat">📈 25-35% expected open</div>
+                    </div>
+                    <a href="email-nurture-sequence.html">View Document →</a>
+                </div>
+
+                <!-- Sales Quick Reference -->
+                <div class="document-card">
+                    <div class="type">DAILY TOOL</div>
+                    <h3>Sales Quick Reference</h3>
+                    <p>Everything reps need daily: pitches, objection responses, discovery questions, talking points, email templates, and more.</p>
+                    <div class="stats">
+                        <div class="stat">📄 3,500 words</div>
+                        <div class="stat">🎯 11 discovery Q's</div>
+                    </div>
+                    <a href="sales-quick-reference.html">View Document →</a>
+                </div>
+
+                <!-- Mental Health Integration -->
+                <div class="document-card">
+                    <div class="type">NEW - SALES COLLATERAL</div>
+                    <h3>Mental Health Screening Integration</h3>
+                    <p>2-page collateral on automated PHQ-9 screening, depression gap creation, and $120K-$230K annual ROI. Competitive advantage positioning.</p>
+                    <div class="stats">
+                        <div class="stat">📄 1,700 words</div>
+                        <div class="stat">💰 +$120K-$230K ROI</div>
+                    </div>
+                    <a href="mental-health-integration.html">View Document →</a>
+                </div>
+
+                <!-- Risk Stratification -->
+                <div class="document-card">
+                    <div class="type">NEW - SALES COLLATERAL</div>
+                    <h3>Risk Stratification Fact Sheet</h3>
+                    <p>1-page fact sheet on 80/20 principle, automated patient prioritization, and $200K-$400K annual savings through prevention.</p>
+                    <div class="stats">
+                        <div class="stat">📄 1,400 words</div>
+                        <div class="stat">💰 +$200K-$400K savings</div>
+                    </div>
+                    <a href="risk-stratification.html">View Document →</a>
+                </div>
+
+                <!-- ROI Calculator -->
+                <div class="document-card">
+                    <div class="type">TOOL</div>
+                    <h3>ROI Calculator</h3>
+                    <p>Interactive financial modeling tool. Customizes ROI projections based on prospect's specific situation. Ready to deploy.</p>
+                    <div class="stats">
+                        <div class="stat">⚙️ TypeScript</div>
+                        <div class="stat">🚀 Ready to deploy</div>
+                    </div>
+                    <a href="roi-calculator.html">View Document →</a>
+                </div>
+
+                <!-- Implementation Summary -->
+                <div class="document-card">
+                    <div class="type">GUIDE</div>
+                    <h3>Implementation Summary</h3>
+                    <p>Deployment guide showing how to use all assets together. Includes timeline, success metrics, FAQ, and team roles.</p>
+                    <div class="stats">
+                        <div class="stat">📄 2,500 words</div>
+                        <div class="stat">📋 4-phase rollout</div>
+                    </div>
+                    <a href="implementation-summary.html">View Document →</a>
+                </div>
+
+                <!-- Sales Training Toolkit -->
+                <div class="document-card">
+                    <div class="type">ENABLEMENT</div>
+                    <h3>Sales Training Toolkit</h3>
+                    <p>Complete battle cards, discovery guides, and competitive positioning notes for coaching reps across every stage.</p>
+                    <div class="stats">
+                        <div class="stat">🛡️ 10 battle cards</div>
+                        <div class="stat">🎯 6 discovery flows</div>
+                    </div>
+                    <a href="sales-training-materials.html">View Toolkit →</a>
+                </div>
+
+                <!-- Email Template Library -->
+                <div class="document-card">
+                    <div class="type">CAMPAIGN</div>
+                    <h3>Email Template Library</h3>
+                    <p>15 production-ready templates spanning webinar promos, reminders, post-event nurture, and C-suite prospecting.</p>
+                    <div class="stats">
+                        <div class="stat">📧 15 templates</div>
+                        <div class="stat">🕒 Full buyer journey</div>
+                    </div>
+                    <a href="email-template-library.html">Open Library →</a>
+                </div>
+
+                <!-- Webinar Speaker Notes -->
+                <div class="document-card">
+                    <div class="type">WEBINAR</div>
+                    <h3>Webinar Speaker Notes</h3>
+                    <p>Slide-by-slide guidance, timing cues, poll prompts, and CTA reminders for the Mental Health + Quality Measures webinar.</p>
+                    <div class="stats">
+                        <div class="stat">🕒 30-minute flow</div>
+                        <div class="stat">🗣️ Presenter cues</div>
+                    </div>
+                    <a href="webinar-deck-speaker-notes.html">View Notes →</a>
+                </div>
+
+                <!-- Marketing Implementation Guide -->
+                <div class="document-card">
+                    <div class="type">GTM PLAN</div>
+                    <h3>Marketing Implementation Guide</h3>
+                    <p>90-day rollout plan covering asset deployment, training cadence, content calendar, KPI targets, and ownership.</p>
+                    <div class="stats">
+                        <div class="stat">📆 90-day plan</div>
+                        <div class="stat">🧩 4 phases</div>
+                    </div>
+                    <a href="marketing-implementation-guide.html">View Guide →</a>
+                </div>
+
+                <!-- Marketing Completion Summary -->
+                <div class="document-card">
+                    <div class="type">REPORT</div>
+                    <h3>Marketing Completion Summary</h3>
+                    <p>Executive-ready recap of all deliverables, persona coverage, ROI projections, and recommended next moves.</p>
+                    <div class="stats">
+                        <div class="stat">📊 20 assets</div>
+                        <div class="stat">📅 Nov 20, 2025</div>
+                    </div>
+                    <a href="marketing-completion-summary.html">View Summary →</a>
+                </div>
+
+                <!-- Investor Overview Narrative -->
+                <div class="document-card">
+                    <div class="type">INVESTOR</div>
+                    <h3>Investor Overview Narrative</h3>
+                    <p>Vision, TAM, product differentiation, traction proof, and capital plan in a single narrative for outbound investor updates.</p>
+                    <div class="stats">
+                        <div class="stat">📄 6 sections</div>
+                        <div class="stat">🧭 Story-first</div>
+                    </div>
+                    <a href="investor-overview.html">View Overview →</a>
+                </div>
+
+                <!-- Investor Metrics Fact Sheet -->
+                <div class="document-card">
+                    <div class="type">INVESTOR</div>
+                    <h3>Investor Metrics Fact Sheet</h3>
+                    <p>ARR, pipeline, capital efficiency, adoption telemetry, and near-term catalysts in table format for diligence packets.</p>
+                    <div class="stats">
+                        <div class="stat">📈 8 KPIs</div>
+                        <div class="stat">📅 Nov 2025</div>
+                    </div>
+                    <a href="investor-metrics-factsheet.html">View Fact Sheet →</a>
+                </div>
+
+                <!-- Investor FAQ -->
+                <div class="document-card">
+                    <div class="type">INVESTOR</div>
+                    <h3>Investor FAQ</h3>
+                    <p>Concise responses on competition, compliance, pricing, capital deployment, and risk mitigation for fast diligence cycles.</p>
+                    <div class="stats">
+                        <div class="stat">❓ 15 questions</div>
+                        <div class="stat">📝 Copy-ready</div>
+                    </div>
+                    <a href="investor-faq.html">View FAQ →</a>
+                </div>
+
+                <!-- Content Index -->
+                <div class="document-card">
+                    <div class="type">REFERENCE</div>
+                    <h3>Content Index & Quick Find</h3>
+                    <p>Master index showing all assets, how they work together, usage by prospect type, and complete implementation timeline.</p>
+                    <div class="stats">
+                        <div class="stat">📄 Comprehensive</div>
+                        <div class="stat">🗂️ Quick-find guide</div>
+                    </div>
+                    <a href="content-index.html">View Document →</a>
+                </div>
+
+                <!-- Original Audit -->
+                <div class="document-card">
+                    <div class="type">REFERENCE</div>
+                    <h3>Marketing Content Review</h3>
+                    <p>Original gap analysis that led to this project. Documents current state, gaps, and recommendations.</p>
+                    <div class="stats">
+                        <div class="stat">📄 4,000 words</div>
+                        <div class="stat">🔍 Baseline audit</div>
+                    </div>
+                    <a href="marketing-content-review.html">View Document →</a>
+                </div>
+
+                <!-- Blog: Mental Health Missing Piece -->
+                <div class="document-card">
+                    <div class="type">BLOG - THOUGHT LEADERSHIP</div>
+                    <h3>Blog: Mental Health Missing Piece</h3>
+                    <p>~1,400-word blog post for CMO/Medical Director audience. Covers 50% depression prevalence, hidden costs ($115K-$230K), integrated screening solution, and customer story.</p>
+                    <div class="stats">
+                        <div class="stat">📰 1,400 words</div>
+                        <div class="stat">👥 CMO audience</div>
+                    </div>
+                    <a href="blog-mental-health-missing-piece.html">View Blog →</a>
+                </div>
+
+                <!-- Blog: FHIR-Native Architecture -->
+                <div class="document-card">
+                    <div class="type">BLOG - THOUGHT LEADERSHIP</div>
+                    <h3>Blog: FHIR-Native Architecture</h3>
+                    <p>~1,400-word technical blog for CIO/IT Director audience. Explains FHIR-native vs. retrofitted, implementation speed comparison, data ownership, and future-proofing benefits.</p>
+                    <div class="stats">
+                        <div class="stat">📰 1,400 words</div>
+                        <div class="stat">⚙️ CIO audience</div>
+                    </div>
+                    <a href="blog-fhir-native-architecture.html">View Blog →</a>
+                </div>
+
+                <!-- Blog: Risk Stratification -->
+                <div class="document-card">
+                    <div class="type">BLOG - THOUGHT LEADERSHIP</div>
+                    <h3>Blog: Risk Stratification</h3>
+                    <p>~1,400-word operational blog for COO/Operations Director audience. Covers 80/20 principle, $8.4M annual savings, automated prioritization, and financial model.</p>
+                    <div class="stats">
+                        <div class="stat">📰 1,400 words</div>
+                        <div class="stat">💼 COO audience</div>
+                    </div>
+                    <a href="blog-risk-stratification.html">View Blog →</a>
+                </div>
+
+                <!-- Blog: HEDIS Measures Explained -->
+                <div class="document-card">
+                    <div class="type">BLOG - THOUGHT LEADERSHIP</div>
+                    <h3>Blog: HEDIS Measures Explained</h3>
+                    <p>~1,400-word clinical blog explaining 5 HEDIS measures (CDC, CBP, COL, BCS, CIS), why manual tracking fails, and automation benefits (15-25% closure improvement).</p>
+                    <div class="stats">
+                        <div class="stat">📰 1,400 words</div>
+                        <div class="stat">🏥 Clinical audience</div>
+                    </div>
+                    <a href="blog-hedis-measures.html">View Blog →</a>
+                </div>
+
+                <!-- Webinar Outline -->
+                <div class="document-card">
+                    <div class="type">NEW – WEBINAR</div>
+                    <h3>Webinar: Mental Health + Quality Measures</h3>
+                    <p>Complete 30-minute webinar plan with slide-by-slide talking points, pre/post communications, Q&A prep, and validated ROI messaging for CMOs and Quality leaders.</p>
+                    <div class="stats">
+                        <div class="stat">🎥 30-minute flow</div>
+                        <div class="stat">📋 Speakers + CTA kit</div>
+                    </div>
+                    <a href="webinar-outline.html">View Outline →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Metrics -->
+        <section id="stats" style="margin: 40px 0;">
+            <h2>📊 Key Metrics at a Glance</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="number">2-3 hrs/week</div>
+                    <div class="label">Time freed per care coordinator</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">45% → 68%</div>
+                    <div class="label">Gap closure improvement</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">+$265K-$525K</div>
+                    <div class="label">Year 1 net ROI (org-size dependent)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">4.9 months</div>
+                    <div class="label">Payback period</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">3.4 → 4.0</div>
+                    <div class="label">Star rating improvement</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">106%-250%</div>
+                    <div class="label">ROI range (year 1)</div>
+                </div>
+            </div>
+
+            <div class="info-box" style="margin-top: 30px;">
+                <h4>💰 Financial Model (15,000-Patient Organization)</h4>
+                <p><strong>Year 1 Benefits:</strong> Quality bonuses $270K + Labor savings $45K + Compliance benefits $120K = $435K gross benefit<br><strong>Year 1 Cost:</strong> ~$170K<br><strong>Net ROI:</strong> $265K (147% return)<br><strong>Payback:</strong> 4.9 months</p>
+            </div>
+        </section>
+
+        <!-- Quick Access -->
+        <section id="quick-access" style="margin: 40px 0;">
+            <h2>⚡ Quick Access by Use Case</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin: 20px 0;">
+                <div class="info-box">
+                    <h4>"I need to send something to a prospect NOW"</h4>
+                    <p><a href="clinical-overview-onepager.html"><strong>→ Clinical Overview One-Pager</strong></a><br>Send as PDF or print. Hits all pain points and value props in 2 pages.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"I have a discovery call in 30 min"</h4>
+                    <p><a href="sales-quick-reference.html"><strong>→ Sales Quick Reference</strong></a><br>Discovery questions section. 11 questions that uncover needs and qualify.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"Investor asked for the story arc"</h4>
+                    <p><a href="investor-overview.html"><strong>→ Investor Overview Narrative</strong></a><br>Vision, TAM, differentiation, GTM, and capital plan in one skim-friendly flow.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"Need current metrics in their inbox"</h4>
+                    <p><a href="investor-metrics-factsheet.html"><strong>→ Investor Metrics Fact Sheet</strong></a><br>ARR, pipeline, burn multiple, adoption stats, and catalysts in table format.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"Prospect is worried about ROI"</h4>
+                    <p><a href="roi-calculator.html"><strong>→ ROI Calculator</strong></a><br>Calculate their specific ROI. Or reference the strategy doc for detailed model.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"I need to prove this works"</h4>
+                    <p><a href="case-study-clinical-impact.html"><strong>→ Case Study</strong></a><br>Real numbers, real quotes, real customer. 45%→68% gap closure, $265K ROI.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"I need to handle an objection"</h4>
+                    <p><a href="sales-quick-reference.html"><strong>→ Sales Quick Reference</strong></a><br>Jump to objection responses. 7 common ones with answers ready to go.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"I'm new to the sales team"</h4>
+                    <p><a href="sales-quick-reference.html"><strong>→ Sales Quick Reference</strong></a><br>Everything you need to know. 30-second pitch, talking points, messaging.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"I need the complete strategy"</h4>
+                    <p><a href="clinical-sales-strategy.html"><strong>→ Clinical Sales Strategy</strong></a><br>Full 8,000-word strategy with all research, analysis, and recommendations.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"I'm deploying this to the team"</h4>
+                    <p><a href="implementation-summary.html"><strong>→ Implementation Summary</strong></a><br>Deployment guide showing how to use all assets, timeline, metrics.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"I need competitive positioning"</h4>
+                    <p><a href="clinical-sales-strategy.html"><strong>→ Clinical Sales Strategy</strong></a><br>Section 4 has competitive analysis vs. Epic, Cerner, build-in-house, etc.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"I need email copy fast"</h4>
+                    <p><a href="email-template-library.html"><strong>→ Email Template Library</strong></a><br>15 ready-to-send templates with subject lines, preview text, and CTAs.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"Investor diligence Q&A is piling up"</h4>
+                    <p><a href="investor-faq.html"><strong>→ Investor FAQ</strong></a><br>Use as send-ahead or paste into data room to preempt common questions.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"I'm running sales training"</h4>
+                    <p><a href="sales-training-materials.html"><strong>→ Sales Training Toolkit</strong></a><br>Battle cards, objection maps, and discovery guides for every persona.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"We're hosting the webinar"</h4>
+                    <p><a href="webinar-deck-speaker-notes.html"><strong>→ Webinar Speaker Notes</strong></a><br>Slide-by-slide cues, poll timing, and CTA ladder to keep presenters aligned.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"Marketing needs the rollout plan"</h4>
+                    <p><a href="marketing-implementation-guide.html"><strong>→ Marketing Implementation Guide</strong></a><br>90-day GTM roadmap with calendar, owners, and metrics.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>"Leadership wants a status update"</h4>
+                    <p><a href="marketing-completion-summary.html"><strong>→ Marketing Completion Summary</strong></a><br>Executive-ready recap of scope, ROI expectations, and next steps.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Next Steps -->
+        <section id="next-steps" style="margin: 40px 0;">
+            <h2>🚀 Next Steps</h2>
+
+            <h3 style="color: #1e40af; margin-top: 30px; margin-bottom: 15px;">Week 1 (Immediate)</h3>
+            <div class="info-box">
+                <p>✓ Team reviews all documents<br>✓ Sales brief on Sales Quick Reference<br>✓ Print one-pagers (order 100+)<br>✓ Create PDF versions</p>
+            </div>
+
+            <h3 style="color: #1e40af; margin-top: 30px; margin-bottom: 15px;">Weeks 2-3 (Short-term)</h3>
+            <div class="info-box">
+                <p>✓ Deploy ROI calculator (web tool)<br>✓ Set up email automation<br>✓ Create gated landing pages<br>✓ Sales team training on messaging</p>
+            </div>
+
+            <h3 style="color: #1e40af; margin-top: 30px; margin-bottom: 15px;">Weeks 4-6 (Medium-term)</h3>
+            <div class="info-box">
+                <p>✓ Case study video<br>✓ Product demo video (5 min)<br>✓ Competitive positioning guide<br>✓ Analytics setup</p>
+            </div>
+
+            <h3 style="color: #1e40af; margin-top: 30px; margin-bottom: 15px;">Months 2-3 (Long-term)</h3>
+            <div class="info-box">
+                <p>✓ 2nd case study<br>✓ Customer webinar<br>✓ ROI measurement template<br>✓ Expand case study library</p>
+            </div>
+
+            <h3 style="color: #1e40af; margin-top: 30px; margin-bottom: 15px;">Success Metrics to Track</h3>
+            <table style="width: 100%; margin: 20px 0; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <tr style="background: #f3f4f6; border-bottom: 1px solid #e5e7eb;">
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #1e40af;">Metric</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #1e40af;">Target</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #1e40af;">Owner</th>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px;">Email open rate</td>
+                    <td style="padding: 12px;">25-35%</td>
+                    <td style="padding: 12px;">Marketing</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px;">Email click rate</td>
+                    <td style="padding: 12px;">5-12%</td>
+                    <td style="padding: 12px;">Marketing</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px;">Demo booking rate</td>
+                    <td style="padding: 12px;">5-10% of engaged</td>
+                    <td style="padding: 12px;">Sales</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px;">Working session rate</td>
+                    <td style="padding: 12px;">1-2% of email list</td>
+                    <td style="padding: 12px;">Sales</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px;">Proposal advance rate</td>
+                    <td style="padding: 12px;">50%+ of sessions</td>
+                    <td style="padding: 12px;">Sales</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px;">Close rate</td>
+                    <td style="padding: 12px;">30-40%</td>
+                    <td style="padding: 12px;">Sales</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px;">Customer NPS</td>
+                    <td style="padding: 12px;">50+</td>
+                    <td style="padding: 12px;">Customer Success</td>
+                </tr>
+            </table>
+
+            <div class="info-box" style="margin-top: 30px;">
+                <h4>Investor Library Deployment Checklist</h4>
+                <p style="margin-bottom: 10px;">Sync the new investor pages to production once reviewed:</p>
+                <ol style="margin-left: 18px; color: #333;">
+                    <li>Run <code>npm run build</code> to ensure static assets compile cleanly.</li>
+                    <li>Execute <code>./deploy-production.sh sales-content-web</code> to publish the refreshed HTML bundle.</li>
+                    <li>Spot-check <code>/investor-overview</code>, <code>/investor-metrics-factsheet</code>, and <code>/investor-faq</code> routes on the CDN before notifying investors.</li>
+                </ol>
+                <p style="margin-top: 10px;">If you only need to stage the changes, swap in <code>deploy-rhel7.sh</code> or <code>docker-compose.local.yml</code> as appropriate.</p>
+            </div>
+        </section>
+
+        <footer>
+            <p>HDIM Clinical Sales Content Suite | Updated November 20, 2025 | Status: Ready for Production</p>
+            <p style="margin-top: 10px;">Print this page as PDF for offline reference. For questions, see the Implementation Summary and Content Index documents.</p>
+        </footer>
+    </div>
+</body>
+</html>

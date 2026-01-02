@@ -1,0 +1,54 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: hdim
+
+resources:
+  # Base resources
+  - base/namespace.yaml
+  - base/secrets.yaml
+  - base/configmap.yaml
+
+  # Infrastructure
+  - infrastructure/postgres.yaml
+  - infrastructure/redis.yaml
+  - infrastructure/kafka.yaml
+
+  # Core services
+  - services/gateway-service.yaml
+  - services/fhir-service.yaml
+  - services/patient-service.yaml
+  - services/care-gap-service.yaml
+  - services/quality-measure-service.yaml
+  - services/cql-engine-service.yaml
+  - services/consent-service.yaml
+  - services/event-processing-service.yaml
+  - services/event-router-service.yaml
+
+  # AI services
+  - services/agent-runtime-service.yaml
+  - services/ai-assistant-service.yaml
+  - services/agent-builder-service.yaml
+
+  # Analytics services
+  - services/analytics-service.yaml
+  - services/predictive-analytics-service.yaml
+  - services/sdoh-service.yaml
+
+  # Workflow services
+  - services/approval-service.yaml
+  - services/payer-workflows-service.yaml
+
+  # Data services
+  - services/cdr-processor-service.yaml
+  - services/data-enrichment-service.yaml
+
+  # Integration services
+  - services/ehr-connector-service.yaml
+
+  # Support services
+  - services/documentation-service.yaml
+
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize
+  app.kubernetes.io/part-of: hdim-platform

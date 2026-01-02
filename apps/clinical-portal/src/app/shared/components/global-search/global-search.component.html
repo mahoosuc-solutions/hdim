@@ -1,0 +1,161 @@
+<div class="global-search-dialog">
+  <!-- Header -->
+  <div class="search-header">
+    <mat-form-field class="search-field" appearance="outline">
+      <mat-icon matPrefix class="search-icon">search</mat-icon>
+      <input
+        #searchInput
+        matInput
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+        placeholder="Search patients, measures, or pages..."
+        autocomplete="off"
+        aria-label="Global search"
+      />
+      <button
+        *ngIf="searchQuery"
+        mat-icon-button
+        matSuffix
+        (click)="clearSearch()"
+        aria-label="Clear search">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <button
+      mat-icon-button
+      class="close-button"
+      (click)="close()"
+      aria-label="Close search">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Keyboard Hint -->
+  <div class="keyboard-hint">
+    <span class="hint-text">
+      <kbd>↑</kbd> <kbd>↓</kbd> to navigate
+      <kbd>Enter</kbd> to select
+      <kbd>Esc</kbd> to close
+    </span>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p class="loading-text">Searching...</p>
+  </div>
+
+  <!-- Search Results -->
+  <div *ngIf="!loading && searchResults.length > 0" class="results-container">
+    <div class="results-header">
+      <h3>Search Results</h3>
+      <span class="result-count">{{ searchResults.length }} result(s)</span>
+    </div>
+
+    <mat-list class="results-list">
+      <mat-list-item
+        *ngFor="let result of searchResults; let i = index"
+        class="result-item"
+        [class.selected]="i === selectedIndex"
+        (click)="navigateToResult(result)"
+        (mouseenter)="selectedIndex = i"
+        [attr.tabindex]="0"
+        [attr.role]="'button'"
+        [attr.aria-label]="'Navigate to ' + result.title">
+
+        <mat-icon
+          matListItemIcon
+          class="result-icon"
+          [style.color]="getResultIconColor(result.type)">
+          {{ result.icon }}
+        </mat-icon>
+
+        <div matListItemTitle class="result-title">
+          <span class="title-text">{{ result.title }}</span>
+          <span class="result-type-badge">{{ getResultTypeLabel(result.type) }}</span>
+        </div>
+
+        <div matListItemLine class="result-subtitle" *ngIf="result.subtitle">
+          {{ result.subtitle }}
+        </div>
+
+        <div matListItemLine class="result-description" *ngIf="result.description">
+          {{ result.description }}
+        </div>
+
+        <mat-icon matListItemMeta class="navigate-icon">arrow_forward</mat-icon>
+      </mat-list-item>
+    </mat-list>
+  </div>
+
+  <!-- No Results -->
+  <div *ngIf="!loading && searchQuery && searchResults.length === 0" class="no-results">
+    <mat-icon class="no-results-icon">search_off</mat-icon>
+    <h3>No results found</h3>
+    <p>Try searching for a patient name, MRN, or measure name</p>
+  </div>
+
+  <!-- Quick Access (shown when no search query) -->
+  <div *ngIf="!loading && !searchQuery" class="quick-access">
+    <!-- Recent Searches -->
+    <div *ngIf="recentSearches.length > 0" class="section">
+      <div class="section-header">
+        <mat-icon>history</mat-icon>
+        <h3>Recent</h3>
+      </div>
+
+      <mat-list class="results-list">
+        <mat-list-item
+          *ngFor="let result of recentSearches.slice(0, 5); let i = index"
+          class="result-item recent-item"
+          [class.selected]="!searchResults.length && i === selectedIndex"
+          (click)="navigateToResult(result)"
+          (mouseenter)="selectedIndex = i">
+
+          <mat-icon matListItemIcon class="result-icon" [style.color]="getResultIconColor(result.type)">
+            {{ result.icon }}
+          </mat-icon>
+
+          <div matListItemTitle class="result-title">{{ result.title }}</div>
+          <div matListItemLine class="result-subtitle" *ngIf="result.subtitle">
+            {{ result.subtitle }}
+          </div>
+
+          <mat-icon matListItemMeta class="navigate-icon">arrow_forward</mat-icon>
+        </mat-list-item>
+      </mat-list>
+    </div>
+
+    <mat-divider *ngIf="recentSearches.length > 0"></mat-divider>
+
+    <!-- Popular Pages -->
+    <div class="section">
+      <div class="section-header">
+        <mat-icon>star</mat-icon>
+        <h3>Quick Access</h3>
+      </div>
+
+      <mat-list class="results-list">
+        <mat-list-item
+          *ngFor="let page of popularPages; let i = index"
+          class="result-item page-item"
+          [class.selected]="!searchResults.length && (!recentSearches.length ? i : i + recentSearches.length) === selectedIndex"
+          (click)="navigateToResult(page)"
+          (mouseenter)="selectedIndex = (!recentSearches.length ? i : i + recentSearches.length)">
+
+          <mat-icon matListItemIcon class="result-icon" [style.color]="getResultIconColor(page.type)">
+            {{ page.icon }}
+          </mat-icon>
+
+          <div matListItemTitle class="result-title">{{ page.title }}</div>
+          <div matListItemLine class="result-subtitle">{{ page.subtitle }}</div>
+
+          <mat-icon matListItemMeta class="navigate-icon">arrow_forward</mat-icon>
+        </mat-list-item>
+      </mat-list>
+    </div>
+  </div>
+</div>

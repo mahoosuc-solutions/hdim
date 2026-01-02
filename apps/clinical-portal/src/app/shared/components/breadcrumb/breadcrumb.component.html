@@ -1,0 +1,46 @@
+<nav class="breadcrumb-nav" aria-label="Breadcrumb navigation" *ngIf="breadcrumbs.length > 0">
+  <ol class="breadcrumb-list">
+    <li
+      *ngFor="let crumb of breadcrumbs; let i = index; trackBy: trackByUrl"
+      class="breadcrumb-item"
+      [class.active]="isLast(i)">
+
+      <!-- Home Icon (first breadcrumb only) -->
+      <mat-icon
+        *ngIf="i === 0"
+        class="home-icon"
+        aria-label="Home">
+        home
+      </mat-icon>
+
+      <!-- Separator (except for first item) -->
+      <mat-icon
+        *ngIf="i > 0"
+        class="separator"
+        aria-hidden="true">
+        chevron_right
+      </mat-icon>
+
+      <!-- Clickable breadcrumb (not last) -->
+      <a
+        *ngIf="!isLast(i) && crumb.url"
+        [routerLink]="crumb.url"
+        [queryParams]="crumb.queryParams"
+        class="breadcrumb-link"
+        [matTooltip]="'Navigate to ' + crumb.label"
+        [attr.aria-label]="'Navigate to ' + crumb.label">
+        <mat-icon *ngIf="crumb.icon && i > 0" class="crumb-icon">{{ crumb.icon }}</mat-icon>
+        <span class="crumb-label">{{ crumb.label }}</span>
+      </a>
+
+      <!-- Current page (last breadcrumb - not clickable) -->
+      <span
+        *ngIf="isLast(i)"
+        class="breadcrumb-current"
+        [attr.aria-current]="'page'">
+        <mat-icon *ngIf="crumb.icon" class="crumb-icon">{{ crumb.icon }}</mat-icon>
+        <span class="crumb-label">{{ crumb.label }}</span>
+      </span>
+    </li>
+  </ol>
+</nav>

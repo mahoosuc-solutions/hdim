@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: migration-cli
+  main:
+    web-application-type: none
+    banner-mode: off
+
+# Default migration service connection
+migration:
+  api:
+    url: http://localhost:8092
+  default-tenant: default
+
+# Logging
+logging:
+  level:
+    root: WARN
+    com.healthdata: INFO
+  pattern:
+    console: "%msg%n"

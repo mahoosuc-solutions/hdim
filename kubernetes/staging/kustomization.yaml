@@ -1,0 +1,90 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: cql-engine-staging
+
+namespace: healthdata-staging
+
+commonLabels:
+  environment: staging
+  app.kubernetes.io/version: "latest"
+
+bases:
+  - ../base
+
+resources:
+  - namespace.yaml
+
+images:
+  - name: healthdata/cql-engine-service
+    newName: ghcr.io/your-org/healthdata-in-motion/cql-engine-service
+    newTag: develop
+
+replicas:
+  - name: cql-engine-service
+    count: 2
+
+patches:
+  # Staging replicas (smaller than production)
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: cql-engine-hpa
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 2
+      - op: replace
+        path: /spec/maxReplicas
+        value: 5
+
+  # Staging resource limits (smaller than production)
+  - target:
+      kind: Deployment
+      name: cql-engine-service
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 250m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 512Mi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: 1000m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 1Gi
+
+  # Staging ingress host
+  - target:
+      kind: Ingress
+      name: cql-engine-ingress
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: staging-api.healthdata-in-motion.com
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: staging-api.healthdata-in-motion.com
+
+  # More relaxed PDB for staging
+  - target:
+      kind: PodDisruptionBudget
+      name: cql-engine-pdb
+    patch: |-
+      - op: replace
+        path: /spec/minAvailable
+        value: 1
+
+configMapGenerator:
+  - name: cql-engine-env-config
+    behavior: merge
+    literals:
+      - SPRING_PROFILES_ACTIVE=staging
+      - LOGGING_LEVEL_COM_HEALTHDATA_CQL=DEBUG
+      - MEASURE_EVALUATION_MAX_POOL_SIZE=50
+      - JAVA_OPTS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC
+
+generatorOptions:
+  disableNameSuffixHash: true

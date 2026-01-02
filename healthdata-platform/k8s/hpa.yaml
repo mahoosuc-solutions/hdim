@@ -1,0 +1,118 @@
+---
+# HealthData Platform Horizontal Pod Autoscaler (HPA)
+# Automatically scales based on CPU and memory metrics
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: healthdata-platform-hpa
+  namespace: healthdata
+  labels:
+    app: healthdata-platform
+    app.kubernetes.io/name: healthdata-platform
+    app.kubernetes.io/component: autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: healthdata-platform
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  # CPU-based scaling
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  # Memory-based scaling
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  # Custom metrics (requires metrics server with custom metrics)
+  # - type: Pods
+  #   pods:
+  #     metric:
+  #       name: http_requests_per_second
+  #     target:
+  #       type: AverageValue
+  #       averageValue: "1000"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+      - type: Pods
+        value: 1
+        periodSeconds: 120
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 30
+      selectPolicy: Max
+
+---
+# Vertical Pod Autoscaler (VPA) - Optional
+# Automatically adjusts CPU and memory requests/limits
+# NOTE: VPA and HPA should not target the same metrics
+
+# apiVersion: autoscaling.k8s.io/v1
+# kind: VerticalPodAutoscaler
+# metadata:
+#   name: healthdata-platform-vpa
+#   namespace: healthdata
+#   labels:
+#     app: healthdata-platform
+# spec:
+#   targetRef:
+#     apiVersion: apps/v1
+#     kind: Deployment
+#     name: healthdata-platform
+#   updatePolicy:
+#     updateMode: "Auto"
+#   resourcePolicy:
+#     containerPolicies:
+#     - containerName: healthdata-platform
+#       minAllowed:
+#         cpu: 500m
+#         memory: 512Mi
+#       maxAllowed:
+#         cpu: 4000m
+#         memory: 4Gi
+#       controlledResources:
+#       - cpu
+#       - memory
+
+---
+# Pod Disruption Budget (PDB)
+# Ensures high availability during voluntary disruptions
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: healthdata-platform-pdb
+  namespace: healthdata
+  labels:
+    app: healthdata-platform
+    app.kubernetes.io/name: healthdata-platform
+    app.kubernetes.io/component: availability
+spec:
+  minAvailable: 2
+  # Alternative: maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: healthdata-platform
+      app.kubernetes.io/name: healthdata-platform
+      app.kubernetes.io/component: application

@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help System Demo - HealthData In Motion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 32px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .demo-section {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .demo-section h2 {
+            color: #1f2937;
+            margin-bottom: 16px;
+            font-size: 24px;
+        }
+
+        .demo-section p {
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        /* Tooltip Demo */
+        .tooltip-demo {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .help-tooltip-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .help-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: help;
+            color: #6b7280;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .help-icon:hover {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        .tooltip {
+            position: absolute;
+            left: calc(100% + 12px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            max-width: 320px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+
+        .help-tooltip-container:hover .tooltip {
+            opacity: 1;
+        }
+
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-right-color: #1f2937;
+        }
+
+        /* Form Demo */
+        .form-demo {
+            max-width: 600px;
+        }
+
+        .form-field {
+            margin-bottom: 24px;
+        }
+
+        .form-field label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-field input:focus,
+        .form-field select:focus,
+        .form-field textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-field textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Help Panel Demo */
+        .help-panel-demo {
+            position: relative;
+            height: 400px;
+            background: #f9fafb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .help-panel-trigger {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .help-panel-trigger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .help-panel-trigger kbd {
+            padding: 2px 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .help-panel {
+            position: absolute;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100%;
+            background: white;
+            box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s ease;
+        }
+
+        .help-panel.open {
+            right: 0;
+        }
+
+        .help-panel-header {
+            padding: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .help-panel-header h3 {
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .help-panel-content {
+            padding: 24px;
+            height: calc(100% - 140px);
+            overflow-y: auto;
+        }
+
+        .help-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .help-section.info { border-left: 3px solid #3b82f6; }
+        .help-section.warning { border-left: 3px solid #f59e0b; }
+        .help-section.tip { border-left: 3px solid #10b981; }
+
+        .help-section-header {
+            padding: 16px;
+            background: #f9fafb;
+            font-weight: 600;
+            color: #1f2937;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .help-section-header:hover {
+            background: #f3f4f6;
+        }
+
+        .help-section-content {
+            padding: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #4b5563;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .feature-card h3 {
+            color: #1f2937;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+
+        .feature-card p {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .feature-list {
+            margin-top: 12px;
+            padding-left: 20px;
+        }
+
+        .feature-list li {
+            color: #4b5563;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 24px;
+            transition: all 0.2s;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .code-block {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎯 On-Screen Help System</h1>
+            <p>Comprehensive contextual help for HealthData In Motion Clinical Portal</p>
+        </div>
+
+        <!-- Overview -->
+        <div class="demo-section">
+            <h2>📖 Overview</h2>
+            <p>
+                The help system provides three levels of assistance to guide users through the application:
+            </p>
+            <ul style="margin-left: 24px; color: #4b5563; line-height: 1.8;">
+                <li><strong>Inline Tooltips</strong> - Quick contextual help next to form fields and buttons</li>
+                <li><strong>Help Panel</strong> - Detailed documentation with searchable sections</li>
+                <li><strong>Help Content Service</strong> - Centralized content management system</li>
+            </ul>
+        </div>
+
+        <!-- Feature 1: Tooltip Demo -->
+        <div class="demo-section">
+            <h2>1️⃣ Help Tooltip Component</h2>
+            <p>Inline contextual help that appears on hover or click. Perfect for form field clarification.</p>
+
+            <div class="form-demo">
+                <div class="form-field">
+                    <label>
+                        Measure Name
+                        <div class="help-tooltip-container">
+                            <span class="help-icon">?</span>
+                            <div class="tooltip">
+                                Enter a descriptive name like "CDC-A1C - Diabetes HbA1c Control"
+                            </div>
+                        </div>
+                    </label>
+                    <input type="text" placeholder="Enter measure name...">
+                </div>
+
+                <div class="form-field">
+                    <label>
+                        Measure Category
+                        <div class="help-tooltip-container">
+                            <span class="help-icon">?</span>
+                            <div class="tooltip">
+                                Organize measures by clinical area (Diabetes, Hypertension, Mental Health, etc.)
+                            </div>
+                        </div>
+                    </label>
+                    <select>
+                        <option>Select a category...</option>
+                        <option>Diabetes</option>
+                        <option>Hypertension</option>
+                        <option>Mental Health</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label>
+                        CQL Text
+                        <div class="help-tooltip-container">
+                            <span class="help-icon">?</span>
+                            <div class="tooltip">
+                                Clinical Quality Language defines the logic for automated measure calculation. Leave blank for manual measures.
+                            </div>
+                        </div>
+                    </label>
+                    <textarea placeholder="Enter CQL logic..."></textarea>
+                </div>
+            </div>
+
+            <p style="margin-top: 24px; font-size: 14px; color: #6b7280;">
+                <em>💡 Hover over the "?" icons above to see tooltips in action!</em>
+            </p>
+        </div>
+
+        <!-- Feature 2: Help Panel Demo -->
+        <div class="demo-section">
+            <h2>2️⃣ Help Panel Component</h2>
+            <p>Comprehensive help documentation in a sliding side panel with search, sections, and quick links.</p>
+
+            <div class="help-panel-demo">
+                <button class="help-panel-trigger" onclick="toggleHelpPanel()">
+                    Help
+                    <kbd>?</kbd>
+                </button>
+
+                <div class="help-panel" id="helpPanel">
+                    <div class="help-panel-header">
+                        <h3>
+                            <span>❓</span>
+                            Measure Builder Help
+                        </h3>
+                        <button onclick="toggleHelpPanel()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            ✕
+                        </button>
+                    </div>
+
+                    <div class="help-panel-content">
+                        <div class="help-section info">
+                            <div class="help-section-header">
+                                ℹ️ What are Custom Quality Measures?
+                            </div>
+                            <div class="help-section-content">
+                                Custom quality measures allow you to define your own clinical quality metrics beyond standard HEDIS and CMS measures.
+                            </div>
+                        </div>
+
+                        <div class="help-section tip">
+                            <div class="help-section-header">
+                                💡 Creating Your First Measure
+                            </div>
+                            <div class="help-section-content">
+                                <strong>Step 1:</strong> Click "Create New Measure" button<br>
+                                <strong>Step 2:</strong> Fill in basic information<br>
+                                <strong>Step 3:</strong> Save as Draft or Publish
+                            </div>
+                        </div>
+
+                        <div class="help-section warning">
+                            <div class="help-section-header">
+                                ⚠️ Important: CQL Validation
+                            </div>
+                            <div class="help-section-content">
+                                Always validate your CQL logic before publishing a measure. Invalid CQL can cause evaluation errors.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p style="margin-top: 24px; font-size: 14px; color: #6b7280;">
+                <em>💡 Click the "Help ?" button in the demo above to see the sliding panel!</em>
+            </p>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="demo-section">
+            <h2>✨ Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Context-Aware</h3>
+                    <p>Help content automatically matches the current page and user's task</p>
+                    <ul class="feature-list">
+                        <li>Page-specific help sections</li>
+                        <li>Task-focused guidance</li>
+                        <li>Role-based content</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Searchable</h3>
+                    <p>Quickly find answers with built-in search functionality</p>
+                    <ul class="feature-list">
+                        <li>Real-time filtering</li>
+                        <li>Keyword highlighting</li>
+                        <li>Section suggestions</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⌨️</div>
+                    <h3>Keyboard Accessible</h3>
+                    <p>Full keyboard navigation and screen reader support</p>
+                    <ul class="feature-list">
+                        <li>Press ? to toggle help</li>
+                        <li>Tab navigation</li>
+                        <li>ARIA compliant</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Mobile Responsive</h3>
+                    <p>Optimized experience on all device sizes</p>
+                    <ul class="feature-list">
+                        <li>Touch-friendly tooltips</li>
+                        <li>Full-screen panel on mobile</li>
+                        <li>Swipe gestures</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📚</div>
+                    <h3>Rich Content</h3>
+                    <p>Support for text, images, videos, and code examples</p>
+                    <ul class="feature-list">
+                        <li>HTML formatting</li>
+                        <li>Code syntax highlighting</li>
+                        <li>Video tutorials</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔗</div>
+                    <h3>Quick Links</h3>
+                    <p>Easy access to detailed documentation and external resources</p>
+                    <ul class="feature-list">
+                        <li>API documentation</li>
+                        <li>Video tutorials</li>
+                        <li>Best practices guides</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Implementation Example -->
+        <div class="demo-section">
+            <h2>💻 Implementation Example</h2>
+            <p>Add help to your page in just a few lines of code:</p>
+
+            <div class="code-block">
+// Import components
+import { HelpTooltipComponent } from './shared/components/help-tooltip';
+import { HelpPanelComponent } from './shared/components/help-panel';
+import { HelpContentService } from './services/help-content.service';
+
+// In your component
+@Component({
+  imports: [HelpTooltipComponent, HelpPanelComponent]
+})
+export class YourComponent {
+  showHelp = false;
+  helpSections = this.helpContent.getMeasureBuilderHelp();
+
+  constructor(private helpContent: HelpContentService) {}
+}
+
+// In your template
+&lt;app-help-tooltip text="Helpful tip here"&gt;&lt;/app-help-tooltip&gt;
+
+&lt;app-help-panel
+  [isOpen]="showHelp"
+  [sections]="helpSections"
+  (close)="showHelp = false"&gt;
+&lt;/app-help-panel&gt;
+            </div>
+        </div>
+
+        <!-- Documentation -->
+        <div class="demo-section">
+            <h2>📄 Documentation</h2>
+            <p>Complete implementation guide and API reference available:</p>
+            <ul style="margin-left: 24px; color: #4b5563; line-height: 1.8; margin-top: 16px;">
+                <li><strong>HELP_SYSTEM_GUIDE.md</strong> - Complete implementation guide</li>
+                <li><strong>help-tooltip.component.ts</strong> - Tooltip component source</li>
+                <li><strong>help-panel.component.ts</strong> - Panel component source</li>
+                <li><strong>help-content.service.ts</strong> - Content management service</li>
+            </ul>
+
+            <p style="margin-top: 24px;">
+                <span class="highlight">All components are production-ready</span> and include:
+            </p>
+            <ul style="margin-left: 24px; color: #4b5563; line-height: 1.8; margin-top: 12px;">
+                <li>✅ Full TypeScript type safety</li>
+                <li>✅ Comprehensive documentation</li>
+                <li>✅ Accessibility compliance (WCAG AA)</li>
+                <li>✅ Mobile-responsive design</li>
+                <li>✅ Dark mode support</li>
+            </ul>
+
+            <a href="HELP_SYSTEM_GUIDE.md" class="cta-button">View Complete Guide →</a>
+        </div>
+    </div>
+
+    <script>
+        function toggleHelpPanel() {
+            const panel = document.getElementById('helpPanel');
+            panel.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>

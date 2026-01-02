@@ -1,0 +1,39 @@
+{
+  "name": "cql-engine-service",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "backend/modules/services/cql-engine-service/src",
+  "tags": [
+    "backend",
+    "service"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/backend/modules/services/cql-engine-service/build"
+      ],
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:cql-engine-service:build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:cql-engine-service:test"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:cql-engine-service:clean"
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./backend/gradlew -p backend :modules:services:cql-engine-service:test :modules:services:cql-engine-service:jacocoTestReport :modules:services:cql-engine-service:jacocoTestCoverageVerification"
+      }
+    }
+  }
+}

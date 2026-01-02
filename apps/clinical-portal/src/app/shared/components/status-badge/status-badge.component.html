@@ -1,0 +1,22 @@
+<mat-chip
+  class="status-badge"
+  [class.status-badge-success]="type === 'success'"
+  [class.status-badge-warning]="type === 'warning'"
+  [class.status-badge-error]="type === 'error'"
+  [class.status-badge-info]="type === 'info'"
+  [class.status-badge-neutral]="type === 'neutral'"
+  [class.status-badge-compact]="compact"
+  [class]="customClass"
+  [matTooltip]="tooltip"
+  [attr.mattooltip]="tooltip || null"
+  [aria-label]="ariaLabel"
+  [attr.aria-label]="ariaLabel"
+  role="status">
+  <mat-icon
+    *ngIf="shouldShowIcon()"
+    class="status-badge-icon"
+    [attr.aria-hidden]="true">
+    {{ getDefaultIcon() }}
+  </mat-icon>
+  <span class="status-badge-text">{{ status }}</span>
+</mat-chip>

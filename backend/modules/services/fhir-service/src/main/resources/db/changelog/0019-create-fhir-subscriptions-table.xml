@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0019-1" author="healthdata">
+        <comment>Create fhir_subscriptions table for real-time notifications</comment>
+        <createTable tableName="fhir_subscriptions">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason" type="VARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="criteria" type="VARCHAR(2000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_type" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="channel_type" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="channel_endpoint" type="VARCHAR(1000)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="channel_payload" type="VARCHAR(64)" defaultValue="application/fhir+json">
+                <constraints nullable="true"/>
+            </column>
+            <column name="channel_headers" type="JSONB">
+                <constraints nullable="true"/>
+            </column>
+            <column name="end_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="tag" type="VARCHAR(256)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="contact_email" type="VARCHAR(256)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="error_count" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_error" type="VARCHAR(1000)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="last_notification_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="notification_count" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_json" type="JSONB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="0019-2" author="healthdata">
+        <comment>Create indexes for fhir_subscriptions</comment>
+        <createIndex indexName="idx_fhir_subscriptions_tenant" tableName="fhir_subscriptions">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex indexName="idx_fhir_subscriptions_status" tableName="fhir_subscriptions">
+            <column name="status"/>
+        </createIndex>
+        <createIndex indexName="idx_fhir_subscriptions_resource_type" tableName="fhir_subscriptions">
+            <column name="resource_type"/>
+        </createIndex>
+        <createIndex indexName="idx_fhir_subscriptions_tenant_status" tableName="fhir_subscriptions">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+        <createIndex indexName="idx_fhir_subscriptions_tenant_resource" tableName="fhir_subscriptions">
+            <column name="tenant_id"/>
+            <column name="resource_type"/>
+            <column name="status"/>
+        </createIndex>
+        <createIndex indexName="idx_fhir_subscriptions_end_time" tableName="fhir_subscriptions">
+            <column name="end_time"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

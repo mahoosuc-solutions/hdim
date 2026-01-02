@@ -1,0 +1,36 @@
+image:
+  repository: ghcr.io/your-org/kong-user-patient
+  tag: latest
+
+env:
+  database: "off"
+  plugins: "bundled,user-patient-kafka"
+  lua_package_path: "/usr/local/share/lua/5.1/?.lua;;/opt/kong/plugins/?.lua;;"
+
+proxy:
+  type: ClusterIP
+  http:
+    enabled: true
+    servicePort: 8000
+  tls:
+    enabled: false
+
+admin:
+  enabled: false
+
+deck:
+  enabled: true
+  files:
+    - /opt/kong/kong.yaml
+
+extraVolumes:
+  - name: kong-declarative-config
+    configMap:
+      name: kong-declarative-config
+
+extraVolumeMounts:
+  - name: kong-declarative-config
+    mountPath: /opt/kong/kong.yaml
+    subPath: kong.yaml
+
+# Note: Plugin code and dependencies are expected to be baked into the image.

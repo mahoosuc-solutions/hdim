@@ -1,0 +1,9 @@
+{
+  "prompt_id": "TECH-N8N",
+  "name": "Integration Workflow",
+  "category": "technical",
+  "dimensions": "1200x800",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create a clean, modern visualization of an n8n-style integration workflow for healthcare.\n\nShow a specific workflow example: \"New Lab Result \u2192 Care Gap Check \u2192 Alert\"\n\nLayout: Left to right workflow with connected nodes.\n\nNODE 1 - Trigger (left):\n- Lab System icon\n- Label: \"Lab Result Received\"\n- Incoming data visualization\n\nNODE 2 - Transform:\n- FHIR icon\n- Label: \"Normalize to FHIR R4\"\n- Data transformation visual\n\nNODE 3 - Process:\n- CQL Engine icon with code brackets\n- Label: \"Evaluate Quali..."
+}

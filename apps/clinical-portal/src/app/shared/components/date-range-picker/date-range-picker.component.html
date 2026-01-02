@@ -1,0 +1,71 @@
+<div class="date-range-picker">
+  <div class="date-range-fields">
+    <!-- Start Date -->
+    <mat-form-field appearance="outline" class="date-field">
+      <mat-label>{{ startLabel }}</mat-label>
+      <input
+        matInput
+        [matDatepicker]="startPicker"
+        [(ngModel)]="internalStartDate"
+        (ngModelChange)="onStartDateChange($event)"
+        [min]="minDate"
+        [max]="maxDate"
+        [attr.aria-label]="startLabel">
+      <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+      <mat-datepicker #startPicker></mat-datepicker>
+    </mat-form-field>
+
+    <!-- Separator -->
+    <div class="date-separator" aria-hidden="true">—</div>
+
+    <!-- End Date -->
+    <mat-form-field appearance="outline" class="date-field">
+      <mat-label>{{ endLabel }}</mat-label>
+      <input
+        matInput
+        [matDatepicker]="endPicker"
+        [(ngModel)]="internalEndDate"
+        (ngModelChange)="onEndDateChange($event)"
+        [min]="getMinEndDate()"
+        [max]="maxDate"
+        [attr.aria-label]="endLabel">
+      <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+      <mat-datepicker #endPicker></mat-datepicker>
+      <mat-error *ngIf="!isValidRange()">{{ getErrorMessage() }}</mat-error>
+    </mat-form-field>
+
+    <!-- Actions -->
+    <div class="date-actions">
+      <button
+        *ngIf="showPresets"
+        mat-icon-button
+        [matMenuTriggerFor]="presetsMenu"
+        [attr.matMenuTriggerFor]="'presetsMenu'"
+        matTooltip="Quick date ranges"
+        aria-label="Select preset date range">
+        <mat-icon>calendar_today</mat-icon>
+      </button>
+
+      <button
+        mat-icon-button
+        (click)="clearRange()"
+        matTooltip="Clear date range"
+        aria-label="Clear date range"
+        [disabled]="!internalStartDate && !internalEndDate">
+        <mat-icon>clear</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Presets Menu -->
+  <mat-menu #presetsMenu="matMenu">
+    <button
+      mat-menu-item
+      *ngFor="let preset of presets"
+      (click)="applyPreset(preset)"
+      [attr.aria-label]="'Apply ' + preset.label + ' preset'">
+      <mat-icon>date_range</mat-icon>
+      <span>{{ preset.label }}</span>
+    </button>
+  </mat-menu>
+</div>

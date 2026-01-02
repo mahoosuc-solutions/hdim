@@ -1,0 +1,307 @@
+.patient-health-overview {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  .loading-container, .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    text-align: center;
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+    }
+  }
+
+  // Score Card
+  .score-card {
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+
+    mat-card-header {
+      mat-card-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: white;
+        font-size: 24px;
+      }
+
+      mat-card-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+      }
+    }
+
+    .score-display {
+      text-align: center;
+      padding: 24px 0;
+
+      .score-number {
+        font-size: 72px;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .score-status {
+        font-size: 24px;
+        margin-top: 8px;
+        opacity: 0.9;
+      }
+
+      .score-trend {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 16px;
+        font-size: 16px;
+      }
+    }
+
+    .score-divider {
+      margin: 24px 0;
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .component-scores {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 24px;
+
+      .component-score {
+        .component-label {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: 500;
+          margin-bottom: 8px;
+        }
+
+        mat-progress-bar {
+          height: 12px;
+          border-radius: 6px;
+          margin-bottom: 8px;
+        }
+
+        .component-value {
+          font-size: 18px;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+
+      .lab-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+
+        .lab-name {
+          font-weight: 500;
+        }
+
+        .lab-status {
+          color: white;
+          font-size: 11px;
+          height: 20px;
+        }
+      }
+
+      .lab-value {
+        font-size: 20px;
+        font-weight: 600;
+
+    .problematic-meds {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #f44336;
+    }
+  }
+
+  // Diagnoses
+  .diagnoses-list {
+    .diagnosis-item {
+      padding: 12px;
+      border-bottom: 1px solid #f0f0f0;
+
+      .diagnosis-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 4px;
+
+        .diagnosis-name {
+          flex: 1;
+          font-weight: 500;
+        }
+      }
+
+      .diagnosis-details {
+        display: flex;
+        gap: 16px;
+        font-size: 12px;
+        color: #666;
+        margin-top: 4px;
+      }
+    }
+  }
+
+  // Substance Use
+  .substance-list {
+    .substance-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      border-bottom: 1px solid #f0f0f0;
+
+      .substance-name {
+        flex: 1;
+        font-weight: 500;
+      }
+
+      .substance-frequency {
+        color: #666;
+      }
+    }
+  }
+
+  // Risk Assessment
+  .risk-factors, .protective-factors {
+    margin: 12px 0;
+
+    ul {
+      list-style: none;
+      padding: 0;
+
+      li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+
+        .modifiable {
+          font-size: 12px;
+          color: #2196f3;
+          font-style: italic;
+        }
+      }
+    }
+  }
+
+  .intervention-required {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background-color: #ffebee;
+    border-radius: 4px;
+    margin-top: 12px;
+  }
+
+
+  // Care Gaps
+  .gap-details, .recommendation-details {
+    padding: 16px 0;
+
+    .gap-description, .recommendation-description {
+      margin-bottom: 16px;
+    }
+
+    .gap-measure, .gap-actions, .gap-barriers, .gap-due-date,
+    .recommendation-rationale, .recommendation-evidence, .recommendation-benefit, .recommendation-resources {
+      margin: 12px 0;
+
+      strong {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      ul {
+        margin: 8px 0;
+        padding-left: 24px;
+      }
+    }
+
+    .guideline-source {
+      font-style: italic;
+      color: #666;
+    }
+
+    .resource-description {
+      color: #666;
+      font-size: 13px;
+    }
+  }
+
+  .overdue-indicator {
+    color: #f44336;
+    font-weight: 500;
+    margin-left: 8px;
+  }
+
+  .priority-chip {
+    color: white;
+  }
+
+  .priority-low {
+    background-color: #4caf50;
+  }
+
+  .priority-medium {
+    background-color: #ff9800;
+  }
+
+  .priority-high {
+    background-color: #f44336;
+  }
+
+  // Responsive
+  @media (max-width: 768px) {
+    padding: 16px;
+
+    .component-scores {
+      grid-template-columns: 1fr !important;
+    }
+
+    .vitals-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .predictions-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .functional-item {
+      grid-template-columns: 1fr !important;
+      gap: 8px !important;
+
+      mat-progress-bar {
+        order: 3;
+      }
+
+      .functional-value {
+        text-align: left !important;
+      }
+    }
+
+    .risk-score-item {
+      grid-template-columns: 1fr !important;
+      gap: 8px !important;
+
+      .risk-score-value {
+        text-align: left !important;
+      }
+    }
+  }
+}

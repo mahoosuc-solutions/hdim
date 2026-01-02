@@ -1,0 +1,24 @@
+<h2 mat-dialog-title>
+  <mat-icon color="primary">add_circle</mat-icon>
+  New Measure
+</h2>
+<mat-dialog-content class="dialog-content">
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Name</mat-label>
+    <input matInput [(ngModel)]="name" placeholder="e.g., Custom Diabetes Screening" />
+  </mat-form-field>
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Description</mat-label>
+    <textarea matInput [(ngModel)]="description" rows="3" placeholder="What this measure evaluates"></textarea>
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>
+    <mat-icon>close</mat-icon>
+    Cancel
+  </button>
+  <button mat-raised-button color="primary" [disabled]="!name.trim()" (click)="save()">
+    <mat-icon>save</mat-icon>
+    Save Draft
+  </button>
+</mat-dialog-actions>

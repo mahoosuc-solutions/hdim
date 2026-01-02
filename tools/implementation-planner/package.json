@@ -1,0 +1,30 @@
+{
+  "name": "@hdim/implementation-planner",
+  "version": "1.0.0",
+  "description": "HDIM customer implementation timeline calculator",
+  "main": "timeline-calculator.ts",
+  "scripts": {
+    "start": "ts-node timeline-calculator.ts",
+    "demo": "ts-node timeline-calculator.ts --demo",
+    "demo:solo": "ts-node timeline-calculator.ts --demo solo-practice",
+    "demo:small": "ts-node timeline-calculator.ts --demo small-practice",
+    "demo:fqhc": "ts-node timeline-calculator.ts --demo fqhc",
+    "demo:aco": "ts-node timeline-calculator.ts --demo midsize-aco",
+    "demo:health-system": "ts-node timeline-calculator.ts --demo large-health-system",
+    "interactive": "ts-node interactive-planner.ts",
+    "test": "ts-node timeline-calculator.ts --demo small-practice"
+  },
+  "keywords": [
+    "hdim",
+    "healthcare",
+    "implementation",
+    "timeline",
+    "quality-measures"
+  ],
+  "author": "HDIM",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}

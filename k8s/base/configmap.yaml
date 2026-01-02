@@ -1,0 +1,35 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hdim-common-config
+  namespace: hdim
+  labels:
+    app.kubernetes.io/part-of: hdim-platform
+data:
+  SPRING_PROFILES_ACTIVE: "kubernetes"
+  JAVA_OPTS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+  SERVER_TOMCAT_ACCESSLOG_ENABLED: "true"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
+  MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: "always"
+  MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED: "true"
+  LOGGING_LEVEL_ROOT: "INFO"
+  LOGGING_LEVEL_COM_HEALTHDATA: "DEBUG"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hdim-service-urls
+  namespace: hdim
+  labels:
+    app.kubernetes.io/part-of: hdim-platform
+data:
+  GATEWAY_SERVICE_URL: http://gateway-service:8080
+  FHIR_SERVICE_URL: http://fhir-service:8085
+  PATIENT_SERVICE_URL: http://patient-service:8084
+  CARE_GAP_SERVICE_URL: http://care-gap-service:8086
+  QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087
+  CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8081
+  EVENT_PROCESSING_SERVICE_URL: http://event-processing-service:8083
+  AGENT_RUNTIME_SERVICE_URL: http://agent-runtime-service:8088
+  AI_ASSISTANT_SERVICE_URL: http://ai-assistant-service:8090

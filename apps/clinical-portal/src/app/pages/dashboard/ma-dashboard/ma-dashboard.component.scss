@@ -1,0 +1,262 @@
+// Medical Assistant Dashboard Styles
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+// Quick Actions Card
+.quick-actions-card {
+  margin-bottom: 24px;
+
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 500;
+
+      mat-icon {
+        color: #ff9800;
+      }
+    }
+  }
+
+  .quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    .action-btn {
+      flex: 1;
+      min-width: 180px;
+      height: 56px;
+      font-size: 14px;
+      font-weight: 500;
+
+      mat-icon {
+        margin-right: 8px;
+      }
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: all 0.2s ease;
+      }
+    }
+  }
+}
+
+// Schedule Card
+.schedule-card {
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 500;
+
+      mat-icon {
+        color: #1976d2;
+      }
+    }
+
+    .header-actions {
+      margin-left: auto;
+    }
+  }
+}
+
+// Schedule Table
+.schedule-table {
+  width: 100%;
+
+  th {
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.87);
+    background-color: #f5f5f5;
+  }
+
+  td {
+    padding: 16px 12px;
+  }
+
+  .time-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .time-icon {
+      color: #1976d2;
+      font-size: 20px;
+    }
+
+    .time-text {
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .priority-icon {
+      margin-left: 8px;
+      animation: pulse 2s infinite;
+    }
+  }
+
+  .patient-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    strong {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.87);
+    }
+
+    .mrn-text {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  .room-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+
+    mat-icon {
+      color: #ff9800;
+      font-size: 20px;
+    }
+  }
+
+  mat-chip {
+    font-weight: 500;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-right: 4px;
+    }
+  }
+
+  .status-badge {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+
+    &.status-pending {
+      background-color: #e3f2fd;
+      color: #1976d2;
+    }
+
+    &.status-in-progress {
+      background-color: #fff3e0;
+      color: #f57c00;
+    }
+
+    &.status-completed {
+      background-color: #e8f5e9;
+      color: #388e3c;
+    }
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    button {
+      &:hover {
+        transform: scale(1.05);
+        transition: transform 0.2s ease;
+      }
+    }
+  }
+}
+
+.schedule-row {
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+}
+
+// Loading State
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  gap: 16px;
+
+  p {
+    color: rgba(0, 0, 0, 0.6);
+    margin: 0;
+  }
+}
+
+// Animations
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-actions {
+    .action-btn {
+      min-width: 100% !important;
+    }
+  }
+
+  .schedule-table {
+    .time-cell, .room-cell {
+      font-size: 12px;
+
+      mat-icon {
+        font-size: 16px;
+      }
+    }
+
+    .patient-cell {
+      strong {
+        font-size: 13px;
+      }
+
+      .mrn-text {
+        font-size: 11px;
+      }
+    }
+
+    .action-buttons {
+      flex-direction: column;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}

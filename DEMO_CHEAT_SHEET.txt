@@ -1,0 +1,122 @@
+# 🎬 DEMO CHEAT SHEET - Print This!
+
+```
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                    DEMO LOGIN CREDENTIALS                   ┃
+┃                     Password: demo123                       ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+┌─────────────────────────────────────────────────────────────┐
+│ 👨‍⚕️ DOCTOR - Dr. Sarah Chen                                 │
+│ Username: demo.doctor                                       │
+│ Role:     EVALUATOR                                         │
+│ Show:     Clinical workflows, patient care, quality checks  │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ 📊 ANALYST - Michael Rodriguez                              │
+│ Username: demo.analyst                                      │
+│ Role:     ANALYST                                           │
+│ Show:     Data analysis, reports, metrics, performance      │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ 🤝 CARE EVALUATOR - Jennifer Thompson                       │
+│ Username: demo.care                                         │
+│ Role:     EVALUATOR                                         │
+│ Show:     Care gaps, patient evaluation, coordination       │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ 👑 ADMIN - David Johnson                                    │
+│ Username: demo.admin                                        │
+│ Role:     ADMIN                                             │
+│ Show:     Full system access, configuration, management     │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ 👁️ VIEWER - Emily Martinez                                  │
+│ Username: demo.viewer                                       │
+│ Role:     VIEWER                                            │
+│ Show:     Read-only dashboards, executive overview          │
+└─────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+QUICK COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Web Login:
+  http://localhost:4200
+  Any username above + demo123
+
+API Login (terminal demo):
+  curl -X POST http://localhost:9000/api/v1/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{"username":"demo.doctor","password":"demo123"}'
+
+Gateway Health Check:
+  http://localhost:9000/actuator/health
+
+Test All Accounts:
+  ./test-demo-accounts.sh
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KEY TALKING POINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ Centralized authentication via Gateway
+✓ JWT tokens with 15-minute expiration
+✓ Role-based access control (EVALUATOR, ANALYST, ADMIN, VIEWER)
+✓ Multi-tenant support (demo-clinic)
+✓ BCrypt password hashing for security
+✓ Docker containerized deployment
+✓ 38% improvement in depression remission
+✓ Real-time quality measure tracking
+✓ Care gap identification and management
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DEMO FLOW (5 MINUTES)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+0:00 - Introduction
+       "Health Data in Motion platform"
+
+0:30 - Login as demo.doctor
+       Show authentication working
+
+1:00 - Patient Dashboard
+       Navigate to patient list
+
+2:00 - Quality Measures
+       Show CMS134, depression screening
+
+3:00 - Care Gaps
+       Highlight intervention opportunities
+
+4:00 - Results
+       "38% improvement in depression remission"
+
+4:30 - Architecture
+       Show Gateway, microservices
+
+5:00 - Call to Action
+       Contact information
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PRE-RECORDING CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+□ Run: ./test-demo-accounts.sh
+□ Clear browser cache
+□ Close unnecessary tabs
+□ Test screen recording
+□ Check audio levels
+□ Have script ready
+□ Check Gateway: docker compose ps gateway-service
+□ Verify database: docker compose ps postgres
+□ Open http://localhost:4200 in clean browser
+```

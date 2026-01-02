@@ -1,0 +1,9 @@
+{
+  "prompt_id": "EMAIL-BANNER",
+  "name": "Email Header Banner",
+  "category": "email",
+  "dimensions": "600x150",
+  "model": "gemini-2.0-flash-exp-image-generation",
+  "timestamp": "20251230_124818",
+  "prompt": "Create an email header banner for HDIM communications.\n\nDesign:\n- HDIM logo on left\n- Subtle healthcare pattern/graphic on right\n- Deep blue background (#0066CC)\n- Optimized for email clients (no transparency needed)\n- Professional, trustworthy feel\n\nDimensions: 600x150 pixels, landscape orientation...."
+}

@@ -1,0 +1,14 @@
+🔬 LAB RESULT AVAILABLE
+
+Patient: [(${patientName})]
+Test: [(${testName})]
+
+Result: [(${resultValue})]
+Normal Range: [(${normalRange})]
+
+Test Date: [(${testDate})]
+Provider: [(${orderingProvider})]
+
+View full report: [(${actionUrl})]
+
+- HealthData-in-Motion

@@ -1,0 +1,119 @@
+{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "Procedure"
+      },
+      "resource": {
+        "resourceType": "Procedure",
+        "status": "completed",
+        "code": {
+          "coding": [
+            {
+              "system": "http://www.ama-assn.org/go/cpt",
+              "code": "77065",
+              "display": "Diagnostic mammography, including CAD when performed; unilateral"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "24606-6",
+              "display": "Mammography"
+            }
+          ],
+          "text": "Screening Mammography"
+        },
+        "subject": {
+          "reference": "Patient/patient-123"
+        },
+        "performedDateTime": "2024-01-20T09:00:00Z",
+        "outcome": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "385669000",
+              "display": "Successful"
+            }
+          ],
+          "text": "No abnormalities detected"
+        },
+        "note": [
+          {
+            "text": "Annual screening mammography performed. BI-RADS 1 - Negative."
+          }
+        ]
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "Procedure"
+      },
+      "resource": {
+        "resourceType": "Procedure",
+        "status": "completed",
+        "code": {
+          "coding": [
+            {
+              "system": "http://www.ama-assn.org/go/cpt",
+              "code": "99214",
+              "display": "Office or other outpatient visit"
+            }
+          ],
+          "text": "Diabetes Management Visit"
+        },
+        "subject": {
+          "reference": "Patient/patient-456"
+        },
+        "performedDateTime": "2024-02-10T10:30:00Z",
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "44054006",
+                "display": "Type 2 Diabetes Mellitus"
+              }
+            ]
+          }
+        ],
+        "note": [
+          {
+            "text": "Follow-up for Type 2 Diabetes. A1c checked. Medication adjusted."
+          }
+        ]
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "Procedure"
+      },
+      "resource": {
+        "resourceType": "Procedure",
+        "status": "completed",
+        "code": {
+          "coding": [
+            {
+              "system": "http://www.ama-assn.org/go/cpt",
+              "code": "80061",
+              "display": "Lipid panel"
+            }
+          ],
+          "text": "Lipid Panel"
+        },
+        "subject": {
+          "reference": "Patient/patient-789"
+        },
+        "performedDateTime": "2024-03-01T08:00:00Z",
+        "note": [
+          {
+            "text": "Routine lipid screening for cardiovascular risk assessment."
+          }
+        ]
+      }
+    }
+  ]
+}

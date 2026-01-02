@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/healthdata_event_router
+    username: ${DB_USERNAME:healthdata_user}
+    password: ${DB_PASSWORD:healthdata_password}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+
+logging:
+  level:
+    root: INFO
+    com.healthdata.eventrouter: INFO

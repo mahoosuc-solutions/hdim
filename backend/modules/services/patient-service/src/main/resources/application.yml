@@ -1,0 +1,104 @@
+server:
+  port: 8084
+  servlet:
+    context-path: /patient
+
+spring:
+  application:
+    name: patient-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_patient}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    # ⚠️ SECURITY: Password MUST be provided via environment variable
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+# FHIR Server Configuration
+fhir:
+  server:
+    url: http://localhost:8085/fhir
+
+# Consent Service Configuration
+consent:
+  server:
+    url: http://localhost:8086/consent
+
+# Feign Client Configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 10000
+        loggerLevel: basic
+      fhir-service:
+        url: http://localhost:8085
+        connectTimeout: 5000
+        readTimeout: 10000
+      consent-service:
+        url: http://localhost:8086
+        connectTimeout: 5000
+        readTimeout: 10000
+
+# Cache Configuration (Redis)
+# ⚠️ CRITICAL HIPAA COMPLIANCE SETTING - DO NOT INCREASE TTL ⚠️
+# TTL reduced from 10 minutes to 2 minutes to comply with HIPAA data minimization
+# See: /backend/HIPAA-CACHE-COMPLIANCE.md for full documentation
+spring.cache:
+  type: redis
+  redis:
+    time-to-live: 120000  # 2 minutes (HIPAA compliant for PHI)
+
+# HIPAA Audit Configuration
+audit:
+  enabled: true
+  encryption:
+    enabled: true
+
+# Rate Limiting Configuration
+rate-limiting:
+  enabled: true
+  login:
+    per-minute: 5
+    per-hour: 20
+  register:
+    per-hour: 3
+  api:
+    per-minute: 100
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

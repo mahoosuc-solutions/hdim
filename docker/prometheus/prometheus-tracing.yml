@@ -1,0 +1,113 @@
+# Prometheus Configuration for Tracing Integration
+# Scrapes metrics from HDIM services and OpenTelemetry Collector
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    platform: hdim
+    environment: ${ENVIRONMENT:-development}
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Load alerting rules
+rule_files:
+  - /etc/prometheus/alerts-tracing.yml
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # OpenTelemetry Collector metrics
+  - job_name: 'otel-collector'
+    static_configs:
+      - targets: ['otel-collector:8888', 'otel-collector:8889']
+
+  # Jaeger metrics
+  - job_name: 'jaeger'
+    static_configs:
+      - targets: ['jaeger:14269']
+
+  # HDIM Gateway Service
+  - job_name: 'gateway-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['gateway-service:9000']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        replacement: gateway-service
+
+  # HDIM CQL Engine Service
+  - job_name: 'cql-engine-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['cql-engine-service:8081']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        replacement: cql-engine-service
+
+  # HDIM Quality Measure Service
+  - job_name: 'quality-measure-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['quality-measure-service:8087']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        replacement: quality-measure-service
+
+  # HDIM FHIR Service
+  - job_name: 'fhir-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['fhir-service:8085']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        replacement: fhir-service
+
+  # HDIM Patient Service
+  - job_name: 'patient-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['patient-service:8084']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        replacement: patient-service
+
+  # HDIM Care Gap Service
+  - job_name: 'care-gap-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['care-gap-service:8085']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        replacement: care-gap-service
+
+  # Redis metrics (via redis_exporter if deployed)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        replacement: redis
+
+  # PostgreSQL metrics (via postgres_exporter if deployed)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        replacement: postgres

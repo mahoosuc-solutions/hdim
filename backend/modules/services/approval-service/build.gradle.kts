@@ -57,7 +57,6 @@ dependencies {
 
     // Testing
     testImplementation(libs.testcontainers)
-    testImplementation(project(":platform:test-fixtures"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:junit-jupiter")

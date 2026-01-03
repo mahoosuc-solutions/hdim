@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
     }
 )
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@EntityScan(basePackages = "com.healthdata.analytics.domain")
+@EntityScan(basePackages = "com.healthdata.analytics.persistence")
 @Testcontainers
 @ActiveProfiles("test")
 @Tag("entity-migration-validation")

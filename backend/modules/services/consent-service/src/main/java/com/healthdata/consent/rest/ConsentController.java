@@ -14,6 +14,8 @@ import com.healthdata.consent.persistence.ConsentEntity;
 import com.healthdata.consent.service.ConsentService;
 
 import lombok.RequiredArgsConstructor;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 @RestController
 @RequestMapping("/api/consents")
@@ -26,6 +28,7 @@ public class ConsentController {
      * Create a new consent
      * POST /api/consents
      */
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping
     public ResponseEntity<ConsentEntity> createConsent(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -43,6 +46,7 @@ public class ConsentController {
      * Get consent by ID
      * GET /api/consents/{id}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/{id}")
     public ResponseEntity<ConsentEntity> getConsent(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -56,6 +60,7 @@ public class ConsentController {
      * Update consent
      * PUT /api/consents/{id}
      */
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping("/{id}")
     public ResponseEntity<ConsentEntity> updateConsent(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -76,6 +81,7 @@ public class ConsentController {
      * Delete consent
      * DELETE /api/consents/{id}
      */
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteConsent(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -93,6 +99,7 @@ public class ConsentController {
      * Revoke consent
      * POST /api/consents/{id}/revoke
      */
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/revoke")
     public ResponseEntity<ConsentEntity> revokeConsent(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -111,6 +118,7 @@ public class ConsentController {
      * Get all consents for a patient
      * GET /api/consents/patient/{patientId}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}")
     public ResponseEntity<List<ConsentEntity>> getConsentsByPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -123,6 +131,7 @@ public class ConsentController {
      * Get consents for a patient with pagination
      * GET /api/consents/patient/{patientId}/page
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/page")
     public ResponseEntity<Page<ConsentEntity>> getConsentsByPatientPaginated(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -136,6 +145,7 @@ public class ConsentController {
      * Get active consents for a patient
      * GET /api/consents/patient/{patientId}/active
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/active")
     public ResponseEntity<List<ConsentEntity>> getActiveConsentsByPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -148,6 +158,7 @@ public class ConsentController {
      * Get active consents for a patient and scope
      * GET /api/consents/patient/{patientId}/active/scope/{scope}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/active/scope/{scope}")
     public ResponseEntity<List<ConsentEntity>> getActiveConsentsByPatientAndScope(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -161,6 +172,7 @@ public class ConsentController {
      * Get active consents for a patient and category
      * GET /api/consents/patient/{patientId}/active/category/{category}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/active/category/{category}")
     public ResponseEntity<List<ConsentEntity>> getActiveConsentsByPatientAndCategory(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -174,6 +186,7 @@ public class ConsentController {
      * Get active consents for a patient and data class
      * GET /api/consents/patient/{patientId}/active/data-class/{dataClass}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/active/data-class/{dataClass}")
     public ResponseEntity<List<ConsentEntity>> getActiveConsentsByPatientAndDataClass(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -187,6 +200,7 @@ public class ConsentController {
      * Get revoked consents for a patient
      * GET /api/consents/patient/{patientId}/revoked
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/revoked")
     public ResponseEntity<List<ConsentEntity>> getRevokedConsentsByPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -199,6 +213,7 @@ public class ConsentController {
      * Get expired consents for a patient
      * GET /api/consents/patient/{patientId}/expired
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/expired")
     public ResponseEntity<List<ConsentEntity>> getExpiredConsentsByPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -211,6 +226,7 @@ public class ConsentController {
      * Get consents expiring soon
      * GET /api/consents/patient/{patientId}/expiring-soon?days={days}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/expiring-soon")
     public ResponseEntity<List<ConsentEntity>> getConsentsExpiringSoon(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -224,6 +240,7 @@ public class ConsentController {
      * Check if patient has active consent for scope
      * GET /api/consents/patient/{patientId}/check/scope/{scope}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/check/scope/{scope}")
     public ResponseEntity<ConsentCheckResponse> checkConsentForScope(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -237,6 +254,7 @@ public class ConsentController {
      * Check if patient has active consent for category
      * GET /api/consents/patient/{patientId}/check/category/{category}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/check/category/{category}")
     public ResponseEntity<ConsentCheckResponse> checkConsentForCategory(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -250,6 +268,7 @@ public class ConsentController {
      * Check if patient has active consent for data class
      * GET /api/consents/patient/{patientId}/check/data-class/{dataClass}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/check/data-class/{dataClass}")
     public ResponseEntity<ConsentCheckResponse> checkConsentForDataClass(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -263,6 +282,7 @@ public class ConsentController {
      * Check if authorized party has consent to access patient data
      * GET /api/consents/patient/{patientId}/check/authorized-party/{authorizedPartyId}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/check/authorized-party/{authorizedPartyId}")
     public ResponseEntity<ConsentCheckResponse> checkConsentForAuthorizedParty(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -276,6 +296,7 @@ public class ConsentController {
      * Validate data access request
      * POST /api/consents/validate-access
      */
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/validate-access")
     public ResponseEntity<ConsentValidationResponse> validateDataAccess(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -301,6 +322,7 @@ public class ConsentController {
      * Health check endpoint
      * GET /api/consents/_health
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/_health")
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("{\"status\": \"UP\", \"service\": \"Consent\"}");

@@ -343,6 +343,81 @@ environment:
 
 ---
 
+## Service-to-Service Communication
+
+When backend services call each other via Feign clients, authentication headers must be forwarded to maintain the trust chain.
+
+### AuthHeaderForwardingInterceptor
+
+The `AuthHeaderForwardingInterceptor` automatically forwards X-Auth-* headers from the incoming request to outgoing Feign calls.
+
+**Location**: `shared/infrastructure/authentication/.../feign/AuthHeaderForwardingInterceptor.java`
+
+**Auto-Registration**: The interceptor is auto-registered when:
+- The authentication module is on the classpath
+- Feign is on the classpath (`@ConditionalOnClass(name = "feign.RequestInterceptor")`)
+
+### Service-to-Service Flow
+
+```
+┌─────────────┐   X-Auth-*    ┌─────────────┐   X-Auth-*    ┌─────────────┐
+│  Gateway    │──────────────▶│  Service A  │──────────────▶│  Service B  │
+└─────────────┘               └─────────────┘               └─────────────┘
+                                     │                             │
+                                     │ AuthHeaderForwarding        │ TrustedHeaderAuthFilter
+                                     │ Interceptor                 │ Validates headers
+                                     ▼                             ▼
+```
+
+### Feign Client Example
+
+```java
+@FeignClient(name = "patient-service", url = "${patient.service.url}")
+public interface PatientServiceClient {
+
+    @GetMapping("/api/v1/patients/{id}")
+    PatientResponse getPatient(@PathVariable String id);
+}
+```
+
+No additional configuration needed - headers are forwarded automatically.
+
+For more details, see [Service-to-Service Authentication](./SERVICE_TO_SERVICE_AUTHENTICATION.md).
+
+---
+
+## @EnableMethodSecurity Requirement
+
+**CRITICAL**: All services using `@PreAuthorize` annotations MUST have `@EnableMethodSecurity(prePostEnabled = true)` on their security configuration class.
+
+### Why This Is Required
+
+In Spring Security 6.x, method security is NOT enabled by default. Without this annotation:
+- `@PreAuthorize` annotations are ignored
+- All requests pass authorization checks
+- Security is effectively bypassed
+
+### Correct Configuration
+
+```java
+@Configuration
+@EnableMethodSecurity(prePostEnabled = true)  // REQUIRED!
+public class ServiceSecurityConfig {
+    // ...
+}
+```
+
+### Verification
+
+```bash
+# Check if all services have @EnableMethodSecurity
+grep -r "@EnableMethodSecurity" backend/modules/services/*/src/main/java/
+```
+
+For a complete checklist, see [Security Configuration Checklist](./SECURITY_CONFIGURATION_CHECKLIST.md).
+
+---
+
 ## Security Checklist
 
 - [ ] Backend services are NOT publicly accessible (only via gateway)
@@ -361,9 +436,13 @@ environment:
 - `GatewayAuthenticationFilter.java` - Gateway header injection
 - `TrustedHeaderAuthFilter.java` - Service header validation
 - `TrustedTenantAccessFilter.java` - Tenant isolation
+- `AuthHeaderForwardingInterceptor.java` - Feign header forwarding
+- [Service-to-Service Authentication](./SERVICE_TO_SERVICE_AUTHENTICATION.md)
+- [Security Configuration Checklist](./SECURITY_CONFIGURATION_CHECKLIST.md)
 - `AUTHENTICATION_GUIDE.md` - General authentication guide
 - `HIPAA-CACHE-COMPLIANCE.md` - PHI handling requirements
 
 ---
 
-*Last Updated: December 30, 2025*
+*Last Updated: January 2026*
+*GitHub Issue: https://github.com/webemo-aaron/hdim/issues/132*

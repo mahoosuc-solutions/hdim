@@ -101,6 +101,12 @@ public class GatewayAuthProperties {
     private RateLimitConfig rateLimit = new RateLimitConfig();
 
     /**
+     * Demo mode user configuration.
+     * Used when enforced=false and no token is provided.
+     */
+    private DemoUserConfig demoUser = new DemoUserConfig();
+
+    /**
      * Get all global public paths.
      */
     public List<String> getGlobalPublicPaths() {
@@ -187,5 +193,33 @@ public class GatewayAuthProperties {
          * Block duration after exceeding rate limit (seconds).
          */
         private Integer blockDurationSeconds = 300;
+    }
+
+    /**
+     * Demo user configuration for non-enforced mode.
+     * When auth is not enforced and no token is provided,
+     * these values are used to create a demo user context.
+     */
+    @Data
+    public static class DemoUserConfig {
+        /**
+         * Demo user ID (UUID format).
+         */
+        private String userId = "00000000-0000-0000-0000-000000000001";
+
+        /**
+         * Demo username.
+         */
+        private String username = "demo-user";
+
+        /**
+         * Tenant IDs the demo user has access to.
+         */
+        private List<String> tenantIds = List.of("acme-health");
+
+        /**
+         * Roles assigned to demo user.
+         */
+        private List<String> roles = List.of("ADMIN", "CLINICIAN", "ANALYST");
     }
 }

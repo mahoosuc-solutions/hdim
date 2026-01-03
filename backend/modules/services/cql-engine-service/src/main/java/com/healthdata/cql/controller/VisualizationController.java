@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * REST API for visualization and monitoring.
@@ -33,6 +35,7 @@ public class VisualizationController {
      * Get WebSocket connection statistics
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/connections")
     @Operation(summary = "Get WebSocket connection statistics",
             description = "Returns count of active WebSocket connections for real-time monitoring")
@@ -50,6 +53,7 @@ public class VisualizationController {
      * Get connection count for a specific tenant
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/connections/{tenantId}")
     @Operation(summary = "Get connection count for tenant",
             description = "Returns count of active WebSocket connections for a specific tenant")
@@ -66,6 +70,7 @@ public class VisualizationController {
      * Get visualization configuration
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/config")
     @Operation(summary = "Get visualization configuration",
             description = "Returns current visualization configuration including emit intervals and topic names")
@@ -100,6 +105,7 @@ public class VisualizationController {
      * Health check for visualization system
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/health")
     @Operation(summary = "Visualization system health check",
             description = "Returns health status of visualization infrastructure (WebSocket, Kafka consumers)")
@@ -117,6 +123,7 @@ public class VisualizationController {
      * Get sample WebSocket message format for documentation
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/sample-message")
     @Operation(summary = "Get sample WebSocket message",
             description = "Returns example WebSocket message format for client integration")

@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * REST Controller for ValueSet Management
@@ -44,6 +46,7 @@ public class ValueSetController {
      * POST /api/v1/cql/valuesets
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping
     public ResponseEntity<ValueSet> createValueSet(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -72,6 +75,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/{id}
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/{id}")
     public ResponseEntity<ValueSet> getValueSet(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -88,6 +92,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping
     public ResponseEntity<Page<ValueSet>> getAllValueSets(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -103,6 +108,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/by-oid/{oid}
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-oid/{oid}")
     public ResponseEntity<ValueSet> getValueSetByOid(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -119,6 +125,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/by-oid/{oid}/version/{version}
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-oid/{oid}/version/{version}")
     public ResponseEntity<ValueSet> getValueSetByOidAndVersion(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -136,6 +143,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/by-oid/{oid}/latest
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-oid/{oid}/latest")
     public ResponseEntity<ValueSet> getLatestValueSetVersion(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -152,6 +160,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/by-oid/{oid}/versions
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-oid/{oid}/versions")
     public ResponseEntity<List<ValueSet>> getAllValueSetVersions(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -167,6 +176,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/by-name/{name}
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-name/{name}")
     public ResponseEntity<ValueSet> getValueSetByName(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -183,6 +193,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/by-code-system/{codeSystem}
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-code-system/{codeSystem}")
     public ResponseEntity<Page<ValueSet>> getValueSetsByCodeSystem(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -200,6 +211,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/active
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/active")
     public ResponseEntity<List<ValueSet>> getActiveValueSets(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -214,6 +226,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/snomed
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/snomed")
     public ResponseEntity<List<ValueSet>> getSnomedValueSets(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -228,6 +241,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/loinc
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/loinc")
     public ResponseEntity<List<ValueSet>> getLoincValueSets(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -242,6 +256,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/rxnorm
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/rxnorm")
     public ResponseEntity<List<ValueSet>> getRxNormValueSets(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -256,6 +271,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/common
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/common")
     public ResponseEntity<List<ValueSet>> getCommonCodeSystemValueSets(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -270,6 +286,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/search?q={searchTerm}
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/search")
     public ResponseEntity<List<ValueSet>> searchValueSets(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -285,6 +302,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/by-oid-prefix/{oidPrefix}
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-oid-prefix/{oidPrefix}")
     public ResponseEntity<List<ValueSet>> getValueSetsByOidPrefix(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -300,6 +318,7 @@ public class ValueSetController {
      * PUT /api/v1/cql/valuesets/{id}
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping("/{id}")
     public ResponseEntity<ValueSet> updateValueSet(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -331,6 +350,7 @@ public class ValueSetController {
      * POST /api/v1/cql/valuesets/{id}/activate
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/activate")
     public ResponseEntity<ValueSet> activateValueSet(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -346,6 +366,7 @@ public class ValueSetController {
      * POST /api/v1/cql/valuesets/{id}/retire
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/retire")
     public ResponseEntity<ValueSet> retireValueSet(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -361,6 +382,7 @@ public class ValueSetController {
      * DELETE /api/v1/cql/valuesets/{id}
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteValueSet(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -376,6 +398,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/count
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/count")
     public ResponseEntity<Long> countValueSets(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -390,6 +413,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/count/by-code-system/{codeSystem}
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/count/by-code-system/{codeSystem}")
     public ResponseEntity<Long> countValueSetsByCodeSystem(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -406,6 +430,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/exists/by-oid/{oid}
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/exists/by-oid/{oid}")
     public ResponseEntity<Boolean> valueSetExistsByOid(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -421,6 +446,7 @@ public class ValueSetController {
      * GET /api/v1/cql/valuesets/{id}/contains-code/{code}
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/{id}/contains-code/{code}")
     public ResponseEntity<Boolean> codeExistsInValueSet(
             @RequestHeader("X-Tenant-ID") String tenantId,

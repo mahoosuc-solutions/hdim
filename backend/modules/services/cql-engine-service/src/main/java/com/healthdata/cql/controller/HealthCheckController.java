@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * Health check controller for service status
@@ -16,6 +18,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/health")
 public class HealthCheckController {
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping
     public ResponseEntity<Map<String, Object>> healthCheck() {
         Map<String, Object> health = new HashMap<>();
@@ -26,6 +29,7 @@ public class HealthCheckController {
         return ResponseEntity.ok(health);
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/ready")
     public ResponseEntity<Map<String, Object>> readiness() {
         Map<String, Object> readiness = new HashMap<>();
@@ -34,6 +38,7 @@ public class HealthCheckController {
         return ResponseEntity.ok(readiness);
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/live")
     public ResponseEntity<Map<String, Object>> liveness() {
         Map<String, Object> liveness = new HashMap<>();

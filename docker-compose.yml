@@ -180,6 +180,7 @@ services:
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       # Backend service URLs (include context-path + internal controller path)
       BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir/fhir
@@ -196,6 +197,12 @@ services:
       BACKEND_SERVICES_ECR_URL: http://ecr-service:8101
       BACKEND_SERVICES_PRIOR_AUTH_URL: http://prior-auth-service:8102
       BACKEND_SERVICES_SALES_AUTOMATION_URL: http://sales-automation-service:8106/sales-automation
+      # Demo mode configuration - disables auth enforcement and injects demo user headers
+      GATEWAY_AUTH_ENFORCED: "false"
+      GATEWAY_AUTH_DEMO_USER_USER_ID: "00000000-0000-0000-0000-000000000001"
+      GATEWAY_AUTH_DEMO_USER_USERNAME: "demo-user"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "acme-health"
+      GATEWAY_AUTH_DEMO_USER_ROLES: "ADMIN,CLINICIAN,ANALYST"
     ports:
       - "8080:8080"
     healthcheck:

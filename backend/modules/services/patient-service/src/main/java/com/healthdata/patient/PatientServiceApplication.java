@@ -1,5 +1,6 @@
 package com.healthdata.patient;
 
+import com.healthdata.authentication.config.AuthenticationJwtAutoConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -12,15 +13,21 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  *
  * Aggregates FHIR resources from FHIR Service, provides timeline views,
  * health status dashboards, and applies consent filters for patient data.
+ *
+ * SECURITY: Uses gateway-trust authentication pattern (TrustedHeaderAuthFilter)
+ * instead of direct JWT validation. Excludes JwtAuthenticationFilter from
+ * component scanning and AuthenticationJwtAutoConfiguration from auto-config.
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = AuthenticationJwtAutoConfiguration.class)
 @EnableFeignClients
 @EnableCaching
 @EnableJpaRepositories(basePackages = {
-    "com.healthdata.patient.repository"
+    "com.healthdata.patient.repository",
+    "com.healthdata.audit.repository"
 })
 @EntityScan(basePackages = {
-    "com.healthdata.patient.entity"
+    "com.healthdata.patient.entity",
+    "com.healthdata.audit.entity"
 })
 public class PatientServiceApplication {
 

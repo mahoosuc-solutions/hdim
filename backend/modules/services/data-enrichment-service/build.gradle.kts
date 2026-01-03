@@ -86,6 +86,7 @@ dependencies {
     implementation("com.google.re2j:re2j:1.7")
 
     // Testing
+    testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.bundles.testing)
     testImplementation(libs.spring.boot.starter.test)
     testImplementation("org.springframework.security:spring-security-test")

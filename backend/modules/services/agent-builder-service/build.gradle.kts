@@ -55,6 +55,7 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
 
     // Testing
+    testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.testcontainers)
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.testcontainers:postgresql")

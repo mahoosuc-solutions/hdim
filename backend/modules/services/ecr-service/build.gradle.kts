@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.guava)
 
     // Testing
+    testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.bundles.testing)
     testImplementation(libs.spring.boot.starter.test)
     testImplementation("org.springframework.security:spring-security-test")

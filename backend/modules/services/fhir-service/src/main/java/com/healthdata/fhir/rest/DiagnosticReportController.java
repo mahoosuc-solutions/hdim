@@ -31,6 +31,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * REST Controller for FHIR DiagnosticReport resource.
@@ -48,6 +50,7 @@ public class DiagnosticReportController {
 
     private final DiagnosticReportService diagnosticReportService;
 
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
     @Operation(summary = "Create a new DiagnosticReport resource")
     public ResponseEntity<String> createDiagnosticReport(
@@ -61,6 +64,7 @@ public class DiagnosticReportController {
         return ResponseEntity.status(HttpStatus.CREATED).body(JSON_PARSER.encodeResourceToString(created));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = "application/fhir+json")
     @Operation(summary = "Get a DiagnosticReport resource by ID")
     public ResponseEntity<String> getDiagnosticReport(
@@ -73,6 +77,7 @@ public class DiagnosticReportController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
     @Operation(summary = "Update an existing DiagnosticReport resource")
     public ResponseEntity<String> updateDiagnosticReport(
@@ -87,6 +92,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(updated));
     }
 
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a DiagnosticReport resource")
     public ResponseEntity<Void> deleteDiagnosticReport(
@@ -101,6 +107,7 @@ public class DiagnosticReportController {
 
     // ==================== Search Endpoints ====================
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = "application/fhir+json")
     @Operation(summary = "Search DiagnosticReport resources")
     public ResponseEntity<String> searchReports(
@@ -131,6 +138,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}", produces = "application/fhir+json")
     @Operation(summary = "Get all diagnostic reports for a patient")
     public ResponseEntity<String> getReportsByPatient(
@@ -143,6 +151,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/final", produces = "application/fhir+json")
     @Operation(summary = "Get final diagnostic reports for a patient")
     public ResponseEntity<String> getFinalReports(
@@ -155,6 +164,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/pending", produces = "application/fhir+json")
     @Operation(summary = "Get pending diagnostic reports for a patient")
     public ResponseEntity<String> getPendingReports(
@@ -167,6 +177,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/lab", produces = "application/fhir+json")
     @Operation(summary = "Get lab reports for a patient")
     public ResponseEntity<String> getLabReports(
@@ -179,6 +190,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/imaging", produces = "application/fhir+json")
     @Operation(summary = "Get imaging reports for a patient")
     public ResponseEntity<String> getImagingReports(
@@ -191,6 +203,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/encounter/{encounterId}", produces = "application/fhir+json")
     @Operation(summary = "Get diagnostic reports for an encounter")
     public ResponseEntity<String> getReportsByEncounter(
@@ -203,6 +216,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/code/{code}/latest", produces = "application/fhir+json")
     @Operation(summary = "Get latest report of a specific type for a patient")
     public ResponseEntity<String> getLatestReportByCode(
@@ -216,6 +230,7 @@ public class DiagnosticReportController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/date-range", produces = "application/fhir+json")
     @Operation(summary = "Get diagnostic reports within a date range")
     public ResponseEntity<String> getReportsByDateRange(

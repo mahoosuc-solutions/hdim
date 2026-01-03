@@ -30,6 +30,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * REST Controller for FHIR Coverage resource.
@@ -47,6 +49,7 @@ public class CoverageController {
 
     private final CoverageService coverageService;
 
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
     @Operation(summary = "Create a new Coverage resource")
     public ResponseEntity<String> createCoverage(
@@ -60,6 +63,7 @@ public class CoverageController {
         return ResponseEntity.status(HttpStatus.CREATED).body(JSON_PARSER.encodeResourceToString(created));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = "application/fhir+json")
     @Operation(summary = "Get a Coverage resource by ID")
     public ResponseEntity<String> getCoverage(
@@ -72,6 +76,7 @@ public class CoverageController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
     @Operation(summary = "Update an existing Coverage resource")
     public ResponseEntity<String> updateCoverage(
@@ -86,6 +91,7 @@ public class CoverageController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(updated));
     }
 
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a Coverage resource")
     public ResponseEntity<Void> deleteCoverage(
@@ -100,6 +106,7 @@ public class CoverageController {
 
     // ==================== Search Endpoints ====================
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = "application/fhir+json")
     @Operation(summary = "Search Coverage resources")
     public ResponseEntity<String> searchCoverages(
@@ -132,6 +139,7 @@ public class CoverageController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}", produces = "application/fhir+json")
     @Operation(summary = "Get all coverages for a patient")
     public ResponseEntity<String> getCoveragesByPatient(
@@ -144,6 +152,7 @@ public class CoverageController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/active", produces = "application/fhir+json")
     @Operation(summary = "Get active coverages for a patient")
     public ResponseEntity<String> getActiveCoverages(
@@ -156,6 +165,7 @@ public class CoverageController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/primary", produces = "application/fhir+json")
     @Operation(summary = "Get primary coverage for a patient")
     public ResponseEntity<String> getPrimaryCoverage(
@@ -168,6 +178,7 @@ public class CoverageController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/has-active", produces = "application/json")
     @Operation(summary = "Check if patient has active coverage")
     public ResponseEntity<Boolean> hasActiveCoverage(
@@ -178,6 +189,7 @@ public class CoverageController {
         return ResponseEntity.ok(hasActive);
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/subscriber/{subscriberId}", produces = "application/fhir+json")
     @Operation(summary = "Get coverages by subscriber ID")
     public ResponseEntity<String> getCoveragesBySubscriberId(

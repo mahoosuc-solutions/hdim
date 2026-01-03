@@ -27,7 +27,7 @@ spring-kafka = "3.3.0"
 # API & Documentation
 springdoc-openapi = "2.6.0"
 swagger = "2.2.25"
-jackson = "2.17.2"  # Must match Spring Boot BOM version
+jackson = "2.20.1"  # Must match Spring Boot BOM version
 
 # Security
 spring-security = "6.3.8"

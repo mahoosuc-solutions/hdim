@@ -65,7 +65,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-aop")
 
     // JSON type support for JPA (JSONB, HSTORE, etc.)
-    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.7.0")
+    // Version 3.9.0+ required for Hibernate 6.5+ compatibility
+    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.0")
 
     // Jackson for JSON processing
     implementation(libs.jackson.databind)

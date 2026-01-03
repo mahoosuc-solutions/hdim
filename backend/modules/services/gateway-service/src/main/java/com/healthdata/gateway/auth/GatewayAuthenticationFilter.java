@@ -318,6 +318,7 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * Handle missing token.
+     * In demo mode (enforced=false), injects demo user context headers.
      */
     private void handleMissingToken(
         HttpServletRequest request,
@@ -327,9 +328,30 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
     ) throws IOException, ServletException {
 
         if (!authProperties.getEnforced()) {
-            // Non-enforced mode: allow request without auth (demo mode)
-            log.debug("No token provided for {}, but auth not enforced", path);
-            filterChain.doFilter(request, response);
+            // Demo mode: inject demo user headers for unauthenticated requests
+            log.debug("No token for {}, injecting demo user context (auth not enforced)", path);
+
+            GatewayAuthProperties.DemoUserConfig demoUser = authProperties.getDemoUser();
+
+            // Create demo user context with injected headers
+            HttpServletRequest demoRequest = injectDemoAuthHeaders(
+                request,
+                demoUser.getUserId(),
+                demoUser.getUsername(),
+                new HashSet<>(demoUser.getTenantIds()),
+                new HashSet<>(demoUser.getRoles())
+            );
+
+            // Set Spring Security context for demo user
+            setSecurityContext(demoUser.getUsername(), new HashSet<>(demoUser.getRoles()), demoRequest);
+
+            // Log demo mode access for audit
+            if (authProperties.getAuditLogging()) {
+                log.info("AUTH_EVENT: user={}, userId={}, path={}, method={}, result=DEMO_MODE",
+                    demoUser.getUsername(), demoUser.getUserId(), path, request.getMethod());
+            }
+
+            filterChain.doFilter(demoRequest, response);
             return;
         }
 
@@ -337,6 +359,62 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
         response.getWriter().write("{\"error\":\"unauthorized\",\"message\":\"Authentication required\"}");
+    }
+
+    /**
+     * Inject demo user auth headers (used when auth not enforced).
+     * Similar to injectAuthHeaders but uses string userId and no token info.
+     */
+    private HttpServletRequest injectDemoAuthHeaders(
+        HttpServletRequest request,
+        String userId,
+        String username,
+        Set<String> tenantIds,
+        Set<String> roles
+    ) {
+        // Generate validation signature
+        long timestamp = System.currentTimeMillis() / 1000;
+        String signature = generateValidationSignature(userId, timestamp);
+
+        // Create header map
+        Map<String, String> injectedHeaders = new HashMap<>();
+        injectedHeaders.put(AuthHeaderConstants.HEADER_USER_ID, userId);
+        injectedHeaders.put(AuthHeaderConstants.HEADER_USERNAME, username);
+        injectedHeaders.put(AuthHeaderConstants.HEADER_TENANT_IDS, String.join(",", tenantIds));
+        injectedHeaders.put(AuthHeaderConstants.HEADER_ROLES, String.join(",", roles));
+        injectedHeaders.put(AuthHeaderConstants.HEADER_VALIDATED, signature);
+        // Demo mode doesn't have token info
+        injectedHeaders.put(AuthHeaderConstants.HEADER_TOKEN_ID, "demo-token");
+        injectedHeaders.put(AuthHeaderConstants.HEADER_TOKEN_EXPIRES, String.valueOf(timestamp + 86400)); // 24h
+
+        return new HttpServletRequestWrapper(request) {
+            @Override
+            public String getHeader(String name) {
+                if (injectedHeaders.containsKey(name)) {
+                    return injectedHeaders.get(name);
+                }
+                return super.getHeader(name);
+            }
+
+            @Override
+            public Enumeration<String> getHeaders(String name) {
+                if (injectedHeaders.containsKey(name)) {
+                    return Collections.enumeration(List.of(injectedHeaders.get(name)));
+                }
+                return super.getHeaders(name);
+            }
+
+            @Override
+            public Enumeration<String> getHeaderNames() {
+                Set<String> names = new LinkedHashSet<>();
+                Enumeration<String> originalNames = super.getHeaderNames();
+                while (originalNames.hasMoreElements()) {
+                    names.add(originalNames.nextElement());
+                }
+                names.addAll(injectedHeaders.keySet());
+                return Collections.enumeration(names);
+            }
+        };
     }
 
     /**

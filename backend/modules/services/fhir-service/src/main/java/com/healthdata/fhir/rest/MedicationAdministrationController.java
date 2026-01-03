@@ -15,6 +15,8 @@ import com.healthdata.fhir.service.MedicationAdministrationService;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * REST Controller for FHIR MedicationAdministration resources.
@@ -40,6 +42,7 @@ public class MedicationAdministrationController {
      * Create a new MedicationAdministration resource
      * POST /fhir/MedicationAdministration
      */
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
     public ResponseEntity<String> createMedicationAdministration(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -64,6 +67,7 @@ public class MedicationAdministrationController {
      * Read a MedicationAdministration resource by ID
      * GET /fhir/MedicationAdministration/{id}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = "application/fhir+json")
     public ResponseEntity<String> getMedicationAdministration(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -80,6 +84,7 @@ public class MedicationAdministrationController {
      * Update a MedicationAdministration resource
      * PUT /fhir/MedicationAdministration/{id}
      */
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
     public ResponseEntity<String> updateMedicationAdministration(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -105,6 +110,7 @@ public class MedicationAdministrationController {
      * Delete a MedicationAdministration resource
      * DELETE /fhir/MedicationAdministration/{id}
      */
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMedicationAdministration(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -122,6 +128,7 @@ public class MedicationAdministrationController {
      * Search MedicationAdministrations by patient
      * GET /fhir/MedicationAdministration?patient={patientId}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = "application/fhir+json")
     public ResponseEntity<String> searchMedicationAdministrations(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -161,6 +168,7 @@ public class MedicationAdministrationController {
      * Get completed medication administrations for a patient
      * GET /fhir/MedicationAdministration/completed?patient={patientId}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/completed", produces = "application/fhir+json")
     public ResponseEntity<String> getCompletedAdministrations(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -179,6 +187,7 @@ public class MedicationAdministrationController {
      * Get in-progress medication administrations for a patient
      * GET /fhir/MedicationAdministration/in-progress?patient={patientId}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/in-progress", produces = "application/fhir+json")
     public ResponseEntity<String> getInProgressAdministrations(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -197,6 +206,7 @@ public class MedicationAdministrationController {
      * Get medication administrations within a date range
      * GET /fhir/MedicationAdministration/by-date?patient={patientId}&start={startDate}&end={endDate}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/by-date", produces = "application/fhir+json")
     public ResponseEntity<String> getAdministrationsByDateRange(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -220,6 +230,7 @@ public class MedicationAdministrationController {
      * Get administration history for a medication request (prescription)
      * GET /fhir/MedicationAdministration/by-request?request={requestId}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/by-request", produces = "application/fhir+json")
     public ResponseEntity<String> getAdministrationsByRequest(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -238,6 +249,7 @@ public class MedicationAdministrationController {
      * Get administrations by lot number (for drug recalls)
      * GET /fhir/MedicationAdministration/by-lot?lot={lotNumber}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/by-lot", produces = "application/fhir+json")
     public ResponseEntity<String> getAdministrationsByLotNumber(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -256,6 +268,7 @@ public class MedicationAdministrationController {
      * Check if medication has been administered today
      * GET /fhir/MedicationAdministration/administered-today?patient={patientId}&code={code}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/administered-today", produces = "application/json")
     public ResponseEntity<String> hasBeenAdministeredToday(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -275,6 +288,7 @@ public class MedicationAdministrationController {
      * Health check endpoint
      * GET /fhir/MedicationAdministration/_health
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/_health")
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("{\"status\": \"UP\", \"service\": \"MedicationAdministration\"}");

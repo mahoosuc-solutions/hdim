@@ -12,6 +12,8 @@ import com.healthdata.fhir.service.MedicationRequestService;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 @RestController
 @RequestMapping("/fhir/MedicationRequest")
@@ -30,6 +32,7 @@ public class MedicationRequestController {
      * Create a new MedicationRequest resource
      * POST /fhir/MedicationRequest
      */
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
     public ResponseEntity<String> createMedicationRequest(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -53,6 +56,7 @@ public class MedicationRequestController {
      * Read a MedicationRequest resource by ID
      * GET /fhir/MedicationRequest/{id}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = "application/fhir+json")
     public ResponseEntity<String> getMedicationRequest(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -69,6 +73,7 @@ public class MedicationRequestController {
      * Update a MedicationRequest resource
      * PUT /fhir/MedicationRequest/{id}
      */
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
     public ResponseEntity<String> updateMedicationRequest(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -93,6 +98,7 @@ public class MedicationRequestController {
      * Delete a MedicationRequest resource
      * DELETE /fhir/MedicationRequest/{id}
      */
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMedicationRequest(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -110,6 +116,7 @@ public class MedicationRequestController {
      * Search MedicationRequests by patient
      * GET /fhir/MedicationRequest?patient={patientId}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = "application/fhir+json")
     public ResponseEntity<String> searchMedicationRequests(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -145,6 +152,7 @@ public class MedicationRequestController {
      * Get active medication requests for a patient
      * GET /fhir/MedicationRequest/active?patient={patientId}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/active", produces = "application/fhir+json")
     public ResponseEntity<String> getActiveMedicationRequests(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -163,6 +171,7 @@ public class MedicationRequestController {
      * Get prescriptions for a patient (intent=order)
      * GET /fhir/MedicationRequest/prescriptions?patient={patientId}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/prescriptions", produces = "application/fhir+json")
     public ResponseEntity<String> getPrescriptions(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -181,6 +190,7 @@ public class MedicationRequestController {
      * Get medication requests with refills remaining
      * GET /fhir/MedicationRequest/with-refills?patient={patientId}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/with-refills", produces = "application/fhir+json")
     public ResponseEntity<String> getRequestsWithRefills(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -199,6 +209,7 @@ public class MedicationRequestController {
      * Check if patient has active medication by code
      * GET /fhir/MedicationRequest/has-medication?patient={patientId}&code={code}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/has-medication", produces = "application/json")
     public ResponseEntity<String> hasActiveMedication(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -218,6 +229,7 @@ public class MedicationRequestController {
      * Health check endpoint
      * GET /fhir/MedicationRequest/_health
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/_health")
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("{\"status\": \"UP\", \"service\": \"MedicationRequest\"}");

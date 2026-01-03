@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 @RestController
 @RequestMapping("/fhir/Immunization")
@@ -26,6 +28,7 @@ public class ImmunizationController {
     private final IParser jsonParser = fhirContext.newJsonParser().setPrettyPrint(true);
 
     // Create Immunization
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
     public ResponseEntity<String> createImmunization(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -44,6 +47,7 @@ public class ImmunizationController {
     }
 
     // Get Immunization by ID
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = "application/fhir+json")
     public ResponseEntity<String> getImmunization(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -59,6 +63,7 @@ public class ImmunizationController {
     }
 
     // Update Immunization
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
     public ResponseEntity<String> updateImmunization(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -78,6 +83,7 @@ public class ImmunizationController {
     }
 
     // Delete Immunization
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteImmunization(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -91,6 +97,7 @@ public class ImmunizationController {
     }
 
     // Search by patient
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = "application/fhir+json")
     public ResponseEntity<String> searchByPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -120,6 +127,7 @@ public class ImmunizationController {
     }
 
     // Get completed immunizations
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/completed", produces = "application/fhir+json")
     public ResponseEntity<String> getCompletedImmunizations(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -137,6 +145,7 @@ public class ImmunizationController {
     }
 
     // Check if patient has immunization
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/has-immunization", produces = "application/json")
     public ResponseEntity<Map<String, Boolean>> hasImmunization(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -152,6 +161,7 @@ public class ImmunizationController {
     }
 
     // Get vaccine series
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/series", produces = "application/fhir+json")
     public ResponseEntity<String> getVaccineSeries(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -170,6 +180,7 @@ public class ImmunizationController {
     }
 
     // Check series completion
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/series-complete", produces = "application/json")
     public ResponseEntity<Map<String, Boolean>> isSeriesComplete(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -186,6 +197,7 @@ public class ImmunizationController {
     }
 
     // Get immunizations with reactions
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/with-reactions", produces = "application/fhir+json")
     public ResponseEntity<String> getImmunizationsWithReactions(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -203,6 +215,7 @@ public class ImmunizationController {
     }
 
     // Count immunizations
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/count", produces = "application/json")
     public ResponseEntity<Map<String, Long>> countImmunizations(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -224,6 +237,7 @@ public class ImmunizationController {
     }
 
     // Compliance report endpoint
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/compliance", produces = "application/json")
     public ResponseEntity<Map<String, Object>> getComplianceReport(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -242,6 +256,7 @@ public class ImmunizationController {
     }
 
     // Health check
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/_health")
     public ResponseEntity<Map<String, String>> health() {
         return ResponseEntity.ok(Map.of("status", "UP"));

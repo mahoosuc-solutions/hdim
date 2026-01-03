@@ -62,12 +62,14 @@ public class EntityMigrationValidator {
      */
     private void validateEntity(EntityType<?> entity, ValidationReport report) {
         String tableName = getTableName(entity);
+        String schemaName = getSchemaName(entity);
 
-        log.debug("Validating entity: {} -> table: {}", entity.getName(), tableName);
+        log.info("Validating entity: {} -> table: {}", entity.getName(),
+                schemaName.equals("public") ? tableName : schemaName + "." + tableName);
 
         // Check table exists
-        if (!schemaIntrospector.tableExists(tableName)) {
-            report.addError(tableName, "Table does not exist in database");
+        if (!schemaIntrospector.tableExists(tableName, schemaName)) {
+            report.addError(tableName, "Table does not exist in database (schema: " + schemaName + ")");
             return;
         }
 
@@ -75,7 +77,7 @@ public class EntityMigrationValidator {
 
         // Get entity columns and database columns
         Map<String, AttributeInfo> entityColumns = getEntityAttributes(entity);
-        Map<String, SchemaIntrospector.ColumnInfo> dbColumns = schemaIntrospector.getTableColumns(tableName);
+        Map<String, SchemaIntrospector.ColumnInfo> dbColumns = schemaIntrospector.getTableColumns(tableName, schemaName);
 
         // Validate each entity column exists in database
         for (String columnName : entityColumns.keySet()) {
@@ -95,13 +97,13 @@ public class EntityMigrationValidator {
         }
 
         // Validate primary key
-        validatePrimaryKey(entity, tableName, report);
+        validatePrimaryKey(entity, tableName, schemaName, report);
 
         // Validate foreign keys
-        validateForeignKeys(entity, tableName, report);
+        validateForeignKeys(entity, tableName, schemaName, report);
 
         // Validate indexes
-        validateIndexes(entity, tableName, report);
+        validateIndexes(entity, tableName, schemaName, report);
     }
 
     /**
@@ -148,11 +150,12 @@ public class EntityMigrationValidator {
      *
      * @param entity the JPA entity type
      * @param tableName the table name
+     * @param schemaName the schema name
      * @param report the validation report to update
      */
-    private void validatePrimaryKey(EntityType<?> entity, String tableName, ValidationReport report) {
+    private void validatePrimaryKey(EntityType<?> entity, String tableName, String schemaName, ValidationReport report) {
         Set<String> entityPkColumns = new HashSet<>();
-        Set<String> dbPkColumns = schemaIntrospector.getPrimaryKeyColumns(tableName);
+        Set<String> dbPkColumns = schemaIntrospector.getPrimaryKeyColumns(tableName, schemaName);
 
         // Get PK from entity
         if (entity.hasSingleIdAttribute()) {
@@ -186,9 +189,10 @@ public class EntityMigrationValidator {
      *
      * @param entity the JPA entity type
      * @param tableName the table name
+     * @param schemaName the schema name
      * @param report the validation report to update
      */
-    private void validateForeignKeys(EntityType<?> entity, String tableName, ValidationReport report) {
+    private void validateForeignKeys(EntityType<?> entity, String tableName, String schemaName, ValidationReport report) {
         Map<String, String> entityFkColumns = new HashMap<>();
 
         // Get FK columns from entity
@@ -205,7 +209,7 @@ public class EntityMigrationValidator {
         }
 
         // Get FK columns from database
-        List<SchemaIntrospector.ForeignKeyInfo> dbFks = schemaIntrospector.getForeignKeyConstraints(tableName);
+        List<SchemaIntrospector.ForeignKeyInfo> dbFks = schemaIntrospector.getForeignKeyConstraints(tableName, schemaName);
         Map<String, SchemaIntrospector.ForeignKeyInfo> dbFksByColumn = new HashMap<>();
         dbFks.forEach(fk -> dbFksByColumn.put(fk.getColumnName(), fk));
 
@@ -223,11 +227,12 @@ public class EntityMigrationValidator {
      *
      * @param entity the JPA entity type
      * @param tableName the table name
+     * @param schemaName the schema name
      * @param report the validation report to update
      */
-    private void validateIndexes(EntityType<?> entity, String tableName, ValidationReport report) {
+    private void validateIndexes(EntityType<?> entity, String tableName, String schemaName, ValidationReport report) {
         Map<String, List<String>> entityIndexes = getEntityIndexes(entity);
-        List<SchemaIntrospector.IndexInfo> dbIndexes = schemaIntrospector.getIndexes(tableName);
+        List<SchemaIntrospector.IndexInfo> dbIndexes = schemaIntrospector.getIndexes(tableName, schemaName);
 
         report.incrementIndexesChecked(entityIndexes.size());
 
@@ -265,6 +270,27 @@ public class EntityMigrationValidator {
         }
 
         return tableName;
+    }
+
+    /**
+     * Get schema name from entity.
+     *
+     * @param entity the JPA entity type
+     * @return the schema name, or "public" as default
+     */
+    private String getSchemaName(EntityType<?> entity) {
+        // Check for @Table annotation
+        try {
+            Class<?> entityClass = entity.getJavaType();
+            Table tableAnnotation = entityClass.getAnnotation(Table.class);
+            if (tableAnnotation != null && !tableAnnotation.schema().isEmpty()) {
+                return tableAnnotation.schema();
+            }
+        } catch (Exception e) {
+            log.debug("Could not get @Table schema annotation", e);
+        }
+
+        return "public";
     }
 
     /**

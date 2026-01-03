@@ -396,7 +396,7 @@ jobs:
             "$SLACK_WEBHOOK_URL" || echo "Slack notification failed"
 
       - name: Create GitHub Issue
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const title = `Deployment Failed: ${context.workflow} - ${context.ref}`;

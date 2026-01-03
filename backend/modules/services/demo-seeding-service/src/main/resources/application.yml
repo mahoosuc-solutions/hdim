@@ -1,0 +1,65 @@
+server:
+  port: 8098
+  servlet:
+    context-path: /demo
+
+spring:
+  application:
+    name: demo-seeding-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_demo?sslmode=disable}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:healthdata_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 600000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          time_zone: UTC
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  cache:
+    type: simple
+
+# Demo-specific configuration
+demo:
+  snapshots:
+    directory: ${DEMO_SNAPSHOTS_DIR:./demo-snapshots}
+  database:
+    name: ${POSTGRES_DB:healthdata_demo}
+  generation:
+    default-care-gap-percentage: 28
+    default-patient-count: 5000
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.healthdata.demo: DEBUG
+    org.hibernate.SQL: WARN
+
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized

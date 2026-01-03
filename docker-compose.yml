@@ -1358,6 +1358,41 @@ services:
     networks:
       - healthdata-network
 
+  # Port 8098 - Demo Seeding Service (synthetic data for video demos)
+  demo-seeding-service:
+    container_name: healthdata-demo-seeding-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/demo-seeding-service/Dockerfile
+    profiles: ["demo", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_demo
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SERVER_PORT: 8098
+      DEMO_SNAPSHOTS_DIR: /app/demo-snapshots
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+    ports:
+      - "8098:8098"
+    volumes:
+      - demo-snapshots:/app/demo-snapshots
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8098/demo/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
   # ============================================
   # FRONTEND SERVICE
   # ============================================
@@ -1385,3 +1420,4 @@ networks:
 volumes:
   postgres_data:
   postgres_backups:
+  demo-snapshots:

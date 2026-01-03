@@ -83,7 +83,7 @@ public class ElectronicCaseReportEntity {
     /**
      * The complete eICR FHIR Bundle as JSON
      */
-    @Column(name = "eicr_bundle_json", columnDefinition = "text")
+    @Column(name = "eicr_bundle_json", columnDefinition = "jsonb")
     @Convert(converter = MapJsonConverter.class)
     private Map<String, Object> eicrBundleJson;
 
@@ -97,7 +97,7 @@ public class ElectronicCaseReportEntity {
     /**
      * Full Reportability Response as JSON
      */
-    @Column(name = "rr_response_json", columnDefinition = "text")
+    @Column(name = "rr_response_json", columnDefinition = "jsonb")
     @Convert(converter = MapJsonConverter.class)
     private Map<String, Object> rrResponseJson;
 

@@ -21,6 +21,8 @@ import com.healthdata.fhir.service.ConditionService;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * FHIR R4 Condition Resource Controller.
@@ -59,6 +61,7 @@ public class ConditionController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
     public ResponseEntity<String> createCondition(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -95,6 +98,7 @@ public class ConditionController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = "application/fhir+json")
     public ResponseEntity<String> getCondition(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -121,6 +125,7 @@ public class ConditionController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
     public ResponseEntity<String> updateCondition(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -159,6 +164,7 @@ public class ConditionController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCondition(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -186,6 +192,7 @@ public class ConditionController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = "application/fhir+json")
     public ResponseEntity<String> searchConditions(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -236,6 +243,7 @@ public class ConditionController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/active", produces = "application/fhir+json")
     public ResponseEntity<String> getActiveConditions(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -263,6 +271,7 @@ public class ConditionController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/chronic", produces = "application/fhir+json")
     public ResponseEntity<String> getChronicConditions(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -290,6 +299,7 @@ public class ConditionController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/diagnoses", produces = "application/fhir+json")
     public ResponseEntity<String> getDiagnoses(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -317,6 +327,7 @@ public class ConditionController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/problem-list", produces = "application/fhir+json")
     public ResponseEntity<String> getProblemList(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -344,6 +355,7 @@ public class ConditionController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/has-condition", produces = "application/json")
     public ResponseEntity<String> hasActiveCondition(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -365,6 +377,7 @@ public class ConditionController {
      * Health check endpoint
      * GET /fhir/Condition/_health
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/_health")
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("{\"status\": \"UP\", \"service\": \"Condition\"}");

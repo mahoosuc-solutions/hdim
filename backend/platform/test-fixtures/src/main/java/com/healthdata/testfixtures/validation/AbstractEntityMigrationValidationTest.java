@@ -111,6 +111,15 @@ public abstract class AbstractEntityMigrationValidationTest {
         registry.add("spring.flyway.enabled", () -> "false");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
         registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
+
+        // JWT configuration for security modules (JwtConfig and SecurityProperties)
+        registry.add("jwt.secret", () -> "test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough");
+        registry.add("jwt.access-token-expiration", () -> "15m");
+        registry.add("jwt.refresh-token-expiration", () -> "7d");
+        registry.add("jwt.issuer", () -> "healthdata-in-motion-test");
+        registry.add("jwt.audience", () -> "healthdata-api-test");
+        registry.add("healthdata.security.jwt.secret", () -> "test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough");
+        registry.add("healthdata.security.jwt.issuer", () -> "healthdata-in-motion-test");
     }
 
     /**

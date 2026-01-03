@@ -59,6 +59,10 @@ public class ColumnTypeMatcher {
         JAVA_TO_PG_TYPES.put(Map.class, Arrays.asList("jsonb", "json"));
         JAVA_TO_PG_TYPES.put(List.class, Arrays.asList("jsonb", "json"));
         JAVA_TO_PG_TYPES.put(Set.class, Arrays.asList("jsonb", "json"));
+
+        // Object.class is used by JPA metamodel for custom Hibernate types like @Type(JsonBinaryType.class)
+        // These are typically JSONB columns storing Map<String, Object> or other JSON structures
+        JAVA_TO_PG_TYPES.put(Object.class, Arrays.asList("jsonb", "json", "uuid", "bytea"));
     }
 
     /**

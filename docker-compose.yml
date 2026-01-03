@@ -21,7 +21,7 @@ services:
     container_name: healthdata-postgres
     restart: unless-stopped
     image: postgres:15-alpine
-    profiles: ["light", "core", "ai", "analytics", "full"]
+    profiles: ["light", "core", "ai", "analytics", "demo", "full"]
     environment:
       POSTGRES_USER: healthdata
       POSTGRES_PASSWORD: healthdata_password

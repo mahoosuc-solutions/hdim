@@ -55,6 +55,9 @@ public class ColumnTypeMatcher {
         JAVA_TO_PG_TYPES.put(byte[].class, Arrays.asList("bytea"));
         JAVA_TO_PG_TYPES.put(Byte[].class, Arrays.asList("bytea"));
 
+        // String arrays (PostgreSQL uses _varchar internally for varchar[] arrays)
+        JAVA_TO_PG_TYPES.put(String[].class, Arrays.asList("_varchar", "varchar[]", "_text", "text[]", "jsonb", "json"));
+
         // Collections (stored as JSONB)
         JAVA_TO_PG_TYPES.put(Map.class, Arrays.asList("jsonb", "json"));
         JAVA_TO_PG_TYPES.put(List.class, Arrays.asList("jsonb", "json"));
@@ -64,6 +67,14 @@ public class ColumnTypeMatcher {
         // These are typically JSONB columns storing Map<String, Object> or other JSON structures
         JAVA_TO_PG_TYPES.put(Object.class, Arrays.asList("jsonb", "json", "uuid", "bytea"));
     }
+
+    /**
+     * PostgreSQL array type prefixes (internal representation uses underscore prefix).
+     * Maps standard PostgreSQL array notation to internal names.
+     */
+    private static final Set<String> PG_ARRAY_PREFIXES = new HashSet<>(Arrays.asList(
+            "_varchar", "_text", "_int4", "_int8", "_float8", "_bool", "_uuid"
+    ));
 
     /**
      * Check if a PostgreSQL type is compatible with a Java type.
@@ -95,6 +106,24 @@ public class ColumnTypeMatcher {
             return "varchar".equals(normalizedPgType) || "character varying".equals(normalizedPgType) || "text".equals(normalizedPgType);
         }
 
+        // Check if it's an array type
+        if (javaType.isArray()) {
+            // PostgreSQL uses underscore prefix for array types (e.g., _varchar for varchar[])
+            if (PG_ARRAY_PREFIXES.contains(normalizedPgType) || normalizedPgType.endsWith("[]")) {
+                return true;
+            }
+            // Arrays can also be stored as JSONB
+            if ("jsonb".equals(normalizedPgType) || "json".equals(normalizedPgType)) {
+                return true;
+            }
+        }
+
+        // Check if it's a custom class (POJO) stored as JSONB
+        // Custom classes that are not standard Java types are typically serialized to JSONB
+        if (isCustomClass(javaType) && ("jsonb".equals(normalizedPgType) || "json".equals(normalizedPgType))) {
+            return true;
+        }
+
         // Check if it's a generic type with a superclass we recognize
         Class<?> superClass = javaType.getSuperclass();
         if (superClass != null && superClass != Object.class) {
@@ -102,6 +131,42 @@ public class ColumnTypeMatcher {
         }
 
         return false;
+    }
+
+    /**
+     * Check if a class is a custom class (POJO) that would be serialized to JSONB.
+     * Custom classes are those that:
+     * - Are not primitive types or their wrappers
+     * - Are not standard Java library classes (java.*, javax.*)
+     * - Are not enums
+     * - Are not collections or maps
+     *
+     * @param clazz the class to check
+     * @return true if it's a custom class
+     */
+    private static boolean isCustomClass(Class<?> clazz) {
+        if (clazz == null) {
+            return false;
+        }
+
+        // Primitive types and wrappers are not custom classes
+        if (clazz.isPrimitive()) {
+            return false;
+        }
+
+        // Standard library types are not custom classes
+        String className = clazz.getName();
+        if (className.startsWith("java.") || className.startsWith("javax.") || className.startsWith("jakarta.")) {
+            return false;
+        }
+
+        // Enums are handled separately
+        if (clazz.isEnum()) {
+            return false;
+        }
+
+        // If it's not in our type map and not a standard type, it's a custom class
+        return !JAVA_TO_PG_TYPES.containsKey(clazz);
     }
 
     /**

@@ -43,7 +43,7 @@ public class SdohAssessmentEntity {
     @Column(columnDefinition = "TEXT")
     private String identifiedNeedsJson;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "identified_z_codes_json", columnDefinition = "TEXT")
     private String identifiedZCodesJson;
 
     private Double riskScore;

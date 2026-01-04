@@ -1,6 +1,9 @@
 package com.healthdata.demo.application;
 
 import ca.uhn.fhir.context.FhirContext;
+import com.healthdata.demo.client.CareGapServiceClient;
+import com.healthdata.demo.client.FhirServiceClient;
+import com.healthdata.demo.client.UserSeedingClient;
 import com.healthdata.demo.domain.model.DemoScenario;
 import com.healthdata.demo.domain.model.DemoSession;
 import com.healthdata.demo.domain.model.SyntheticPatientTemplate;
@@ -12,6 +15,7 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Patient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +48,10 @@ public class DemoSeedingService {
     private final DemoSessionRepository sessionRepository;
     private final SyntheticPatientTemplateRepository templateRepository;
     private final FhirContext fhirContext;
+    private final FhirServiceClient fhirServiceClient;
+    private final CareGapServiceClient careGapServiceClient;
+    private final UserSeedingClient userSeedingClient;
+    private final boolean persistToServices;
 
     public DemoSeedingService(
             SyntheticPatientGenerator patientGenerator,
@@ -54,7 +62,11 @@ public class DemoSeedingService {
             DemoScenarioRepository scenarioRepository,
             DemoSessionRepository sessionRepository,
             SyntheticPatientTemplateRepository templateRepository,
-            FhirContext fhirContext) {
+            FhirContext fhirContext,
+            FhirServiceClient fhirServiceClient,
+            CareGapServiceClient careGapServiceClient,
+            UserSeedingClient userSeedingClient,
+            @Value("${demo.persistence.enabled:true}") boolean persistToServices) {
         this.patientGenerator = patientGenerator;
         this.medicationGenerator = medicationGenerator;
         this.observationGenerator = observationGenerator;
@@ -64,6 +76,10 @@ public class DemoSeedingService {
         this.sessionRepository = sessionRepository;
         this.templateRepository = templateRepository;
         this.fhirContext = fhirContext;
+        this.fhirServiceClient = fhirServiceClient;
+        this.careGapServiceClient = careGapServiceClient;
+        this.userSeedingClient = userSeedingClient;
+        this.persistToServices = persistToServices;
     }
 
     /**
@@ -103,7 +119,6 @@ public class DemoSeedingService {
             }
 
             result.setCareGapCount(careGapCount);
-            result.setSuccess(true);
             result.setGeneratedBundle(patientBundle);
 
             // Calculate statistics
@@ -117,13 +132,46 @@ public class DemoSeedingService {
             result.setEncounterCount((int) encounterCount);
             result.setProcedureCount((int) procedureCount);
 
+            // Persist to downstream services if enabled
+            if (persistToServices) {
+                logger.info("Persisting generated data to downstream services...");
+
+                // Persist FHIR resources
+                if (fhirServiceClient.isServiceAvailable()) {
+                    FhirServiceClient.PersistenceResult persistResult =
+                        fhirServiceClient.persistBundle(patientBundle, tenantId);
+
+                    if (!persistResult.isSuccess()) {
+                        logger.warn("Some resources failed to persist: {} errors", persistResult.getErrorCount());
+                    }
+
+                    // Update counts from actual persistence
+                    result.setPatientCount(persistResult.getPatientCount());
+                } else {
+                    logger.warn("FHIR service not available - data generated but not persisted");
+                }
+
+                // Create care gaps
+                if (careGapServiceClient.isServiceAvailable()) {
+                    int actualCareGaps = careGapServiceClient.createCareGapsFromBundle(
+                        patientBundle, tenantId, careGapCount);
+                    result.setCareGapCount(actualCareGaps);
+                } else {
+                    logger.warn("Care Gap service not available - care gaps not created");
+                }
+            } else {
+                logger.info("Persistence disabled - data generated in memory only");
+            }
+
+            result.setSuccess(true);
+
             Instant endTime = Instant.now();
             result.setGenerationTimeMs(endTime.toEpochMilli() - startTime.toEpochMilli());
 
-            logger.info("Generation complete: {} patients, {} care gaps, {} medications, {} observations in {}ms",
+            logger.info("Generation complete: {} patients, {} care gaps, {} medications, {} observations in {}ms (persisted: {})",
                 result.getPatientCount(), result.getCareGapCount(),
                 result.getMedicationCount(), result.getObservationCount(),
-                result.getGenerationTimeMs());
+                result.getGenerationTimeMs(), persistToServices);
 
         } catch (Exception e) {
             logger.error("Error generating patient cohort", e);
@@ -262,6 +310,13 @@ public class DemoSeedingService {
             );
             multiTenant.setEstimatedLoadTimeSeconds(60);
             scenarioRepository.save(multiTenant);
+        }
+
+        // Seed demo users for authentication
+        if (persistToServices && userSeedingClient.isDatabaseAvailable()) {
+            logger.info("Seeding demo users...");
+            userSeedingClient.seedDemoUsers("acme-health");
+            userSeedingClient.seedDemoUsers("demo-admin");
         }
 
         logger.info("Demo scenarios initialized");

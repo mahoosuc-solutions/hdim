@@ -185,7 +185,7 @@ services:
       SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       # Backend service URLs (include context-path + internal controller path)
-      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir/fhir
+      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir
       BACKEND_SERVICES_CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
       BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087/quality-measure
       BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084/patient
@@ -392,6 +392,7 @@ services:
       SERVER_PORT: 8085
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
       GATEWAY_AUTH_DEV_MODE: "true"

@@ -74,21 +74,21 @@ public class PatientHccProfileEntity {
     /**
      * List of HCC codes captured under V24 model.
      */
-    @Column(name = "hccs_v24", columnDefinition = "text")
+    @Column(name = "hccs_v24", columnDefinition = "jsonb")
     @Convert(converter = StringListConverter.class)
     private List<String> hccsV24;
 
     /**
      * List of HCC codes captured under V28 model.
      */
-    @Column(name = "hccs_v28", columnDefinition = "text")
+    @Column(name = "hccs_v28", columnDefinition = "jsonb")
     @Convert(converter = StringListConverter.class)
     private List<String> hccsV28;
 
     /**
      * Diagnosis codes used for HCC calculation.
      */
-    @Column(name = "diagnosis_codes", columnDefinition = "text")
+    @Column(name = "diagnosis_codes", columnDefinition = "jsonb")
     @Convert(converter = StringListConverter.class)
     private List<String> diagnosisCodes;
 
@@ -99,7 +99,7 @@ public class PatientHccProfileEntity {
     /**
      * List of identified documentation gaps (as JSON).
      */
-    @Column(name = "documentation_gaps", columnDefinition = "text")
+    @Column(name = "documentation_gaps", columnDefinition = "jsonb")
     @Convert(converter = DocumentationGapSummaryListConverter.class)
     private List<DocumentationGapSummary> documentationGaps;
 

@@ -22,6 +22,8 @@ services:
     restart: unless-stopped
     image: postgres:15-alpine
     profiles: ["light", "core", "ai", "analytics", "demo", "full"]
+    # Increase max_connections to support all microservices (28 services × ~10 connections each)
+    command: postgres -c max_connections=300 -c shared_buffers=256MB
     environment:
       POSTGRES_USER: healthdata
       POSTGRES_PASSWORD: healthdata_password

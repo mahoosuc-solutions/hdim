@@ -17,6 +17,9 @@ dependencies {
     implementation(libs.bundles.spring.boot.data)
     implementation(libs.spring.boot.starter.validation)
 
+    // Spring Security (for BCrypt password encoding)
+    implementation("org.springframework.security:spring-security-crypto")
+
     // HAPI FHIR
     implementation(libs.bundles.hapi.fhir.client)
 

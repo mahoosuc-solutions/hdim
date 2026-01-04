@@ -90,9 +90,11 @@ dependencies {
     implementation(libs.guava)
 
     // Testing
+    testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.bundles.testing)
     testImplementation(libs.spring.boot.starter.test)
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation(libs.postgresql)  // PostgreSQL JDBC driver for Testcontainers
 
     // Testcontainers
     testImplementation(libs.bundles.testcontainers)

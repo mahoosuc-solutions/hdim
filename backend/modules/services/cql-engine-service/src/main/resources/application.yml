@@ -105,8 +105,10 @@ visualization:
       cache-event: "cache.event"
       template-loaded: "template.loaded"
   batch-progress:
-    emit-interval-seconds: 5    # Emit progress every 5 seconds
-    emit-every-n-patients: 10   # Or every 10 patients (whichever comes first)
+    # PERFORMANCE TUNING: Reduced emission frequency to prevent event overload
+    # Original values: 5s / 10 patients - caused demo portal performance issues
+    emit-interval-seconds: ${BATCH_PROGRESS_EMIT_INTERVAL:15}    # Emit progress every 15 seconds (was 5s)
+    emit-every-n-patients: ${BATCH_PROGRESS_EMIT_EVERY_N:50}     # Or every 50 patients (was 10)
 
 # Resilience4j Configuration
 resilience4j:

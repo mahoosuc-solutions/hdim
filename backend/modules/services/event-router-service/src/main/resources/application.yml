@@ -61,7 +61,8 @@ event-router:
   priority-queue:
     max-size: 50000
     batch-size: 100
-    poll-interval-ms: 100
+    # PERFORMANCE TUNING: Increased poll interval to reduce processing frequency
+    poll-interval-ms: ${EVENT_ROUTER_POLL_INTERVAL:200}  # Was 100ms, doubled to reduce CPU load
 
   routing:
     default-priority: MEDIUM
@@ -127,7 +128,9 @@ resilience4j:
   ratelimiter:
     instances:
       eventRouterDefault:
-        limitForPeriod: 100
+        # PERFORMANCE TUNING: Reduced rate limit to prevent event overload on demo portal
+        # Original: 100 events/sec caused WebSocket and UI performance issues
+        limitForPeriod: ${EVENT_ROUTER_RATE_LIMIT:50}  # Was 100, halved for demo stability
         limitRefreshPeriod: 1s
         timeoutDuration: 5s
 

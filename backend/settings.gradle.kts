@@ -67,7 +67,8 @@ include(
     "modules:services:prior-auth-service",
     "modules:services:migration-workflow-service",
     "modules:services:sales-automation-service",
-    "modules:services:notification-service"
+    "modules:services:notification-service",
+    "modules:services:demo-seeding-service"
 )
 
 // Applications

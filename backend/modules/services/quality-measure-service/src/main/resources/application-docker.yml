@@ -68,6 +68,8 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: java.util.HashMap
 
 # FHIR Server Configuration
 fhir:
@@ -172,6 +174,10 @@ springdoc:
     operations-sorter: alpha
     tags-sorter: alpha
   show-actuator: true
+
+# OpenTelemetry Tracing Configuration
+tracing:
+  url: http://jaeger:4318/v1/traces
 
 # Logging Configuration
 logging:

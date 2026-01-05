@@ -71,9 +71,11 @@ dependencies {
     implementation("org.apache.commons:commons-csv:1.11.0")
 
     // Testing
+    testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.bundles.testing)
     testImplementation(libs.spring.boot.starter.test)
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation(libs.postgresql)  // PostgreSQL JDBC driver for Testcontainers
 
     // Testcontainers for integration tests
     testImplementation(libs.bundles.testcontainers)

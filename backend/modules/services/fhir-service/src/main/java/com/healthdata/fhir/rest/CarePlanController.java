@@ -31,6 +31,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * REST Controller for FHIR CarePlan resource.
@@ -48,6 +50,7 @@ public class CarePlanController {
 
     private final CarePlanService carePlanService;
 
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
     @Operation(summary = "Create a new CarePlan resource")
     public ResponseEntity<String> createCarePlan(
@@ -61,6 +64,7 @@ public class CarePlanController {
         return ResponseEntity.status(HttpStatus.CREATED).body(JSON_PARSER.encodeResourceToString(created));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = "application/fhir+json")
     @Operation(summary = "Get a CarePlan resource by ID")
     public ResponseEntity<String> getCarePlan(
@@ -73,6 +77,7 @@ public class CarePlanController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
     @Operation(summary = "Update an existing CarePlan resource")
     public ResponseEntity<String> updateCarePlan(
@@ -87,6 +92,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(updated));
     }
 
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a CarePlan resource")
     public ResponseEntity<Void> deleteCarePlan(
@@ -101,6 +107,7 @@ public class CarePlanController {
 
     // ==================== Search Endpoints ====================
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = "application/fhir+json")
     @Operation(summary = "Search CarePlan resources")
     public ResponseEntity<String> searchCarePlans(
@@ -131,6 +138,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}", produces = "application/fhir+json")
     @Operation(summary = "Get all care plans for a patient")
     public ResponseEntity<String> getCarePlansByPatient(
@@ -143,6 +151,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/active", produces = "application/fhir+json")
     @Operation(summary = "Get active care plans for a patient")
     public ResponseEntity<String> getActiveCarePlans(
@@ -155,6 +164,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/primary", produces = "application/fhir+json")
     @Operation(summary = "Get primary (top-level) care plans for a patient")
     public ResponseEntity<String> getPrimaryCarePlans(
@@ -167,6 +177,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/with-activities", produces = "application/fhir+json")
     @Operation(summary = "Get care plans with activities for a patient")
     public ResponseEntity<String> getCarePlansWithActivities(
@@ -179,6 +190,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/encounter/{encounterId}", produces = "application/fhir+json")
     @Operation(summary = "Get care plans for an encounter")
     public ResponseEntity<String> getCarePlansByEncounter(
@@ -191,6 +203,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/condition/{conditionId}", produces = "application/fhir+json")
     @Operation(summary = "Get care plans addressing a specific condition")
     public ResponseEntity<String> getCarePlansByCondition(
@@ -203,6 +216,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/goal/{goalId}", produces = "application/fhir+json")
     @Operation(summary = "Get care plans with a specific goal")
     public ResponseEntity<String> getCarePlansByGoal(
@@ -215,6 +229,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{carePlanId}/children", produces = "application/fhir+json")
     @Operation(summary = "Get child care plans (part of a parent plan)")
     public ResponseEntity<String> getChildCarePlans(
@@ -227,6 +242,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/expiring", produces = "application/fhir+json")
     @Operation(summary = "Get care plans expiring within a date range")
     public ResponseEntity<String> getExpiringCarePlans(
@@ -242,6 +258,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/search", produces = "application/fhir+json")
     @Operation(summary = "Search care plans by text (title/description)")
     public ResponseEntity<String> searchByText(

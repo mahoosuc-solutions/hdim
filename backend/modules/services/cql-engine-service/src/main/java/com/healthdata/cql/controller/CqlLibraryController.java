@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * REST Controller for CQL Library Management
@@ -45,6 +47,7 @@ public class CqlLibraryController {
      * Requires ADMIN or SUPER_ADMIN role
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping
     public ResponseEntity<CqlLibrary> createLibrary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -73,6 +76,7 @@ public class CqlLibraryController {
      * Requires VIEWER, ANALYST, EVALUATOR, ADMIN, or SUPER_ADMIN role
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/{id}")
     public ResponseEntity<CqlLibrary> getLibrary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -90,6 +94,7 @@ public class CqlLibraryController {
      * Requires VIEWER, ANALYST, EVALUATOR, ADMIN, or SUPER_ADMIN role
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping
     public ResponseEntity<Page<CqlLibrary>> getAllLibraries(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -105,6 +110,7 @@ public class CqlLibraryController {
      * GET /api/v1/cql/libraries/by-name/{name}/version/{version}
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-name/{name}/version/{version}")
     public ResponseEntity<CqlLibrary> getLibraryByNameAndVersion(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -122,6 +128,7 @@ public class CqlLibraryController {
      * GET /api/v1/cql/libraries/by-name/{name}/latest
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-name/{name}/latest")
     public ResponseEntity<CqlLibrary> getLatestLibraryVersion(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -138,6 +145,7 @@ public class CqlLibraryController {
      * GET /api/v1/cql/libraries/by-name/{name}/versions
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-name/{name}/versions")
     public ResponseEntity<List<CqlLibrary>> getAllLibraryVersions(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -153,6 +161,7 @@ public class CqlLibraryController {
      * GET /api/v1/cql/libraries/by-status/{status}
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-status/{status}")
     public ResponseEntity<List<CqlLibrary>> getLibrariesByStatus(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -168,6 +177,7 @@ public class CqlLibraryController {
      * GET /api/v1/cql/libraries/active
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/active")
     public ResponseEntity<List<CqlLibrary>> getActiveLibraries(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -182,6 +192,7 @@ public class CqlLibraryController {
      * GET /api/v1/cql/libraries/search?q={searchTerm}
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/search")
     public ResponseEntity<List<CqlLibrary>> searchLibraries(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -197,6 +208,7 @@ public class CqlLibraryController {
      * PUT /api/v1/cql/libraries/{id}
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping("/{id}")
     public ResponseEntity<CqlLibrary> updateLibrary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -227,6 +239,7 @@ public class CqlLibraryController {
      * POST /api/v1/cql/libraries/{id}/activate
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/activate")
     public ResponseEntity<CqlLibrary> activateLibrary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -242,6 +255,7 @@ public class CqlLibraryController {
      * POST /api/v1/cql/libraries/{id}/retire
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/retire")
     public ResponseEntity<CqlLibrary> retireLibrary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -257,6 +271,7 @@ public class CqlLibraryController {
      * POST /api/v1/cql/libraries/{id}/compile
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/compile")
     public ResponseEntity<CqlLibrary> compileLibrary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -272,6 +287,7 @@ public class CqlLibraryController {
      * POST /api/v1/cql/libraries/{id}/validate
      */
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/validate")
     public ResponseEntity<Boolean> validateLibrary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -287,6 +303,7 @@ public class CqlLibraryController {
      * DELETE /api/v1/cql/libraries/{id}
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteLibrary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -302,6 +319,7 @@ public class CqlLibraryController {
      * GET /api/v1/cql/libraries/count
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/count")
     public ResponseEntity<Long> countLibraries(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -316,6 +334,7 @@ public class CqlLibraryController {
      * GET /api/v1/cql/libraries/count/by-status/{status}
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/count/by-status/{status}")
     public ResponseEntity<Long> countLibrariesByStatus(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -331,6 +350,7 @@ public class CqlLibraryController {
      * GET /api/v1/cql/libraries/exists?name={name}&version={version}
      */
     @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/exists")
     public ResponseEntity<Boolean> libraryExists(
             @RequestHeader("X-Tenant-ID") String tenantId,

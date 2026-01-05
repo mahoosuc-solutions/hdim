@@ -31,6 +31,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * REST Controller for FHIR DocumentReference resource.
@@ -48,6 +50,7 @@ public class DocumentReferenceController {
 
     private final DocumentReferenceService documentReferenceService;
 
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
     @Operation(summary = "Create a new DocumentReference resource")
     public ResponseEntity<String> createDocumentReference(
@@ -61,6 +64,7 @@ public class DocumentReferenceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(JSON_PARSER.encodeResourceToString(created));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = "application/fhir+json")
     @Operation(summary = "Get a DocumentReference resource by ID")
     public ResponseEntity<String> getDocumentReference(
@@ -73,6 +77,7 @@ public class DocumentReferenceController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
     @Operation(summary = "Update an existing DocumentReference resource")
     public ResponseEntity<String> updateDocumentReference(
@@ -87,6 +92,7 @@ public class DocumentReferenceController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(updated));
     }
 
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a DocumentReference resource")
     public ResponseEntity<Void> deleteDocumentReference(
@@ -101,6 +107,7 @@ public class DocumentReferenceController {
 
     // ==================== Search Endpoints ====================
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = "application/fhir+json")
     @Operation(summary = "Search DocumentReference resources")
     public ResponseEntity<String> searchDocuments(
@@ -133,6 +140,7 @@ public class DocumentReferenceController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}", produces = "application/fhir+json")
     @Operation(summary = "Get all document references for a patient")
     public ResponseEntity<String> getDocumentsByPatient(
@@ -145,6 +153,7 @@ public class DocumentReferenceController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/current", produces = "application/fhir+json")
     @Operation(summary = "Get current document references for a patient")
     public ResponseEntity<String> getCurrentDocuments(
@@ -157,6 +166,7 @@ public class DocumentReferenceController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/encounter/{encounterId}", produces = "application/fhir+json")
     @Operation(summary = "Get document references for an encounter")
     public ResponseEntity<String> getDocumentsByEncounter(
@@ -169,6 +179,7 @@ public class DocumentReferenceController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/type/{typeCode}", produces = "application/fhir+json")
     @Operation(summary = "Get document references by type for a patient")
     public ResponseEntity<String> getDocumentsByType(
@@ -182,6 +193,7 @@ public class DocumentReferenceController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/type/{typeCode}/latest", produces = "application/fhir+json")
     @Operation(summary = "Get latest document of a specific type for a patient")
     public ResponseEntity<String> getLatestDocumentByType(
@@ -195,6 +207,7 @@ public class DocumentReferenceController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/search", produces = "application/fhir+json")
     @Operation(summary = "Search documents by description text")
     public ResponseEntity<String> searchByDescription(
@@ -209,6 +222,7 @@ public class DocumentReferenceController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/date-range", produces = "application/fhir+json")
     @Operation(summary = "Get documents created within a date range")
     public ResponseEntity<String> getDocumentsByDateRange(

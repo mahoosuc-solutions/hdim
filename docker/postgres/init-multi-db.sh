@@ -53,6 +53,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE qrda_db;
     CREATE DATABASE ecr_db;
 
+    -- Demo Services
+    CREATE DATABASE healthdata_demo;
+
     -- Grant privileges to postgres user
     GRANT ALL PRIVILEGES ON DATABASE fhir_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE cql_db TO "$POSTGRES_USER";
@@ -82,6 +85,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE prior_auth_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE qrda_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE ecr_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE healthdata_demo TO "$POSTGRES_USER";
 EOSQL
 
 echo "Enabling PostgreSQL extensions..."

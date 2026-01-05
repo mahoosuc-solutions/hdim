@@ -26,6 +26,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * Quality Measure Controller - REST API for HEDIS quality measures
@@ -44,6 +46,7 @@ public class QualityMeasureController {
     private final ReportExportService exportService;
 
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/calculate", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<QualityMeasureResultDTO> calculateMeasure(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -58,6 +61,7 @@ public class QualityMeasureController {
     }
 
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/results", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<QualityMeasureResultDTO>> getPatientResults(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -79,6 +83,7 @@ public class QualityMeasureController {
     }
 
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/score", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MeasureCalculationService.QualityScore> getQualityScore(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -89,6 +94,7 @@ public class QualityMeasureController {
     }
 
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/report/patient", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<QualityReportService.QualityReport> getPatientQualityReport(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -99,6 +105,7 @@ public class QualityMeasureController {
     }
 
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/report/population", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<QualityReportService.PopulationQualityReport> getPopulationQualityReport(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -114,6 +121,7 @@ public class QualityMeasureController {
     }
 
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/_health", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> healthCheck() {
         return ResponseEntity.ok(Map.of("status", "UP", "service", "quality-measure-service", "timestamp", LocalDate.now().toString()));
@@ -131,6 +139,7 @@ public class QualityMeasureController {
      * @return Job ID for tracking progress
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/population/calculate", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> startPopulationCalculation(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -168,6 +177,7 @@ public class QualityMeasureController {
      * @return Job status details including progress, counts, and errors
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/population/jobs/{jobId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getJobStatus(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -219,6 +229,7 @@ public class QualityMeasureController {
      * @return List of all jobs (active and completed) for the tenant
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/population/jobs", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Map<String, Object>>> getAllJobs(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId
@@ -259,6 +270,7 @@ public class QualityMeasureController {
      * @return Success/failure response
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/population/jobs/{jobId}/cancel", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> cancelJob(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -305,6 +317,7 @@ public class QualityMeasureController {
      * Save patient quality report
      */
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/report/patient/save", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SavedReportEntity> savePatientReport(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -321,6 +334,7 @@ public class QualityMeasureController {
      * Save population quality report
      */
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/report/population/save", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SavedReportEntity> savePopulationReport(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -341,6 +355,7 @@ public class QualityMeasureController {
      * Get all saved reports for a tenant (optionally filtered by type)
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<SavedReportEntity>> getSavedReports(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -360,6 +375,7 @@ public class QualityMeasureController {
      * Get a saved report by ID
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports/{reportId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SavedReportEntity> getSavedReport(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -384,6 +400,7 @@ public class QualityMeasureController {
      * Delete a saved report
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping(value = "/reports/{reportId}")
     public ResponseEntity<Void> deleteSavedReport(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -410,6 +427,7 @@ public class QualityMeasureController {
      * Export report to CSV
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports/{reportId}/export/csv", produces = "text/csv")
     public ResponseEntity<byte[]> exportReportToCsv(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -447,6 +465,7 @@ public class QualityMeasureController {
      * Export report to Excel
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports/{reportId}/export/excel")
     public ResponseEntity<byte[]> exportReportToExcel(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,

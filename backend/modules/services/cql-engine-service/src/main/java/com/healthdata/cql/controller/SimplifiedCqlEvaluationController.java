@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * Simplified CQL Evaluation Controller
@@ -72,6 +74,7 @@ public class SimplifiedCqlEvaluationController {
      * X-Tenant-ID: test-tenant
      */
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> evaluateCql(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -136,6 +139,7 @@ public class SimplifiedCqlEvaluationController {
      *
      * @return JSON array of available measures with hasCqlLibrary flag
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/measures", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> getAvailableMeasures(
             @RequestHeader(value = "X-Tenant-ID", defaultValue = "default") String tenantId,
@@ -192,6 +196,7 @@ public class SimplifiedCqlEvaluationController {
      * @param measureId The HEDIS measure ID (e.g., "CDC", "CBP")
      * @return Measure details or 404 if not found
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/measures/{measureId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> getMeasureDetails(
             @PathVariable @NotBlank(message = "Measure ID is required") String measureId) {
@@ -228,6 +233,7 @@ public class SimplifiedCqlEvaluationController {
      * @param measureId The HEDIS measure ID
      * @return Boolean indicating if measure exists
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/measures/{measureId}/exists", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> measureExists(
             @PathVariable @NotBlank(message = "Measure ID is required") String measureId) {

@@ -50,8 +50,13 @@ public class CommunityResourceEntity {
     private String hoursOfOperation;
     private Double latitude;
     private Double longitude;
+
+    @Column(name = "accepts_walk_ins", nullable = false)
     private boolean acceptsWalkIns;
+
+    @Column(name = "requires_referral", nullable = false)
     private boolean requiresReferral;
+
     private String language;
 
     @Column(nullable = false, updatable = false)

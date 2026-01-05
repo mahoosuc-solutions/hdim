@@ -1,0 +1,43 @@
+{
+  "deployment": {
+    "environment": "test",
+    "apiUrl": "http://localhost:3000",
+    "database": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "hdim",
+      "user": "hdim_user"
+    }
+  },
+  "validation": {
+    "smokeTier": {
+      "enabled": true,
+      "timeout": 300000,
+      "criticalTests": [
+        "deployment-health",
+        "database-connectivity",
+        "api-accessibility"
+      ]
+    },
+    "functionalTier": {
+      "enabled": true,
+      "timeout": 1800000,
+      "coverage": "comprehensive"
+    },
+    "performanceTier": {
+      "enabled": true,
+      "timeout": 3600000,
+      "loadProfile": {
+        "concurrentTenants": 10,
+        "requestsPerTenant": 100,
+        "rampUpTime": 60000
+      }
+    }
+  },
+  "reporting": {
+    "outputDir": "./test-harness/validation/reports",
+    "formats": ["html", "json", "junit"],
+    "includeTimestamps": true,
+    "includeMetrics": true
+  }
+}

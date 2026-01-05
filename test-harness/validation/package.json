@@ -1,0 +1,39 @@
+{
+  "name": "hdim-deployment-validation",
+  "version": "1.0.0",
+  "description": "HDIM Deployment Validation Test Harness",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:smoke": "jest --testPathPattern=smoke-tests",
+    "test:functional": "jest --testPathPattern=\"(multi-tenant-isolation|api-contracts|database-integrity)\"",
+    "test:integration": "jest --testPathPattern=service-integration",
+    "test:performance": "jest --testPathPattern=performance-load",
+    "test:all": "./run-validation.sh --tier all",
+    "test:watch": "jest --watch"
+  },
+  "keywords": [
+    "hdim",
+    "validation",
+    "testing",
+    "healthcare",
+    "deployment"
+  ],
+  "author": "HDIM Team",
+  "license": "ISC",
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.19",
+    "@types/pg": "^8.11.2",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "axios": "^1.6.7",
+    "dotenv": "^16.4.5",
+    "pg": "^8.11.3"
+  }
+}

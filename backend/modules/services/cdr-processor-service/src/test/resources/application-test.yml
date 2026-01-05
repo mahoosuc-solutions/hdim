@@ -1,10 +1,18 @@
 # JWT Authentication Configuration for Tests
+# Note: Two JWT config classes exist - JwtConfig (prefix: jwt) and SecurityProperties (prefix: healthdata.security)
 jwt:
   secret: test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
-  access-token-expiration: 1h
-  refresh-token-expiration: 1d
+  access-token-expiration: 15m
+  refresh-token-expiration: 7d
   issuer: healthdata-in-motion-test
   audience: healthdata-api-test
+
+healthdata:
+  security:
+    jwt:
+      secret: test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+      expiration: 1h
+      issuer: healthdata-in-motion-test
 
 
 spring:

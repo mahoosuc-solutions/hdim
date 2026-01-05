@@ -1,38 +1,24 @@
 package com.healthdata.patient.config;
 
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
-import io.micrometer.core.instrument.MeterRegistry;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Bean;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Configuration;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Profile;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.core.annotation.Order;
-import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.web.SecurityFilterChain;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.web.cors.CorsConfiguration;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.web.cors.CorsConfigurationSource;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import java.util.Arrays;
-import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * Patient Service Security Configuration
@@ -61,6 +47,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  * @see TrustedTenantAccessFilter
  */
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true)
 public class PatientSecurityConfig {
 
     @Value("${gateway.auth.signing-secret:}")

@@ -1,0 +1,273 @@
+package com.healthdata.cms.auth;
+
+import com.healthdata.cms.dto.OAuth2ErrorResponse;
+import com.healthdata.cms.dto.OAuth2TokenRequest;
+import com.healthdata.cms.dto.OAuth2TokenResponse;
+import com.healthdata.cms.exception.CmsApiException;
+import com.healthdata.cms.model.CmsApiProvider;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * OAuth2 Token Manager for CMS API Authentication
+ *
+ * Manages OAuth2 client credentials flow for CMS API integrations.
+ * Implements RFC 6749 Section 4.4 (Client Credentials Grant).
+ *
+ * Features:
+ * - Token caching with TTL-based expiry
+ * - Automatic token refresh (50-minute interval for 60-minute tokens)
+ * - Support for multiple CMS API providers
+ * - Resilience and retry logic
+ * - Error handling with CMS-specific error responses
+ */
+@Slf4j
+@Component
+public class OAuth2Manager {
+
+    @Value("${cms.oauth2.client-id:}")
+    private String clientId;
+
+    @Value("${cms.oauth2.client-secret:}")
+    private String clientSecret;
+
+    @Value("${cms.oauth2.token-endpoint:https://auth.cms.gov/oauth/token}")
+    private String tokenEndpoint;
+
+    @Value("${cms.oauth2.scopes:beneficiary-claims}")
+    private String scopes;
+
+    @Value("${cms.oauth2.token-refresh-interval:3000000}")
+    private Long tokenRefreshIntervalMs; // 50 minutes in ms
+
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Map<CmsApiProvider, TokenInfo> tokenCache = new HashMap<>();
+
+    public OAuth2Manager(@Qualifier("oauth2RestTemplate") RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    /**
+     * Get valid access token for a CMS API provider
+     * Returns cached token if valid, otherwise refreshes
+     */
+    @Cacheable(value = "cms-tokens", key = "#provider.id", unless = "#result == null")
+    public String getAccessToken(CmsApiProvider provider) {
+        log.debug("Fetching access token for provider: {}", provider.getDisplayName());
+
+        TokenInfo cachedToken = tokenCache.get(provider);
+
+        if (cachedToken != null && isTokenValid(cachedToken)) {
+            log.debug("Using cached token for provider: {}", provider.getDisplayName());
+            return cachedToken.getAccessToken();
+        }
+
+        return refreshToken(provider);
+    }
+
+    /**
+     * Refresh token for a CMS API provider
+     * Implements OAuth2 client credentials flow (RFC 6749 Section 4.4)
+     */
+    public String refreshToken(CmsApiProvider provider) {
+        log.info("Refreshing OAuth2 token for provider: {}", provider.getDisplayName());
+
+        try {
+            // Validate credentials are configured
+            if (clientId == null || clientId.isEmpty() || clientSecret == null || clientSecret.isEmpty()) {
+                throw new IllegalStateException(
+                    "CMS OAuth2 credentials not configured. Set cms.oauth2.client-id and cms.oauth2.client-secret"
+                );
+            }
+
+            // Build token request
+            OAuth2TokenRequest tokenRequest =
+                OAuth2TokenRequest.clientCredentials(clientId, clientSecret, scopes);
+
+            if (!tokenRequest.isValid()) {
+                throw new IllegalArgumentException("Invalid OAuth2 token request");
+            }
+
+            // Call token endpoint
+            ResponseEntity<OAuth2TokenResponse> response =
+                restTemplate.postForEntity(tokenEndpoint, tokenRequest, OAuth2TokenResponse.class);
+
+            // Validate response
+            if (response.getStatusCode() != HttpStatus.OK) {
+                throw new CmsApiException(
+                    "Failed to obtain OAuth2 token: " + response.getStatusCode(),
+                    provider,
+                    "token_error",
+                    response.getStatusCodeValue()
+                );
+            }
+
+            OAuth2TokenResponse tokenResponse = response.getBody();
+            if (tokenResponse == null || !tokenResponse.isValid()) {
+                throw new CmsApiException(
+                    "Invalid OAuth2 token response from CMS",
+                    provider,
+                    "invalid_token_response",
+                    200
+                );
+            }
+
+            // Cache token
+            TokenInfo tokenInfo = new TokenInfo(
+                tokenResponse.getAccessToken(),
+                Instant.ofEpochMilli(tokenResponse.getExpirationTimeMs()),
+                provider
+            );
+
+            tokenCache.put(provider, tokenInfo);
+            log.info("Token refreshed successfully for provider: {}. Expires in {} seconds",
+                provider.getDisplayName(), tokenResponse.getExpiresIn());
+
+            return tokenResponse.getAccessToken();
+
+        } catch (HttpClientErrorException e) {
+            log.error("HTTP error refreshing token for provider {}: {} - {}",
+                provider.getDisplayName(), e.getStatusCode(), e.getMessage());
+
+            // Try to parse error response
+            try {
+                OAuth2ErrorResponse errorResponse =
+                    objectMapper.readValue(e.getResponseBodyAsString(), OAuth2ErrorResponse.class);
+
+                throw new CmsApiException(
+                    "OAuth2 token error: " + errorResponse.getErrorMessage(),
+                    provider,
+                    errorResponse.getError(),
+                    e.getStatusCode().value(),
+                    e
+                );
+            } catch (Exception parseError) {
+                throw new CmsApiException(
+                    "Failed to refresh token for " + provider.getDisplayName(),
+                    provider,
+                    "http_error",
+                    e.getStatusCode().value(),
+                    e
+                );
+            }
+
+        } catch (ResourceAccessException e) {
+            log.error("Connection error refreshing token for provider {}: {}",
+                provider.getDisplayName(), e.getMessage());
+            throw new CmsApiException(
+                "Connection error when refreshing token: " + e.getMessage(),
+                provider,
+                "connection_error",
+                -1,
+                e
+            );
+
+        } catch (Exception e) {
+            log.error("Unexpected error refreshing token for provider: {}", provider.getDisplayName(), e);
+            throw new CmsApiException(
+                "Unexpected error refreshing token: " + e.getMessage(),
+                provider,
+                "unexpected_error",
+                -1,
+                e
+            );
+        }
+    }
+
+    /**
+     * Check if token is still valid
+     * Considers token expired if less than 5 minutes remaining
+     */
+    private boolean isTokenValid(TokenInfo tokenInfo) {
+        long expiresInMs = tokenInfo.getExpiresAt().toEpochMilli() - System.currentTimeMillis();
+        long bufferMs = 5 * 60 * 1000; // 5-minute buffer
+        return expiresInMs > bufferMs;
+    }
+
+    /**
+     * Scheduled task to proactively refresh tokens
+     * Runs every 50 minutes to refresh 60-minute tokens
+     */
+    @Scheduled(fixedRateString = "${cms.oauth2.token-refresh-interval:3000000}")
+    @CacheEvict(value = "cms-tokens", allEntries = true)
+    public void proactiveTokenRefresh() {
+        log.info("Starting proactive token refresh for all CMS API providers");
+
+        for (CmsApiProvider provider : CmsApiProvider.values()) {
+            try {
+                refreshToken(provider);
+            } catch (Exception e) {
+                log.warn("Failed to proactively refresh token for {}: {}",
+                    provider.getDisplayName(), e.getMessage());
+            }
+        }
+
+        log.info("Proactive token refresh completed");
+    }
+
+    /**
+     * Get token information for a specific provider
+     */
+    public TokenInfo getTokenInfo(CmsApiProvider provider) {
+        return tokenCache.get(provider);
+    }
+
+    /**
+     * Clear all cached tokens (useful for testing or forced refresh)
+     */
+    public void clearAllTokens() {
+        log.info("Clearing all cached OAuth2 tokens");
+        tokenCache.clear();
+    }
+
+    /**
+     * Clear token for specific provider
+     */
+    public void clearToken(CmsApiProvider provider) {
+        log.info("Clearing cached token for provider: {}", provider.getDisplayName());
+        tokenCache.remove(provider);
+    }
+
+    /**
+     * Inner class to hold token information
+     */
+    public static class TokenInfo {
+        private final String accessToken;
+        private final Instant expiresAt;
+        private final CmsApiProvider provider;
+
+        public TokenInfo(String accessToken, Instant expiresAt, CmsApiProvider provider) {
+            this.accessToken = accessToken;
+            this.expiresAt = expiresAt;
+            this.provider = provider;
+        }
+
+        public String getAccessToken() {
+            return accessToken;
+        }
+
+        public Instant getExpiresAt() {
+            return expiresAt;
+        }
+
+        public CmsApiProvider getProvider() {
+            return provider;
+        }
+    }
+}

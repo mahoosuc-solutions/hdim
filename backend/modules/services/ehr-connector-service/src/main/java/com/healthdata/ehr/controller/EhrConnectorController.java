@@ -21,6 +21,8 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * REST API controller for EHR connector operations.
@@ -37,6 +39,7 @@ public class EhrConnectorController {
     private final EhrConnectionManager connectionManager;
     private final EhrSyncService syncService;
 
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping
     @Operation(summary = "Register new EHR connection",
             description = "Creates and initializes a new connection to an EHR system")
@@ -59,6 +62,7 @@ public class EhrConnectorController {
                 });
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping
     @Operation(summary = "List all connections",
             description = "Retrieves all active EHR connections for the tenant")
@@ -68,6 +72,7 @@ public class EhrConnectorController {
         return ResponseEntity.ok(connectionIds);
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/{connectionId}/status")
     @Operation(summary = "Get connection status",
             description = "Retrieves the current status and health of an EHR connection")
@@ -85,6 +90,7 @@ public class EhrConnectorController {
                 });
     }
 
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{connectionId}/test")
     @Operation(summary = "Test connection",
             description = "Tests the connection to the EHR system and returns status")
@@ -103,6 +109,7 @@ public class EhrConnectorController {
                 });
     }
 
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{connectionId}/sync")
     @Operation(summary = "Trigger data synchronization",
             description = "Initiates data sync for a patient from the EHR system")
@@ -136,6 +143,7 @@ public class EhrConnectorController {
                 });
     }
 
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{connectionId}")
     @Operation(summary = "Remove connection",
             description = "Disconnects and removes an EHR connection")

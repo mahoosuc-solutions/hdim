@@ -76,13 +76,13 @@ backend:
       url: ${QUALITY_MEASURE_URL:http://quality-measure-service:8087}
       timeout: 30000
     fhir:
-      url: ${FHIR_SERVICE_URL:http://fhir-service:8083}
+      url: ${FHIR_SERVICE_URL:http://fhir-service:8085}
       timeout: 30000
     patient:
       url: ${PATIENT_SERVICE_URL:http://patient-service:8084}
       timeout: 30000
     care-gap:
-      url: ${CARE_GAP_URL:http://care-gap-service:8085}
+      url: ${CARE_GAP_URL:http://care-gap-service:8086}
       timeout: 30000
 
 # Gateway Feature Flags

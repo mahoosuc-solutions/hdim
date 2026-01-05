@@ -21,6 +21,8 @@ import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * REST Controller for CQL Evaluation Management
@@ -51,6 +53,7 @@ public class CqlEvaluationController {
      * POST /api/v1/cql/evaluations
      */
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping
     public ResponseEntity<CqlEvaluation> createAndExecuteEvaluation(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -69,6 +72,7 @@ public class CqlEvaluationController {
      * POST /api/v1/cql/evaluations/{id}/execute
      */
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/execute")
     public ResponseEntity<CqlEvaluation> executeEvaluation(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -84,6 +88,7 @@ public class CqlEvaluationController {
      * GET /api/v1/cql/evaluations
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping
     public ResponseEntity<Page<CqlEvaluation>> getAllEvaluations(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -99,6 +104,7 @@ public class CqlEvaluationController {
      * GET /api/v1/cql/evaluations/{id}
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/{id}")
     public ResponseEntity<CqlEvaluation> getEvaluation(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -115,6 +121,7 @@ public class CqlEvaluationController {
      * GET /api/v1/cql/evaluations/patient/{patientId}
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}")
     public ResponseEntity<Page<CqlEvaluation>> getEvaluationsForPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -132,6 +139,7 @@ public class CqlEvaluationController {
      * GET /api/v1/cql/evaluations/library/{libraryId}
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/library/{libraryId}")
     public ResponseEntity<Page<CqlEvaluation>> getEvaluationsForLibrary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -149,6 +157,7 @@ public class CqlEvaluationController {
      * GET /api/v1/cql/evaluations/patient/{patientId}/library/{libraryId}/latest
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/library/{libraryId}/latest")
     public ResponseEntity<CqlEvaluation> getLatestEvaluationForPatientAndLibrary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -167,6 +176,7 @@ public class CqlEvaluationController {
      * GET /api/v1/cql/evaluations/by-status/{status}
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-status/{status}")
     public ResponseEntity<Page<CqlEvaluation>> getEvaluationsByStatus(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -184,6 +194,7 @@ public class CqlEvaluationController {
      * GET /api/v1/cql/evaluations/date-range?start={start}&end={end}
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/date-range")
     public ResponseEntity<List<CqlEvaluation>> getEvaluationsByDateRange(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -201,6 +212,7 @@ public class CqlEvaluationController {
      * GET /api/v1/cql/evaluations/patient/{patientId}/date-range?start={start}&end={end}
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/date-range")
     public ResponseEntity<List<CqlEvaluation>> getEvaluationsForPatientByDateRange(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -220,6 +232,7 @@ public class CqlEvaluationController {
      * GET /api/v1/cql/evaluations/patient/{patientId}/successful
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/successful")
     public ResponseEntity<List<CqlEvaluation>> getSuccessfulEvaluationsForPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -237,6 +250,7 @@ public class CqlEvaluationController {
      * POST /api/v1/cql/evaluations/{id}/retry
      */
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/retry")
     public ResponseEntity<CqlEvaluation> retryEvaluation(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -252,6 +266,7 @@ public class CqlEvaluationController {
      * POST /api/v1/cql/evaluations/batch
      */
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/batch")
     public ResponseEntity<List<CqlEvaluation>> batchEvaluate(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -271,6 +286,7 @@ public class CqlEvaluationController {
      * GET /api/v1/cql/evaluations/failed-for-retry?hoursBack={hours}
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/failed-for-retry")
     public ResponseEntity<List<CqlEvaluation>> getFailedEvaluationsForRetry(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -288,6 +304,7 @@ public class CqlEvaluationController {
      * GET /api/v1/cql/evaluations/count/by-status/{status}
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/count/by-status/{status}")
     public ResponseEntity<Long> countEvaluationsByStatus(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -303,6 +320,7 @@ public class CqlEvaluationController {
      * GET /api/v1/cql/evaluations/count/library/{libraryId}
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/count/library/{libraryId}")
     public ResponseEntity<Long> countEvaluationsForLibrary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -318,6 +336,7 @@ public class CqlEvaluationController {
      * GET /api/v1/cql/evaluations/count/patient/{patientId}
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/count/patient/{patientId}")
     public ResponseEntity<Long> countEvaluationsForPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -333,6 +352,7 @@ public class CqlEvaluationController {
      * GET /api/v1/cql/evaluations/avg-duration/library/{libraryId}
      */
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/avg-duration/library/{libraryId}")
     public ResponseEntity<Double> getAverageDurationForLibrary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -348,6 +368,7 @@ public class CqlEvaluationController {
      * DELETE /api/v1/cql/evaluations/old?daysToRetain={days}
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/old")
     public ResponseEntity<Void> deleteOldEvaluations(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,

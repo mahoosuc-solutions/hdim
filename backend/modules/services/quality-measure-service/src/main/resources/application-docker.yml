@@ -175,6 +175,10 @@ springdoc:
     tags-sorter: alpha
   show-actuator: true
 
+# OpenTelemetry Tracing Configuration
+tracing:
+  url: http://jaeger:4318/v1/traces
+
 # Logging Configuration
 logging:
   level:

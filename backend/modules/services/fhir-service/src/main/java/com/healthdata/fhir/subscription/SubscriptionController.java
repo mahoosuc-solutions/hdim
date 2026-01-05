@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * REST Controller for FHIR Subscription management.
@@ -45,6 +47,7 @@ public class SubscriptionController {
         @ApiResponse(responseCode = "400", description = "Invalid subscription request"),
         @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping
     public ResponseEntity<FhirSubscription> createSubscription(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -85,6 +88,7 @@ public class SubscriptionController {
         @ApiResponse(responseCode = "200", description = "Subscription found"),
         @ApiResponse(responseCode = "404", description = "Subscription not found")
     })
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/{id}")
     public ResponseEntity<FhirSubscription> getSubscription(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -105,6 +109,7 @@ public class SubscriptionController {
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "List of subscriptions")
     })
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping
     public ResponseEntity<List<FhirSubscription>> getSubscriptions(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -127,6 +132,7 @@ public class SubscriptionController {
     /**
      * Update subscription.
      */
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping("/{id}")
     public ResponseEntity<FhirSubscription> updateSubscription(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -154,6 +160,7 @@ public class SubscriptionController {
         @ApiResponse(responseCode = "204", description = "Subscription deleted successfully"),
         @ApiResponse(responseCode = "404", description = "Subscription not found")
     })
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSubscription(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -174,6 +181,7 @@ public class SubscriptionController {
         @ApiResponse(responseCode = "200", description = "Subscription activated"),
         @ApiResponse(responseCode = "404", description = "Subscription not found")
     })
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/$activate")
     public ResponseEntity<Void> activateSubscription(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -197,6 +205,7 @@ public class SubscriptionController {
         @ApiResponse(responseCode = "200", description = "Subscription deactivated"),
         @ApiResponse(responseCode = "404", description = "Subscription not found")
     })
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/$deactivate")
     public ResponseEntity<Void> deactivateSubscription(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
@@ -222,6 +231,7 @@ public class SubscriptionController {
         @ApiResponse(responseCode = "200", description = "Subscription status retrieved"),
         @ApiResponse(responseCode = "404", description = "Subscription not found")
     })
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/{id}/$status")
     public ResponseEntity<SubscriptionStatusResponse> getStatus(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)

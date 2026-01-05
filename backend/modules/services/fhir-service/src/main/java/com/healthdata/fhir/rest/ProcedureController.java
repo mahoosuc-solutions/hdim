@@ -15,6 +15,8 @@ import com.healthdata.fhir.service.ProcedureService;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 @RestController
 @RequestMapping("/fhir/Procedure")
@@ -33,6 +35,7 @@ public class ProcedureController {
      * Create a new Procedure resource
      * POST /fhir/Procedure
      */
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
     public ResponseEntity<String> createProcedure(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -55,6 +58,7 @@ public class ProcedureController {
      * Read a Procedure resource by ID
      * GET /fhir/Procedure/{id}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = "application/fhir+json")
     public ResponseEntity<String> getProcedure(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -71,6 +75,7 @@ public class ProcedureController {
      * Update a Procedure resource
      * PUT /fhir/Procedure/{id}
      */
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
     public ResponseEntity<String> updateProcedure(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -94,6 +99,7 @@ public class ProcedureController {
      * Delete a Procedure resource
      * DELETE /fhir/Procedure/{id}
      */
+    @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProcedure(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -111,6 +117,7 @@ public class ProcedureController {
      * Search Procedures by patient
      * GET /fhir/Procedure?patient={patientId}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = "application/fhir+json")
     public ResponseEntity<String> searchProcedures(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -149,6 +156,7 @@ public class ProcedureController {
      * Get completed procedures for a patient
      * GET /fhir/Procedure/completed?patient={patientId}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/completed", produces = "application/fhir+json")
     public ResponseEntity<String> getCompletedProcedures(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -167,6 +175,7 @@ public class ProcedureController {
      * Get surgical procedures for a patient
      * GET /fhir/Procedure/surgical?patient={patientId}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/surgical", produces = "application/fhir+json")
     public ResponseEntity<String> getSurgicalProcedures(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -185,6 +194,7 @@ public class ProcedureController {
      * Get diagnostic procedures for a patient
      * GET /fhir/Procedure/diagnostic?patient={patientId}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/diagnostic", produces = "application/fhir+json")
     public ResponseEntity<String> getDiagnosticProcedures(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -203,6 +213,7 @@ public class ProcedureController {
      * Get procedures with complications for a patient
      * GET /fhir/Procedure/with-complications?patient={patientId}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/with-complications", produces = "application/fhir+json")
     public ResponseEntity<String> getProceduresWithComplications(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -221,6 +232,7 @@ public class ProcedureController {
      * Check if patient has completed specific procedure
      * GET /fhir/Procedure/has-procedure?patient={patientId}&code={code}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/has-procedure", produces = "application/json")
     public ResponseEntity<String> hasCompletedProcedure(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -240,6 +252,7 @@ public class ProcedureController {
      * Check if patient has procedure in date range
      * GET /fhir/Procedure/has-procedure-in-range?patient={patientId}&date-start={start}&date-end={end}
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/has-procedure-in-range", produces = "application/json")
     public ResponseEntity<String> hasProcedureInDateRange(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -260,6 +273,7 @@ public class ProcedureController {
      * Health check endpoint
      * GET /fhir/Procedure/_health
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/_health")
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("{\"status\": \"UP\", \"service\": \"Procedure\"}");

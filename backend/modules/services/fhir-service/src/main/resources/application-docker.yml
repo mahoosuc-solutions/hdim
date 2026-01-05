@@ -3,6 +3,15 @@ server:
   port: 8083
 
 spring:
+  # Jackson configuration for HAPI FHIR objects with deeply nested structures
+  jackson:
+    # Use ISO-8601 date format
+    date-format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+    serialization:
+      # Don't fail on empty beans (FHIR lazy loading)
+      FAIL_ON_EMPTY_BEANS: false
+      # Don't indent output for performance
+      INDENT_OUTPUT: false
   datasource:
     url: jdbc:postgresql://postgres:5432/healthdata_fhir
     username: healthdata
@@ -84,6 +93,10 @@ management:
     export:
       prometheus:
         enabled: true
+
+# OpenTelemetry Tracing Configuration
+tracing:
+  url: http://jaeger:4318/v1/traces
 
 # Logging for Docker
 logging:

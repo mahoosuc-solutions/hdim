@@ -55,7 +55,7 @@ spring:
 # FHIR Server Configuration
 fhir:
   server:
-    url: http://fhir-service:8083/fhir
+    url: http://fhir-service:8085/fhir
 
 # Consent Service Configuration
 consent:
@@ -71,7 +71,7 @@ feign:
         readTimeout: 10000
         loggerLevel: basic
       fhir-service:
-        url: http://fhir-service:8083
+        url: http://fhir-service:8085
         connectTimeout: 5000
         readTimeout: 10000
       consent-service:
@@ -120,6 +120,10 @@ management:
       enabled: true
     diskspace:
       enabled: true
+
+# OpenTelemetry Tracing Configuration
+tracing:
+  url: http://jaeger:4318/v1/traces
 
 # Logging for Docker
 logging:

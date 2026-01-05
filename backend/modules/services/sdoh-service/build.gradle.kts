@@ -65,10 +65,12 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-aop")
 
     // Testing
+    testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.bundles.testing)
+    testImplementation(libs.postgresql)  // PostgreSQL JDBC driver for Testcontainers
     testImplementation("org.springframework.security:spring-security-test")
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)

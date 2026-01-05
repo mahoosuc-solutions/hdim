@@ -44,7 +44,7 @@ import com.healthdata.auth.context.ScopedTenant;
  * Provides CRUD operations for Patient resources following HL7 FHIR R4 specification.
  */
 @RestController
-@RequestMapping(value = "/fhir", produces = "application/fhir+json")
+@RequestMapping(produces = "application/fhir+json")
 @Tag(name = "Patient", description = "Patient demographics and administrative information")
 @SecurityRequirement(name = "smart-oauth2")
 public class PatientController {

@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * REST controller for HCC risk adjustment operations.
@@ -34,6 +36,7 @@ public class HccController {
     /**
      * Calculate RAF score for a patient.
      */
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/patient/{patientId}/calculate")
     @Operation(summary = "Calculate RAF score",
         description = "Calculates V24, V28, and blended RAF scores for a patient")
@@ -60,6 +63,7 @@ public class HccController {
     /**
      * Get patient HCC profile.
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/profile")
     @Operation(summary = "Get HCC profile",
         description = "Returns patient HCC profile with RAF scores and captured HCCs")
@@ -76,6 +80,7 @@ public class HccController {
     /**
      * Get ICD-10 to HCC crosswalk.
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/crosswalk")
     @Operation(summary = "Get HCC crosswalk",
         description = "Returns V24 and V28 HCC mappings for given ICD-10 codes")
@@ -88,6 +93,7 @@ public class HccController {
     /**
      * Get documentation gaps for a patient.
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/documentation-gaps")
     @Operation(summary = "Get documentation gaps",
         description = "Returns open documentation gaps that could improve RAF score")
@@ -105,6 +111,7 @@ public class HccController {
     /**
      * Get high-value opportunities across population.
      */
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/opportunities")
     @Operation(summary = "Get high-value opportunities",
         description = "Returns patients with highest potential RAF uplift")

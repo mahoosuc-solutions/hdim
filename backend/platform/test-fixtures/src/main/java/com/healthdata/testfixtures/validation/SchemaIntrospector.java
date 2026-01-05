@@ -20,19 +20,29 @@ import java.util.*;
 public class SchemaIntrospector {
 
     private final DataSource dataSource;
-    private static final String POSTGRESQL_CATALOG_NAME = "public";
+    private static final String DEFAULT_SCHEMA = "public";
 
     /**
-     * Get list of all tables in the schema.
+     * Get list of all tables in the default (public) schema.
      *
      * @return set of table names
      */
     public Set<String> getAllTables() {
+        return getAllTables(DEFAULT_SCHEMA);
+    }
+
+    /**
+     * Get list of all tables in the specified schema.
+     *
+     * @param schemaName the schema to search in
+     * @return set of table names
+     */
+    public Set<String> getAllTables(String schemaName) {
         Set<String> tables = new HashSet<>();
 
         try (Connection conn = dataSource.getConnection()) {
             DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet rs = metaData.getTables(conn.getCatalog(), POSTGRESQL_CATALOG_NAME, "%", new String[]{"TABLE"});
+            ResultSet rs = metaData.getTables(conn.getCatalog(), schemaName, "%", new String[]{"TABLE"});
 
             while (rs.next()) {
                 String tableName = rs.getString("TABLE_NAME");
@@ -40,43 +50,65 @@ public class SchemaIntrospector {
             }
             rs.close();
         } catch (SQLException e) {
-            log.error("Error introspecting tables", e);
+            log.error("Error introspecting tables in schema {}", schemaName, e);
         }
 
         return tables;
     }
 
     /**
-     * Check if a table exists.
+     * Check if a table exists in the default (public) schema.
      *
      * @param tableName the table name
      * @return true if table exists
      */
     public boolean tableExists(String tableName) {
+        return tableExists(tableName, DEFAULT_SCHEMA);
+    }
+
+    /**
+     * Check if a table exists in the specified schema.
+     *
+     * @param tableName the table name
+     * @param schemaName the schema to search in
+     * @return true if table exists
+     */
+    public boolean tableExists(String tableName, String schemaName) {
         try (Connection conn = dataSource.getConnection()) {
             DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet rs = metaData.getTables(conn.getCatalog(), POSTGRESQL_CATALOG_NAME, tableName, new String[]{"TABLE"});
+            ResultSet rs = metaData.getTables(conn.getCatalog(), schemaName, tableName, new String[]{"TABLE"});
             boolean exists = rs.next();
             rs.close();
             return exists;
         } catch (SQLException e) {
-            log.error("Error checking table existence: {}", tableName, e);
+            log.error("Error checking table existence: {}.{}", schemaName, tableName, e);
             return false;
         }
     }
 
     /**
-     * Get all columns for a table.
+     * Get all columns for a table in the default (public) schema.
      *
      * @param tableName the table name
      * @return map of column name to ColumnInfo
      */
     public Map<String, ColumnInfo> getTableColumns(String tableName) {
+        return getTableColumns(tableName, DEFAULT_SCHEMA);
+    }
+
+    /**
+     * Get all columns for a table in the specified schema.
+     *
+     * @param tableName the table name
+     * @param schemaName the schema to search in
+     * @return map of column name to ColumnInfo
+     */
+    public Map<String, ColumnInfo> getTableColumns(String tableName, String schemaName) {
         Map<String, ColumnInfo> columns = new LinkedHashMap<>();
 
         try (Connection conn = dataSource.getConnection()) {
             DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet rs = metaData.getColumns(conn.getCatalog(), POSTGRESQL_CATALOG_NAME, tableName, null);
+            ResultSet rs = metaData.getColumns(conn.getCatalog(), schemaName, tableName, null);
 
             while (rs.next()) {
                 String columnName = rs.getString("COLUMN_NAME");
@@ -98,24 +130,35 @@ public class SchemaIntrospector {
             }
             rs.close();
         } catch (SQLException e) {
-            log.error("Error introspecting columns for table: {}", tableName, e);
+            log.error("Error introspecting columns for table: {}.{}", schemaName, tableName, e);
         }
 
         return columns;
     }
 
     /**
-     * Get primary key columns for a table.
+     * Get primary key columns for a table in the default (public) schema.
      *
      * @param tableName the table name
      * @return set of column names that form the primary key
      */
     public Set<String> getPrimaryKeyColumns(String tableName) {
+        return getPrimaryKeyColumns(tableName, DEFAULT_SCHEMA);
+    }
+
+    /**
+     * Get primary key columns for a table in the specified schema.
+     *
+     * @param tableName the table name
+     * @param schemaName the schema to search in
+     * @return set of column names that form the primary key
+     */
+    public Set<String> getPrimaryKeyColumns(String tableName, String schemaName) {
         Set<String> pkColumns = new HashSet<>();
 
         try (Connection conn = dataSource.getConnection()) {
             DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet rs = metaData.getPrimaryKeys(conn.getCatalog(), POSTGRESQL_CATALOG_NAME, tableName);
+            ResultSet rs = metaData.getPrimaryKeys(conn.getCatalog(), schemaName, tableName);
 
             while (rs.next()) {
                 String columnName = rs.getString("COLUMN_NAME");
@@ -123,24 +166,35 @@ public class SchemaIntrospector {
             }
             rs.close();
         } catch (SQLException e) {
-            log.error("Error introspecting primary key for table: {}", tableName, e);
+            log.error("Error introspecting primary key for table: {}.{}", schemaName, tableName, e);
         }
 
         return pkColumns;
     }
 
     /**
-     * Get foreign key constraints for a table.
+     * Get foreign key constraints for a table in the default (public) schema.
      *
      * @param tableName the table name
      * @return list of ForeignKeyInfo
      */
     public List<ForeignKeyInfo> getForeignKeyConstraints(String tableName) {
+        return getForeignKeyConstraints(tableName, DEFAULT_SCHEMA);
+    }
+
+    /**
+     * Get foreign key constraints for a table in the specified schema.
+     *
+     * @param tableName the table name
+     * @param schemaName the schema to search in
+     * @return list of ForeignKeyInfo
+     */
+    public List<ForeignKeyInfo> getForeignKeyConstraints(String tableName, String schemaName) {
         List<ForeignKeyInfo> fks = new ArrayList<>();
 
         try (Connection conn = dataSource.getConnection()) {
             DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet rs = metaData.getImportedKeys(conn.getCatalog(), POSTGRESQL_CATALOG_NAME, tableName);
+            ResultSet rs = metaData.getImportedKeys(conn.getCatalog(), schemaName, tableName);
 
             while (rs.next()) {
                 ForeignKeyInfo fk = ForeignKeyInfo.builder()
@@ -154,24 +208,35 @@ public class SchemaIntrospector {
             }
             rs.close();
         } catch (SQLException e) {
-            log.error("Error introspecting foreign keys for table: {}", tableName, e);
+            log.error("Error introspecting foreign keys for table: {}.{}", schemaName, tableName, e);
         }
 
         return fks;
     }
 
     /**
-     * Get indexes for a table.
+     * Get indexes for a table in the default (public) schema.
      *
      * @param tableName the table name
      * @return list of IndexInfo
      */
     public List<IndexInfo> getIndexes(String tableName) {
+        return getIndexes(tableName, DEFAULT_SCHEMA);
+    }
+
+    /**
+     * Get indexes for a table in the specified schema.
+     *
+     * @param tableName the table name
+     * @param schemaName the schema to search in
+     * @return list of IndexInfo
+     */
+    public List<IndexInfo> getIndexes(String tableName, String schemaName) {
         List<IndexInfo> indexes = new ArrayList<>();
 
         try (Connection conn = dataSource.getConnection()) {
             DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet rs = metaData.getIndexInfo(conn.getCatalog(), POSTGRESQL_CATALOG_NAME, tableName, false, true);
+            ResultSet rs = metaData.getIndexInfo(conn.getCatalog(), schemaName, tableName, false, true);
 
             Map<String, IndexInfo.IndexInfoBuilder> indexBuilders = new LinkedHashMap<>();
 
@@ -193,19 +258,30 @@ public class SchemaIntrospector {
 
             indexBuilders.forEach((name, builder) -> indexes.add(builder.build()));
         } catch (SQLException e) {
-            log.error("Error introspecting indexes for table: {}", tableName, e);
+            log.error("Error introspecting indexes for table: {}.{}", schemaName, tableName, e);
         }
 
         return indexes;
     }
 
     /**
-     * Get unique constraints for a table.
+     * Get unique constraints for a table in the default (public) schema.
      *
      * @param tableName the table name
      * @return list of UniqueConstraintInfo
      */
     public List<UniqueConstraintInfo> getUniqueConstraints(String tableName) {
+        return getUniqueConstraints(tableName, DEFAULT_SCHEMA);
+    }
+
+    /**
+     * Get unique constraints for a table in the specified schema.
+     *
+     * @param tableName the table name
+     * @param schemaName the schema to search in
+     * @return list of UniqueConstraintInfo
+     */
+    public List<UniqueConstraintInfo> getUniqueConstraints(String tableName, String schemaName) {
         List<UniqueConstraintInfo> constraints = new ArrayList<>();
 
         try (Connection conn = dataSource.getConnection()) {
@@ -213,12 +289,13 @@ public class SchemaIntrospector {
             String sql = """
                     SELECT constraint_name, column_name
                     FROM information_schema.constraint_column_usage
-                    WHERE table_name = ? AND constraint_type = 'UNIQUE'
+                    WHERE table_schema = ? AND table_name = ? AND constraint_type = 'UNIQUE'
                     ORDER BY constraint_name, ordinal_position
                     """;
 
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, tableName);
+            stmt.setString(1, schemaName);
+            stmt.setString(2, tableName);
             ResultSet rs = stmt.executeQuery();
 
             Map<String, UniqueConstraintInfo.UniqueConstraintInfoBuilder> builders = new LinkedHashMap<>();
@@ -239,23 +316,35 @@ public class SchemaIntrospector {
             rs.close();
             stmt.close();
         } catch (SQLException e) {
-            log.debug("Could not introspect unique constraints (may not be supported): {}", tableName, e);
+            log.debug("Could not introspect unique constraints (may not be supported): {}.{}", schemaName, tableName, e);
         }
 
         return constraints;
     }
 
     /**
-     * Check if a column is auto-increment.
+     * Check if a column is auto-increment in the default (public) schema.
      *
      * @param tableName the table name
      * @param columnName the column name
      * @return true if column is auto-increment
      */
     public boolean isAutoIncrement(String tableName, String columnName) {
+        return isAutoIncrement(tableName, columnName, DEFAULT_SCHEMA);
+    }
+
+    /**
+     * Check if a column is auto-increment in the specified schema.
+     *
+     * @param tableName the table name
+     * @param columnName the column name
+     * @param schemaName the schema to search in
+     * @return true if column is auto-increment
+     */
+    public boolean isAutoIncrement(String tableName, String columnName, String schemaName) {
         try (Connection conn = dataSource.getConnection()) {
             DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet rs = metaData.getColumns(conn.getCatalog(), POSTGRESQL_CATALOG_NAME, tableName, columnName);
+            ResultSet rs = metaData.getColumns(conn.getCatalog(), schemaName, tableName, columnName);
 
             if (rs.next()) {
                 String isAutoIncrement = rs.getString("IS_AUTOINCREMENT");
@@ -264,7 +353,7 @@ public class SchemaIntrospector {
             }
             rs.close();
         } catch (SQLException e) {
-            log.error("Error checking auto-increment for column: {}.{}", tableName, columnName, e);
+            log.error("Error checking auto-increment for column: {}.{}.{}", schemaName, tableName, columnName, e);
         }
 
         return false;

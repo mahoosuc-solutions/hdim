@@ -17,6 +17,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 
 /**
  * SDOH Integration Service REST API Controller
@@ -36,6 +38,7 @@ public class SdohController {
     private final HealthEquityAnalyzer equityAnalyzer;
     private final SdohRiskCalculator riskCalculator;
 
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/screening/{patientId}")
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Submit SDOH screening for patient")
@@ -58,6 +61,7 @@ public class SdohController {
         return ResponseEntity.ok(assessment);
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/assessment/{patientId}")
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Get most recent SDOH assessment for patient")
@@ -70,6 +74,7 @@ public class SdohController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/z-codes/{patientId}")
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Get SDOH Z-codes for patient")
@@ -81,6 +86,7 @@ public class SdohController {
         return ResponseEntity.ok(diagnoses);
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/resources")
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Search community resources")
@@ -105,6 +111,7 @@ public class SdohController {
         return ResponseEntity.ok(resources);
     }
 
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/referral")
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Create resource referral for patient")
@@ -124,6 +131,7 @@ public class SdohController {
         return ResponseEntity.status(HttpStatus.CREATED).body(referral);
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/equity/report")
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Generate health equity analytics report")
@@ -140,6 +148,7 @@ public class SdohController {
         return ResponseEntity.ok(report);
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/risk/{patientId}")
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Get SDOH risk score for patient")
@@ -151,6 +160,7 @@ public class SdohController {
         return ResponseEntity.ok(scores);
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/referrals/{patientId}")
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Get resource referrals for patient")
@@ -162,6 +172,7 @@ public class SdohController {
         return ResponseEntity.ok(referrals);
     }
 
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping("/referral/{referralId}/status")
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Update referral status")
@@ -175,6 +186,7 @@ public class SdohController {
         return ResponseEntity.ok().build();
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/screening/questions")
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Get screening questionnaire")
@@ -191,6 +203,7 @@ public class SdohController {
         return ResponseEntity.ok(questions);
     }
 
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/_health")
     @Operation(summary = "Health check endpoint")
     public ResponseEntity<Map<String, String>> healthCheck() {

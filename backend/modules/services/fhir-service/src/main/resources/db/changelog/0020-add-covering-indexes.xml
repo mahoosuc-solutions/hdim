@@ -11,20 +11,22 @@
         - Observation queries by patient and date
         - Condition queries by patient and onset date
         These composite indexes eliminate index scans and reduce I/O operations.
+        Note: Using non-concurrent index creation for Liquibase compatibility.
+        For production migrations on large tables, consider manual CONCURRENTLY with runInTransaction=false.
         </comment>
 
         <sql>
-            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_patients_tenant_resource
+            CREATE INDEX IF NOT EXISTS idx_patients_tenant_resource
             ON patients(tenant_id, resource_type, id);
         </sql>
 
         <sql>
-            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_observations_patient_tenant
-            ON observations(patient_id, tenant_id, effective_date DESC);
+            CREATE INDEX IF NOT EXISTS idx_observations_patient_tenant
+            ON observations(patient_id, tenant_id, effective_datetime DESC);
         </sql>
 
         <sql>
-            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conditions_patient_tenant
+            CREATE INDEX IF NOT EXISTS idx_conditions_patient_tenant
             ON conditions(patient_id, tenant_id, onset_date DESC);
         </sql>
 

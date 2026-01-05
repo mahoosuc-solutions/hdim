@@ -26,8 +26,13 @@ import java.util.UUID;
  * - Proper expiration handling
  * - Exception handling for all JWT operations
  */
+/**
+ * @deprecated This service is disabled for gateway-trust authentication.
+ * JWT validation is handled by the gateway. This service remains for reference only.
+ */
+@Deprecated
 @Slf4j
-@Service
+// @Service - Disabled: CQL engine uses gateway-trust authentication
 @RequiredArgsConstructor
 public class JwtTokenService {
 

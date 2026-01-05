@@ -1,10 +1,23 @@
 <div class="care-gap-manager-container">
   <!-- Header -->
   <div class="page-header">
-    <h1 class="page-title">
-      <mat-icon>warning</mat-icon>
-      Care Gap Management
-    </h1>
+    <div class="header-content">
+      <h1 class="page-title">
+        <mat-icon>warning</mat-icon>
+        Care Gap Management
+      </h1>
+      <p class="subtitle">{{ summary.totalGaps }} care gaps across {{ getUniquePatientCount() }} patients</p>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button (click)="toggleViewMode()">
+        <mat-icon>{{ viewMode() === 'table' ? 'view_module' : 'table_chart' }}</mat-icon>
+        {{ viewMode() === 'table' ? 'By Measure' : 'Table View' }}
+      </button>
+      <button mat-raised-button color="primary" (click)="createOutreachCampaign()">
+        <mat-icon>campaign</mat-icon>
+        Create Outreach Campaign
+      </button>
+    </div>
   </div>
 
   <!-- Summary Cards -->
@@ -47,33 +60,43 @@
     </mat-card>
   </div>
 
-  <!-- Gap Type Distribution -->
-  <mat-card class="distribution-card">
+  <!-- Intervention Recommendations Section -->
+  <mat-card class="interventions-card">
     <mat-card-header>
-      <mat-card-title>Care Gaps by Type</mat-card-title>
+      <mat-card-title>Recommended Interventions</mat-card-title>
+      <mat-card-subtitle>Based on historical success rates and ROI</mat-card-subtitle>
     </mat-card-header>
     <mat-card-content>
-      <div class="gap-type-chips">
-        <mat-chip class="gap-type-chip">
-          <mat-icon>health_and_safety</mat-icon>
-          Screening: {{ summary.byType.screening || 0 }}
-        </mat-chip>
-        <mat-chip class="gap-type-chip">
-          <mat-icon>medication</mat-icon>
-          Medication: {{ summary.byType.medication || 0 }}
-        </mat-chip>
-        <mat-chip class="gap-type-chip">
-          <mat-icon>event_repeat</mat-icon>
-          Follow-up: {{ summary.byType.followup || 0 }}
-        </mat-chip>
-        <mat-chip class="gap-type-chip">
-          <mat-icon>biotech</mat-icon>
-          Lab: {{ summary.byType.lab || 0 }}
-        </mat-chip>
-        <mat-chip class="gap-type-chip">
-          <mat-icon>psychology</mat-icon>
-          Assessment: {{ summary.byType.assessment || 0 }}
-        </mat-chip>
+      <div class="intervention-cards">
+        @for (intervention of interventionRecommendations; track intervention.id) {
+          <div class="intervention-rec-card" [style.border-left-color]="intervention.color">
+            <div class="intervention-icon" [style.background-color]="intervention.color">
+              <mat-icon>{{ intervention.icon }}</mat-icon>
+            </div>
+            <div class="intervention-content">
+              <h4>{{ intervention.name }}</h4>
+              <p>{{ intervention.description }}</p>
+              <div class="intervention-metrics">
+                <div class="metric">
+                  <span class="metric-value">{{ intervention.successRate }}%</span>
+                  <span class="metric-label">Success Rate</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-value">{{ formatCurrency(intervention.avgCost) }}</span>
+                  <span class="metric-label">Avg Cost</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-value">{{ intervention.avgTimeToClose }}d</span>
+                  <span class="metric-label">Avg Close Time</span>
+                </div>
+                <div class="metric roi">
+                  <span class="metric-value">{{ formatROI(intervention.roi) }}</span>
+                  <span class="metric-label">ROI</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
       </div>
     </mat-card-content>
   </mat-card>
@@ -179,8 +202,8 @@
     </mat-card>
   }
 
-  <!-- Care Gaps Table -->
-  @if (!loading && !error) {
+  <!-- Table View -->
+  @if (!loading && !error && viewMode() === 'table') {
     <mat-card class="table-card">
       <mat-card-content>
         <!-- Bulk Actions Toolbar -->
@@ -190,11 +213,15 @@
             <span>{{ getSelectionCount() }} care gap(s) selected</span>
           </div>
           <div class="bulk-actions">
+            <button mat-raised-button color="primary" (click)="generateOutreachForSelected()">
+              <mat-icon>campaign</mat-icon>
+              Generate Outreach
+            </button>
             <app-loading-button
               text="Close Selected"
               icon="check_circle"
               variant="raised"
-              color="primary"
+              color="accent"
               ariaLabel="Close selected care gaps"
               (buttonClick)="bulkCloseGaps()">
             </app-loading-button>
@@ -248,7 +275,9 @@
             <ng-container matColumnDef="patientName">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Patient Name</th>
               <td mat-cell *matCellDef="let gap">
-                <strong>{{ gap.patientName }}</strong>
+                <a class="patient-link" (click)="openPatientPanel(gap); $event.stopPropagation()">
+                  <strong>{{ gap.patientName }}</strong>
+                </a>
               </td>
             </ng-container>
 
@@ -290,7 +319,9 @@
             <!-- Measure Name Column -->
             <ng-container matColumnDef="measureName">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Measure</th>
-              <td mat-cell *matCellDef="let gap">{{ gap.measureName }}</td>
+              <td mat-cell *matCellDef="let gap">
+                <mat-chip class="measure-chip">{{ gap.measureName.split(' ')[0] }}</mat-chip>
+              </td>
             </ng-container>
 
             <!-- Actions Column -->
@@ -331,15 +362,69 @@
       </mat-card-content>
     </mat-card>
   }
+
+  <!-- By Measure View -->
+  @if (!loading && !error && viewMode() === 'by-measure') {
+    <div class="measure-view">
+      @for (measureGroup of gapsByMeasure(); track measureGroup.measureName) {
+        <mat-card class="measure-group-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar>assessment</mat-icon>
+            <mat-card-title>{{ measureGroup.measureName }}</mat-card-title>
+            <mat-card-subtitle>{{ measureGroup.gaps.length }} care gaps</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="measure-patients">
+              @for (gap of measureGroup.gaps; track gap.patientId + gap.gapDescription) {
+                <div class="patient-gap-item" [class.high]="gap.urgency === 'high'" [class.medium]="gap.urgency === 'medium'">
+                  <div class="patient-info">
+                    <a class="patient-link" (click)="openPatientPanel(gap)">
+                      <strong>{{ gap.patientName }}</strong>
+                    </a>
+                    <span class="mrn">{{ gap.mrn }}</span>
+                  </div>
+                  <div class="gap-info">
+                    <span class="gap-desc">{{ gap.gapDescription }}</span>
+                    <span class="days-badge" [class.critical]="gap.daysOverdue > 60">
+                      {{ formatDaysOverdue(gap.daysOverdue) }}
+                    </span>
+                  </div>
+                  <div class="gap-actions">
+                    <button mat-icon-button matTooltip="Add Intervention" (click)="openInterventionForm(gap)">
+                      <mat-icon>add_task</mat-icon>
+                    </button>
+                    <button mat-icon-button matTooltip="Close Gap" (click)="openClosureForm(gap)">
+                      <mat-icon>check_circle</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-raised-button color="primary" (click)="createOutreachCampaign(measureGroup.measureName)">
+              <mat-icon>campaign</mat-icon>
+              Create Outreach for {{ measureGroup.measureCode }}
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
+    </div>
+  }
 </div>
 
 <!-- Actions Menu Template -->
 <mat-menu #actionsMenu="matMenu">
   <ng-template matMenuContent let-gap="gap">
-    <button mat-menu-item (click)="viewPatientDetail(gap)">
+    <button mat-menu-item (click)="openPatientPanel(gap)">
       <mat-icon>person</mat-icon>
-      <span>View Patient</span>
+      <span>View Patient Details</span>
     </button>
+    <button mat-menu-item (click)="viewPatientDetail(gap)">
+      <mat-icon>open_in_new</mat-icon>
+      <span>Go to Patient Record</span>
+    </button>
+    <mat-divider></mat-divider>
     <button mat-menu-item (click)="openInterventionForm(gap)">
       <mat-icon>add_task</mat-icon>
       <span>Add Intervention</span>
@@ -359,6 +444,99 @@
     </button>
   </ng-template>
 </mat-menu>
+
+<!-- Patient Detail Panel -->
+@if (showPatientPanel() && selectedPatient()) {
+  <div class="patient-panel-overlay" (click)="closePatientPanel()"></div>
+  <div class="patient-panel">
+    <div class="panel-header">
+      <div class="patient-header-info">
+        <mat-icon class="patient-avatar">person</mat-icon>
+        <div>
+          <h2>{{ selectedPatient()!.name }}</h2>
+          <span class="mrn">MRN: {{ selectedPatient()!.mrn }}</span>
+        </div>
+      </div>
+      <button mat-icon-button (click)="closePatientPanel()" aria-label="Close">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="panel-content">
+      <div class="patient-stats">
+        <div class="stat-item">
+          <span class="stat-value">{{ selectedPatient()!.gaps.length }}</span>
+          <span class="stat-label">Open Care Gaps</span>
+        </div>
+        <div class="stat-item high">
+          <span class="stat-value">{{ selectedPatientHighUrgencyCount() }}</span>
+          <span class="stat-label">High Urgency</span>
+        </div>
+      </div>
+
+      <h3>Care Gaps</h3>
+      <div class="patient-gaps-list">
+        @for (gap of selectedPatient()!.gaps; track gap.gapDescription) {
+          <mat-card class="patient-gap-card" [class.high]="gap.urgency === 'high'" [class.medium]="gap.urgency === 'medium'">
+            <mat-card-header>
+              <mat-icon mat-card-avatar [class]="'urgency-' + gap.urgency">
+                {{ gap.urgency === 'high' ? 'error' : gap.urgency === 'medium' ? 'warning' : 'info' }}
+              </mat-icon>
+              <mat-card-title>{{ gap.gapDescription }}</mat-card-title>
+              <mat-card-subtitle>{{ gap.measureName }}</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="gap-details">
+                <span class="gap-type">
+                  <mat-icon>{{ getGapIcon(gap.gapType) }}</mat-icon>
+                  {{ gap.gapType | titlecase }}
+                </span>
+                <span class="days-overdue" [class.critical]="gap.daysOverdue > 60">
+                  {{ formatDaysOverdue(gap.daysOverdue) }}
+                </span>
+              </div>
+
+              <h4>Recommended Interventions</h4>
+              <div class="intervention-options">
+                @for (intervention of getRecommendedInterventions(gap).slice(0, 3); track intervention.id) {
+                  <button mat-stroked-button
+                          class="intervention-btn"
+                          [style.border-color]="intervention.color"
+                          (click)="applyIntervention(gap, intervention)">
+                    <mat-icon [style.color]="intervention.color">{{ intervention.icon }}</mat-icon>
+                    <span class="btn-text">
+                      <span class="btn-name">{{ intervention.name }}</span>
+                      <span class="btn-stats">{{ intervention.successRate }}% success</span>
+                    </span>
+                  </button>
+                }
+              </div>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button (click)="openInterventionForm(gap)">
+                <mat-icon>add_task</mat-icon>
+                Add Custom Intervention
+              </button>
+              <button mat-button color="primary" (click)="openClosureForm(gap)">
+                <mat-icon>check_circle</mat-icon>
+                Close Gap
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    </div>
+
+    <div class="panel-footer">
+      <button mat-raised-button color="primary" (click)="viewPatientDetail(selectedPatient()!.gaps[0])">
+        <mat-icon>open_in_new</mat-icon>
+        Go to Full Patient Record
+      </button>
+    </div>
+  </div>
+}
 
 <!-- Intervention Form Dialog -->
 @if (showInterventionForm && selectedGap) {

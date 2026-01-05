@@ -371,7 +371,10 @@ public class TrustedHeaderAuthFilter extends OncePerRequestFilter {
         if (value == null || value.isBlank()) {
             return Collections.emptySet();
         }
-        return new HashSet<>(Arrays.asList(value.split(AuthHeaderConstants.VALUE_DELIMITER)));
+        return Arrays.stream(value.split(AuthHeaderConstants.VALUE_DELIMITER))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .collect(Collectors.toSet());
     }
 
     /**

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -13,12 +13,15 @@ import { MatPaginatorModule, MatPaginator, PageEvent } from '@angular/material/p
 import { MatSortModule, MatSort, Sort } from '@angular/material/sort';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatTabsModule } from '@angular/material/tabs';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { SelectionModel } from '@angular/cdk/collections';
 import { Subject, Observable } from 'rxjs';
 import { debounceTime, takeUntil, finalize } from 'rxjs/operators';
@@ -29,6 +32,21 @@ import { DialogService } from '../../services/dialog.service';
 import { CareGapAlert, CareGapSummary, getCareGapIcon, getUrgencyColor, formatDaysOverdue } from '../../models/care-gap.model';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
+
+/**
+ * Intervention Recommendation with ROI metrics
+ */
+interface InterventionRecommendation {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  successRate: number;
+  avgCost: number;
+  avgTimeToClose: number; // days
+  roi: number; // multiplier
+  color: string;
+}
 
 /**
  * Care Gap Intervention Request
@@ -84,12 +102,15 @@ interface CareGapFilter {
     MatSortModule,
     MatTooltipModule,
     MatProgressSpinnerModule,
+    MatProgressBarModule,
     MatBadgeModule,
     MatDividerModule,
     MatCheckboxModule,
     MatChipsModule,
     MatMenuModule,
+    MatTabsModule,
     MatDialogModule,
+    MatSnackBarModule,
     LoadingButtonComponent,
     LoadingOverlayComponent,
   ],
@@ -127,6 +148,82 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
   selectedGap: CareGapAlert | null = null;
   showInterventionForm = false;
   showClosureForm = false;
+  showPatientPanel = signal(false);
+  selectedPatient = signal<{id: string; name: string; mrn: string; gaps: CareGapAlert[]} | null>(null);
+  viewMode = signal<'table' | 'by-measure'>('table');
+
+  // Computed for template (avoid arrow functions in templates)
+  selectedPatientHighUrgencyCount = computed(() => {
+    const patient = this.selectedPatient();
+    if (!patient) return 0;
+    return patient.gaps.filter(g => g.urgency === 'high').length;
+  });
+
+  // Intervention recommendations with ROI metrics
+  interventionRecommendations: InterventionRecommendation[] = [
+    {
+      id: 'letter',
+      name: 'Member Outreach Letter',
+      description: 'Personalized letter with care gap information and nearby providers',
+      icon: 'mail',
+      successRate: 32,
+      avgCost: 12,
+      avgTimeToClose: 45,
+      roi: 8.2,
+      color: '#2196f3',
+    },
+    {
+      id: 'provider-alert',
+      name: 'Provider Alert',
+      description: 'Alert primary care provider for next patient visit',
+      icon: 'local_hospital',
+      successRate: 48,
+      avgCost: 0,
+      avgTimeToClose: 30,
+      roi: 999, // Infinite ROI (no cost)
+      color: '#4caf50',
+    },
+    {
+      id: 'care-coordinator',
+      name: 'Care Coordinator Call',
+      description: 'Personal outreach from care management team',
+      icon: 'phone',
+      successRate: 67,
+      avgCost: 45,
+      avgTimeToClose: 14,
+      roi: 5.8,
+      color: '#ff9800',
+    },
+    {
+      id: 'sms',
+      name: 'SMS Reminder',
+      description: 'Text message with appointment scheduling link',
+      icon: 'sms',
+      successRate: 28,
+      avgCost: 2,
+      avgTimeToClose: 21,
+      roi: 12.5,
+      color: '#9c27b0',
+    },
+  ];
+
+  // Care gaps grouped by measure
+  gapsByMeasure = computed(() => {
+    const grouped = new Map<string, {measureCode: string; measureName: string; gaps: CareGapAlert[]; rate: number}>();
+    for (const gap of this.careGaps) {
+      const key = gap.measureName;
+      if (!grouped.has(key)) {
+        grouped.set(key, {
+          measureCode: gap.measureName.split(' ')[0],
+          measureName: gap.measureName,
+          gaps: [],
+          rate: 0,
+        });
+      }
+      grouped.get(key)!.gaps.push(gap);
+    }
+    return Array.from(grouped.values());
+  });
 
   // Filter form
   filterForm: FormGroup;
@@ -193,7 +290,8 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
     private dialogService: DialogService,
     private dialog: MatDialog,
     private router: Router,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private snackBar: MatSnackBar
   ) {
     // Initialize filter form
     this.filterForm = this.fb.group({
@@ -275,65 +373,168 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
    */
   private generateMockCareGaps(): void {
     const mockGaps: CareGapAlert[] = [
+      // BCS - Breast Cancer Screening
       {
         patientId: '1',
-        patientName: 'Smith, John',
+        patientName: 'Anderson, Sarah',
         mrn: 'MRN001',
         gapType: 'screening',
-        gapDescription: 'Annual Wellness Visit Overdue',
-        daysOverdue: 45,
+        gapDescription: 'Mammogram overdue - Last screening 26 months ago',
+        daysOverdue: 60,
         urgency: 'high',
-        measureName: 'HEDIS AWV',
-        dueDate: '2024-10-15',
-        lastContactDate: '2024-09-01',
+        measureName: 'BCS - Breast Cancer Screening',
+        dueDate: '2025-10-15',
+        lastContactDate: '2025-09-01',
       },
       {
         patientId: '2',
-        patientName: 'Johnson, Mary',
+        patientName: 'Martinez, Elena',
         mrn: 'MRN002',
-        gapType: 'lab',
-        gapDescription: 'HbA1c Test Overdue',
-        daysOverdue: 90,
+        gapType: 'screening',
+        gapDescription: 'Mammogram needed - No screening on record',
+        daysOverdue: 180,
         urgency: 'high',
-        measureName: 'HEDIS CDC',
-        dueDate: '2024-09-01',
-        lastContactDate: '2024-08-15',
+        measureName: 'BCS - Breast Cancer Screening',
+        dueDate: '2025-06-01',
+        lastContactDate: '2025-08-15',
       },
+      // COL - Colorectal Cancer Screening
       {
         patientId: '3',
-        patientName: 'Williams, Robert',
+        patientName: 'Johnson, Robert',
         mrn: 'MRN003',
-        gapType: 'medication',
-        gapDescription: 'Statin Therapy Not Prescribed',
-        daysOverdue: 30,
-        urgency: 'medium',
-        measureName: 'HEDIS SPC',
-        dueDate: '2024-11-01',
-        lastContactDate: '2024-10-20',
+        gapType: 'screening',
+        gapDescription: 'Colonoscopy overdue - Last screening 11 years ago',
+        daysOverdue: 365,
+        urgency: 'high',
+        measureName: 'COL - Colorectal Cancer Screening',
+        dueDate: '2024-12-01',
+        lastContactDate: '2025-10-20',
       },
       {
         patientId: '4',
-        patientName: 'Brown, Patricia',
+        patientName: 'Williams, James',
         mrn: 'MRN004',
-        gapType: 'followup',
-        gapDescription: 'Post-Discharge Follow-up Missing',
-        daysOverdue: 15,
+        gapType: 'lab',
+        gapDescription: 'FIT test needed - Alternative to colonoscopy',
+        daysOverdue: 45,
         urgency: 'medium',
-        measureName: 'HEDIS FUH',
-        dueDate: '2024-11-16',
-        lastContactDate: '2024-11-01',
+        measureName: 'COL - Colorectal Cancer Screening',
+        dueDate: '2025-11-16',
+        lastContactDate: '2025-11-01',
+      },
+      // CDC - Comprehensive Diabetes Care
+      {
+        patientId: '5',
+        patientName: 'Davis, Patricia',
+        mrn: 'MRN005',
+        gapType: 'lab',
+        gapDescription: 'HbA1c test overdue - Last test 8 months ago',
+        daysOverdue: 90,
+        urgency: 'high',
+        measureName: 'CDC - Comprehensive Diabetes Care',
+        dueDate: '2025-10-01',
+        lastContactDate: '2025-09-20',
+      },
+      {
+        patientId: '6',
+        patientName: 'Thompson, Michael',
+        mrn: 'MRN006',
+        gapType: 'screening',
+        gapDescription: 'Diabetic retinal exam needed',
+        daysOverdue: 120,
+        urgency: 'high',
+        measureName: 'CDC - Comprehensive Diabetes Care',
+        dueDate: '2025-09-01',
+        lastContactDate: '2025-08-15',
+      },
+      {
+        patientId: '7',
+        patientName: 'Garcia, Maria',
+        mrn: 'MRN007',
+        gapType: 'lab',
+        gapDescription: 'Nephropathy screening needed - Annual urine test',
+        daysOverdue: 30,
+        urgency: 'medium',
+        measureName: 'CDC - Comprehensive Diabetes Care',
+        dueDate: '2025-12-01',
+        lastContactDate: '2025-11-10',
+      },
+      // CBP - Controlling Blood Pressure
+      {
+        patientId: '8',
+        patientName: 'Brown, William',
+        mrn: 'MRN008',
+        gapType: 'followup',
+        gapDescription: 'BP follow-up needed - Last reading 158/94',
+        daysOverdue: 14,
+        urgency: 'high',
+        measureName: 'CBP - Controlling Blood Pressure',
+        dueDate: '2025-12-18',
+        lastContactDate: '2025-12-04',
+      },
+      {
+        patientId: '9',
+        patientName: 'Lee, Jennifer',
+        mrn: 'MRN009',
+        gapType: 'medication',
+        gapDescription: 'Antihypertensive medication adherence gap',
+        daysOverdue: 21,
+        urgency: 'medium',
+        measureName: 'CBP - Controlling Blood Pressure',
+        dueDate: '2025-12-10',
+        lastContactDate: '2025-11-25',
+      },
+      // SPC - Statin Therapy
+      {
+        patientId: '10',
+        patientName: 'Miller, David',
+        mrn: 'MRN010',
+        gapType: 'medication',
+        gapDescription: 'Statin therapy not prescribed - ASCVD diagnosis',
+        daysOverdue: 60,
+        urgency: 'medium',
+        measureName: 'SPC - Statin Therapy',
+        dueDate: '2025-11-01',
+        lastContactDate: '2025-10-15',
+      },
+      // AWC - Adolescent Well-Care
+      {
+        patientId: '11',
+        patientName: 'Wilson, Emily',
+        mrn: 'MRN011',
+        gapType: 'screening',
+        gapDescription: 'Annual wellness visit overdue',
+        daysOverdue: 75,
+        urgency: 'low',
+        measureName: 'AWC - Adolescent Well-Care',
+        dueDate: '2025-10-18',
+        lastContactDate: '2025-09-01',
+      },
+      // Patient with multiple gaps
+      {
+        patientId: '5',
+        patientName: 'Davis, Patricia',
+        mrn: 'MRN005',
+        gapType: 'screening',
+        gapDescription: 'Diabetic foot exam needed',
+        daysOverdue: 45,
+        urgency: 'medium',
+        measureName: 'CDC - Comprehensive Diabetes Care',
+        dueDate: '2025-11-16',
+        lastContactDate: '2025-09-20',
       },
       {
         patientId: '5',
-        patientName: 'Davis, Michael',
+        patientName: 'Davis, Patricia',
         mrn: 'MRN005',
-        gapType: 'assessment',
-        gapDescription: 'Depression Screening Overdue',
-        daysOverdue: 60,
+        gapType: 'medication',
+        gapDescription: 'Statin recommended for diabetes',
+        daysOverdue: 30,
         urgency: 'low',
-        measureName: 'HEDIS DEM',
-        dueDate: '2024-10-01',
-        lastContactDate: '2024-09-20',
+        measureName: 'SPC - Statin Therapy',
+        dueDate: '2025-12-01',
+        lastContactDate: '2025-09-20',
       },
     ];
 
@@ -677,5 +878,128 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
    */
   clearSelection(): void {
     this.selection.clear();
+  }
+
+  // ============================================================================
+  // Patient Panel Methods
+  // ============================================================================
+
+  /**
+   * Open patient detail panel showing all care gaps for a patient
+   */
+  openPatientPanel(gap: CareGapAlert): void {
+    const patientGaps = this.careGaps.filter(g => g.patientId === gap.patientId);
+    this.selectedPatient.set({
+      id: gap.patientId,
+      name: gap.patientName,
+      mrn: gap.mrn,
+      gaps: patientGaps,
+    });
+    this.showPatientPanel.set(true);
+  }
+
+  /**
+   * Close the patient detail panel
+   */
+  closePatientPanel(): void {
+    this.showPatientPanel.set(false);
+    this.selectedPatient.set(null);
+  }
+
+  /**
+   * Get the total patient count with care gaps
+   */
+  getUniquePatientCount(): number {
+    const patientIds = new Set(this.careGaps.map(g => g.patientId));
+    return patientIds.size;
+  }
+
+  // ============================================================================
+  // Outreach Campaign Methods
+  // ============================================================================
+
+  /**
+   * Navigate to outreach campaigns page with selected measure
+   */
+  createOutreachCampaign(measureName?: string): void {
+    const params: any = {};
+    if (measureName) {
+      const measureCode = measureName.split(' ')[0];
+      const measureGaps = this.careGaps.filter(g => g.measureName === measureName);
+      params.measureCode = measureCode;
+      params.careGapsCount = measureGaps.length;
+    } else if (this.selection.hasValue()) {
+      params.careGapsCount = this.selection.selected.length;
+    } else {
+      params.careGapsCount = this.filteredGaps.length;
+    }
+    this.router.navigate(['/outreach-campaigns'], { queryParams: params });
+  }
+
+  /**
+   * Generate outreach for selected gaps
+   */
+  generateOutreachForSelected(): void {
+    if (!this.selection.hasValue()) {
+      this.snackBar.open('Please select care gaps first', 'Close', { duration: 3000 });
+      return;
+    }
+    this.createOutreachCampaign();
+  }
+
+  // ============================================================================
+  // View Mode Methods
+  // ============================================================================
+
+  /**
+   * Toggle between table and by-measure view
+   */
+  toggleViewMode(): void {
+    this.viewMode.set(this.viewMode() === 'table' ? 'by-measure' : 'table');
+  }
+
+  // ============================================================================
+  // Intervention Recommendation Methods
+  // ============================================================================
+
+  /**
+   * Get recommended interventions for a care gap
+   */
+  getRecommendedInterventions(gap: CareGapAlert): InterventionRecommendation[] {
+    // In a real system, this would use ML to recommend based on patient characteristics
+    // For demo, we return all interventions sorted by success rate
+    return [...this.interventionRecommendations].sort((a, b) => b.successRate - a.successRate);
+  }
+
+  /**
+   * Apply an intervention to a care gap
+   */
+  applyIntervention(gap: CareGapAlert, intervention: InterventionRecommendation): void {
+    this.snackBar.open(
+      `${intervention.name} initiated for ${gap.patientName}`,
+      'Close',
+      { duration: 3000 }
+    );
+  }
+
+  /**
+   * Format currency for display
+   */
+  formatCurrency(value: number): string {
+    if (value === 0) return 'Free';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  }
+
+  /**
+   * Format ROI for display
+   */
+  formatROI(value: number): string {
+    if (value >= 999) return '∞';
+    return `${value.toFixed(1)}x`;
   }
 }

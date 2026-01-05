@@ -36,8 +36,16 @@ import java.util.stream.Collectors;
  * - Does not block the filter chain on token failure
  * - Logs all authentication attempts for audit
  */
+/**
+ * @deprecated This filter is disabled for gateway-trust authentication.
+ * Use TrustedHeaderAuthFilter instead which validates X-Auth-* headers
+ * injected by the gateway. This filter remains for reference/testing only.
+ *
+ * @see com.healthdata.authentication.filter.TrustedHeaderAuthFilter
+ */
+@Deprecated
 @Slf4j
-@Component
+// @Component - Disabled: CQL engine uses gateway-trust authentication via TrustedHeaderAuthFilter
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 

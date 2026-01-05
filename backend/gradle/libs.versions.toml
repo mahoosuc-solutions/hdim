@@ -4,7 +4,7 @@ java = "21"
 kotlin = "2.0.21"
 
 # Spring Framework
-spring-boot = "3.3.11"
+spring-boot = "3.5.9"
 spring-cloud = "2023.0.5"
 spring-dependency-management = "1.1.7"
 
@@ -20,9 +20,9 @@ hibernate = "6.6.1.Final"
 liquibase = "4.29.2"
 
 # Caching & Messaging
-redis = "3.3.5"
+redis = "3.5.7"
 kafka = "3.8.0"
-spring-kafka = "3.3.0"
+spring-kafka = "3.3.11"
 
 # API & Documentation
 springdoc-openapi = "2.6.0"
@@ -30,7 +30,7 @@ swagger = "2.2.25"
 jackson = "2.17.2"  # Must match Spring Boot BOM version
 
 # Security
-spring-security = "6.3.8"
+spring-security = "6.5.7"
 jjwt = "0.12.6"
 bouncycastle = "1.78.1"
 

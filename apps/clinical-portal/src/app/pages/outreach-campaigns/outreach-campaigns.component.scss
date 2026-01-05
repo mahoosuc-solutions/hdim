@@ -1,0 +1,460 @@
+.outreach-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+
+  .header-content {
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      font-weight: 500;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 16px;
+    }
+  }
+}
+
+// Campaign Creation Form
+.campaign-creation {
+  .creation-card {
+    mat-card-header {
+      margin-bottom: 24px;
+
+      [mat-card-avatar] {
+        background: #1976d2;
+        color: white;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 24px;
+      }
+    }
+
+    .form-section {
+      margin: 24px 0;
+
+      h3 {
+        margin: 0 0 8px 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: rgba(0, 0, 0, 0.87);
+      }
+
+      .section-description {
+        margin: 0 0 16px 0;
+        color: rgba(0, 0, 0, 0.6);
+        font-size: 14px;
+      }
+
+      .form-row {
+        &.two-col {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 16px;
+        }
+      }
+
+      .full-width {
+        width: 100%;
+      }
+    }
+
+    mat-card-actions {
+      padding: 16px 24px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+  }
+}
+
+// Interventions Grid
+.interventions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.intervention-card {
+  padding: 16px;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+
+  &.enabled {
+    border-color: #1976d2;
+    background: rgba(25, 118, 210, 0.04);
+  }
+
+  &.disabled {
+    opacity: 0.6;
+  }
+
+  .intervention-header {
+    mat-checkbox {
+      display: flex;
+      align-items: center;
+
+      mat-icon {
+        margin-right: 8px;
+        color: #1976d2;
+      }
+
+      .intervention-name {
+        font-weight: 500;
+      }
+    }
+  }
+
+  .intervention-description {
+    margin: 12px 0;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.6);
+    line-height: 1.5;
+  }
+
+  .intervention-stats {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 12px;
+
+    .stat {
+      .stat-value {
+        display: block;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1976d2;
+      }
+
+      .stat-label {
+        font-size: 11px;
+        color: rgba(0, 0, 0, 0.5);
+      }
+    }
+  }
+
+  .intervention-count {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+
+    .count-field {
+      width: 100px;
+    }
+
+    .cost-preview {
+      font-size: 13px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+}
+
+// Impact Card
+.impact-card {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  padding: 24px;
+
+  .impact-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .impact-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
+
+    .impact-content {
+      .impact-value {
+        display: block;
+        font-size: 24px;
+        font-weight: 600;
+        color: rgba(0, 0, 0, 0.87);
+      }
+
+      .impact-label {
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    &.highlight {
+      background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+
+      mat-icon,
+      .impact-content .impact-value,
+      .impact-content .impact-label {
+        color: white;
+      }
+    }
+  }
+
+  .roi-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 24px;
+
+    .cost-summary {
+      display: flex;
+      gap: 48px;
+
+      .cost-item {
+        .cost-label {
+          display: block;
+          font-size: 12px;
+          color: rgba(0, 0, 0, 0.6);
+          margin-bottom: 4px;
+        }
+
+        .cost-value {
+          font-size: 24px;
+          font-weight: 600;
+
+          &.highlight {
+            color: #4caf50;
+          }
+        }
+      }
+    }
+
+    .roi-badge {
+      background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      text-align: center;
+
+      .roi-value {
+        display: block;
+        font-size: 32px;
+        font-weight: 700;
+      }
+
+      .roi-label {
+        font-size: 12px;
+        opacity: 0.9;
+      }
+    }
+  }
+}
+
+// Export Options
+mat-radio-group {
+  display: flex;
+  gap: 24px;
+
+  mat-radio-button {
+    mat-icon {
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+  }
+}
+
+// Campaign List
+.campaigns-list {
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+
+    .summary-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px;
+
+      mat-icon {
+        font-size: 36px;
+        width: 36px;
+        height: 36px;
+        color: #1976d2;
+      }
+
+      .summary-content {
+        .summary-value {
+          display: block;
+          font-size: 28px;
+          font-weight: 600;
+        }
+
+        .summary-label {
+          font-size: 13px;
+          color: rgba(0, 0, 0, 0.6);
+        }
+      }
+
+      &.highlight {
+        background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+        color: white;
+
+        mat-icon {
+          color: white;
+        }
+
+        .summary-content .summary-label {
+          color: rgba(255, 255, 255, 0.9);
+        }
+      }
+    }
+  }
+
+  .table-card {
+    padding: 24px;
+
+    h3 {
+      margin: 0 0 16px 0;
+      font-size: 18px;
+      font-weight: 500;
+    }
+  }
+
+  .campaigns-table {
+    width: 100%;
+
+    .campaign-name-cell {
+      .name {
+        display: block;
+        font-weight: 500;
+      }
+
+      .date {
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.5);
+      }
+    }
+
+    .measure-chip {
+      font-weight: 600;
+    }
+
+    .rate {
+      font-weight: 500;
+
+      &.actual {
+        color: #4caf50;
+      }
+
+      &.projected {
+        color: rgba(0, 0, 0, 0.6);
+        font-style: italic;
+      }
+    }
+  }
+
+  .no-campaigns {
+    text-align: center;
+    padding: 48px;
+    color: rgba(0, 0, 0, 0.5);
+
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+    }
+
+    p {
+      margin-bottom: 24px;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 1200px) {
+  .impact-card .impact-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .interventions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .impact-card {
+    .impact-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .roi-section {
+      flex-direction: column;
+      gap: 24px;
+
+      .cost-summary {
+        flex-direction: column;
+        gap: 16px;
+      }
+    }
+  }
+
+  .summary-cards {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+// Dark mode support
+:host-context(.dark-theme) {
+  .page-header .subtitle {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .intervention-card {
+    &.enabled {
+      background: rgba(25, 118, 210, 0.15);
+    }
+
+    .intervention-description {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  .impact-card {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+
+    .impact-item {
+      background: rgba(255, 255, 255, 0.1);
+
+      .impact-content .impact-value {
+        color: white;
+      }
+
+      .impact-content .impact-label {
+        color: rgba(255, 255, 255, 0.7);
+      }
+    }
+  }
+}

@@ -52,8 +52,11 @@ export class App implements OnInit, OnDestroy {
   protected navItems = [
     { path: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
     { path: '/patients', icon: 'people', label: 'Patients' },
+    { path: '/quality-measures', icon: 'library_books', label: 'Quality Measures' },
     { path: '/evaluations', icon: 'assessment', label: 'Evaluations' },
     { path: '/results', icon: 'analytics', label: 'Results' },
+    { path: '/care-gaps', icon: 'warning', label: 'Care Gaps' },
+    { path: '/outreach-campaigns', icon: 'campaign', label: 'Outreach' },
     { path: '/reports', icon: 'description', label: 'Reports' },
     { path: '/measure-builder', icon: 'build_circle', label: 'Measure Builder' },
     { path: '/visualization/live-monitor', icon: '3d_rotation', label: 'Live Monitor' },

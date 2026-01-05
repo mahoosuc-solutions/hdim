@@ -1,0 +1,321 @@
+<div class="outreach-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Outreach Campaigns</h1>
+      <p class="subtitle">Generate targeted outreach campaigns to close care gaps</p>
+    </div>
+    @if (!isCreatingCampaign()) {
+      <button mat-raised-button color="primary" (click)="startNewCampaign()">
+        <mat-icon>add</mat-icon>
+        New Campaign
+      </button>
+    }
+  </div>
+
+  @if (isCreatingCampaign()) {
+    <!-- Campaign Creation Form -->
+    <div class="campaign-creation">
+      <mat-card class="creation-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>campaign</mat-icon>
+          <mat-card-title>Generate Outreach Campaign</mat-card-title>
+          <mat-card-subtitle>Configure interventions and export settings</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <!-- Basic Info -->
+          <div class="form-section">
+            <h3>Campaign Details</h3>
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Campaign Name</mat-label>
+                <input matInput [ngModel]="campaignName()" (ngModelChange)="campaignName.set($event)"
+                       placeholder="e.g., BCS Q1 2026 Outreach">
+              </mat-form-field>
+            </div>
+
+            <div class="form-row two-col">
+              <mat-form-field appearance="outline">
+                <mat-label>Quality Measure</mat-label>
+                <mat-select [value]="selectedMeasure()" (selectionChange)="selectedMeasure.set($event.value)">
+                  <mat-option value="BCS">BCS - Breast Cancer Screening</mat-option>
+                  <mat-option value="COL">COL - Colorectal Cancer Screening</mat-option>
+                  <mat-option value="CBP">CBP - Controlling High Blood Pressure</mat-option>
+                  <mat-option value="CDC">CDC - Comprehensive Diabetes Care</mat-option>
+                  <mat-option value="EED">EED - Eye Exam for Diabetics</mat-option>
+                  <mat-option value="SPC">SPC - Statin Therapy</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Target Patients</mat-label>
+                <input matInput type="number" [ngModel]="targetPatientCount()"
+                       (ngModelChange)="targetPatientCount.set($event)">
+                <span matSuffix>patients</span>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <!-- Intervention Mix -->
+          <div class="form-section">
+            <h3>Intervention Mix</h3>
+            <p class="section-description">Select intervention types and configure patient counts for each</p>
+
+            <div class="interventions-grid">
+              @for (intervention of interventions(); track intervention.id) {
+                <mat-card class="intervention-card" [class.enabled]="intervention.enabled" [class.disabled]="!intervention.enabled">
+                  <div class="intervention-header">
+                    <mat-checkbox [checked]="intervention.enabled" (change)="toggleIntervention(intervention.id)">
+                      <mat-icon>{{ intervention.icon }}</mat-icon>
+                      <span class="intervention-name">{{ intervention.name }}</span>
+                    </mat-checkbox>
+                  </div>
+
+                  <p class="intervention-description">{{ intervention.description }}</p>
+
+                  <div class="intervention-stats">
+                    <div class="stat">
+                      <span class="stat-value">{{ intervention.successRate }}%</span>
+                      <span class="stat-label">Success Rate</span>
+                    </div>
+                    <div class="stat">
+                      <span class="stat-value">{{ formatCurrency(intervention.unitCost) }}</span>
+                      <span class="stat-label">Per Patient</span>
+                    </div>
+                  </div>
+
+                  @if (intervention.enabled) {
+                    <div class="intervention-count">
+                      <mat-form-field appearance="outline" class="count-field">
+                        <mat-label>Patients</mat-label>
+                        <input matInput type="number" [ngModel]="intervention.count"
+                               (ngModelChange)="updateInterventionCount(intervention.id, $event)"
+                               [max]="targetPatientCount()">
+                      </mat-form-field>
+                      <span class="cost-preview">Est. Cost: {{ formatCurrency(intervention.unitCost * intervention.count) }}</span>
+                    </div>
+                  }
+                </mat-card>
+              }
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <!-- Projected Impact -->
+          <div class="form-section">
+            <h3>Projected Impact</h3>
+
+            <mat-card class="impact-card">
+              <div class="impact-grid">
+                <div class="impact-item">
+                  <mat-icon>trending_up</mat-icon>
+                  <div class="impact-content">
+                    <span class="impact-value">{{ estimatedCloseRate() }}%</span>
+                    <span class="impact-label">Estimated Close Rate</span>
+                  </div>
+                </div>
+
+                <div class="impact-item">
+                  <mat-icon>check_circle</mat-icon>
+                  <div class="impact-content">
+                    <span class="impact-value">{{ estimatedGapsClosed() }}</span>
+                    <span class="impact-label">Care Gaps Closed</span>
+                  </div>
+                </div>
+
+                <div class="impact-item">
+                  <mat-icon>speed</mat-icon>
+                  <div class="impact-content">
+                    <span class="impact-value">+{{ estimatedHedisImprovement() }} pts</span>
+                    <span class="impact-label">HEDIS Score Improvement</span>
+                  </div>
+                </div>
+
+                <div class="impact-item highlight">
+                  <mat-icon>stars</mat-icon>
+                  <div class="impact-content">
+                    <span class="impact-value">~0.3 stars</span>
+                    <span class="impact-label">Star Rating Impact</span>
+                  </div>
+                </div>
+              </div>
+
+              <mat-divider></mat-divider>
+
+              <div class="roi-section">
+                <div class="cost-summary">
+                  <div class="cost-item">
+                    <span class="cost-label">Total Campaign Cost</span>
+                    <span class="cost-value">{{ formatCurrency(totalCost()) }}</span>
+                  </div>
+                  <div class="cost-item">
+                    <span class="cost-label">Estimated Quality Bonus</span>
+                    <span class="cost-value highlight">{{ formatCurrency(estimatedQualityBonus()) }}</span>
+                  </div>
+                </div>
+
+                <div class="roi-badge">
+                  <span class="roi-value">{{ roi() }}x</span>
+                  <span class="roi-label">ROI</span>
+                </div>
+              </div>
+            </mat-card>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <!-- Export Options -->
+          <div class="form-section">
+            <h3>Export Format</h3>
+            <mat-radio-group [value]="exportFormat()" (change)="exportFormat.set($event.value)">
+              <mat-radio-button value="csv">
+                <mat-icon>table_chart</mat-icon>
+                CSV
+              </mat-radio-button>
+              <mat-radio-button value="hl7">
+                <mat-icon>code</mat-icon>
+                HL7 v2.5
+              </mat-radio-button>
+              <mat-radio-button value="pdf">
+                <mat-icon>picture_as_pdf</mat-icon>
+                PDF Report
+              </mat-radio-button>
+            </mat-radio-group>
+          </div>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button mat-button (click)="cancelCampaign()">Cancel</button>
+          <button mat-stroked-button color="primary" (click)="scheduleCampaign()">
+            <mat-icon>schedule</mat-icon>
+            Schedule for Later
+          </button>
+          <button mat-raised-button color="primary" (click)="generateCampaign()">
+            <mat-icon>send</mat-icon>
+            Generate Campaign
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  } @else {
+    <!-- Campaign List -->
+    <div class="campaigns-list">
+      <!-- Summary Stats -->
+      <div class="summary-cards">
+        <mat-card class="summary-card">
+          <mat-icon>campaign</mat-icon>
+          <div class="summary-content">
+            <span class="summary-value">{{ campaigns().length }}</span>
+            <span class="summary-label">Total Campaigns</span>
+          </div>
+        </mat-card>
+
+        <mat-card class="summary-card">
+          <mat-icon>people</mat-icon>
+          <div class="summary-content">
+            <span class="summary-value">{{ totalPatientsTargeted() }}</span>
+            <span class="summary-label">Patients Targeted</span>
+          </div>
+        </mat-card>
+
+        <mat-card class="summary-card">
+          <mat-icon>check_circle</mat-icon>
+          <div class="summary-content">
+            <span class="summary-value">{{ completedCampaignsCount() }}</span>
+            <span class="summary-label">Completed</span>
+          </div>
+        </mat-card>
+
+        <mat-card class="summary-card highlight">
+          <mat-icon>trending_up</mat-icon>
+          <div class="summary-content">
+            <span class="summary-value">48%</span>
+            <span class="summary-label">Avg Close Rate</span>
+          </div>
+        </mat-card>
+      </div>
+
+      <!-- Campaign Table -->
+      <mat-card class="table-card">
+        <h3>Recent Campaigns</h3>
+
+        <table mat-table [dataSource]="campaigns()" class="campaigns-table">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Campaign Name</th>
+            <td mat-cell *matCellDef="let campaign">
+              <div class="campaign-name-cell">
+                <span class="name">{{ campaign.name }}</span>
+                <span class="date">{{ campaign.createdDate }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="measure">
+            <th mat-header-cell *matHeaderCellDef>Measure</th>
+            <td mat-cell *matCellDef="let campaign">
+              <mat-chip class="measure-chip">{{ campaign.measureCode }}</mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="targetPatients">
+            <th mat-header-cell *matHeaderCellDef>Target</th>
+            <td mat-cell *matCellDef="let campaign">{{ campaign.targetPatients }} patients</td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let campaign">
+              <mat-chip [color]="getStatusColor(campaign.status)">{{ campaign.status }}</mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="closeRate">
+            <th mat-header-cell *matHeaderCellDef>Close Rate</th>
+            <td mat-cell *matCellDef="let campaign">
+              @if (campaign.actualCloseRate) {
+                <span class="rate actual">{{ campaign.actualCloseRate }}%</span>
+              } @else {
+                <span class="rate projected">{{ campaign.projectedCloseRate }}% (est)</span>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="roi">
+            <th mat-header-cell *matHeaderCellDef>Cost</th>
+            <td mat-cell *matCellDef="let campaign">{{ formatCurrency(campaign.totalCost) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let campaign">
+              <button mat-icon-button (click)="viewCampaign(campaign)" matTooltip="View Details">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="deleteCampaign(campaign)" matTooltip="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        @if (campaigns().length === 0) {
+          <div class="no-campaigns">
+            <mat-icon>campaign</mat-icon>
+            <p>No campaigns yet. Create your first outreach campaign!</p>
+            <button mat-raised-button color="primary" (click)="startNewCampaign()">
+              <mat-icon>add</mat-icon>
+              Create Campaign
+            </button>
+          </div>
+        }
+      </mat-card>
+    </div>
+  }
+</div>

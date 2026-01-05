@@ -61,6 +61,15 @@ export const appRoutes: Route[] = [
     data: { permissions: ['VIEW_PATIENTS'] },
   },
   {
+    path: 'quality-measures',
+    loadComponent: () =>
+      import('./pages/quality-measures/quality-measures.component').then(
+        (m) => m.QualityMeasuresComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_EVALUATIONS'] },
+  },
+  {
     path: 'evaluations',
     loadComponent: () =>
       import('./pages/evaluations/evaluations.component').then(
@@ -188,6 +197,15 @@ export const appRoutes: Route[] = [
     loadComponent: () =>
       import('./pages/care-gaps/care-gap-manager.component').then(
         (m) => m.CareGapManagerComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_CARE_GAPS'] },
+  },
+  {
+    path: 'outreach-campaigns',
+    loadComponent: () =>
+      import('./pages/outreach-campaigns/outreach-campaigns.component').then(
+        (m) => m.OutreachCampaignsComponent
       ),
     canActivate: [AuthGuard],
     data: { permissions: ['VIEW_CARE_GAPS'] },

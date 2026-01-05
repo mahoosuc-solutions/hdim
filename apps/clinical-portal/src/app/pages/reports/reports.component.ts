@@ -21,6 +21,12 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { EvaluationService } from '../../services/evaluation.service';
 import { AIAssistantService } from '../../services/ai-assistant.service';
 import { ReportTemplatesService, ReportTemplate, ReportTemplateCategory } from '../../services/report-templates.service';
+import { QrdaExportService, QrdaExportJob, QrdaJobType, QrdaExportRequest } from '../../services/qrda-export.service';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatSelectModule } from '@angular/material/select';
 import { SavedReport, ReportType } from '../../models/quality-result.model';
 import { PatientSelectionDialogComponent } from '../../components/dialogs/patient-selection-dialog.component';
 import { YearSelectionDialogComponent } from '../../components/dialogs/year-selection-dialog.component';
@@ -77,6 +83,7 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatProgressBarModule,
     MatDialogModule,
     MatTooltipModule,
     MatTableModule,
@@ -86,6 +93,10 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
     MatInputModule,
     MatFormFieldModule,
     MatChipsModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatRadioModule,
+    MatSelectModule,
     LoadingButtonComponent,
     LoadingOverlayComponent,
   ],
@@ -770,6 +781,307 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
                   </div>
                 }
               </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- QRDA Export Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">cloud_upload</mat-icon>
+            QRDA Export
+          </ng-template>
+          <div class="tab-content">
+            <div class="qrda-container">
+              <!-- QRDA Header -->
+              <div class="qrda-header">
+                <div class="qrda-title-section">
+                  <h2>CMS Quality Reporting (QRDA)</h2>
+                  <p class="qrda-subtitle">Generate QRDA documents for CMS submission</p>
+                </div>
+              </div>
+
+              <!-- Category Selection Cards -->
+              <div class="qrda-category-cards">
+                <mat-card
+                  class="qrda-category-card"
+                  [class.selected]="selectedQrdaCategory() === 'QRDA_I'"
+                  (click)="selectQrdaCategory('QRDA_I')"
+                >
+                  <mat-card-header>
+                    <mat-icon mat-card-avatar class="category-icon cat-i">person</mat-icon>
+                    <mat-card-title>QRDA Category I</mat-card-title>
+                    <mat-card-subtitle>Patient-Level Export</mat-card-subtitle>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <p class="category-description">
+                      Individual patient quality measure results for CMS submission.
+                      Creates one XML document per patient with detailed measure data.
+                    </p>
+                    <div class="category-features">
+                      <div class="feature-item">
+                        <mat-icon>check_circle</mat-icon>
+                        <span>Individual patient data</span>
+                      </div>
+                      <div class="feature-item">
+                        <mat-icon>check_circle</mat-icon>
+                        <span>PHI included (secure)</span>
+                      </div>
+                      <div class="feature-item">
+                        <mat-icon>check_circle</mat-icon>
+                        <span>CMS certified format</span>
+                      </div>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+
+                <mat-card
+                  class="qrda-category-card"
+                  [class.selected]="selectedQrdaCategory() === 'QRDA_III'"
+                  (click)="selectQrdaCategory('QRDA_III')"
+                >
+                  <mat-card-header>
+                    <mat-icon mat-card-avatar class="category-icon cat-iii">groups</mat-icon>
+                    <mat-card-title>QRDA Category III</mat-card-title>
+                    <mat-card-subtitle>Aggregate Population Export</mat-card-subtitle>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <p class="category-description">
+                      Aggregated population-level quality measure results.
+                      Single XML document with summary statistics for all patients.
+                    </p>
+                    <div class="category-features">
+                      <div class="feature-item">
+                        <mat-icon>check_circle</mat-icon>
+                        <span>Population statistics</span>
+                      </div>
+                      <div class="feature-item">
+                        <mat-icon>check_circle</mat-icon>
+                        <span>No PHI (de-identified)</span>
+                      </div>
+                      <div class="feature-item">
+                        <mat-icon>check_circle</mat-icon>
+                        <span>CMS certified format</span>
+                      </div>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+
+              @if (selectedQrdaCategory()) {
+                <!-- Export Configuration -->
+                <mat-card class="qrda-config-card">
+                  <mat-card-header>
+                    <mat-icon mat-card-avatar class="config-icon">settings</mat-icon>
+                    <mat-card-title>Export Configuration</mat-card-title>
+                    <mat-card-subtitle>Configure your {{ selectedQrdaCategory() === 'QRDA_I' ? 'Category I' : 'Category III' }} export</mat-card-subtitle>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <div class="config-form">
+                      <!-- Measure Selection -->
+                      <div class="form-section">
+                        <h4>Quality Measures</h4>
+                        <mat-form-field appearance="outline" class="full-width">
+                          <mat-label>Select Measures</mat-label>
+                          <mat-select multiple [(ngModel)]="selectedQrdaMeasures">
+                            @for (measure of availableQrdaMeasures; track measure.id) {
+                              <mat-option [value]="measure.id">
+                                {{ measure.code }} - {{ measure.name }}
+                              </mat-option>
+                            }
+                          </mat-select>
+                          <mat-hint>Select one or more quality measures to include</mat-hint>
+                        </mat-form-field>
+                      </div>
+
+                      <!-- Reporting Period -->
+                      <div class="form-section">
+                        <h4>Reporting Period</h4>
+                        <div class="date-range">
+                          <mat-form-field appearance="outline">
+                            <mat-label>Start Date</mat-label>
+                            <input matInput [matDatepicker]="startPicker" [(ngModel)]="qrdaPeriodStart">
+                            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                            <mat-datepicker #startPicker></mat-datepicker>
+                          </mat-form-field>
+                          <mat-form-field appearance="outline">
+                            <mat-label>End Date</mat-label>
+                            <input matInput [matDatepicker]="endPicker" [(ngModel)]="qrdaPeriodEnd">
+                            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                            <mat-datepicker #endPicker></mat-datepicker>
+                          </mat-form-field>
+                        </div>
+                        <div class="period-presets">
+                          <button mat-stroked-button type="button" (click)="setQrdaPeriod('ytd')">Year to Date</button>
+                          <button mat-stroked-button type="button" (click)="setQrdaPeriod('2025')">CY 2025</button>
+                          <button mat-stroked-button type="button" (click)="setQrdaPeriod('2024')">CY 2024</button>
+                          <button mat-stroked-button type="button" (click)="setQrdaPeriod('q4-2025')">Q4 2025</button>
+                        </div>
+                      </div>
+
+                      @if (selectedQrdaCategory() === 'QRDA_I') {
+                        <!-- Patient Selection (Category I only) -->
+                        <div class="form-section">
+                          <h4>Patient Selection</h4>
+                          <mat-radio-group [(ngModel)]="qrdaPatientSelection" class="patient-selection-group">
+                            <mat-radio-button value="all">All eligible patients</mat-radio-button>
+                            <mat-radio-button value="selected">Selected patients only</mat-radio-button>
+                          </mat-radio-group>
+                          @if (qrdaPatientSelection === 'selected') {
+                            <button mat-stroked-button color="primary" type="button" (click)="selectPatientsForQrda()">
+                              <mat-icon>person_add</mat-icon>
+                              Select Patients ({{ selectedQrdaPatients.length }} selected)
+                            </button>
+                          }
+                        </div>
+                      }
+
+                      <!-- Validation Options -->
+                      <div class="form-section">
+                        <h4>Export Options</h4>
+                        <div class="checkbox-options">
+                          <mat-checkbox [(ngModel)]="qrdaValidateDocuments">
+                            Validate documents before export
+                          </mat-checkbox>
+                          <mat-checkbox [(ngModel)]="qrdaIncludeSupplemental">
+                            Include supplemental data elements
+                          </mat-checkbox>
+                        </div>
+                      </div>
+                    </div>
+                  </mat-card-content>
+                  <mat-card-actions>
+                    <button mat-raised-button color="primary" type="button"
+                            [disabled]="!canGenerateQrda() || isGeneratingQrda()"
+                            (click)="generateQrdaExport()">
+                      @if (isGeneratingQrda()) {
+                        <mat-spinner diameter="20"></mat-spinner>
+                      } @else {
+                        <mat-icon>cloud_upload</mat-icon>
+                      }
+                      Generate {{ selectedQrdaCategory() === 'QRDA_I' ? 'Category I' : 'Category III' }} Export
+                    </button>
+                  </mat-card-actions>
+                </mat-card>
+              }
+
+              <!-- Active Export Jobs -->
+              @if (activeQrdaJobs().length > 0) {
+                <div class="qrda-jobs-section">
+                  <h3>
+                    <mat-icon>work_history</mat-icon>
+                    Export Jobs
+                  </h3>
+                  <div class="qrda-jobs-grid">
+                    @for (job of activeQrdaJobs(); track job.id) {
+                      <mat-card class="qrda-job-card" [class]="job.status.toLowerCase()">
+                        <mat-card-header>
+                          <mat-icon mat-card-avatar [class]="job.jobType === 'QRDA_I' ? 'cat-i' : 'cat-iii'">
+                            {{ job.jobType === 'QRDA_I' ? 'person' : 'groups' }}
+                          </mat-icon>
+                          <mat-card-title>{{ job.jobType === 'QRDA_I' ? 'Category I' : 'Category III' }} Export</mat-card-title>
+                          <mat-card-subtitle>{{ formatDate(job.createdAt) }}</mat-card-subtitle>
+                        </mat-card-header>
+                        <mat-card-content>
+                          <div class="job-status">
+                            <span class="status-badge" [class]="job.status.toLowerCase()">
+                              @if (job.status === 'RUNNING') {
+                                <mat-spinner diameter="14"></mat-spinner>
+                              } @else if (job.status === 'COMPLETED') {
+                                <mat-icon>check_circle</mat-icon>
+                              } @else if (job.status === 'FAILED') {
+                                <mat-icon>error</mat-icon>
+                              } @else if (job.status === 'PENDING') {
+                                <mat-icon>schedule</mat-icon>
+                              } @else {
+                                <mat-icon>cancel</mat-icon>
+                              }
+                              {{ job.status }}
+                            </span>
+                          </div>
+                          @if (job.status === 'RUNNING') {
+                            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+                          }
+                          <div class="job-details">
+                            <div class="detail-item">
+                              <span class="label">Measures:</span>
+                              <span class="value">{{ job.measureIds.length }}</span>
+                            </div>
+                            <div class="detail-item">
+                              <span class="label">Period:</span>
+                              <span class="value">{{ job.periodStart }} - {{ job.periodEnd }}</span>
+                            </div>
+                            @if (job.documentCount) {
+                              <div class="detail-item">
+                                <span class="label">Documents:</span>
+                                <span class="value">{{ job.documentCount }}</span>
+                              </div>
+                            }
+                            @if (job.patientCount) {
+                              <div class="detail-item">
+                                <span class="label">Patients:</span>
+                                <span class="value">{{ job.patientCount }}</span>
+                              </div>
+                            }
+                          </div>
+                          @if (job.errorMessage) {
+                            <div class="job-error">
+                              <mat-icon>error_outline</mat-icon>
+                              {{ job.errorMessage }}
+                            </div>
+                          }
+                        </mat-card-content>
+                        <mat-card-actions>
+                          @if (job.status === 'COMPLETED') {
+                            <button mat-raised-button color="primary" type="button" (click)="downloadQrdaExport(job)">
+                              <mat-icon>download</mat-icon>
+                              Download
+                            </button>
+                          }
+                          @if (job.status === 'PENDING' || job.status === 'RUNNING') {
+                            <button mat-stroked-button color="warn" type="button" (click)="cancelQrdaJob(job)">
+                              <mat-icon>cancel</mat-icon>
+                              Cancel
+                            </button>
+                          }
+                        </mat-card-actions>
+                      </mat-card>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- CMS Submission Info -->
+              <mat-card class="qrda-info-card">
+                <mat-card-header>
+                  <mat-icon mat-card-avatar class="info-icon">info</mat-icon>
+                  <mat-card-title>About QRDA Exports</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="info-grid">
+                    <div class="info-item">
+                      <h4>QRDA Category I</h4>
+                      <p>Patient-level quality measure reports containing individual clinical data.
+                         Used for Medicare/Medicaid EHR Incentive Programs and other patient-specific reporting.</p>
+                    </div>
+                    <div class="info-item">
+                      <h4>QRDA Category III</h4>
+                      <p>Aggregate population-level reports with summary statistics.
+                         Used for CMS quality reporting programs including MIPS and hospital quality measures.</p>
+                    </div>
+                    <div class="info-item">
+                      <h4>Validation</h4>
+                      <p>Documents are validated against CMS schematrons to ensure compliance
+                         before submission to the CMS portal.</p>
+                    </div>
+                    <div class="info-item">
+                      <h4>Audit Logging</h4>
+                      <p>All QRDA exports are logged for HIPAA compliance, including document generation
+                         and download activities.</p>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
             </div>
           </div>
         </mat-tab>
@@ -1520,6 +1832,356 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
           }
         }
       }
+
+      /* QRDA Export Tab Styles */
+      .qrda-container {
+        padding: 0;
+      }
+
+      .qrda-header {
+        margin-bottom: 24px;
+
+        h2 {
+          font-size: 24px;
+          font-weight: 500;
+          margin: 0 0 4px 0;
+          color: #1a1a1a;
+        }
+
+        .qrda-subtitle {
+          font-size: 14px;
+          color: #666;
+          margin: 0;
+        }
+      }
+
+      .qrda-category-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 24px;
+        margin-bottom: 24px;
+      }
+
+      .qrda-category-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        &.selected {
+          border-color: #1976d2;
+          box-shadow: 0 4px 12px rgba(25, 118, 210, 0.25);
+        }
+
+        .category-icon {
+          width: 56px;
+          height: 56px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 12px;
+          font-size: 28px;
+
+          &.cat-i {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+          }
+
+          &.cat-iii {
+            background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
+            color: white;
+          }
+        }
+
+        .category-description {
+          color: #666;
+          line-height: 1.6;
+          margin: 0 0 16px 0;
+        }
+
+        .category-features {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+
+          .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #333;
+
+            mat-icon {
+              font-size: 18px;
+              width: 18px;
+              height: 18px;
+              color: #4caf50;
+            }
+          }
+        }
+      }
+
+      .qrda-config-card {
+        margin-bottom: 24px;
+
+        .config-icon {
+          background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+          color: white;
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+        }
+
+        .config-form {
+          .form-section {
+            margin-bottom: 24px;
+
+            h4 {
+              font-size: 16px;
+              font-weight: 500;
+              margin: 0 0 12px 0;
+              color: #333;
+            }
+
+            .full-width {
+              width: 100%;
+            }
+          }
+
+          .date-range {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+
+            mat-form-field {
+              flex: 1;
+            }
+          }
+
+          .period-presets {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+
+            button {
+              font-size: 12px;
+            }
+          }
+
+          .patient-selection-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+          }
+
+          .checkbox-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+        }
+
+        mat-card-actions {
+          padding: 16px;
+
+          button {
+            mat-icon, mat-spinner {
+              margin-right: 8px;
+            }
+          }
+        }
+      }
+
+      .qrda-jobs-section {
+        margin-bottom: 24px;
+
+        h3 {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 18px;
+          font-weight: 500;
+          margin: 0 0 16px 0;
+          color: #333;
+
+          mat-icon {
+            color: #1976d2;
+          }
+        }
+      }
+
+      .qrda-jobs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
+      }
+
+      .qrda-job-card {
+        border-left: 4px solid transparent;
+
+        &.completed {
+          border-left-color: #4caf50;
+        }
+
+        &.running, &.pending {
+          border-left-color: #ff9800;
+        }
+
+        &.failed {
+          border-left-color: #f44336;
+        }
+
+        &.cancelled {
+          border-left-color: #9e9e9e;
+        }
+
+        .job-status {
+          margin-bottom: 12px;
+
+          .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+
+            &.completed {
+              background-color: #e8f5e9;
+              color: #2e7d32;
+            }
+
+            &.running, &.pending {
+              background-color: #fff3e0;
+              color: #e65100;
+            }
+
+            &.failed {
+              background-color: #ffebee;
+              color: #c62828;
+            }
+
+            &.cancelled {
+              background-color: #f5f5f5;
+              color: #616161;
+            }
+
+            mat-icon {
+              font-size: 14px;
+              width: 14px;
+              height: 14px;
+            }
+          }
+        }
+
+        mat-progress-bar {
+          margin-bottom: 12px;
+        }
+
+        .job-details {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 8px;
+
+          .detail-item {
+            font-size: 13px;
+
+            .label {
+              color: #666;
+            }
+
+            .value {
+              font-weight: 500;
+              color: #333;
+              margin-left: 4px;
+            }
+          }
+        }
+
+        .job-error {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          margin-top: 12px;
+          padding: 8px;
+          background-color: #ffebee;
+          border-radius: 4px;
+          color: #c62828;
+          font-size: 13px;
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+          }
+        }
+
+        mat-card-actions {
+          padding: 12px 16px;
+          display: flex;
+          gap: 8px;
+
+          button mat-icon {
+            margin-right: 4px;
+          }
+        }
+      }
+
+      .qrda-info-card {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+
+        .info-icon {
+          background: linear-gradient(135deg, #607d8b 0%, #455a64 100%);
+          color: white;
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+        }
+
+        .info-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 24px;
+
+          .info-item {
+            h4 {
+              font-size: 15px;
+              font-weight: 600;
+              margin: 0 0 8px 0;
+              color: #333;
+            }
+
+            p {
+              font-size: 13px;
+              color: #666;
+              line-height: 1.6;
+              margin: 0;
+            }
+          }
+        }
+      }
+
+      .cat-i {
+        color: #1976d2;
+      }
+
+      .cat-iii {
+        color: #388e3c;
+      }
     `,
   ],
 })
@@ -1556,11 +2218,38 @@ export class ReportsComponent implements OnInit, OnDestroy, AfterViewInit {
   favoriteTemplates: ReportTemplate[] = [];
   templateCategories: { value: ReportTemplateCategory; label: string; icon: string }[] = [];
 
+  // QRDA Export properties
+  selectedQrdaCategory = signal<QrdaJobType | null>(null);
+  selectedQrdaMeasures: string[] = [];
+  qrdaPeriodStart: Date | null = new Date(2025, 0, 1);
+  qrdaPeriodEnd: Date | null = new Date(2025, 11, 31);
+  qrdaPatientSelection: 'all' | 'selected' = 'all';
+  selectedQrdaPatients: string[] = [];
+  qrdaValidateDocuments = true;
+  qrdaIncludeSupplemental = true;
+  isGeneratingQrda = signal(false);
+  activeQrdaJobs = signal<QrdaExportJob[]>([]);
+
+  // Available measures for QRDA export
+  availableQrdaMeasures = [
+    { id: 'BCS', code: 'BCS', name: 'Breast Cancer Screening' },
+    { id: 'COL', code: 'COL', name: 'Colorectal Cancer Screening' },
+    { id: 'CBP', code: 'CBP', name: 'Controlling High Blood Pressure' },
+    { id: 'CDC-HBA1C', code: 'CDC', name: 'Comprehensive Diabetes Care - HbA1c' },
+    { id: 'EED', code: 'EED', name: 'Eye Exam for Diabetics' },
+    { id: 'SPC', code: 'SPC', name: 'Statin Therapy for Cardiovascular Disease' },
+    { id: 'AWC', code: 'AWC', name: 'Adolescent Well-Care Visits' },
+    { id: 'CIS', code: 'CIS', name: 'Childhood Immunization Status' },
+    { id: 'WCC', code: 'WCC', name: 'Weight Assessment and Counseling' },
+    { id: 'PPC', code: 'PPC', name: 'Prenatal and Postpartum Care' },
+  ];
+
   constructor(
     private evaluationService: EvaluationService,
     private dialog: MatDialog,
     private toast: ToastService,
     private reportTemplatesService: ReportTemplatesService,
+    private qrdaExportService: QrdaExportService,
     public aiAssistant: AIAssistantService
   ) {}
 
@@ -2110,5 +2799,188 @@ export class ReportsComponent implements OnInit, OnDestroy, AfterViewInit {
   getCategoryLabel(category: ReportTemplateCategory): string {
     const cat = this.templateCategories.find(c => c.value === category);
     return cat ? cat.label : category;
+  }
+
+  // ===== QRDA Export Methods =====
+
+  /**
+   * Select QRDA category
+   */
+  selectQrdaCategory(category: QrdaJobType): void {
+    this.selectedQrdaCategory.set(category);
+  }
+
+  /**
+   * Set QRDA period based on preset
+   */
+  setQrdaPeriod(preset: string): void {
+    const now = new Date();
+    switch (preset) {
+      case 'ytd':
+        this.qrdaPeriodStart = new Date(now.getFullYear(), 0, 1);
+        this.qrdaPeriodEnd = now;
+        break;
+      case '2025':
+        this.qrdaPeriodStart = new Date(2025, 0, 1);
+        this.qrdaPeriodEnd = new Date(2025, 11, 31);
+        break;
+      case '2024':
+        this.qrdaPeriodStart = new Date(2024, 0, 1);
+        this.qrdaPeriodEnd = new Date(2024, 11, 31);
+        break;
+      case 'q4-2025':
+        this.qrdaPeriodStart = new Date(2025, 9, 1);
+        this.qrdaPeriodEnd = new Date(2025, 11, 31);
+        break;
+    }
+  }
+
+  /**
+   * Select patients for Category I export
+   */
+  selectPatientsForQrda(): void {
+    const dialogRef = this.dialog.open(PatientSelectionDialogComponent, {
+      width: '800px',
+      maxWidth: '90vw',
+      data: { multiSelect: true },
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((patientIds: string[] | null) => {
+      if (patientIds && patientIds.length > 0) {
+        this.selectedQrdaPatients = patientIds;
+        this.toast.info(`${patientIds.length} patient(s) selected`);
+      }
+    });
+  }
+
+  /**
+   * Check if QRDA export can be generated
+   */
+  canGenerateQrda(): boolean {
+    return (
+      this.selectedQrdaCategory() !== null &&
+      this.selectedQrdaMeasures.length > 0 &&
+      this.qrdaPeriodStart !== null &&
+      this.qrdaPeriodEnd !== null
+    );
+  }
+
+  /**
+   * Format date to ISO string for API
+   */
+  private formatDateForApi(date: Date | null): string {
+    if (!date) return '';
+    return date.toISOString().split('T')[0];
+  }
+
+  /**
+   * Generate QRDA export
+   */
+  generateQrdaExport(): void {
+    if (!this.canGenerateQrda()) {
+      this.toast.error('Please complete all required fields');
+      return;
+    }
+
+    const category = this.selectedQrdaCategory();
+    if (!category) return;
+
+    this.isGeneratingQrda.set(true);
+
+    const request: QrdaExportRequest = {
+      jobType: category,
+      measureIds: this.selectedQrdaMeasures,
+      periodStart: this.formatDateForApi(this.qrdaPeriodStart),
+      periodEnd: this.formatDateForApi(this.qrdaPeriodEnd),
+      validateDocuments: this.qrdaValidateDocuments,
+      includeSupplementalData: this.qrdaIncludeSupplemental,
+    };
+
+    // Add patient IDs for Category I if specific patients selected
+    if (category === 'QRDA_I' && this.qrdaPatientSelection === 'selected' && this.selectedQrdaPatients.length > 0) {
+      request.patientIds = this.selectedQrdaPatients;
+    }
+
+    const exportObservable = category === 'QRDA_I'
+      ? this.qrdaExportService.generateCategoryI(request)
+      : this.qrdaExportService.generateCategoryIII(request);
+
+    exportObservable.pipe(takeUntil(this.destroy$)).subscribe({
+      next: (job) => {
+        this.isGeneratingQrda.set(false);
+        this.toast.success(`${category === 'QRDA_I' ? 'Category I' : 'Category III'} export started`);
+        this.activeQrdaJobs.update(jobs => [job, ...jobs]);
+
+        // Start polling for job completion
+        this.pollQrdaJob(job.id);
+      },
+      error: (error) => {
+        this.isGeneratingQrda.set(false);
+        this.toast.error(`Failed to start ${category === 'QRDA_I' ? 'Category I' : 'Category III'} export`);
+      },
+    });
+  }
+
+  /**
+   * Poll QRDA job status
+   */
+  private pollQrdaJob(jobId: string): void {
+    this.qrdaExportService.pollJobUntilComplete(jobId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (job) => {
+          // Update job in active jobs list
+          this.activeQrdaJobs.update(jobs =>
+            jobs.map(j => j.id === job.id ? job : j)
+          );
+
+          // Show completion message
+          if (job.status === 'COMPLETED') {
+            this.toast.success(`QRDA export completed - ${job.documentCount || 1} document(s) ready`);
+          } else if (job.status === 'FAILED') {
+            this.toast.error(`QRDA export failed: ${job.errorMessage || 'Unknown error'}`);
+          }
+        },
+        error: (error) => {
+          this.toast.error('Failed to get export status');
+        },
+      });
+  }
+
+  /**
+   * Download QRDA export
+   */
+  downloadQrdaExport(job: QrdaExportJob): void {
+    this.qrdaExportService.downloadDocument(job.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob) => {
+          const filename = this.qrdaExportService.getExportFilename(job);
+          this.qrdaExportService.triggerDownload(blob, filename);
+          this.toast.success('Download started');
+        },
+        error: (error) => {
+          this.toast.error('Failed to download export');
+        },
+      });
+  }
+
+  /**
+   * Cancel QRDA job
+   */
+  cancelQrdaJob(job: QrdaExportJob): void {
+    this.qrdaExportService.cancelJob(job.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (cancelledJob) => {
+          this.activeQrdaJobs.update(jobs =>
+            jobs.map(j => j.id === cancelledJob.id ? cancelledJob : j)
+          );
+          this.toast.info('Export cancelled');
+        },
+        error: (error) => {
+          this.toast.error('Failed to cancel export');
+        },
+      });
   }
 }

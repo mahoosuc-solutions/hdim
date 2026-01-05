@@ -21,7 +21,9 @@ services:
     container_name: healthdata-postgres
     restart: unless-stopped
     image: postgres:15-alpine
-    profiles: ["light", "core", "ai", "analytics", "full"]
+    profiles: ["light", "core", "ai", "analytics", "demo", "full"]
+    # Increase max_connections to support all microservices (28 services × ~10 connections each)
+    command: postgres -c max_connections=300 -c shared_buffers=256MB
     environment:
       POSTGRES_USER: healthdata
       POSTGRES_PASSWORD: healthdata_password
@@ -180,9 +182,10 @@ services:
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       # Backend service URLs (include context-path + internal controller path)
-      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir/fhir
+      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir
       BACKEND_SERVICES_CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
       BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087/quality-measure
       BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084/patient
@@ -196,14 +199,23 @@ services:
       BACKEND_SERVICES_ECR_URL: http://ecr-service:8101
       BACKEND_SERVICES_PRIOR_AUTH_URL: http://prior-auth-service:8102
       BACKEND_SERVICES_SALES_AUTOMATION_URL: http://sales-automation-service:8106/sales-automation
+      # Demo mode configuration - disables auth enforcement and injects demo user headers
+      GATEWAY_AUTH_ENFORCED: "false"
+      GATEWAY_AUTH_DEMO_USER_USER_ID: "00000000-0000-0000-0000-000000000001"
+      GATEWAY_AUTH_DEMO_USER_USERNAME: "demo-user"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "acme-health"
+      GATEWAY_AUTH_DEMO_USER_ROLES: "ADMIN,CLINICIAN,ANALYST"
+      # OpenTelemetry - use Jaeger container hostname (not localhost)
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_SERVICE_NAME: gateway-service
     ports:
       - "8080:8080"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
       interval: 30s
-      timeout: 10s
+      timeout: 30s
       retries: 5
-      start_period: 60s
+      start_period: 90s
     networks:
       - healthdata-network
 
@@ -307,14 +319,17 @@ services:
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+      # OpenTelemetry - use Jaeger container hostname (not localhost)
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_SERVICE_NAME: event-processing-service
     ports:
       - "8083:8083"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8083/events/actuator/health"]
       interval: 30s
-      timeout: 10s
+      timeout: 30s
       retries: 5
-      start_period: 60s
+      start_period: 90s
     networks:
       - healthdata-network
 
@@ -344,6 +359,9 @@ services:
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+      # OpenTelemetry - use Jaeger container hostname
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: patient-service
     ports:
       - "8084:8084"
     healthcheck:
@@ -374,13 +392,21 @@ services:
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: healthdata_password
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      # Kafka producer config - don't add type headers to allow cross-service consumption
+      SPRING_KAFKA_PRODUCER_PROPERTIES_SPRING_JSON_ADD_TYPE_HEADERS: "false"
       SERVER_PORT: 8085
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+      # Disable Redis caching to avoid HAPI FHIR serialization issues with Jackson
+      SPRING_CACHE_TYPE: simple
+      # OpenTelemetry - use Jaeger container hostname
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: fhir-service
     ports:
       - "8085:8085"
     healthcheck:
@@ -421,8 +447,12 @@ services:
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # Use simple cache to avoid Redis/Jackson serialization issues with FHIR objects
+      SPRING_CACHE_TYPE: simple
       # OpenTelemetry configuration for Jaeger
       TRACING_URL: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: care-gap-service
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
@@ -458,6 +488,9 @@ services:
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: healthdata_password
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      # Kafka consumer config - ignore type headers to avoid ClassNotFoundException
+      SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_USE_TYPE_HEADERS: "false"
+      SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_VALUE_DEFAULT_TYPE: "java.util.HashMap"
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SERVER_PORT: 8087
@@ -469,6 +502,9 @@ services:
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+      # OpenTelemetry - use Jaeger container hostname
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: quality-measure-service
     ports:
       - "8087:8087"
     healthcheck:
@@ -792,14 +828,24 @@ services:
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # OpenTelemetry - use Jaeger container hostname (not localhost)
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_SERVICE_NAME: event-router-service
+      # Performance tuning - increased connection pool for high event load
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "20"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "5"
+      SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: "60000"
+      # Event throttling configuration (from application.yml defaults)
+      EVENT_ROUTER_POLL_INTERVAL: "200"
+      EVENT_ROUTER_RATE_LIMIT: "50"
     ports:
       - "8095:8095"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8095/actuator/health"]
-      interval: 30s
-      timeout: 10s
+      interval: 60s
+      timeout: 30s
       retries: 5
-      start_period: 60s
+      start_period: 120s
     networks:
       - healthdata-network
 
@@ -1358,6 +1404,41 @@ services:
     networks:
       - healthdata-network
 
+  # Port 8098 - Demo Seeding Service (synthetic data for video demos)
+  demo-seeding-service:
+    container_name: healthdata-demo-seeding-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/demo-seeding-service/Dockerfile
+    profiles: ["demo", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_demo
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SERVER_PORT: 8098
+      DEMO_SNAPSHOTS_DIR: /app/demo-snapshots
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+    ports:
+      - "8098:8098"
+    volumes:
+      - demo-snapshots:/app/demo-snapshots
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8098/demo/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
   # ============================================
   # FRONTEND SERVICE
   # ============================================
@@ -1385,3 +1466,4 @@ networks:
 volumes:
   postgres_data:
   postgres_backups:
+  demo-snapshots:

@@ -71,6 +71,7 @@ dependencies {
     testImplementation(libs.bundles.testing)
     testImplementation(libs.spring.boot.starter.test)
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation(project(":platform:test-fixtures"))
 
     // Testcontainers
     testImplementation(libs.bundles.testcontainers)

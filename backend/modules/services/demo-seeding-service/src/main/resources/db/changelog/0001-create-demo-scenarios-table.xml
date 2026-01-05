@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="0001-create-demo-scenarios-table" author="demo-seeding-service">
+        <comment>Create demo_scenarios table for storing scenario configurations</comment>
+
+        <createTable tableName="demo_scenarios">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="display_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="scenario_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_count" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="data_snapshot" type="JSONB"/>
+            <column name="configuration" type="JSONB"/>
+            <column name="estimated_load_time_seconds" type="INTEGER"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="INTEGER" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE"/>
+        </createTable>
+
+        <createIndex tableName="demo_scenarios" indexName="idx_demo_scenarios_name">
+            <column name="name"/>
+        </createIndex>
+
+        <createIndex tableName="demo_scenarios" indexName="idx_demo_scenarios_type">
+            <column name="scenario_type"/>
+        </createIndex>
+
+        <createIndex tableName="demo_scenarios" indexName="idx_demo_scenarios_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex tableName="demo_scenarios" indexName="idx_demo_scenarios_active">
+            <column name="is_active"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

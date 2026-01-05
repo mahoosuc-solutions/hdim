@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Profile;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.core.annotation.Order;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -52,6 +53,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  * @see TrustedTenantAccessFilter
  */
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true)
 public class ConsentSecurityConfig {
 
     @Value("${gateway.auth.signing-secret:}")

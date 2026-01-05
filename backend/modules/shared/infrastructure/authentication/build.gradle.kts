@@ -38,6 +38,9 @@ dependencies {
     // TOTP MFA (Time-based One-Time Password)
     api("dev.samstevens.totp:totp:1.7.1")
 
+    // Spring Cloud OpenFeign for auth header forwarding interceptor
+    compileOnly("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.5")
+
     // Lombok
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)

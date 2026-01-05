@@ -24,7 +24,7 @@ import java.util.Map;
  *
  * REST API for patient data aggregation, timeline views, and health status dashboards.
  *
- * Endpoints:
+ * Endpoints (via gateway at /patient/patient/* or /api/patients/patient/*):
  * - GET /patient/health-record - Comprehensive patient health record
  * - GET /patient/allergies - Patient allergies
  * - GET /patient/immunizations - Patient immunizations

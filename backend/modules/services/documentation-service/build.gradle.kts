@@ -36,7 +36,8 @@ dependencies {
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
 
     // Hypersistence for PostgreSQL JSONB and array support
-    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.7.0")
+    // Version 3.9.0+ required for Hibernate 6.5+ compatibility
+    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.0")
 
     // Spring Cache with Redis
     implementation(libs.spring.boot.starter.data.redis)
@@ -59,6 +60,7 @@ dependencies {
     implementation(libs.guava)
 
     // Testing
+    testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)

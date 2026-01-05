@@ -397,6 +397,16 @@ public class ApiGatewayController {
                 }
             }
 
+            // In demo mode, X-Auth-Tenant-Ids is set by GatewayAuthenticationFilter
+            // Override X-Tenant-ID to use the first allowed tenant from authenticated context
+            // This ensures tenant ID consistency for demo/gateway-authenticated requests
+            String authTenantIds = request.getHeader("X-Auth-Tenant-Ids");
+            if (authTenantIds != null && !authTenantIds.trim().isEmpty()) {
+                String primaryTenant = authTenantIds.split(",")[0].trim();
+                headers.set("X-Tenant-ID", primaryTenant);
+                log.debug("Set X-Tenant-ID from gateway auth context: {}", primaryTenant);
+            }
+
             // Create request entity
             HttpEntity<String> requestEntity = new HttpEntity<>(body, headers);
 

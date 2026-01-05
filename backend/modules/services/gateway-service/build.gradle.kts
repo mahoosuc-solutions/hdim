@@ -42,10 +42,12 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:tracing"))
 
     // Testing
+    testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.bundles.testing)
+    testImplementation(libs.postgresql)  // PostgreSQL JDBC driver for Testcontainers
 }
 
 tasks.withType<Test> {

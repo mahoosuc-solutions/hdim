@@ -9,8 +9,7 @@ spring:
     allow-circular-references: true
   
   liquibase:
-    enabled: true
-    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: false  # Gateway uses shared auth module - no database migrations needed
 
   cache:
     type: none  # Disable Redis cache to avoid circular dependencies

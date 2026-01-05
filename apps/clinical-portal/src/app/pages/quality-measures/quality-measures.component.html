@@ -1,0 +1,284 @@
+<div class="quality-measures-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Quality Measures</h1>
+      <p class="subtitle">HEDIS Quality Measure Library & Population Evaluation</p>
+    </div>
+    <div class="header-stats">
+      <mat-card class="stat-card">
+        <mat-icon>people</mat-icon>
+        <div class="stat-content">
+          <span class="stat-value">{{ totalPatients().toLocaleString() }}</span>
+          <span class="stat-label">Attributed Patients</span>
+        </div>
+      </mat-card>
+      <mat-card class="stat-card">
+        <mat-icon>assessment</mat-icon>
+        <div class="stat-content">
+          <span class="stat-value">{{ measures().length }}</span>
+          <span class="stat-label">Active Measures</span>
+        </div>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content" [class.with-detail]="selectedMeasure()">
+    <!-- Measures List -->
+    <div class="measures-list-section">
+      <!-- Filters -->
+      <mat-card class="filters-card">
+        <div class="filters-row">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search Measures</mat-label>
+            <input matInput [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" placeholder="Search by name or code...">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Category</mat-label>
+            <mat-select [value]="selectedCategory()" (selectionChange)="selectedCategory.set($event.value)">
+              @for (cat of categories; track cat.value) {
+                <mat-option [value]="cat.value">{{ cat.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select [value]="selectedStatus()" (selectionChange)="selectedStatus.set($event.value)">
+              <mat-option value="all">All Statuses</mat-option>
+              <mat-option value="Active">Active</mat-option>
+              <mat-option value="Draft">Draft</mat-option>
+              <mat-option value="Retired">Retired</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </mat-card>
+
+      <!-- Measures Table -->
+      <mat-card class="measures-table-card">
+        <div class="measures-grid">
+          @for (measure of filteredMeasures(); track measure.id) {
+            <mat-card
+              class="measure-card"
+              [class.selected]="selectedMeasure()?.id === measure.id"
+              (click)="selectMeasure(measure)"
+            >
+              <div class="measure-header">
+                <div class="measure-code-badge">{{ measure.code }}</div>
+                <mat-chip [class]="measure.status.toLowerCase()">{{ measure.status }}</mat-chip>
+              </div>
+
+              <h3 class="measure-name">{{ measure.name }}</h3>
+
+              <p class="measure-description">{{ measure.description }}</p>
+
+              <div class="measure-meta">
+                <div class="meta-item">
+                  <mat-icon>category</mat-icon>
+                  <span>{{ getCategoryLabel(measure.category) }}</span>
+                </div>
+                <div class="meta-item">
+                  <mat-icon>business</mat-icon>
+                  <span>{{ measure.steward }}</span>
+                </div>
+              </div>
+
+              <div class="measure-footer">
+                <div class="star-rating">
+                  @for (star of getStarArray(measure.starRating); track $index) {
+                    <mat-icon [class.filled]="star === 1">{{ star === 1 ? 'star' : 'star_border' }}</mat-icon>
+                  }
+                  <span class="star-label">CMS Impact</span>
+                </div>
+
+                @if (measure.benchmark) {
+                  <div class="benchmark">
+                    <span class="benchmark-value">{{ measure.benchmark }}%</span>
+                    <span class="benchmark-label">Benchmark</span>
+                  </div>
+                }
+              </div>
+
+              @if (measure.lastEvaluated) {
+                <div class="evaluation-status">
+                  <mat-icon>check_circle</mat-icon>
+                  <span>Rate: {{ measure.rate }}%</span>
+                  <span class="divider">|</span>
+                  <span>{{ measure.careGaps }} care gaps</span>
+                </div>
+              }
+            </mat-card>
+          }
+        </div>
+
+        @if (filteredMeasures().length === 0) {
+          <div class="no-results">
+            <mat-icon>search_off</mat-icon>
+            <p>No measures found matching your criteria</p>
+          </div>
+        }
+      </mat-card>
+    </div>
+
+    <!-- Measure Detail Panel -->
+    @if (selectedMeasure()) {
+      <div class="measure-detail-panel">
+        <mat-card class="detail-card">
+          <div class="detail-header">
+            <div class="detail-title">
+              <span class="code-badge">{{ selectedMeasure()!.code }}</span>
+              <h2>{{ selectedMeasure()!.name }}</h2>
+            </div>
+            <button mat-icon-button (click)="closeMeasureDetail()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="detail-content">
+            <!-- Measure Info -->
+            <div class="info-section">
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="label">Measure Type</span>
+                  <span class="value">{{ selectedMeasure()!.measureType }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Steward</span>
+                  <span class="value">{{ selectedMeasure()!.steward }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">CMS Star Rating Impact</span>
+                  <div class="star-display">
+                    @for (star of getStarArray(selectedMeasure()!.starRating); track $index) {
+                      <mat-icon [class.filled]="star === 1">{{ star === 1 ? 'star' : 'star_border' }}</mat-icon>
+                    }
+                    <span>(High)</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <span class="label">National Benchmark</span>
+                  <span class="value highlight">{{ selectedMeasure()!.benchmark }}%</span>
+                </div>
+              </div>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <!-- Population Criteria -->
+            <div class="criteria-section">
+              <h4>Population Criteria</h4>
+              <p class="description">{{ selectedMeasure()!.description }}</p>
+
+              @if (selectedMeasure()!.code === 'BCS') {
+                <ul class="criteria-list">
+                  <li>Women aged 50-74</li>
+                  <li>Continuously enrolled for 12 months</li>
+                  <li>Mammogram (CPT 77067, 77063) within 27 months</li>
+                </ul>
+              }
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <!-- Last Evaluation -->
+            <div class="evaluation-section">
+              <h4>Last Evaluated</h4>
+              <p class="eval-date">{{ formatDate(selectedMeasure()!.lastEvaluated) }}</p>
+
+              @if (!isEvaluating() && !evaluationResult()) {
+                <div class="action-buttons">
+                  <button mat-raised-button color="primary" (click)="runEvaluation()">
+                    <mat-icon>play_arrow</mat-icon>
+                    Run Evaluation
+                  </button>
+                  <button mat-stroked-button (click)="viewCqlLogic()">
+                    <mat-icon>code</mat-icon>
+                    View CQL Logic
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Evaluation Progress -->
+            @if (isEvaluating()) {
+              <div class="evaluation-progress">
+                <h4>Evaluating {{ selectedMeasure()!.code }} Measure...</h4>
+                <mat-progress-bar mode="determinate" [value]="evaluationProgress()"></mat-progress-bar>
+                <p class="status-text">{{ evaluationStatus() }}</p>
+                <p class="time-estimate">Estimated time remaining: {{ estimatedTimeRemaining() }} seconds</p>
+              </div>
+            }
+
+            <!-- Evaluation Results -->
+            @if (evaluationResult()) {
+              <div class="evaluation-results">
+                <div class="results-header">
+                  <mat-icon class="success-icon">check_circle</mat-icon>
+                  <h4>{{ evaluationResult()!.measureCode }} Evaluation Results</h4>
+                  <mat-chip class="complete-chip">Complete</mat-chip>
+                </div>
+
+                <div class="results-meta">
+                  <span>Evaluation Time: {{ evaluationResult()!.evaluationTime }}s</span>
+                  <span>Patients Evaluated: {{ evaluationResult()!.patientsEvaluated.toLocaleString() }}</span>
+                </div>
+
+                <mat-card class="results-card performance-card">
+                  <h5>MEASURE PERFORMANCE</h5>
+                  <div class="performance-grid">
+                    <div class="perf-item">
+                      <span class="perf-label">Denominator</span>
+                      <span class="perf-value">{{ evaluationResult()!.denominator.toLocaleString() }} eligible</span>
+                    </div>
+                    <div class="perf-item">
+                      <span class="perf-label">Numerator</span>
+                      <span class="perf-value">{{ evaluationResult()!.numerator.toLocaleString() }} compliant</span>
+                    </div>
+                    <div class="perf-item highlight-rate">
+                      <span class="perf-label">HEDIS Rate</span>
+                      <span class="perf-value large">{{ evaluationResult()!.rate }}%</span>
+                    </div>
+                    <div class="perf-item">
+                      <span class="perf-label">National Benchmark</span>
+                      <span class="perf-value">{{ evaluationResult()!.benchmark }}%</span>
+                    </div>
+                    <div class="perf-item" [class.positive]="evaluationResult()!.gapToBenchmark >= 0" [class.negative]="evaluationResult()!.gapToBenchmark < 0">
+                      <span class="perf-label">Gap to Benchmark</span>
+                      <span class="perf-value">{{ evaluationResult()!.gapToBenchmark > 0 ? '+' : '' }}{{ evaluationResult()!.gapToBenchmark }} points</span>
+                    </div>
+                  </div>
+                </mat-card>
+
+                <mat-card class="results-card care-gaps-card">
+                  <h5>CARE GAPS IDENTIFIED</h5>
+                  <div class="care-gaps-content">
+                    <div class="gaps-count">
+                      <mat-icon>warning</mat-icon>
+                      <span class="count">{{ evaluationResult()!.careGapsCount }}</span>
+                      <span class="label">patients need intervention</span>
+                    </div>
+                    <div class="gaps-actions">
+                      <button mat-raised-button color="primary" (click)="viewCareGaps()">
+                        <mat-icon>list</mat-icon>
+                        View Care Gap List
+                      </button>
+                      <button mat-raised-button color="accent" (click)="generateOutreach()">
+                        <mat-icon>campaign</mat-icon>
+                        Generate Outreach
+                      </button>
+                    </div>
+                  </div>
+                </mat-card>
+              </div>
+            }
+          </div>
+        </mat-card>
+      </div>
+    }
+  </div>
+</div>

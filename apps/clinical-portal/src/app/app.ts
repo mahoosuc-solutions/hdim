@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -13,6 +13,8 @@ import { BreadcrumbComponent } from './shared/components/breadcrumb/breadcrumb.c
 import { GlobalSearchService } from './shared/services/global-search.service';
 import { ThemeService } from './services/theme.service';
 import { AuthService } from './services/auth.service';
+import { DemoControlBarComponent } from './demo-mode/components/demo-control-bar/demo-control-bar.component';
+import { DemoModeService } from './demo-mode/services/demo-mode.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -29,6 +31,7 @@ import { Subscription } from 'rxjs';
     MatMenuModule,
     MatTooltipModule,
     BreadcrumbComponent,
+    DemoControlBarComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
@@ -69,8 +72,18 @@ export class App implements OnInit, OnDestroy {
     private globalSearchService: GlobalSearchService,
     protected themeService: ThemeService,
     private authService: AuthService,
-    protected router: Router
-  ) {}
+    protected router: Router,
+    private demoModeService: DemoModeService
+  ) {
+    // React to demo mode changes to add/remove body class
+    effect(() => {
+      if (this.demoModeService.isDemoMode()) {
+        document.body.classList.add('demo-mode-active');
+      } else {
+        document.body.classList.remove('demo-mode-active');
+      }
+    });
+  }
 
   ngOnInit(): void {
     // Initialize theme system - automatically detects browser preference

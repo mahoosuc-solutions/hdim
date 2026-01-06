@@ -1,14 +1,14 @@
 package com.healthdata.authentication.feign;
 
 import com.healthdata.authentication.constants.AuthHeaderConstants;
+import com.healthdata.authentication.context.AuthHeaderContext;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.util.Map;
 
 /**
  * Feign RequestInterceptor that forwards X-Auth-* headers from the current
@@ -29,6 +29,11 @@ import org.springframework.web.context.request.ServletRequestAttributes;
  *   <li><b>X-Auth-Token-Expires</b> - Token expiration timestamp</li>
  *   <li><b>X-Tenant-ID</b> - Current tenant context for the request</li>
  * </ul>
+ *
+ * <h2>Implementation</h2>
+ * This interceptor reads headers from AuthHeaderContext (InheritableThreadLocal)
+ * instead of RequestContextHolder. This ensures headers are available even when
+ * Feign executes requests in different threads (e.g., thread pools).
  *
  * <h2>Usage</h2>
  * This interceptor is auto-registered as a Spring component when Feign is on the classpath.
@@ -53,6 +58,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
  * </pre>
  *
  * @see AuthHeaderConstants
+ * @see AuthHeaderContext
+ * @see com.healthdata.authentication.context.AuthHeaderContextFilter
  * @see com.healthdata.authentication.filter.TrustedHeaderAuthFilter
  */
 @Slf4j
@@ -64,57 +71,38 @@ public class AuthHeaderForwardingInterceptor implements RequestInterceptor {
 
     @Override
     public void apply(RequestTemplate template) {
-        ServletRequestAttributes attributes = getRequestAttributes();
-        if (attributes == null) {
-            log.trace("No request context available, skipping auth header forwarding");
+        // Read headers from AuthHeaderContext (InheritableThreadLocal)
+        // This works across threads, unlike RequestContextHolder
+        Map<String, String> headers = AuthHeaderContext.getAllHeaders();
+
+        if (headers.isEmpty()) {
+            log.trace("No auth headers in context, skipping header forwarding");
             return;
         }
 
-        HttpServletRequest request = attributes.getRequest();
-        if (request == null) {
-            log.trace("No HTTP request in context, skipping auth header forwarding");
-            return;
-        }
+        int forwardedCount = 0;
 
-        // Forward all X-Auth-* headers
-        forwardAuthHeaders(request, template);
+        // Forward all X-Auth-* headers from context
+        for (String headerName : AuthHeaderConstants.getAllAuthHeaders()) {
+            String headerValue = headers.get(headerName);
+            if (headerValue != null && !headerValue.isBlank()) {
+                template.header(headerName, headerValue);
+                log.trace("Forwarding header: {} = {}", headerName, maskSensitiveValue(headerName, headerValue));
+                forwardedCount++;
+            }
+        }
 
         // Forward X-Tenant-ID for tenant context
-        forwardHeader(request, template, TENANT_ID_HEADER);
-
-        log.debug("Auth headers forwarded to downstream service: {}",
-            template.feignTarget().name());
-    }
-
-    /**
-     * Forward all authentication headers to the downstream request.
-     */
-    private void forwardAuthHeaders(HttpServletRequest request, RequestTemplate template) {
-        for (String headerName : AuthHeaderConstants.getAllAuthHeaders()) {
-            forwardHeader(request, template, headerName);
+        String tenantId = headers.get(TENANT_ID_HEADER);
+        if (tenantId != null && !tenantId.isBlank()) {
+            template.header(TENANT_ID_HEADER, tenantId);
+            log.trace("Forwarding header: {} = {}", TENANT_ID_HEADER, tenantId);
+            forwardedCount++;
         }
-    }
 
-    /**
-     * Forward a single header if present in the original request.
-     */
-    private void forwardHeader(HttpServletRequest request, RequestTemplate template, String headerName) {
-        String headerValue = request.getHeader(headerName);
-        if (headerValue != null && !headerValue.isBlank()) {
-            template.header(headerName, headerValue);
-            log.trace("Forwarding header: {} = {}", headerName, maskSensitiveValue(headerName, headerValue));
-        }
-    }
-
-    /**
-     * Get the current request attributes from RequestContextHolder.
-     */
-    private ServletRequestAttributes getRequestAttributes() {
-        try {
-            return (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        } catch (Exception e) {
-            log.trace("Error getting request attributes: {}", e.getMessage());
-            return null;
+        if (forwardedCount > 0) {
+            log.debug("Forwarded {} auth headers to downstream service: {}",
+                forwardedCount, template.feignTarget().name());
         }
     }
 

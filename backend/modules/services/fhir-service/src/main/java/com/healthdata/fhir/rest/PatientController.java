@@ -1,6 +1,8 @@
 package com.healthdata.fhir.rest;
 
 import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
 
 import com.healthdata.audit.annotations.Audited;
 import com.healthdata.audit.models.AuditAction;
@@ -173,6 +175,57 @@ public class PatientController {
 
         String filter = family != null ? family : name;
         Bundle bundle = patientService.searchPatients(resolveTenant(tenantId), filter, count);
+        return ResponseEntity.ok()
+                .contentType(MediaType.valueOf("application/fhir+json"))
+                .body(parser.encodeResourceToString(bundle));
+    }
+
+    @Operation(
+        summary = "Batch fetch Patients by IDs",
+        description = "Fetches multiple Patient resources in a single request. " +
+                     "Issue #137: Optimize FHIR queries for dashboard performance. " +
+                     "This endpoint reduces N+1 queries to a single batch query.",
+        operationId = "batchGetPatients"
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Batch fetch completed successfully",
+            content = @Content(mediaType = "application/fhir+json", schema = @Schema(implementation = String.class))
+        ),
+        @ApiResponse(responseCode = "400", description = "Invalid patient IDs"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
+    @GetMapping("/_batch")
+    @Audited(
+            action = AuditAction.READ,
+            resourceType = "Patient",
+            purposeOfUse = "TREATMENT",
+            description = "Batch fetch patient records"
+    )
+    public ResponseEntity<String> batchGetPatients(
+            @Parameter(description = "Tenant ID for multi-tenant isolation")
+            @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+            @Parameter(description = "Comma-separated list of Patient IDs", required = true,
+                      example = "123e4567-e89b-12d3-a456-426614174000,223e4567-e89b-12d3-a456-426614174001")
+            @RequestParam(value = "_id") String ids) {
+
+        List<String> patientIds = Arrays.stream(ids.split(","))
+                .map(String::trim)
+                .filter(id -> !id.isEmpty())
+                .toList();
+
+        if (patientIds.isEmpty()) {
+            Bundle emptyBundle = new Bundle();
+            emptyBundle.setType(Bundle.BundleType.SEARCHSET);
+            emptyBundle.setTotal(0);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.valueOf("application/fhir+json"))
+                    .body(parser.encodeResourceToString(emptyBundle));
+        }
+
+        Bundle bundle = patientService.getPatientsBundleByIds(resolveTenant(tenantId), patientIds);
         return ResponseEntity.ok()
                 .contentType(MediaType.valueOf("application/fhir+json"))
                 .body(parser.encodeResourceToString(bundle));

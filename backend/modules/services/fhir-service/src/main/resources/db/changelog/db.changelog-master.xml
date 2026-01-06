@@ -25,5 +25,6 @@
     <include file="db/changelog/0018-create-smart-clients-table.xml"/>
     <include file="db/changelog/0019-create-fhir-subscriptions-table.xml"/>
     <include file="db/changelog/0020-add-covering-indexes.xml"/>
+    <include file="db/changelog/0021-add-batch-query-indexes.xml"/>
 
 </databaseChangeLog>

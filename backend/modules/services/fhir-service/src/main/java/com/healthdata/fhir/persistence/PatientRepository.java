@@ -21,5 +21,19 @@ public interface PatientRepository extends JpaRepository<PatientEntity, UUID> {
     @Query("SELECT p FROM PatientEntity p WHERE p.tenantId = :tenantId AND p.id = :id AND p.deletedAt IS NULL")
     Optional<PatientEntity> findActiveByTenantIdAndId(@Param("tenantId") String tenantId, @Param("id") UUID id);
 
+    /**
+     * Batch find patients by tenant and multiple IDs, excluding soft-deleted records.
+     * Issue #137: Optimize FHIR Queries for Primary Care Dashboard
+     *
+     * This query fetches multiple patients in a single database roundtrip,
+     * replacing N+1 query patterns for dashboard loads.
+     *
+     * @param tenantId Tenant ID for multi-tenant isolation
+     * @param ids List of patient UUIDs to fetch
+     * @return List of active patient entities matching the IDs
+     */
+    @Query("SELECT p FROM PatientEntity p WHERE p.tenantId = :tenantId AND p.id IN :ids AND p.deletedAt IS NULL")
+    List<PatientEntity> findActiveByTenantIdAndIdIn(@Param("tenantId") String tenantId, @Param("ids") List<UUID> ids);
+
     long countByTenantId(String tenantId);
 }

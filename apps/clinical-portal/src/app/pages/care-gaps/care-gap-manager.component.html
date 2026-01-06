@@ -324,18 +324,43 @@
               </td>
             </ng-container>
 
-            <!-- Actions Column -->
+            <!-- Actions Column - Quick Actions (Issue #141) -->
             <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <th mat-header-cell *matHeaderCellDef>Quick Actions</th>
               <td mat-cell *matCellDef="let gap">
-                <button
-                  mat-icon-button
-                  [matMenuTriggerFor]="actionsMenu"
-                  [matMenuTriggerData]="{gap: gap}"
-                  aria-label="More actions"
-                  matTooltip="More actions">
-                  <mat-icon>more_vert</mat-icon>
-                </button>
+                <div class="quick-actions-cell">
+                  <!-- Primary Quick Action Button -->
+                  <button
+                    mat-raised-button
+                    color="primary"
+                    class="quick-action-btn primary-action"
+                    [matTooltip]="getPrimaryAction(gap).description"
+                    (click)="executePrimaryAction(gap); $event.stopPropagation()">
+                    <mat-icon>{{ getPrimaryAction(gap).icon }}</mat-icon>
+                    {{ getPrimaryAction(gap).label }}
+                  </button>
+
+                  <!-- Close Gap Button -->
+                  <button
+                    mat-icon-button
+                    color="accent"
+                    class="close-gap-btn"
+                    matTooltip="Close gap"
+                    (click)="quickCloseGap(gap); $event.stopPropagation()">
+                    <mat-icon>check_circle</mat-icon>
+                  </button>
+
+                  <!-- More Actions Menu -->
+                  <button
+                    mat-icon-button
+                    [matMenuTriggerFor]="quickActionsMenu"
+                    [matMenuTriggerData]="{gap: gap}"
+                    aria-label="More actions"
+                    matTooltip="More actions"
+                    (click)="$event.stopPropagation()">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+                </div>
               </td>
             </ng-container>
 
@@ -390,11 +415,25 @@
                     </span>
                   </div>
                   <div class="gap-actions">
-                    <button mat-icon-button matTooltip="Add Intervention" (click)="openInterventionForm(gap)">
-                      <mat-icon>add_task</mat-icon>
+                    <!-- Quick action buttons in measure view -->
+                    <button mat-stroked-button
+                            class="quick-action-sm"
+                            [matTooltip]="getPrimaryAction(gap).description"
+                            (click)="executePrimaryAction(gap)">
+                      <mat-icon>{{ getPrimaryAction(gap).icon }}</mat-icon>
+                      {{ getPrimaryAction(gap).label }}
                     </button>
-                    <button mat-icon-button matTooltip="Close Gap" (click)="openClosureForm(gap)">
+                    <button mat-icon-button
+                            color="accent"
+                            matTooltip="Close Gap"
+                            (click)="quickCloseGap(gap)">
                       <mat-icon>check_circle</mat-icon>
+                    </button>
+                    <button mat-icon-button
+                            [matMenuTriggerFor]="quickActionsMenu"
+                            [matMenuTriggerData]="{gap: gap}"
+                            matTooltip="More actions">
+                      <mat-icon>more_vert</mat-icon>
                     </button>
                   </div>
                 </div>
@@ -413,7 +452,38 @@
   }
 </div>
 
-<!-- Actions Menu Template -->
+<!-- Quick Actions Menu Template (Issue #141) -->
+<mat-menu #quickActionsMenu="matMenu">
+  <ng-template matMenuContent let-gap="gap">
+    <!-- Secondary Quick Actions -->
+    @for (action of getSecondaryActions(gap); track action.type) {
+      <button mat-menu-item (click)="openQuickActionDialog(gap, action.type)">
+        <mat-icon [style.color]="action.color">{{ action.icon }}</mat-icon>
+        <span>{{ action.label }}</span>
+      </button>
+    }
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="openPatientPanel(gap)">
+      <mat-icon>person</mat-icon>
+      <span>View Patient Details</span>
+    </button>
+    <button mat-menu-item (click)="viewPatientDetail(gap)">
+      <mat-icon>open_in_new</mat-icon>
+      <span>Go to Patient Record</span>
+    </button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="openInterventionForm(gap)">
+      <mat-icon>add_task</mat-icon>
+      <span>Custom Intervention</span>
+    </button>
+    <button mat-menu-item (click)="quickCloseGap(gap)">
+      <mat-icon color="primary">check_circle</mat-icon>
+      <span>Close Gap</span>
+    </button>
+  </ng-template>
+</mat-menu>
+
+<!-- Legacy Actions Menu (for backwards compatibility) -->
 <mat-menu #actionsMenu="matMenu">
   <ng-template matMenuContent let-gap="gap">
     <button mat-menu-item (click)="openPatientPanel(gap)">
@@ -434,11 +504,11 @@
       <span>Close Gap</span>
     </button>
     <mat-divider></mat-divider>
-    <button mat-menu-item>
+    <button mat-menu-item (click)="openQuickActionDialog(gap, 'SEND_REMINDER')">
       <mat-icon>email</mat-icon>
       <span>Send Reminder</span>
     </button>
-    <button mat-menu-item>
+    <button mat-menu-item (click)="openQuickActionDialog(gap, 'SCHEDULE_VISIT')">
       <mat-icon>event</mat-icon>
       <span>Schedule Appointment</span>
     </button>

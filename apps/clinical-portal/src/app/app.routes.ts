@@ -211,6 +211,15 @@ export const appRoutes: Route[] = [
     data: { permissions: ['VIEW_CARE_GAPS'] },
   },
   {
+    path: 'risk-stratification',
+    loadComponent: () =>
+      import('./pages/risk-stratification/risk-stratification.component').then(
+        (m) => m.RiskStratificationComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_PATIENTS'] },
+  },
+  {
     path: 'outreach-campaigns',
     loadComponent: () =>
       import('./pages/outreach-campaigns/outreach-campaigns.component').then(

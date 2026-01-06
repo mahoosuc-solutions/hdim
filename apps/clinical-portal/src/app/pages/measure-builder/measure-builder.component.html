@@ -8,14 +8,24 @@
         <p>Create and manage custom quality measures using FHIR data and CQL.</p>
       </div>
     </div>
-    <app-loading-button
-      text="New Measure"
-      icon="add"
-      color="primary"
-      variant="raised"
-      ariaLabel="Create new measure"
-      (buttonClick)="openNewMeasureDialog()">
-    </app-loading-button>
+    <div class="header-actions">
+      <app-loading-button
+        text="Performance Dashboard"
+        icon="analytics"
+        color="accent"
+        variant="raised"
+        ariaLabel="View performance dashboard"
+        (buttonClick)="openPerformanceDashboard()">
+      </app-loading-button>
+      <app-loading-button
+        text="New Measure"
+        icon="add"
+        color="primary"
+        variant="raised"
+        ariaLabel="Create new measure"
+        (buttonClick)="openNewMeasureDialog()">
+      </app-loading-button>
+    </div>
   </div>
 
   <!-- Loading Overlay -->
@@ -200,12 +210,29 @@
 
                   <button
                     mat-icon-button
+                    [matTooltip]="'Version History'"
+                    color="primary"
+                    (click)="openVersionHistory(measure)">
+                    <mat-icon>history</mat-icon>
+                  </button>
+
+                  <button
+                    mat-icon-button
                     [matMenuTriggerFor]="moreMenu"
                     [matTooltip]="'More options'">
                     <mat-icon>more_vert</mat-icon>
                   </button>
 
                   <mat-menu #moreMenu="matMenu">
+                    <button mat-menu-item (click)="cloneMeasure(measure)">
+                      <mat-icon>content_copy</mat-icon>
+                      <span>Clone Measure</span>
+                    </button>
+                    <button mat-menu-item (click)="openVersionHistory(measure)">
+                      <mat-icon>history</mat-icon>
+                      <span>Version History</span>
+                    </button>
+                    <mat-divider></mat-divider>
                     <button mat-menu-item (click)="deleteMeasure(measure)">
                       <mat-icon color="warn">delete</mat-icon>
                       <span>Delete</span>

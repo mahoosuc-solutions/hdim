@@ -1,0 +1,255 @@
+/**
+ * Demo Mode Global Styles
+ *
+ * These styles are applied when demo mode is active.
+ * Import this file in your main styles.scss or global styles.
+ */
+
+/* Demo Tooltip Styles */
+.demo-tooltip {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  max-width: 300px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &.visible {
+    opacity: 1;
+  }
+
+  &.demo-tooltip-top {
+    transform: translateX(-50%) translateY(-5px);
+
+    &.visible {
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  &.demo-tooltip-bottom {
+    transform: translateX(-50%) translateY(5px);
+
+    &.visible {
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  &.demo-tooltip-left {
+    transform: translateY(-50%) translateX(-5px);
+
+    &.visible {
+      transform: translateY(-50%) translateX(0);
+    }
+  }
+
+  &.demo-tooltip-right {
+    transform: translateY(-50%) translateX(5px);
+
+    &.visible {
+      transform: translateY(-50%) translateX(0);
+    }
+  }
+}
+
+.demo-tooltip-indicator {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+/* Demo Highlight Styles */
+.demo-highlighted {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 8px;
+    border: 2px solid rgba(33, 150, 243, 0.5);
+    pointer-events: none;
+    animation: demo-border-pulse 2s infinite;
+  }
+}
+
+@keyframes demo-border-pulse {
+  0%,
+  100% {
+    border-color: rgba(33, 150, 243, 0.5);
+  }
+  50% {
+    border-color: rgba(33, 150, 243, 0.2);
+  }
+}
+
+.demo-pulse {
+  animation: demo-pulse-animation 2s infinite;
+}
+
+@keyframes demo-pulse-animation {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* Demo Mode Body Adjustments */
+body.demo-mode-active {
+  /* Add padding for the demo control bar */
+  padding-top: 56px !important;
+
+  /* Adjust mat-sidenav-container */
+  .mat-sidenav-container {
+    margin-top: 56px;
+    height: calc(100vh - 56px - 64px) !important;
+  }
+
+  /* Adjust toolbar position */
+  .mat-toolbar.mat-primary {
+    position: relative;
+    z-index: 1000;
+  }
+}
+
+/* Demo Metric Highlight */
+[data-demo-metric] {
+  position: relative;
+
+  &::before {
+    content: attr(data-demo-metric);
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: #1e3a5f;
+    background: rgba(33, 150, 243, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+}
+
+/* Demo Success Animation */
+.demo-success-animation {
+  animation: demo-success 0.5s ease;
+}
+
+@keyframes demo-success {
+  0% {
+    transform: scale(1);
+    background-color: inherit;
+  }
+  50% {
+    transform: scale(1.05);
+    background-color: rgba(76, 175, 80, 0.2);
+  }
+  100% {
+    transform: scale(1);
+    background-color: inherit;
+  }
+}
+
+/* Demo Number Counter Animation */
+.demo-counter {
+  display: inline-block;
+  transition: all 0.3s ease;
+
+  &.counting {
+    animation: demo-count-up 0.5s ease;
+  }
+}
+
+@keyframes demo-count-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Demo Focus Ring */
+.demo-focus-ring {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 12px;
+    border: 3px solid #2196f3;
+    animation: demo-focus-pulse 1.5s infinite;
+    pointer-events: none;
+  }
+}
+
+@keyframes demo-focus-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.02);
+  }
+}
+
+/* Demo Progress Bar */
+.demo-progress-bar {
+  height: 4px;
+  background: rgba(33, 150, 243, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+
+  .demo-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2196f3, #21cbf3);
+    transition: width 0.3s ease;
+  }
+}
+
+/* Demo Scenario Banner */
+.demo-scenario-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+
+  .scenario-title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .scenario-duration {
+    font-size: 14px;
+    opacity: 0.9;
+  }
+}

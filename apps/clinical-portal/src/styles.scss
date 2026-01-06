@@ -5,6 +5,9 @@
 // Import custom theme system
 @import './styles/themes.scss';
 
+// Import demo mode styles
+@import './app/demo-mode/demo-mode.styles.scss';
+
 // Global styles
 * {
   margin: 0;

@@ -76,6 +76,11 @@ include(
     "modules:apps:migration-cli"
 )
 
+// Tools
+include(
+    "tools:demo-cli"
+)
+
 // Platform Modules
 include(
     "platform:bom",

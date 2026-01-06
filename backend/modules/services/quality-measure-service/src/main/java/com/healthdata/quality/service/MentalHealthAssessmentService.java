@@ -155,7 +155,7 @@ public class MentalHealthAssessmentService {
             case DAST_10 -> scoreDAST10(tenantId, request);
             case PCL_5 -> scorePCL5(tenantId, request);
             case MDQ -> scoreMDQ(tenantId, request);
-            default -> throw new UnsupportedOperationException("Assessment type not yet implemented: " + type);
+            case CAGE_AID -> scoreCageAID(tenantId, request);
         };
     }
 
@@ -542,6 +542,68 @@ public class MentalHealthAssessmentService {
             .interpretation(interpretation)
             .positiveScreen(positiveScreen)
             .thresholdScore(7)
+            .requiresFollowup(requiresFollowup)
+            .assessedBy(request.getAssessedBy())
+            .assessmentDate(request.getAssessmentDate() != null ?
+                request.getAssessmentDate() : Instant.now())
+            .responses(request.getResponses())
+            .clinicalNotes(request.getClinicalNotes())
+            .build();
+    }
+
+    /**
+     * Score CAGE-AID (CAGE Adapted to Include Drugs)
+     * A 4-question screening tool for substance use disorders.
+     * Range: 0-4 (yes=1, no=0)
+     * Threshold: ≥2 indicates possible substance use disorder
+     *
+     * Questions:
+     * C - Have you ever felt you should Cut down on your drinking or drug use?
+     * A - Have people Annoyed you by criticizing your drinking or drug use?
+     * G - Have you ever felt bad or Guilty about your drinking or drug use?
+     * E - Eye opener: Have you ever had a drink or used drugs first thing in the morning?
+     */
+    private MentalHealthAssessmentEntity scoreCageAID(
+        String tenantId,
+        MentalHealthAssessmentRequest request
+    ) {
+        int score = request.getResponses().values().stream()
+            .mapToInt(Integer::intValue)
+            .sum();
+
+        String severity;
+        String interpretation;
+
+        if (score == 0) {
+            severity = "negative";
+            interpretation = "No substance use problems indicated";
+        } else if (score == 1) {
+            severity = "low";
+            interpretation = "Low concern - monitor and reassess";
+        } else if (score == 2) {
+            severity = "moderate";
+            interpretation = "Possible substance use disorder - further assessment recommended";
+        } else if (score == 3) {
+            severity = "high";
+            interpretation = "Likely substance use disorder - clinical evaluation recommended";
+        } else {
+            severity = "severe";
+            interpretation = "High probability of substance use disorder - immediate intervention needed";
+        }
+
+        boolean positiveScreen = score >= 2;
+        boolean requiresFollowup = score >= 2;
+
+        return MentalHealthAssessmentEntity.builder()
+            .tenantId(tenantId)
+            .patientId(request.getPatientId())
+            .type(AssessmentType.CAGE_AID)
+            .score(score)
+            .maxScore(4)
+            .severity(severity)
+            .interpretation(interpretation)
+            .positiveScreen(positiveScreen)
+            .thresholdScore(2)
             .requiresFollowup(requiresFollowup)
             .assessedBy(request.getAssessedBy())
             .assessmentDate(request.getAssessmentDate() != null ?

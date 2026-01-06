@@ -424,6 +424,19 @@ describe('Measure Creation Workflow', () => {
     }
   }
 
+  /**
+   * Add an assistant message programmatically (for action feedback)
+   */
+  addAssistantMessage(content: string, metadata?: AIMessage['metadata']): void {
+    this.addMessage({
+      id: this.generateId(),
+      role: 'assistant',
+      content,
+      timestamp: new Date(),
+      metadata
+    });
+  }
+
   // Private helper methods
 
   private addMessage(message: AIMessage) {

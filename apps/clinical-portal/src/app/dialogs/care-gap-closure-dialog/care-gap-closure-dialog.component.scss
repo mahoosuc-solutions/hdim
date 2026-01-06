@@ -1,0 +1,385 @@
+// Care Gap Closure Dialog Styles
+// Issue #7: Provider-Optimized Care Gap Closure Workflow
+
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  color: white;
+
+  mat-icon {
+    color: white;
+  }
+}
+
+.dialog-content {
+  padding: 0 !important;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+// Gap Info Header
+.gap-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: #f5f5f5;
+
+  .patient-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
+
+    strong {
+      display: block;
+      font-size: 16px;
+      color: rgba(0, 0, 0, 0.87);
+    }
+
+    .mrn {
+      font-size: 13px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  .gap-details {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .gap-type {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      mat-icon {
+        color: #f57c00;
+      }
+
+      span {
+        font-weight: 500;
+      }
+    }
+
+    .priority-badge {
+      padding: 4px 12px;
+      border-radius: 16px;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+  }
+}
+
+.gap-description {
+  padding: 16px 24px;
+
+  p {
+    margin: 0 0 8px;
+    color: rgba(0, 0, 0, 0.7);
+    line-height: 1.5;
+  }
+
+  .recommendation {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px;
+    background: #fff8e1;
+    border-radius: 8px;
+    margin-top: 12px;
+
+    mat-icon {
+      color: #ff9800;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    span {
+      font-size: 13px;
+      color: rgba(0, 0, 0, 0.7);
+    }
+  }
+}
+
+// Quick Actions Section
+.quick-actions-section {
+  padding: 16px 24px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.87);
+
+  mat-icon {
+    color: #1976d2;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.6);
+    margin-left: 8px;
+  }
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.quick-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 12px !important;
+  height: auto !important;
+  min-height: 80px;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--action-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    margin-bottom: 8px;
+  }
+
+  .action-label {
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+  }
+}
+
+// Bulk Closure Section
+.bulk-closure-section {
+  padding: 16px 24px;
+}
+
+.bulk-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.related-gaps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.related-gap-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f5f5f5;
+  }
+
+  &.selected {
+    background: #e3f2fd;
+    border-color: #1976d2;
+  }
+
+  .related-gap-info {
+    flex: 1;
+
+    strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    span {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  .priority-chip {
+    padding: 2px 8px;
+    border-radius: 12px;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+}
+
+.bulk-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #e8f5e9;
+  border-radius: 8px;
+  margin-top: 12px;
+
+  mat-icon {
+    color: #4caf50;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  span {
+    font-size: 13px;
+    color: #2e7d32;
+  }
+}
+
+// Manual Closure Section
+.manual-closure-section {
+  padding: 16px 24px;
+}
+
+.manual-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+  }
+}
+
+.closure-suggestions {
+  margin-bottom: 16px;
+
+  .suggestions-label {
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.6);
+    margin-bottom: 8px;
+  }
+
+  .suggestion-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    mat-chip {
+      cursor: pointer;
+      font-size: 12px;
+
+      &:hover {
+        background: #e3f2fd;
+      }
+
+      &[highlighted] {
+        background: #1976d2;
+        color: white;
+      }
+    }
+  }
+}
+
+.closure-form {
+  .full-width {
+    width: 100%;
+  }
+
+  .follow-up-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+
+    .follow-up-date {
+      width: 200px;
+    }
+  }
+}
+
+// Processing Overlay
+.processing-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  gap: 16px;
+
+  p {
+    color: rgba(0, 0, 0, 0.6);
+    margin: 0;
+  }
+}
+
+// Dialog Actions
+mat-dialog-actions {
+  padding: 16px 24px !important;
+  border-top: 1px solid #e0e0e0;
+
+  button {
+    mat-icon {
+      margin-right: 4px;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 600px) {
+  .gap-info-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-action-btn {
+    min-height: 70px;
+    padding: 12px 8px !important;
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+
+    .action-label {
+      font-size: 12px;
+    }
+  }
+}

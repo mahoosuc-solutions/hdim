@@ -50,6 +50,13 @@ export const API_CONFIG = {
     ? `${API_GATEWAY_URL}/api/ai-assistant`
     : '/api/ai-assistant',  // Proxied or direct to AI service
 
+  PREDICTIVE_ANALYTICS_URL: USE_API_GATEWAY
+    ? `${API_GATEWAY_URL}/api/predictive-analytics`
+    : '/predictive-analytics',  // Proxied to localhost:8110
+
+  // Base URL fallback for services without specific configuration
+  BASE_URL: USE_API_GATEWAY ? API_GATEWAY_URL : '',
+
   // Tenant Configuration - must match backend test data
   DEFAULT_TENANT_ID: 'DEMO001',  // Demo tenant for clinical portal
 

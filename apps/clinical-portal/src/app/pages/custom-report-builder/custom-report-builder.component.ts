@@ -20,6 +20,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { MatChipInputEvent } from '@angular/material/chips';
@@ -83,6 +84,7 @@ interface ReportSection {
     MatSnackBarModule,
     MatTooltipModule,
     MatDividerModule,
+    MatSlideToggleModule,
     DragDropModule,
     LoadingButtonComponent,
   ],
@@ -445,6 +447,17 @@ interface ReportSection {
                     <mat-divider></mat-divider>
 
                     <div class="option-group">
+                      <label class="option-label">Comparison Period</label>
+                      <mat-radio-group formControlName="comparisonPeriod" class="radio-group horizontal">
+                        <mat-radio-button value="none">No Comparison</mat-radio-button>
+                        <mat-radio-button value="previous-period">Previous Period</mat-radio-button>
+                        <mat-radio-button value="same-period-last-year">Same Period Last Year</mat-radio-button>
+                      </mat-radio-group>
+                    </div>
+
+                    <mat-divider></mat-divider>
+
+                    <div class="option-group">
                       <label class="option-label">Compliance Threshold</label>
                       <div class="slider-container">
                         <mat-slider min="0" max="100" step="5" discrete>
@@ -575,6 +588,116 @@ interface ReportSection {
                 </div>
               </mat-card-content>
             </mat-card>
+
+            <!-- Export & Delivery Options -->
+            <div class="export-schedule-grid">
+              <!-- Export Formats -->
+              <mat-card class="export-card">
+                <mat-card-header>
+                  <mat-icon mat-card-avatar>download</mat-icon>
+                  <mat-card-title>Export Formats</mat-card-title>
+                  <mat-card-subtitle>Available export options when generating</mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="export-formats">
+                    <mat-checkbox [(ngModel)]="exportFormats.pdf" color="primary">
+                      <mat-icon>picture_as_pdf</mat-icon>
+                      PDF (Print-ready)
+                    </mat-checkbox>
+                    <mat-checkbox [(ngModel)]="exportFormats.excel" color="primary">
+                      <mat-icon>table_chart</mat-icon>
+                      Excel (Data analysis)
+                    </mat-checkbox>
+                    <mat-checkbox [(ngModel)]="exportFormats.png" color="primary">
+                      <mat-icon>image</mat-icon>
+                      PNG (Charts for presentations)
+                    </mat-checkbox>
+                    <mat-checkbox [(ngModel)]="exportFormats.csv" color="primary">
+                      <mat-icon>description</mat-icon>
+                      CSV (Raw data)
+                    </mat-checkbox>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- Scheduled Delivery -->
+              <mat-card class="schedule-card">
+                <mat-card-header>
+                  <mat-icon mat-card-avatar>schedule_send</mat-icon>
+                  <mat-card-title>Scheduled Delivery</mat-card-title>
+                  <mat-card-subtitle>Automatically email reports on a schedule</mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                  <mat-slide-toggle [(ngModel)]="scheduleEnabled" color="primary">
+                    Enable scheduled delivery
+                  </mat-slide-toggle>
+
+                  @if (scheduleEnabled) {
+                    <div class="schedule-config">
+                      <mat-form-field appearance="outline">
+                        <mat-label>Frequency</mat-label>
+                        <mat-select [(ngModel)]="schedule.frequency">
+                          <mat-option value="daily">Daily</mat-option>
+                          <mat-option value="weekly">Weekly</mat-option>
+                          <mat-option value="monthly">Monthly</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+
+                      @if (schedule.frequency === 'weekly') {
+                        <mat-form-field appearance="outline">
+                          <mat-label>Day of Week</mat-label>
+                          <mat-select [(ngModel)]="schedule.dayOfWeek">
+                            <mat-option [value]="0">Sunday</mat-option>
+                            <mat-option [value]="1">Monday</mat-option>
+                            <mat-option [value]="2">Tuesday</mat-option>
+                            <mat-option [value]="3">Wednesday</mat-option>
+                            <mat-option [value]="4">Thursday</mat-option>
+                            <mat-option [value]="5">Friday</mat-option>
+                            <mat-option [value]="6">Saturday</mat-option>
+                          </mat-select>
+                        </mat-form-field>
+                      }
+
+                      @if (schedule.frequency === 'monthly') {
+                        <mat-form-field appearance="outline">
+                          <mat-label>Day of Month</mat-label>
+                          <mat-select [(ngModel)]="schedule.dayOfMonth">
+                            @for (day of daysOfMonth; track day) {
+                              <mat-option [value]="day">{{ day }}</mat-option>
+                            }
+                          </mat-select>
+                        </mat-form-field>
+                      }
+
+                      <mat-form-field appearance="outline">
+                        <mat-label>Time</mat-label>
+                        <input matInput type="time" [(ngModel)]="schedule.time">
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline">
+                        <mat-label>Recipients (comma-separated)</mat-label>
+                        <input matInput [(ngModel)]="schedule.recipients" placeholder="user@example.com">
+                        <mat-hint>Email addresses to receive scheduled reports</mat-hint>
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline">
+                        <mat-label>Export Format</mat-label>
+                        <mat-select [(ngModel)]="schedule.format">
+                          <mat-option value="pdf">PDF</mat-option>
+                          <mat-option value="excel">Excel</mat-option>
+                          <mat-option value="csv">CSV</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+
+                      <div class="schedule-preview">
+                        <mat-icon>info</mat-icon>
+                        <span>{{ getScheduleDescription() }}</span>
+                      </div>
+                    </div>
+                  }
+                </mat-card-content>
+              </mat-card>
+            </div>
 
             <!-- Save Options -->
             <mat-card class="save-options-card">
@@ -1109,6 +1232,66 @@ interface ReportSection {
       }
     }
 
+    /* Export & Schedule Grid (Issue #158) */
+    .export-schedule-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .export-card, .schedule-card {
+      mat-card-header {
+        mat-icon[mat-card-avatar] {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 8px;
+          border-radius: 8px;
+        }
+      }
+    }
+
+    .export-formats {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      mat-checkbox {
+        mat-icon {
+          margin-right: 8px;
+          color: #1976d2;
+        }
+      }
+    }
+
+    .schedule-config {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 16px;
+
+      mat-form-field {
+        width: 100%;
+      }
+    }
+
+    .schedule-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background: #e3f2fd;
+      border-radius: 8px;
+      color: #1565c0;
+      font-size: 14px;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+
     /* CDK Drag Drop */
     .cdk-drag-animating {
       transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
@@ -1192,6 +1375,26 @@ export class CustomReportBuilderComponent implements OnInit, OnDestroy {
   generateImmediately = false;
   saving = false;
 
+  // Export format options (Issue #158)
+  exportFormats = {
+    pdf: true,
+    excel: true,
+    png: false,
+    csv: false,
+  };
+
+  // Schedule configuration (Issue #158)
+  scheduleEnabled = false;
+  schedule = {
+    frequency: 'weekly' as 'daily' | 'weekly' | 'monthly',
+    dayOfWeek: 1,
+    dayOfMonth: 1,
+    time: '08:00',
+    recipients: '',
+    format: 'pdf' as 'pdf' | 'excel' | 'csv',
+  };
+  daysOfMonth = Array.from({ length: 31 }, (_, i) => i + 1);
+
   // Edit mode
   editMode = false;
   editTemplateId: string | null = null;
@@ -1233,6 +1436,7 @@ export class CustomReportBuilderComponent implements OnInit, OnDestroy {
       groupBy: ['measure'],
       sortBy: ['compliance'],
       dateRange: ['ytd'],
+      comparisonPeriod: ['same-period-last-year'],
       complianceThreshold: [80],
     });
   }
@@ -1410,6 +1614,23 @@ export class CustomReportBuilderComponent implements OnInit, OnDestroy {
       case 'custom': return 'Custom Range';
       default: return value;
     }
+  }
+
+  getScheduleDescription(): string {
+    if (!this.scheduleEnabled) return '';
+
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    let desc = `Report will be sent ${this.schedule.frequency}`;
+
+    if (this.schedule.frequency === 'weekly') {
+      desc += ` on ${days[this.schedule.dayOfWeek]}`;
+    } else if (this.schedule.frequency === 'monthly') {
+      desc += ` on day ${this.schedule.dayOfMonth}`;
+    }
+
+    const recipients = this.schedule.recipients.split(',').filter(r => r.trim()).length;
+    desc += ` at ${this.schedule.time} to ${recipients} recipient(s) as ${this.schedule.format.toUpperCase()}`;
+    return desc;
   }
 
   isFormValid(): boolean {

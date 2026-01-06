@@ -19,8 +19,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatBadgeModule } from '@angular/material/badge';
-import { Subject, takeUntil, forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Subject, takeUntil, forkJoin, of, from } from 'rxjs';
+import { catchError, map, mergeMap, toArray } from 'rxjs/operators';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
@@ -29,6 +29,7 @@ import { NotificationService } from '../../../services/notification.service';
 import { CareGapService, CareGap, GapPriority } from '../../../services/care-gap.service';
 import { EvaluationService } from '../../../services/evaluation.service';
 import { PatientService } from '../../../services/patient.service';
+import { Patient } from '../../../models/patient.model';
 import { TrackInteraction } from '../../../utils/ai-tracking.decorator';
 
 export interface HighPriorityCareGap {
@@ -118,6 +119,10 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
+  // Cache for patient names to avoid repeated API calls
+  // Key: patientId, Value: formatted name "Last, First"
+  private patientNameCache = new Map<string, string>();
+
   constructor(
     private router: Router,
     private dialogService: DialogService,
@@ -150,11 +155,44 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
   /**
    * Load high priority care gaps requiring provider action
    * Uses real API from CareGapService
+   * Issue #136: Enhanced to fetch and display real patient names
    */
   private loadHighPriorityCareGaps(): void {
     this.careGapService.getHighPriorityGaps(10).pipe(
       takeUntil(this.destroy$),
-      map((gaps: CareGap[]) => gaps.map(gap => this.mapCareGapToDisplay(gap))),
+      mergeMap((gaps: CareGap[]) => {
+        if (gaps.length === 0) {
+          return of([]);
+        }
+
+        // Get unique patient IDs for batch lookup
+        const uniquePatientIds = [...new Set(gaps.map(g => g.patientId))];
+
+        // Fetch patient details for all unique patients concurrently
+        const patientLookups$ = uniquePatientIds.map(patientId =>
+          this.patientService.getPatient(patientId).pipe(
+            map(patient => ({ patientId, patient })),
+            catchError(() => of({ patientId, patient: null as Patient | null }))
+          )
+        );
+
+        return forkJoin(patientLookups$).pipe(
+          map(results => {
+            // Build patient map and cache names
+            const patientMap = new Map<string, Patient | null>();
+            results.forEach(({ patientId, patient }) => {
+              patientMap.set(patientId, patient);
+              if (patient) {
+                const formattedName = this.formatPatientNameLastFirst(patient);
+                this.patientNameCache.set(patientId, formattedName);
+              }
+            });
+
+            // Map care gaps with real patient names
+            return gaps.map(gap => this.mapCareGapToDisplayWithPatient(gap, patientMap.get(gap.patientId)));
+          })
+        );
+      }),
       catchError(error => {
         console.warn('Failed to load care gaps from API, using fallback data', error);
         return of(this.getFallbackCareGaps());
@@ -168,12 +206,38 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
 
   /**
    * Map CareGap from API to HighPriorityCareGap display interface
+   * @deprecated Use mapCareGapToDisplayWithPatient for real patient names
    */
   private mapCareGapToDisplay(gap: CareGap): HighPriorityCareGap {
+    return this.mapCareGapToDisplayWithPatient(gap, null);
+  }
+
+  /**
+   * Map CareGap from API to HighPriorityCareGap display interface with patient data
+   * Issue #136: Integrates real patient names from FHIR service
+   */
+  private mapCareGapToDisplayWithPatient(gap: CareGap, patient: Patient | null | undefined): HighPriorityCareGap {
+    // Format patient name: use real name if available, otherwise fallback
+    let patientName: string;
+    let patientMRN: string;
+
+    if (patient) {
+      patientName = this.formatPatientNameLastFirst(patient);
+      // Get MRN from patient identifiers
+      const mrnIdentifier = patient.identifier?.find(
+        id => id.type?.text === 'Medical Record Number'
+      );
+      patientMRN = mrnIdentifier?.value || gap.patientId;
+    } else {
+      // Graceful fallback when patient lookup fails
+      patientName = this.getFallbackPatientName(gap.patientId);
+      patientMRN = gap.patientId;
+    }
+
     return {
       id: gap.id,
-      patientName: `Patient ${gap.patientId}`, // Will be enhanced when patient lookup is added
-      patientMRN: gap.patientId,
+      patientName,
+      patientMRN,
       gapType: gap.measureName || gap.gapType.toString(),
       clinicalContext: gap.description,
       risk: this.mapPriorityToRisk(gap.priority),
@@ -194,6 +258,76 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
       default:
         return 'moderate';
     }
+  }
+
+  /**
+   * Format patient name as "Last, First" for clinical display
+   * Issue #136: Integrate Real Patient Names
+   */
+  private formatPatientNameLastFirst(patient: Patient): string {
+    if (!patient.name || patient.name.length === 0) {
+      return this.getFallbackPatientName(patient.id);
+    }
+
+    const name = patient.name[0];
+    const lastName = name.family || '';
+    const firstName = name.given?.join(' ') || '';
+
+    if (lastName && firstName) {
+      return `${lastName}, ${firstName}`;
+    } else if (lastName) {
+      return lastName;
+    } else if (firstName) {
+      return firstName;
+    }
+
+    return this.getFallbackPatientName(patient.id);
+  }
+
+  /**
+   * Generate fallback patient name when lookup fails
+   * Issue #136: Graceful error handling
+   */
+  private getFallbackPatientName(patientId: string): string {
+    // Extract MRN-like portion if it looks like one, otherwise use ID
+    if (patientId.startsWith('MRN-')) {
+      return `Patient ${patientId}`;
+    }
+    // Use last 8 characters of UUID for brevity
+    const shortId = patientId.length > 8 ? patientId.slice(-8) : patientId;
+    return `Patient MRN-${shortId}`;
+  }
+
+  /**
+   * Get patient name with caching
+   * Issue #136: Cache patient names to avoid repeated API calls
+   */
+  private getPatientNameCached(patientId: string): string | undefined {
+    return this.patientNameCache.get(patientId);
+  }
+
+  /**
+   * Lookup patient and cache formatted name
+   * Issue #136: Fetch real patient names from FHIR service
+   */
+  private lookupAndCachePatientName(patientId: string): void {
+    // Skip if already cached
+    if (this.patientNameCache.has(patientId)) {
+      return;
+    }
+
+    this.patientService.getPatient(patientId).pipe(
+      takeUntil(this.destroy$),
+      catchError(() => of(null))
+    ).subscribe(patient => {
+      if (patient) {
+        const formattedName = this.formatPatientNameLastFirst(patient);
+        this.patientNameCache.set(patientId, formattedName);
+      } else {
+        // Cache fallback name to avoid repeated failed lookups
+        this.patientNameCache.set(patientId, this.getFallbackPatientName(patientId));
+      }
+    });
   }
 
   /**
@@ -316,23 +450,48 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
 
   /**
    * Load pending results requiring review from API
+   * Issue #136: Enhanced to fetch and display real patient names
    */
   private loadPendingResults(): void {
     this.evaluationService.getAllResults(0, 10).pipe(
       takeUntil(this.destroy$),
-      map(results => {
-        if (results && results.length > 0) {
-          return results.slice(0, 5).map((result: any) => ({
-            id: result.id,
-            patientName: `Patient ${result.patientId}`,
-            patientMRN: result.patientId,
-            resultType: result.measureId || 'Quality Measure Result',
-            date: result.evaluationDate || new Date().toISOString().split('T')[0],
-            abnormal: result.complianceRate < 70,
-            requiresReview: true
-          }));
+      mergeMap(results => {
+        if (!results || results.length === 0) {
+          return of(this.getFallbackPendingResults());
         }
-        return this.getFallbackPendingResults();
+
+        const slicedResults = results.slice(0, 5);
+
+        // Get unique patient IDs for batch lookup
+        const uniquePatientIds = [...new Set(slicedResults.map((r: any) => r.patientId))];
+
+        // Fetch patient details for all unique patients concurrently
+        const patientLookups$ = uniquePatientIds.map(patientId =>
+          this.patientService.getPatient(patientId).pipe(
+            map(patient => ({ patientId, patient })),
+            catchError(() => of({ patientId, patient: null as Patient | null }))
+          )
+        );
+
+        return forkJoin(patientLookups$).pipe(
+          map(patientResults => {
+            // Build patient map and cache names
+            const patientMap = new Map<string, Patient | null>();
+            patientResults.forEach(({ patientId, patient }) => {
+              patientMap.set(patientId, patient);
+              if (patient) {
+                const formattedName = this.formatPatientNameLastFirst(patient);
+                this.patientNameCache.set(patientId, formattedName);
+              }
+            });
+
+            // Map results with real patient names
+            return slicedResults.map((result: any) => {
+              const patient = patientMap.get(result.patientId);
+              return this.mapResultToDisplayWithPatient(result, patient);
+            });
+          })
+        );
       }),
       catchError(error => {
         console.warn('Failed to load pending results from API, using fallback data', error);
@@ -342,6 +501,39 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
       this.pendingResults = results;
       this.resultsToReview = results.filter(r => r.requiresReview).length;
     });
+  }
+
+  /**
+   * Map evaluation result to PendingResult display interface with patient data
+   * Issue #136: Integrates real patient names from FHIR service
+   */
+  private mapResultToDisplayWithPatient(result: any, patient: Patient | null | undefined): PendingResult {
+    // Format patient name: use real name if available, otherwise fallback
+    let patientName: string;
+    let patientMRN: string;
+
+    if (patient) {
+      patientName = this.formatPatientNameLastFirst(patient);
+      // Get MRN from patient identifiers
+      const mrnIdentifier = patient.identifier?.find(
+        id => id.type?.text === 'Medical Record Number'
+      );
+      patientMRN = mrnIdentifier?.value || result.patientId;
+    } else {
+      // Graceful fallback when patient lookup fails
+      patientName = this.getFallbackPatientName(result.patientId);
+      patientMRN = result.patientId;
+    }
+
+    return {
+      id: result.id,
+      patientName,
+      patientMRN,
+      resultType: result.measureId || 'Quality Measure Result',
+      date: result.evaluationDate || new Date().toISOString().split('T')[0],
+      abnormal: result.complianceRate < 70,
+      requiresReview: true
+    };
   }
 
   /**

@@ -23,7 +23,7 @@ dependencies {
     compileOnly("jakarta.validation:jakarta.validation-api:3.0.2")
 
     // Logging (SLF4J)
-    compileOnly("org.slf4j:slf4j-api:2.0.9")
+    compileOnly("org.slf4j:slf4j-api:2.0.17")
 
     // Testing
     testImplementation(libs.junit.jupiter)

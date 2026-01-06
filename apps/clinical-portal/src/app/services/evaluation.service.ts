@@ -20,6 +20,7 @@ import {
   SavePopulationReportRequest,
   ReportType,
   ExportFormat,
+  LocalMeasureResult,
 } from '../models/quality-result.model';
 import {
   API_CONFIG,
@@ -314,6 +315,46 @@ export class EvaluationService {
           success: false,
           durationMs: Date.now() - startTime,
           errorMessage: error.message || 'Quality measure calculation failed',
+        });
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Calculate quality measure using local Java implementation (bypasses CQL Engine)
+   * Endpoint: POST /quality-measure/calculate-local?patient={patientId}&measure={measureId}
+   * This is the preferred method for measures registered in MeasureRegistry (e.g., CDC)
+   * Audit logged for HIPAA compliance
+   */
+  calculateLocalMeasure(
+    patientId: string,
+    measureId: string
+  ): Observable<LocalMeasureResult> {
+    const url = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.CALCULATE_LOCAL, {
+      patient: patientId,
+      measure: measureId,
+    });
+    const startTime = Date.now();
+
+    return this.http.post<LocalMeasureResult>(url, {}).pipe(
+      tap((result) => {
+        this.invalidateAllCaches();
+        this.auditService.logEvaluation({
+          evaluationId: `local-${measureId}-${patientId}`,
+          measureId,
+          patientIds: [patientId],
+          success: true,
+          durationMs: Date.now() - startTime,
+        });
+      }),
+      catchError((error) => {
+        this.auditService.logEvaluation({
+          measureId,
+          patientIds: [patientId],
+          success: false,
+          durationMs: Date.now() - startTime,
+          errorMessage: error.message || 'Local measure calculation failed',
         });
         throw error;
       })

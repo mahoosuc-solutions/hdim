@@ -41,4 +41,13 @@
     <include file="db/changelog/0024-create-notification-routing-tables.xml"/>
     <include file="db/changelog/0025-convert-quality-patient-ids-to-uuid.xml"/>
 
+    <!-- Quality Measure Definition and Results Refactoring -->
+    <include file="db/changelog/0026-create-quality-measures-table.xml"/>
+    <include file="db/changelog/0027-create-measure-results-table.xml"/>
+    <include file="db/changelog/0028-create-measure-populations-table.xml"/>
+    <include file="db/changelog/0029-create-care-team-members-table.xml"/>
+
+    <!-- Bulk Result Signing - Immutable Audit Trail -->
+    <include file="db/changelog/0030-create-result-signatures-table.xml"/>
+
 </databaseChangeLog>

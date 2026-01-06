@@ -1103,3 +1103,107 @@
     transform: translateX(0);
   }
 }
+
+// ============================================================================
+// Quick Action Buttons (Issue #141)
+// ============================================================================
+
+.quick-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+
+  .quick-action-btn {
+    font-size: 12px;
+    height: 32px;
+    line-height: 32px;
+    padding: 0 12px;
+    min-width: unset;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-right: 4px;
+    }
+
+    &.primary-action {
+      background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+      box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+      transition: all 0.2s;
+
+      &:hover {
+        box-shadow: 0 4px 8px rgba(25, 118, 210, 0.4);
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  .close-gap-btn {
+    mat-icon {
+      color: #4caf50;
+    }
+
+    &:hover mat-icon {
+      color: #388e3c;
+    }
+  }
+}
+
+.quick-action-sm {
+  font-size: 11px;
+  height: 28px;
+  line-height: 28px;
+  padding: 0 8px;
+  min-width: unset;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    margin-right: 4px;
+  }
+}
+
+// Responsive adjustments for quick actions
+@media (max-width: 1200px) {
+  .quick-actions-cell {
+    .quick-action-btn {
+      // Hide text on smaller screens, show only icon
+      span:not(.mat-icon) {
+        display: none;
+      }
+
+      mat-icon {
+        margin-right: 0;
+      }
+
+      padding: 0 8px;
+      min-width: 40px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .quick-actions-cell {
+    flex-wrap: wrap;
+    gap: 2px;
+
+    .quick-action-btn {
+      font-size: 11px;
+      height: 28px;
+      line-height: 28px;
+    }
+  }
+
+  .patient-gap-item .gap-actions {
+    flex-direction: column;
+    gap: 4px;
+
+    .quick-action-sm {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}

@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, NgZone, OnDestroy } from '@angular/core';
+import { BehaviorSubject, Observable, Subject, fromEvent } from 'rxjs';
 import { Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { filter, takeUntil } from 'rxjs/operators';
 
 /**
  * Help Content for a specific page
@@ -75,9 +75,10 @@ export interface WhatsNewItem {
 @Injectable({
   providedIn: 'root',
 })
-export class HelpService {
+export class HelpService implements OnDestroy {
   private readonly DISMISSED_KEY = 'hdim_dismissed_whats_new';
   private readonly SEEN_TOURS_KEY = 'hdim_seen_tours';
+  private readonly destroy$ = new Subject<void>();
 
   private helpContent: Map<string, HelpContent> = new Map();
   private whatsNewItems: WhatsNewItem[] = [];
@@ -91,11 +92,54 @@ export class HelpService {
   private showHelpPanelSubject = new BehaviorSubject<boolean>(false);
   readonly showHelpPanel$ = this.showHelpPanelSubject.asObservable();
 
-  constructor(private router: Router) {
+  constructor(
+    private router: Router,
+    private ngZone: NgZone
+  ) {
     this.initializeHelpContent();
     this.initializeWhatsNew();
     this.loadDismissedItems();
     this.setupRouteListener();
+    this.initKeyboardShortcuts();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Initialize keyboard shortcuts for help
+   * Issue #24: Press ? or F1 to open help panel
+   */
+  private initKeyboardShortcuts(): void {
+    this.ngZone.runOutsideAngular(() => {
+      fromEvent<KeyboardEvent>(document, 'keydown')
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((event) => {
+          // Don't trigger if user is typing in an input
+          const target = event.target as HTMLElement;
+          if (
+            target.tagName === 'INPUT' ||
+            target.tagName === 'TEXTAREA' ||
+            target.isContentEditable
+          ) {
+            return;
+          }
+
+          // Handle ? key (Shift + /) or F1
+          if (event.key === '?' || (event.shiftKey && event.key === '/') || event.key === 'F1') {
+            event.preventDefault();
+            this.ngZone.run(() => this.toggleHelpPanel());
+          }
+
+          // Handle Escape when help panel is open
+          if (event.key === 'Escape' && this.showHelpPanelSubject.getValue()) {
+            event.preventDefault();
+            this.ngZone.run(() => this.hideHelpPanel());
+          }
+        });
+    });
   }
 
   /**
@@ -539,6 +583,23 @@ export class HelpService {
   private initializeWhatsNew(): void {
     this.whatsNewItems = [
       {
+        id: 'offline-mode-2026-01',
+        title: 'Offline Mode Now Available',
+        description: 'Continue working even without internet connection. Changes sync automatically when you\'re back online.',
+        date: new Date('2026-01-06'),
+        type: 'feature',
+        dismissed: false,
+      },
+      {
+        id: 'provider-leaderboard-2026-01',
+        title: 'Provider Performance Leaderboard',
+        description: 'Compare your quality metrics with peers and track your improvement over time.',
+        date: new Date('2026-01-06'),
+        type: 'feature',
+        link: '/reports',
+        dismissed: false,
+      },
+      {
         id: 'population-insights-2026-01',
         title: 'Population Health Insights',
         description: 'New AI-powered insights dashboard with predictive care gap detection and risk stratification visualization.',
@@ -562,6 +623,14 @@ export class HelpService {
         description: 'Navigate faster with keyboard shortcuts. Press ? anywhere to see all available shortcuts.',
         date: new Date('2026-01-06'),
         type: 'feature',
+        dismissed: false,
+      },
+      {
+        id: 'care-gap-closure-2026-01',
+        title: 'Quick Care Gap Closure',
+        description: 'Close care gaps faster with new quick actions and bulk closure options directly from the dashboard.',
+        date: new Date('2026-01-05'),
+        type: 'improvement',
         dismissed: false,
       },
       {

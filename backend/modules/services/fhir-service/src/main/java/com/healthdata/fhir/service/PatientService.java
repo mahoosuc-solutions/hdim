@@ -2,10 +2,15 @@ package com.healthdata.fhir.service;
 
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.hl7.fhir.r4.model.Patient;
 import org.springframework.cache.Cache;
@@ -14,6 +19,10 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import lombok.extern.slf4j.Slf4j;
+
 import com.healthdata.fhir.persistence.PatientEntity;
 import com.healthdata.fhir.persistence.PatientRepository;
 import com.healthdata.fhir.validation.PatientValidator;
@@ -21,6 +30,7 @@ import com.healthdata.fhir.validation.PatientValidator;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 
+@Slf4j
 @Service
 public class PatientService {
 
@@ -32,16 +42,38 @@ public class PatientService {
     private final PatientValidator patientValidator;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final Cache cache;
+    private final MeterRegistry meterRegistry;
+
+    // Query timing metrics for Issue #137
+    private final Timer singlePatientQueryTimer;
+    private final Timer batchPatientQueryTimer;
+    private final Timer searchQueryTimer;
 
     public PatientService(
             PatientRepository patientRepository,
             PatientValidator patientValidator,
             KafkaTemplate<String, Object> kafkaTemplate,
-            CacheManager cacheManager) {
+            CacheManager cacheManager,
+            MeterRegistry meterRegistry) {
         this.patientRepository = patientRepository;
         this.patientValidator = patientValidator;
         this.kafkaTemplate = kafkaTemplate;
         this.cache = cacheManager.getCache(CACHE_NAME);
+        this.meterRegistry = meterRegistry;
+
+        // Initialize metrics for query timing (Issue #137)
+        this.singlePatientQueryTimer = Timer.builder("fhir.patient.query")
+                .tag("type", "single")
+                .description("Time for single patient query")
+                .register(meterRegistry);
+        this.batchPatientQueryTimer = Timer.builder("fhir.patient.query")
+                .tag("type", "batch")
+                .description("Time for batch patient query")
+                .register(meterRegistry);
+        this.searchQueryTimer = Timer.builder("fhir.patient.query")
+                .tag("type", "search")
+                .description("Time for patient search query")
+                .register(meterRegistry);
     }
 
     @Transactional
@@ -68,19 +100,105 @@ public class PatientService {
 
     @Transactional(readOnly = true)
     public Optional<Patient> getPatient(String tenantId, String patientId) {
-        UUID uuid = parsePatientUuid(patientId);
-        Patient cached = cacheGet(tenantId, patientId);
-        if (cached != null) {
-            return Optional.of(cached);
-        }
+        return singlePatientQueryTimer.record(() -> {
+            UUID uuid = parsePatientUuid(patientId);
+            Patient cached = cacheGet(tenantId, patientId);
+            if (cached != null) {
+                meterRegistry.counter("fhir.patient.cache", "result", "hit").increment();
+                return Optional.of(cached);
+            }
+            meterRegistry.counter("fhir.patient.cache", "result", "miss").increment();
 
-        // Use findActiveByTenantIdAndId to exclude soft-deleted patients
-        return patientRepository.findActiveByTenantIdAndId(tenantId, uuid)
-                .map(entity -> {
-                    Patient parsed = fromEntity(entity);
-                    cachePut(tenantId, patientId, parsed);
-                    return parsed;
-                });
+            // Use findActiveByTenantIdAndId to exclude soft-deleted patients
+            return patientRepository.findActiveByTenantIdAndId(tenantId, uuid)
+                    .map(entity -> {
+                        Patient parsed = fromEntity(entity);
+                        cachePut(tenantId, patientId, parsed);
+                        return parsed;
+                    });
+        });
+    }
+
+    /**
+     * Batch patient lookup for multiple IDs.
+     * Issue #137: Optimize FHIR Queries for Primary Care Dashboard
+     *
+     * This method fetches multiple patients in a single database query,
+     * significantly reducing latency compared to N individual queries.
+     *
+     * @param tenantId The tenant ID for multi-tenant isolation
+     * @param patientIds List of patient IDs to fetch
+     * @return Map of patientId -> Patient for found patients
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Patient> getPatientsByIds(String tenantId, List<String> patientIds) {
+        return batchPatientQueryTimer.record(() -> {
+            if (patientIds == null || patientIds.isEmpty()) {
+                return new HashMap<>();
+            }
+
+            Map<String, Patient> result = new HashMap<>();
+            List<UUID> uncachedIds = new ArrayList<>();
+
+            // Check cache first
+            for (String patientId : patientIds) {
+                Patient cached = cacheGet(tenantId, patientId);
+                if (cached != null) {
+                    result.put(patientId, cached);
+                    meterRegistry.counter("fhir.patient.cache", "result", "hit").increment();
+                } else {
+                    try {
+                        UUID uuid = UUID.fromString(patientId);
+                        uncachedIds.add(uuid);
+                        meterRegistry.counter("fhir.patient.cache", "result", "miss").increment();
+                    } catch (IllegalArgumentException ex) {
+                        log.warn("Invalid patient ID format: {}", patientId);
+                    }
+                }
+            }
+
+            // Batch fetch uncached patients
+            if (!uncachedIds.isEmpty()) {
+                log.debug("Batch fetching {} patients from database", uncachedIds.size());
+                List<PatientEntity> entities = patientRepository.findActiveByTenantIdAndIdIn(tenantId, uncachedIds);
+
+                for (PatientEntity entity : entities) {
+                    Patient patient = fromEntity(entity);
+                    applyMeta(patient, entity);
+                    String id = entity.getId().toString();
+                    result.put(id, patient);
+                    cachePut(tenantId, id, patient);
+                }
+            }
+
+            log.debug("Batch query returned {} patients (cache hits: {}, db fetches: {})",
+                    result.size(), patientIds.size() - uncachedIds.size(), uncachedIds.size());
+
+            return result;
+        });
+    }
+
+    /**
+     * Get patients by IDs and return as FHIR Bundle.
+     * Issue #137: Optimize FHIR Queries for Primary Care Dashboard
+     */
+    @Transactional(readOnly = true)
+    public org.hl7.fhir.r4.model.Bundle getPatientsBundleByIds(String tenantId, List<String> patientIds) {
+        Map<String, Patient> patients = getPatientsByIds(tenantId, patientIds);
+
+        org.hl7.fhir.r4.model.Bundle bundle = new org.hl7.fhir.r4.model.Bundle();
+        bundle.setType(org.hl7.fhir.r4.model.Bundle.BundleType.SEARCHSET);
+        bundle.setTotal(patients.size());
+
+        patients.values().forEach(patient -> {
+            org.hl7.fhir.r4.model.Bundle.BundleEntryComponent entry =
+                    new org.hl7.fhir.r4.model.Bundle.BundleEntryComponent();
+            entry.setResource(patient);
+            entry.setFullUrl("Patient/" + patient.getId());
+            bundle.addEntry(entry);
+        });
+
+        return bundle;
     }
 
     @Transactional

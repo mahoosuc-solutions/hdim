@@ -184,6 +184,15 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'pre-visit',
+    loadComponent: () =>
+      import('./pages/pre-visit-planning/pre-visit-planning.component').then(
+        (m) => m.PreVisitPlanningComponent
+      ),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN', 'EVALUATOR'] },
+  },
+  {
     path: 'care-recommendations',
     loadComponent: () =>
       import('./pages/care-recommendations/care-recommendations.component').then(

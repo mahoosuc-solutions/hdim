@@ -29,6 +29,14 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
           time_zone: UTC
+          batch_size: 50
+          fetch_size: 100
+        order_inserts: true
+        order_updates: true
+        batch_versioned_data: true
+        # Connection release mode for batch operations
+        connection:
+          handling_mode: DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION
 
   liquibase:
     enabled: true
@@ -46,6 +54,15 @@ demo:
   generation:
     default-care-gap-percentage: 28
     default-patient-count: 5000
+    batch-size: 100
+  # Cache warmup on startup
+  cache:
+    warmup:
+      enabled: ${DEMO_CACHE_WARMUP:true}
+  # Performance tuning
+  performance:
+    parallel-generation: true
+    max-concurrent-requests: 16
   # Enable persistence to downstream services (FHIR, Care Gap)
   persistence:
     enabled: ${DEMO_PERSISTENCE_ENABLED:true}

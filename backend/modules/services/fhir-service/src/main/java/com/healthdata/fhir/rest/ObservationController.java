@@ -34,7 +34,7 @@ import com.healthdata.audit.models.AuditAction;
  * lab results, vital signs, and other clinical observations.
  */
 @RestController
-@RequestMapping("/fhir/Observation")
+@RequestMapping("/Observation")
 @Tag(name = "Observation", description = "Clinical observations including vital signs, lab results, and social history")
 @SecurityRequirement(name = "smart-oauth2")
 public class ObservationController {
@@ -65,7 +65,7 @@ public class ObservationController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> createObservation(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -102,7 +102,7 @@ public class ObservationController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/{id}", produces = "application/fhir+json")
+    @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getObservation(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -129,7 +129,7 @@ public class ObservationController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> updateObservation(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -196,7 +196,7 @@ public class ObservationController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(produces = "application/fhir+json")
+    @GetMapping(produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> searchObservations(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -263,7 +263,7 @@ public class ObservationController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/lab-results", produces = "application/fhir+json")
+    @GetMapping(value = "/lab-results", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getLabResults(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -291,7 +291,7 @@ public class ObservationController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/vital-signs", produces = "application/fhir+json")
+    @GetMapping(value = "/vital-signs", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getVitalSigns(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -319,7 +319,7 @@ public class ObservationController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/latest", produces = "application/fhir+json")
+    @GetMapping(value = "/latest", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getLatestObservation(
             @Parameter(description = "Tenant ID for multi-tenant isolation", required = true)
             @RequestHeader("X-Tenant-ID") String tenantId,

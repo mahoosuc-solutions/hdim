@@ -18,7 +18,7 @@ import com.healthdata.audit.annotations.Audited;
 import com.healthdata.audit.models.AuditAction;
 
 @RestController
-@RequestMapping("/fhir/AllergyIntolerance")
+@RequestMapping("/AllergyIntolerance")
 @Slf4j
 @RequiredArgsConstructor
 public class AllergyIntoleranceController {
@@ -29,7 +29,7 @@ public class AllergyIntoleranceController {
 
     // Create AllergyIntolerance
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> createAllergyIntolerance(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-User-ID", defaultValue = "system") String userId,
@@ -48,7 +48,7 @@ public class AllergyIntoleranceController {
 
     // Get AllergyIntolerance by ID
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/{id}", produces = "application/fhir+json")
+    @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getAllergyIntolerance(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String id) {
@@ -64,7 +64,7 @@ public class AllergyIntoleranceController {
 
     // Update AllergyIntolerance
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> updateAllergyIntolerance(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-User-ID", defaultValue = "system") String userId,
@@ -98,7 +98,7 @@ public class AllergyIntoleranceController {
 
     // Search by patient
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(produces = "application/fhir+json")
+    @GetMapping(produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> searchByPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(value = "patient", required = false) String patient,
@@ -123,7 +123,7 @@ public class AllergyIntoleranceController {
 
     // Get active allergies
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/active", produces = "application/fhir+json")
+    @GetMapping(value = "/active", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getActiveAllergies(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(value = "patient") String patient) {
@@ -141,7 +141,7 @@ public class AllergyIntoleranceController {
 
     // Get critical allergies
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/critical", produces = "application/fhir+json")
+    @GetMapping(value = "/critical", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getCriticalAllergies(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(value = "patient") String patient) {
@@ -159,7 +159,7 @@ public class AllergyIntoleranceController {
 
     // Get medication allergies
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/medication", produces = "application/fhir+json")
+    @GetMapping(value = "/medication", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getMedicationAllergies(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(value = "patient") String patient) {
@@ -177,7 +177,7 @@ public class AllergyIntoleranceController {
 
     // Get food allergies
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/food", produces = "application/fhir+json")
+    @GetMapping(value = "/food", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getFoodAllergies(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(value = "patient") String patient) {
@@ -195,7 +195,7 @@ public class AllergyIntoleranceController {
 
     // Get confirmed allergies
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/confirmed", produces = "application/fhir+json")
+    @GetMapping(value = "/confirmed", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getConfirmedAllergies(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(value = "patient") String patient) {

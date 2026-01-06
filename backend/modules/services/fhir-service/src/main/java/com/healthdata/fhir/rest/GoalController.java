@@ -39,7 +39,7 @@ import com.healthdata.audit.models.AuditAction;
  * Provides CRUD operations and search functionality for patient health goals.
  */
 @RestController
-@RequestMapping("/fhir/Goal")
+@RequestMapping("/Goal")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Goal", description = "FHIR Goal resource operations")
@@ -51,7 +51,7 @@ public class GoalController {
     private final GoalService goalService;
 
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Create a new Goal resource")
     public ResponseEntity<String> createGoal(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -65,7 +65,7 @@ public class GoalController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/{id}", produces = "application/fhir+json")
+    @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get a Goal resource by ID")
     public ResponseEntity<String> getGoal(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -78,7 +78,7 @@ public class GoalController {
     }
 
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Update an existing Goal resource")
     public ResponseEntity<String> updateGoal(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -108,7 +108,7 @@ public class GoalController {
     // ==================== Search Endpoints ====================
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(produces = "application/fhir+json")
+    @GetMapping(produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Search Goal resources")
     public ResponseEntity<String> searchGoals(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -141,7 +141,7 @@ public class GoalController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get all goals for a patient")
     public ResponseEntity<String> getGoalsByPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -154,7 +154,7 @@ public class GoalController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/active", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/active", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get active goals for a patient")
     public ResponseEntity<String> getActiveGoals(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -167,7 +167,7 @@ public class GoalController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/overdue", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/overdue", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get overdue goals for a patient")
     public ResponseEntity<String> getOverdueGoals(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -180,7 +180,7 @@ public class GoalController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/high-priority", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/high-priority", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get high priority goals for a patient")
     public ResponseEntity<String> getHighPriorityGoals(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -193,7 +193,7 @@ public class GoalController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/condition/{conditionId}", produces = "application/fhir+json")
+    @GetMapping(value = "/condition/{conditionId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get goals addressing a specific condition")
     public ResponseEntity<String> getGoalsByCondition(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -206,7 +206,7 @@ public class GoalController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/due", produces = "application/fhir+json")
+    @GetMapping(value = "/due", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get goals due within a date range")
     public ResponseEntity<String> getGoalsDueInRange(
             @RequestHeader("X-Tenant-ID") String tenantId,

@@ -1,0 +1,310 @@
+# HDIM Minimal Clinical Portal
+# Connects to external PostgreSQL (WSL) and optional external FHIR server
+#
+# Usage:
+#   cp .env.customer-simulation .env
+#   docker compose -f docker-compose.minimal-clinical.yml up -d
+#
+# Prerequisites:
+#   1. PostgreSQL running in WSL with databases initialized
+#   2. Run: psql -U postgres -f docker/postgres/external-db-setup.sql
+#
+# Services included (~5GB RAM):
+#   - Redis (caching)
+#   - Jaeger (tracing)
+#   - Gateway Service (authentication)
+#   - FHIR Service (clinical data)
+#   - Patient Service (patient management)
+#   - Quality Measure Service (CQL evaluation)
+#   - Care Gap Service (gap detection)
+#   - Clinical Portal (Angular UI)
+
+services:
+  # ============================================
+  # INFRASTRUCTURE SERVICES
+  # ============================================
+
+  redis:
+    container_name: hdim-redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hdim-network
+
+  jaeger:
+    container_name: hdim-jaeger
+    image: jaegertracing/all-in-one:1.52
+    restart: unless-stopped
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hdim-network
+
+  # ============================================
+  # CORE SERVICES
+  # ============================================
+
+  gateway-service:
+    container_name: hdim-gateway
+    image: hdim-master-gateway-service:${VERSION:-latest}
+    pull_policy: never
+    restart: unless-stopped
+    ports:
+      - "8001:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: external-db
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/gateway_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-healthdata}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-healthdata_password}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET: ${JWT_SECRET:-hdim-dev-jwt-secret-key-for-local-development-minimum-64-characters-required}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-900000}
+      GATEWAY_AUTH_DEV_MODE: ${GATEWAY_AUTH_DEV_MODE:-true}
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-dev-signing-secret-for-local-testing-only-minimum-32-chars}
+      GATEWAY_AUTH_HEADER_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-dev-signing-secret-for-local-testing-only-minimum-32-chars}
+      # Demo mode - disable auth enforcement and inject demo user headers
+      GATEWAY_AUTH_ENFORCED: "false"
+      GATEWAY_AUTH_DEMO_USER_USER_ID: "00000000-0000-0000-0000-000000000001"
+      GATEWAY_AUTH_DEMO_USER_USERNAME: "demo-user"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "acme-health,DEMO_TENANT"
+      GATEWAY_AUTH_DEMO_USER_ROLES: "ADMIN,CLINICIAN,ANALYST,EVALUATOR"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_SERVICE_NAME: gateway-service
+      LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_AUTH: DEBUG
+      LOGGING_LEVEL_COM_HEALTHDATA_AUTHENTICATION: DEBUG
+      # Backend service URLs for Docker networking (include context paths)
+      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir
+      BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084/patient
+      BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087/quality-measure
+      BACKEND_SERVICES_CARE_GAP_URL: http://care-gap-service:8086/care-gap
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      redis:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hdim-network
+
+  fhir-service:
+    container_name: hdim-fhir
+    image: hdim-master-fhir-service:${VERSION:-latest}
+    pull_policy: never
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_PROFILES_ACTIVE: external-db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/fhir_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-healthdata}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-healthdata_password}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EXTERNAL_FHIR_URL: ${EXTERNAL_FHIR_URL:-}
+      JWT_SECRET: ${JWT_SECRET:-hdim-dev-jwt-secret-key-for-local-development-minimum-64-characters-required}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-900000}
+      GATEWAY_AUTH_DEV_MODE: ${GATEWAY_AUTH_DEV_MODE:-true}
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-dev-signing-secret-for-local-testing-only-minimum-32-chars}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_SERVICE_NAME: fhir-service
+      # Disable Elasticsearch health check (not used in minimal setup)
+      MANAGEMENT_HEALTH_ELASTICSEARCH_ENABLED: "false"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      redis:
+        condition: service_healthy
+      gateway-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8085/fhir/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - hdim-network
+
+  patient-service:
+    container_name: hdim-patient
+    image: hdim-master-patient-service:${VERSION:-latest}
+    pull_policy: never
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: external-db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/patient_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-healthdata}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-healthdata_password}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET: ${JWT_SECRET:-hdim-dev-jwt-secret-key-for-local-development-minimum-64-characters-required}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-900000}
+      GATEWAY_AUTH_DEV_MODE: ${GATEWAY_AUTH_DEV_MODE:-true}
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-dev-signing-secret-for-local-testing-only-minimum-32-chars}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_SERVICE_NAME: patient-service
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
+      LOGGING_LEVEL_COM_HEALTHDATA_PATIENT: DEBUG
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: DEBUG
+      LOGGING_LEVEL_FEIGN: DEBUG
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD_OPENFEIGN: DEBUG
+      LOGGING_LEVEL_ROOT: DEBUG
+      # Service URLs for Docker networking
+      # FeignClient adds /fhir to paths, so base URL should NOT include /fhir
+      FHIR_SERVER_URL: http://fhir-service:8085
+      CONSENT_SERVER_URL: http://care-gap-service:8086
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      redis:
+        condition: service_healthy
+      gateway-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8084/patient/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hdim-network
+
+  quality-measure-service:
+    container_name: hdim-quality-measure
+    image: hdim-master-quality-measure-service:${VERSION:-latest}
+    pull_policy: never
+    restart: unless-stopped
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_PROFILES_ACTIVE: external-db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/quality_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-healthdata}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-healthdata_password}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      FHIR_SERVICE_URL: http://fhir-service:8085/fhir
+      JWT_SECRET: ${JWT_SECRET:-hdim-dev-jwt-secret-key-for-local-development-minimum-64-characters-required}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-900000}
+      GATEWAY_AUTH_DEV_MODE: ${GATEWAY_AUTH_DEV_MODE:-true}
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-dev-signing-secret-for-local-testing-only-minimum-32-chars}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_SERVICE_NAME: quality-measure-service
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      fhir-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8087/quality-measure/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - hdim-network
+
+  care-gap-service:
+    container_name: hdim-care-gap
+    image: hdim-master-care-gap-service:${VERSION:-latest}
+    pull_policy: never
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_PROFILES_ACTIVE: external-db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/caregap_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-healthdata}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-healthdata_password}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      FHIR_SERVICE_URL: http://fhir-service:8085/fhir
+      QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087/quality-measure
+      JWT_SECRET: ${JWT_SECRET:-hdim-dev-jwt-secret-key-for-local-development-minimum-64-characters-required}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-900000}
+      GATEWAY_AUTH_DEV_MODE: ${GATEWAY_AUTH_DEV_MODE:-true}
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-dev-signing-secret-for-local-testing-only-minimum-32-chars}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_SERVICE_NAME: care-gap-service
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      quality-measure-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8086/care-gap/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hdim-network
+
+  # ============================================
+  # CLINICAL PORTAL (Frontend)
+  # ============================================
+
+  clinical-portal:
+    container_name: hdim-clinical-portal
+    image: hdim-master-clinical-portal:${VERSION:-latest}
+    pull_policy: never
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    environment:
+      API_URL: http://gateway-service:8001
+    depends_on:
+      gateway-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - hdim-network
+
+networks:
+  hdim-network:
+    name: hdim-clinical-network
+    driver: bridge
+
+volumes:
+  redis_data:

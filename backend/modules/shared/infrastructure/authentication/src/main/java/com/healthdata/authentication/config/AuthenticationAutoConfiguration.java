@@ -36,6 +36,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @AutoConfiguration
 @ComponentScan(basePackages = {
     "com.healthdata.authentication.filter",
+    "com.healthdata.authentication.context",
+    "com.healthdata.authentication.feign",
     "com.healthdata.authentication.config",
     "com.healthdata.authentication.service",
     "com.healthdata.cache"

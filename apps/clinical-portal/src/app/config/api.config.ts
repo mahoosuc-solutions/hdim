@@ -99,7 +99,12 @@ export const CQL_ENGINE_ENDPOINTS = {
  * Note: Controller now uses /api/v1 (servlet context-path /quality-measure is already in base URL)
  */
 export const QUALITY_MEASURE_ENDPOINTS = {
+  // Local Measure Registry (service discovery)
+  LOCAL_MEASURES: '/measures/local',  // GET - returns available measures with metadata
+
+  // Calculation Endpoints
   CALCULATE: '/calculate',
+  CALCULATE_LOCAL: '/calculate-local',  // POST - local Java calculation (bypasses CQL)
   RESULTS_BY_PATIENT: '/results',
   QUALITY_SCORE: '/score',
   PATIENT_REPORT: '/report/patient',

@@ -1,0 +1,37 @@
+{
+  "resourceType": "Patient",
+  "id": "demo-james-thompson-004",
+  "identifier": [
+    {
+      "system": "urn:oid:2.16.840.1.113883.4.1",
+      "value": "DEMO-JT-004"
+    }
+  ],
+  "active": true,
+  "name": [
+    {
+      "use": "official",
+      "family": "Thompson",
+      "given": ["James", "Edward"]
+    }
+  ],
+  "gender": "male",
+  "birthDate": "1956-04-30",
+  "address": [
+    {
+      "use": "home",
+      "line": ["567 Elm Street"],
+      "city": "Worcester",
+      "state": "MA",
+      "postalCode": "01608",
+      "country": "USA"
+    }
+  ],
+  "telecom": [
+    {
+      "system": "phone",
+      "value": "555-0456",
+      "use": "home"
+    }
+  ]
+}

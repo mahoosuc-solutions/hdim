@@ -1,0 +1,41 @@
+{
+  "resourceType": "Patient",
+  "id": "demo-angela-williams-003",
+  "identifier": [
+    {
+      "system": "urn:oid:2.16.840.1.113883.4.1",
+      "value": "DEMO-AW-003"
+    }
+  ],
+  "active": true,
+  "name": [
+    {
+      "use": "official",
+      "family": "Williams",
+      "given": ["Angela", "Marie"]
+    }
+  ],
+  "gender": "female",
+  "birthDate": "1970-11-08",
+  "address": [
+    {
+      "use": "home",
+      "line": ["321 Pine Road"],
+      "city": "Cambridge",
+      "state": "MA",
+      "postalCode": "02139",
+      "country": "USA"
+    }
+  ],
+  "telecom": [
+    {
+      "system": "phone",
+      "value": "555-0389",
+      "use": "mobile"
+    },
+    {
+      "system": "email",
+      "value": "angela.williams@example.com"
+    }
+  ]
+}

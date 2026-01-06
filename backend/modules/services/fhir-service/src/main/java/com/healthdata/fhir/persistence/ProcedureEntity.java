@@ -149,6 +149,12 @@ public class ProcedureEntity {
     private Boolean hasNotes;
 
     // Audit fields
+    @Column(name = "created_by", nullable = false, length = 255, updatable = false)
+    private String createdBy;
+
+    @Column(name = "modified_by", length = 255)
+    private String modifiedBy;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

@@ -14,10 +14,10 @@ dependencyManagement {
 configurations.all {
     resolutionStrategy {
         // Force Jackson to 2.17.2 to match Spring Boot
-        force("com.fasterxml.jackson.core:jackson-databind:2.17.2")
-        force("com.fasterxml.jackson.core:jackson-core:2.17.2")
-        force("com.fasterxml.jackson.core:jackson-annotations:2.17.2")
-        force("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")
+        force("com.fasterxml.jackson.core:jackson-databind:2.20.1")
+        force("com.fasterxml.jackson.core:jackson-core:2.20.1")
+        force("com.fasterxml.jackson.core:jackson-annotations:2.20.1")
+        force("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.20.1")
     }
 }
 

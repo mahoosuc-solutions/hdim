@@ -80,3 +80,15 @@ export type MeasureCategory =
   | 'CARE_COORDINATION'
   | 'OVERUSE'
   | 'CUSTOM';
+
+/**
+ * Local Measure Metadata - from /local-measures endpoint
+ * Represents locally calculated measure implementations
+ */
+export interface LocalMeasureMetadata {
+  measureId: string; // e.g., "CDC", "CBP", "BCS"
+  measureName: string; // e.g., "Comprehensive Diabetes Care"
+  version: string; // e.g., "1.0.0"
+  description?: string;
+  category?: MeasureCategory;
+}

@@ -6,7 +6,7 @@ plugins {
 
 dependencyManagement {
     imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.3")
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.6")
     }
 }
 

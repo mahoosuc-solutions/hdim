@@ -13,6 +13,57 @@
     (dismissed)="error = null">
   </app-error-banner>
 
+  <!-- Severity Summary Cards (Issue #145) -->
+  <div class="severity-summary-grid">
+    <button mat-raised-button
+            class="severity-card critical"
+            [class.active]="severityFilter === 'critical'"
+            (click)="filterBySeverity(severityFilter === 'critical' ? null : 'critical')"
+            matTooltip="Filter by critical severity - requires immediate attention">
+      <mat-icon>error</mat-icon>
+      <div class="severity-info">
+        <span class="severity-count">{{ severityCounts.critical }}</span>
+        <span class="severity-label">Critical</span>
+      </div>
+    </button>
+
+    <button mat-raised-button
+            class="severity-card high"
+            [class.active]="severityFilter === 'high'"
+            (click)="filterBySeverity(severityFilter === 'high' ? null : 'high')"
+            matTooltip="Filter by high severity - needs attention soon">
+      <mat-icon>warning</mat-icon>
+      <div class="severity-info">
+        <span class="severity-count">{{ severityCounts.high }}</span>
+        <span class="severity-label">High</span>
+      </div>
+    </button>
+
+    <button mat-raised-button
+            class="severity-card moderate"
+            [class.active]="severityFilter === 'moderate'"
+            (click)="filterBySeverity(severityFilter === 'moderate' ? null : 'moderate')"
+            matTooltip="Filter by moderate severity">
+      <mat-icon>info</mat-icon>
+      <div class="severity-info">
+        <span class="severity-count">{{ severityCounts.moderate }}</span>
+        <span class="severity-label">Moderate</span>
+      </div>
+    </button>
+
+    <button mat-raised-button
+            class="severity-card normal"
+            [class.active]="severityFilter === 'normal'"
+            (click)="filterBySeverity(severityFilter === 'normal' ? null : 'normal')"
+            matTooltip="Filter by normal results">
+      <mat-icon>check_circle</mat-icon>
+      <div class="severity-info">
+        <span class="severity-count">{{ severityCounts.normal }}</span>
+        <span class="severity-label">Normal</span>
+      </div>
+    </button>
+  </div>
+
   <!-- Summary Statistics -->
   <div class="stats-grid">
     <app-stat-card
@@ -354,22 +405,77 @@
             </td>
           </ng-container>
 
+          <!-- Severity Column (Issue #145) -->
+          <ng-container matColumnDef="severity">
+            <th mat-header-cell *matHeaderCellDef matTooltip="Result severity level based on clinical significance">Severity</th>
+            <td mat-cell *matCellDef="let result" [class]="getResultSeverityClass(result)">
+              <span [class]="getResultSeverityBadgeClass(result)" class="severity-badge">
+                {{ getResultSeverityText(result) }}
+              </span>
+            </td>
+          </ng-container>
+
           <!-- Calculation Date Column -->
           <ng-container matColumnDef="calculationDate">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header matTooltip="Date when the quality measure evaluation was performed">Evaluation Date</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header matTooltip="Date when the quality measure evaluation was performed">Date</th>
             <td mat-cell *matCellDef="let result">{{ formatDate(result.calculationDate) }}</td>
           </ng-container>
 
           <!-- Patient ID Column -->
           <ng-container matColumnDef="patientId">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header matTooltip="FHIR resource ID of the evaluated patient">Patient ID</th>
-            <td mat-cell *matCellDef="let result">{{ result.patientId }}</td>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header matTooltip="FHIR resource ID of the evaluated patient">Patient</th>
+            <td mat-cell *matCellDef="let result">
+              <div class="patient-id-cell">
+                {{ result.patientId | slice:0:8 }}...
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Patient Context Column (Issue #145) -->
+          <ng-container matColumnDef="patientContext">
+            <th mat-header-cell *matHeaderCellDef matTooltip="Patient demographics and relevant clinical context">Context</th>
+            <td mat-cell *matCellDef="let result">
+              <div class="patient-context-cell" *ngIf="result.patientContext">
+                <span class="patient-summary">{{ getPatientContextSummary(result) }}</span>
+                <span [class]="getRiskLevelBadgeClass(result)" class="risk-badge">
+                  {{ getPatientRiskLevel(result) | titlecase }}
+                </span>
+                <button mat-icon-button
+                        class="context-info-btn"
+                        [matMenuTriggerFor]="contextMenu"
+                        matTooltip="View patient conditions & medications">
+                  <mat-icon>info_outline</mat-icon>
+                </button>
+                <mat-menu #contextMenu="matMenu" class="patient-context-menu">
+                  <div class="context-menu-content" (click)="$event.stopPropagation()">
+                    <div class="context-section">
+                      <strong>Conditions:</strong>
+                      <ul>
+                        <li *ngFor="let condition of getPatientConditions(result)">{{ condition }}</li>
+                        <li *ngIf="getPatientConditions(result).length === 0">None recorded</li>
+                      </ul>
+                    </div>
+                    <div class="context-section">
+                      <strong>Medications:</strong>
+                      <ul>
+                        <li *ngFor="let med of getPatientMedications(result)">{{ med }}</li>
+                        <li *ngIf="getPatientMedications(result).length === 0">None recorded</li>
+                      </ul>
+                    </div>
+                  </div>
+                </mat-menu>
+              </div>
+            </td>
           </ng-container>
 
           <!-- Measure Name Column -->
           <ng-container matColumnDef="measureName">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header matTooltip="Name of the quality measure used for evaluation">Measure Name</th>
-            <td mat-cell *matCellDef="let result">{{ result.measureName }}</td>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header matTooltip="Name of the quality measure used for evaluation">Measure</th>
+            <td mat-cell *matCellDef="let result">
+              <span class="measure-name" [matTooltip]="result.measureName">
+                {{ result.measureName | slice:0:20 }}{{ result.measureName.length > 20 ? '...' : '' }}
+              </span>
+            </td>
           </ng-container>
 
           <!-- Measure Category Column -->
@@ -390,23 +496,66 @@
             </td>
           </ng-container>
 
-          <!-- Compliance Rate Column -->
-          <ng-container matColumnDef="complianceRate">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header matTooltip="Calculated compliance rate as a percentage">Compliance Rate</th>
-            <td mat-cell *matCellDef="let result">{{ formatPercentage(result.complianceRate) }}</td>
+          <!-- Trend Column (Issue #145) -->
+          <ng-container matColumnDef="trend">
+            <th mat-header-cell *matHeaderCellDef matTooltip="Trend compared to previous result">Trend</th>
+            <td mat-cell *matCellDef="let result">
+              <div class="trend-cell" [class]="getResultTrendClass(result)" *ngIf="result.trend">
+                <mat-icon [matTooltip]="getTrendText(result) + ' from ' + (result.previousValue || 0) + '%'">
+                  {{ result.trendIcon }}
+                </mat-icon>
+                <span class="trend-diff">{{ formatComparisonDiff(result) }}</span>
+              </div>
+            </td>
           </ng-container>
 
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
+          <!-- Compliance Rate Column -->
+          <ng-container matColumnDef="complianceRate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header matTooltip="Calculated compliance rate as a percentage">Rate</th>
+            <td mat-cell *matCellDef="let result">
+              <div class="compliance-rate-cell">
+                <span class="current-rate">{{ formatPercentage(result.complianceRate) }}</span>
+                <span class="previous-rate" *ngIf="result.previousValue !== undefined">
+                  (was {{ result.previousValue }}%)
+                </span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Quick Actions Column (Issue #145) -->
+          <ng-container matColumnDef="quickActions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let result">
-              <app-loading-button
-                icon="visibility"
-                variant="icon"
-                ariaLabel="View details for result {{ result.id }}"
-                tooltip="View Details"
-                (buttonClick)="viewResultDetails(result)">
-              </app-loading-button>
+              <div class="quick-actions-cell">
+                <button mat-raised-button
+                        color="primary"
+                        class="primary-action-btn"
+                        [style.background-color]="getResultPrimaryAction(result).color"
+                        [matTooltip]="getResultPrimaryAction(result).description"
+                        (click)="executePrimaryResultAction(result); $event.stopPropagation()">
+                  <mat-icon>{{ getResultPrimaryAction(result).icon }}</mat-icon>
+                  <span class="action-label">{{ getResultPrimaryAction(result).label }}</span>
+                </button>
+                <button mat-icon-button
+                        [matMenuTriggerFor]="actionsMenu"
+                        matTooltip="More actions"
+                        (click)="$event.stopPropagation()">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #actionsMenu="matMenu">
+                  <button mat-menu-item
+                          *ngFor="let action of getResultSecondaryActions(result)"
+                          (click)="executeResultAction(result, action.type)">
+                    <mat-icon [style.color]="action.color">{{ action.icon }}</mat-icon>
+                    <span>{{ action.label }}</span>
+                  </button>
+                  <mat-divider></mat-divider>
+                  <button mat-menu-item (click)="viewEnhancedResultDetails(result)">
+                    <mat-icon>visibility</mat-icon>
+                    <span>View Details</span>
+                  </button>
+                </mat-menu>
+              </div>
             </td>
           </ng-container>
 

@@ -27,6 +27,11 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
     Optional<CareGapEntity> findByIdAndTenantId(UUID id, String tenantId);
 
     /**
+     * Find all care gaps for a tenant with pagination
+     */
+    org.springframework.data.domain.Page<CareGapEntity> findByTenantId(String tenantId, org.springframework.data.domain.Pageable pageable);
+
+    /**
      * Find all care gaps for a patient
      */
     @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId ORDER BY c.identifiedDate DESC")
@@ -198,5 +203,35 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
     boolean hasHighPriorityGap(
         @Param("tenantId") String tenantId,
         @Param("patientId") UUID patientId
+    );
+
+    // ==================== Provider Queries (Issue #138) ====================
+
+    /**
+     * Find open care gaps assigned to a specific provider
+     */
+    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.assignedToProviderId = :providerId AND c.gapStatus = 'OPEN' ORDER BY c.priority DESC, c.dueDate ASC")
+    List<CareGapEntity> findOpenGapsByProvider(
+        @Param("tenantId") String tenantId,
+        @Param("providerId") String providerId
+    );
+
+    /**
+     * Find open care gaps for a provider with pagination
+     */
+    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.assignedToProviderId = :providerId AND c.gapStatus = 'OPEN' ORDER BY c.priority DESC, c.dueDate ASC")
+    List<CareGapEntity> findOpenGapsByProviderWithLimit(
+        @Param("tenantId") String tenantId,
+        @Param("providerId") String providerId,
+        org.springframework.data.domain.Pageable pageable
+    );
+
+    /**
+     * Count open gaps by provider
+     */
+    @Query("SELECT COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.assignedToProviderId = :providerId AND c.gapStatus = 'OPEN'")
+    long countOpenGapsByProvider(
+        @Param("tenantId") String tenantId,
+        @Param("providerId") String providerId
     );
 }

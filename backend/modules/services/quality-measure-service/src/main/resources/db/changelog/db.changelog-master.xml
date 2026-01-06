@@ -50,4 +50,7 @@
     <!-- Bulk Result Signing - Immutable Audit Trail -->
     <include file="db/changelog/0030-create-result-signatures-table.xml"/>
 
+    <!-- Issue #152: Measure Versioning and Audit Trail -->
+    <include file="db/changelog/0031-create-measure-versions-table.xml"/>
+
 </databaseChangeLog>

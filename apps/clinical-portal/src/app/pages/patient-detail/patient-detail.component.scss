@@ -215,6 +215,46 @@
   }
 }
 
+// Context-aware navigation highlighting (Issue #155)
+.highlighted {
+  animation: highlightPulse 3s ease-out;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(33, 150, 243, 0.15);
+    pointer-events: none;
+    border-left: 4px solid #2196f3;
+  }
+}
+
+@keyframes highlightPulse {
+  0% {
+    background-color: rgba(33, 150, 243, 0.3);
+  }
+  50% {
+    background-color: rgba(33, 150, 243, 0.15);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+// Row highlighting for care gaps and results
+tr.highlighted-row {
+  background-color: rgba(33, 150, 243, 0.1) !important;
+  border-left: 3px solid #2196f3;
+
+  &:hover {
+    background-color: rgba(33, 150, 243, 0.15) !important;
+  }
+}
+
 // Responsive Design
 @media (max-width: 960px) {
   .patient-detail-container {

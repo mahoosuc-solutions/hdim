@@ -276,7 +276,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
 
     const { dateFrom, dateTo, measureType, status } = this.filterForm.value;
 
-    const filtered = this.results.filter((result) => {
+    const filtered = this.enhancedResults.filter((result) => {
       if (dateFrom) {
         const resultDate = new Date(result.calculationDate);
         const fromDate = new Date(dateFrom);
@@ -393,8 +393,8 @@ export class ResultsComponent implements OnInit, AfterViewInit {
       measureType: null,
       status: null,
     });
-    this.filteredResults = this.results;
-    this.dataSource.data = this.results;
+    this.filteredResults = this.enhancedResults;
+    this.dataSource.data = this.enhancedResults;
     this.dataSource.filter = '';
     this.dataSource.filterPredicate = () => true;
     this.currentPage = 0;
@@ -404,7 +404,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
   /**
    * View detailed information for a result
    */
-  viewResultDetails(result: QualityMeasureResult): void {
+  viewResultDetails(result: EnhancedResult): void {
     this.selectedResult = result;
     this.showDetailsPanel = true;
 
@@ -786,7 +786,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
   /**
    * The label for the checkbox on the passed row
    */
-  checkboxLabel(row?: QualityMeasureResult): string {
+  checkboxLabel(row?: EnhancedResult): string {
     if (!row) {
       return `${this.isAllSelected() ? 'deselect' : 'select'} all`;
     }
@@ -1145,38 +1145,33 @@ export class ResultsComponent implements OnInit, AfterViewInit {
     switch (actionType) {
       case 'CONTACT_PATIENT':
         // Open contact dialog or initiate call
-        this.aiAssistant.addMessage({
-          role: 'assistant',
-          content: `Initiating contact for patient ${result.patientId} regarding ${result.measureName} result.`,
-        });
+        this.aiAssistant.addAssistantMessage(
+          `Initiating contact for patient ${result.patientId} regarding ${result.measureName} result.`
+        );
         break;
       case 'ORDER_FOLLOWUP':
         // Open order dialog
-        this.aiAssistant.addMessage({
-          role: 'assistant',
-          content: `Preparing follow-up order for ${result.measureName}.`,
-        });
+        this.aiAssistant.addAssistantMessage(
+          `Preparing follow-up order for ${result.measureName}.`
+        );
         break;
       case 'REFER_SPECIALIST':
         // Open referral dialog
-        this.aiAssistant.addMessage({
-          role: 'assistant',
-          content: `Preparing specialist referral for patient ${result.patientId}.`,
-        });
+        this.aiAssistant.addAssistantMessage(
+          `Preparing specialist referral for patient ${result.patientId}.`
+        );
         break;
       case 'SCHEDULE_VISIT':
         // Open scheduling dialog
-        this.aiAssistant.addMessage({
-          role: 'assistant',
-          content: `Opening scheduler for patient ${result.patientId}.`,
-        });
+        this.aiAssistant.addAssistantMessage(
+          `Opening scheduler for patient ${result.patientId}.`
+        );
         break;
       case 'SIGN_RESULT':
         // Sign the result (would call bulk signing API)
-        this.aiAssistant.addMessage({
-          role: 'assistant',
-          content: `Result ${result.id} has been digitally signed.`,
-        });
+        this.aiAssistant.addAssistantMessage(
+          `Result ${result.id} has been digitally signed.`
+        );
         break;
     }
   }

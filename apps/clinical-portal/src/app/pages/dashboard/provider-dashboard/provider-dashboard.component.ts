@@ -44,7 +44,13 @@ import {
 } from '../../../dialogs/care-gap-closure-dialog/care-gap-closure-dialog.component';
 import { KeyboardShortcutsService } from '../../../services/keyboard-shortcuts.service';
 import { KeyboardShortcutsDialogComponent } from '../../../components/dialogs/keyboard-shortcuts-dialog.component';
+import { ProviderLeaderboardDialogComponent } from '../../../components/dialogs/provider-leaderboard-dialog.component';
 import { ShortcutHintDirective } from '../../../directives/shortcut-hint.directive';
+import { GuidedTourService } from '../../../services/guided-tour.service';
+import { TourOverlayComponent } from '../../../components/tour-overlay/tour-overlay.component';
+import { HelpService } from '../../../services/help.service';
+import { HelpPanelComponent, HelpSection } from '../../../shared/components/help-panel/help-panel.component';
+import { HelpTooltipComponent } from '../../../shared/components/help-tooltip/help-tooltip.component';
 
 export interface HighPriorityCareGap {
   id: string;
@@ -196,7 +202,11 @@ export interface RiskFactor {
     PageHeaderComponent,
     EmptyStateComponent,
     ShortcutHintDirective,
-    KeyboardShortcutsDialogComponent
+    KeyboardShortcutsDialogComponent,
+    ProviderLeaderboardDialogComponent,
+    TourOverlayComponent,
+    HelpPanelComponent,
+    HelpTooltipComponent
   ],
   templateUrl: './provider-dashboard.component.html',
   styleUrls: ['./provider-dashboard.component.scss']
@@ -248,6 +258,46 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
   // Issue #139: Enable section reordering mode
   enableSectionReorder = false;
 
+  // Issue #160: Help system state
+  showHelpPanel = false;
+  helpSections: HelpSection[] = [
+    {
+      title: 'Dashboard Overview',
+      content: 'The Provider Dashboard is your central hub for managing patient care. It displays key metrics, care gaps, results to review, and quality performance all in one place.',
+      type: 'info',
+      icon: 'dashboard',
+    },
+    {
+      title: 'Care Gap Management',
+      content: 'Care gaps represent missed preventive care opportunities. Click "Close Gap" when a patient receives the recommended service. Priority is indicated by color: red for critical, orange for high, yellow for moderate.',
+      type: 'tip',
+      icon: 'healing',
+    },
+    {
+      title: 'Results Review',
+      content: 'Pending results are sorted by severity. Critical results appear in red. Use "Sign" to acknowledge individual results or "Sign All Normal" (Ctrl+Shift+A) for batch processing.',
+      type: 'info',
+      icon: 'science',
+    },
+    {
+      title: 'Section Reordering',
+      content: 'Click the settings button in the bottom-right corner to enable section reordering. Drag sections to customize your dashboard layout. Your preferences are saved automatically.',
+      type: 'tip',
+      icon: 'drag_indicator',
+    },
+    {
+      title: 'Need More Help?',
+      content: 'Press "?" at any time to see keyboard shortcuts. Click the "Start Tour" button to restart the guided tour. Visit the Knowledge Base for detailed documentation.',
+      type: 'info',
+      icon: 'help',
+    },
+  ];
+  helpQuickLinks = [
+    { text: 'Knowledge Base', url: '/knowledge-base' },
+    { text: 'Keyboard Shortcuts', url: '#' },
+    { text: 'Report a Problem', url: '#' },
+  ];
+
   constructor(
     private router: Router,
     private dialog: MatDialog,
@@ -256,7 +306,9 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     private careGapService: CareGapService,
     private evaluationService: EvaluationService,
     private patientService: PatientService,
-    private shortcutsService: KeyboardShortcutsService
+    private shortcutsService: KeyboardShortcutsService,
+    private tourService: GuidedTourService,
+    private helpService: HelpService
   ) {}
 
   ngOnInit(): void {
@@ -266,6 +318,67 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
 
     // Issue #159: Set up keyboard shortcuts
     this.setupKeyboardShortcuts();
+
+    // Issue #160: Check for first-time user tour (with delay to let DOM render)
+    setTimeout(() => {
+      this.checkFirstVisitTour();
+    }, 1000);
+  }
+
+  /**
+   * Issue #160: Check and start first-visit tour for new users
+   */
+  private checkFirstVisitTour(): void {
+    if (this.tourService.isFirstVisit() && !this.tourService.isTourCompleted('provider-dashboard-tour')) {
+      // Show welcome dialog first
+      this.dialogService.confirm(
+        'Welcome to the Provider Dashboard!',
+        'Would you like a quick tour to help you get started?',
+        'Start Tour',
+        'Skip for now'
+      ).subscribe(startTour => {
+        this.tourService.markFirstVisitComplete();
+        if (startTour) {
+          this.tourService.startTour('provider-dashboard-tour');
+        }
+      });
+    }
+  }
+
+  /**
+   * Issue #160: Start the dashboard tour
+   */
+  startDashboardTour(): void {
+    this.tourService.startTour('provider-dashboard-tour');
+  }
+
+  /**
+   * Issue #160: Toggle help panel
+   */
+  toggleHelpPanel(): void {
+    this.showHelpPanel = !this.showHelpPanel;
+  }
+
+  /**
+   * Issue #160: Open help panel
+   */
+  openHelpPanel(): void {
+    this.showHelpPanel = true;
+  }
+
+  /**
+   * Issue #160: Close help panel
+   */
+  closeHelpPanel(): void {
+    this.showHelpPanel = false;
+  }
+
+  /**
+   * Issue #160: Handle contact support
+   */
+  onContactSupport(): void {
+    this.notificationService.show('Opening support portal...');
+    // Could navigate to support page or open external link
   }
 
   /**
@@ -371,6 +484,18 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     this.dialog.open(KeyboardShortcutsDialogComponent, {
       width: '600px',
       maxHeight: '80vh'
+    });
+  }
+
+  /**
+   * Issue #20: Open provider leaderboard dialog
+   */
+  openProviderLeaderboard(): void {
+    this.dialog.open(ProviderLeaderboardDialogComponent, {
+      width: '1100px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      panelClass: 'leaderboard-dialog-panel'
     });
   }
 

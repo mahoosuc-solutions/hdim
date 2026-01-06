@@ -1,0 +1,41 @@
+{
+  "resourceType": "Patient",
+  "id": "demo-patricia-davis-005",
+  "identifier": [
+    {
+      "system": "urn:oid:2.16.840.1.113883.4.1",
+      "value": "DEMO-PD-005"
+    }
+  ],
+  "active": true,
+  "name": [
+    {
+      "use": "official",
+      "family": "Davis",
+      "given": ["Patricia", "Ann"]
+    }
+  ],
+  "gender": "female",
+  "birthDate": "1979-07-12",
+  "address": [
+    {
+      "use": "home",
+      "line": ["890 Cedar Lane"],
+      "city": "Quincy",
+      "state": "MA",
+      "postalCode": "02169",
+      "country": "USA"
+    }
+  ],
+  "telecom": [
+    {
+      "system": "phone",
+      "value": "555-0567",
+      "use": "mobile"
+    },
+    {
+      "system": "email",
+      "value": "patricia.davis@example.com"
+    }
+  ]
+}

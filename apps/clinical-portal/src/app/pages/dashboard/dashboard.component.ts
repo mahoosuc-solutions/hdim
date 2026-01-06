@@ -30,6 +30,7 @@ import { SystemActivitySectionComponent } from '../../shared/components/system-a
 import { TrackInteraction } from '../../utils/ai-tracking.decorator';
 import { UserRoleService, UserRole } from '../../shared/services/user-role.service';
 import { MeasureFavoritesService, FavoriteMeasure, RecentMeasure } from '../../services/measure-favorites.service';
+import { ContextNavigationService } from '../../services/context-navigation.service';
 
 /**
  * Dashboard Statistics Interface
@@ -285,7 +286,8 @@ export class DashboardComponent implements OnInit {
     private router: Router,
     public aiAssistant: AIAssistantService,
     private userRoleService: UserRoleService,
-    public measureFavorites: MeasureFavoritesService
+    public measureFavorites: MeasureFavoritesService,
+    private contextNavService: ContextNavigationService
   ) {}
 
   ngOnInit(): void {
@@ -792,10 +794,22 @@ export class DashboardComponent implements OnInit {
   }
 
   /**
-   * View result details
+   * View result details (Issue #155: Context-Aware)
    */
-  viewResultDetails(resultId: string): void {
-    this.router.navigate(['/results', resultId]);
+  viewResultDetails(resultId: string, patientId?: string): void {
+    if (patientId) {
+      // Navigate to patient with result highlighted
+      this.contextNavService.navigateToPatientResult(patientId, resultId);
+    } else {
+      this.router.navigate(['/results', resultId]);
+    }
+  }
+
+  /**
+   * Navigate to measure results with context (Issue #155)
+   */
+  viewMeasureResults(measureId: string, providerId?: string): void {
+    this.contextNavService.navigateToMeasureResults(measureId, providerId);
   }
 
   /**
@@ -963,27 +977,36 @@ export class DashboardComponent implements OnInit {
    * Navigate to patient list with care gap filter
    */
   viewAllCareGaps(): void {
-    this.router.navigate(['/patients'], {
-      queryParams: { filter: 'care-gaps', urgency: 'high' },
-    });
+    this.contextNavService.navigateToCareGaps(undefined, undefined, 'high');
   }
 
   /**
-   * Navigate to specific patient with care gap
+   * Navigate to specific patient with care gap (Issue #155: Context-Aware Routing)
    */
-  viewPatientWithCareGap(patientId: string): void {
-    this.router.navigate(['/patients', patientId]);
+  viewPatientWithCareGap(patientId: string, careGapId?: string, measureId?: string): void {
+    if (careGapId) {
+      // Navigate with context to highlight specific care gap
+      this.contextNavService.navigateToPatientCareGap(patientId, careGapId, measureId);
+    } else {
+      // Simple navigation to patient care gaps tab
+      this.router.navigate(['/patients', patientId], {
+        queryParams: { tab: 'care-gaps' }
+      });
+    }
   }
 
   /**
-   * Schedule appointment for a patient with care gap
-   * Navigates to scheduling page (placeholder - would integrate with scheduling system)
+   * Navigate to address/close a specific care gap (Issue #155)
+   */
+  addressCareGap(patientId: string, careGapId: string, measureId?: string): void {
+    this.contextNavService.navigateToAddressGap(patientId, careGapId, measureId);
+  }
+
+  /**
+   * Schedule appointment for a patient with care gap (Issue #155: Context-Aware)
    */
   scheduleAppointment(patientId: string): void {
-    // For now, navigate to patient detail with scheduling intent
-    this.router.navigate(['/patients', patientId], {
-      queryParams: { action: 'schedule' },
-    });
+    this.contextNavService.navigateToPreVisit(patientId);
   }
 
   /**
@@ -998,10 +1021,17 @@ export class DashboardComponent implements OnInit {
   }
 
   /**
-   * Navigate to all evaluations
+   * Navigate to all evaluations (Issue #155: Context-Aware)
    */
   viewAllEvaluations(): void {
-    this.router.navigate(['/evaluations']);
+    this.contextNavService.navigateToEvaluations();
+  }
+
+  /**
+   * Navigate to evaluations by measure (Issue #155: Context-Aware)
+   */
+  viewEvaluationsByMeasure(measureId: string): void {
+    this.contextNavService.navigateToEvaluations(measureId);
   }
 
   /**
@@ -1065,6 +1095,13 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/reports'], {
       queryParams: { reportType: 'compliance' },
     });
+  }
+
+  /**
+   * Navigate to risk stratification with filters (Issue #155: Context-Aware)
+   */
+  viewRiskStratification(riskLevel?: string, condition?: string): void {
+    this.contextNavService.navigateToRiskStratification(riskLevel, condition);
   }
 
   // ==================== Favorites & Recent Measures ====================

@@ -55,8 +55,8 @@ dependencies {
     implementation("org.apache.opennlp:opennlp-tools:2.3.3")
 
     // Stanford CoreNLP for advanced NLP (optional - can be heavy)
-    implementation("edu.stanford.nlp:stanford-corenlp:4.5.7")
-    implementation("edu.stanford.nlp:stanford-corenlp:4.5.7:models") // Pre-trained models
+    implementation("edu.stanford.nlp:stanford-corenlp:4.5.10")
+    implementation("edu.stanford.nlp:stanford-corenlp:4.5.10:models") // Pre-trained models
 
     // Apache cTAKES-inspired clinical text processing
     // Using simpler regex-based approach for this implementation

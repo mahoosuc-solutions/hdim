@@ -1,0 +1,68 @@
+{
+  "resourceType": "Condition",
+  "id": "demo-rc-diabetes",
+  "clinicalStatus": {
+    "coding": [
+      {
+        "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+        "code": "active",
+        "display": "Active"
+      }
+    ]
+  },
+  "verificationStatus": {
+    "coding": [
+      {
+        "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+        "code": "confirmed",
+        "display": "Confirmed"
+      }
+    ]
+  },
+  "category": [
+    {
+      "coding": [
+        {
+          "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+          "code": "problem-list-item",
+          "display": "Problem List Item"
+        }
+      ]
+    }
+  ],
+  "severity": {
+    "coding": [
+      {
+        "system": "http://snomed.info/sct",
+        "code": "24484000",
+        "display": "Severe"
+      }
+    ]
+  },
+  "code": {
+    "coding": [
+      {
+        "system": "http://hl7.org/fhir/sid/icd-10-cm",
+        "code": "E11.9",
+        "display": "Type 2 diabetes mellitus without complications"
+      },
+      {
+        "system": "http://snomed.info/sct",
+        "code": "44054006",
+        "display": "Diabetes mellitus type 2"
+      }
+    ],
+    "text": "Type 2 Diabetes Mellitus"
+  },
+  "subject": {
+    "reference": "Patient/demo-robert-chen-002",
+    "display": "Robert Chen"
+  },
+  "onsetDateTime": "2019-03-10",
+  "recordedDate": "2019-03-10",
+  "note": [
+    {
+      "text": "Patient diagnosed with Type 2 Diabetes. Initial HbA1c 8.2%. Started on Metformin 500mg BID."
+    }
+  ]
+}

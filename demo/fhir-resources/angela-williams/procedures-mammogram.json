@@ -1,0 +1,176 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "demo-aw-mammogram-2021",
+        "status": "completed",
+        "category": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "103693007",
+              "display": "Diagnostic procedure"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://www.ama-assn.org/go/cpt",
+              "code": "77067",
+              "display": "Screening mammography, bilateral"
+            }
+          ],
+          "text": "Screening mammogram"
+        },
+        "subject": {
+          "reference": "Patient/demo-angela-williams-003",
+          "display": "Angela Williams"
+        },
+        "performedDateTime": "2021-02-15T10:00:00Z",
+        "outcome": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "385669000",
+              "display": "Successful"
+            }
+          ],
+          "text": "BI-RADS 1 - Negative"
+        },
+        "note": [
+          {
+            "text": "Routine screening mammogram. No suspicious findings. BI-RADS Category 1. Recommend annual screening."
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "demo-aw-mammogram-2023",
+        "status": "completed",
+        "category": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "103693007",
+              "display": "Diagnostic procedure"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://www.ama-assn.org/go/cpt",
+              "code": "77067",
+              "display": "Screening mammography, bilateral"
+            }
+          ],
+          "text": "Screening mammogram - CARE GAP CLOSURE"
+        },
+        "subject": {
+          "reference": "Patient/demo-angela-williams-003",
+          "display": "Angela Williams"
+        },
+        "performedDateTime": "2023-07-15T09:30:00Z",
+        "outcome": {
+          "text": "BI-RADS 4 - Suspicious finding, biopsy recommended"
+        },
+        "note": [
+          {
+            "text": "CARE GAP CLOSURE: Patient overdue by 28 months. Outreach campaign successful - patient scheduled after SMS reminder and care coordinator call. Finding: 1.2cm mass in upper outer quadrant left breast. BI-RADS 4. Biopsy recommended. EARLY DETECTION - patient would have been diagnosed later without gap closure intervention."
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "demo-aw-biopsy-2023",
+        "status": "completed",
+        "category": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "103693007",
+              "display": "Diagnostic procedure"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://www.ama-assn.org/go/cpt",
+              "code": "19083",
+              "display": "Breast biopsy with image guidance"
+            }
+          ],
+          "text": "Breast biopsy"
+        },
+        "subject": {
+          "reference": "Patient/demo-angela-williams-003",
+          "display": "Angela Williams"
+        },
+        "performedDateTime": "2023-08-01T11:00:00Z",
+        "outcome": {
+          "text": "Invasive ductal carcinoma, Stage 1A, ER+/PR+/HER2-"
+        },
+        "note": [
+          {
+            "text": "Core needle biopsy confirmed early-stage breast cancer. Stage 1A - highly treatable. Excellent prognosis with treatment. Patient referred to oncology. WITHOUT CARE GAP INTERVENTION, this cancer would likely have progressed to later stage before detection."
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "demo-aw-lumpectomy-2023",
+        "status": "completed",
+        "category": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "387713003",
+              "display": "Surgical procedure"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://www.ama-assn.org/go/cpt",
+              "code": "19301",
+              "display": "Lumpectomy"
+            }
+          ],
+          "text": "Lumpectomy with sentinel node biopsy"
+        },
+        "subject": {
+          "reference": "Patient/demo-angela-williams-003",
+          "display": "Angela Williams"
+        },
+        "performedDateTime": "2023-09-15T08:00:00Z",
+        "outcome": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "385669000",
+              "display": "Successful"
+            }
+          ],
+          "text": "Clear margins, no lymph node involvement"
+        },
+        "note": [
+          {
+            "text": "Successful lumpectomy. Clear margins achieved. Sentinel node negative. Patient to begin adjuvant hormone therapy. Prognosis excellent - 95%+ 5-year survival. SUCCESS STORY: Care gap intervention led to early detection and optimal outcome."
+          }
+        ]
+      }
+    }
+  ]
+}

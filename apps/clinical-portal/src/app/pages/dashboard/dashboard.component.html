@@ -31,20 +31,20 @@
           [value]="currentRole"
           (change)="switchRole($event.value)"
           aria-label="Select user role view">
-          <mat-button-toggle [value]="UserRole.MEDICAL_ASSISTANT">
-            <mat-icon>medical_services</mat-icon>
+          <mat-button-toggle [value]="UserRole.MEDICAL_ASSISTANT" aria-label="View dashboard as Medical Assistant">
+            <mat-icon aria-hidden="true">support_agent</mat-icon>
             Medical Assistant
           </mat-button-toggle>
-          <mat-button-toggle [value]="UserRole.REGISTERED_NURSE">
-            <mat-icon>local_hospital</mat-icon>
+          <mat-button-toggle [value]="UserRole.REGISTERED_NURSE" aria-label="View dashboard as Registered Nurse">
+            <mat-icon aria-hidden="true">healing</mat-icon>
             Registered Nurse
           </mat-button-toggle>
-          <mat-button-toggle [value]="UserRole.PROVIDER">
-            <mat-icon>stethoscope</mat-icon>
+          <mat-button-toggle [value]="UserRole.PROVIDER" aria-label="View dashboard as Provider">
+            <mat-icon aria-hidden="true">stethoscope</mat-icon>
             Provider
           </mat-button-toggle>
-          <mat-button-toggle [value]="UserRole.ADMIN">
-            <mat-icon>admin_panel_settings</mat-icon>
+          <mat-button-toggle [value]="UserRole.ADMIN" aria-label="View dashboard as Administrator">
+            <mat-icon aria-hidden="true">admin_panel_settings</mat-icon>
             Administrator
           </mat-button-toggle>
         </mat-button-toggle-group>

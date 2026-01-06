@@ -335,6 +335,8 @@ public class EncounterService {
                 .resourceType("Encounter")
                 .resourceJson(JSON_PARSER.encodeResourceToString(encounter))
                 .patientId(patientId)
+                .createdBy(createdBy)
+                .lastModifiedBy(modifiedBy)
                 .build();
 
         updateExtractedFields(entity, encounter);

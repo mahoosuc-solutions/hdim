@@ -1,0 +1,193 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon color="primary">healing</mat-icon>
+  Close Care Gap
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <!-- Patient and Gap Info Header -->
+  <div class="gap-info-header">
+    <div class="patient-info">
+      <mat-icon>person</mat-icon>
+      <div>
+        <strong>{{ data.patientName }}</strong>
+        <span class="mrn">{{ data.patientMRN }}</span>
+      </div>
+    </div>
+    <div class="gap-details">
+      <div class="gap-type">
+        <mat-icon>assignment_late</mat-icon>
+        <span>{{ data.gap.measureName }}</span>
+      </div>
+      <div class="priority-badge" [style.background-color]="getPriorityColor(data.gap.priority)">
+        {{ data.gap.priority | titlecase }}
+      </div>
+    </div>
+  </div>
+
+  <div class="gap-description">
+    <p>{{ data.gap.description }}</p>
+    @if (data.gap.recommendation) {
+      <p class="recommendation">
+        <mat-icon>lightbulb</mat-icon>
+        <span>{{ data.gap.recommendation }}</span>
+      </p>
+    }
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- Quick Actions Section -->
+  @if (!showManualForm()) {
+    <div class="quick-actions-section">
+      <h3 class="section-title">
+        <mat-icon>bolt</mat-icon>
+        Quick Actions
+        <span class="subtitle">Close this gap in 2-3 clicks</span>
+      </h3>
+
+      <div class="quick-actions-grid">
+        @for (action of quickActions; track action.type) {
+          <button
+            mat-raised-button
+            class="quick-action-btn"
+            [style.--action-color]="action.color"
+            [disabled]="isProcessing()"
+            (click)="onQuickAction(action)"
+            [matTooltip]="action.description">
+            <mat-icon [style.color]="action.color">{{ action.icon }}</mat-icon>
+            <span class="action-label">{{ action.label }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Bulk Closure Section -->
+    @if (hasBulkOption()) {
+      <mat-divider></mat-divider>
+
+      <div class="bulk-closure-section">
+        <h3 class="section-title">
+          <mat-icon>checklist</mat-icon>
+          Close Related Gaps Together
+          <span class="subtitle">{{ data.relatedGaps?.length }} similar gaps found</span>
+        </h3>
+
+        <div class="bulk-actions">
+          <button mat-button color="primary" (click)="selectAllRelatedGaps()">
+            Select All
+          </button>
+          <button mat-button (click)="deselectAllRelatedGaps()">
+            Deselect All
+          </button>
+        </div>
+
+        <div class="related-gaps-list">
+          @for (relatedGap of data.relatedGaps; track relatedGap.id) {
+            <div
+              class="related-gap-item"
+              [class.selected]="isRelatedGapSelected(relatedGap.id)"
+              (click)="toggleRelatedGap(relatedGap.id)">
+              <mat-checkbox
+                [checked]="isRelatedGapSelected(relatedGap.id)"
+                (click)="$event.stopPropagation()">
+              </mat-checkbox>
+              <div class="related-gap-info">
+                <strong>{{ relatedGap.measureName }}</strong>
+                <span>{{ relatedGap.description }}</span>
+              </div>
+              <div class="priority-chip" [style.background-color]="getPriorityColor(relatedGap.priority)">
+                {{ relatedGap.priority }}
+              </div>
+            </div>
+          }
+        </div>
+
+        @if (selectedRelatedGaps().length > 0) {
+          <div class="bulk-summary">
+            <mat-icon>info</mat-icon>
+            <span>{{ selectedRelatedGaps().length + 1 }} gap(s) will be closed with the selected action</span>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- Manual Closure Form -->
+  @if (showManualForm()) {
+    <div class="manual-closure-section">
+      <div class="manual-header">
+        <button mat-icon-button (click)="backToQuickActions()">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <h3>Specify Closure Reason</h3>
+      </div>
+
+      <div class="closure-suggestions">
+        <p class="suggestions-label">Suggested reasons for this gap type:</p>
+        <div class="suggestion-chips">
+          @for (suggestion of closureReasonSuggestions; track suggestion.reason) {
+            <mat-chip
+              (click)="selectSuggestedReason(suggestion)"
+              [highlighted]="manualClosureForm.get('reason')?.value === suggestion.reason">
+              {{ suggestion.reason }}
+            </mat-chip>
+          }
+        </div>
+      </div>
+
+      <form [formGroup]="manualClosureForm" class="closure-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Closure Reason</mat-label>
+          <input matInput formControlName="reason" placeholder="Enter or select a reason above">
+          @if (manualClosureForm.get('reason')?.hasError('required')) {
+            <mat-error>Reason is required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Additional Notes (Optional)</mat-label>
+          <textarea matInput formControlName="notes" rows="3"
+            placeholder="Add any additional context or notes..."></textarea>
+        </mat-form-field>
+
+        <div class="follow-up-section">
+          <mat-checkbox formControlName="scheduleFollowUp">
+            Schedule follow-up for this patient
+          </mat-checkbox>
+
+          @if (manualClosureForm.get('scheduleFollowUp')?.value) {
+            <mat-form-field appearance="outline" class="follow-up-date">
+              <mat-label>Follow-up Date</mat-label>
+              <input matInput type="date" formControlName="followUpDate">
+            </mat-form-field>
+          }
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- Processing Indicator -->
+  @if (isProcessing()) {
+    <div class="processing-overlay">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Closing care gap...</p>
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isProcessing()">
+    Cancel
+  </button>
+
+  @if (showManualForm()) {
+    <button
+      mat-raised-button
+      color="primary"
+      [disabled]="manualClosureForm.invalid || isProcessing()"
+      (click)="onManualClose()">
+      <mat-icon>check</mat-icon>
+      Close Gap
+    </button>
+  }
+</mat-dialog-actions>

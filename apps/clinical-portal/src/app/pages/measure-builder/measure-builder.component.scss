@@ -40,6 +40,12 @@
   }
 }
 
+.header-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 // Measures Table Card
 .measures-table-card {
   .filter-container {

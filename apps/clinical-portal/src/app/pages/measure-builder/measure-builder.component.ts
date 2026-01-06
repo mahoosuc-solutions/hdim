@@ -13,6 +13,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDividerModule } from '@angular/material/divider';
 import { SelectionModel } from '@angular/cdk/collections';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -35,6 +36,8 @@ import { CqlEditorDialogComponent } from './dialogs/cql-editor-dialog.component'
 import { ValueSetPickerDialogComponent } from './dialogs/value-set-picker-dialog.component';
 import { TestPreviewDialogComponent } from './dialogs/test-preview-dialog.component';
 import { PublishConfirmDialogComponent } from './dialogs/publish-confirm-dialog.component';
+import { VersionHistoryDialogComponent } from './dialogs/version-history-dialog.component';
+import { PerformanceDashboardDialogComponent } from './dialogs/performance-dashboard-dialog.component';
 
 @Component({
   selector: 'app-measure-builder',
@@ -54,6 +57,7 @@ import { PublishConfirmDialogComponent } from './dialogs/publish-confirm-dialog.
     MatFormFieldModule,
     MatInputModule,
     MatCheckboxModule,
+    MatDividerModule,
     LoadingButtonComponent,
     LoadingOverlayComponent,
   ],
@@ -152,21 +156,48 @@ export class MeasureBuilderComponent implements OnInit, OnDestroy, AfterViewInit
   @TrackInteraction('measure-builder', 'create-measure')
   openNewMeasureDialog(): void {
     const dialogRef = this.dialog.open(NewMeasureDialogComponent, {
-      width: '600px',
+      width: '900px',
+      maxHeight: '85vh',
       disableClose: true,
       autoFocus: true,
     });
 
-    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((draft?: CreateCustomMeasureRequest) => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((draft?: CreateCustomMeasureRequest & { cqlTemplate?: string }) => {
       if (!draft) return;
       this.loading = true;
+
+      // Extract cqlTemplate before sending to backend (it's not part of the DTO)
+      const cqlTemplate = draft.cqlTemplate;
+      delete draft.cqlTemplate;
+
       this.customMeasureService.createDraft(draft).pipe(takeUntil(this.destroy$)).subscribe({
         next: (saved) => {
-          this.drafts = [saved, ...this.drafts];
-          this.measures = this.drafts;
-          this.dataSource.data = this.drafts;
-          this.toast.success('Measure created successfully');
-          this.loading = false;
+          // If created from template, also save the CQL
+          if (cqlTemplate) {
+            this.customMeasureService.updateCql(saved.id, cqlTemplate).pipe(takeUntil(this.destroy$)).subscribe({
+              next: (updatedMeasure) => {
+                this.drafts = [updatedMeasure, ...this.drafts];
+                this.measures = this.drafts;
+                this.dataSource.data = this.drafts;
+                this.toast.success('Measure created from template successfully');
+                this.loading = false;
+              },
+              error: () => {
+                // Measure created but CQL save failed - still add to list
+                this.drafts = [saved, ...this.drafts];
+                this.measures = this.drafts;
+                this.dataSource.data = this.drafts;
+                this.toast.warning('Measure created, but template CQL could not be saved');
+                this.loading = false;
+              },
+            });
+          } else {
+            this.drafts = [saved, ...this.drafts];
+            this.measures = this.drafts;
+            this.dataSource.data = this.drafts;
+            this.toast.success('Measure created successfully');
+            this.loading = false;
+          }
         },
         error: () => {
           this.toast.error('Failed to create measure');
@@ -267,12 +298,62 @@ export class MeasureBuilderComponent implements OnInit, OnDestroy, AfterViewInit
    * Test measure against sample patients
    */
   testMeasure(measure: CustomMeasure): void {
-    const dialogRef = this.dialog.open(TestPreviewDialogComponent, {
+    this.dialog.open(TestPreviewDialogComponent, {
       width: '1000px',
       height: '700px',
       data: {
         measureId: measure.id,
         measureName: measure.name,
+      },
+    });
+  }
+
+  /**
+   * Open version history and audit trail dialog
+   */
+  @TrackInteraction('measure-builder', 'view-version-history')
+  openVersionHistory(measure: CustomMeasure): void {
+    this.dialog.open(VersionHistoryDialogComponent, {
+      width: '900px',
+      maxHeight: '80vh',
+      data: {
+        measure,
+      },
+    });
+  }
+
+  /**
+   * Clone a measure to create a copy
+   */
+  @TrackInteraction('measure-builder', 'clone-measure')
+  cloneMeasure(measure: CustomMeasure): void {
+    this.loading = true;
+    this.customMeasureService.cloneMeasure(measure.id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (clonedMeasure) => {
+        this.drafts = [clonedMeasure, ...this.drafts];
+        this.measures = this.drafts;
+        this.dataSource.data = this.drafts;
+        this.toast.success(`Measure "${measure.name}" cloned successfully`);
+        this.loading = false;
+      },
+      error: (err) => {
+        this.toast.error(`Failed to clone measure: ${err.userMessage || err.message || 'Unknown error'}`);
+        this.loading = false;
+      },
+    });
+  }
+
+  /**
+   * Open performance comparison dashboard
+   */
+  @TrackInteraction('measure-builder', 'view-performance-dashboard')
+  openPerformanceDashboard(): void {
+    this.dialog.open(PerformanceDashboardDialogComponent, {
+      width: '1200px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      data: {
+        measures: this.measures,
       },
     });
   }

@@ -1,0 +1,391 @@
+<!-- Risk Stratification View -->
+<!-- Issue #147: Add Risk Stratification View -->
+
+<div class="risk-stratification-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>
+        <mat-icon>analytics</mat-icon>
+        Risk Stratification
+      </h1>
+      <p class="subtitle">Prioritize high-risk patients and allocate time effectively</p>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button (click)="toggleViewMode()" matTooltip="Toggle view mode">
+        <mat-icon>{{ viewMode === 'cards' ? 'table_rows' : 'grid_view' }}</mat-icon>
+        {{ viewMode === 'cards' ? 'Table View' : 'Card View' }}
+      </button>
+      <button mat-stroked-button (click)="exportPatientList()" [disabled]="filteredPatients.length === 0">
+        <mat-icon>download</mat-icon>
+        Export
+      </button>
+      <button mat-raised-button color="primary" (click)="loadPatients()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading patient risk data...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading" class="main-content">
+    <!-- Risk Level Summary Cards -->
+    <div class="risk-summary-grid">
+      <div
+        *ngFor="let level of riskLevels"
+        class="risk-summary-card"
+        [class.selected]="selectedRiskLevel === level.level"
+        [style.border-color]="level.color"
+        (click)="selectRiskLevel(level.level)">
+        <div class="card-header" [style.background-color]="level.bgColor">
+          <mat-icon [style.color]="level.color">{{ level.icon }}</mat-icon>
+          <span class="count" [style.color]="level.color">{{ getGroupSummary(level.level)?.count || 0 }}</span>
+        </div>
+        <div class="card-body">
+          <h3>{{ level.label }}</h3>
+          <p class="description">{{ level.description }}</p>
+          <div class="stats">
+            <span class="stat">
+              <strong>{{ getGroupSummary(level.level)?.percentage || 0 }}%</strong> of panel
+            </span>
+            <span class="stat">
+              Avg score: <strong>{{ getGroupSummary(level.level)?.avgScore || 0 }}</strong>
+            </span>
+          </div>
+          <div class="action-badge" [style.background-color]="level.bgColor" [style.color]="level.color">
+            {{ level.actionRequired }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <mat-card class="filters-card">
+      <div class="filters-row">
+        <!-- Search -->
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search patients</mat-label>
+          <input matInput
+                 [value]="searchTerm"
+                 (input)="onSearch($event)"
+                 placeholder="Search by name, MRN, or condition">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <!-- Condition Filter -->
+        <mat-form-field appearance="outline" class="condition-filter">
+          <mat-label>Filter by condition</mat-label>
+          <mat-select [(value)]="selectedCondition" (selectionChange)="applyFilters()">
+            <mat-option [value]="null">All Conditions</mat-option>
+            <mat-option *ngFor="let condition of conditionCategories" [value]="condition.name">
+              {{ condition.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Clear Filters -->
+        <button mat-stroked-button
+                (click)="clearFilters()"
+                [disabled]="!selectedRiskLevel && !selectedCondition && !searchTerm">
+          <mat-icon>clear_all</mat-icon>
+          Clear Filters
+        </button>
+      </div>
+
+      <!-- Active Filters Display -->
+      <div class="active-filters" *ngIf="selectedRiskLevel || selectedCondition || searchTerm">
+        <span class="filter-label">Active filters:</span>
+        <mat-chip-set>
+          <mat-chip *ngIf="selectedRiskLevel" (removed)="selectRiskLevel(null)">
+            {{ getRiskLevelConfig(selectedRiskLevel).label }}
+            <mat-icon matChipRemove>cancel</mat-icon>
+          </mat-chip>
+          <mat-chip *ngIf="selectedCondition" (removed)="selectCondition(null)">
+            {{ selectedCondition }}
+            <mat-icon matChipRemove>cancel</mat-icon>
+          </mat-chip>
+          <mat-chip *ngIf="searchTerm" (removed)="searchTerm = ''; applyFilters()">
+            "{{ searchTerm }}"
+            <mat-icon matChipRemove>cancel</mat-icon>
+          </mat-chip>
+        </mat-chip-set>
+        <span class="results-count">{{ filteredPatients.length }} patients</span>
+      </div>
+    </mat-card>
+
+    <!-- Card View -->
+    <div *ngIf="viewMode === 'cards'" class="patients-card-grid">
+      <mat-card *ngFor="let patient of filteredPatients" class="patient-risk-card"
+                [class.expanded]="expandedPatientId === patient.patientId">
+        <!-- Card Header with Risk Score -->
+        <div class="card-risk-header" [style.background-color]="getRiskLevelConfig(patient.riskLevel).bgColor">
+          <div class="risk-gauge">
+            <div class="gauge-fill"
+                 [style.width.%]="patient.overallRiskScore"
+                 [style.background-color]="getRiskLevelConfig(patient.riskLevel).color">
+            </div>
+            <span class="risk-score" [style.color]="getRiskLevelConfig(patient.riskLevel).color">
+              {{ patient.overallRiskScore }}
+            </span>
+          </div>
+          <div class="risk-level-badge" [style.background-color]="getRiskLevelConfig(patient.riskLevel).color">
+            {{ getRiskLevelConfig(patient.riskLevel).label }}
+          </div>
+        </div>
+
+        <!-- Patient Info -->
+        <mat-card-content>
+          <div class="patient-header">
+            <div class="patient-info">
+              <h3>{{ patient.patientName }}</h3>
+              <p class="patient-meta">
+                {{ patient.age }}y {{ patient.gender }} | MRN: {{ patient.mrn }}
+              </p>
+            </div>
+            <div class="trend-indicator" [ngClass]="getTrendClass(patient.trending)">
+              <mat-icon>{{ getTrendIcon(patient.trending) }}</mat-icon>
+              <span>{{ patient.trending | titlecase }}</span>
+            </div>
+          </div>
+
+          <!-- Conditions -->
+          <div class="conditions-section">
+            <span class="section-label">Conditions:</span>
+            <div class="condition-chips">
+              <mat-chip *ngFor="let condition of patient.primaryConditions.slice(0, 3)">
+                {{ condition }}
+              </mat-chip>
+              <mat-chip *ngIf="patient.primaryConditions.length > 3" class="more-chip">
+                +{{ patient.primaryConditions.length - 3 }} more
+              </mat-chip>
+            </div>
+          </div>
+
+          <!-- Key Metrics -->
+          <div class="metrics-row">
+            <div class="metric">
+              <mat-icon [class.has-gaps]="patient.openCareGaps > 0">assignment_late</mat-icon>
+              <span>{{ patient.openCareGaps }} care gaps</span>
+            </div>
+            <div class="metric">
+              <mat-icon>event</mat-icon>
+              <span>Last: {{ patient.lastVisit }}</span>
+            </div>
+            <div class="metric" *ngIf="patient.recentEdVisits > 0">
+              <mat-icon class="ed-icon">local_hospital</mat-icon>
+              <span>{{ patient.recentEdVisits }} ED visits</span>
+            </div>
+          </div>
+
+          <!-- Expandable Risk Factors -->
+          <mat-expansion-panel class="risk-factors-panel" hideToggle
+                               [expanded]="expandedPatientId === patient.patientId"
+                               (opened)="togglePatientExpanded(patient.patientId)"
+                               (closed)="togglePatientExpanded(patient.patientId)">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>insights</mat-icon>
+                Risk Factor Breakdown
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div class="risk-factors-content">
+              <div *ngFor="let factor of patient.riskFactors" class="factor-row">
+                <div class="factor-header">
+                  <span class="factor-name">{{ factor.factorName }}</span>
+                  <span class="factor-score">{{ factor.weightedScore }}/{{ factor.maxScore }}</span>
+                </div>
+                <mat-progress-bar
+                  mode="determinate"
+                  [value]="getFactorContributionWidth(factor)"
+                  [color]="factor.percentContribution > 25 ? 'warn' : 'primary'">
+                </mat-progress-bar>
+              </div>
+
+              <!-- SDOH Factors -->
+              <div *ngIf="patient.sdohRiskFactors && patient.sdohRiskFactors.length > 0" class="sdoh-section">
+                <mat-divider></mat-divider>
+                <span class="section-label">
+                  <mat-icon>home</mat-icon>
+                  Social Determinants:
+                </span>
+                <div class="sdoh-chips">
+                  <mat-chip *ngFor="let sdoh of patient.sdohRiskFactors" class="sdoh-chip">
+                    {{ sdoh }}
+                  </mat-chip>
+                </div>
+              </div>
+            </div>
+          </mat-expansion-panel>
+        </mat-card-content>
+
+        <!-- Card Actions -->
+        <mat-card-actions>
+          <button mat-button color="primary" (click)="viewPatientDetails(patient)">
+            <mat-icon>person</mat-icon>
+            View Details
+          </button>
+          <button mat-button (click)="viewCareGaps(patient)" [disabled]="patient.openCareGaps === 0">
+            <mat-icon>checklist</mat-icon>
+            Care Gaps
+          </button>
+          <button mat-icon-button [matMenuTriggerFor]="actionsMenu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #actionsMenu="matMenu">
+            <button mat-menu-item (click)="scheduleVisit(patient)">
+              <mat-icon>calendar_today</mat-icon>
+              <span>Schedule Visit</span>
+            </button>
+            <button mat-menu-item (click)="initiateOutreach(patient)">
+              <mat-icon>phone</mat-icon>
+              <span>Initiate Outreach</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="viewPatientDetails(patient)">
+              <mat-icon>open_in_new</mat-icon>
+              <span>Full Patient Record</span>
+            </button>
+          </mat-menu>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+
+    <!-- Table View -->
+    <mat-card *ngIf="viewMode === 'table'" class="table-card">
+      <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange($event)">
+        <!-- Risk Score Column -->
+        <ng-container matColumnDef="riskScore">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Risk Score</th>
+          <td mat-cell *matCellDef="let patient">
+            <div class="risk-score-cell">
+              <span class="score-badge"
+                    [style.background-color]="getRiskLevelConfig(patient.riskLevel).bgColor"
+                    [style.color]="getRiskLevelConfig(patient.riskLevel).color">
+                {{ patient.overallRiskScore }}
+              </span>
+              <span class="risk-label">{{ getRiskLevelConfig(patient.riskLevel).label }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Patient Name Column -->
+        <ng-container matColumnDef="patientName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Patient</th>
+          <td mat-cell *matCellDef="let patient">
+            <div class="patient-cell">
+              <strong>{{ patient.patientName }}</strong>
+              <span class="mrn">{{ patient.mrn }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Age Column -->
+        <ng-container matColumnDef="age">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Age</th>
+          <td mat-cell *matCellDef="let patient">{{ patient.age }}y {{ patient.gender.charAt(0) }}</td>
+        </ng-container>
+
+        <!-- Conditions Column -->
+        <ng-container matColumnDef="primaryConditions">
+          <th mat-header-cell *matHeaderCellDef>Conditions</th>
+          <td mat-cell *matCellDef="let patient">
+            <div class="conditions-cell">
+              <span *ngFor="let c of patient.primaryConditions.slice(0, 2)" class="condition-tag">
+                {{ c }}
+              </span>
+              <span *ngIf="patient.primaryConditions.length > 2" class="more-tag">
+                +{{ patient.primaryConditions.length - 2 }}
+              </span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Care Gaps Column -->
+        <ng-container matColumnDef="openCareGaps">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Care Gaps</th>
+          <td mat-cell *matCellDef="let patient">
+            <span [class.gaps-warning]="patient.openCareGaps > 2"
+                  [class.gaps-alert]="patient.openCareGaps > 4">
+              {{ patient.openCareGaps }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Last Visit Column -->
+        <ng-container matColumnDef="lastVisit">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Visit</th>
+          <td mat-cell *matCellDef="let patient">{{ patient.lastVisit }}</td>
+        </ng-container>
+
+        <!-- Trend Column -->
+        <ng-container matColumnDef="trending">
+          <th mat-header-cell *matHeaderCellDef>Trend</th>
+          <td mat-cell *matCellDef="let patient">
+            <span class="trend-cell" [ngClass]="getTrendClass(patient.trending)">
+              <mat-icon>{{ getTrendIcon(patient.trending) }}</mat-icon>
+              {{ patient.trending | titlecase }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let patient">
+            <button mat-icon-button color="primary" matTooltip="View Details"
+                    (click)="viewPatientDetails(patient)">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button matTooltip="Care Gaps"
+                    (click)="viewCareGaps(patient)"
+                    [disabled]="patient.openCareGaps === 0">
+              <mat-icon>checklist</mat-icon>
+            </button>
+            <button mat-icon-button [matMenuTriggerFor]="tableMenu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #tableMenu="matMenu">
+              <button mat-menu-item (click)="scheduleVisit(patient)">
+                <mat-icon>calendar_today</mat-icon>
+                Schedule Visit
+              </button>
+              <button mat-menu-item (click)="initiateOutreach(patient)">
+                <mat-icon>phone</mat-icon>
+                Initiate Outreach
+              </button>
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            [class.critical-row]="row.riskLevel === 'critical'"
+            [class.high-row]="row.riskLevel === 'high'">
+        </tr>
+      </table>
+
+      <mat-paginator [pageSizeOptions]="[10, 25, 50]"
+                     [pageSize]="25"
+                     showFirstLastButtons
+                     (page)="onPageChange($event)">
+      </mat-paginator>
+    </mat-card>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && filteredPatients.length === 0" class="empty-state">
+      <mat-icon>search_off</mat-icon>
+      <h3>No patients found</h3>
+      <p>Try adjusting your filters or search criteria</p>
+      <button mat-raised-button color="primary" (click)="clearFilters()">
+        Clear Filters
+      </button>
+    </div>
+  </div>
+</div>

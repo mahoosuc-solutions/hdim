@@ -1,0 +1,98 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "demo-rc-eye-exam-2022",
+        "status": "completed",
+        "category": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "103693007",
+              "display": "Diagnostic procedure"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://www.ama-assn.org/go/cpt",
+              "code": "92250",
+              "display": "Fundus photography with interpretation and report"
+            }
+          ],
+          "text": "Diabetic retinal examination"
+        },
+        "subject": {
+          "reference": "Patient/demo-robert-chen-002",
+          "display": "Robert Chen"
+        },
+        "performedDateTime": "2022-06-15T14:00:00Z",
+        "outcome": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "385669000",
+              "display": "Successful"
+            }
+          ],
+          "text": "No diabetic retinopathy detected"
+        },
+        "note": [
+          {
+            "text": "Annual diabetic eye exam - no evidence of diabetic retinopathy. Recommend annual follow-up."
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "demo-rc-eye-exam-2023",
+        "status": "completed",
+        "category": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "103693007",
+              "display": "Diagnostic procedure"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://www.ama-assn.org/go/cpt",
+              "code": "92250",
+              "display": "Fundus photography with interpretation and report"
+            }
+          ],
+          "text": "Diabetic retinal examination"
+        },
+        "subject": {
+          "reference": "Patient/demo-robert-chen-002",
+          "display": "Robert Chen"
+        },
+        "performedDateTime": "2023-12-05T14:00:00Z",
+        "outcome": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "385669000",
+              "display": "Successful"
+            }
+          ],
+          "text": "Mild non-proliferative diabetic retinopathy - early detection"
+        },
+        "note": [
+          {
+            "text": "Annual diabetic eye exam completed after care gap intervention. Mild NPDR detected - early stage. Patient counseled on importance of glycemic control. 6-month follow-up scheduled. EYE EXAM GAP CLOSED."
+          }
+        ]
+      }
+    }
+  ]
+}

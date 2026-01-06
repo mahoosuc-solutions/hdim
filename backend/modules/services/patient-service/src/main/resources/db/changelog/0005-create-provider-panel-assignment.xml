@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0005-01" author="claude-code">
+        <comment>Create provider_panel_assignment table for Issue #135</comment>
+        <createTable tableName="provider_panel_assignment">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provider_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assigned_date" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assignment_type" type="VARCHAR(50)" defaultValue="PRIMARY">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Unique constraint: one active assignment per tenant/provider/patient -->
+        <addUniqueConstraint
+            tableName="provider_panel_assignment"
+            columnNames="tenant_id, provider_id, patient_id"
+            constraintName="uk_provider_panel_tenant_provider_patient"/>
+
+        <!-- Index for efficient provider panel queries -->
+        <createIndex tableName="provider_panel_assignment" indexName="idx_provider_panel_provider">
+            <column name="tenant_id"/>
+            <column name="provider_id"/>
+            <column name="active"/>
+        </createIndex>
+
+        <!-- Index for patient-based lookups -->
+        <createIndex tableName="provider_panel_assignment" indexName="idx_provider_panel_patient">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

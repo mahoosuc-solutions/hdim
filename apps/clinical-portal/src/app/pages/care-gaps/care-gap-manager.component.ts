@@ -32,6 +32,8 @@ import { DialogService } from '../../services/dialog.service';
 import { CareGapAlert, CareGapSummary, getCareGapIcon, getUrgencyColor, formatDaysOverdue } from '../../models/care-gap.model';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
+import { QuickActionDialogComponent, QuickActionType, QuickActionConfig, QuickActionResult } from './dialogs/quick-action-dialog.component';
+import { getQuickActionsForGap, getPrimaryQuickAction, getSecondaryQuickActions, getClosureMetrics, CLOSURE_METRICS } from './quick-actions.config';
 
 /**
  * Intervention Recommendation with ROI metrics
@@ -1001,5 +1003,145 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
   formatROI(value: number): string {
     if (value >= 999) return '∞';
     return `${value.toFixed(1)}x`;
+  }
+
+  // ============================================================================
+  // Quick Action Methods (Issue #141)
+  // ============================================================================
+
+  /**
+   * Get quick actions for a care gap row
+   */
+  getQuickActions(gap: CareGapAlert): QuickActionConfig[] {
+    return getQuickActionsForGap(gap);
+  }
+
+  /**
+   * Get the primary (first) quick action for a gap
+   */
+  getPrimaryAction(gap: CareGapAlert): QuickActionConfig {
+    return getPrimaryQuickAction(gap);
+  }
+
+  /**
+   * Get secondary quick actions (for dropdown)
+   */
+  getSecondaryActions(gap: CareGapAlert): QuickActionConfig[] {
+    return getSecondaryQuickActions(gap);
+  }
+
+  /**
+   * Open quick action dialog
+   */
+  openQuickActionDialog(gap: CareGapAlert, actionType: QuickActionType): void {
+    const dialogRef = this.dialog.open(QuickActionDialogComponent, {
+      width: '550px',
+      maxWidth: '95vw',
+      data: {
+        gap,
+        actionType,
+      },
+      disableClose: false,
+    });
+
+    dialogRef.afterClosed().subscribe((result: QuickActionResult | null) => {
+      if (result?.success) {
+        this.handleQuickActionResult(gap, result);
+      }
+    });
+  }
+
+  /**
+   * Execute primary quick action for a gap
+   */
+  executePrimaryAction(gap: CareGapAlert): void {
+    const primaryAction = this.getPrimaryAction(gap);
+    this.openQuickActionDialog(gap, primaryAction.type);
+  }
+
+  /**
+   * Execute quick close action
+   */
+  quickCloseGap(gap: CareGapAlert): void {
+    this.openQuickActionDialog(gap, 'CLOSE_GAP');
+  }
+
+  /**
+   * Handle quick action result
+   */
+  private handleQuickActionResult(gap: CareGapAlert, result: QuickActionResult): void {
+    const actionName = this.getActionDisplayName(result.actionType);
+
+    if (result.closureRequested) {
+      // Remove gap from list (closed)
+      this.careGaps = this.careGaps.filter(g => g !== gap);
+      this.calculateSummary();
+      this.applyFilters();
+
+      this.snackBar.open(
+        `${actionName} completed - Gap closed for ${gap.patientName}`,
+        'View',
+        { duration: 5000 }
+      );
+
+      // Track closure time metric
+      this.trackClosureMetric(gap, result);
+    } else {
+      this.snackBar.open(
+        `${actionName} initiated for ${gap.patientName}`,
+        'Close',
+        { duration: 4000 }
+      );
+    }
+  }
+
+  /**
+   * Get display name for action type
+   */
+  private getActionDisplayName(actionType: QuickActionType): string {
+    const names: Record<QuickActionType, string> = {
+      ORDER_LAB: 'Lab order',
+      SCHEDULE_VISIT: 'Visit scheduled',
+      SEND_REMINDER: 'Reminder sent',
+      REVIEW_MEDS: 'Medication review',
+      REFILL_REQUEST: 'Refill request',
+      ORDER_TEST: 'Test ordered',
+      SCHEDULE_PROCEDURE: 'Procedure scheduled',
+      SEND_EDUCATION: 'Education sent',
+      SCHEDULE_SCREENING: 'Screening scheduled',
+      REFER_SPECIALIST: 'Referral sent',
+      CLOSE_GAP: 'Gap closure',
+    };
+    return names[actionType] || 'Action';
+  }
+
+  /**
+   * Track closure time metrics for analytics
+   */
+  private trackClosureMetric(gap: CareGapAlert, result: QuickActionResult): void {
+    // In production, this would send to analytics service
+    console.log('Closure metric tracked:', {
+      gapType: gap.gapType,
+      measureName: gap.measureName,
+      actionType: result.actionType,
+      daysOverdue: gap.daysOverdue,
+      closureTimestamp: result.timestamp,
+    });
+  }
+
+  /**
+   * Get closure metrics for display
+   */
+  getClosureMetricsForAction(actionType: QuickActionType) {
+    return getClosureMetrics(actionType);
+  }
+
+  /**
+   * Check if gap has high closure success rate via quick action
+   */
+  hasHighSuccessAction(gap: CareGapAlert): boolean {
+    const primary = this.getPrimaryAction(gap);
+    const metrics = getClosureMetrics(primary.type);
+    return metrics ? metrics.successRate >= 70 : false;
   }
 }

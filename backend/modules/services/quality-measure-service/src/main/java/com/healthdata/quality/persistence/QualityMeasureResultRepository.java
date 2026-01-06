@@ -21,6 +21,8 @@ public interface QualityMeasureResultRepository extends JpaRepository<QualityMea
 
     List<QualityMeasureResultEntity> findByTenantIdAndPatientId(String tenantId, UUID patientId);
 
+    List<QualityMeasureResultEntity> findByTenantId(String tenantId);
+
     @Query("SELECT q FROM QualityMeasureResultEntity q WHERE q.tenantId = :tenantId AND q.patientId = :patientId AND q.measureId = :measureId ORDER BY q.calculationDate DESC")
     List<QualityMeasureResultEntity> findByPatientAndMeasure(
         @Param("tenantId") String tenantId,

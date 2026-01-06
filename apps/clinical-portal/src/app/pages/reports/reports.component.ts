@@ -33,6 +33,7 @@ import { YearSelectionDialogComponent } from '../../components/dialogs/year-sele
 import { ReportDetailDialogComponent } from '../../components/dialogs/report-detail-dialog.component';
 import { ConfirmDialogComponent } from '../../components/dialogs/confirm-dialog.component';
 import { PeriodComparisonDialogComponent, PeriodComparisonSelection } from '../../components/dialogs/period-comparison-dialog.component';
+import { ProviderLeaderboardDialogComponent } from '../../components/dialogs/provider-leaderboard-dialog.component';
 import { ToastService } from '../../services/toast.service';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
@@ -172,6 +173,19 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
             } @else {
               <mat-icon class="action-arrow">arrow_forward</mat-icon>
             }
+          </button>
+          <button class="action-card leaderboard"
+                  type="button"
+                  (click)="openProviderLeaderboard()"
+                  matTooltip="View provider performance rankings and quality metrics">
+            <div class="action-card-icon">
+              <mat-icon>leaderboard</mat-icon>
+            </div>
+            <div class="action-card-content">
+              <span class="action-title">Provider Leaderboard</span>
+              <span class="action-desc">Rankings & performance</span>
+            </div>
+            <mat-icon class="action-arrow">arrow_forward</mat-icon>
           </button>
         </div>
       </div>
@@ -1204,6 +1218,10 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
 
           &.comparative .action-card-icon {
             background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+          }
+
+          &.leaderboard .action-card-icon {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
           }
 
           .action-card-content {
@@ -2418,6 +2436,20 @@ export class ReportsComponent implements OnInit, OnDestroy, AfterViewInit {
             },
           });
       }
+    });
+  }
+
+  /**
+   * Open provider leaderboard dialog
+   * Issue #20: Provider Leaderboards & Quality Reporting
+   */
+  @TrackInteraction('reports', 'view-provider-leaderboard')
+  openProviderLeaderboard(): void {
+    this.dialog.open(ProviderLeaderboardDialogComponent, {
+      width: '1100px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      panelClass: 'leaderboard-dialog-panel',
     });
   }
 

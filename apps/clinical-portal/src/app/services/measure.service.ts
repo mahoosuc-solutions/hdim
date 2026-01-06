@@ -9,11 +9,14 @@ import {
   HedisMeasureInfo,
   HedisMeasuresResponse,
   MeasureCategory,
+  LocalMeasureMetadata,
 } from '../models/cql-library.model';
 import {
   API_CONFIG,
   CQL_ENGINE_ENDPOINTS,
+  QUALITY_MEASURE_ENDPOINTS,
   buildCqlEngineUrl,
+  buildQualityMeasureUrl,
 } from '../config/api.config';
 
 /**
@@ -32,8 +35,10 @@ export class MeasureService {
   private activeMeasuresCache$: Observable<CqlLibrary[]> | null = null;
   private activeMeasuresInfoCache$: Observable<MeasureInfo[]> | null = null;
   private hedisMeasuresCache$: Observable<HedisMeasureInfo[]> | null = null;
+  private localMeasuresCache$: Observable<LocalMeasureMetadata[]> | null = null;
   private cacheTimestamp = 0;
   private hedisCacheTimestamp = 0;
+  private localMeasuresCacheTimestamp = 0;
   private readonly CACHE_TTL = 10 * 60 * 1000; // 10 minutes
   // Toggle to expose preview custom measures until backend APIs are available.
   private readonly includePreviewCustomMeasures = true;
@@ -112,8 +117,10 @@ export class MeasureService {
     this.activeMeasuresCache$ = null;
     this.activeMeasuresInfoCache$ = null;
     this.hedisMeasuresCache$ = null;
+    this.localMeasuresCache$ = null;
     this.cacheTimestamp = 0;
     this.hedisCacheTimestamp = 0;
+    this.localMeasuresCacheTimestamp = 0;
   }
 
   // ============================================================================
@@ -201,6 +208,61 @@ export class MeasureService {
     return this.getAllAvailableMeasures().pipe(
       map((measures) => measures.filter((m) => m.category === category))
     );
+  }
+
+  // ============================================================================
+  // Local Measure Registry Methods (Service Discovery)
+  // These methods use the quality-measure-service's /measures/local endpoint
+  // for measures available via local Java calculation (bypasses CQL Engine)
+  // ============================================================================
+
+  /**
+   * Get all registered local measures from MeasureRegistry
+   * Endpoint: GET /quality-measure/measures/local
+   * Returns measures that can be calculated without CQL Engine
+   */
+  getLocalMeasures(): Observable<LocalMeasureMetadata[]> {
+    const url = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.LOCAL_MEASURES);
+    return this.http.get<LocalMeasureMetadata[]>(url);
+  }
+
+  /**
+   * Get local measures with caching (10-minute TTL)
+   */
+  getLocalMeasuresCached(): Observable<LocalMeasureMetadata[]> {
+    const now = Date.now();
+    if (this.localMeasuresCache$ && (now - this.localMeasuresCacheTimestamp) < this.CACHE_TTL) {
+      return this.localMeasuresCache$;
+    }
+    this.localMeasuresCacheTimestamp = now;
+    this.localMeasuresCache$ = this.getLocalMeasures().pipe(shareReplay(1));
+    return this.localMeasuresCache$;
+  }
+
+  /**
+   * Get local measures as MeasureInfo for UI dropdowns
+   * Converts LocalMeasureMetadata to MeasureInfo format
+   */
+  getLocalMeasuresAsInfo(): Observable<MeasureInfo[]> {
+    return this.getLocalMeasuresCached().pipe(
+      map((measures) => measures.map((m) => this.localMeasureToInfo(m)))
+    );
+  }
+
+  /**
+   * Helper: Convert LocalMeasureMetadata to MeasureInfo
+   */
+  private localMeasureToInfo(measure: LocalMeasureMetadata): MeasureInfo {
+    const category = this.inferCategory(measure.measureId);
+
+    return {
+      id: measure.measureId,
+      name: measure.measureId,
+      version: measure.version,
+      description: measure.measureName,
+      category,
+      displayName: `${measure.measureId} - ${measure.measureName} (v${measure.version})`,
+    };
   }
 
   /**

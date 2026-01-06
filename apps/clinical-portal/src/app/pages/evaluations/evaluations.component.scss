@@ -315,6 +315,288 @@
   }
 }
 
+// Local Evaluation Result Card Styles
+.local-result-card {
+  .result-title-icon {
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+
+  // Sub-Measures Section
+  .sub-measures-section {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color, #e0e0e0);
+
+    h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 16px 0;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .sub-measures-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .sub-measure-item {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color, #e0e0e0);
+      background: var(--surface-color, #fafafa);
+
+      &.passed {
+        border-color: #4caf50;
+        background: rgba(76, 175, 80, 0.05);
+      }
+
+      &.failed {
+        border-color: #f44336;
+        background: rgba(244, 67, 54, 0.05);
+      }
+
+      .sub-measure-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+
+        .sub-measure-name {
+          font-weight: 500;
+        }
+      }
+
+      .sub-measure-value,
+      .sub-measure-date {
+        font-size: 13px;
+        color: var(--text-secondary, #666);
+        margin-top: 4px;
+
+        .label {
+          font-weight: 500;
+        }
+      }
+
+      .sub-measure-notes {
+        font-size: 12px;
+        color: var(--text-tertiary, #888);
+        font-style: italic;
+        margin-top: 6px;
+      }
+    }
+  }
+
+  // Care Gaps Section
+  .care-gaps-section {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color, #e0e0e0);
+
+    h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 16px 0;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .care-gaps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .care-gap-item {
+      padding: 16px;
+      border-radius: 8px;
+      border-left: 4px solid;
+      background: var(--surface-color, #fafafa);
+
+      &.high-priority {
+        border-left-color: #f44336;
+        background: rgba(244, 67, 54, 0.05);
+      }
+
+      &.medium-priority {
+        border-left-color: #ff9800;
+        background: rgba(255, 152, 0, 0.05);
+      }
+
+      &.low-priority {
+        border-left-color: #2196f3;
+        background: rgba(33, 150, 243, 0.05);
+      }
+
+      .gap-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+
+        .gap-id {
+          font-size: 12px;
+          color: var(--text-secondary, #666);
+        }
+      }
+
+      .gap-description {
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+
+      .gap-due-date {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 13px;
+        color: var(--text-secondary, #666);
+        margin-top: 8px;
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+
+      .gap-intervention {
+        font-size: 13px;
+        margin-top: 8px;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 4px;
+      }
+    }
+  }
+
+  // Recommendations Section
+  .recommendations-section {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color, #e0e0e0);
+
+    h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 16px 0;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .recommendations-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .recommendation-item {
+      padding: 16px;
+      border-radius: 8px;
+      border-left: 4px solid;
+      background: var(--surface-color, #fafafa);
+
+      &.high-priority {
+        border-left-color: #9c27b0;
+      }
+
+      &.medium-priority {
+        border-left-color: #3f51b5;
+      }
+
+      &.low-priority {
+        border-left-color: #607d8b;
+      }
+
+      .rec-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+
+        .rec-category {
+          font-size: 12px;
+          color: var(--text-secondary, #666);
+          text-transform: uppercase;
+        }
+      }
+
+      .rec-title {
+        font-weight: 500;
+        font-size: 15px;
+        margin-bottom: 4px;
+      }
+
+      .rec-description {
+        font-size: 14px;
+        color: var(--text-secondary, #666);
+      }
+
+      .rec-rationale {
+        font-size: 13px;
+        margin-top: 8px;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 4px;
+      }
+    }
+  }
+
+  // Priority Badges
+  .priority-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+
+    &.priority-high {
+      background: #f44336;
+      color: white;
+    }
+
+    &.priority-medium {
+      background: #ff9800;
+      color: white;
+    }
+
+    &.priority-low {
+      background: #2196f3;
+      color: white;
+    }
+  }
+
+  // No Gaps Message
+  .no-gaps-message {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    margin-top: 24px;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 8px;
+    color: #2e7d32;
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
 .error-card {
   background-color: #ffebee;
 

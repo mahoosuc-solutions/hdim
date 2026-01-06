@@ -62,6 +62,12 @@ export class NavigationComponent {
       description: 'Generate quality reports',
     },
     {
+      label: 'Pre-Visit Planning',
+      icon: 'event_note',
+      route: '/pre-visit',
+      description: 'Prepare for upcoming patient visits',
+    },
+    {
       label: 'Visualizations',
       icon: '3d_rotation',
       route: '/visualization',

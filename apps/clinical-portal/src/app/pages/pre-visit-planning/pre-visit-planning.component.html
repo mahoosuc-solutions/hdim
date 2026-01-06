@@ -1,0 +1,246 @@
+<div class="pre-visit-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <mat-icon class="header-icon">event_note</mat-icon>
+      <div class="header-text">
+        <h1>Pre-Visit Planning</h1>
+        <p class="subtitle">Prepare for tomorrow's patients with care gap summaries</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Date Picker -->
+      <mat-form-field appearance="outline" class="date-picker">
+        <mat-label>Planning Date</mat-label>
+        <input matInput
+               [matDatepicker]="picker"
+               [formControl]="selectedDate"
+               [min]="minDate"
+               [max]="maxDate">
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+
+      <!-- Action Buttons -->
+      <button mat-raised-button
+              color="primary"
+              (click)="printAllSummaries()"
+              [disabled]="patients().length === 0"
+              matTooltip="Print all patient summaries">
+        <mat-icon>print</mat-icon>
+        Print All
+      </button>
+      <button mat-raised-button
+              color="accent"
+              (click)="exportPdf()"
+              [disabled]="patients().length === 0"
+              matTooltip="Export summaries to PDF">
+        <mat-icon>picture_as_pdf</mat-icon>
+        Export PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="summary-stats" *ngIf="patients().length > 0">
+    <mat-card class="stat-card">
+      <mat-icon>people</mat-icon>
+      <div class="stat-content">
+        <span class="stat-value">{{ totalPatients() }}</span>
+        <span class="stat-label">Scheduled Patients</span>
+      </div>
+    </mat-card>
+    <mat-card class="stat-card">
+      <mat-icon color="warn">warning</mat-icon>
+      <div class="stat-content">
+        <span class="stat-value">{{ totalCareGaps() }}</span>
+        <span class="stat-label">Total Care Gaps</span>
+      </div>
+    </mat-card>
+    <mat-card class="stat-card high-urgency">
+      <mat-icon>priority_high</mat-icon>
+      <div class="stat-content">
+        <span class="stat-value">{{ highUrgencyCount() }}</span>
+        <span class="stat-label">High Priority</span>
+      </div>
+    </mat-card>
+    <mat-card class="stat-card prepared">
+      <mat-icon>check_circle</mat-icon>
+      <div class="stat-content">
+        <span class="stat-value">{{ preparedCount() }} / {{ totalPatients() }}</span>
+        <span class="stat-label">Prepared</span>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Loading State -->
+  <app-loading-overlay
+    [isLoading]="loading()"
+    message="Loading scheduled patients...">
+  </app-loading-overlay>
+
+  <!-- Error State -->
+  <mat-card class="error-card" *ngIf="error() && !loading()">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="loadPatientsForDate()">
+      <mat-icon>refresh</mat-icon>
+      Try Again
+    </button>
+  </mat-card>
+
+  <!-- Empty State -->
+  <mat-card class="empty-card" *ngIf="patients().length === 0 && !loading() && !error()">
+    <mat-icon>event_busy</mat-icon>
+    <h3>No Patients Scheduled</h3>
+    <p>There are no patients scheduled for {{ selectedDate.value | date:'fullDate' }}</p>
+  </mat-card>
+
+  <!-- Patient List -->
+  <div class="patient-list" *ngIf="patients().length > 0 && !loading()">
+    @for (patient of patients(); track patient.id) {
+      <mat-card class="patient-card"
+                [class.prepared]="patient.prepared"
+                [class.expanded]="expandedPatientId() === patient.id">
+
+        <!-- Patient Header (Always Visible) -->
+        <div class="patient-header" (click)="toggleExpand(patient.id)">
+          <div class="patient-time">
+            <mat-checkbox
+              [checked]="patient.prepared"
+              (click)="togglePrepared(patient, $event)"
+              matTooltip="Mark as prepared"
+              aria-label="Mark patient as prepared">
+            </mat-checkbox>
+            <span class="appointment-time">{{ patient.appointmentTime }}</span>
+          </div>
+
+          <div class="patient-info">
+            <div class="patient-name">
+              <strong>{{ patient.fullName }}</strong>
+              <span class="patient-meta">
+                MRN: {{ patient.mrn }} | DOB: {{ formatDate(patient.dateOfBirth) }} ({{ patient.age }}y)
+              </span>
+            </div>
+            <div class="patient-summary">
+              <mat-chip-set aria-label="Care gap summary">
+                @if (patient.careGaps.length === 0) {
+                  <mat-chip class="no-gaps">
+                    <mat-icon>check_circle</mat-icon>
+                    No care gaps
+                  </mat-chip>
+                } @else {
+                  <mat-chip [class]="getUrgencyClass(patient.careGaps[0]?.urgency)"
+                            [matBadge]="patient.careGaps.length"
+                            matBadgeColor="warn"
+                            [matBadgeHidden]="patient.careGaps.length <= 1">
+                    {{ patient.careGaps.length }} care gap{{ patient.careGaps.length !== 1 ? 's' : '' }}
+                  </mat-chip>
+                }
+              </mat-chip-set>
+            </div>
+          </div>
+
+          <div class="expand-toggle">
+            <mat-icon>{{ expandedPatientId() === patient.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </div>
+        </div>
+
+        <!-- Expanded Content -->
+        <div class="patient-details" *ngIf="expandedPatientId() === patient.id">
+          <mat-divider></mat-divider>
+
+          <!-- Conditions -->
+          <div class="detail-section">
+            <h4><mat-icon>medical_information</mat-icon> Primary Conditions</h4>
+            <mat-chip-set aria-label="Patient conditions">
+              @for (condition of patient.primaryConditions; track condition) {
+                <mat-chip>{{ condition }}</mat-chip>
+              }
+              @if (patient.primaryConditions.length === 0) {
+                <span class="no-data">No conditions documented</span>
+              }
+            </mat-chip-set>
+          </div>
+
+          <!-- Last Visit -->
+          <div class="detail-section">
+            <h4><mat-icon>history</mat-icon> Last Visit</h4>
+            <p>{{ daysSinceLastVisit(patient.lastVisit) }}
+              @if (patient.lastVisit) {
+                ({{ formatDate(patient.lastVisit) }})
+              }
+            </p>
+          </div>
+
+          <!-- Care Gaps -->
+          <div class="detail-section care-gaps-section">
+            <h4><mat-icon>assignment_late</mat-icon> Care Gaps</h4>
+
+            @if (patient.careGaps.length === 0) {
+              <p class="no-gaps-message">
+                <mat-icon>check_circle</mat-icon>
+                All care gaps are closed for this patient
+              </p>
+            } @else {
+              <div class="care-gaps-list">
+                @for (gap of patient.careGaps; track gap.id) {
+                  <div class="care-gap-item" [class]="getUrgencyClass(gap.urgency)">
+                    <div class="gap-header">
+                      <span class="gap-name">{{ gap.measureName }}</span>
+                      <mat-chip [class]="getUrgencyClass(gap.urgency)" size="small">
+                        {{ gap.urgency | uppercase }}
+                      </mat-chip>
+                    </div>
+                    <p class="gap-description">{{ gap.description }}</p>
+                    <div class="gap-action">
+                      <mat-icon>lightbulb</mat-icon>
+                      <span>{{ gap.recommendedAction }}</span>
+                    </div>
+                    <span class="gap-overdue">{{ gap.daysOverdue }} days overdue</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Actions -->
+          <div class="patient-actions">
+            <button mat-stroked-button
+                    color="primary"
+                    (click)="viewPatient(patient.id)"
+                    matTooltip="View full patient record">
+              <mat-icon>person</mat-icon>
+              View Full Summary
+            </button>
+            <button mat-stroked-button
+                    (click)="printAllSummaries()"
+                    matTooltip="Print this patient's summary">
+              <mat-icon>print</mat-icon>
+              Print
+            </button>
+          </div>
+        </div>
+      </mat-card>
+    }
+  </div>
+
+  <!-- Footer Actions -->
+  <div class="footer-actions" *ngIf="patients().length > 0">
+    <button mat-raised-button
+            color="primary"
+            (click)="printAllSummaries()"
+            class="large-action-button">
+      <mat-icon>print</mat-icon>
+      Print All Summaries
+    </button>
+    <button mat-raised-button
+            color="accent"
+            (click)="exportPdf()"
+            class="large-action-button">
+      <mat-icon>picture_as_pdf</mat-icon>
+      Export PDF
+    </button>
+  </div>
+</div>

@@ -218,6 +218,7 @@ services:
       start_period: 90s
     networks:
       - healthdata-network
+      - hdim-clinical-network
 
   # Port 8081 - CQL Engine Service
   cql-engine-service:
@@ -352,16 +353,22 @@ services:
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: healthdata_password
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
       SERVER_PORT: 8084
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # Disable Redis caching to avoid HAPI FHIR serialization issues with Jackson
+      SPRING_CACHE_TYPE: simple
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
       # OpenTelemetry - use Jaeger container hostname
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
       OTEL_SERVICE_NAME: patient-service
+      # Service URLs for Feign clients (can reach both healthdata-network and hdim-clinical-network)
+      FHIR_SERVER_URL: http://fhir-service:8085
     ports:
       - "8084:8084"
     healthcheck:
@@ -372,6 +379,7 @@ services:
       start_period: 60s
     networks:
       - healthdata-network
+      - hdim-clinical-network
 
   # Port 8085 - FHIR Service
   fhir-service:
@@ -414,9 +422,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 90s
+    mem_limit: 1g
     networks:
       - healthdata-network
+      - hdim-clinical-network
 
   # Port 8086 - Care Gap Service
   care-gap-service:
@@ -466,6 +476,7 @@ services:
       start_period: 60s
     networks:
       - healthdata-network
+      - hdim-clinical-network
 
   # Port 8087 - Quality Measure Service
   quality-measure-service:
@@ -515,6 +526,7 @@ services:
       start_period: 60s
     networks:
       - healthdata-network
+      - hdim-clinical-network
 
   # ============================================
   # AI SERVICES (8088, 8090, 8096)
@@ -1462,6 +1474,10 @@ services:
 networks:
   healthdata-network:
     driver: bridge
+  # External network for connecting to minimal-clinical stack
+  hdim-clinical-network:
+    external: true
+    name: hdim-clinical-network
 
 volumes:
   postgres_data:

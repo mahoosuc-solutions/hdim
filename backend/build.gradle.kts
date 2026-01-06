@@ -216,7 +216,7 @@ subprojects {
         testImplementation("org.mockito:mockito-junit-jupiter:5.2.0")
         testImplementation("org.mockito:mockito-inline:5.2.0")
         testImplementation("org.assertj:assertj-core:3.27.6")
-        mockitoAgent("net.bytebuddy:byte-buddy-agent:1.14.10")
+        mockitoAgent("net.bytebuddy:byte-buddy-agent:1.18.3")
     }
 }
 

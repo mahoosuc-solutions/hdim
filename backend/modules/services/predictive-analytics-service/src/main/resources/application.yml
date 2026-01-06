@@ -18,6 +18,10 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
   # ⚠️ HIPAA COMPLIANCE: PHI cache TTL must be ≤ 5 minutes (300000ms)
   # See: backend/HIPAA-CACHE-COMPLIANCE.md
   cache:

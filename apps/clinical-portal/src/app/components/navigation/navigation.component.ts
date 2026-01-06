@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -6,6 +6,11 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { OfflineIndicatorComponent } from '../offline-indicator/offline-indicator.component';
+import { HelpPanelComponent } from '../help/help-panel.component';
+import { WhatsNewBannerComponent } from '../help/whats-new-banner.component';
+import { HelpService } from '../../services/help.service';
 
 export interface NavigationItem {
   label: string;
@@ -25,11 +30,19 @@ export interface NavigationItem {
     MatListModule,
     MatIconModule,
     MatButtonModule,
+    MatTooltipModule,
+    OfflineIndicatorComponent,
+    HelpPanelComponent,
+    WhatsNewBannerComponent,
   ],
   templateUrl: './navigation.component.html',
   styleUrl: './navigation.component.scss',
 })
 export class NavigationComponent {
+  @ViewChild(HelpPanelComponent) helpPanel!: HelpPanelComponent;
+
+  private readonly helpService = inject(HelpService);
+
   navigationItems: NavigationItem[] = [
     {
       label: 'Dashboard',
@@ -103,5 +116,19 @@ export class NavigationComponent {
 
   toggleSidenav(): void {
     this.sidenavOpened = !this.sidenavOpened;
+  }
+
+  /**
+   * Issue #24: Toggle help panel visibility
+   */
+  toggleHelp(): void {
+    this.helpService.toggleHelpPanel();
+  }
+
+  /**
+   * Get help panel observable for template binding
+   */
+  get showHelpPanel$() {
+    return this.helpService.showHelpPanel$;
   }
 }

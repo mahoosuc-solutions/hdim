@@ -44,6 +44,16 @@
       <span class="toolbar-spacer"></span>
       <span class="app-title">Clinical Portal</span>
       <span class="toolbar-spacer"></span>
+      <!-- Issue #24: Offline Status Indicator -->
+      <app-offline-indicator></app-offline-indicator>
+      <!-- Issue #24: Help Button -->
+      <button
+        mat-icon-button
+        (click)="toggleHelp()"
+        matTooltip="Help (Press ?)"
+        aria-label="Help">
+        <mat-icon>help_outline</mat-icon>
+      </button>
       <button mat-icon-button aria-label="Notifications">
         <mat-icon>notifications</mat-icon>
       </button>
@@ -52,9 +62,15 @@
       </button>
     </mat-toolbar>
 
+    <!-- Issue #24: What's New Banner -->
+    <app-whats-new-banner></app-whats-new-banner>
+
     <!-- Page Content -->
     <div class="content-wrapper">
       <ng-content></ng-content>
     </div>
   </mat-sidenav-content>
 </mat-sidenav-container>
+
+<!-- Issue #24: Help Panel (overlays everything) -->
+<app-help-panel [isOpen]="(showHelpPanel$ | async) ?? false"></app-help-panel>

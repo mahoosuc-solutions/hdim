@@ -15,6 +15,95 @@
   }
 }
 
+// ===== Severity Summary Grid (Issue #145) =====
+.severity-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+
+  .severity-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    min-height: 70px;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &.active {
+      transform: scale(1.02);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+
+    .severity-info {
+      display: flex;
+      flex-direction: column;
+
+      .severity-count {
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .severity-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.9;
+      }
+    }
+
+    &.critical {
+      background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+      color: white;
+
+      &.active {
+        background: linear-gradient(135deg, #b71c1c 0%, #7f0000 100%);
+      }
+    }
+
+    &.high {
+      background: linear-gradient(135deg, #f57c00 0%, #e65100 100%);
+      color: white;
+
+      &.active {
+        background: linear-gradient(135deg, #e65100 0%, #bf360c 100%);
+      }
+    }
+
+    &.moderate {
+      background: linear-gradient(135deg, #fbc02d 0%, #f9a825 100%);
+      color: #333;
+
+      &.active {
+        background: linear-gradient(135deg, #f9a825 0%, #f57f17 100%);
+      }
+    }
+
+    &.normal {
+      background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+      color: white;
+
+      &.active {
+        background: linear-gradient(135deg, #388e3c 0%, #1b5e20 100%);
+      }
+    }
+  }
+}
+
 // Error Banner
 .error-banner {
   padding: 16px;
@@ -547,10 +636,290 @@
   }
 }
 
+// ===== Enhanced Results Styles (Issue #145) =====
+
+// Severity Badges
+.severity-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+
+  &.severity-badge-critical {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+  }
+
+  &.severity-badge-high {
+    background-color: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffcc80;
+  }
+
+  &.severity-badge-moderate {
+    background-color: #fffde7;
+    color: #f57f17;
+    border: 1px solid #fff59d;
+  }
+
+  &.severity-badge-normal {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+  }
+}
+
+// Row severity highlighting
+.severity-critical {
+  background: linear-gradient(90deg, #ffebee 0%, white 100%) !important;
+  border-left: 4px solid #d32f2f !important;
+}
+
+.severity-high {
+  background: linear-gradient(90deg, #fff3e0 0%, white 100%) !important;
+  border-left: 4px solid #f57c00 !important;
+}
+
+.severity-moderate {
+  background: linear-gradient(90deg, #fffde7 0%, white 100%) !important;
+  border-left: 4px solid #fbc02d !important;
+}
+
+.severity-normal {
+  background: white !important;
+  border-left: 4px solid #4caf50 !important;
+}
+
+// Trend Cell
+.trend-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .trend-diff {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  &.trend-improving {
+    color: #2e7d32;
+
+    mat-icon {
+      color: #4caf50;
+    }
+  }
+
+  &.trend-worsening {
+    color: #c62828;
+
+    mat-icon {
+      color: #f44336;
+    }
+  }
+
+  &.trend-stable {
+    color: #757575;
+
+    mat-icon {
+      color: #9e9e9e;
+    }
+  }
+}
+
+// Patient Context Cell
+.patient-context-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .patient-summary {
+    font-size: 12px;
+    color: #555;
+    white-space: nowrap;
+  }
+
+  .context-info-btn {
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      color: #9e9e9e;
+    }
+
+    &:hover mat-icon {
+      color: #1976d2;
+    }
+  }
+}
+
+// Risk Level Badges
+.risk-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  &.risk-badge-high {
+    background-color: #ffcdd2;
+    color: #c62828;
+  }
+
+  &.risk-badge-moderate {
+    background-color: #ffe0b2;
+    color: #e65100;
+  }
+
+  &.risk-badge-low {
+    background-color: #c8e6c9;
+    color: #2e7d32;
+  }
+
+  &.risk-badge-unknown {
+    background-color: #e0e0e0;
+    color: #757575;
+  }
+}
+
+// Patient Context Menu
+.patient-context-menu {
+  .context-menu-content {
+    padding: 12px 16px;
+    min-width: 200px;
+
+    .context-section {
+      margin-bottom: 12px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      strong {
+        display: block;
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 16px;
+        font-size: 13px;
+        color: #333;
+
+        li {
+          margin: 2px 0;
+        }
+      }
+    }
+  }
+}
+
+// Compliance Rate Cell
+.compliance-rate-cell {
+  display: flex;
+  flex-direction: column;
+
+  .current-rate {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+  }
+
+  .previous-rate {
+    font-size: 11px;
+    color: #999;
+  }
+}
+
+// Quick Actions Cell
+.quick-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  .primary-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    min-width: auto;
+    font-size: 12px;
+    border-radius: 16px;
+    color: white;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+
+    .action-label {
+      display: none;
+
+      @media (min-width: 1200px) {
+        display: inline;
+      }
+    }
+  }
+}
+
+// Patient ID Cell
+.patient-id-cell {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 12px;
+  color: #666;
+}
+
+// Measure Name
+.measure-name {
+  font-size: 13px;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+
 // Responsive Design
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .severity-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+
+    .severity-card {
+      padding: 12px 16px;
+      min-height: auto;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      .severity-info .severity-count {
+        font-size: 18px;
+      }
+    }
   }
 
   .filter-form .filter-row {
@@ -569,5 +938,25 @@
       flex-basis: 100%;
       order: 2;
     }
+  }
+
+  .quick-actions-cell {
+    .primary-action-btn .action-label {
+      display: none;
+    }
+  }
+
+  .patient-context-cell {
+    flex-wrap: wrap;
+
+    .patient-summary {
+      flex-basis: 100%;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .severity-summary-grid {
+    grid-template-columns: 1fr;
   }
 }

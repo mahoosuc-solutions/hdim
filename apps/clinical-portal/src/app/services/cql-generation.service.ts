@@ -98,15 +98,30 @@ export class CqlGenerationService {
 
   /**
    * Generate CQL from natural language prompt
+   *
+   * Issue #150: Updated to use new AI CQL generation endpoint
    */
   generateCql(request: CqlGenerationRequest): Observable<CqlGenerationResponse> {
-    const url = `${this.apiUrl}/ai/cql/generate`;
+    const url = `${this.apiUrl}/api/v1/measures/ai/generate-cql`;
     const headers = new HttpHeaders({
       'X-Tenant-ID': API_CONFIG.DEFAULT_TENANT_ID,
     });
 
+    // Transform request to match backend DTO
+    const backendRequest = {
+      description: request.prompt,
+      measureType: request.options?.measureType?.toUpperCase() || 'PROCESS',
+      context: {
+        existingConditions: request.context?.clinicalCriteria,
+        targetPopulation: request.context?.targetPopulation,
+      },
+      validateCql: true,
+      runTests: false,
+    };
+
     // Try backend first, fallback to local generation
-    return this.http.post<CqlGenerationResponse>(url, request, { headers }).pipe(
+    return this.http.post<any>(url, backendRequest, { headers }).pipe(
+      map((backendResponse) => this.transformBackendResponse(backendResponse)),
       catchError(() => {
         // Fallback to local AI-like generation
         return this.generateCqlLocally(request);
@@ -115,20 +130,65 @@ export class CqlGenerationService {
   }
 
   /**
+   * Transform backend response to frontend format
+   */
+  private transformBackendResponse(backendResponse: any): CqlGenerationResponse {
+    return {
+      cql: backendResponse.generatedCql || '',
+      explanation: backendResponse.explanation || '',
+      warnings: backendResponse.validationResult?.warnings?.map((w: any) => w.message) || [],
+      suggestedValueSets: backendResponse.suggestions?.filter((s: any) => s.type === 'VALUE_SET')?.map((s: any) => ({
+        oid: s.suggestedCode || '',
+        name: s.message,
+        codeSystem: 'Various',
+        description: s.message,
+        usage: 'Suggested by AI',
+      })) || [],
+      confidence: backendResponse.confidence || 0.85,
+    };
+  }
+
+  /**
    * Validate CQL syntax
+   *
+   * Issue #150: Updated to use new AI CQL validation endpoint
    */
   validateCql(cql: string): Observable<CqlValidationResult> {
-    const url = `${this.apiUrl}/ai/cql/validate`;
+    const url = `${this.apiUrl}/api/v1/measures/ai/validate-cql`;
     const headers = new HttpHeaders({
       'X-Tenant-ID': API_CONFIG.DEFAULT_TENANT_ID,
     });
 
-    return this.http.post<CqlValidationResult>(url, { cql }, { headers }).pipe(
+    return this.http.post<any>(url, { cqlCode: cql }, { headers }).pipe(
+      map((backendResponse) => this.transformValidationResponse(backendResponse)),
       catchError(() => {
         // Fallback to local validation
         return this.validateCqlLocally(cql);
       })
     );
+  }
+
+  /**
+   * Transform backend validation response to frontend format
+   */
+  private transformValidationResponse(backendResponse: any): CqlValidationResult {
+    const result = backendResponse.validationResult || {};
+    return {
+      valid: result.syntaxValid && result.semanticValid,
+      errors: (result.errors || []).map((e: any) => ({
+        line: e.line || 1,
+        column: e.column || 1,
+        message: e.message,
+        severity: 'error' as const,
+      })),
+      warnings: (result.warnings || []).map((w: any) => ({
+        line: w.line || 1,
+        column: w.column || 1,
+        message: w.message,
+        severity: 'warning' as const,
+      })),
+      suggestions: [],
+    };
   }
 
   /**

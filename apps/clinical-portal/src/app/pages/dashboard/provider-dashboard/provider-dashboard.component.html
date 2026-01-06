@@ -22,6 +22,12 @@
           shortcutPosition="bottom">
     <mat-icon>keyboard</mat-icon>
   </button>
+  <!-- Issue #20: Provider Leaderboard button -->
+  <button mat-icon-button
+          matTooltip="Provider Leaderboard"
+          (click)="openProviderLeaderboard()">
+    <mat-icon>leaderboard</mat-icon>
+  </button>
   <button mat-raised-button color="primary"
           (click)="refreshData()"
           hdimShortcutHint="refresh"

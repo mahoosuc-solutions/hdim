@@ -120,6 +120,12 @@ public class EncounterEntity {
     private String dischargeDisposition;
 
     // Audit fields
+    @Column(name = "created_by", nullable = false, length = 255, updatable = false)
+    private String createdBy;
+
+    @Column(name = "last_modified_by", nullable = false, length = 255)
+    private String lastModifiedBy;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

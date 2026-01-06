@@ -199,6 +199,21 @@ services:
       BACKEND_SERVICES_ECR_URL: http://ecr-service:8101
       BACKEND_SERVICES_PRIOR_AUTH_URL: http://prior-auth-service:8102
       BACKEND_SERVICES_SALES_AUTOMATION_URL: http://sales-automation-service:8106/sales-automation
+      BACKEND_SERVICES_AI_ASSISTANT_URL: http://ai-assistant-service:8090
+      BACKEND_SERVICES_PREDICTIVE_ANALYTICS_URL: http://predictive-analytics-service:8093
+      BACKEND_SERVICES_SDOH_URL: http://sdoh-service:8094
+      BACKEND_SERVICES_DATA_ENRICHMENT_URL: http://data-enrichment-service:8089
+      BACKEND_SERVICES_EVENT_ROUTER_URL: http://event-router-service:8095
+      BACKEND_SERVICES_CDR_PROCESSOR_URL: http://cdr-processor-service:8099
+      BACKEND_SERVICES_APPROVAL_URL: http://approval-service:8097
+      BACKEND_SERVICES_PAYER_WORKFLOWS_URL: http://payer-workflows-service:8098
+      BACKEND_SERVICES_MIGRATION_WORKFLOW_URL: http://migration-workflow-service:8103
+      BACKEND_SERVICES_EHR_CONNECTOR_URL: http://ehr-connector-service:8100
+      BACKEND_SERVICES_NOTIFICATION_URL: http://notification-service:8107
+      BACKEND_SERVICES_DEMO_SEEDING_URL: http://demo-seeding-service:8108
+      BACKEND_SERVICES_CMS_CONNECTOR_URL: http://cms-connector-service:8109
+      BACKEND_SERVICES_ANALYTICS_URL: http://analytics-service:8092
+      BACKEND_SERVICES_DOCUMENTATION_URL: http://documentation-service:8091
       # Demo mode configuration - disables auth enforcement and injects demo user headers
       GATEWAY_AUTH_ENFORCED: "false"
       GATEWAY_AUTH_DEMO_USER_USER_ID: "00000000-0000-0000-0000-000000000001"

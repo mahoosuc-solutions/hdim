@@ -29,7 +29,7 @@ import { AIAssistantService } from '../../services/ai-assistant.service';
 import { MeasureFavoritesService } from '../../services/measure-favorites.service';
 import { MeasureInfo, MeasureCategory } from '../../models/cql-library.model';
 import { PatientSummary } from '../../models/patient.model';
-import { QualityMeasureResult } from '../../models/quality-result.model';
+import { QualityMeasureResult, LocalMeasureResult } from '../../models/quality-result.model';
 import { AppError, ErrorFactory } from '../../models/error.model';
 import { ErrorBannerComponent } from '../../shared/components/error-banner/error-banner.component';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
@@ -109,6 +109,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
   // Evaluation state
   submitting = false;
   evaluationResult: QualityMeasureResult | null = null;
+  localEvaluationResult: LocalMeasureResult | null = null;
   evaluationError: string | null = null;
   evaluationErrorDetails: AppError | null = null;
 
@@ -163,29 +164,34 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
 
   /**
    * Load available HEDIS measures from backend registry
-   * Uses the new /evaluate/measures endpoint for discovery
+   * Primary: Uses /quality-measure/measures/local for locally-calculated measures
+   * Fallback: Uses /evaluate/measures for HEDIS registry
    */
   loadActiveMeasures(): void {
     this.loadingMeasures = true;
     this.measuresError = null;
     this.measuresErrorDetails = null;
 
-    // Use getAllAvailableMeasures() which fetches from the HEDIS registry
-    this.measureService.getAllAvailableMeasures().pipe(
+    // Primary: Load locally-calculable measures from quality-measure-service
+    this.measureService.getLocalMeasuresAsInfo().pipe(
       takeUntil(this.destroy$),
       catchError((error) => {
-        this.measuresErrorDetails = ErrorFactory.createCqlEngineError('load measures', error);
-        this.measuresError = this.measuresErrorDetails.userMessage;
-        console.error('[ERR-5002] Error loading HEDIS measures:', error);
-        // Fallback to active library measures if HEDIS registry fails
-        return this.measureService.getActiveMeasuresInfo().pipe(
-          catchError(() => of([]))
+        console.warn('[WARN] Local measures unavailable, falling back to HEDIS registry:', error);
+        // Fallback to HEDIS registry measures
+        return this.measureService.getAllAvailableMeasures().pipe(
+          catchError((hedisError) => {
+            this.measuresErrorDetails = ErrorFactory.createCqlEngineError('load measures', hedisError);
+            this.measuresError = this.measuresErrorDetails.userMessage;
+            console.error('[ERR-5002] Error loading measures:', hedisError);
+            return of([]);
+          })
         );
       })
     ).subscribe((measures) => {
       this.allMeasures = measures;
       this.measures = measures;
       this.loadingMeasures = false;
+      console.log(`[INFO] Loaded ${measures.length} measures:`, measures.map(m => m.name).join(', '));
     });
   }
 
@@ -345,6 +351,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
 
   /**
    * Submit evaluation
+   * Uses local calculation endpoint (/calculate-local) for MeasureRegistry measures
    */
   @TrackInteraction('evaluations', 'submit-evaluation')
   submitEvaluation(): void {
@@ -354,6 +361,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
 
     this.submitting = true;
     this.evaluationResult = null;
+    this.localEvaluationResult = null;
     this.evaluationError = null;
 
     const measureId = this.evaluationForm.value.measureId;
@@ -365,19 +373,20 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
       this.measureFavorites.recordUsage(selectedMeasure);
     }
 
-    // Use Quality Measure Service to calculate measure
-    this.evaluationService.calculateQualityMeasure(patientId, measureId).pipe(
+    // Use local calculation endpoint (bypasses CQL Engine, uses Java MeasureRegistry)
+    this.evaluationService.calculateLocalMeasure(patientId, measureId).pipe(
       takeUntil(this.destroy$),
       catchError((error: any) => {
         this.evaluationErrorDetails = ErrorFactory.createEvaluationError(patientId, measureId, error);
         this.evaluationError = this.evaluationErrorDetails.userMessage;
-        console.error(`[${this.evaluationErrorDetails.code}] Evaluation error:`, error);
+        console.error(`[${this.evaluationErrorDetails.code}] Local evaluation error:`, error);
         this.submitting = false;
         return of(null);
       })
     ).subscribe((result) => {
       if (result) {
-        this.evaluationResult = result;
+        this.localEvaluationResult = result;
+        console.log(`[INFO] Local evaluation result:`, result);
       }
       this.submitting = false;
     });
@@ -433,6 +442,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     this.evaluationForm.reset();
     this.selectedPatient = null;
     this.evaluationResult = null;
+    this.localEvaluationResult = null;
     this.evaluationError = null;
   }
 
@@ -515,6 +525,16 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     } else {
       return 'Not Eligible';
     }
+  }
+
+  /**
+   * Get sub-measure keys for local evaluation result
+   */
+  getSubMeasureKeys(): string[] {
+    if (this.localEvaluationResult?.subMeasures) {
+      return Object.keys(this.localEvaluationResult.subMeasures);
+    }
+    return [];
   }
 
   // ===== Row Selection Methods =====

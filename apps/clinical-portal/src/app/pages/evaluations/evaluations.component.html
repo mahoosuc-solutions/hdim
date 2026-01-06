@@ -449,6 +449,169 @@
     </mat-card>
   }
 
+  <!-- Local Evaluation Result Card (from MeasureRegistry) -->
+  @if (localEvaluationResult) {
+    <mat-card class="result-card mt-3 local-result-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon class="result-title-icon">assessment</mat-icon>
+          {{ localEvaluationResult.measureName }} Result
+        </mat-card-title>
+        <mat-icon [class]="localEvaluationResult.eligible ? 'status-success' : 'status-warning'" class="result-icon">
+          {{ localEvaluationResult.eligible ? 'check_circle' : 'info' }}
+        </mat-icon>
+      </mat-card-header>
+
+      <mat-card-content>
+        <!-- Summary Header -->
+        <div class="result-summary">
+          <h3 [class]="localEvaluationResult.eligible ? 'status-success' : 'status-warning'">
+            {{ localEvaluationResult.eligible ? 'Patient is Eligible for Measure' : 'Patient Not Eligible' }}
+          </h3>
+
+          <!-- Basic Info -->
+          <div class="result-details">
+            <div class="result-row">
+              <span class="label">Measure ID:</span>
+              <span class="value">{{ localEvaluationResult.measureId }}</span>
+            </div>
+            <div class="result-row">
+              <span class="label">Measure Name:</span>
+              <span class="value">{{ localEvaluationResult.measureName }}</span>
+            </div>
+            <div class="result-row">
+              <span class="label">Patient ID:</span>
+              <span class="value">{{ localEvaluationResult.patientId }}</span>
+            </div>
+            <div class="result-row">
+              <span class="label">Denominator Membership:</span>
+              <span class="value">
+                <mat-icon [class]="localEvaluationResult.denominatorMembership ? 'status-success' : 'status-error'">
+                  {{ localEvaluationResult.denominatorMembership ? 'check' : 'close' }}
+                </mat-icon>
+                {{ localEvaluationResult.denominatorMembership ? 'Yes' : 'No' }}
+              </span>
+            </div>
+            @if (localEvaluationResult.denominatorExclusion) {
+              <div class="result-row">
+                <span class="label">Exclusion Applied:</span>
+                <span class="value status-warning">
+                  <mat-icon>warning</mat-icon>
+                  Yes - {{ localEvaluationResult.exclusionReason || 'No reason provided' }}
+                </span>
+              </div>
+            }
+            <div class="result-row">
+              <span class="label">Calculated At:</span>
+              <span class="value">{{ localEvaluationResult.calculatedAt | date: 'medium' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-Measures Section -->
+        @if (localEvaluationResult.subMeasures && getSubMeasureKeys().length > 0) {
+          <div class="sub-measures-section">
+            <h4>
+              <mat-icon>checklist</mat-icon>
+              Sub-Measure Results
+            </h4>
+            <div class="sub-measures-grid">
+              @for (key of getSubMeasureKeys(); track key) {
+                <div class="sub-measure-item" [class.passed]="localEvaluationResult.subMeasures[key].numeratorMembership" [class.failed]="!localEvaluationResult.subMeasures[key].numeratorMembership">
+                  <div class="sub-measure-header">
+                    <mat-icon>{{ localEvaluationResult.subMeasures[key].numeratorMembership ? 'check_circle' : 'cancel' }}</mat-icon>
+                    <span class="sub-measure-name">{{ key }}</span>
+                  </div>
+                  @if (localEvaluationResult.subMeasures[key].value) {
+                    <div class="sub-measure-value">
+                      <span class="label">Value:</span> {{ localEvaluationResult.subMeasures[key].value }}
+                    </div>
+                  }
+                  @if (localEvaluationResult.subMeasures[key].date) {
+                    <div class="sub-measure-date">
+                      <span class="label">Date:</span> {{ localEvaluationResult.subMeasures[key].date | date: 'shortDate' }}
+                    </div>
+                  }
+                  @if (localEvaluationResult.subMeasures[key].metadata) {
+                    <div class="sub-measure-notes">{{ localEvaluationResult.subMeasures[key].metadata }}</div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Care Gaps Section -->
+        @if (localEvaluationResult.careGaps && localEvaluationResult.careGaps.length > 0) {
+          <div class="care-gaps-section">
+            <h4>
+              <mat-icon color="warn">warning</mat-icon>
+              Care Gaps Identified ({{ localEvaluationResult.careGaps.length }})
+            </h4>
+            <div class="care-gaps-list">
+              @for (gap of localEvaluationResult.careGaps; track gap.type) {
+                <div class="care-gap-item" [class.high-priority]="gap.severity === 'high'" [class.medium-priority]="gap.severity === 'medium'" [class.low-priority]="gap.severity === 'low'">
+                  <div class="gap-header">
+                    <span class="priority-badge" [class]="'priority-' + (gap.severity || 'medium')">{{ (gap.severity || 'MEDIUM') | uppercase }}</span>
+                    <span class="gap-id">{{ gap.type }}</span>
+                  </div>
+                  <div class="gap-description">{{ gap.description }}</div>
+                  @if (gap.measureComponent) {
+                    <div class="gap-due-date">
+                      <mat-icon>category</mat-icon>
+                      {{ gap.measureComponent }}
+                    </div>
+                  }
+                  @if (gap.action) {
+                    <div class="gap-intervention">
+                      <strong>Action:</strong> {{ gap.action }}
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Recommendations Section -->
+        @if (localEvaluationResult.recommendations && localEvaluationResult.recommendations.length > 0) {
+          <div class="recommendations-section">
+            <h4>
+              <mat-icon color="primary">lightbulb</mat-icon>
+              Clinical Recommendations ({{ localEvaluationResult.recommendations.length }})
+            </h4>
+            <div class="recommendations-list">
+              @for (rec of localEvaluationResult.recommendations; track rec.action) {
+                <div class="recommendation-item" [class.high-priority]="rec.priority === 'high'" [class.medium-priority]="rec.priority === 'medium'" [class.low-priority]="rec.priority === 'low'">
+                  <div class="rec-header">
+                    <span class="priority-badge" [class]="'priority-' + (rec.priority || 'medium')">{{ (rec.priority || 'MEDIUM') | uppercase }}</span>
+                    @if (rec.category) {
+                      <span class="rec-category">{{ rec.category }}</span>
+                    }
+                  </div>
+                  <div class="rec-title">{{ rec.action }}</div>
+                  @if (rec.rationale) {
+                    <div class="rec-rationale">
+                      <strong>Rationale:</strong> {{ rec.rationale }}
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- No Care Gaps Message -->
+        @if (localEvaluationResult.careGaps?.length === 0 && localEvaluationResult.eligible) {
+          <div class="no-gaps-message">
+            <mat-icon color="primary">verified</mat-icon>
+            <span>No care gaps identified - patient is fully compliant with this measure.</span>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+
   <!-- Evaluation Error -->
   @if (evaluationError) {
     <app-error-banner

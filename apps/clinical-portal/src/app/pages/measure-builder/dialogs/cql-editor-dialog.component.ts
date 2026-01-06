@@ -445,6 +445,101 @@ export interface CqlEditorDialogData {
                 }
               </div>
 
+              <!-- Test Specific Patient -->
+              <div class="specific-patient-test">
+                <h4>Test Specific Patient</h4>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Search by name or MRN</mat-label>
+                  <input
+                    matInput
+                    [(ngModel)]="specificPatientSearch"
+                    (ngModelChange)="onPatientSearchChange($event)"
+                    placeholder="e.g., John Smith or PRV-001">
+                  <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+
+                @if (patientSearchResults.length > 0) {
+                  <div class="search-results">
+                    @for (patient of patientSearchResults; track patient.id) {
+                      <div
+                        class="search-result-item"
+                        [class.selected]="selectedSpecificPatient?.id === patient.id"
+                        (click)="selectSpecificPatient(patient)">
+                        <div class="patient-info">
+                          <span class="name">{{ patient.name }}</span>
+                          <span class="mrn">{{ patient.mrn }}</span>
+                        </div>
+                        <div class="patient-meta">
+                          <span>{{ patient.age }}yo {{ patient.gender }}</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+
+                @if (selectedSpecificPatient) {
+                  <div class="selected-patient-card">
+                    <div class="card-header">
+                      <mat-icon>person</mat-icon>
+                      <span>{{ selectedSpecificPatient.name }}</span>
+                      <button mat-icon-button (click)="clearSpecificPatient()" matTooltip="Clear selection">
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                    <div class="card-body">
+                      <div class="patient-details-row">
+                        <span class="label">MRN:</span>
+                        <span class="value">{{ selectedSpecificPatient.mrn }}</span>
+                      </div>
+                      <div class="patient-details-row">
+                        <span class="label">Age/Gender:</span>
+                        <span class="value">{{ selectedSpecificPatient.age }}yo {{ selectedSpecificPatient.gender }}</span>
+                      </div>
+                      <div class="patient-conditions">
+                        @for (condition of selectedSpecificPatient.conditions; track condition) {
+                          <mat-chip size="small">{{ condition }}</mat-chip>
+                        }
+                      </div>
+                    </div>
+                    <div class="card-actions">
+                      <app-loading-button
+                        text="Test This Patient"
+                        icon="play_arrow"
+                        color="primary"
+                        variant="flat"
+                        [loading]="isTestingSpecificPatient"
+                        loadingText="Testing..."
+                        [disabled]="!cqlText.trim()"
+                        ariaLabel="Test CQL against selected patient"
+                        (buttonClick)="testSpecificPatient()">
+                      </app-loading-button>
+                    </div>
+                  </div>
+                }
+
+                @if (specificPatientResult) {
+                  <div class="specific-patient-result" [class]="'outcome-' + specificPatientResult.results[0]?.outcome">
+                    <div class="result-header">
+                      <mat-icon>{{ getOutcomeIcon(specificPatientResult.results[0]?.outcome) }}</mat-icon>
+                      <span>{{ specificPatientResult.results[0]?.outcome | uppercase }}</span>
+                    </div>
+                    @if (specificPatientResult.results[0]?.matchedCriteria) {
+                      <div class="criteria-list">
+                        @for (criterion of specificPatientResult.results[0].matchedCriteria; track criterion.criterionName) {
+                          <div class="criterion" [class.matched]="criterion.matched">
+                            <mat-icon>{{ criterion.matched ? 'check' : 'close' }}</mat-icon>
+                            <div class="criterion-text">
+                              <span class="name">{{ criterion.criterionName }}</span>
+                              <span class="reason">{{ criterion.reason }}</span>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
               <!-- Sample Patient Info -->
               <div class="sample-patients-info">
                 <mat-expansion-panel>
@@ -456,7 +551,7 @@ export interface CqlEditorDialogData {
                   </mat-expansion-panel-header>
                   <div class="sample-patients-list">
                     @for (patient of samplePatients; track patient.id) {
-                      <div class="sample-patient-item">
+                      <div class="sample-patient-item" (click)="selectSpecificPatient(patient)">
                         <div class="patient-header">
                           <span class="name">{{ patient.name }}</span>
                           <span class="demographics">{{ patient.age }}yo {{ patient.gender }}</span>
@@ -1189,6 +1284,228 @@ export interface CqlEditorDialogData {
       }
     }
 
+    /* Specific Patient Test */
+    .specific-patient-test {
+      margin-bottom: 16px;
+      padding: 12px;
+      background-color: #fff;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+
+      h4 {
+        margin: 0 0 12px 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1976d2;
+      }
+
+      .search-results {
+        margin-top: 8px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        max-height: 150px;
+        overflow-y: auto;
+
+        .search-result-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 12px;
+          cursor: pointer;
+          border-bottom: 1px solid #e0e0e0;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          &:hover {
+            background-color: #e3f2fd;
+          }
+
+          &.selected {
+            background-color: #bbdefb;
+          }
+
+          .patient-info {
+            .name {
+              font-weight: 500;
+              font-size: 13px;
+            }
+
+            .mrn {
+              font-size: 11px;
+              color: #666;
+              margin-left: 8px;
+            }
+          }
+
+          .patient-meta {
+            font-size: 11px;
+            color: #666;
+          }
+        }
+      }
+
+      .selected-patient-card {
+        margin-top: 12px;
+        border: 1px solid #1976d2;
+        border-radius: 8px;
+        overflow: hidden;
+
+        .card-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          background-color: #e3f2fd;
+          font-weight: 500;
+
+          mat-icon {
+            color: #1976d2;
+          }
+
+          span {
+            flex: 1;
+          }
+
+          button {
+            margin: -4px;
+          }
+        }
+
+        .card-body {
+          padding: 12px;
+
+          .patient-details-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-size: 12px;
+
+            .label {
+              color: #666;
+              min-width: 80px;
+            }
+
+            .value {
+              font-weight: 500;
+            }
+          }
+
+          .patient-conditions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 8px;
+
+            mat-chip {
+              font-size: 10px;
+              min-height: 18px;
+              padding: 0 6px;
+              background-color: #e3f2fd;
+            }
+          }
+        }
+
+        .card-actions {
+          padding: 8px 12px;
+          border-top: 1px solid #e0e0e0;
+          background-color: #fafafa;
+        }
+      }
+
+      .specific-patient-result {
+        margin-top: 12px;
+        border-radius: 8px;
+        padding: 12px;
+
+        &.outcome-pass {
+          background-color: #e8f5e9;
+          border: 1px solid #a5d6a7;
+        }
+
+        &.outcome-fail {
+          background-color: #ffebee;
+          border: 1px solid #ef9a9a;
+        }
+
+        &.outcome-not-eligible {
+          background-color: #e3f2fd;
+          border: 1px solid #90caf9;
+        }
+
+        &.outcome-excluded {
+          background-color: #fff3e0;
+          border: 1px solid #ffcc80;
+        }
+
+        &.outcome-error {
+          background-color: #ffebee;
+          border: 1px solid #ef9a9a;
+        }
+
+        .result-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: 600;
+          margin-bottom: 12px;
+
+          mat-icon {
+            font-size: 24px;
+            width: 24px;
+            height: 24px;
+          }
+        }
+
+        .criteria-list {
+          .criterion {
+            display: flex;
+            gap: 8px;
+            padding: 6px 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+
+            &:first-child {
+              border-top: none;
+            }
+
+            mat-icon {
+              font-size: 16px;
+              width: 16px;
+              height: 16px;
+              flex-shrink: 0;
+              margin-top: 2px;
+            }
+
+            &.matched mat-icon {
+              color: #2e7d32;
+            }
+
+            &:not(.matched) mat-icon {
+              color: #c62828;
+            }
+
+            .criterion-text {
+              flex: 1;
+
+              .name {
+                display: block;
+                font-weight: 500;
+                font-size: 12px;
+              }
+
+              .reason {
+                display: block;
+                font-size: 11px;
+                color: #666;
+                margin-top: 2px;
+              }
+            }
+          }
+        }
+      }
+    }
+
     .sample-patients-info {
       margin-top: 16px;
 
@@ -1329,6 +1646,13 @@ export class CqlEditorDialogComponent implements OnInit, OnDestroy {
   samplePatients: PreviewPatient[] = [];
   previewBadge: string | null = null;
 
+  // Specific Patient Test state
+  specificPatientSearch = '';
+  patientSearchResults: PreviewPatient[] = [];
+  selectedSpecificPatient: PreviewPatient | null = null;
+  isTestingSpecificPatient = false;
+  specificPatientResult: LivePreviewResponse | null = null;
+
   // Quick prompts for common measure types
   quickPrompts = [
     { label: 'Diabetes HbA1c', text: 'Create a measure for adults 18-75 with diabetes who had an HbA1c test in the measurement period' },
@@ -1440,6 +1764,55 @@ export class CqlEditorDialogComponent implements OnInit, OnDestroy {
     }
 
     this.updatePreviewBadge();
+  }
+
+  /**
+   * Handle patient search input change
+   */
+  onPatientSearchChange(query: string): void {
+    this.patientSearchResults = this.livePreviewService.searchPatients(query);
+  }
+
+  /**
+   * Select a specific patient for testing
+   */
+  selectSpecificPatient(patient: PreviewPatient): void {
+    this.selectedSpecificPatient = patient;
+    this.specificPatientSearch = '';
+    this.patientSearchResults = [];
+    this.specificPatientResult = null;
+  }
+
+  /**
+   * Clear selected specific patient
+   */
+  clearSpecificPatient(): void {
+    this.selectedSpecificPatient = null;
+    this.specificPatientResult = null;
+    this.specificPatientSearch = '';
+  }
+
+  /**
+   * Test CQL against the selected specific patient
+   */
+  testSpecificPatient(): void {
+    if (!this.selectedSpecificPatient || !this.cqlText.trim()) return;
+
+    this.isTestingSpecificPatient = true;
+    this.specificPatientResult = null;
+
+    this.livePreviewService.evaluateSpecificPatient(
+      this.cqlText,
+      this.selectedSpecificPatient.id
+    ).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (result) => {
+        this.specificPatientResult = result;
+        this.isTestingSpecificPatient = false;
+      },
+      error: () => {
+        this.isTestingSpecificPatient = false;
+      },
+    });
   }
 
   /**

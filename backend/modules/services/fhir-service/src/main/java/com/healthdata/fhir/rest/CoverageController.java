@@ -38,7 +38,7 @@ import com.healthdata.audit.models.AuditAction;
  * Provides CRUD operations and search functionality for insurance coverage data.
  */
 @RestController
-@RequestMapping("/fhir/Coverage")
+@RequestMapping("/Coverage")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Coverage", description = "FHIR Coverage resource operations")
@@ -50,7 +50,7 @@ public class CoverageController {
     private final CoverageService coverageService;
 
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Create a new Coverage resource")
     public ResponseEntity<String> createCoverage(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -64,7 +64,7 @@ public class CoverageController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/{id}", produces = "application/fhir+json")
+    @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get a Coverage resource by ID")
     public ResponseEntity<String> getCoverage(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -77,7 +77,7 @@ public class CoverageController {
     }
 
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Update an existing Coverage resource")
     public ResponseEntity<String> updateCoverage(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -107,7 +107,7 @@ public class CoverageController {
     // ==================== Search Endpoints ====================
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(produces = "application/fhir+json")
+    @GetMapping(produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Search Coverage resources")
     public ResponseEntity<String> searchCoverages(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -140,7 +140,7 @@ public class CoverageController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get all coverages for a patient")
     public ResponseEntity<String> getCoveragesByPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -153,7 +153,7 @@ public class CoverageController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/active", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/active", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get active coverages for a patient")
     public ResponseEntity<String> getActiveCoverages(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -166,7 +166,7 @@ public class CoverageController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/primary", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/primary", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get primary coverage for a patient")
     public ResponseEntity<String> getPrimaryCoverage(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -190,7 +190,7 @@ public class CoverageController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/subscriber/{subscriberId}", produces = "application/fhir+json")
+    @GetMapping(value = "/subscriber/{subscriberId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get coverages by subscriber ID")
     public ResponseEntity<String> getCoveragesBySubscriberId(
             @RequestHeader("X-Tenant-ID") String tenantId,

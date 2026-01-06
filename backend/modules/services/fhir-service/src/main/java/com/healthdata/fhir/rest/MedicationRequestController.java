@@ -16,7 +16,7 @@ import com.healthdata.audit.annotations.Audited;
 import com.healthdata.audit.models.AuditAction;
 
 @RestController
-@RequestMapping("/fhir/MedicationRequest")
+@RequestMapping("/MedicationRequest")
 public class MedicationRequestController {
 
     private static final FhirContext FHIR_CONTEXT = FhirContext.forR4();
@@ -33,7 +33,7 @@ public class MedicationRequestController {
      * POST /fhir/MedicationRequest
      */
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> createMedicationRequest(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-User-ID", required = false, defaultValue = "system") String userId,
@@ -57,7 +57,7 @@ public class MedicationRequestController {
      * GET /fhir/MedicationRequest/{id}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/{id}", produces = "application/fhir+json")
+    @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getMedicationRequest(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String id) {
@@ -74,7 +74,7 @@ public class MedicationRequestController {
      * PUT /fhir/MedicationRequest/{id}
      */
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> updateMedicationRequest(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-User-ID", required = false, defaultValue = "system") String userId,
@@ -117,7 +117,7 @@ public class MedicationRequestController {
      * GET /fhir/MedicationRequest?patient={patientId}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(produces = "application/fhir+json")
+    @GetMapping(produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> searchMedicationRequests(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(value = "patient", required = false) String patientId,
@@ -153,7 +153,7 @@ public class MedicationRequestController {
      * GET /fhir/MedicationRequest/active?patient={patientId}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/active", produces = "application/fhir+json")
+    @GetMapping(value = "/active", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getActiveMedicationRequests(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("patient") String patientId) {
@@ -172,7 +172,7 @@ public class MedicationRequestController {
      * GET /fhir/MedicationRequest/prescriptions?patient={patientId}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/prescriptions", produces = "application/fhir+json")
+    @GetMapping(value = "/prescriptions", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getPrescriptions(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("patient") String patientId) {
@@ -191,7 +191,7 @@ public class MedicationRequestController {
      * GET /fhir/MedicationRequest/with-refills?patient={patientId}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/with-refills", produces = "application/fhir+json")
+    @GetMapping(value = "/with-refills", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getRequestsWithRefills(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("patient") String patientId) {

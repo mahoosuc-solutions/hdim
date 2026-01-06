@@ -19,7 +19,7 @@ import com.healthdata.audit.annotations.Audited;
 import com.healthdata.audit.models.AuditAction;
 
 @RestController
-@RequestMapping("/fhir/Encounter")
+@RequestMapping("/Encounter")
 public class EncounterController {
 
     private static final FhirContext FHIR_CONTEXT = FhirContext.forR4();
@@ -36,7 +36,7 @@ public class EncounterController {
      * POST /fhir/Encounter
      */
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> createEncounter(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-User-ID", required = false, defaultValue = "system") String userId,
@@ -59,7 +59,7 @@ public class EncounterController {
      * GET /fhir/Encounter/{id}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/{id}", produces = "application/fhir+json")
+    @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getEncounter(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String id) {
@@ -76,7 +76,7 @@ public class EncounterController {
      * PUT /fhir/Encounter/{id}
      */
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> updateEncounter(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-User-ID", required = false, defaultValue = "system") String userId,
@@ -118,7 +118,7 @@ public class EncounterController {
      * GET /fhir/Encounter?patient={patientId}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(produces = "application/fhir+json")
+    @GetMapping(produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> searchEncounters(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(value = "patient", required = false) String patientId,
@@ -157,7 +157,7 @@ public class EncounterController {
      * GET /fhir/Encounter/finished?patient={patientId}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/finished", produces = "application/fhir+json")
+    @GetMapping(value = "/finished", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getFinishedEncounters(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("patient") String patientId) {
@@ -176,7 +176,7 @@ public class EncounterController {
      * GET /fhir/Encounter/active?patient={patientId}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/active", produces = "application/fhir+json")
+    @GetMapping(value = "/active", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getActiveEncounters(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("patient") String patientId) {
@@ -195,7 +195,7 @@ public class EncounterController {
      * GET /fhir/Encounter/inpatient?patient={patientId}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/inpatient", produces = "application/fhir+json")
+    @GetMapping(value = "/inpatient", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getInpatientEncounters(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("patient") String patientId) {
@@ -214,7 +214,7 @@ public class EncounterController {
      * GET /fhir/Encounter/ambulatory?patient={patientId}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/ambulatory", produces = "application/fhir+json")
+    @GetMapping(value = "/ambulatory", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getAmbulatoryEncounters(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("patient") String patientId) {
@@ -233,7 +233,7 @@ public class EncounterController {
      * GET /fhir/Encounter/emergency?patient={patientId}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/emergency", produces = "application/fhir+json")
+    @GetMapping(value = "/emergency", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getEmergencyEncounters(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("patient") String patientId) {

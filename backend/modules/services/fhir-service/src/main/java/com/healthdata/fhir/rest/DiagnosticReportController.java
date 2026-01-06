@@ -39,7 +39,7 @@ import com.healthdata.audit.models.AuditAction;
  * Provides CRUD operations and search functionality for diagnostic reports.
  */
 @RestController
-@RequestMapping("/fhir/DiagnosticReport")
+@RequestMapping("/DiagnosticReport")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "DiagnosticReport", description = "FHIR DiagnosticReport resource operations")
@@ -51,7 +51,7 @@ public class DiagnosticReportController {
     private final DiagnosticReportService diagnosticReportService;
 
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Create a new DiagnosticReport resource")
     public ResponseEntity<String> createDiagnosticReport(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -65,7 +65,7 @@ public class DiagnosticReportController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/{id}", produces = "application/fhir+json")
+    @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get a DiagnosticReport resource by ID")
     public ResponseEntity<String> getDiagnosticReport(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -78,7 +78,7 @@ public class DiagnosticReportController {
     }
 
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Update an existing DiagnosticReport resource")
     public ResponseEntity<String> updateDiagnosticReport(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -108,7 +108,7 @@ public class DiagnosticReportController {
     // ==================== Search Endpoints ====================
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(produces = "application/fhir+json")
+    @GetMapping(produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Search DiagnosticReport resources")
     public ResponseEntity<String> searchReports(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -139,7 +139,7 @@ public class DiagnosticReportController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get all diagnostic reports for a patient")
     public ResponseEntity<String> getReportsByPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -152,7 +152,7 @@ public class DiagnosticReportController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/final", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/final", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get final diagnostic reports for a patient")
     public ResponseEntity<String> getFinalReports(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -165,7 +165,7 @@ public class DiagnosticReportController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/pending", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/pending", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get pending diagnostic reports for a patient")
     public ResponseEntity<String> getPendingReports(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -178,7 +178,7 @@ public class DiagnosticReportController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/lab", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/lab", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get lab reports for a patient")
     public ResponseEntity<String> getLabReports(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -191,7 +191,7 @@ public class DiagnosticReportController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/imaging", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/imaging", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get imaging reports for a patient")
     public ResponseEntity<String> getImagingReports(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -204,7 +204,7 @@ public class DiagnosticReportController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/encounter/{encounterId}", produces = "application/fhir+json")
+    @GetMapping(value = "/encounter/{encounterId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get diagnostic reports for an encounter")
     public ResponseEntity<String> getReportsByEncounter(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -217,7 +217,7 @@ public class DiagnosticReportController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/code/{code}/latest", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/code/{code}/latest", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get latest report of a specific type for a patient")
     public ResponseEntity<String> getLatestReportByCode(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -231,7 +231,7 @@ public class DiagnosticReportController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/date-range", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/date-range", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get diagnostic reports within a date range")
     public ResponseEntity<String> getReportsByDateRange(
             @RequestHeader("X-Tenant-ID") String tenantId,

@@ -39,7 +39,7 @@ import com.healthdata.audit.models.AuditAction;
  * Provides CRUD operations and search functionality for care coordination plans.
  */
 @RestController
-@RequestMapping("/fhir/CarePlan")
+@RequestMapping("/CarePlan")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "CarePlan", description = "FHIR CarePlan resource operations")
@@ -51,7 +51,7 @@ public class CarePlanController {
     private final CarePlanService carePlanService;
 
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Create a new CarePlan resource")
     public ResponseEntity<String> createCarePlan(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -65,7 +65,7 @@ public class CarePlanController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/{id}", produces = "application/fhir+json")
+    @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get a CarePlan resource by ID")
     public ResponseEntity<String> getCarePlan(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -78,7 +78,7 @@ public class CarePlanController {
     }
 
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Update an existing CarePlan resource")
     public ResponseEntity<String> updateCarePlan(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -108,7 +108,7 @@ public class CarePlanController {
     // ==================== Search Endpoints ====================
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(produces = "application/fhir+json")
+    @GetMapping(produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Search CarePlan resources")
     public ResponseEntity<String> searchCarePlans(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -139,7 +139,7 @@ public class CarePlanController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get all care plans for a patient")
     public ResponseEntity<String> getCarePlansByPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -152,7 +152,7 @@ public class CarePlanController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/active", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/active", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get active care plans for a patient")
     public ResponseEntity<String> getActiveCarePlans(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -165,7 +165,7 @@ public class CarePlanController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/primary", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/primary", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get primary (top-level) care plans for a patient")
     public ResponseEntity<String> getPrimaryCarePlans(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -178,7 +178,7 @@ public class CarePlanController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/with-activities", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/with-activities", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get care plans with activities for a patient")
     public ResponseEntity<String> getCarePlansWithActivities(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -191,7 +191,7 @@ public class CarePlanController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/encounter/{encounterId}", produces = "application/fhir+json")
+    @GetMapping(value = "/encounter/{encounterId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get care plans for an encounter")
     public ResponseEntity<String> getCarePlansByEncounter(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -204,7 +204,7 @@ public class CarePlanController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/condition/{conditionId}", produces = "application/fhir+json")
+    @GetMapping(value = "/condition/{conditionId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get care plans addressing a specific condition")
     public ResponseEntity<String> getCarePlansByCondition(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -217,7 +217,7 @@ public class CarePlanController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/goal/{goalId}", produces = "application/fhir+json")
+    @GetMapping(value = "/goal/{goalId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get care plans with a specific goal")
     public ResponseEntity<String> getCarePlansByGoal(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -230,7 +230,7 @@ public class CarePlanController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/{carePlanId}/children", produces = "application/fhir+json")
+    @GetMapping(value = "/{carePlanId}/children", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get child care plans (part of a parent plan)")
     public ResponseEntity<String> getChildCarePlans(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -243,7 +243,7 @@ public class CarePlanController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/expiring", produces = "application/fhir+json")
+    @GetMapping(value = "/expiring", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get care plans expiring within a date range")
     public ResponseEntity<String> getExpiringCarePlans(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -259,7 +259,7 @@ public class CarePlanController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/search", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/search", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Search care plans by text (title/description)")
     public ResponseEntity<String> searchByText(
             @RequestHeader("X-Tenant-ID") String tenantId,

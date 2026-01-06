@@ -44,7 +44,7 @@ import com.healthdata.auth.context.ScopedTenant;
  * Provides CRUD operations for Patient resources following HL7 FHIR R4 specification.
  */
 @RestController
-@RequestMapping(produces = "application/fhir+json")
+@RequestMapping(value = "/Patient", produces = {"application/fhir+json", "application/json"})
 @Tag(name = "Patient", description = "Patient demographics and administrative information")
 @SecurityRequirement(name = "smart-oauth2")
 public class PatientController {
@@ -76,7 +76,7 @@ public class PatientController {
         @ApiResponse(responseCode = "401", description = "Unauthorized - missing or invalid authentication"),
         @ApiResponse(responseCode = "403", description = "Forbidden - insufficient permissions")
     })
-    @PostMapping(value = "/Patient", consumes = "application/fhir+json")
+    @PostMapping(consumes = "application/fhir+json")
     @Audited(
             action = AuditAction.CREATE,
             resourceType = "Patient",
@@ -119,7 +119,7 @@ public class PatientController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    @GetMapping("/Patient/{id}")
+    @GetMapping("/{id}")
     @Audited(
             action = AuditAction.READ,
             resourceType = "Patient",
@@ -154,7 +154,7 @@ public class PatientController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    @GetMapping("/Patient")
+    @GetMapping
     @Audited(
             action = AuditAction.SEARCH,
             resourceType = "Patient",
@@ -195,7 +195,7 @@ public class PatientController {
         @ApiResponse(responseCode = "404", description = "Patient not found"),
         @ApiResponse(responseCode = "409", description = "Version conflict")
     })
-    @PutMapping(value = "/Patient/{id}", consumes = "application/fhir+json")
+    @PutMapping(value = "/{id}", consumes = "application/fhir+json")
     @Audited(
             action = AuditAction.UPDATE,
             resourceType = "Patient",
@@ -232,7 +232,7 @@ public class PatientController {
         @ApiResponse(responseCode = "403", description = "Forbidden"),
         @ApiResponse(responseCode = "404", description = "Patient not found")
     })
-    @DeleteMapping("/Patient/{id}")
+    @DeleteMapping("/{id}")
     @Audited(
             action = AuditAction.DELETE,
             resourceType = "Patient",

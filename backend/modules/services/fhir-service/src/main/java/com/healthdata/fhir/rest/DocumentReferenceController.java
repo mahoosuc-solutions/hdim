@@ -39,7 +39,7 @@ import com.healthdata.audit.models.AuditAction;
  * Provides CRUD operations and search functionality for clinical document references.
  */
 @RestController
-@RequestMapping("/fhir/DocumentReference")
+@RequestMapping("/DocumentReference")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "DocumentReference", description = "FHIR DocumentReference resource operations")
@@ -51,7 +51,7 @@ public class DocumentReferenceController {
     private final DocumentReferenceService documentReferenceService;
 
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Create a new DocumentReference resource")
     public ResponseEntity<String> createDocumentReference(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -65,7 +65,7 @@ public class DocumentReferenceController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/{id}", produces = "application/fhir+json")
+    @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get a DocumentReference resource by ID")
     public ResponseEntity<String> getDocumentReference(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -78,7 +78,7 @@ public class DocumentReferenceController {
     }
 
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Update an existing DocumentReference resource")
     public ResponseEntity<String> updateDocumentReference(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -108,7 +108,7 @@ public class DocumentReferenceController {
     // ==================== Search Endpoints ====================
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(produces = "application/fhir+json")
+    @GetMapping(produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Search DocumentReference resources")
     public ResponseEntity<String> searchDocuments(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -141,7 +141,7 @@ public class DocumentReferenceController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get all document references for a patient")
     public ResponseEntity<String> getDocumentsByPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -154,7 +154,7 @@ public class DocumentReferenceController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/current", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/current", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get current document references for a patient")
     public ResponseEntity<String> getCurrentDocuments(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -167,7 +167,7 @@ public class DocumentReferenceController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/encounter/{encounterId}", produces = "application/fhir+json")
+    @GetMapping(value = "/encounter/{encounterId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get document references for an encounter")
     public ResponseEntity<String> getDocumentsByEncounter(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -180,7 +180,7 @@ public class DocumentReferenceController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/type/{typeCode}", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/type/{typeCode}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get document references by type for a patient")
     public ResponseEntity<String> getDocumentsByType(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -194,7 +194,7 @@ public class DocumentReferenceController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/type/{typeCode}/latest", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/type/{typeCode}/latest", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get latest document of a specific type for a patient")
     public ResponseEntity<String> getLatestDocumentByType(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -208,7 +208,7 @@ public class DocumentReferenceController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/search", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/search", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Search documents by description text")
     public ResponseEntity<String> searchByDescription(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -223,7 +223,7 @@ public class DocumentReferenceController {
     }
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/patient/{patientId}/date-range", produces = "application/fhir+json")
+    @GetMapping(value = "/patient/{patientId}/date-range", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get documents created within a date range")
     public ResponseEntity<String> getDocumentsByDateRange(
             @RequestHeader("X-Tenant-ID") String tenantId,

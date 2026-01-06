@@ -1,6 +1,7 @@
 package com.healthdata.patient.controller;
 
 import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 import com.healthdata.patient.dto.ProviderPanelRequest;
 import com.healthdata.patient.dto.ProviderPanelResponse;
 import com.healthdata.patient.entity.ProviderPanelAssignmentEntity;
@@ -48,7 +49,7 @@ public class ProviderPanelController {
     @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'PROVIDER') or @providerSecurity.isProvider(#providerId)")
     @Operation(summary = "Get provider panel",
                description = "Returns paginated list of patients assigned to the provider")
-    @Audited(eventType = "PROVIDER_PANEL_VIEW", description = "View provider panel")
+    @Audited(action = AuditAction.READ, resourceType = "ProviderPanel", description = "View provider panel")
     public ResponseEntity<Page<ProviderPanelResponse>> getProviderPanel(
             @Parameter(description = "Provider's unique identifier")
             @PathVariable UUID providerId,
@@ -101,7 +102,7 @@ public class ProviderPanelController {
     @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'PROVIDER') or @providerSecurity.isProvider(#providerId)")
     @Operation(summary = "Get panel patient IDs",
                description = "Returns list of patient IDs in the provider's panel")
-    @Audited(eventType = "PROVIDER_PANEL_IDS", description = "Get panel patient IDs")
+    @Audited(action = AuditAction.READ, resourceType = "ProviderPanel", description = "Get panel patient IDs")
     public ResponseEntity<List<UUID>> getPanelPatientIds(
             @PathVariable UUID providerId,
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -139,7 +140,7 @@ public class ProviderPanelController {
     @PreAuthorize("hasAnyRole('ADMIN', 'PROVIDER') or @providerSecurity.isProvider(#providerId)")
     @Operation(summary = "Assign patient to panel",
                description = "Assign a patient to the provider's panel")
-    @Audited(eventType = "PROVIDER_PANEL_ASSIGN", description = "Assign patient to panel")
+    @Audited(action = AuditAction.CREATE, resourceType = "ProviderPanel", description = "Assign patient to panel")
     public ResponseEntity<ProviderPanelResponse> assignPatient(
             @PathVariable UUID providerId,
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -169,7 +170,7 @@ public class ProviderPanelController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Bulk assign patients",
                description = "Bulk assign multiple patients to the provider's panel (Admin only)")
-    @Audited(eventType = "PROVIDER_PANEL_BULK_ASSIGN", description = "Bulk assign patients")
+    @Audited(action = AuditAction.CREATE, resourceType = "ProviderPanel", description = "Bulk assign patients")
     public ResponseEntity<Map<String, Integer>> bulkAssignPatients(
             @PathVariable UUID providerId,
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -198,7 +199,7 @@ public class ProviderPanelController {
     @PreAuthorize("hasAnyRole('ADMIN', 'PROVIDER') or @providerSecurity.isProvider(#providerId)")
     @Operation(summary = "Remove patient from panel",
                description = "Remove a patient from the provider's panel")
-    @Audited(eventType = "PROVIDER_PANEL_REMOVE", description = "Remove patient from panel")
+    @Audited(action = AuditAction.DELETE, resourceType = "ProviderPanel", description = "Remove patient from panel")
     public ResponseEntity<Void> removePatient(
             @PathVariable UUID providerId,
             @PathVariable UUID patientId,

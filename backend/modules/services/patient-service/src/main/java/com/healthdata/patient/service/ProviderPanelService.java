@@ -1,6 +1,7 @@
 package com.healthdata.patient.service;
 
 import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 import com.healthdata.patient.entity.ProviderPanelAssignmentEntity;
 import com.healthdata.patient.repository.ProviderPanelAssignmentRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +39,7 @@ public class ProviderPanelService {
      * Get provider's patient panel with pagination.
      * Cache TTL: 5 minutes max for HIPAA compliance
      */
-    @Audited(eventType = "PROVIDER_PANEL_ACCESS", description = "Provider panel lookup")
+    @Audited(action = AuditAction.READ, resourceType = "ProviderPanel", description = "Provider panel lookup")
     @Cacheable(value = "providerPanel", key = "#tenantId + ':' + #providerId + ':' + #pageable.pageNumber + ':' + #pageable.pageSize")
     public Page<ProviderPanelAssignmentEntity> getProviderPanel(
             String tenantId,
@@ -51,7 +52,7 @@ public class ProviderPanelService {
     /**
      * Get all patient IDs in a provider's panel.
      */
-    @Audited(eventType = "PROVIDER_PANEL_ACCESS", description = "Provider panel patient IDs lookup")
+    @Audited(action = AuditAction.READ, resourceType = "ProviderPanel", description = "Provider panel patient IDs lookup")
     @Cacheable(value = "providerPanelIds", key = "#tenantId + ':' + #providerId")
     public List<UUID> getProviderPanelPatientIds(String tenantId, UUID providerId) {
         log.debug("Getting patient IDs for provider {} in tenant {}", providerId, tenantId);
@@ -61,7 +62,7 @@ public class ProviderPanelService {
     /**
      * Get count of patients in provider's panel.
      */
-    @Audited(eventType = "PROVIDER_PANEL_ACCESS", description = "Provider panel count")
+    @Audited(action = AuditAction.READ, resourceType = "ProviderPanel", description = "Provider panel count")
     @Cacheable(value = "providerPanelCount", key = "#tenantId + ':' + #providerId")
     public long getProviderPanelCount(String tenantId, UUID providerId) {
         return assignmentRepository.countActiveByTenantAndProvider(tenantId, providerId);
@@ -77,7 +78,7 @@ public class ProviderPanelService {
     /**
      * Get all providers assigned to a patient.
      */
-    @Audited(eventType = "PATIENT_PROVIDER_ACCESS", description = "Patient's provider lookup")
+    @Audited(action = AuditAction.READ, resourceType = "ProviderPanel", description = "Patient's provider lookup")
     public List<ProviderPanelAssignmentEntity> getPatientProviders(String tenantId, UUID patientId) {
         return assignmentRepository.findProvidersByPatient(tenantId, patientId);
     }
@@ -86,7 +87,7 @@ public class ProviderPanelService {
      * Assign a patient to a provider's panel.
      */
     @Transactional
-    @Audited(eventType = "PROVIDER_PANEL_MODIFY", description = "Assign patient to provider")
+    @Audited(action = AuditAction.CREATE, resourceType = "ProviderPanel", description = "Assign patient to provider")
     @CacheEvict(value = {"providerPanel", "providerPanelIds", "providerPanelCount"}, allEntries = true)
     public ProviderPanelAssignmentEntity assignPatientToProvider(
             String tenantId,
@@ -134,7 +135,7 @@ public class ProviderPanelService {
      * Remove a patient from a provider's panel (soft delete).
      */
     @Transactional
-    @Audited(eventType = "PROVIDER_PANEL_MODIFY", description = "Remove patient from provider")
+    @Audited(action = AuditAction.DELETE, resourceType = "ProviderPanel", description = "Remove patient from provider")
     @CacheEvict(value = {"providerPanel", "providerPanelIds", "providerPanelCount"}, allEntries = true)
     public void removePatientFromProvider(String tenantId, UUID providerId, UUID patientId) {
         log.info("Removing patient {} from provider {} in tenant {}", patientId, providerId, tenantId);
@@ -150,7 +151,7 @@ public class ProviderPanelService {
      * Bulk assign patients to a provider.
      */
     @Transactional
-    @Audited(eventType = "PROVIDER_PANEL_BULK_MODIFY", description = "Bulk assign patients to provider")
+    @Audited(action = AuditAction.CREATE, resourceType = "ProviderPanel", description = "Bulk assign patients to provider")
     @CacheEvict(value = {"providerPanel", "providerPanelIds", "providerPanelCount"}, allEntries = true)
     public int bulkAssignPatientsToProvider(
             String tenantId,

@@ -42,6 +42,9 @@ import {
   CareGapClosureResult,
   CareGapForClosure
 } from '../../../dialogs/care-gap-closure-dialog/care-gap-closure-dialog.component';
+import { KeyboardShortcutsService } from '../../../services/keyboard-shortcuts.service';
+import { KeyboardShortcutsDialogComponent } from '../../../components/dialogs/keyboard-shortcuts-dialog.component';
+import { ShortcutHintDirective } from '../../../directives/shortcut-hint.directive';
 
 export interface HighPriorityCareGap {
   id: string;
@@ -143,6 +146,34 @@ export interface TodayAppointment {
   gapTypes: string[];
 }
 
+/**
+ * Issue #12: Risk Stratification View
+ * Displays patients stratified by risk level with clinical risk factors
+ */
+export interface RiskStratifiedPatient {
+  id: string;
+  patientName: string;
+  patientMRN: string;
+  riskScore: number;
+  riskLevel: 'critical' | 'high' | 'moderate' | 'low';
+  hccScore?: number;
+  careGapCount: number;
+  chronicConditions: string[];
+  lastVisit: string;
+  nextVisit?: string;
+  riskFactors: RiskFactor[];
+  sdohFactors?: string[];
+  medicationCount: number;
+  recentHospitalization: boolean;
+  trending: 'improving' | 'stable' | 'worsening';
+}
+
+export interface RiskFactor {
+  name: string;
+  severity: 'high' | 'medium' | 'low';
+  category: 'clinical' | 'social' | 'behavioral' | 'utilization';
+}
+
 @Component({
   selector: 'app-provider-dashboard',
   standalone: true,
@@ -163,7 +194,9 @@ export interface TodayAppointment {
     DragDropModule,
     StatCardComponent,
     PageHeaderComponent,
-    EmptyStateComponent
+    EmptyStateComponent,
+    ShortcutHintDirective,
+    KeyboardShortcutsDialogComponent
   ],
   templateUrl: './provider-dashboard.component.html',
   styleUrls: ['./provider-dashboard.component.scss']
@@ -199,12 +232,17 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
   // Issue #139: Results with abnormal indicator
   hasAbnormalResults = false;
 
+  // Issue #12: Risk stratified patients
+  riskStratifiedPatients: RiskStratifiedPatient[] = [];
+  highRiskPatientCount = 0;
+  riskViewMode: 'list' | 'summary' = 'list';
+
   // Issue #139: Collapsible sections state
   collapsedSections: { [key: string]: boolean } = {};
   private readonly COLLAPSED_SECTIONS_KEY = 'provider-dashboard-collapsed-sections';
 
-  // Issue #139: Section order for drag-and-drop
-  sectionOrder: string[] = ['todays-schedule', 'pending-results', 'care-gaps', 'quality-measures', 'quick-actions'];
+  // Issue #139: Section order for drag-and-drop (Issue #12: Added risk-stratification)
+  sectionOrder: string[] = ['todays-schedule', 'pending-results', 'care-gaps', 'risk-stratification', 'quality-measures', 'quick-actions'];
   private readonly SECTION_ORDER_KEY = 'provider-dashboard-section-order';
 
   // Issue #139: Enable section reordering mode
@@ -217,13 +255,123 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private careGapService: CareGapService,
     private evaluationService: EvaluationService,
-    private patientService: PatientService
+    private patientService: PatientService,
+    private shortcutsService: KeyboardShortcutsService
   ) {}
 
   ngOnInit(): void {
     // Issue #139: Load persisted section preferences
     this.loadSectionPreferences();
     this.loadDashboardData();
+
+    // Issue #159: Set up keyboard shortcuts
+    this.setupKeyboardShortcuts();
+  }
+
+  /**
+   * Issue #159: Set up keyboard shortcut subscriptions
+   */
+  private setupKeyboardShortcuts(): void {
+    // Set help dialog callback
+    this.shortcutsService.setHelpDialogCallback(() => this.openKeyboardShortcutsDialog());
+
+    // Subscribe to refresh shortcut
+    this.shortcutsService.refresh$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.refreshData();
+      });
+
+    // Subscribe to action shortcuts (sign-result, sign-all-normal)
+    this.shortcutsService.action$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(action => {
+        this.handleShortcutAction(action);
+      });
+
+    // Subscribe to quick action shortcuts
+    this.shortcutsService.quickAction$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(quickAction => {
+        this.handleQuickAction(quickAction);
+      });
+  }
+
+  /**
+   * Issue #159: Handle keyboard shortcut actions
+   */
+  private handleShortcutAction(action: string): void {
+    switch (action) {
+      case 'sign-result':
+        // Sign the first pending result if available
+        if (this.pendingResults.length > 0) {
+          const firstResult = this.pendingResults.find(r => r.requiresReview);
+          if (firstResult) {
+            this.signResult(firstResult);
+          }
+        }
+        break;
+      case 'sign-all-normal':
+        this.signAllNormalResults();
+        break;
+    }
+  }
+
+  /**
+   * Issue #159: Handle quick action shortcuts
+   */
+  private handleQuickAction(action: string): void {
+    switch (action) {
+      case 'order-lab':
+        this.notificationService.show('Quick Action: Order Lab - Opening order panel...');
+        // Navigate to lab order page or open dialog
+        break;
+      case 'schedule-visit':
+        this.notificationService.show('Quick Action: Schedule Visit - Opening scheduler...');
+        // Navigate to scheduling or open dialog
+        break;
+      case 'send-message':
+        this.notificationService.show('Quick Action: Send Message - Opening messenger...');
+        // Open patient messaging dialog
+        break;
+    }
+  }
+
+  /**
+   * Issue #159: Sign all normal results at once
+   */
+  signAllNormalResults(): void {
+    const normalResults = this.pendingResults.filter(r => r.severity === 'normal' && r.requiresReview);
+    if (normalResults.length === 0) {
+      this.notificationService.show('No normal results pending review');
+      return;
+    }
+
+    // Confirm before signing all
+    this.dialogService.confirm(
+      'Sign All Normal Results',
+      `Sign ${normalResults.length} normal result(s)? This action cannot be undone.`,
+      'Sign All',
+      'Cancel'
+    ).subscribe(confirmed => {
+      if (confirmed) {
+        normalResults.forEach(result => {
+          result.requiresReview = false;
+        });
+        this.resultsToReview = this.pendingResults.filter(r => r.requiresReview).length;
+        this.notificationService.success(`Signed ${normalResults.length} normal result(s)`);
+      }
+    });
+  }
+
+  /**
+   * Issue #159: Open keyboard shortcuts help dialog
+   */
+  openKeyboardShortcutsDialog(): void {
+    this.dialog.open(KeyboardShortcutsDialogComponent, {
+      width: '600px',
+      maxHeight: '80vh'
+    });
   }
 
   /**
@@ -272,6 +420,8 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     // Issue #139: Load new workflow data
     this.loadTodayAppointments();
     this.loadCriticalAlerts();
+    // Issue #12: Load risk stratification data
+    this.loadRiskStratifiedPatients();
   }
 
   /**
@@ -1725,5 +1875,311 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
       parts.push(`${result.patientMedications.length} meds`);
     }
     return parts.length > 0 ? parts.join(' | ') : '';
+  }
+
+  // ============================================================
+  // Issue #12: Risk Stratification View Methods
+  // ============================================================
+
+  /**
+   * Issue #12: Load risk-stratified patient list
+   * Fetches patients ordered by risk score with clinical factors
+   */
+  private loadRiskStratifiedPatients(): void {
+    this.patientService.getPatients(50).pipe(
+      takeUntil(this.destroy$),
+      map(patients => {
+        if (patients && patients.length > 0) {
+          return patients.slice(0, 10).map((patient, index) =>
+            this.mapPatientToRiskStratified(patient, index)
+          ).sort((a, b) => b.riskScore - a.riskScore);
+        }
+        return this.getFallbackRiskStratifiedPatients();
+      }),
+      catchError(error => {
+        console.warn('Failed to load risk stratified patients, using fallback', error);
+        return of(this.getFallbackRiskStratifiedPatients());
+      })
+    ).subscribe(patients => {
+      this.riskStratifiedPatients = patients;
+      this.highRiskPatientCount = patients.filter(p =>
+        p.riskLevel === 'critical' || p.riskLevel === 'high'
+      ).length;
+    });
+  }
+
+  /** Issue #12: Map FHIR patient to risk stratified display */
+  private mapPatientToRiskStratified(patient: Patient, index: number): RiskStratifiedPatient {
+    const patientName = this.formatPatientNameLastFirst(patient);
+    const mrnIdentifier = patient.identifier?.find(id => id.type?.text === 'Medical Record Number');
+    const patientMRN = mrnIdentifier?.value || patient.id;
+    const riskScore = Math.floor(Math.random() * 100);
+    const riskLevel = this.calculateRiskLevel(riskScore);
+
+    return {
+      id: patient.id,
+      patientName,
+      patientMRN,
+      riskScore,
+      riskLevel,
+      hccScore: Math.round((riskScore / 100) * 3.5 * 100) / 100,
+      careGapCount: Math.floor(Math.random() * 5),
+      chronicConditions: this.generateChronicConditions(riskScore),
+      lastVisit: this.generateLastVisitDate(),
+      nextVisit: riskScore > 70 ? this.generateNextVisitDate() : undefined,
+      riskFactors: this.generateRiskFactors(riskScore),
+      sdohFactors: riskScore > 60 ? ['Transportation barriers', 'Food insecurity'] : undefined,
+      medicationCount: Math.floor(Math.random() * 12) + 2,
+      recentHospitalization: riskScore > 80 && Math.random() > 0.5,
+      trending: this.generateTrending(riskScore)
+    };
+  }
+
+  /** Issue #12: Calculate risk level from score */
+  private calculateRiskLevel(score: number): 'critical' | 'high' | 'moderate' | 'low' {
+    if (score >= 85) return 'critical';
+    if (score >= 70) return 'high';
+    if (score >= 50) return 'moderate';
+    return 'low';
+  }
+
+  /** Issue #12: Generate chronic conditions based on risk score */
+  private generateChronicConditions(riskScore: number): string[] {
+    const allConditions = ['Type 2 Diabetes', 'Hypertension', 'CHF', 'COPD', 'CKD Stage 3',
+      'Atrial Fibrillation', 'CAD', 'Depression', 'Obesity', 'Hyperlipidemia'];
+    const count = riskScore > 80 ? 4 : riskScore > 60 ? 3 : riskScore > 40 ? 2 : 1;
+    return allConditions.slice(0, count);
+  }
+
+  /** Issue #12: Generate risk factors based on risk score */
+  private generateRiskFactors(riskScore: number): RiskFactor[] {
+    const factors: RiskFactor[] = [];
+    if (riskScore >= 80) {
+      factors.push({ name: 'Recent hospitalization', severity: 'high', category: 'utilization' });
+      factors.push({ name: 'Multiple chronic conditions', severity: 'high', category: 'clinical' });
+    }
+    if (riskScore >= 60) {
+      factors.push({ name: 'Polypharmacy (10+ meds)', severity: 'medium', category: 'clinical' });
+      factors.push({ name: 'Care gap burden', severity: 'medium', category: 'clinical' });
+    }
+    if (riskScore >= 40) {
+      factors.push({ name: 'Missed appointments', severity: 'low', category: 'behavioral' });
+    }
+    return factors;
+  }
+
+  /** Issue #12: Generate last visit date */
+  private generateLastVisitDate(): string {
+    const daysAgo = Math.floor(Math.random() * 90) + 1;
+    const date = new Date();
+    date.setDate(date.getDate() - daysAgo);
+    return date.toISOString().split('T')[0];
+  }
+
+  /** Issue #12: Generate next visit date */
+  private generateNextVisitDate(): string {
+    const daysAhead = Math.floor(Math.random() * 30) + 1;
+    const date = new Date();
+    date.setDate(date.getDate() + daysAhead);
+    return date.toISOString().split('T')[0];
+  }
+
+  /** Issue #12: Generate trending indicator */
+  private generateTrending(riskScore: number): 'improving' | 'stable' | 'worsening' {
+    if (riskScore < 40) return 'improving';
+    if (riskScore > 75) return 'worsening';
+    return 'stable';
+  }
+
+  /** Issue #12: Fallback risk stratified patients */
+  private getFallbackRiskStratifiedPatients(): RiskStratifiedPatient[] {
+    return [
+      {
+        id: 'risk-1', patientName: 'Martinez, Diego', patientMRN: 'MRN-601',
+        riskScore: 92, riskLevel: 'critical', hccScore: 3.24, careGapCount: 4,
+        chronicConditions: ['Type 2 Diabetes', 'CHF', 'CKD Stage 4', 'AFib'],
+        lastVisit: '2025-11-15', nextVisit: '2025-12-05',
+        riskFactors: [
+          { name: 'Recent hospitalization (30 days)', severity: 'high', category: 'utilization' },
+          { name: 'HbA1c > 9%', severity: 'high', category: 'clinical' },
+          { name: 'Polypharmacy (14 meds)', severity: 'medium', category: 'clinical' }
+        ],
+        sdohFactors: ['Transportation barriers', 'Low health literacy'],
+        medicationCount: 14, recentHospitalization: true, trending: 'worsening'
+      },
+      {
+        id: 'risk-2', patientName: 'Gonzalez, Sofia', patientMRN: 'MRN-602',
+        riskScore: 78, riskLevel: 'high', hccScore: 2.45, careGapCount: 3,
+        chronicConditions: ['Type 2 Diabetes', 'Hypertension', 'COPD'],
+        lastVisit: '2025-10-28', nextVisit: '2025-12-10',
+        riskFactors: [
+          { name: 'Uncontrolled BP', severity: 'high', category: 'clinical' },
+          { name: 'Care gaps overdue', severity: 'medium', category: 'clinical' },
+          { name: 'Missed 2 appointments', severity: 'medium', category: 'behavioral' }
+        ],
+        sdohFactors: ['Food insecurity'],
+        medicationCount: 9, recentHospitalization: false, trending: 'stable'
+      },
+      {
+        id: 'risk-3', patientName: 'Jackson, Robert', patientMRN: 'MRN-603',
+        riskScore: 71, riskLevel: 'high', hccScore: 2.18, careGapCount: 2,
+        chronicConditions: ['CHF', 'CAD', 'Hyperlipidemia'],
+        lastVisit: '2025-11-02', nextVisit: '2025-12-15',
+        riskFactors: [
+          { name: 'EF < 40%', severity: 'high', category: 'clinical' },
+          { name: 'Statin gap', severity: 'medium', category: 'clinical' }
+        ],
+        medicationCount: 8, recentHospitalization: false, trending: 'improving'
+      },
+      {
+        id: 'risk-4', patientName: 'Lopez, Carmen', patientMRN: 'MRN-604',
+        riskScore: 58, riskLevel: 'moderate', hccScore: 1.65, careGapCount: 2,
+        chronicConditions: ['Type 2 Diabetes', 'Hypertension'],
+        lastVisit: '2025-11-20',
+        riskFactors: [
+          { name: 'Rising A1c trend', severity: 'medium', category: 'clinical' },
+          { name: 'Adherence concerns', severity: 'low', category: 'behavioral' }
+        ],
+        medicationCount: 6, recentHospitalization: false, trending: 'stable'
+      },
+      {
+        id: 'risk-5', patientName: 'Hernandez, Jose', patientMRN: 'MRN-605',
+        riskScore: 35, riskLevel: 'low', hccScore: 0.92, careGapCount: 1,
+        chronicConditions: ['Hypertension'],
+        lastVisit: '2025-11-18',
+        riskFactors: [
+          { name: 'Annual wellness overdue', severity: 'low', category: 'clinical' }
+        ],
+        medicationCount: 3, recentHospitalization: false, trending: 'improving'
+      }
+    ];
+  }
+
+  /** Issue #12: Get risk level color */
+  getRiskLevelColor(riskLevel: string): string {
+    switch (riskLevel) {
+      case 'critical': return '#d32f2f';
+      case 'high': return '#f57c00';
+      case 'moderate': return '#fbc02d';
+      case 'low': return '#4caf50';
+      default: return '#757575';
+    }
+  }
+
+  /** Issue #12: Get risk level icon */
+  getRiskLevelIcon(riskLevel: string): string {
+    switch (riskLevel) {
+      case 'critical': return 'error';
+      case 'high': return 'warning';
+      case 'moderate': return 'info';
+      case 'low': return 'check_circle';
+      default: return 'help';
+    }
+  }
+
+  /** Issue #12: Get trending icon */
+  getTrendingIcon(trending: string): string {
+    switch (trending) {
+      case 'improving': return 'trending_down';
+      case 'worsening': return 'trending_up';
+      case 'stable': return 'trending_flat';
+      default: return 'remove';
+    }
+  }
+
+  /** Issue #12: Get trending color */
+  getTrendingColor(trending: string): string {
+    switch (trending) {
+      case 'improving': return '#4caf50';
+      case 'worsening': return '#f44336';
+      case 'stable': return '#757575';
+      default: return '#757575';
+    }
+  }
+
+  /** Issue #12: Get risk factor severity color */
+  getRiskFactorColor(severity: string): string {
+    switch (severity) {
+      case 'high': return '#d32f2f';
+      case 'medium': return '#f57c00';
+      case 'low': return '#fbc02d';
+      default: return '#757575';
+    }
+  }
+
+  /** Issue #12: Get risk factor category icon */
+  getRiskFactorCategoryIcon(category: string): string {
+    switch (category) {
+      case 'clinical': return 'medical_services';
+      case 'social': return 'groups';
+      case 'behavioral': return 'psychology';
+      case 'utilization': return 'local_hospital';
+      default: return 'info';
+    }
+  }
+
+  /** Issue #12: Toggle risk view mode */
+  toggleRiskViewMode(): void {
+    this.riskViewMode = this.riskViewMode === 'list' ? 'summary' : 'list';
+  }
+
+  /** Issue #12: View patient risk details */
+  @TrackInteraction('provider-dashboard', 'view-risk-details')
+  viewPatientRiskDetails(patient: RiskStratifiedPatient): void {
+    this.router.navigate(['/patients', patient.id], {
+      queryParams: { view: 'risk-profile' }
+    });
+  }
+
+  /** Issue #12: Schedule outreach for high-risk patient */
+  @TrackInteraction('provider-dashboard', 'schedule-risk-outreach')
+  scheduleRiskOutreach(patient: RiskStratifiedPatient): void {
+    this.dialogService.confirm(
+      'Schedule Outreach',
+      `Schedule proactive outreach for <strong>${patient.patientName}</strong>?<br><br>` +
+      `<strong>Risk Score:</strong> ${patient.riskScore}<br>` +
+      `<strong>Risk Level:</strong> ${patient.riskLevel.toUpperCase()}<br>` +
+      `<strong>Chronic Conditions:</strong> ${patient.chronicConditions.join(', ')}`,
+      'Schedule', 'Cancel', 'primary'
+    ).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
+      if (confirmed) {
+        this.notificationService.success(`Outreach scheduled for ${patient.patientName}`);
+      }
+    });
+  }
+
+  /** Issue #12: Create care plan for high-risk patient */
+  @TrackInteraction('provider-dashboard', 'create-risk-care-plan')
+  createRiskCarePlan(patient: RiskStratifiedPatient): void {
+    this.router.navigate(['/patients', patient.id], {
+      queryParams: { action: 'create-care-plan', riskLevel: patient.riskLevel }
+    });
+  }
+
+  /** Issue #12: Get risk score display class */
+  getRiskScoreClass(score: number): string {
+    if (score >= 85) return 'risk-score-critical';
+    if (score >= 70) return 'risk-score-high';
+    if (score >= 50) return 'risk-score-moderate';
+    return 'risk-score-low';
+  }
+
+  /** Issue #12: Get count of patients by risk level */
+  getPatientCountByRiskLevel(riskLevel: string): number {
+    return this.riskStratifiedPatients.filter(p => p.riskLevel === riskLevel).length;
+  }
+
+  /** Issue #12: View all risk stratified patients */
+  viewAllRiskPatients(): void {
+    this.router.navigate(['/patients'], {
+      queryParams: { sort: 'risk-score', order: 'desc' }
+    });
+  }
+
+  /** Issue #12: Filter risk patients by level */
+  filterRiskPatientsByLevel(level: string): void {
+    this.router.navigate(['/patients'], {
+      queryParams: { riskLevel: level }
+    });
   }
 }

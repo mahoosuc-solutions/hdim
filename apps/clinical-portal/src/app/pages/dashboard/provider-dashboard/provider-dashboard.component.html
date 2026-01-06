@@ -2,7 +2,18 @@
   title="Provider Dashboard"
   subtitle="Clinical Decision Support & Quality Performance"
   icon="stethoscope">
-  <button mat-raised-button color="primary" (click)="refreshData()">
+  <!-- Issue #159: Keyboard shortcuts help button -->
+  <button mat-icon-button
+          matTooltip="Keyboard Shortcuts (?)"
+          (click)="openKeyboardShortcutsDialog()"
+          hdimShortcutHint="help"
+          shortcutPosition="bottom">
+    <mat-icon>keyboard</mat-icon>
+  </button>
+  <button mat-raised-button color="primary"
+          (click)="refreshData()"
+          hdimShortcutHint="refresh"
+          shortcutPosition="bottom">
     <mat-icon>refresh</mat-icon>
     Refresh
   </button>
@@ -265,7 +276,11 @@
                       <mat-icon>visibility</mat-icon>
                       Review
                     </button>
-                    <button mat-stroked-button (click)="signResult(result)" matTooltip="Sign and acknowledge">
+                    <button mat-stroked-button
+                            (click)="signResult(result)"
+                            matTooltip="Sign and acknowledge"
+                            hdimShortcutHint="sign-result"
+                            shortcutPosition="left">
                       <mat-icon>check</mat-icon>
                       Sign
                     </button>
@@ -420,6 +435,191 @@
     }
   </mat-card>
 
+  <!-- Section 4b: Risk Stratification View (Issue #12) -->
+  <mat-card
+    class="workflow-section risk-stratification-card"
+    cdkDrag
+    [cdkDragDisabled]="!enableSectionReorder"
+    [attr.data-section-id]="'risk-stratification'"
+    [class.collapsed]="collapsedSections['risk-stratification']">
+    <mat-card-header (click)="toggleSection('risk-stratification')">
+      <mat-card-title>
+        <mat-icon>assessment</mat-icon>
+        Risk Stratification
+        <span class="section-badge risk-badge-critical" [matTooltip]="'High risk patients requiring attention'">
+          {{ highRiskPatientCount }}
+        </span>
+      </mat-card-title>
+      <div class="header-actions">
+        <button mat-stroked-button (click)="toggleRiskViewMode(); $event.stopPropagation()" matTooltip="Toggle view mode">
+          <mat-icon>{{ riskViewMode === 'list' ? 'view_module' : 'view_list' }}</mat-icon>
+        </button>
+        <button mat-icon-button class="collapse-toggle" (click)="toggleSection('risk-stratification'); $event.stopPropagation()">
+          <mat-icon>{{ collapsedSections['risk-stratification'] ? 'expand_more' : 'expand_less' }}</mat-icon>
+        </button>
+      </div>
+    </mat-card-header>
+    @if (!collapsedSections['risk-stratification']) {
+      <mat-card-content>
+        @if (loading) {
+          <div class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Loading risk data...</p>
+          </div>
+        } @else if (riskStratifiedPatients.length === 0) {
+          <app-empty-state
+            icon="verified"
+            title="No risk data available"
+            message="Risk stratification data will appear here when available.">
+          </app-empty-state>
+        } @else {
+          <!-- Issue #12: Risk Summary Badges -->
+          <div class="risk-summary-row">
+            <div class="risk-level-badge critical" (click)="filterRiskPatientsByLevel('critical')" matTooltip="Critical risk patients">
+              <mat-icon>error</mat-icon>
+              <span class="count">{{ getPatientCountByRiskLevel('critical') }}</span>
+              <span class="label">Critical</span>
+            </div>
+            <div class="risk-level-badge high" (click)="filterRiskPatientsByLevel('high')" matTooltip="High risk patients">
+              <mat-icon>warning</mat-icon>
+              <span class="count">{{ getPatientCountByRiskLevel('high') }}</span>
+              <span class="label">High</span>
+            </div>
+            <div class="risk-level-badge moderate" (click)="filterRiskPatientsByLevel('moderate')" matTooltip="Moderate risk patients">
+              <mat-icon>info</mat-icon>
+              <span class="count">{{ getPatientCountByRiskLevel('moderate') }}</span>
+              <span class="label">Moderate</span>
+            </div>
+            <div class="risk-level-badge low" (click)="filterRiskPatientsByLevel('low')" matTooltip="Low risk patients">
+              <mat-icon>check_circle</mat-icon>
+              <span class="count">{{ getPatientCountByRiskLevel('low') }}</span>
+              <span class="label">Low</span>
+            </div>
+          </div>
+
+          <!-- Issue #12: Risk Stratified Patient List -->
+          <div class="risk-patients-list">
+            @for (patient of riskStratifiedPatients; track patient.id) {
+              <div class="risk-patient-card"
+                   [class.risk-critical]="patient.riskLevel === 'critical'"
+                   [class.risk-high]="patient.riskLevel === 'high'"
+                   [class.risk-moderate]="patient.riskLevel === 'moderate'"
+                   [class.risk-low]="patient.riskLevel === 'low'">
+
+                <!-- Risk score indicator -->
+                <div class="risk-score-indicator" [class]="getRiskScoreClass(patient.riskScore)">
+                  <span class="score">{{ patient.riskScore }}</span>
+                  <span class="label">Risk</span>
+                </div>
+
+                <!-- Patient info -->
+                <div class="risk-patient-info">
+                  <div class="patient-header">
+                    <strong class="patient-name">{{ patient.patientName }}</strong>
+                    <span class="patient-mrn">{{ patient.patientMRN }}</span>
+                    @if (patient.recentHospitalization) {
+                      <mat-chip class="hospitalization-chip" matTooltip="Recent hospitalization within 30 days">
+                        <mat-icon>local_hospital</mat-icon>
+                        Recent Admit
+                      </mat-chip>
+                    }
+                  </div>
+
+                  <!-- Chronic conditions -->
+                  <div class="chronic-conditions">
+                    @for (condition of patient.chronicConditions.slice(0, 3); track condition) {
+                      <mat-chip class="condition-chip">{{ condition }}</mat-chip>
+                    }
+                    @if (patient.chronicConditions.length > 3) {
+                      <span class="more-conditions">+{{ patient.chronicConditions.length - 3 }} more</span>
+                    }
+                  </div>
+
+                  <!-- Risk factors -->
+                  <div class="risk-factors">
+                    @for (factor of patient.riskFactors.slice(0, 2); track factor.name) {
+                      <span class="risk-factor" [style.border-color]="getRiskFactorColor(factor.severity)">
+                        <mat-icon [style.color]="getRiskFactorColor(factor.severity)">
+                          {{ getRiskFactorCategoryIcon(factor.category) }}
+                        </mat-icon>
+                        {{ factor.name }}
+                      </span>
+                    }
+                  </div>
+
+                  <!-- SDOH factors if present -->
+                  @if (patient.sdohFactors && patient.sdohFactors.length > 0) {
+                    <div class="sdoh-factors">
+                      <mat-icon class="sdoh-icon" matTooltip="Social determinants">groups</mat-icon>
+                      @for (sdoh of patient.sdohFactors; track sdoh) {
+                        <span class="sdoh-tag">{{ sdoh }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <!-- Right side metrics -->
+                <div class="risk-metrics">
+                  <div class="metric">
+                    <span class="metric-value">{{ patient.hccScore | number:'1.2-2' }}</span>
+                    <span class="metric-label">HCC Score</span>
+                  </div>
+                  <div class="metric">
+                    <span class="metric-value">{{ patient.careGapCount }}</span>
+                    <span class="metric-label">Gaps</span>
+                  </div>
+                  <div class="metric">
+                    <span class="metric-value">{{ patient.medicationCount }}</span>
+                    <span class="metric-label">Meds</span>
+                  </div>
+                  <div class="metric trending" [matTooltip]="'Risk trend: ' + patient.trending">
+                    <mat-icon [style.color]="getTrendingColor(patient.trending)">
+                      {{ getTrendingIcon(patient.trending) }}
+                    </mat-icon>
+                    <span class="metric-label">{{ patient.trending | titlecase }}</span>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="risk-actions">
+                  <button mat-raised-button color="primary" (click)="viewPatientRiskDetails(patient)" matTooltip="View risk details">
+                    <mat-icon>person</mat-icon>
+                    View
+                  </button>
+                  <button mat-icon-button [matMenuTriggerFor]="riskActionsMenu" matTooltip="More actions">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+                  <mat-menu #riskActionsMenu="matMenu">
+                    <button mat-menu-item (click)="scheduleRiskOutreach(patient)">
+                      <mat-icon>phone</mat-icon>
+                      <span>Schedule Outreach</span>
+                    </button>
+                    <button mat-menu-item (click)="createRiskCarePlan(patient)">
+                      <mat-icon>assignment</mat-icon>
+                      <span>Create Care Plan</span>
+                    </button>
+                    <button mat-menu-item (click)="viewPatient(patient.id)">
+                      <mat-icon>description</mat-icon>
+                      <span>Full Patient Record</span>
+                    </button>
+                  </mat-menu>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- View all link -->
+          <div class="section-footer">
+            <button mat-stroked-button color="primary" (click)="viewAllRiskPatients()">
+              View All Risk Stratified Patients
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        }
+      </mat-card-content>
+    }
+  </mat-card>
+
   <!-- Section 5: Quality Measures Performance (Issue #139 - Lower in workflow) -->
   <mat-card
     class="workflow-section quality-measures-card"
@@ -474,25 +674,39 @@
 
 </div>
 
-<!-- Section 6: Quick Actions Panel (Issue #139 - Fixed footer) -->
+<!-- Section 6: Quick Actions Panel (Issue #139 - Fixed footer, Issue #159 - Keyboard shortcuts) -->
 <mat-card class="quick-actions-panel">
   <mat-card-header>
     <mat-card-title>
       <mat-icon>bolt</mat-icon>
       Quick Actions
+      <!-- Issue #159: Shortcut hint -->
+      <span class="shortcut-hint-inline" matTooltip="Ctrl+1, Ctrl+2, Ctrl+3 for quick actions">
+        <mat-icon>keyboard</mat-icon>
+      </span>
     </mat-card-title>
   </mat-card-header>
   <mat-card-content>
     <div class="quick-actions-grid">
-      <button mat-raised-button color="primary" class="quick-action-btn" (click)="viewAllResults()">
+      <button mat-raised-button color="primary"
+              class="quick-action-btn"
+              (click)="viewAllResults()"
+              hdimShortcutHint="quick-action-1"
+              shortcutPosition="top">
         <mat-icon>analytics</mat-icon>
         <span>Review Results</span>
       </button>
-      <button mat-raised-button color="accent" class="quick-action-btn">
+      <button mat-raised-button color="accent"
+              class="quick-action-btn"
+              hdimShortcutHint="quick-action-2"
+              shortcutPosition="top">
         <mat-icon>medication</mat-icon>
         <span>E-Prescribe</span>
       </button>
-      <button mat-raised-button class="quick-action-btn">
+      <button mat-raised-button
+              class="quick-action-btn"
+              hdimShortcutHint="quick-action-3"
+              shortcutPosition="top">
         <mat-icon>science</mat-icon>
         <span>Order Tests</span>
       </button>
@@ -500,13 +714,27 @@
         <mat-icon>send</mat-icon>
         <span>Create Referral</span>
       </button>
-      <button mat-raised-button class="quick-action-btn" (click)="viewAllPatients()">
+      <button mat-raised-button
+              class="quick-action-btn"
+              (click)="viewAllPatients()"
+              hdimShortcutHint="nav-patients"
+              shortcutPosition="top">
         <mat-icon>people</mat-icon>
         <span>View Patients</span>
       </button>
       <button mat-raised-button class="quick-action-btn" (click)="viewAllCareGaps()">
         <mat-icon>report_problem</mat-icon>
         <span>Care Gaps</span>
+      </button>
+      <!-- Issue #159: Sign all normal results button -->
+      <button mat-raised-button
+              color="warn"
+              class="quick-action-btn sign-all-btn"
+              (click)="signAllNormalResults()"
+              hdimShortcutHint="sign-all-normal"
+              shortcutPosition="top">
+        <mat-icon>done_all</mat-icon>
+        <span>Sign All Normal</span>
       </button>
     </div>
   </mat-card-content>

@@ -23,6 +23,8 @@ import java.util.Map;
  * - POST /api/v1/analytics/disease-progression/{patientId} - Disease trajectory
  * - GET /api/v1/analytics/population/risk-stratification - Population risk tiers
  * - GET /api/v1/analytics/population/high-risk - High-risk patient list
+ * - GET /api/v1/providers/{providerId}/predicted-gaps - Predicted care gaps for provider panel (Issue #157)
+ * - GET /api/v1/patients/{patientId}/predicted-gaps - Predicted care gaps for patient (Issue #157)
  */
 @RestController
 @RequestMapping("/api/v1/analytics")
@@ -34,6 +36,7 @@ public class PredictiveAnalyticsController {
     private final CostPredictor costPredictor;
     private final DiseaseProgressionPredictor progressionPredictor;
     private final PopulationRiskStratifier riskStratifier;
+    private final PredictedCareGapService predictedCareGapService;
 
     @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @PostMapping(value = "/readmission-risk/{patientId}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -140,5 +143,77 @@ public class PredictiveAnalyticsController {
 
         List<String> highRiskPatients = riskStratifier.getHighRiskPatients(tenantId, patientIdList, patientDataMap);
         return ResponseEntity.ok(highRiskPatients);
+    }
+
+    /**
+     * Get predicted care gaps for a provider's patient panel
+     *
+     * Issue #157: Implement Predictive Care Gap Detection
+     *
+     * Uses weighted multi-factor prediction model:
+     * - Historical Pattern (40%): Previous gaps, compliance history
+     * - Appointment Adherence (25%): No-shows, cancellations
+     * - Medication Refills (20%): Prescription adherence
+     * - Similar Patient Behavior (15%): Cohort analysis
+     *
+     * @param tenantId Tenant identifier
+     * @param providerId Provider identifier
+     * @param providerData Provider data including patient panel information
+     * @return List of predicted care gaps sorted by risk score
+     */
+    @PreAuthorize("hasAnyRole('PROVIDER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PostMapping(value = "/providers/{providerId}/predicted-gaps", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<PredictedCareGap>> getPredictedGapsForProvider(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String providerId,
+            @RequestBody Map<String, Object> providerData
+    ) {
+        log.info("POST /api/v1/analytics/providers/{}/predicted-gaps - tenant: {}", providerId, tenantId);
+
+        if (tenantId == null || tenantId.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (providerId == null || providerId.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        List<PredictedCareGap> predictedGaps = predictedCareGapService.getPredictedGapsForProvider(
+            tenantId, providerId, providerData
+        );
+
+        return ResponseEntity.ok(predictedGaps);
+    }
+
+    /**
+     * Get predicted care gaps for a specific patient
+     *
+     * Issue #157: Implement Predictive Care Gap Detection
+     *
+     * @param tenantId Tenant identifier
+     * @param patientId Patient identifier
+     * @param patientData Patient data including measures and adherence history
+     * @return List of predicted care gaps for the patient
+     */
+    @PreAuthorize("hasAnyRole('PROVIDER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PostMapping(value = "/patients/{patientId}/predicted-gaps", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<PredictedCareGap>> getPredictedGapsForPatient(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String patientId,
+            @RequestBody Map<String, Object> patientData
+    ) {
+        log.info("POST /api/v1/analytics/patients/{}/predicted-gaps - tenant: {}", patientId, tenantId);
+
+        if (tenantId == null || tenantId.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (patientId == null || patientId.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        List<PredictedCareGap> predictedGaps = predictedCareGapService.getPredictedGapsForPatient(
+            tenantId, patientId, patientData
+        );
+
+        return ResponseEntity.ok(predictedGaps);
     }
 }

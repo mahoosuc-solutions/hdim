@@ -308,6 +308,57 @@ services:
         limits:
           memory: 512M
 
+  # Demo Seeding Service - for generating synthetic demo data
+  demo-seeding-service:
+    container_name: hdim-demo-seeding
+    build:
+      context: ./backend
+      dockerfile: modules/services/demo-seeding-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      fhir-service:
+        condition: service_healthy
+      care-gap-service:
+        condition: service_healthy
+      gateway-service:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8098
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_demo
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: demo_password_2024
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_FLYWAY_ENABLED: "false"
+      JAVA_OPTS: "-Xmx384m -Xms192m"
+      # Downstream service URLs
+      FHIR_SERVICE_URL: http://fhir-service:8085/fhir
+      CARE_GAP_SERVICE_URL: http://care-gap-service:8086/care-gap
+      GATEWAY_SERVICE_URL: http://gateway-service:8080
+      GATEWAY_DB_URL: jdbc:postgresql://postgres:5432/gateway_db
+      GATEWAY_DB_USER: healthdata
+      GATEWAY_DB_PASSWORD: demo_password_2024
+      # Snapshot storage
+      DEMO_SNAPSHOTS_DIR: /app/snapshots
+      DEMO_PERSISTENCE_ENABLED: "true"
+    ports:
+      - "8098:8098"
+    volumes:
+      - demo_snapshots:/app/snapshots
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8098/demo/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
   clinical-portal:
     container_name: hdim-demo-clinical-portal
     build:
@@ -316,9 +367,12 @@ services:
     depends_on:
       gateway-service:
         condition: service_healthy
+      demo-seeding-service:
+        condition: service_healthy
     environment:
       API_URL: http://gateway-service:8080
       DEFAULT_TENANT_ID: DEMO001
+      DEMO_SEEDING_URL: http://demo-seeding-service:8098
     ports:
       - "4200:80"
     healthcheck:
@@ -340,4 +394,6 @@ networks:
 
 volumes:
   demo_postgres_data:
+    driver: local
+  demo_snapshots:
     driver: local

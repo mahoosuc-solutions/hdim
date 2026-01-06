@@ -38,6 +38,12 @@ export class NavigationComponent {
       description: 'Overview and statistics',
     },
     {
+      label: 'Population Insights',
+      icon: 'insights',
+      route: '/insights',
+      description: 'AI-powered population health insights',
+    },
+    {
       label: 'Patients',
       icon: 'people',
       route: '/patients',
@@ -60,6 +66,12 @@ export class NavigationComponent {
       icon: 'description',
       route: '/reports',
       description: 'Generate quality reports',
+    },
+    {
+      label: 'Report Builder',
+      icon: 'build',
+      route: '/report-builder',
+      description: 'Create custom report templates',
     },
     {
       label: 'Pre-Visit Planning',

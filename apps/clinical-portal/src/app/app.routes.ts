@@ -97,6 +97,24 @@ export const appRoutes: Route[] = [
     data: { permissions: ['VIEW_REPORTS'] },
   },
   {
+    path: 'report-builder',
+    loadComponent: () =>
+      import('./pages/custom-report-builder/custom-report-builder.component').then(
+        (m) => m.CustomReportBuilderComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_REPORTS'] },
+  },
+  {
+    path: 'report-builder/:id',
+    loadComponent: () =>
+      import('./pages/custom-report-builder/custom-report-builder.component').then(
+        (m) => m.CustomReportBuilderComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_REPORTS'] },
+  },
+  {
     path: 'visualization',
     loadComponent: () =>
       import('./visualization/angular/visualization-layout.component').then(
@@ -254,6 +272,15 @@ export const appRoutes: Route[] = [
       ),
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['ADMIN', 'DEVELOPER'] },
+  },
+  {
+    path: 'insights',
+    loadComponent: () =>
+      import('./pages/insights/insights.component').then(
+        (m) => m.InsightsComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_PATIENTS'] },
   },
 
   // ==================== Fallback Route ====================

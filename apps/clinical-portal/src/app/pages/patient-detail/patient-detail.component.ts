@@ -1,10 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
+import { MatTabsModule, MatTabGroup } from '@angular/material/tabs';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
@@ -15,6 +15,7 @@ import { injectDestroy } from '../../shared/utils';
 import { PatientService } from '../../services/patient.service';
 import { FhirClinicalService, PatientClinicalData, Observation, Condition, Procedure } from '../../services/fhir-clinical.service';
 import { EvaluationService } from '../../services/evaluation.service';
+import { ContextNavigationService, NavigationContext, parseNavigationContext } from '../../services/context-navigation.service';
 import { Patient } from '../../models/patient.model';
 import { QualityMeasureResult } from '../../models/quality-result.model';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
@@ -42,8 +43,10 @@ import { PatientHealthOverviewComponent } from '../patient-health-overview/patie
   templateUrl: './patient-detail.component.html',
   styleUrls: ['./patient-detail.component.scss'],
 })
-export class PatientDetailComponent implements OnInit {
+export class PatientDetailComponent implements OnInit, AfterViewInit {
   private destroy$ = injectDestroy();
+
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
 
   patientId: string | null = null;
   patient: Patient | null = null;
@@ -63,12 +66,27 @@ export class PatientDetailComponent implements OnInit {
   proceduresColumns: string[] = ['status', 'code', 'performed'];
   resultsColumns: string[] = ['measure', 'compliant', 'date'];
 
+  // Context-aware navigation (Issue #155)
+  navigationContext: NavigationContext | null = null;
+  highlightedCareGapId: string | null = null;
+  highlightedResultId: string | null = null;
+  selectedTabIndex = 0;
+
+  // Tab name to index mapping
+  private tabIndexMap: Record<string, number> = {
+    'overview': 0,
+    'clinical': 1,
+    'care-gaps': 2,
+    'results': 3
+  };
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private patientService: PatientService,
     private fhirClinicalService: FhirClinicalService,
-    private evaluationService: EvaluationService
+    private evaluationService: EvaluationService,
+    private contextNavService: ContextNavigationService
   ) {}
 
   ngOnInit(): void {
@@ -80,7 +98,99 @@ export class PatientDetailComponent implements OnInit {
       return;
     }
 
+    // Handle context-aware navigation (Issue #155)
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      this.navigationContext = parseNavigationContext(params);
+      this.processNavigationContext();
+    });
+
     this.loadPatientData();
+  }
+
+  ngAfterViewInit(): void {
+    // Handle highlighting after view is ready
+    if (this.navigationContext?.highlight) {
+      setTimeout(() => this.scrollToHighlightedItem(), 500);
+    }
+  }
+
+  /**
+   * Process navigation context from query params (Issue #155)
+   */
+  private processNavigationContext(): void {
+    if (!this.navigationContext) return;
+
+    // Set the appropriate tab based on context
+    if (this.navigationContext.tab) {
+      const tabIndex = this.tabIndexMap[this.navigationContext.tab];
+      if (tabIndex !== undefined) {
+        this.selectedTabIndex = tabIndex;
+      }
+    }
+
+    // Handle care gap highlighting
+    if (this.navigationContext.careGapId) {
+      this.highlightedCareGapId = this.navigationContext.careGapId;
+      if (!this.navigationContext.tab) {
+        this.selectedTabIndex = this.tabIndexMap['care-gaps'];
+      }
+    }
+
+    // Handle result highlighting
+    if (this.navigationContext.resultId) {
+      this.highlightedResultId = this.navigationContext.resultId;
+      if (!this.navigationContext.tab) {
+        this.selectedTabIndex = this.tabIndexMap['results'];
+      }
+    }
+
+    // Handle close-gap action
+    if (this.navigationContext.action === 'close-gap' && this.navigationContext.careGapId) {
+      this.initiateGapClosure(this.navigationContext.careGapId);
+    }
+  }
+
+  /**
+   * Scroll to highlighted item after view init
+   */
+  private scrollToHighlightedItem(): void {
+    const elementId = this.highlightedCareGapId
+      ? `care-gap-${this.highlightedCareGapId}`
+      : this.highlightedResultId
+        ? `result-${this.highlightedResultId}`
+        : null;
+
+    if (elementId) {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.classList.add('highlighted');
+        setTimeout(() => element.classList.remove('highlighted'), 3000);
+      }
+    }
+  }
+
+  /**
+   * Initiate care gap closure workflow
+   */
+  private initiateGapClosure(careGapId: string): void {
+    // This would open a dialog or panel for gap closure
+    // Implementation depends on the care gap service integration
+    console.log('Initiating gap closure for:', careGapId);
+  }
+
+  /**
+   * Check if a care gap row should be highlighted
+   */
+  isHighlightedCareGap(careGapId: string): boolean {
+    return this.highlightedCareGapId === careGapId;
+  }
+
+  /**
+   * Check if a result row should be highlighted
+   */
+  isHighlightedResult(resultId: string): boolean {
+    return this.highlightedResultId === resultId;
   }
 
   private loadPatientData(): void {
@@ -213,11 +323,16 @@ export class PatientDetailComponent implements OnInit {
 
   goBack(): void {
     this.backButtonLoading = true;
-    this.router.navigate(['/patients']).then(() => {
-      this.backButtonLoading = false;
-    }).catch(() => {
-      this.backButtonLoading = false;
-    });
+    // Use context-aware navigation to return to origin (Issue #155)
+    if (this.navigationContext?.returnUrl) {
+      this.contextNavService.navigateBack('/patients');
+    } else {
+      this.router.navigate(['/patients']).then(() => {
+        this.backButtonLoading = false;
+      }).catch(() => {
+        this.backButtonLoading = false;
+      });
+    }
   }
 
   navigateToResults(): void {

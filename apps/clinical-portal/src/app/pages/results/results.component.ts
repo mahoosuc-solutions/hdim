@@ -30,6 +30,22 @@ import { QrdaExportService, QrdaExportJob } from '../../services/qrda-export.ser
 import { ReportExportService, ReportOptions } from '../../services/report-export.service';
 import { QualityMeasureResult } from '../../models/quality-result.model';
 import { Patient } from '../../models/patient.model';
+import {
+  EnhancedResult,
+  ResultSeverity,
+  ResultActionConfig,
+  ResultActionType,
+  enhanceResults,
+  sortBySeverity,
+  getSeverityCounts,
+  getSeverityClass,
+  getSeverityBadgeClass,
+  getSeverityText,
+  getTrendClass,
+  getQuickActionsForResult,
+  getPrimaryResultAction,
+  getSecondaryResultActions,
+} from './result-enhancement.config';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
@@ -77,13 +93,21 @@ export class ResultsComponent implements OnInit, AfterViewInit {
 
   filterForm: FormGroup;
   results: QualityMeasureResult[] = [];
-  filteredResults: QualityMeasureResult[] = [];
-  dataSource = new MatTableDataSource<QualityMeasureResult>([]);
-  selection = new SelectionModel<QualityMeasureResult>(true, []);
+  enhancedResults: EnhancedResult[] = [];
+  filteredResults: EnhancedResult[] = [];
+  dataSource = new MatTableDataSource<EnhancedResult>([]);
+  selection = new SelectionModel<EnhancedResult>(true, []);
   loading = false;
   error: string | null = null;
-  selectedResult: QualityMeasureResult | null = null;
+  selectedResult: EnhancedResult | null = null;
   showDetailsPanel = false;
+
+  // Severity filter state
+  severityFilter: ResultSeverity | null = null;
+  severityCounts: Record<ResultSeverity, number> = { critical: 0, high: 0, moderate: 0, normal: 0 };
+
+  // Comparison view state
+  showComparisonView = false;
   currentPage = 0;
   pageSize = 20;
   totalResults = 0;
@@ -104,16 +128,19 @@ export class ResultsComponent implements OnInit, AfterViewInit {
   qrdaExportJob: QrdaExportJob | null = null;
   qrdaExportError: string | null = null;
 
-  // Display columns for table
+  // Display columns for table - enhanced with severity and trend
   displayedColumns: string[] = [
     'select',
+    'severity',
     'calculationDate',
     'patientId',
+    'patientContext',
     'measureName',
     'measureCategory',
     'outcome',
+    'trend',
     'complianceRate',
-    'actions',
+    'quickActions',
   ];
 
   // Measure categories for filter
@@ -226,10 +253,16 @@ export class ResultsComponent implements OnInit, AfterViewInit {
       )
       .subscribe((results) => {
         this.results = results;
-        this.filteredResults = results;
-        this.dataSource.data = results;
-        this.totalResults = results.length;
+        // Enhance results with severity, trend, and patient context
+        this.enhancedResults = enhanceResults(results);
+        // Sort by severity (critical first)
+        this.enhancedResults = sortBySeverity(this.enhancedResults);
+        this.filteredResults = this.enhancedResults;
+        this.dataSource.data = this.enhancedResults;
+        this.totalResults = this.enhancedResults.length;
         this.currentPage = 0;
+        // Update severity counts
+        this.severityCounts = getSeverityCounts(this.enhancedResults);
         this.updateChartData();
       });
   }
@@ -1011,5 +1044,245 @@ export class ResultsComponent implements OnInit, AfterViewInit {
     this.qrdaExportJob = null;
     this.qrdaExportError = null;
     this.exportQrdaSuccess = false;
+  }
+
+  // ===== Enhanced Results Methods (Issue #145) =====
+
+  /**
+   * Get severity class for a result row
+   */
+  getResultSeverityClass(result: EnhancedResult): string {
+    return getSeverityClass(result.severity);
+  }
+
+  /**
+   * Get severity badge class
+   */
+  getResultSeverityBadgeClass(result: EnhancedResult): string {
+    return getSeverityBadgeClass(result.severity);
+  }
+
+  /**
+   * Get severity display text
+   */
+  getResultSeverityText(result: EnhancedResult): string {
+    return getSeverityText(result.severity);
+  }
+
+  /**
+   * Get trend class for styling
+   */
+  getResultTrendClass(result: EnhancedResult): string {
+    return result.trend ? getTrendClass(result.trend) : '';
+  }
+
+  /**
+   * Get trend display text
+   */
+  getTrendText(result: EnhancedResult): string {
+    if (!result.trend) return '';
+    switch (result.trend) {
+      case 'improving':
+        return 'Improving';
+      case 'worsening':
+        return 'Worsening';
+      case 'stable':
+        return 'Stable';
+    }
+  }
+
+  /**
+   * Filter results by severity level
+   */
+  filterBySeverity(severity: ResultSeverity | null): void {
+    this.severityFilter = severity;
+    if (severity === null) {
+      this.filteredResults = this.enhancedResults;
+    } else {
+      this.filteredResults = this.enhancedResults.filter(r => r.severity === severity);
+    }
+    this.dataSource.data = this.filteredResults;
+    this.totalResults = this.filteredResults.length;
+    this.updateChartData();
+  }
+
+  /**
+   * Toggle comparison view
+   */
+  toggleComparisonView(): void {
+    this.showComparisonView = !this.showComparisonView;
+  }
+
+  /**
+   * Get quick actions for a result
+   */
+  getResultQuickActions(result: EnhancedResult): ResultActionConfig[] {
+    return getQuickActionsForResult(result);
+  }
+
+  /**
+   * Get primary action for result
+   */
+  getResultPrimaryAction(result: EnhancedResult): ResultActionConfig {
+    return getPrimaryResultAction(result);
+  }
+
+  /**
+   * Get secondary actions for result
+   */
+  getResultSecondaryActions(result: EnhancedResult): ResultActionConfig[] {
+    return getSecondaryResultActions(result);
+  }
+
+  /**
+   * Execute a quick action on a result
+   */
+  @TrackInteraction('results', 'quick-action')
+  executeResultAction(result: EnhancedResult, actionType: ResultActionType): void {
+    console.log(`Executing action ${actionType} on result ${result.id}`);
+
+    // In a real implementation, this would call appropriate services
+    switch (actionType) {
+      case 'CONTACT_PATIENT':
+        // Open contact dialog or initiate call
+        this.aiAssistant.addMessage({
+          role: 'assistant',
+          content: `Initiating contact for patient ${result.patientId} regarding ${result.measureName} result.`,
+        });
+        break;
+      case 'ORDER_FOLLOWUP':
+        // Open order dialog
+        this.aiAssistant.addMessage({
+          role: 'assistant',
+          content: `Preparing follow-up order for ${result.measureName}.`,
+        });
+        break;
+      case 'REFER_SPECIALIST':
+        // Open referral dialog
+        this.aiAssistant.addMessage({
+          role: 'assistant',
+          content: `Preparing specialist referral for patient ${result.patientId}.`,
+        });
+        break;
+      case 'SCHEDULE_VISIT':
+        // Open scheduling dialog
+        this.aiAssistant.addMessage({
+          role: 'assistant',
+          content: `Opening scheduler for patient ${result.patientId}.`,
+        });
+        break;
+      case 'SIGN_RESULT':
+        // Sign the result (would call bulk signing API)
+        this.aiAssistant.addMessage({
+          role: 'assistant',
+          content: `Result ${result.id} has been digitally signed.`,
+        });
+        break;
+    }
+  }
+
+  /**
+   * Execute primary action for a result
+   */
+  executePrimaryResultAction(result: EnhancedResult): void {
+    const action = this.getResultPrimaryAction(result);
+    this.executeResultAction(result, action.type);
+  }
+
+  /**
+   * Get patient context summary for display
+   */
+  getPatientContextSummary(result: EnhancedResult): string {
+    if (!result.patientContext) return '';
+    const ctx = result.patientContext;
+    return `${ctx.age}y ${ctx.gender}`;
+  }
+
+  /**
+   * Get patient conditions list
+   */
+  getPatientConditions(result: EnhancedResult): string[] {
+    return result.patientContext?.conditions || [];
+  }
+
+  /**
+   * Get patient medications list
+   */
+  getPatientMedications(result: EnhancedResult): string[] {
+    return result.patientContext?.medications || [];
+  }
+
+  /**
+   * Get patient risk level
+   */
+  getPatientRiskLevel(result: EnhancedResult): string {
+    return result.patientContext?.riskLevel || 'unknown';
+  }
+
+  /**
+   * Get risk level badge class
+   */
+  getRiskLevelBadgeClass(result: EnhancedResult): string {
+    const risk = result.patientContext?.riskLevel;
+    switch (risk) {
+      case 'high':
+        return 'risk-badge-high';
+      case 'moderate':
+        return 'risk-badge-moderate';
+      case 'low':
+        return 'risk-badge-low';
+      default:
+        return 'risk-badge-unknown';
+    }
+  }
+
+  /**
+   * Format previous date for comparison
+   */
+  formatPreviousDate(result: EnhancedResult): string {
+    if (!result.previousDate) return 'N/A';
+    return this.formatDate(result.previousDate);
+  }
+
+  /**
+   * Get comparison difference
+   */
+  getComparisonDiff(result: EnhancedResult): number {
+    if (result.previousValue === undefined) return 0;
+    return Math.round((result.complianceRate - result.previousValue) * 10) / 10;
+  }
+
+  /**
+   * Format comparison difference with sign
+   */
+  formatComparisonDiff(result: EnhancedResult): string {
+    const diff = this.getComparisonDiff(result);
+    if (diff > 0) return `+${diff}%`;
+    if (diff < 0) return `${diff}%`;
+    return '0%';
+  }
+
+  /**
+   * View result details with enhanced information
+   */
+  viewEnhancedResultDetails(result: EnhancedResult): void {
+    this.selectedResult = result;
+    this.showDetailsPanel = true;
+
+    // Load patient information
+    const patientObservable = this.patientService.getPatient(result.patientId);
+    if (patientObservable) {
+      patientObservable.pipe(takeUntil(this.destroy$)).subscribe({
+        next: (patient) => {
+          if (this.patientService.toPatientSummary) {
+            const patientSummary = this.patientService.toPatientSummary(patient);
+            // Update patient context with real data if available
+          }
+        },
+        error: (err) => {
+          console.error('Error loading patient:', err);
+        }
+      });
+    }
   }
 }

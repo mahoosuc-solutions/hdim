@@ -2,6 +2,18 @@
   title="Provider Dashboard"
   subtitle="Clinical Decision Support & Quality Performance"
   icon="stethoscope">
+  <!-- Issue #160: Start tour button -->
+  <button mat-icon-button
+          matTooltip="Take a Tour"
+          (click)="startDashboardTour()">
+    <mat-icon>explore</mat-icon>
+  </button>
+  <!-- Issue #160: Help panel button -->
+  <button mat-icon-button
+          matTooltip="Help"
+          (click)="toggleHelpPanel()">
+    <mat-icon>help_outline</mat-icon>
+  </button>
   <!-- Issue #159: Keyboard shortcuts help button -->
   <button mat-icon-button
           matTooltip="Keyboard Shortcuts (?)"
@@ -750,3 +762,17 @@
   aria-label="Toggle section reorder mode">
   <mat-icon>{{ enableSectionReorder ? 'lock' : 'settings' }}</mat-icon>
 </button>
+
+<!-- Issue #160: Help Panel -->
+<app-help-panel
+  [isOpen]="showHelpPanel"
+  title="Provider Dashboard Help"
+  [sections]="helpSections"
+  [quickLinks]="helpQuickLinks"
+  [showKeyboardShortcuts]="true"
+  (close)="closeHelpPanel()"
+  (contactSupport)="onContactSupport()">
+</app-help-panel>
+
+<!-- Issue #160: Tour Overlay -->
+<app-tour-overlay></app-tour-overlay>

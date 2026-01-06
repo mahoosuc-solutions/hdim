@@ -56,6 +56,7 @@ export class App implements OnInit, OnDestroy {
     { path: '/evaluations', icon: 'assessment', label: 'Evaluations' },
     { path: '/results', icon: 'analytics', label: 'Results' },
     { path: '/care-gaps', icon: 'warning', label: 'Care Gaps' },
+    { path: '/risk-stratification', icon: 'speed', label: 'Risk Stratification' },
     { path: '/outreach-campaigns', icon: 'campaign', label: 'Outreach' },
     { path: '/reports', icon: 'description', label: 'Reports' },
     { path: '/measure-builder', icon: 'build_circle', label: 'Measure Builder' },

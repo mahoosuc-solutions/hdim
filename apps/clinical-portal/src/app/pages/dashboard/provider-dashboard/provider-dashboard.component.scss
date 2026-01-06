@@ -406,3 +406,454 @@
     }
   }
 }
+
+// =========================================================
+// Issue #139: Provider Dashboard Layout Styles
+// =========================================================
+
+// Critical Alerts Banner
+.critical-alerts-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  background: linear-gradient(90deg, #d32f2f 0%, #f44336 100%);
+  color: white;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+  animation: pulse-border 2s infinite;
+
+  @keyframes pulse-border {
+    0%, 100% { box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3); }
+    50% { box-shadow: 0 4px 20px rgba(211, 47, 47, 0.5); }
+  }
+
+  .alert-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    animation: shake 0.5s ease-in-out infinite;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
+  }
+
+  .alert-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    strong {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .alert-summary {
+      font-size: 14px;
+      opacity: 0.95;
+
+      .more-alerts {
+        font-weight: 600;
+        margin-left: 8px;
+      }
+    }
+  }
+}
+
+// Workflow Sections Container
+.workflow-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+// Workflow Section Cards
+.workflow-section {
+  margin-bottom: 0;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+
+  &.cdk-drag-dragging {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+  }
+
+  &.cdk-drag-placeholder {
+    background: #f5f5f5;
+    border: 2px dashed #ccc;
+    min-height: 100px;
+  }
+
+  &.collapsed {
+    mat-card-content {
+      display: none;
+    }
+  }
+
+  mat-card-header {
+    cursor: pointer;
+    user-select: none;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+
+      .section-badge,
+      .gap-badge,
+      .results-badge {
+        background-color: #1976d2;
+        color: white;
+        border-radius: 12px;
+        padding: 4px 10px;
+        font-size: 13px;
+        font-weight: 600;
+        min-width: 28px;
+        text-align: center;
+      }
+
+      .gap-badge {
+        background-color: #f44336;
+      }
+
+      .results-badge {
+        background-color: #2196f3;
+
+        &.urgent {
+          background-color: #f44336;
+          animation: pulse 1s infinite;
+        }
+      }
+
+      .gap-indicator,
+      .abnormal-indicator {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background-color: #ff9800;
+        color: white;
+        border-radius: 12px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 600;
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+
+      .abnormal-indicator {
+        background-color: #f44336;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .collapse-toggle {
+      color: rgba(0, 0, 0, 0.54);
+    }
+  }
+
+  mat-card-content {
+    padding: 0 16px 16px;
+  }
+
+  // Has abnormal indicator
+  &.has-abnormal {
+    border-left: 4px solid #f44336;
+  }
+}
+
+// Today's Schedule Styles
+.todays-schedule-card {
+  mat-card-header {
+    mat-card-title {
+      mat-icon {
+        color: #4caf50;
+      }
+    }
+  }
+
+  .schedule-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .appointment-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: #f9f9f9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #f0f0f0;
+      transform: translateX(4px);
+    }
+
+    &.has-gaps {
+      border-left: 4px solid #ff9800;
+      background: #fff8e1;
+
+      &:hover {
+        background: #fff3cd;
+      }
+    }
+
+    .appointment-time {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 60px;
+
+      .time {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1976d2;
+      }
+
+      .duration {
+        font-size: 11px;
+        color: rgba(0, 0, 0, 0.54);
+      }
+    }
+
+    .appointment-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .patient-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        strong {
+          font-size: 15px;
+          color: rgba(0, 0, 0, 0.87);
+        }
+
+        .appointment-type {
+          font-size: 13px;
+          color: rgba(0, 0, 0, 0.54);
+          padding: 2px 8px;
+          background: #e3f2fd;
+          border-radius: 4px;
+        }
+      }
+
+      .appointment-gaps {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #ff9800;
+
+        .gap-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+
+    .appointment-actions {
+      display: flex;
+      gap: 4px;
+
+      button {
+        color: rgba(0, 0, 0, 0.54);
+
+        &:hover {
+          color: #1976d2;
+        }
+      }
+    }
+  }
+}
+
+// Quick Actions Panel
+.quick-actions-panel {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  margin-top: 24px;
+  background: white;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+
+  mat-card-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e0e0e0;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0;
+
+      mat-icon {
+        color: #ff9800;
+      }
+    }
+  }
+
+  mat-card-content {
+    padding: 16px;
+  }
+
+  .quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+
+    .quick-action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 12px;
+      height: auto;
+      min-height: 80px;
+
+      mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
+
+      span {
+        font-size: 12px;
+        font-weight: 500;
+        text-align: center;
+      }
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        transition: all 0.2s ease;
+      }
+    }
+  }
+}
+
+// Settings FAB
+.settings-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 140px;
+  z-index: 100;
+
+  &:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+  }
+}
+
+// Abnormal row highlighting
+.abnormal-row {
+  background-color: #ffebee !important;
+
+  &:hover {
+    background-color: #ffcdd2 !important;
+  }
+}
+
+// Animation for pulse effect
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+// CDK Drag Preview
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+// Responsive adjustments for Issue #139
+@media (max-width: 1024px) {
+  .quick-actions-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  .settings-fab {
+    bottom: 180px;
+  }
+}
+
+@media (max-width: 768px) {
+  .critical-alerts-banner {
+    flex-direction: column;
+    text-align: center;
+
+    .alert-content {
+      align-items: center;
+    }
+  }
+
+  .appointment-item {
+    flex-wrap: wrap;
+
+    .appointment-time {
+      flex-direction: row;
+      gap: 8px;
+    }
+
+    .appointment-actions {
+      width: 100%;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+
+    .quick-action-btn {
+      min-height: 70px;
+      padding: 12px 8px;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      span {
+        font-size: 11px;
+      }
+    }
+  }
+
+  .settings-fab {
+    right: 16px;
+    bottom: 160px;
+  }
+}

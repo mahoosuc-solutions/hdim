@@ -8,7 +8,29 @@
   </button>
 </app-page-header>
 
-<!-- Dashboard Metrics -->
+<!-- Section 1: Critical Alerts Banner (Issue #139 - Always visible at top) -->
+@if (criticalAlerts.length > 0) {
+  <div class="critical-alerts-banner" role="alert" aria-live="assertive">
+    <mat-icon class="alert-icon">warning</mat-icon>
+    <div class="alert-content">
+      <strong>{{ criticalAlerts.length }} Critical Alert{{ criticalAlerts.length > 1 ? 's' : '' }}</strong>
+      <span class="alert-summary">
+        @for (alert of criticalAlerts.slice(0, 2); track alert.id) {
+          {{ alert.patientName }}: {{ alert.message }}
+          @if (!$last) { | }
+        }
+        @if (criticalAlerts.length > 2) {
+          <span class="more-alerts">+{{ criticalAlerts.length - 2 }} more</span>
+        }
+      </span>
+    </div>
+    <button mat-icon-button (click)="viewAllAlerts()" matTooltip="View All Alerts" aria-label="View all critical alerts">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+}
+
+<!-- Dashboard Metrics Summary (Issue #139 - Compact metrics row) -->
 <div class="metrics-grid">
   <app-stat-card
     title="Patients Today"
@@ -43,354 +65,460 @@
   </app-stat-card>
 </div>
 
-  <div class="stat-card-actions-fallback" aria-label="Provider dashboard quick actions">
-    <button
-      mat-stroked-button
-      color="primary"
-      type="button"
-      class="stat-action-button"
-      aria-label="View today schedule"
-      (click)="viewTodaySchedule()"
-    >
-      <mat-icon>event</mat-icon>
-      View Today
-    </button>
-    <button
-      mat-stroked-button
-      color="accent"
-      type="button"
-      class="stat-action-button"
-      aria-label="View all results"
-      (click)="viewAllResults()"
-    >
-      <mat-icon>analytics</mat-icon>
-      View Results
-    </button>
-    <button
-      mat-stroked-button
-      color="primary"
-      type="button"
-      class="stat-action-button"
-      aria-label="View all evaluations"
-      (click)="viewAllEvaluations()"
-    >
-      <mat-icon>list</mat-icon>
-      View Evaluations
-    </button>
-    <button
-      mat-stroked-button
-      color="accent"
-      type="button"
-      class="stat-action-button"
-      aria-label="View all patients"
-      (click)="viewAllPatients()"
-    >
-      <mat-icon>people</mat-icon>
-      View Patients
-    </button>
-    <button
-      mat-stroked-button
-      color="warn"
-      type="button"
-      class="stat-action-button"
-      aria-label="View care gaps"
-      (click)="viewAllCareGaps()"
-    >
-      <mat-icon>report_problem</mat-icon>
-      View Care Gaps
-    </button>
-    <button
-      mat-stroked-button
-      color="success"
-      type="button"
-      class="stat-action-button"
-      aria-label="View reports"
-      (click)="viewReports()"
-    >
-      <mat-icon>description</mat-icon>
-      View Reports
-    </button>
-  </div>
+<!-- Issue #139: Workflow-Organized Sections Container -->
+<div class="workflow-sections" cdkDropList (cdkDropListDropped)="onSectionDrop($event)">
 
-<!-- Quick Clinical Actions -->
-<mat-card class="quick-actions-card">
+  <!-- Section 2: Today's Schedule with Care Gaps (Issue #139 - Primary workflow) -->
+  <mat-card
+    class="workflow-section todays-schedule-card"
+    cdkDrag
+    [cdkDragDisabled]="!enableSectionReorder"
+    [attr.data-section-id]="'todays-schedule'"
+    [class.collapsed]="collapsedSections['todays-schedule']">
+    <mat-card-header (click)="toggleSection('todays-schedule')">
+      <mat-card-title>
+        <mat-icon>today</mat-icon>
+        Today's Schedule
+        <span class="section-badge">{{ todayAppointments.length }}</span>
+        @if (patientsWithGaps > 0) {
+          <span class="gap-indicator" matTooltip="{{ patientsWithGaps }} patients have care gaps">
+            <mat-icon>warning</mat-icon>
+            {{ patientsWithGaps }}
+          </span>
+        }
+      </mat-card-title>
+      <button mat-icon-button class="collapse-toggle" (click)="toggleSection('todays-schedule'); $event.stopPropagation()">
+        <mat-icon>{{ collapsedSections['todays-schedule'] ? 'expand_more' : 'expand_less' }}</mat-icon>
+      </button>
+    </mat-card-header>
+    @if (!collapsedSections['todays-schedule']) {
+      <mat-card-content>
+        @if (loading) {
+          <div class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Loading schedule...</p>
+          </div>
+        } @else if (todayAppointments.length === 0) {
+          <app-empty-state
+            icon="event_available"
+            title="No appointments today"
+            message="Your schedule is clear for today.">
+          </app-empty-state>
+        } @else {
+          <div class="schedule-timeline">
+            @for (appointment of todayAppointments; track appointment.id) {
+              <div class="appointment-item" [class.has-gaps]="appointment.hasGaps" (click)="viewPatient(appointment.patientId)">
+                <div class="appointment-time">
+                  <span class="time">{{ appointment.startTime }}</span>
+                  <span class="duration">{{ appointment.duration }}min</span>
+                </div>
+                <div class="appointment-details">
+                  <div class="patient-info">
+                    <strong>{{ appointment.patientName }}</strong>
+                    <span class="appointment-type">{{ appointment.type }}</span>
+                  </div>
+                  @if (appointment.hasGaps) {
+                    <div class="appointment-gaps">
+                      <mat-icon class="gap-icon" [matTooltip]="'Care gaps: ' + appointment.gapCount">warning</mat-icon>
+                      <span class="gap-count">{{ appointment.gapCount }} gap{{ appointment.gapCount > 1 ? 's' : '' }}</span>
+                    </div>
+                  }
+                </div>
+                <div class="appointment-actions">
+                  <button mat-icon-button matTooltip="Pre-visit planning" (click)="openPreVisitPlanning(appointment); $event.stopPropagation()">
+                    <mat-icon>assignment</mat-icon>
+                  </button>
+                  <button mat-icon-button matTooltip="View patient" (click)="viewPatient(appointment.patientId); $event.stopPropagation()">
+                    <mat-icon>person</mat-icon>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    }
+  </mat-card>
+
+  <!-- Section 3: Results Awaiting Signature (Issue #139 - Higher priority) -->
+  <mat-card
+    class="workflow-section results-card"
+    [class.has-abnormal]="hasAbnormalResults"
+    cdkDrag
+    [cdkDragDisabled]="!enableSectionReorder"
+    [attr.data-section-id]="'pending-results'"
+    [class.collapsed]="collapsedSections['pending-results']">
+    <mat-card-header (click)="toggleSection('pending-results')">
+      <mat-card-title>
+        <mat-icon>science</mat-icon>
+        Results Awaiting Review
+        <span class="results-badge" [class.urgent]="hasAbnormalResults">{{ pendingResults.length }}</span>
+        @if (hasAbnormalResults) {
+          <span class="abnormal-indicator" matTooltip="Contains abnormal results">
+            <mat-icon>error</mat-icon>
+          </span>
+        }
+      </mat-card-title>
+      <div class="header-actions">
+        @if (pendingResults.length > 0) {
+          <button mat-stroked-button color="primary" (click)="signMultipleResults(pendingResults); $event.stopPropagation()">
+            <mat-icon>check_circle</mat-icon>
+            Sign All
+          </button>
+        }
+        <button mat-icon-button class="collapse-toggle" (click)="toggleSection('pending-results'); $event.stopPropagation()">
+          <mat-icon>{{ collapsedSections['pending-results'] ? 'expand_more' : 'expand_less' }}</mat-icon>
+        </button>
+      </div>
+    </mat-card-header>
+    @if (!collapsedSections['pending-results']) {
+      <mat-card-content>
+        @if (loading) {
+          <div class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Loading results...</p>
+          </div>
+        } @else if (pendingResults.length === 0) {
+          <app-empty-state
+            icon="check_circle"
+            title="No pending results"
+            message="All results have been reviewed.">
+          </app-empty-state>
+        } @else {
+          <!-- Issue #10: Enhanced Results Table -->
+          <div class="enhanced-results-list">
+            @for (result of pendingResults; track result.id) {
+              <div class="enhanced-result-card"
+                   [class.severity-critical]="result.severity === 'critical'"
+                   [class.severity-high]="result.severity === 'high'"
+                   [class.severity-moderate]="result.severity === 'moderate'"
+                   [class.severity-normal]="result.severity === 'normal'">
+
+                <!-- Issue #10: Severity indicator strip -->
+                <div class="severity-strip" [style.background-color]="getSeverityColor(result.severity)"></div>
+
+                <div class="result-content">
+                  <!-- Header row with patient info and severity badge -->
+                  <div class="result-header">
+                    <div class="patient-info">
+                      <div class="patient-name-row">
+                        <strong>{{ result.patientName }}</strong>
+                        <span class="mrn-text">{{ result.patientMRN }}</span>
+                      </div>
+                      <!-- Issue #10: Inline patient context -->
+                      @if (getPatientContextSummary(result)) {
+                        <span class="patient-context" matTooltip="Patient context">
+                          {{ getPatientContextSummary(result) }}
+                        </span>
+                      }
+                    </div>
+                    <!-- Issue #10: Severity badge -->
+                    <div class="severity-badge" [style.background-color]="getSeverityColor(result.severity)">
+                      <mat-icon>{{ getSeverityIcon(result.severity) }}</mat-icon>
+                      {{ result.severity | titlecase }}
+                    </div>
+                  </div>
+
+                  <!-- Result details row -->
+                  <div class="result-details">
+                    <div class="result-type">
+                      <mat-icon class="result-icon">science</mat-icon>
+                      <span>{{ result.resultType }}</span>
+                    </div>
+
+                    <!-- Issue #10: Value with trend indicator -->
+                    <div class="result-value-trend">
+                      @if (result.currentValue) {
+                        <div class="current-value">
+                          <span class="value-label">Value:</span>
+                          <span class="value" [style.color]="getSeverityColor(result.severity)">{{ result.currentValue }}</span>
+                        </div>
+                      }
+                      <!-- Issue #10: Trend indicator -->
+                      <div class="trend-indicator" [matTooltip]="result.previousValue ? 'Previous: ' + result.previousValue : 'First result'">
+                        <mat-icon [style.color]="getResultTrendColor(result.trend)">
+                          {{ getResultTrendIcon(result.trend) }}
+                        </mat-icon>
+                        @if (result.trend !== 'new' && result.previousValue) {
+                          <span class="trend-change">from {{ result.previousValue }}</span>
+                        }
+                      </div>
+                    </div>
+
+                    <!-- Reference range -->
+                    @if (result.referenceRange) {
+                      <div class="reference-range">
+                        <span class="ref-label">Ref:</span>
+                        <span class="ref-value">{{ result.referenceRange }}</span>
+                      </div>
+                    }
+
+                    <div class="result-date">
+                      <mat-icon>event</mat-icon>
+                      {{ result.date }}
+                    </div>
+                  </div>
+
+                  <!-- Issue #10: Quick action buttons -->
+                  <div class="result-actions">
+                    <button mat-stroked-button color="primary" (click)="reviewResult(result)" matTooltip="Review full result">
+                      <mat-icon>visibility</mat-icon>
+                      Review
+                    </button>
+                    <button mat-stroked-button (click)="signResult(result)" matTooltip="Sign and acknowledge">
+                      <mat-icon>check</mat-icon>
+                      Sign
+                    </button>
+
+                    <!-- Issue #10: Additional quick actions menu -->
+                    <button mat-icon-button [matMenuTriggerFor]="resultActionsMenu" matTooltip="More actions">
+                      <mat-icon>more_vert</mat-icon>
+                    </button>
+                    <mat-menu #resultActionsMenu="matMenu">
+                      <button mat-menu-item (click)="showResultComparison(result)">
+                        <mat-icon>timeline</mat-icon>
+                        <span>View History</span>
+                      </button>
+                      <button mat-menu-item (click)="contactPatientAboutResult(result)">
+                        <mat-icon>phone</mat-icon>
+                        <span>Contact Patient</span>
+                      </button>
+                      <button mat-menu-item (click)="orderFollowUp(result)">
+                        <mat-icon>science</mat-icon>
+                        <span>Order Follow-Up</span>
+                      </button>
+                      <button mat-menu-item (click)="referPatient(result)">
+                        <mat-icon>send</mat-icon>
+                        <span>Refer Patient</span>
+                      </button>
+                      <button mat-menu-item (click)="viewPatient(result.patientId)">
+                        <mat-icon>person</mat-icon>
+                        <span>View Patient</span>
+                      </button>
+                    </mat-menu>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    }
+  </mat-card>
+
+  <!-- Section 4: High Priority Care Gaps (Issue #139 - Care gap management) -->
+  <mat-card
+    class="workflow-section care-gaps-card"
+    cdkDrag
+    [cdkDragDisabled]="!enableSectionReorder"
+    [attr.data-section-id]="'care-gaps'"
+    [class.collapsed]="collapsedSections['care-gaps']">
+    <mat-card-header (click)="toggleSection('care-gaps')">
+      <mat-card-title>
+        <mat-icon>error</mat-icon>
+        High Priority Care Gaps
+        <span class="gap-badge">{{ highPriorityCareGaps.length }}</span>
+      </mat-card-title>
+      <button mat-icon-button class="collapse-toggle" (click)="toggleSection('care-gaps'); $event.stopPropagation()">
+        <mat-icon>{{ collapsedSections['care-gaps'] ? 'expand_more' : 'expand_less' }}</mat-icon>
+      </button>
+    </mat-card-header>
+    @if (!collapsedSections['care-gaps']) {
+      <mat-card-content>
+        @if (loading) {
+          <div class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Loading care gaps...</p>
+          </div>
+        } @else if (highPriorityCareGaps.length === 0) {
+          <app-empty-state
+            icon="check_circle"
+            title="No high priority care gaps"
+            message="All critical care gaps have been addressed.">
+          </app-empty-state>
+        } @else {
+          <table mat-table [dataSource]="highPriorityCareGaps" class="care-gaps-table">
+            <!-- Patient Column -->
+            <ng-container matColumnDef="patient">
+              <th mat-header-cell *matHeaderCellDef>Patient</th>
+              <td mat-cell *matCellDef="let gap">
+                <div class="patient-cell">
+                  <strong>{{ gap.patientName }}</strong>
+                  <span class="mrn-text">{{ gap.patientMRN }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Gap Column -->
+            <ng-container matColumnDef="gap">
+              <th mat-header-cell *matHeaderCellDef>Care Gap</th>
+              <td mat-cell *matCellDef="let gap">
+                <div class="gap-cell">
+                  <strong>{{ gap.gapType }}</strong>
+                  <span class="action-text">{{ gap.requiresAction }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Clinical Context Column -->
+            <ng-container matColumnDef="context">
+              <th mat-header-cell *matHeaderCellDef>Clinical Context</th>
+              <td mat-cell *matCellDef="let gap">
+                <span class="context-text">{{ gap.clinicalContext }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Risk Column -->
+            <ng-container matColumnDef="risk">
+              <th mat-header-cell *matHeaderCellDef>Risk</th>
+              <td mat-cell *matCellDef="let gap">
+                <div class="risk-badge" [style.background-color]="getRiskColor(gap.risk)">
+                  <mat-icon>{{ getRiskIcon(gap.risk) }}</mat-icon>
+                  {{ gap.risk | titlecase }}
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Due Date Column -->
+            <ng-container matColumnDef="dueDate">
+              <th mat-header-cell *matHeaderCellDef>Due Date</th>
+              <td mat-cell *matCellDef="let gap">
+                <div class="date-cell">
+                  <mat-icon>event</mat-icon>
+                  {{ gap.dueDate }}
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let gap">
+                <div class="action-buttons">
+                  <button
+                    mat-raised-button
+                    color="primary"
+                    (click)="addressCareGap(gap)">
+                    <mat-icon>medical_services</mat-icon>
+                    Address
+                  </button>
+                  <button
+                    mat-icon-button
+                    (click)="viewPatient(gap.id)"
+                    matTooltip="View Patient">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="careGapColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: careGapColumns" class="gap-row"></tr>
+          </table>
+        }
+      </mat-card-content>
+    }
+  </mat-card>
+
+  <!-- Section 5: Quality Measures Performance (Issue #139 - Lower in workflow) -->
+  <mat-card
+    class="workflow-section quality-measures-card"
+    cdkDrag
+    [cdkDragDisabled]="!enableSectionReorder"
+    [attr.data-section-id]="'quality-measures'"
+    [class.collapsed]="collapsedSections['quality-measures']">
+    <mat-card-header (click)="toggleSection('quality-measures')">
+      <mat-card-title>
+        <mat-icon>insights</mat-icon>
+        Quality Measures Performance
+      </mat-card-title>
+      <button mat-icon-button class="collapse-toggle" (click)="toggleSection('quality-measures'); $event.stopPropagation()">
+        <mat-icon>{{ collapsedSections['quality-measures'] ? 'expand_more' : 'expand_less' }}</mat-icon>
+      </button>
+    </mat-card-header>
+    @if (!collapsedSections['quality-measures']) {
+      <mat-card-content>
+        <div class="measures-grid">
+          @for (measure of qualityMeasures; track measure.id) {
+            <div class="measure-card" (click)="viewMeasureDetails(measure)">
+              <div class="measure-header">
+                <h3>{{ measure.name }}</h3>
+                <mat-icon
+                  class="trend-icon"
+                  [style.color]="getTrendColor(measure.trend)">
+                  {{ getTrendIcon(measure.trend) }}
+                </mat-icon>
+              </div>
+              <div class="measure-performance">
+                <span
+                  class="performance-value"
+                  [style.color]="getPerformanceColor(measure.performance, measure.target)">
+                  {{ measure.performance | number:'1.1-1' }}%
+                </span>
+                <span class="target-value">Target: {{ measure.target }}%</span>
+              </div>
+              <mat-progress-bar
+                mode="determinate"
+                [value]="measure.performance"
+                [color]="measure.performance >= measure.target ? 'primary' : 'warn'">
+              </mat-progress-bar>
+              <div class="measure-counts">
+                <span>{{ measure.numerator }} / {{ measure.denominator }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    }
+  </mat-card>
+
+</div>
+
+<!-- Section 6: Quick Actions Panel (Issue #139 - Fixed footer) -->
+<mat-card class="quick-actions-panel">
   <mat-card-header>
     <mat-card-title>
       <mat-icon>bolt</mat-icon>
-      Quick Clinical Actions
+      Quick Actions
     </mat-card-title>
   </mat-card-header>
   <mat-card-content>
-    <div class="quick-actions">
-      <button mat-raised-button color="primary" class="action-btn">
+    <div class="quick-actions-grid">
+      <button mat-raised-button color="primary" class="quick-action-btn" (click)="viewAllResults()">
         <mat-icon>analytics</mat-icon>
-        Review Results
+        <span>Review Results</span>
       </button>
-      <button mat-raised-button color="accent" class="action-btn">
+      <button mat-raised-button color="accent" class="quick-action-btn">
         <mat-icon>medication</mat-icon>
-        E-Prescribe
+        <span>E-Prescribe</span>
       </button>
-      <button mat-raised-button class="action-btn">
+      <button mat-raised-button class="quick-action-btn">
         <mat-icon>science</mat-icon>
-        Order Tests
+        <span>Order Tests</span>
       </button>
-      <button mat-raised-button class="action-btn">
+      <button mat-raised-button class="quick-action-btn">
         <mat-icon>send</mat-icon>
-        Create Referral
+        <span>Create Referral</span>
       </button>
-      <button mat-raised-button class="action-btn">
-        <mat-icon>note_add</mat-icon>
-        Clinical Note
+      <button mat-raised-button class="quick-action-btn" (click)="viewAllPatients()">
+        <mat-icon>people</mat-icon>
+        <span>View Patients</span>
+      </button>
+      <button mat-raised-button class="quick-action-btn" (click)="viewAllCareGaps()">
+        <mat-icon>report_problem</mat-icon>
+        <span>Care Gaps</span>
       </button>
     </div>
   </mat-card-content>
 </mat-card>
 
-<!-- Quality Measures Performance -->
-<mat-card class="quality-measures-card">
-  <mat-card-header>
-    <mat-card-title>
-      <mat-icon>insights</mat-icon>
-      Quality Measures Performance
-    </mat-card-title>
-  </mat-card-header>
-  <mat-card-content>
-    <div class="measures-grid">
-      @for (measure of qualityMeasures; track measure.id) {
-        <div class="measure-card" (click)="viewMeasureDetails(measure)">
-          <div class="measure-header">
-            <h3>{{ measure.name }}</h3>
-            <mat-icon
-              class="trend-icon"
-              [style.color]="getTrendColor(measure.trend)">
-              {{ getTrendIcon(measure.trend) }}
-            </mat-icon>
-          </div>
-          <div class="measure-performance">
-            <span
-              class="performance-value"
-              [style.color]="getPerformanceColor(measure.performance, measure.target)">
-              {{ measure.performance | number:'1.1-1' }}%
-            </span>
-            <span class="target-value">Target: {{ measure.target }}%</span>
-          </div>
-          <mat-progress-bar
-            mode="determinate"
-            [value]="measure.performance"
-            [color]="measure.performance >= measure.target ? 'primary' : 'warn'">
-          </mat-progress-bar>
-          <div class="measure-counts">
-            <span>{{ measure.numerator }} / {{ measure.denominator }}</span>
-          </div>
-        </div>
-      }
-    </div>
-  </mat-card-content>
-</mat-card>
-
-<!-- High Priority Care Gaps -->
-<mat-card class="care-gaps-card">
-  <mat-card-header>
-    <mat-card-title>
-      <mat-icon>error</mat-icon>
-      High Priority Care Gaps
-      <span class="gap-badge">{{ highPriorityCareGaps.length }}</span>
-    </mat-card-title>
-  </mat-card-header>
-  <mat-card-content>
-    @if (loading) {
-      <div class="loading-container">
-        <mat-spinner diameter="40"></mat-spinner>
-        <p>Loading care gaps...</p>
-      </div>
-    } @else if (highPriorityCareGaps.length === 0) {
-      <app-empty-state
-        icon="check_circle"
-        title="No high priority care gaps"
-        message="All critical care gaps have been addressed.">
-      </app-empty-state>
-    } @else {
-      <table mat-table [dataSource]="highPriorityCareGaps" class="care-gaps-table">
-        <!-- Patient Column -->
-        <ng-container matColumnDef="patient">
-          <th mat-header-cell *matHeaderCellDef>Patient</th>
-          <td mat-cell *matCellDef="let gap">
-            <div class="patient-cell">
-              <strong>{{ gap.patientName }}</strong>
-              <span class="mrn-text">{{ gap.patientMRN }}</span>
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Gap Column -->
-        <ng-container matColumnDef="gap">
-          <th mat-header-cell *matHeaderCellDef>Care Gap</th>
-          <td mat-cell *matCellDef="let gap">
-            <div class="gap-cell">
-              <strong>{{ gap.gapType }}</strong>
-              <span class="action-text">{{ gap.requiresAction }}</span>
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Clinical Context Column -->
-        <ng-container matColumnDef="context">
-          <th mat-header-cell *matHeaderCellDef>Clinical Context</th>
-          <td mat-cell *matCellDef="let gap">
-            <span class="context-text">{{ gap.clinicalContext }}</span>
-          </td>
-        </ng-container>
-
-        <!-- Risk Column -->
-        <ng-container matColumnDef="risk">
-          <th mat-header-cell *matHeaderCellDef>Risk</th>
-          <td mat-cell *matCellDef="let gap">
-            <div class="risk-badge" [style.background-color]="getRiskColor(gap.risk)">
-              <mat-icon>{{ getRiskIcon(gap.risk) }}</mat-icon>
-              {{ gap.risk | titlecase }}
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Due Date Column -->
-        <ng-container matColumnDef="dueDate">
-          <th mat-header-cell *matHeaderCellDef>Due Date</th>
-          <td mat-cell *matCellDef="let gap">
-            <div class="date-cell">
-              <mat-icon>event</mat-icon>
-              {{ gap.dueDate }}
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let gap">
-            <div class="action-buttons">
-              <button
-                mat-raised-button
-                color="primary"
-                (click)="addressCareGap(gap)">
-                <mat-icon>medical_services</mat-icon>
-                Address
-              </button>
-              <button
-                mat-icon-button
-                (click)="viewPatient(gap.id)"
-                matTooltip="View Patient">
-                <mat-icon>visibility</mat-icon>
-              </button>
-            </div>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="careGapColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: careGapColumns" class="gap-row"></tr>
-      </table>
-    }
-  </mat-card-content>
-</mat-card>
-
-<!-- Pending Results to Review -->
-<mat-card class="results-card">
-  <mat-card-header>
-    <mat-card-title>
-      <mat-icon>science</mat-icon>
-      Pending Results to Review
-      <span class="results-badge">{{ pendingResults.length }}</span>
-    </mat-card-title>
-  </mat-card-header>
-  <mat-card-content>
-    @if (loading) {
-      <div class="loading-container">
-        <mat-spinner diameter="40"></mat-spinner>
-        <p>Loading results...</p>
-      </div>
-    } @else if (pendingResults.length === 0) {
-      <app-empty-state
-        icon="check_circle"
-        title="No pending results"
-        message="All results have been reviewed.">
-      </app-empty-state>
-    } @else {
-      <table mat-table [dataSource]="pendingResults" class="results-table">
-        <!-- Patient Column -->
-        <ng-container matColumnDef="patient">
-          <th mat-header-cell *matHeaderCellDef>Patient</th>
-          <td mat-cell *matCellDef="let result">
-            <div class="patient-cell">
-              <strong>{{ result.patientName }}</strong>
-              <span class="mrn-text">{{ result.patientMRN }}</span>
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Result Type Column -->
-        <ng-container matColumnDef="resultType">
-          <th mat-header-cell *matHeaderCellDef>Result Type</th>
-          <td mat-cell *matCellDef="let result">
-            <div class="result-type-cell">
-              <mat-icon>science</mat-icon>
-              {{ result.resultType }}
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Date Column -->
-        <ng-container matColumnDef="date">
-          <th mat-header-cell *matHeaderCellDef>Date</th>
-          <td mat-cell *matCellDef="let result">
-            <div class="date-cell">
-              <mat-icon>event</mat-icon>
-              {{ result.date }}
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Status Column -->
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>Status</th>
-          <td mat-cell *matCellDef="let result">
-            @if (result.abnormal) {
-              <mat-chip color="warn">
-                <mat-icon>warning</mat-icon>
-                Abnormal
-              </mat-chip>
-            } @else {
-              <mat-chip color="primary">
-                <mat-icon>check_circle</mat-icon>
-                Normal
-              </mat-chip>
-            }
-          </td>
-        </ng-container>
-
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let result">
-            <div class="action-buttons">
-              <button
-                mat-raised-button
-                color="primary"
-                (click)="reviewResult(result)">
-                <mat-icon>visibility</mat-icon>
-                Review
-              </button>
-              <button
-                mat-raised-button
-                (click)="signResult(result)">
-                <mat-icon>check</mat-icon>
-                Sign
-              </button>
-            </div>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="resultsColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: resultsColumns" class="result-row"></tr>
-      </table>
-    }
-  </mat-card-content>
-</mat-card>
+<!-- Settings Button for Section Reorder (Issue #139) -->
+<button
+  mat-mini-fab
+  color="primary"
+  class="settings-fab"
+  (click)="toggleSectionReorder()"
+  [matTooltip]="enableSectionReorder ? 'Lock layout' : 'Customize layout'"
+  aria-label="Toggle section reorder mode">
+  <mat-icon>{{ enableSectionReorder ? 'lock' : 'settings' }}</mat-icon>
+</button>

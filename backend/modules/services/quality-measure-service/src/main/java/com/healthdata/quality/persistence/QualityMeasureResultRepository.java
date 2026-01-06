@@ -45,4 +45,13 @@ public interface QualityMeasureResultRepository extends JpaRepository<QualityMea
         @Param("tenantId") String tenantId,
         Pageable pageable
     );
+
+    /**
+     * Find all results by IDs for a specific tenant (for bulk operations)
+     */
+    @Query("SELECT q FROM QualityMeasureResultEntity q WHERE q.id IN :ids AND q.tenantId = :tenantId")
+    List<QualityMeasureResultEntity> findAllByIdInAndTenantId(
+        @Param("ids") List<UUID> ids,
+        @Param("tenantId") String tenantId
+    );
 }

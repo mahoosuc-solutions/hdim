@@ -10,5 +10,6 @@
     <include file="db/changelog/0003-create-demo-snapshots-table.xml"/>
     <include file="db/changelog/0004-create-synthetic-patient-templates-table.xml"/>
     <include file="db/changelog/0005-seed-demo-scenarios.xml"/>
+    <include file="db/changelog/0006-performance-indexes.xml"/>
 
 </databaseChangeLog>

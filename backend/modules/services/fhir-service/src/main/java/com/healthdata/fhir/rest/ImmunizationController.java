@@ -18,7 +18,7 @@ import com.healthdata.audit.annotations.Audited;
 import com.healthdata.audit.models.AuditAction;
 
 @RestController
-@RequestMapping("/fhir/Immunization")
+@RequestMapping("/Immunization")
 @Slf4j
 @RequiredArgsConstructor
 public class ImmunizationController {
@@ -29,7 +29,7 @@ public class ImmunizationController {
 
     // Create Immunization
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> createImmunization(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-User-ID", defaultValue = "system") String userId,
@@ -48,7 +48,7 @@ public class ImmunizationController {
 
     // Get Immunization by ID
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/{id}", produces = "application/fhir+json")
+    @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getImmunization(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String id) {
@@ -64,7 +64,7 @@ public class ImmunizationController {
 
     // Update Immunization
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> updateImmunization(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-User-ID", defaultValue = "system") String userId,
@@ -98,7 +98,7 @@ public class ImmunizationController {
 
     // Search by patient
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(produces = "application/fhir+json")
+    @GetMapping(produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> searchByPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(value = "patient", required = false) String patient,
@@ -128,7 +128,7 @@ public class ImmunizationController {
 
     // Get completed immunizations
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/completed", produces = "application/fhir+json")
+    @GetMapping(value = "/completed", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getCompletedImmunizations(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(value = "patient") String patient) {
@@ -162,7 +162,7 @@ public class ImmunizationController {
 
     // Get vaccine series
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/series", produces = "application/fhir+json")
+    @GetMapping(value = "/series", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getVaccineSeries(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(value = "patient") String patient,
@@ -198,7 +198,7 @@ public class ImmunizationController {
 
     // Get immunizations with reactions
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/with-reactions", produces = "application/fhir+json")
+    @GetMapping(value = "/with-reactions", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getImmunizationsWithReactions(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(value = "patient") String patient) {

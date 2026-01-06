@@ -25,7 +25,7 @@ import com.healthdata.audit.models.AuditAction;
  * including those converted from HL7 v2 RAS^O17 messages.
  */
 @RestController
-@RequestMapping("/fhir/MedicationAdministration")
+@RequestMapping("/MedicationAdministration")
 public class MedicationAdministrationController {
 
     private static final FhirContext FHIR_CONTEXT = FhirContext.forR4();
@@ -43,7 +43,7 @@ public class MedicationAdministrationController {
      * POST /fhir/MedicationAdministration
      */
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PostMapping(consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> createMedicationAdministration(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-User-ID", required = false, defaultValue = "system") String userId,
@@ -68,7 +68,7 @@ public class MedicationAdministrationController {
      * GET /fhir/MedicationAdministration/{id}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/{id}", produces = "application/fhir+json")
+    @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getMedicationAdministration(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String id) {
@@ -85,7 +85,7 @@ public class MedicationAdministrationController {
      * PUT /fhir/MedicationAdministration/{id}
      */
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = "application/fhir+json")
+    @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> updateMedicationAdministration(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-User-ID", required = false, defaultValue = "system") String userId,
@@ -129,7 +129,7 @@ public class MedicationAdministrationController {
      * GET /fhir/MedicationAdministration?patient={patientId}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(produces = "application/fhir+json")
+    @GetMapping(produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> searchMedicationAdministrations(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(value = "patient", required = false) String patientId,
@@ -169,7 +169,7 @@ public class MedicationAdministrationController {
      * GET /fhir/MedicationAdministration/completed?patient={patientId}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/completed", produces = "application/fhir+json")
+    @GetMapping(value = "/completed", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getCompletedAdministrations(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("patient") String patientId) {
@@ -188,7 +188,7 @@ public class MedicationAdministrationController {
      * GET /fhir/MedicationAdministration/in-progress?patient={patientId}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/in-progress", produces = "application/fhir+json")
+    @GetMapping(value = "/in-progress", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getInProgressAdministrations(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("patient") String patientId) {
@@ -207,7 +207,7 @@ public class MedicationAdministrationController {
      * GET /fhir/MedicationAdministration/by-date?patient={patientId}&start={startDate}&end={endDate}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/by-date", produces = "application/fhir+json")
+    @GetMapping(value = "/by-date", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getAdministrationsByDateRange(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("patient") String patientId,
@@ -231,7 +231,7 @@ public class MedicationAdministrationController {
      * GET /fhir/MedicationAdministration/by-request?request={requestId}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/by-request", produces = "application/fhir+json")
+    @GetMapping(value = "/by-request", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getAdministrationsByRequest(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("request") String requestId) {
@@ -250,7 +250,7 @@ public class MedicationAdministrationController {
      * GET /fhir/MedicationAdministration/by-lot?lot={lotNumber}
      */
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
-    @GetMapping(value = "/by-lot", produces = "application/fhir+json")
+    @GetMapping(value = "/by-lot", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getAdministrationsByLotNumber(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("lot") String lotNumber) {

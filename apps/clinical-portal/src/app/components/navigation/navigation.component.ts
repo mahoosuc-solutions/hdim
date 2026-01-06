@@ -75,6 +75,12 @@ export class NavigationComponent {
       description: 'View evaluation results',
     },
     {
+      label: 'Measure Comparison',
+      icon: 'compare_arrows',
+      route: '/measure-comparison',
+      description: 'Compare measure performance and trends',
+    },
+    {
       label: 'Reports',
       icon: 'description',
       route: '/reports',

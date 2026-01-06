@@ -70,6 +70,15 @@ export const appRoutes: Route[] = [
     data: { permissions: ['VIEW_EVALUATIONS'] },
   },
   {
+    path: 'measure-comparison',
+    loadComponent: () =>
+      import('./pages/measure-comparison/measure-comparison.component').then(
+        (m) => m.MeasureComparisonComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_EVALUATIONS'] },
+  },
+  {
     path: 'evaluations',
     loadComponent: () =>
       import('./pages/evaluations/evaluations.component').then(

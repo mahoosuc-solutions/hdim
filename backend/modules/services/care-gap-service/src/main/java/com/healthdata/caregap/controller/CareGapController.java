@@ -3,6 +3,7 @@ package com.healthdata.caregap.controller;
 import com.healthdata.caregap.persistence.CareGapEntity;
 import com.healthdata.caregap.service.CareGapIdentificationService;
 import com.healthdata.caregap.service.CareGapReportService;
+import com.healthdata.caregap.service.ProviderCareGapPrioritizationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -47,6 +48,7 @@ public class CareGapController {
 
     private final CareGapIdentificationService identificationService;
     private final CareGapReportService reportService;
+    private final ProviderCareGapPrioritizationService prioritizationService;
 
     // ==================== Care Gap Identification Endpoints ====================
 
@@ -351,6 +353,60 @@ public class CareGapController {
                 reportService.getPopulationGapReport(tenantId);
 
         return ResponseEntity.ok(report);
+    }
+
+    // ==================== Provider-Specific Endpoints (Issue #138) ====================
+
+    /**
+     * Get prioritized care gaps for a provider
+     *
+     * Issue #138: Provider-specific care gap prioritization with scoring algorithm.
+     * Scoring: urgency (40%) + due date (30%) + intervention ease (30%)
+     * Includes primary care priority rules and recommended actions.
+     *
+     * @param tenantId Tenant ID
+     * @param providerId Provider ID
+     * @param limit Maximum number of gaps to return (default: 50)
+     * @return List of prioritized care gaps with scores and recommendations
+     */
+    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, resourceType = "CareGap", purposeOfUse = "TREATMENT",
+            description = "Provider care gap prioritization lookup")
+    @GetMapping(value = "/providers/{providerId}/prioritized", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<ProviderCareGapPrioritizationService.PrioritizedCareGap>> getProviderPrioritizedGaps(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable("providerId") String providerId,
+            @RequestParam(value = "limit", defaultValue = "50") int limit
+    ) {
+        log.info("GET /care-gap/providers/{}/prioritized - tenant: {}, limit: {}", providerId, tenantId, limit);
+
+        List<ProviderCareGapPrioritizationService.PrioritizedCareGap> prioritizedGaps =
+                prioritizationService.getPrioritizedCareGaps(tenantId, providerId, limit);
+
+        return ResponseEntity.ok(prioritizedGaps);
+    }
+
+    /**
+     * Get provider gap summary statistics
+     *
+     * @param tenantId Tenant ID
+     * @param providerId Provider ID
+     * @return Summary statistics for provider's care gaps
+     */
+    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, resourceType = "CareGap", purposeOfUse = "TREATMENT",
+            description = "Provider care gap summary lookup")
+    @GetMapping(value = "/providers/{providerId}/summary", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ProviderCareGapPrioritizationService.ProviderGapSummary> getProviderGapSummary(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable("providerId") String providerId
+    ) {
+        log.info("GET /care-gap/providers/{}/summary - tenant: {}", providerId, tenantId);
+
+        ProviderCareGapPrioritizationService.ProviderGapSummary summary =
+                prioritizationService.getProviderGapSummary(tenantId, providerId);
+
+        return ResponseEntity.ok(summary);
     }
 
     // ==================== Health Check ====================

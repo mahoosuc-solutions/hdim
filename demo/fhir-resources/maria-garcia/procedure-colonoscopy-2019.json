@@ -1,0 +1,52 @@
+{
+  "resourceType": "Procedure",
+  "id": "d3a00001-0000-0000-0001-000000000101",
+  "status": "completed",
+  "category": {
+    "coding": [
+      {
+        "system": "http://snomed.info/sct",
+        "code": "103693007",
+        "display": "Diagnostic procedure"
+      }
+    ]
+  },
+  "code": {
+    "coding": [
+      {
+        "system": "http://www.ama-assn.org/go/cpt",
+        "code": "45378",
+        "display": "Colonoscopy, flexible; diagnostic"
+      },
+      {
+        "system": "http://snomed.info/sct",
+        "code": "73761001",
+        "display": "Colonoscopy"
+      }
+    ],
+    "text": "Screening colonoscopy - normal findings"
+  },
+  "subject": {
+    "reference": "Patient/d3a00001-0000-0000-0001-000000000001",
+    "display": "Maria Garcia"
+  },
+  "performedDateTime": "2019-06-20T10:30:00Z",
+  "recorder": {
+    "display": "Dr. James Wilson, Gastroenterology"
+  },
+  "outcome": {
+    "coding": [
+      {
+        "system": "http://snomed.info/sct",
+        "code": "385669000",
+        "display": "Successful"
+      }
+    ],
+    "text": "Normal colonoscopy, no polyps found. Recommend repeat in 10 years."
+  },
+  "note": [
+    {
+      "text": "Routine screening colonoscopy performed. Bowel prep adequate. Cecum reached. No polyps, masses, or abnormalities identified. Patient tolerated procedure well. Recommended follow-up colonoscopy in 10 years (2029)."
+    }
+  ]
+}

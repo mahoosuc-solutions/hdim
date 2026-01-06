@@ -311,6 +311,8 @@ public class ProcedureService {
                 .resourceType("Procedure")
                 .resourceJson(JSON_PARSER.encodeResourceToString(procedure))
                 .patientId(patientId)
+                .createdBy(createdBy)
+                .modifiedBy(modifiedBy)
                 .build();
 
         updateExtractedFields(entity, procedure);

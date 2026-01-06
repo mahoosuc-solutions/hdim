@@ -582,4 +582,101 @@ export class LivePreviewService {
   clearResults(): void {
     this.evaluationResults$.next(null);
   }
+
+  /**
+   * Evaluate CQL against a specific patient by ID
+   */
+  evaluateSpecificPatient(
+    cqlText: string,
+    patientId: string,
+    tenantId: string = API_CONFIG.DEFAULT_TENANT_ID
+  ): Observable<LivePreviewResponse> {
+    const url = `${API_CONFIG.QUALITY_MEASURE_URL}/cql/preview/patient/${patientId}`;
+    const headers = new HttpHeaders({
+      'X-Tenant-ID': tenantId,
+    });
+
+    const request: LivePreviewRequest = {
+      cqlText,
+      patientIds: [patientId],
+      measurementPeriod: {
+        start: this.getMeasurementPeriodStart(),
+        end: this.getMeasurementPeriodEnd(),
+      },
+    };
+
+    return this.http.post<LivePreviewResponse>(url, request, { headers }).pipe(
+      catchError(() => {
+        // Fallback: Try to find patient in sample patients
+        const samplePatient = this.samplePatients.find(p => p.id === patientId || p.mrn === patientId);
+        if (samplePatient) {
+          return of(this.simulateSinglePatientEvaluation(cqlText, samplePatient));
+        }
+        // Return error response if patient not found
+        return of({
+          evaluationId: `eval-${Date.now()}`,
+          status: 'error' as const,
+          timestamp: new Date().toISOString(),
+          cqlValid: true,
+          cqlErrors: [`Patient ${patientId} not found in sample data`],
+          results: [],
+          summary: {
+            total: 0,
+            inInitialPopulation: 0,
+            inDenominator: 0,
+            inNumerator: 0,
+            passed: 0,
+            failed: 0,
+            excluded: 0,
+            notEligible: 0,
+            errors: 1,
+          },
+          executionTimeMs: 0,
+        });
+      })
+    );
+  }
+
+  /**
+   * Simulate evaluation for a single patient
+   */
+  private simulateSinglePatientEvaluation(cqlText: string, patient: PreviewPatient): LivePreviewResponse {
+    const startTime = Date.now();
+    const cqlLower = cqlText.toLowerCase();
+    const result = this.evaluatePatient(patient, cqlLower);
+
+    return {
+      evaluationId: `eval-${Date.now()}`,
+      status: 'complete',
+      timestamp: new Date().toISOString(),
+      cqlValid: true,
+      results: [result],
+      summary: {
+        total: 1,
+        inInitialPopulation: result.inInitialPopulation ? 1 : 0,
+        inDenominator: result.inDenominator ? 1 : 0,
+        inNumerator: result.inNumerator ? 1 : 0,
+        passed: result.outcome === 'pass' ? 1 : 0,
+        failed: result.outcome === 'fail' ? 1 : 0,
+        excluded: result.outcome === 'excluded' ? 1 : 0,
+        notEligible: result.outcome === 'not-eligible' ? 1 : 0,
+        errors: result.outcome === 'error' ? 1 : 0,
+      },
+      executionTimeMs: Date.now() - startTime,
+    };
+  }
+
+  /**
+   * Search patients by name or MRN (for specific patient testing)
+   */
+  searchPatients(query: string): PreviewPatient[] {
+    if (!query || query.trim().length < 2) {
+      return [];
+    }
+    const queryLower = query.toLowerCase();
+    return this.samplePatients.filter(p =>
+      p.name.toLowerCase().includes(queryLower) ||
+      p.mrn.toLowerCase().includes(queryLower)
+    );
+  }
 }

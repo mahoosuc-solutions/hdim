@@ -1,0 +1,4 @@
+name: hdim-master
+languages:
+  - typescript
+root_path: .

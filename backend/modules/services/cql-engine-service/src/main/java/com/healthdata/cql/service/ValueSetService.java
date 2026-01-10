@@ -6,6 +6,8 @@ import com.healthdata.cql.entity.ValueSet;
 import com.healthdata.cql.repository.ValueSetRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -38,6 +40,7 @@ public class ValueSetService {
     /**
      * Create a new value set
      */
+    @CacheEvict(value = {"valueSets", "valueSetList"}, allEntries = true)
     public ValueSet createValueSet(ValueSet valueSet) {
         logger.info("Creating value set: {} (OID: {}) for tenant: {}",
                 valueSet.getName(), valueSet.getOid(), valueSet.getTenantId());
@@ -66,6 +69,7 @@ public class ValueSetService {
     /**
      * Update an existing value set
      */
+    @CacheEvict(value = {"valueSets", "valueSetList"}, allEntries = true)
     public ValueSet updateValueSet(UUID valueSetId, ValueSet updates) {
         logger.info("Updating value set: {}", valueSetId);
 
@@ -113,8 +117,10 @@ public class ValueSetService {
 
     /**
      * Get a value set by ID
+     * Cached with 30-minute TTL (value sets are reference data, not PHI)
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "valueSets", key = "#valueSetId")
     public Optional<ValueSet> getValueSetById(UUID valueSetId) {
         return valueSetRepository.findById(valueSetId);
     }
@@ -131,16 +137,20 @@ public class ValueSetService {
 
     /**
      * Get value set by OID
+     * Cached with 30-minute TTL (value sets are reference data, not PHI)
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "valueSets", key = "#tenantId + ':oid:' + #oid")
     public Optional<ValueSet> getValueSetByOid(String tenantId, String oid) {
         return valueSetRepository.findByTenantIdAndOidAndActiveTrue(tenantId, oid);
     }
 
     /**
      * Get value set by OID and version
+     * Cached with 30-minute TTL (value sets are reference data, not PHI)
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "valueSets", key = "#tenantId + ':oid:' + #oid + ':' + #version")
     public Optional<ValueSet> getValueSetByOidAndVersion(
             String tenantId, String oid, String version) {
         return valueSetRepository.findByTenantIdAndOidAndVersionAndActiveTrue(
@@ -173,8 +183,10 @@ public class ValueSetService {
 
     /**
      * Get all active value sets for a tenant
+     * Cached with 30-minute TTL (value sets are reference data, not PHI)
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "valueSetList", key = "#tenantId + ':all'")
     public List<ValueSet> getAllValueSets(String tenantId) {
         return valueSetRepository.findByTenantIdAndActiveTrue(tenantId);
     }
@@ -189,8 +201,10 @@ public class ValueSetService {
 
     /**
      * Get value sets by code system
+     * Cached with 30-minute TTL (value sets are reference data, not PHI)
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "valueSetList", key = "#tenantId + ':codeSystem:' + #codeSystem")
     public List<ValueSet> getValueSetsByCodeSystem(String tenantId, String codeSystem) {
         return valueSetRepository.findByTenantIdAndCodeSystemAndActiveTrue(tenantId, codeSystem);
     }

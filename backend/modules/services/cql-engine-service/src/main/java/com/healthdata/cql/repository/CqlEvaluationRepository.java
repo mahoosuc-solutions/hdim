@@ -3,6 +3,7 @@ package com.healthdata.cql.repository;
 import com.healthdata.cql.entity.CqlEvaluation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,34 +25,46 @@ public interface CqlEvaluationRepository extends JpaRepository<CqlEvaluation, UU
 
     /**
      * Find all evaluations for a tenant with pagination
+     * Uses @EntityGraph to prevent N+1 queries for library association
      */
+    @EntityGraph(attributePaths = {"library"})
     Page<CqlEvaluation> findByTenantId(String tenantId, Pageable pageable);
 
     /**
      * Find all evaluations for a specific patient
+     * Uses @EntityGraph to prevent N+1 queries for library association
      */
+    @EntityGraph(attributePaths = {"library"})
     List<CqlEvaluation> findByTenantIdAndPatientId(String tenantId, UUID patientId);
 
     /**
      * Find all evaluations for a patient with pagination
+     * Uses @EntityGraph to prevent N+1 queries for library association
      */
+    @EntityGraph(attributePaths = {"library"})
     Page<CqlEvaluation> findByTenantIdAndPatientId(
             String tenantId, UUID patientId, Pageable pageable);
 
     /**
      * Find evaluations for a patient ordered by date (most recent first)
+     * Uses @EntityGraph to prevent N+1 queries for library association
      */
+    @EntityGraph(attributePaths = {"library"})
     List<CqlEvaluation> findByTenantIdAndPatientIdOrderByEvaluationDateDesc(
             String tenantId, UUID patientId);
 
     /**
      * Find evaluations by library
+     * Uses @EntityGraph to prevent N+1 queries for library association
      */
+    @EntityGraph(attributePaths = {"library"})
     List<CqlEvaluation> findByTenantIdAndLibrary_Id(String tenantId, UUID libraryId);
 
     /**
      * Find evaluations by library with pagination
+     * Uses @EntityGraph to prevent N+1 queries for library association
      */
+    @EntityGraph(attributePaths = {"library"})
     Page<CqlEvaluation> findByTenantIdAndLibrary_Id(
             String tenantId, UUID libraryId, Pageable pageable);
 

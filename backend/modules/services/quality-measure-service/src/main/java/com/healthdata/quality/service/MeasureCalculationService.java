@@ -38,8 +38,8 @@ public class MeasureCalculationService {
 
     /**
      * Calculate quality measure for a patient
+     * Transaction boundary optimized: external I/O happens outside transaction
      */
-    @Transactional
     public QualityMeasureResultEntity calculateMeasure(
             String tenantId,
             UUID patientId,
@@ -49,34 +49,18 @@ public class MeasureCalculationService {
         log.info("Calculating measure {} for patient: {}", measureId, patientId);
 
         try {
-            // Evaluate CQL library
+            // Evaluate CQL library (external I/O - no transaction needed)
             String cqlResult = cqlEngineServiceClient.evaluateCql(
                     tenantId, measureId, patientId, "{}");
 
-            // Parse CQL result
+            // Parse CQL result (in-memory - no transaction needed)
             JsonNode result = objectMapper.readTree(cqlResult);
 
-            // Create and save result
-            QualityMeasureResultEntity entity = QualityMeasureResultEntity.builder()
-                    .tenantId(tenantId)
-                    .patientId(patientId)
-                    .measureId(measureId)
-                    .measureName(extractMeasureName(measureId, result))
-                    .measureCategory(extractMeasureCategory(measureId))
-                    .measureYear(LocalDate.now().getYear())
-                    .numeratorCompliant(extractNumeratorCompliance(result))
-                    .denominatorElligible(extractDenominatorEligibility(result))
-                    .complianceRate(extractComplianceRate(result))
-                    .score(extractScore(result))
-                    .calculationDate(LocalDate.now())
-                    .cqlLibrary(measureId)
-                    .cqlResult(cqlResult)
-                    .createdBy(createdBy)
-                    .build();
+            // Save result (transactional - only DB operation)
+            QualityMeasureResultEntity saved = saveCalculationResult(
+                    tenantId, patientId, measureId, createdBy, cqlResult, result);
 
-            QualityMeasureResultEntity saved = repository.save(entity);
-
-            // Publish event
+            // Publish event (async - no transaction needed)
             publishCalculationEvent(tenantId, patientId, measureId);
 
             return saved;
@@ -84,6 +68,38 @@ public class MeasureCalculationService {
             log.error("Error calculating measure {}: {}", measureId, e.getMessage());
             throw new RuntimeException("Measure calculation failed", e);
         }
+    }
+
+    /**
+     * Save calculation result in a separate transaction (optimized for minimal transaction duration)
+     */
+    @Transactional
+    private QualityMeasureResultEntity saveCalculationResult(
+            String tenantId,
+            UUID patientId,
+            String measureId,
+            String createdBy,
+            String cqlResult,
+            JsonNode result
+    ) {
+        QualityMeasureResultEntity entity = QualityMeasureResultEntity.builder()
+                .tenantId(tenantId)
+                .patientId(patientId)
+                .measureId(measureId)
+                .measureName(extractMeasureName(measureId, result))
+                .measureCategory(extractMeasureCategory(measureId))
+                .measureYear(LocalDate.now().getYear())
+                .numeratorCompliant(extractNumeratorCompliance(result))
+                .denominatorElligible(extractDenominatorEligibility(result))
+                .complianceRate(extractComplianceRate(result))
+                .score(extractScore(result))
+                .calculationDate(LocalDate.now())
+                .cqlLibrary(measureId)
+                .cqlResult(cqlResult)
+                .createdBy(createdBy)
+                .build();
+
+        return repository.save(entity);
     }
 
     /**

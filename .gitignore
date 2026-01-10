@@ -18,3 +18,30 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Environment variables (CRITICAL: Never commit secrets)
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+.gradle/
+.nx/
+build/
+build-user/
+.docker-tmp/
+.tmp-*/
+META-INF/
+
+# Screenshots and test artifacts
+.playwright-mcp/
+
+# Zone.Identifier files (Windows)
+*.Zone.Identifier
+
+# Git worktrees (separate working directories for different branches)
+hdim-admin-portal/
+hdim-backend-tests/
+hdim-master/
+hdim-predictive-analytics/
+phase2-worktree*/

@@ -32,7 +32,7 @@ public class QualityMeasureResultDTO implements Serializable {
     @Schema(description = "Unique identifier for this quality measure result", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID id;
 
-    @Schema(description = "Tenant identifier", example = "acme-health")
+    @Schema(description = "Tenant identifier", example = "demo-tenant")
     private String tenantId;
 
     @Schema(description = "Patient identifier", example = "550e8400-e29b-41d4-a716-446655440001")

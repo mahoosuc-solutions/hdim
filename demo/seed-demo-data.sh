@@ -4,12 +4,16 @@
 #
 # Usage: ./seed-demo-data.sh [--reset]
 #   --reset: Clear existing data before seeding
+# Environment:
+#   TENANT_ID: Tenant ID to seed (default: demo-tenant)
+#   FHIR_PATIENT_BASE: FHIR base URL for authoritative Patient storage
 
 set -e
 
 # Configuration
 API_BASE="http://localhost:8080"
-TENANT_ID="DEMO_TENANT"
+TENANT_ID="${TENANT_ID:-acme-health}"
+FHIR_PATIENT_BASE="${FHIR_PATIENT_BASE:-$API_BASE/fhir}"
 AUTH_HEADER="Authorization: Bearer demo-token"
 TENANT_HEADER="X-Tenant-ID: $TENANT_ID"
 
@@ -28,7 +32,7 @@ echo -e "${BLUE}========================================${NC}"
 check_services() {
     echo -e "\n${YELLOW}Checking service availability...${NC}"
 
-    services=("8080:Gateway" "8084:Patient" "8085:FHIR" "8086:Care-Gap" "8087:Quality-Measure")
+    services=("8080:Gateway" "8084:Patient" "8086:Care-Gap" "8087:Quality-Measure")
 
     for service in "${services[@]}"; do
         port="${service%%:*}"
@@ -44,6 +48,14 @@ check_services() {
             exit 1
         fi
     done
+    if curl -s "$FHIR_PATIENT_BASE/metadata" > /dev/null 2>&1; then
+        echo -e "  ${GREEN}✓${NC} FHIR (patient source) at $FHIR_PATIENT_BASE"
+    else
+        echo -e "  ${RED}✗${NC} FHIR (patient source) at $FHIR_PATIENT_BASE - NOT AVAILABLE"
+        echo -e "\n${RED}Error: FHIR server not ready. Please run:${NC}"
+        echo -e "  docker compose -f docker-compose.fhir-server.yml up -d"
+        exit 1
+    fi
     echo -e "${GREEN}All services are running!${NC}"
 }
 
@@ -55,7 +67,8 @@ wait_for_services() {
     attempt=0
 
     while [ $attempt -lt $max_attempts ]; do
-        if curl -s "http://localhost:8080/actuator/health" > /dev/null 2>&1; then
+        if curl -s "http://localhost:8080/actuator/health" > /dev/null 2>&1 \
+            && curl -s "$FHIR_PATIENT_BASE/metadata" > /dev/null 2>&1; then
             echo -e "${GREEN}Services are ready!${NC}"
             return 0
         fi
@@ -80,7 +93,7 @@ create_patient() {
 
     echo -e "  Creating patient: ${BLUE}$first_name $last_name${NC}"
 
-    curl -s -X POST "$API_BASE/fhir/Patient" \
+    curl -s -X POST "$FHIR_PATIENT_BASE/Patient" \
         -H "Content-Type: application/fhir+json" \
         -H "$AUTH_HEADER" \
         -H "$TENANT_HEADER" \

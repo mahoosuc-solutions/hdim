@@ -10,7 +10,7 @@ import java.util.Map;
  */
 @FeignClient(
     name = "cql-engine-service",
-    url = "${hdim.services.cql.url:http://cql-engine-service:8080}"
+    url = "${hdim.services.cql.url:http://cql-engine-service:8081}"
 )
 public interface CqlEngineClient {
 

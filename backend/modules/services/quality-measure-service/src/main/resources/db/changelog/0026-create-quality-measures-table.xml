@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <changeSet id="0001-create-quality-measures-table" author="healthdata-system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="quality_measures"/>
+            </not>
+        </preConditions>
         <comment>Create quality measures table for HEDIS and other quality measure definitions</comment>
 
         <createTable tableName="quality_measures">

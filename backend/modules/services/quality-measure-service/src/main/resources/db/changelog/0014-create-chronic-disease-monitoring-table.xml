@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <changeSet id="0010-create-chronic-disease-monitoring-table" author="healthdata-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="chronic_disease_monitoring"/>
+            </not>
+        </preConditions>
         <comment>Create chronic disease monitoring table for continuous disease deterioration detection</comment>
 
         <createTable tableName="chronic_disease_monitoring">

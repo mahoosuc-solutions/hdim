@@ -1,0 +1,146 @@
+# Docker Compose Override for External PostgreSQL
+# Use this when connecting to a PostgreSQL instance outside Docker
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.external-db.yml --profile core up -d
+#
+# Prerequisites:
+#   1. Run external-db-setup.sql on your PostgreSQL instance
+#   2. Set POSTGRES_HOST in .env (default: host.docker.internal for Docker Desktop)
+#   3. For WSL2: Use Windows host IP from /etc/resolv.conf
+
+services:
+  # Disable the Docker PostgreSQL container
+  postgres:
+    profiles: ["disabled"]
+
+  # Override each service to use external PostgreSQL
+  gateway-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/gateway_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  fhir-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/fhir_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  cql-engine-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/cql_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  quality-measure-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/quality_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  patient-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/patient_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  care-gap-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/caregap_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  consent-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/consent_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  event-processing-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/event_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  event-router-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/event_router_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  demo-seeding-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/healthdata_demo
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # AI Services
+  agent-builder-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/agent_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  agent-runtime-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/agent_runtime_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  ai-assistant-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/ai_assistant_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Analytics Services
+  analytics-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/analytics_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  predictive-analytics-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/predictive_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  sdoh-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/sdoh_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

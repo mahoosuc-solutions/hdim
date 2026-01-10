@@ -15,7 +15,7 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Configuration
-GATEWAY_URL="http://localhost:9000"
+GATEWAY_URL="http://localhost:8080"
 
 echo -e "${BLUE}📋 System Status Check${NC}"
 echo "-------------------"
@@ -63,20 +63,20 @@ echo ""
 echo "Test 2: Login with admin credentials..."
 LOGIN_RESPONSE=$(curl -s -X POST $GATEWAY_URL/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}')
+  -d '{"username":"demo.admin","password":"demo123"}')
 
 # Check if login was successful
 if echo "$LOGIN_RESPONSE" | grep -q "accessToken"; then
     echo -e "${GREEN}✅ Login successful${NC}"
     
     # Extract tokens
-    ACCESS_TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r .accessToken)
-    REFRESH_TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r .refreshToken)
-    USERNAME=$(echo "$LOGIN_RESPONSE" | jq -r .username)
-    EMAIL=$(echo "$LOGIN_RESPONSE" | jq -r .email)
-    ROLES=$(echo "$LOGIN_RESPONSE" | jq -r '.roles | join(", ")')
-    TENANTS=$(echo "$LOGIN_RESPONSE" | jq -r '.tenantIds | join(", ")')
-    EXPIRES_IN=$(echo "$LOGIN_RESPONSE" | jq -r .expiresIn)
+    ACCESS_TOKEN=$(LOGIN_RESPONSE="$LOGIN_RESPONSE" python3 -c 'import json,os; data=json.loads(os.environ["LOGIN_RESPONSE"]); print(data.get("accessToken",""))')
+    REFRESH_TOKEN=$(LOGIN_RESPONSE="$LOGIN_RESPONSE" python3 -c 'import json,os; data=json.loads(os.environ["LOGIN_RESPONSE"]); print(data.get("refreshToken",""))')
+    USERNAME=$(LOGIN_RESPONSE="$LOGIN_RESPONSE" python3 -c 'import json,os; data=json.loads(os.environ["LOGIN_RESPONSE"]); print(data.get("username",""))')
+    EMAIL=$(LOGIN_RESPONSE="$LOGIN_RESPONSE" python3 -c 'import json,os; data=json.loads(os.environ["LOGIN_RESPONSE"]); print(data.get("email",""))')
+    ROLES=$(LOGIN_RESPONSE="$LOGIN_RESPONSE" python3 -c 'import json,os; data=json.loads(os.environ["LOGIN_RESPONSE"]); print(", ".join(data.get("roles") or []))')
+    TENANTS=$(LOGIN_RESPONSE="$LOGIN_RESPONSE" python3 -c 'import json,os; data=json.loads(os.environ["LOGIN_RESPONSE"]); print(", ".join(data.get("tenantIds") or []))')
+    EXPIRES_IN=$(LOGIN_RESPONSE="$LOGIN_RESPONSE" python3 -c 'import json,os; data=json.loads(os.environ["LOGIN_RESPONSE"]); print(data.get("expiresIn",""))')
     
     echo ""
     echo "Login Details:"
@@ -101,7 +101,7 @@ REFRESH_RESPONSE=$(curl -s -X POST $GATEWAY_URL/api/v1/auth/refresh \
   -d "{\"refreshToken\":\"$REFRESH_TOKEN\"}")
 
 if echo "$REFRESH_RESPONSE" | grep -q "accessToken"; then
-    NEW_ACCESS_TOKEN=$(echo "$REFRESH_RESPONSE" | jq -r .accessToken)
+    NEW_ACCESS_TOKEN=$(REFRESH_RESPONSE="$REFRESH_RESPONSE" python3 -c 'import json,os; data=json.loads(os.environ["REFRESH_RESPONSE"]); print(data.get("accessToken",""))')
     echo -e "${GREEN}✅ Token refresh successful${NC}"
     echo "  New Token: ${NEW_ACCESS_TOKEN:0:50}..."
 else
@@ -114,7 +114,7 @@ echo ""
 echo "Test 4: Accessing protected endpoint with JWT..."
 PROTECTED_RESPONSE=$(curl -s $GATEWAY_URL/actuator/health \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "X-Tenant-ID: tenant-1")
+  -H "X-Tenant-ID: demo-clinic")
 
 if echo "$PROTECTED_RESPONSE" | grep -q "UP"; then
     echo -e "${GREEN}✅ Protected endpoint access successful${NC}"
@@ -131,7 +131,7 @@ echo "------------------------------"
 echo "Test 5a: CQL Engine routing..."
 CQL_RESPONSE=$(curl -s $GATEWAY_URL/api/cql/actuator/health \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "X-Tenant-ID: tenant-1" 2>&1)
+  -H "X-Tenant-ID: demo-clinic" 2>&1)
 
 if echo "$CQL_RESPONSE" | grep -q '"status":"UP"'; then
     echo -e "${GREEN}✅ CQL Engine accessible through Gateway${NC}"
@@ -147,7 +147,7 @@ echo ""
 echo "Test 5b: Quality Measure routing..."
 QUALITY_RESPONSE=$(curl -s $GATEWAY_URL/api/quality/actuator/health \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "X-Tenant-ID: tenant-1" 2>&1)
+  -H "X-Tenant-ID: demo-clinic" 2>&1)
 
 if echo "$QUALITY_RESPONSE" | grep -q '"status":"UP"'; then
     echo -e "${GREEN}✅ Quality Measure Service accessible through Gateway${NC}"
@@ -162,7 +162,7 @@ fi
 echo ""
 echo -e "${BLUE}💾 Database Connection Test${NC}"
 echo "-------------------------"
-USER_COUNT=$(docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -t -c "SELECT COUNT(*) FROM users;" 2>/dev/null | tr -d '[:space:]')
+USER_COUNT=$(docker exec healthdata-postgres psql -U healthdata -d gateway_db -t -c "SELECT COUNT(*) FROM users;" 2>/dev/null | tr -d '[:space:]')
 
 if [ -n "$USER_COUNT" ]; then
     echo -e "${GREEN}✅ Database connected${NC}"
@@ -177,21 +177,21 @@ echo "===================================================="
 echo -e "${GREEN}✅ Docker Deployment Test Complete!${NC}"
 echo ""
 echo "Summary:"
-echo "  ✅ Gateway Service: Running on port 9000"
+echo "  ✅ Gateway Service: Running on port 8080"
 echo "  ✅ Authentication: Working (JWT tokens generated)"
 echo "  ✅ Token Refresh: Configured"
 echo "  ✅ Database: Connected ($USER_COUNT users)"
 echo ""
 echo "Gateway Details:"
-echo "  Container: healthdata-gateway"
+echo "  Container: healthdata-gateway-service"
 echo "  Image: healthdata/gateway-service:latest"
 echo "  URL: $GATEWAY_URL"
 echo "  Health: $GATEWAY_URL/actuator/health"
 echo ""
 echo "Demo Credentials:"
-echo "  Username: admin"
-echo "  Password: admin123"
-echo "  Tenant: tenant-1"
+echo "  Username: demo.admin"
+echo "  Password: demo123"
+echo "  Tenant: demo-clinic"
 echo ""
 echo "Next Steps:"
 echo "  1. Start backend services:"

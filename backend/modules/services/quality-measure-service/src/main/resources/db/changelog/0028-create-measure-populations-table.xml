@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <changeSet id="0003-create-measure-populations-table" author="healthdata-system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="measure_populations"/>
+            </not>
+        </preConditions>
         <comment>Create measure populations table for aggregate measure statistics</comment>
 
         <createTable tableName="measure_populations">

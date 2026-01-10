@@ -4,7 +4,7 @@ java = "21"
 kotlin = "2.0.21"
 
 # Spring Framework
-spring-boot = "3.5.9"
+spring-boot = "3.3.6"  # Compatible with Spring Cloud 2023.0.x
 spring-cloud = "2023.0.5"
 spring-dependency-management = "1.1.7"
 

@@ -15,6 +15,11 @@
         - Change summary documentation
     -->
     <changeSet id="0031-create-measure-versions-table" author="claude-code">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="measure_versions"/>
+            </not>
+        </preConditions>
         <createTable tableName="measure_versions" remarks="Immutable version history for custom measures - HIPAA audit trail">
             <column name="id" type="UUID">
                 <constraints primaryKey="true" nullable="false"/>

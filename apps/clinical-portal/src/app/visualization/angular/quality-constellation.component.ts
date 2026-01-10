@@ -193,7 +193,7 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
 
         this.qualityResults.push({
           id: `${patient.id}-${measureId}-${i}`,
-          tenantId: 'demo-tenant',
+          tenantId: 'acme-health',
           patientId: patient.id!,
           measureId,
           measureName: `${category} ${measureId}`,

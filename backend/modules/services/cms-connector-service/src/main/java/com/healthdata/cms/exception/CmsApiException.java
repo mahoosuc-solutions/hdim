@@ -11,6 +11,26 @@ public class CmsApiException extends RuntimeException {
     private final String errorCode;
     private final int httpStatus;
 
+    /**
+     * Simple constructor for wrapping errors without provider context
+     */
+    public CmsApiException(String message) {
+        super(message);
+        this.provider = null;
+        this.errorCode = null;
+        this.httpStatus = -1;
+    }
+
+    /**
+     * Constructor for wrapping errors with a cause but no provider context
+     */
+    public CmsApiException(String message, Throwable cause) {
+        super(message, cause);
+        this.provider = null;
+        this.errorCode = null;
+        this.httpStatus = -1;
+    }
+
     public CmsApiException(String message, CmsApiProvider provider) {
         super(message);
         this.provider = provider;

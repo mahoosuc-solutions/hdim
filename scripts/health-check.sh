@@ -99,11 +99,11 @@ if [ -n "$1" ]; then
             exit $?
             ;;
         cql-engine|cql)
-            check_http_health "CQL Engine" "http://localhost:8081/actuator/health"
+            check_http_health "CQL Engine" "http://localhost:8081/cql-engine/actuator/health"
             exit $?
             ;;
         quality-measure|quality)
-            check_http_health "Quality Measure" "http://localhost:8087/actuator/health"
+            check_http_health "Quality Measure" "http://localhost:8087/quality-measure/actuator/health"
             exit $?
             ;;
         postgres|db)
@@ -119,23 +119,23 @@ if [ -n "$1" ]; then
             exit $?
             ;;
         fhir)
-            check_http_health "FHIR Service" "http://localhost:8085/actuator/health"
+            check_http_health "FHIR Service" "http://localhost:8085/fhir/actuator/health"
             exit $?
             ;;
         consent)
-            check_http_health "Consent Service" "http://localhost:8082/actuator/health"
+            check_http_health "Consent Service" "http://localhost:8082/consent/actuator/health"
             exit $?
             ;;
         event-processing|events)
-            check_http_health "Event Processing Service" "http://localhost:8083/actuator/health"
+            check_http_health "Event Processing Service" "http://localhost:8083/events/actuator/health"
             exit $?
             ;;
         patient)
-            check_http_health "Patient Service" "http://localhost:8084/actuator/health"
+            check_http_health "Patient Service" "http://localhost:8084/patient/actuator/health"
             exit $?
             ;;
         care-gap)
-            check_http_health "Care Gap Service" "http://localhost:8086/actuator/health"
+            check_http_health "Care Gap Service" "http://localhost:8086/care-gap/actuator/health"
             exit $?
             ;;
         prometheus)
@@ -204,43 +204,43 @@ fi
 
 # CQL Engine
 total=$((total + 1))
-if check_http_health "CQL Engine" "http://localhost:8081/actuator/health"; then
+if check_http_health "CQL Engine" "http://localhost:8081/cql-engine/actuator/health"; then
     passed=$((passed + 1))
 fi
 
 # Quality Measure Service
 total=$((total + 1))
-if check_http_health "Quality Measure" "http://localhost:8087/actuator/health"; then
+if check_http_health "Quality Measure" "http://localhost:8087/quality-measure/actuator/health"; then
     passed=$((passed + 1))
 fi
 
 # Consent Service
 total=$((total + 1))
-if check_http_health "Consent Service" "http://localhost:8082/actuator/health"; then
+if check_http_health "Consent Service" "http://localhost:8082/consent/actuator/health"; then
     passed=$((passed + 1))
 fi
 
 # Event Processing Service
 total=$((total + 1))
-if check_http_health "Event Processing Service" "http://localhost:8083/actuator/health"; then
+if check_http_health "Event Processing Service" "http://localhost:8083/events/actuator/health"; then
     passed=$((passed + 1))
 fi
 
 # Patient Service
 total=$((total + 1))
-if check_http_health "Patient Service" "http://localhost:8084/actuator/health"; then
+if check_http_health "Patient Service" "http://localhost:8084/patient/actuator/health"; then
     passed=$((passed + 1))
 fi
 
 # FHIR Service
 total=$((total + 1))
-if check_http_health "FHIR Service" "http://localhost:8085/actuator/health"; then
+if check_http_health "FHIR Service" "http://localhost:8085/fhir/actuator/health"; then
     passed=$((passed + 1))
 fi
 
 # Care Gap Service
 total=$((total + 1))
-if check_http_health "Care Gap Service" "http://localhost:8086/actuator/health"; then
+if check_http_health "Care Gap Service" "http://localhost:8086/care-gap/actuator/health"; then
     passed=$((passed + 1))
 fi
 

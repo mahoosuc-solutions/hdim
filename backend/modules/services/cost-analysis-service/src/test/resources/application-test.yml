@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: cost-analysis-service-test
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQL15Dialect
+        format_sql: true
+        use_sql_comments: true
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+  liquibase:
+    enabled: false
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 1000ms
+    jedis:
+      pool:
+        max-active: 3
+        max-idle: 1
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8111
+  servlet:
+    context-path: /cost-analysis
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    enabled: true
+
+logging:
+  level:
+    root: WARN
+    com.healthdata: DEBUG
+    org.springframework.security: DEBUG

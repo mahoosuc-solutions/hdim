@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <changeSet id="0010-create-health-events-table" author="healthdata-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="health_events"/>
+            </not>
+        </preConditions>
         <comment>Create health events table for event sourcing and complete audit trail</comment>
 
         <createTable tableName="health_events">

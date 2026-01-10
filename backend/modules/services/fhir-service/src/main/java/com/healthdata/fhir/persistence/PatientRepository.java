@@ -5,14 +5,25 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import jakarta.persistence.LockModeType;
 
 public interface PatientRepository extends JpaRepository<PatientEntity, UUID> {
 
     List<PatientEntity> findByTenantIdAndLastNameContainingIgnoreCaseOrderByLastNameAsc(String tenantId, String lastNameFragment);
 
     Optional<PatientEntity> findByTenantIdAndId(String tenantId, UUID id);
+
+    /**
+     * Find patient by tenant and id with pessimistic write lock for upsert operations.
+     * This prevents race conditions during concurrent inserts of the same patient.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM PatientEntity p WHERE p.tenantId = :tenantId AND p.id = :id")
+    Optional<PatientEntity> findByTenantIdAndIdForUpdate(@Param("tenantId") String tenantId, @Param("id") UUID id);
 
     /**
      * Find patient by tenant and id, excluding soft-deleted records.

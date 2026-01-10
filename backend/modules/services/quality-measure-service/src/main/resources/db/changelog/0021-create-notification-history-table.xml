@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <changeSet id="0014-create-notification-history-table" author="claude-code">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="notification_history"/>
+            </not>
+        </preConditions>
         <comment>
             Create notification_history table for HIPAA compliance audit trail.
             Tracks all notifications sent through the system (EMAIL, SMS, WebSocket).

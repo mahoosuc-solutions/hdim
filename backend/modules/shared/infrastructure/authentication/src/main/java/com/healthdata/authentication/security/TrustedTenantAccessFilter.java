@@ -76,6 +76,8 @@ public class TrustedTenantAccessFilter extends OncePerRequestFilter {
         "/actuator/health",
         "/actuator/info",
         "/api/v1/health",
+        "/fhir/metadata",
+        "/metadata",
         "/swagger-ui",
         "/v3/api-docs",
         "/api/v1/auth/login",

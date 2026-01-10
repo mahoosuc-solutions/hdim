@@ -169,7 +169,8 @@ public class FhirSecurityConfig {
                     "/v3/api-docs/**",
                     "/swagger-resources/**",
                     "/webjars/**",
-                    "/fhir/metadata"  // FHIR metadata endpoint (capability statement)
+                    "/fhir/metadata",
+                    "/metadata"  // FHIR metadata endpoint (capability statement)
                 ).permitAll()
 
                 // SMART on FHIR OAuth endpoints (public per spec)

@@ -1,0 +1,238 @@
+{
+  "core_services": [
+    {
+      "name": "quality-measure",
+      "port": 8087,
+      "critical": true,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/measures"
+    },
+    {
+      "name": "cql-engine",
+      "port": 8081,
+      "critical": true,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/libraries"
+    },
+    {
+      "name": "fhir",
+      "port": 8085,
+      "critical": true,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/Patient"
+    },
+    {
+      "name": "patient",
+      "port": 8084,
+      "critical": true,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/patients"
+    },
+    {
+      "name": "care-gap",
+      "port": 8086,
+      "critical": true,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/care-gaps"
+    },
+    {
+      "name": "consent",
+      "port": 8082,
+      "critical": true,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/consents"
+    }
+  ],
+  "extended_services": [
+    {
+      "name": "agent-runtime",
+      "port": 8088,
+      "critical": false,
+      "timeout": 120000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/agents"
+    },
+    {
+      "name": "agent-builder",
+      "port": 8096,
+      "critical": false,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/templates"
+    },
+    {
+      "name": "qrda-export",
+      "port": 8104,
+      "critical": false,
+      "timeout": 60000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/export"
+    },
+    {
+      "name": "hcc",
+      "port": 8105,
+      "critical": false,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/risk-scores"
+    },
+    {
+      "name": "ecr",
+      "port": 8101,
+      "critical": false,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/reports"
+    },
+    {
+      "name": "prior-auth",
+      "port": 8102,
+      "critical": false,
+      "timeout": 60000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/requests"
+    },
+    {
+      "name": "analytics",
+      "port": 8092,
+      "critical": false,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/reports"
+    },
+    {
+      "name": "documentation",
+      "port": 8091,
+      "critical": false,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/docs"
+    },
+    {
+      "name": "sales-automation",
+      "port": 8106,
+      "critical": false,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/leads"
+    },
+    {
+      "name": "ai-assistant",
+      "port": 8090,
+      "critical": false,
+      "timeout": 120000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/chat"
+    },
+    {
+      "name": "predictive-analytics",
+      "port": 8093,
+      "critical": false,
+      "timeout": 60000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/predictions"
+    },
+    {
+      "name": "sdoh",
+      "port": 8094,
+      "critical": false,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/assessments"
+    },
+    {
+      "name": "data-enrichment",
+      "port": 8089,
+      "critical": false,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/enrich"
+    },
+    {
+      "name": "event-router",
+      "port": 8095,
+      "critical": false,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/events"
+    },
+    {
+      "name": "cdr-processor",
+      "port": 8099,
+      "critical": false,
+      "timeout": 60000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/process"
+    },
+    {
+      "name": "approval",
+      "port": 8097,
+      "critical": false,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/approvals"
+    },
+    {
+      "name": "payer-workflows",
+      "port": 8098,
+      "critical": false,
+      "timeout": 60000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/workflows"
+    },
+    {
+      "name": "migration-workflow",
+      "port": 8103,
+      "critical": false,
+      "timeout": 60000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/migrations"
+    },
+    {
+      "name": "ehr-connector",
+      "port": 8100,
+      "critical": false,
+      "timeout": 60000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/connections"
+    },
+    {
+      "name": "notification",
+      "port": 8107,
+      "critical": false,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/notifications"
+    },
+    {
+      "name": "demo-seeding",
+      "port": 8108,
+      "critical": false,
+      "timeout": 60000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/demo"
+    },
+    {
+      "name": "cms-connector",
+      "port": 8109,
+      "critical": false,
+      "timeout": 90000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/claims"
+    },
+    {
+      "name": "events",
+      "port": 8083,
+      "critical": false,
+      "timeout": 30000,
+      "healthPath": "/actuator/health",
+      "testPath": "/api/v1/events"
+    }
+  ]
+}

@@ -1,0 +1,342 @@
+languages:
+- java
+
+encoding: "utf-8"
+
+ignore_all_files_in_gitignore: true
+
+ignored_paths:
+  - "**/build/**"
+  - "**/build-user/**"
+  - "**/.gradle/**"
+  - "**/target/**"
+
+read_only: false
+
+excluded_tools: []
+
+initial_prompt: |
+  # CQL Engine Service - Clinical Quality Language Evaluation
+
+  ## Service Overview
+  **Port**: 8081
+  **Context Path**: `/cql-engine`
+  **Purpose**: CQL (Clinical Quality Language) expression evaluation engine
+
+  ## Key Responsibilities
+  - Parse and evaluate CQL expressions
+  - Manage CQL libraries (HEDIS measures, custom logic)
+  - Value set handling and terminology services
+  - FHIR-based data retrieval for evaluation context
+  - Expression caching for performance
+
+  ## Dependencies
+  - **fhir-service** (8085): FHIR resource retrieval
+  - **Database**: healthdata_cql (PostgreSQL)
+  - **Cache**: Redis (expression results)
+  - **CQL Engine**: HAPI FHIR CQL Engine library
+
+  ## Tech Stack
+  - Java 21
+  - Spring Boot 3.x
+  - HAPI FHIR 7.x (includes CQL engine)
+  - CQL-to-ELM Translator
+  - PostgreSQL 15 (library storage)
+  - Redis 7 (result caching)
+
+  ## Package Structure
+  ```
+  com.healthdata.cql/
+  ├── api/v1/              # REST controllers
+  │   ├── CqlEvaluationController
+  │   ├── LibraryController
+  │   └── dto/
+  ├── application/         # Application services
+  │   ├── CqlEvaluationService
+  │   ├── LibraryManagementService
+  │   └── ValueSetService
+  ├── domain/              # Domain models
+  │   ├── model/
+  │   │   ├── CqlLibrary
+  │   │   ├── ValueSet
+  │   │   └── EvaluationResult
+  │   └── repository/
+  ├── infrastructure/      # External integrations
+  │   ├── fhir/           # FHIR client
+  │   └── translator/     # CQL-to-ELM translation
+  └── config/              # Spring configuration
+      └── CqlEngineConfig
+  ```
+
+  ## Critical Requirements
+
+  ### 1. CQL Standard Compliance
+  - Support CQL 1.5 specification
+  - FHIR R4 data model
+  - HL7 standard value sets
+  - Proper date/time handling
+  - Accurate population logic
+
+  ### 2. Performance
+  - Cache compiled CQL libraries
+  - Cache evaluation results (with appropriate TTL)
+  - Optimize FHIR data retrieval
+  - Batch evaluations when possible
+
+  ### 3. Multi-Tenant Isolation
+  - CQL libraries filtered by tenantId
+  - Value sets filtered by tenantId
+  - Evaluation context isolated per tenant
+
+  ### 4. Entity-Migration Sync
+  - Entities: CqlLibrary, ValueSet, ValueSetConcept
+  - Migrations: src/main/resources/db/changelog/
+  - Run validation: ./gradlew test --tests "*EntityMigrationValidationTest"
+  - ddl-auto: validate (NEVER update/create)
+
+  ## Key Entities
+
+  ### CqlLibrary
+  - Represents a CQL library (measure definition, reusable functions)
+  - Fields: name, version, cqlContent, elmJson, tenantId
+  - Table: cql_libraries
+  - Indexes: (name, version, tenantId)
+
+  ### ValueSet
+  - Terminology value sets for code matching
+  - Fields: url, version, name, concepts[], tenantId
+  - Table: value_sets
+  - Essential sets: Gender, Ethnicity, Race, Diagnosis codes
+
+  ### ValueSetConcept
+  - Individual codes within a value set
+  - Fields: valueSetId, system, code, display
+  - Table: value_set_concepts
+  - Indexed for fast code lookups
+
+  ## API Endpoints
+
+  ### Evaluation
+  - POST /api/v1/evaluate - Evaluate CQL expression
+    ```json
+    {
+      "cql": "define InDemographic: AgeInYearsAt(...) >= 18",
+      "patientId": "patient-123",
+      "parameters": { "MeasurementPeriod": "2024-01-01/2024-12-31" }
+    }
+    ```
+  - POST /api/v1/evaluate/library - Evaluate named library
+  - POST /api/v1/evaluate/batch - Batch evaluate multiple patients
+
+  ### Library Management
+  - GET /api/v1/libraries - List CQL libraries
+  - GET /api/v1/libraries/{name}/{version} - Get library
+  - POST /api/v1/libraries - Upload CQL library
+  - PUT /api/v1/libraries/{name}/{version} - Update library
+  - DELETE /api/v1/libraries/{name}/{version} - Delete library
+
+  ### Value Sets
+  - GET /api/v1/valuesets - List value sets
+  - GET /api/v1/valuesets/{url} - Get value set by URL
+  - POST /api/v1/valuesets - Create value set
+
+  ## CQL Evaluation Flow
+
+  1. **Parse CQL**: Convert CQL text to abstract syntax tree (AST)
+  2. **Translate to ELM**: Convert AST to Expression Logical Model (ELM) JSON
+  3. **Load Data**: Retrieve FHIR resources for patient from fhir-service
+  4. **Evaluate**: Execute ELM expressions against FHIR data
+  5. **Return Result**: Boolean, numeric, or complex result
+
+  ## Common CQL Patterns
+
+  ### Age Calculation
+  ```cql
+  define InDemographic:
+    AgeInYearsAt(start of MeasurementPeriod) >= 18
+    and AgeInYearsAt(start of MeasurementPeriod) < 75
+  ```
+
+  ### Diagnosis Check
+  ```cql
+  define HasDiabetes:
+    exists ([Condition: "Diabetes"] C
+      where C.clinicalStatus = 'active'
+    )
+  ```
+
+  ### Medication Check
+  ```cql
+  define OnStatinTherapy:
+    exists ([MedicationRequest: "Statin Medications"] M
+      where M.status = 'active'
+    )
+  ```
+
+  ### Lab Result
+  ```cql
+  define RecentHbA1c:
+    Last([Observation: "HbA1c Lab Test"] O
+      where O.issued during MeasurementPeriod
+      sort by issued
+    )
+  ```
+
+  ## Build Commands
+  ```bash
+  # Build service
+  ./gradlew :modules:services:cql-engine-service:build
+
+  # Run service
+  ./gradlew :modules:services:cql-engine-service:bootRun
+
+  # Run tests
+  ./gradlew :modules:services:cql-engine-service:test
+
+  # Run validation
+  ./gradlew :modules:services:cql-engine-service:test --tests "*EntityMigrationValidationTest"
+  ```
+
+  ## Docker Commands
+  ```bash
+  # Start dependencies
+  docker compose up -d postgres redis fhir-service
+
+  # Start cql-engine-service
+  docker compose up -d cql-engine-service
+
+  # View logs
+  docker compose logs -f cql-engine-service
+
+  # Health check
+  curl http://localhost:8081/actuator/health
+  ```
+
+  ## Common Tasks
+
+  ### Adding a New CQL Library
+  1. Write CQL definition following HL7 standards
+  2. Test CQL syntax locally
+  3. Upload via API or include in migration
+  4. Test evaluation with sample patient
+  5. Cache compiled library for performance
+
+  ### Debugging CQL Evaluation Errors
+  1. Validate CQL syntax
+  2. Check ELM translation output
+  3. Verify FHIR data exists for patient
+  4. Test individual expressions in isolation
+  5. Review value set membership
+  6. Check date/time range logic
+
+  ### Loading Value Sets
+  1. Obtain value set from VSAC or custom source
+  2. Format as JSON or XML
+  3. Load via API or Liquibase migration
+  4. Test code membership queries
+  5. Verify tenant isolation
+
+  ## Testing Patterns
+
+  ### Unit Test Example
+  ```java
+  @ExtendWith(MockitoExtension.class)
+  class CqlEvaluationServiceTest {
+      @Mock
+      private CqlLibraryRepository libraryRepository;
+
+      @Mock
+      private FhirClient fhirClient;
+
+      @InjectMocks
+      private CqlEvaluationService cqlEvaluationService;
+
+      @Test
+      void shouldEvaluateCqlExpression() {
+          // Test implementation
+      }
+  }
+  ```
+
+  ### Integration Test Example
+  ```java
+  @SpringBootTest
+  @AutoConfigureMockMvc
+  class CqlEvaluationControllerTest {
+      @Test
+      void shouldEvaluateAgeCheck() throws Exception {
+          mockMvc.perform(post("/api/v1/evaluate")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(cqlRequest))
+              .andExpect(status().isOk())
+              .andExpect(jsonPath("$.result").value(true));
+      }
+  }
+  ```
+
+  ## Troubleshooting
+
+  ### Issue: CQL parsing fails
+  - Validate CQL syntax against CQL 1.5 spec
+  - Check for unsupported functions
+  - Verify library dependencies exist
+  - Review translator output for errors
+
+  ### Issue: Evaluation returns unexpected result
+  - Verify FHIR data is correct
+  - Test data retrieval separately
+  - Check value set codes match
+  - Review date/time calculations
+  - Enable debug logging for evaluation
+
+  ### Issue: Slow evaluation
+  - Cache compiled libraries
+  - Optimize FHIR queries (reduce data fetched)
+  - Batch evaluations when possible
+  - Profile CQL expressions for bottlenecks
+  - Consider pre-computing static expressions
+
+  ### Issue: Value set not found
+  - Check value set is loaded: GET /api/v1/valuesets
+  - Verify URL matches exactly
+  - Confirm tenant has access
+  - Load via migration: 0014-seed-essential-value-sets.xml
+
+  ## Security Checklist
+  - [ ] @PreAuthorize on all endpoints
+  - [ ] X-Tenant-ID header required
+  - [ ] Multi-tenant filtering for libraries
+  - [ ] Validate CQL input (no code injection)
+  - [ ] Limit evaluation timeouts
+  - [ ] Audit CQL executions
+
+  ## Performance Best Practices
+  1. Cache compiled CQL libraries in memory
+  2. Cache ELM translations
+  3. Optimize FHIR data retrieval (request only needed resources)
+  4. Use batch evaluation for populations
+  5. Profile slow CQL expressions
+  6. Consider expression simplification
+
+  ## Related Services
+  - **Quality Measure**: Port 8087, Measure evaluation orchestration
+  - **FHIR Service**: Port 8085, Patient data retrieval
+  - **Patient Service**: Port 8084, Demographics
+
+  ## Parent Project Memories
+  Access root project knowledge:
+  - ../../../../.serena/memories/architecture-overview.md
+  - ../../../../.serena/memories/common-patterns.md
+  - ../../../../.serena/memories/entity-migration-sync.md
+  - ../../../../.serena/memories/troubleshooting-guide.md
+
+  ## Key References
+  - CQL Specification: https://cql.hl7.org/
+  - FHIR R4: https://hl7.org/fhir/R4/
+  - HAPI FHIR CQL Engine: https://hapifhir.io/hapi-fhir/docs/clinical_reasoning/cql.html
+
+  **For CQL-specific questions, focus on expression evaluation and library management.**
+  **For system-wide patterns, reference parent project memories.**
+
+project_name: "cql-engine-service"
+included_optional_tools: []

@@ -1,0 +1,91 @@
+languages:
+- java
+
+encoding: "utf-8"
+
+ignore_all_files_in_gitignore: true
+
+ignored_paths:
+  - "**/build/**"
+  - "**/.gradle/**"
+
+read_only: false
+
+excluded_tools: []
+
+initial_prompt: |
+  # Patient Service - Patient Demographics & Master Data
+
+  ## Service Overview
+  **Port**: 8084
+  **Context Path**: `/patient`
+  **Purpose**: Patient demographics, enrollment, and master data management
+
+  ## Key Responsibilities
+  - Patient demographics (wraps FHIR Patient resource)
+  - Enrollment tracking and attribution
+  - Patient identity resolution and matching
+  - Coverage and insurance information
+  - Patient search and lookup
+
+  ## Dependencies
+  - **fhir-service** (8085): FHIR Patient resource storage
+  - **Database**: healthdata_patient (PostgreSQL)
+  - **Cache**: Redis (PHI cache TTL ≤ 5 minutes)
+
+  ## Tech Stack
+  - Java 21, Spring Boot 3.x, PostgreSQL 15, Redis 7
+
+  ## Critical Requirements
+
+  ### HIPAA Compliance
+  - Patient demographics are PHI
+  - Cache TTL ≤ 5 minutes
+  - Cache-Control headers on all responses
+  - Audit all patient access
+  - No PHI in logs
+
+  ### Multi-Tenant Isolation
+  - ALL queries filter by tenantId
+  - Repository pattern:
+    ```java
+    @Query("SELECT p FROM Patient p WHERE p.id = :id AND p.tenantId = :tenantId")
+    Optional<Patient> findByIdAndTenant(@Param("id") String id, @Param("tenantId") String tenantId);
+    ```
+
+  ### Gateway Trust Authentication
+  - Use TrustedHeaderAuthFilter
+  - Use TrustedTenantAccessFilter
+  - Trust X-Auth-* headers
+
+  ## API Endpoints
+  - GET /api/v1/patients/{id} - Get patient by ID
+  - GET /api/v1/patients?name={name} - Search by name
+  - GET /api/v1/patients?identifier={value} - Search by identifier
+  - POST /api/v1/patients - Create patient
+  - PUT /api/v1/patients/{id} - Update patient
+  - GET /api/v1/patients/{id}/enrollment - Get enrollment status
+
+  ## Build & Run
+  ```bash
+  ./gradlew :modules:services:patient-service:build
+  ./gradlew :modules:services:patient-service:bootRun
+  ./gradlew :modules:services:patient-service:test
+  docker compose up -d patient-service
+  ```
+
+  ## Security Checklist
+  - [ ] @PreAuthorize on all endpoints
+  - [ ] X-Tenant-ID header required
+  - [ ] Multi-tenant filtering in queries
+  - [ ] Cache TTL ≤ 5 minutes
+  - [ ] PHI cache headers
+  - [ ] Audit logging enabled
+
+  ## Parent Memories
+  - ../../../../.serena/memories/hipaa-compliance-checklist.md
+  - ../../../../.serena/memories/common-patterns.md
+  - ../../../../.serena/memories/gateway-trust-auth.md
+
+project_name: "patient-service"
+included_optional_tools: []

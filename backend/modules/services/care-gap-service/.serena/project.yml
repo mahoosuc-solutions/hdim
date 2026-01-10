@@ -1,0 +1,106 @@
+languages:
+- java
+
+encoding: "utf-8"
+
+ignore_all_files_in_gitignore: true
+
+ignored_paths:
+  - "**/build/**"
+  - "**/.gradle/**"
+
+read_only: false
+
+excluded_tools: []
+
+initial_prompt: |
+  # Care Gap Service - Care Gap Detection & Tracking
+
+  ## Service Overview
+  **Port**: 8086
+  **Context Path**: `/care-gap`
+  **Purpose**: Identify, prioritize, and track care gaps for quality improvement
+
+  ## Key Responsibilities
+  - Care gap identification from quality measure results
+  - Gap prioritization (risk stratification, value-based care impact)
+  - Gap closure tracking
+  - Outreach recommendations
+  - Care gap reporting
+
+  ## Dependencies
+  - **quality-measure-service** (8087): Measure evaluation results
+  - **patient-service** (8084): Patient demographics
+  - **Database**: healthdata_caregap (PostgreSQL)
+  - **Kafka**: care-gap-events topic
+
+  ## Tech Stack
+  - Java 21, Spring Boot 3.x, PostgreSQL 15, Kafka 3.x
+
+  ## Key Entities
+
+  ### CareGap
+  - Represents an identified care gap
+  - Fields: patientId, measureId, gapType, priority, status, dueDate, tenantId
+  - Table: care_gaps
+  - Statuses: OPEN, IN_PROGRESS, CLOSED, DISMISSED
+
+  ### CareGapClosure
+  - Tracks gap closure actions
+  - Fields: careGapId, closureDate, closureReason, closedBy, tenantId
+  - Table: care_gap_closures
+
+  ## Critical Requirements
+
+  ### Multi-Tenant Isolation
+  - ALL queries filter by tenantId
+  - Care gaps are tenant-specific
+
+  ### Gateway Trust Authentication
+  - Use TrustedHeaderAuthFilter
+  - Use TrustedTenantAccessFilter
+
+  ### Event-Driven
+  - Publish care gap events to Kafka
+  - Subscribe to measure result events
+
+  ## API Endpoints
+  - GET /api/v1/care-gaps - List care gaps (filtered by tenant)
+  - GET /api/v1/care-gaps/{id} - Get care gap by ID
+  - GET /api/v1/care-gaps/patient/{patientId} - Get gaps for patient
+  - POST /api/v1/care-gaps/{id}/close - Close care gap
+  - GET /api/v1/care-gaps/summary - Care gap summary metrics
+
+  ## Build & Run
+  ```bash
+  ./gradlew :modules:services:care-gap-service:build
+  ./gradlew :modules:services:care-gap-service:bootRun
+  docker compose up -d care-gap-service
+  ```
+
+  ## Common Tasks
+
+  ### Identifying Care Gaps
+  1. Quality measure service evaluates measures
+  2. Non-compliant results trigger care gap creation
+  3. Care gap service prioritizes gaps
+  4. Gaps published to Kafka for downstream processing
+
+  ### Closing Care Gaps
+  1. User performs intervention (e.g., orders screening)
+  2. POST to /api/v1/care-gaps/{id}/close
+  3. Closure tracked in database
+  4. Closure event published to Kafka
+
+  ## Security Checklist
+  - [ ] @PreAuthorize on endpoints
+  - [ ] X-Tenant-ID header required
+  - [ ] Multi-tenant filtering
+  - [ ] Audit logging
+
+  ## Parent Memories
+  - ../../../../.serena/memories/common-patterns.md
+  - ../../../../.serena/memories/gateway-trust-auth.md
+
+project_name: "care-gap-service"
+included_optional_tools: []

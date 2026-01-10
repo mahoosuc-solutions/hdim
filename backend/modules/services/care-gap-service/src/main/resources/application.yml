@@ -7,6 +7,11 @@ spring:
   application:
     name: care-gap-service
 
+  # Spring Cloud compatibility check - disable for Spring Boot 3.5.x until Spring Cloud updates
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_care_gap}
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}

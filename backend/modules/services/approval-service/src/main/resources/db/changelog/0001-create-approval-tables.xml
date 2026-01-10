@@ -5,15 +5,16 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
-    <changeSet id="0003-create-audit-events-table" author="flyway-migration">
-        <comment>Create HIPAA-compliant audit events table (migrated from Flyway V3)</comment>
+    <changeSet id="0001-create-approval-tables" author="flyway-migration">
+        <comment>Create approval request and history tables (migrated from Flyway V1)</comment>
 
-        <sqlFile path="db/changelog/sql/0003-create-audit-events-table.sql"
+        <sqlFile path="db/changelog/sql/0001-create-approval-tables.sql"
                  relativeToChangelogFile="true"/>
 
         <rollback>
             <sql>
-                DROP TABLE IF EXISTS audit_events;
+                DROP TABLE IF EXISTS approval_history;
+                DROP TABLE IF EXISTS approval_requests;
             </sql>
         </rollback>
     </changeSet>

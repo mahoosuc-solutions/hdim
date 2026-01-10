@@ -15,6 +15,7 @@
 # Note that when using the JetBrains backend, language servers are not used and this list is correspondingly ignored.
 languages:
 - java
+- typescript  # For Angular frontend
 
 # the encoding used by text files in the project
 # For a list of possible encodings, see https://docs.python.org/3.11/library/codecs.html#standard-encodings
@@ -28,7 +29,15 @@ ignore_all_files_in_gitignore: true
 # same syntax as gitignore, so you can use * and **
 # Was previously called `ignored_dirs`, please update your config if you are using that.
 # Added (renamed) on 2025-04-07
-ignored_paths: []
+ignored_paths:
+  - "**/build/**"
+  - "**/dist/**"
+  - "**/node_modules/**"
+  - "**/.gradle/**"
+  - "**/target/**"
+  - "**/.nx/**"
+  - "**/coverage/**"
+  - "**/.docker-tmp/**"
 
 # whether the project is in read-only mode
 # If set to true, all editing tools will be disabled and attempts to use them will result in an error
@@ -78,7 +87,108 @@ excluded_tools: []
 
 # initial prompt for the project. It will always be given to the LLM upon activating the project
 # (contrary to the memories, which are loaded on demand).
-initial_prompt: ""
+initial_prompt: |
+  # HealthData-in-Motion (HDIM) - Enterprise Healthcare Interoperability Platform
+
+  ## Project Overview
+  HDIM is an enterprise healthcare platform for HEDIS quality measure evaluation, FHIR R4 compliance, and clinical decision support.
+
+  **Primary Purpose**: Enable healthcare organizations to evaluate clinical quality measures (CQL/HEDIS), identify care gaps, perform risk stratification, and generate quality reports for value-based care contracts.
+
+  **Target Users**: Healthcare payers, ACOs, health systems, and clinical quality teams.
+
+  ## Tech Stack
+  - **Backend**: Java 21, Spring Boot 3.x, HAPI FHIR 7.x, Gradle 8.11+ (Kotlin DSL)
+  - **Frontend**: Angular 17+, RxJS, Angular Material
+  - **Data**: PostgreSQL 15, Redis 7, Apache Kafka 3.x
+  - **Platform**: Docker, Kubernetes, Kong API Gateway, HashiCorp Vault
+
+  ## Architecture (28 Microservices)
+  **Core Services**:
+  - quality-measure-service (8087): HEDIS measure evaluation
+  - cql-engine-service (8081): CQL expression evaluation
+  - fhir-service (8085): FHIR R4 resource management
+  - patient-service (8084): Patient demographics
+  - care-gap-service (8086): Care gap detection
+  - gateway-service (8001): API gateway & routing
+
+  **Infrastructure**: PostgreSQL (5435), Redis (6380), Kafka (9094), Prometheus (9090), Grafana (3001)
+
+  ## CRITICAL REQUIREMENTS
+
+  ### 1. HIPAA Compliance (MANDATORY)
+  - PHI cache TTL MUST be ≤ 5 minutes
+  - Cache-Control: no-store, no-cache headers on all PHI endpoints
+  - @Audited annotation on all PHI access methods
+  - NO PHI in log statements
+  - See: `.serena/memories/hipaa-compliance-checklist.md`
+
+  ### 2. Gateway Trust Authentication (GOLD STANDARD)
+  - Gateway validates JWT tokens, backend services trust X-Auth-* headers
+  - Services MUST use TrustedHeaderAuthFilter + TrustedTenantAccessFilter
+  - DO NOT re-validate JWT in backend services
+  - DO NOT perform database lookups for user/tenant info
+  - See: `.serena/memories/gateway-trust-auth.md`
+
+  ### 3. Multi-Tenant Isolation (ENFORCED)
+  - ALL queries MUST filter by tenantId
+  - Use @Query with explicit tenant parameter
+  - X-Tenant-ID header required on all requests
+  - See: `.serena/memories/common-patterns.md`
+
+  ### 4. Entity-Migration Synchronization (PREVENTS PRODUCTION BUGS)
+  - JPA entities MUST match Liquibase migrations exactly
+  - Use `ddl-auto: validate` in ALL environments (NEVER use update/create)
+  - Run EntityMigrationValidationTest before committing
+  - NEVER modify existing migrations, create new ones
+  - See: `.serena/memories/entity-migration-sync.md`
+
+  ## Build Commands (from backend/ directory)
+  ```bash
+  ./gradlew build                                    # Build all modules
+  ./gradlew :modules:services:SERVICE_NAME:build     # Build specific service
+  ./gradlew :modules:services:SERVICE_NAME:bootRun   # Run service
+  ./gradlew test                                     # Run all tests
+  ```
+
+  ## Docker Commands (from project root)
+  ```bash
+  docker compose up -d              # Start all services
+  docker compose logs -f SERVICE    # View logs
+  docker compose ps                 # Check status
+  docker compose down               # Stop all
+  ```
+
+  ## Serena Memories Available
+  Use `read_memory` or `list_memories` to access:
+  - architecture-overview.md - System architecture, 28 services, tech stack
+  - hipaa-compliance-checklist.md - PHI handling, cache TTL, audit logging
+  - gateway-trust-auth.md - Authentication architecture (GOLD STANDARD)
+  - entity-migration-sync.md - JPA/Liquibase synchronization rules
+  - service-registry.md - Complete service catalog with ports and dependencies
+  - common-patterns.md - Controller, service, repository, entity patterns
+  - troubleshooting-guide.md - Common issues and solutions
+
+  ## Code Review Checklist (Before Committing)
+  - [ ] HIPAA: Cache TTL ≤ 5 minutes for PHI
+  - [ ] HIPAA: Cache-Control headers on PHI endpoints
+  - [ ] HIPAA: @Audited annotation on PHI access
+  - [ ] Multi-tenant: ALL queries filter by tenantId
+  - [ ] Auth: @PreAuthorize on all endpoints
+  - [ ] Auth: Using TrustedHeaderAuthFilter (NOT JwtAuthenticationFilter)
+  - [ ] Database: Entity matches migration exactly
+  - [ ] Database: ddl-auto is 'validate' (NOT update/create)
+  - [ ] Tests: EntityMigrationValidationTest passes
+  - [ ] Logging: No PHI in log statements
+
+  ## Documentation References
+  - `CLAUDE.md` - AI coding guidelines (THIS FILE IS LAW)
+  - `backend/docs/GATEWAY_TRUST_ARCHITECTURE.md` - Auth architecture
+  - `backend/HIPAA-CACHE-COMPLIANCE.md` - PHI cache rules
+  - `backend/docs/ENTITY_MIGRATION_GUIDE.md` - Database sync guide
+  - `docs/architecture/SYSTEM_ARCHITECTURE.md` - Complete system design
+
+  **When in doubt, consult Serena memories or CLAUDE.md.**
 
 project_name: "hdim-master"
 included_optional_tools: []

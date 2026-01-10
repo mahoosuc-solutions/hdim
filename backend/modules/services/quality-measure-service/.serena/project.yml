@@ -1,0 +1,275 @@
+languages:
+- java
+
+encoding: "utf-8"
+
+ignore_all_files_in_gitignore: true
+
+ignored_paths:
+  - "**/build/**"
+  - "**/build-user/**"
+  - "**/.gradle/**"
+  - "**/target/**"
+
+read_only: false
+
+excluded_tools: []
+
+initial_prompt: |
+  # Quality Measure Service - HDIM Core Service
+
+  ## Service Overview
+  **Port**: 8087
+  **Context Path**: `/quality-measure`
+  **Purpose**: HEDIS quality measure evaluation engine
+
+  ## Key Responsibilities
+  - Quality measure calculation and evaluation
+  - HEDIS measure library management
+  - Measure result storage and retrieval
+  - Population stratification
+  - Measure version management
+  - Care gap integration
+
+  ## Dependencies
+  - **cql-engine-service** (8081): CQL expression evaluation
+  - **fhir-service** (8085): FHIR resource access
+  - **patient-service** (8084): Patient demographics
+  - **Database**: healthdata_qm (PostgreSQL)
+  - **Cache**: Redis (5-minute TTL for PHI)
+
+  ## Tech Stack
+  - Java 21
+  - Spring Boot 3.x
+  - Gradle 8.11+ (Kotlin DSL)
+  - PostgreSQL 15
+  - Redis 7
+  - Liquibase (database migrations)
+
+  ## Package Structure
+  ```
+  com.healthdata.quality/
+  ├── api/v1/              # REST controllers
+  │   ├── MeasureController
+  │   ├── MeasureResultController
+  │   └── dto/
+  ├── application/         # Application services
+  │   ├── QualityMeasureService
+  │   ├── MeasureCalculationService
+  │   └── MeasureResultService
+  ├── domain/              # Domain models
+  │   ├── model/
+  │   │   ├── QualityMeasure
+  │   │   ├── MeasureResult
+  │   │   └── MeasurePopulation
+  │   └── repository/
+  ├── infrastructure/      # External integrations
+  │   ├── cql/            # CQL engine client
+  │   └── fhir/           # FHIR service client
+  └── config/              # Spring configuration
+      └── QualityMeasureSecurityConfig
+  ```
+
+  ## Critical Requirements
+
+  ### 1. HIPAA Compliance
+  - Measure results contain PHI
+  - Cache TTL MUST be ≤ 5 minutes
+  - Use @Cacheable(value = "measureResults", key = "#measureId + ':' + #patientId")
+  - Add Cache-Control headers on all patient-specific results
+  - Audit log all measure evaluations
+
+  ### 2. Multi-Tenant Isolation
+  - ALL queries MUST filter by tenantId
+  - Example:
+    ```java
+    @Query("SELECT m FROM QualityMeasure m WHERE m.id = :id AND m.tenantId = :tenantId")
+    Optional<QualityMeasure> findByIdAndTenant(@Param("id") String id, @Param("tenantId") String tenantId);
+    ```
+
+  ### 3. Gateway Trust Authentication
+  - Use TrustedHeaderAuthFilter
+  - Use TrustedTenantAccessFilter
+  - Trust X-Auth-* headers from gateway
+  - NO JWT re-validation
+
+  ### 4. Entity-Migration Sync
+  - Entities: QualityMeasure, MeasureResult, MeasurePopulation
+  - Migrations: src/main/resources/db/changelog/
+  - Run validation: ./gradlew test --tests "*EntityMigrationValidationTest"
+  - ddl-auto: validate (NEVER update/create)
+
+  ## Key Entities
+
+  ### QualityMeasure
+  - Represents a HEDIS quality measure definition
+  - Fields: measureId, name, description, cqlLibrary, version, tenantId
+  - Table: quality_measures
+
+  ### MeasureResult
+  - Stores evaluation results for patient/measure combinations
+  - Fields: patientId, measureId, numerator, denominator, exclusion, result, tenantId
+  - Table: measure_results
+  - Indexes: (patientId, measureId, tenantId), (tenantId, measureId)
+
+  ### MeasurePopulation
+  - Population stratification data
+  - Fields: measureId, populationType, count, tenantId
+  - Table: measure_populations
+
+  ## API Endpoints
+
+  ### Measures
+  - GET /api/v1/measures - List all measures (tenant-filtered)
+  - GET /api/v1/measures/{id} - Get measure by ID
+  - POST /api/v1/measures - Create measure (ADMIN only)
+  - PUT /api/v1/measures/{id} - Update measure (ADMIN only)
+
+  ### Evaluation
+  - POST /api/v1/measures/{id}/evaluate - Evaluate measure for patient
+  - POST /api/v1/measures/batch-evaluate - Batch evaluation
+  - GET /api/v1/measures/{id}/results - Get measure results
+
+  ### Results
+  - GET /api/v1/results/{patientId} - Get all results for patient
+  - GET /api/v1/results/{patientId}/{measureId} - Get specific result
+
+  ## Build Commands
+  ```bash
+  # Build service
+  ./gradlew :modules:services:quality-measure-service:build
+
+  # Run service
+  ./gradlew :modules:services:quality-measure-service:bootRun
+
+  # Run tests
+  ./gradlew :modules:services:quality-measure-service:test
+
+  # Run entity validation
+  ./gradlew :modules:services:quality-measure-service:test --tests "*EntityMigrationValidationTest"
+  ```
+
+  ## Docker Commands
+  ```bash
+  # Start with dependencies
+  docker compose up -d postgres redis cql-engine-service fhir-service
+
+  # Start quality-measure-service
+  docker compose up -d quality-measure-service
+
+  # View logs
+  docker compose logs -f quality-measure-service
+
+  # Health check
+  curl http://localhost:8087/actuator/health
+  ```
+
+  ## Common Tasks
+
+  ### Adding a New HEDIS Measure
+  1. Create measure definition in database (via migration or API)
+  2. Add CQL library to cql-engine-service
+  3. Implement calculator if custom logic needed
+  4. Test evaluation with sample patient data
+  5. Verify results stored correctly
+
+  ### Debugging Evaluation Issues
+  1. Check CQL engine logs for expression errors
+  2. Verify FHIR data is available for patient
+  3. Check measure definition has correct CQL library reference
+  4. Test CQL expression in isolation via cql-engine-service
+  5. Review measure result storage
+
+  ### Performance Optimization
+  1. Enable caching for measure definitions
+  2. Batch evaluate multiple patients
+  3. Use async processing for large populations
+  4. Index frequently queried fields
+  5. Monitor database query performance
+
+  ## Testing Patterns
+
+  ### Unit Test Example
+  ```java
+  @ExtendWith(MockitoExtension.class)
+  class QualityMeasureServiceTest {
+      @Mock
+      private QualityMeasureRepository measureRepository;
+
+      @Mock
+      private CqlEngineClient cqlEngineClient;
+
+      @InjectMocks
+      private QualityMeasureService qualityMeasureService;
+
+      @Test
+      void shouldEvaluateMeasure_WhenPatientMeetsNumerator() {
+          // Test implementation
+      }
+  }
+  ```
+
+  ### Integration Test Example
+  ```java
+  @SpringBootTest
+  @AutoConfigureMockMvc
+  @Testcontainers
+  class MeasureControllerIntegrationTest {
+      @Test
+      void shouldEvaluateMeasure() throws Exception {
+          mockMvc.perform(post("/api/v1/measures/BCS-E/evaluate")
+                  .header("X-Tenant-ID", "TENANT001")
+                  .content(objectMapper.writeValueAsString(request)))
+              .andExpect(status().isOk());
+      }
+  }
+  ```
+
+  ## Troubleshooting
+
+  ### Issue: Measure evaluation fails
+  - Check CQL engine is running (port 8081)
+  - Verify CQL library exists in cql-engine-service
+  - Check FHIR data is available
+  - Review cql-engine-service logs
+
+  ### Issue: Results not cached
+  - Verify Redis is running (port 6380)
+  - Check cache configuration in application.yml
+  - Confirm @Cacheable annotation present
+  - Test Redis connection: docker exec hdim-redis redis-cli ping
+
+  ### Issue: Schema validation fails
+  - Run migrations: ./gradlew bootRun
+  - Check entity annotations match migration
+  - Verify ddl-auto: validate in application.yml
+  - Review entity-migration-sync.md in root .serena/memories/
+
+  ## Security Checklist
+  - [ ] @PreAuthorize on all endpoints
+  - [ ] X-Tenant-ID header required
+  - [ ] Multi-tenant filtering in all queries
+  - [ ] Cache TTL ≤ 5 minutes for results
+  - [ ] Cache-Control headers on PHI responses
+  - [ ] Audit logging for evaluations
+  - [ ] No PHI in log statements
+
+  ## Related Services
+  - **CQL Engine**: Port 8081, CQL evaluation
+  - **FHIR Service**: Port 8085, Resource access
+  - **Patient Service**: Port 8084, Demographics
+  - **Care Gap Service**: Port 8086, Gap identification
+
+  ## Parent Project Memories
+  Access root project knowledge:
+  - ../../../../.serena/memories/architecture-overview.md
+  - ../../../../.serena/memories/hipaa-compliance-checklist.md
+  - ../../../../.serena/memories/gateway-trust-auth.md
+  - ../../../../.serena/memories/entity-migration-sync.md
+  - ../../../../.serena/memories/common-patterns.md
+
+  **For service-specific questions, focus on quality measure evaluation.**
+  **For system-wide patterns, reference parent project memories.**
+
+project_name: "quality-measure-service"
+included_optional_tools: []

@@ -1,0 +1,311 @@
+languages:
+- java
+
+encoding: "utf-8"
+
+ignore_all_files_in_gitignore: true
+
+ignored_paths:
+  - "**/build/**"
+  - "**/.gradle/**"
+  - "**/target/**"
+
+read_only: false
+
+excluded_tools: []
+
+initial_prompt: |
+  # FHIR Service - FHIR R4 Resource Management
+
+  ## Service Overview
+  **Port**: 8085
+  **Context Path**: `/fhir`
+  **Purpose**: FHIR R4 compliant resource server and data management
+
+  ## Key Responsibilities
+  - FHIR R4 resource CRUD operations
+  - Search parameter support
+  - Bundle processing (transaction, batch)
+  - Resource validation against FHIR profiles
+  - Multi-tenant data isolation
+  - FHIR metadata endpoint (CapabilityStatement)
+
+  ## Dependencies
+  - **Database**: healthdata_fhir (PostgreSQL with FHIR schema)
+  - **Cache**: Redis (resource caching, PHI TTL ≤ 5 minutes)
+  - **HAPI FHIR**: 7.x server framework
+
+  ## Tech Stack
+  - Java 21
+  - Spring Boot 3.x
+  - HAPI FHIR 7.x (R4)
+  - PostgreSQL 15
+  - Redis 7
+  - Liquibase
+
+  ## Supported FHIR Resources
+  - **Patient**: Demographics, identifiers, contacts
+  - **Practitioner**: Healthcare providers
+  - **Organization**: Healthcare organizations
+  - **Observation**: Labs, vitals, assessments
+  - **Condition**: Diagnoses, problems
+  - **Procedure**: Procedures performed
+  - **MedicationRequest**: Prescriptions
+  - **MedicationStatement**: Medication history
+  - **Immunization**: Vaccinations
+  - **AllergyIntolerance**: Allergies
+  - **Encounter**: Healthcare encounters
+  - **DiagnosticReport**: Diagnostic results
+  - **DocumentReference**: Clinical documents
+  - **Consent**: Patient consent directives
+
+  ## Package Structure
+  ```
+  com.healthdata.fhir/
+  ├── api/                 # FHIR REST endpoints
+  │   ├── PatientResourceProvider
+  │   ├── ObservationResourceProvider
+  │   └── ...
+  ├── config/              # HAPI FHIR configuration
+  │   ├── FhirServerConfig
+  │   └── FhirSecurityConfig
+  ├── persistence/         # JPA entities for FHIR resources
+  │   ├── PatientEntity
+  │   ├── ObservationEntity
+  │   └── repositories/
+  └── interceptor/         # FHIR interceptors
+      ├── TenantInterceptor
+      └── AuditInterceptor
+  ```
+
+  ## Critical Requirements
+
+  ### 1. FHIR R4 Compliance
+  - Validate all resources against FHIR R4 profiles
+  - Support required search parameters
+  - Implement proper HTTP status codes (200, 201, 404, 422)
+  - CapabilityStatement at /fhir/metadata
+  - FHIR JSON and XML support
+
+  ### 2. HIPAA Compliance
+  - Patient resources contain PHI
+  - Cache TTL ≤ 5 minutes
+  - Cache-Control: no-store, no-cache headers
+  - Audit all Patient resource access
+  - No PHI in logs
+
+  ### 3. Multi-Tenant Isolation
+  - ALL FHIR resources filtered by tenantId
+  - Use HAPI FHIR tenant interceptor
+  - Enforce tenant in search parameters
+  - Example:
+    ```java
+    @Search
+    public List<Patient> searchPatients(
+        @RequiredParam(name = "identifier") StringParam identifier,
+        RequestDetails requestDetails) {
+        String tenantId = TenantInterceptor.getTenantId(requestDetails);
+        return repository.findByIdentifierAndTenant(identifier, tenantId);
+    }
+    ```
+
+  ### 4. Entity-Migration Sync
+  - Entities: PatientEntity, ObservationEntity, ConditionEntity, etc.
+  - Migrations: src/main/resources/db/changelog/
+  - Run validation: ./gradlew test --tests "*EntityMigrationValidationTest"
+  - ddl-auto: validate
+
+  ## API Endpoints (FHIR Standard)
+
+  ### Patient Resource
+  - GET /fhir/Patient/{id} - Read patient
+  - GET /fhir/Patient?identifier={value} - Search by identifier
+  - GET /fhir/Patient?name={value} - Search by name
+  - POST /fhir/Patient - Create patient
+  - PUT /fhir/Patient/{id} - Update patient
+  - DELETE /fhir/Patient/{id} - Delete patient
+
+  ### Observation Resource
+  - GET /fhir/Observation/{id} - Read observation
+  - GET /fhir/Observation?patient={id} - Search by patient
+  - GET /fhir/Observation?code={code} - Search by code
+  - GET /fhir/Observation?date=ge{date} - Date range search
+
+  ### Bundle Operations
+  - POST /fhir - Transaction bundle
+  - POST /fhir?_bundle=batch - Batch bundle
+
+  ### Metadata
+  - GET /fhir/metadata - CapabilityStatement
+
+  ## Build Commands
+  ```bash
+  # Build service
+  ./gradlew :modules:services:fhir-service:build
+
+  # Run service
+  ./gradlew :modules:services:fhir-service:bootRun
+
+  # Run tests
+  ./gradlew :modules:services:fhir-service:test
+
+  # Validation test
+  ./gradlew :modules:services:fhir-service:test --tests "*EntityMigrationValidationTest"
+  ```
+
+  ## Docker Commands
+  ```bash
+  # Start dependencies
+  docker compose up -d postgres redis
+
+  # Start fhir-service
+  docker compose up -d fhir-service
+
+  # Logs
+  docker compose logs -f fhir-service
+
+  # Health check
+  curl http://localhost:8085/actuator/health
+
+  # FHIR metadata
+  curl http://localhost:8085/fhir/metadata
+  ```
+
+  ## Common Tasks
+
+  ### Loading Sample FHIR Data
+  ```bash
+  # Via FHIR API
+  curl -X POST http://localhost:8085/fhir/Patient \
+    -H "Content-Type: application/fhir+json" \
+    -H "X-Tenant-ID: TENANT001" \
+    -d @patient.json
+
+  # Via bundle
+  curl -X POST http://localhost:8085/fhir \
+    -H "Content-Type: application/fhir+json" \
+    -d @bundle-transaction.json
+  ```
+
+  ### Searching Resources
+  ```bash
+  # Search patients by name
+  curl "http://localhost:8085/fhir/Patient?name=Smith" \
+    -H "X-Tenant-ID: TENANT001"
+
+  # Search observations by patient
+  curl "http://localhost:8085/fhir/Observation?patient=patient-123" \
+    -H "X-Tenant-ID: TENANT001"
+  ```
+
+  ### Validating Resources
+  ```bash
+  # Use FHIR validator endpoint
+  curl -X POST http://localhost:8085/fhir/$validate \
+    -H "Content-Type: application/fhir+json" \
+    -d @patient.json
+  ```
+
+  ## Testing Patterns
+
+  ### Unit Test Example
+  ```java
+  @ExtendWith(MockitoExtension.class)
+  class PatientResourceProviderTest {
+      @Mock
+      private PatientRepository patientRepository;
+
+      @InjectMocks
+      private PatientResourceProvider patientResourceProvider;
+
+      @Test
+      void shouldReturnPatient_WhenIdExists() {
+          // Test FHIR resource retrieval
+      }
+  }
+  ```
+
+  ### Integration Test Example
+  ```java
+  @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+  class FhirServerIntegrationTest {
+      @Autowired
+      private FhirContext fhirContext;
+
+      private IGenericClient client;
+
+      @BeforeEach
+      void setUp() {
+          client = fhirContext.newRestfulGenericClient("http://localhost:8085/fhir");
+      }
+
+      @Test
+      void shouldCreateAndReadPatient() {
+          Patient patient = new Patient();
+          patient.addName().setFamily("Doe").addGiven("John");
+
+          MethodOutcome outcome = client.create().resource(patient).execute();
+          String id = outcome.getId().getIdPart();
+
+          Patient retrieved = client.read().resource(Patient.class).withId(id).execute();
+          assertThat(retrieved.getNameFirstRep().getFamily()).isEqualTo("Doe");
+      }
+  }
+  ```
+
+  ## Troubleshooting
+
+  ### Issue: FHIR resource validation fails
+  - Check resource conforms to FHIR R4 spec
+  - Validate required fields are present
+  - Verify code systems and value sets
+  - Use FHIR validator: https://validator.fhir.org/
+
+  ### Issue: Search returns no results
+  - Verify tenant isolation (correct X-Tenant-ID)
+  - Check search parameter syntax
+  - Review database indexes for search fields
+  - Enable SQL logging to debug queries
+
+  ### Issue: Performance slow for large datasets
+  - Add database indexes for search parameters
+  - Enable caching for frequently accessed resources
+  - Use pagination (_count, _page parameters)
+  - Consider FHIR Bulk Data API for large exports
+
+  ## Security Checklist
+  - [ ] TrustedHeaderAuthFilter configured
+  - [ ] TenantInterceptor enforces multi-tenancy
+  - [ ] X-Tenant-ID header required
+  - [ ] Cache TTL ≤ 5 minutes for PHI resources
+  - [ ] Audit logging for Patient access
+  - [ ] No PHI in log statements
+  - [ ] FHIR resource validation enabled
+
+  ## FHIR Best Practices
+  1. Use FHIR identifiers for cross-system linking
+  2. Implement proper search parameters
+  3. Support FHIR bundles for efficiency
+  4. Validate resources on create/update
+  5. Use FHIR extensions sparingly
+  6. Follow HL7 guidance for profiles
+
+  ## Related Services
+  - **CQL Engine**: Port 8081, Uses FHIR data for evaluation
+  - **Quality Measure**: Port 8087, Queries FHIR resources
+  - **Patient Service**: Port 8084, Wraps Patient resources
+
+  ## Parent Project Memories
+  - ../../../../.serena/memories/architecture-overview.md
+  - ../../../../.serena/memories/hipaa-compliance-checklist.md
+  - ../../../../.serena/memories/common-patterns.md
+
+  ## Key References
+  - FHIR R4: https://hl7.org/fhir/R4/
+  - HAPI FHIR: https://hapifhir.io/
+  - Search Parameters: https://hl7.org/fhir/R4/search.html
+
+  **Focus on FHIR R4 compliance and multi-tenant data isolation.**
+
+project_name: "fhir-service"
+included_optional_tools: []

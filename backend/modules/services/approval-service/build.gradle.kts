@@ -27,8 +27,6 @@ dependencies {
 
     // Database
     runtimeOnly("org.postgresql:postgresql")
-    implementation("org.flywaydb:flyway-core")
-    implementation("org.flywaydb:flyway-database-postgresql")
 
     // OpenFeign for service communication
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")

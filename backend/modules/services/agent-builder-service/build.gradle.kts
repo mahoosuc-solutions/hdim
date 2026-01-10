@@ -26,8 +26,7 @@ dependencies {
 
     // Database
     runtimeOnly("org.postgresql:postgresql")
-    implementation("org.flywaydb:flyway-core")
-    implementation("org.flywaydb:flyway-database-postgresql")
+    // Liquibase included via :modules:shared:infrastructure:persistence
 
     // OpenFeign for service communication
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")

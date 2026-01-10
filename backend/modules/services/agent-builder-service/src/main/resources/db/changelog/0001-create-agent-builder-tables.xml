@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0001-create-agent-builder-tables" author="hdim-platform-team">
+        <comment>Agent Builder Service Database Schema - Tables for no-code agent configuration and management</comment>
+
+        <!-- Agent configurations (tenant-isolated) -->
+        <createTable tableName="agent_configurations">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_agent_configurations"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="slug" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="version" type="VARCHAR(32)" defaultValue="1.0.0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(32)" defaultValue="DRAFT">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Persona configuration -->
+            <column name="persona_name" type="VARCHAR(255)"/>
+            <column name="persona_role" type="VARCHAR(255)"/>
+            <column name="persona_avatar_url" type="VARCHAR(512)"/>
+
+            <!-- Model configuration -->
+            <column name="model_provider" type="VARCHAR(64)" defaultValue="claude">
+                <constraints nullable="false"/>
+            </column>
+            <column name="model_id" type="VARCHAR(128)"/>
+            <column name="max_tokens" type="INTEGER" defaultValueNumeric="4096"/>
+            <column name="temperature" type="DECIMAL(3,2)" defaultValueNumeric="0.3"/>
+
+            <!-- Prompts -->
+            <column name="system_prompt" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="welcome_message" type="TEXT"/>
+
+            <!-- Tool configuration (JSON array of tool names and configs) -->
+            <column name="tool_configuration" type="JSONB" defaultValue="[]"/>
+
+            <!-- Guardrail configuration -->
+            <column name="guardrail_configuration" type="JSONB" defaultValue="{}"/>
+
+            <!-- UI configuration (colors, position, behavior) -->
+            <column name="ui_configuration" type="JSONB" defaultValue="{}"/>
+
+            <!-- Access control -->
+            <column name="allowed_roles" type="TEXT[]" defaultValue="{}"/>
+            <column name="requires_patient_context" type="BOOLEAN" defaultValueBoolean="false"/>
+
+            <!-- Metadata -->
+            <column name="tags" type="TEXT[]" defaultValue="{}"/>
+            <column name="created_by" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="VARCHAR(100)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="published_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="archived_at" type="TIMESTAMP WITH TIME ZONE"/>
+        </createTable>
+
+        <!-- Unique constraint for tenant + slug -->
+        <addUniqueConstraint
+            tableName="agent_configurations"
+            columnNames="tenant_id, slug"
+            constraintName="uk_agent_config_tenant_slug"/>
+
+        <!-- Check constraint for status -->
+        <sql>
+            ALTER TABLE agent_configurations ADD CONSTRAINT chk_agent_status
+            CHECK (status IN ('DRAFT', 'TESTING', 'ACTIVE', 'DEPRECATED', 'ARCHIVED'))
+        </sql>
+
+        <!-- Indexes for agent_configurations -->
+        <createIndex indexName="idx_agent_config_tenant" tableName="agent_configurations">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_agent_config_status" tableName="agent_configurations">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_agent_config_tags" tableName="agent_configurations">
+            <column name="tags"/>
+        </createIndex>
+
+        <setTableRemarks tableName="agent_configurations" remarks="Custom agent configurations created by tenants via no-code builder"/>
+
+        <!-- Agent versions (immutable snapshots for rollback) -->
+        <createTable tableName="agent_versions">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_agent_versions"/>
+            </column>
+            <column name="agent_configuration_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_agent_version_config"
+                    references="agent_configurations(id)" deleteCascade="true"/>
+            </column>
+            <column name="version_number" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Complete configuration snapshot -->
+            <column name="configuration_snapshot" type="JSONB">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Version metadata -->
+            <column name="status" type="VARCHAR(32)" defaultValue="DRAFT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="change_summary" type="TEXT"/>
+            <column name="change_type" type="VARCHAR(32)" defaultValue="MINOR"/>
+
+            <!-- Publishing info -->
+            <column name="published_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="published_by" type="VARCHAR(100)"/>
+
+            <!-- Rollback tracking -->
+            <column name="rolled_back_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="rolled_back_by" type="VARCHAR(100)"/>
+            <column name="rollback_reason" type="TEXT"/>
+
+            <column name="created_by" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <!-- Unique constraint for agent + version -->
+        <addUniqueConstraint
+            tableName="agent_versions"
+            columnNames="agent_configuration_id, version_number"
+            constraintName="uk_agent_version"/>
+
+        <!-- Check constraints -->
+        <sql>
+            ALTER TABLE agent_versions ADD CONSTRAINT chk_version_status
+            CHECK (status IN ('DRAFT', 'PUBLISHED', 'ROLLED_BACK', 'SUPERSEDED'));
+
+            ALTER TABLE agent_versions ADD CONSTRAINT chk_change_type
+            CHECK (change_type IN ('MAJOR', 'MINOR', 'PATCH'))
+        </sql>
+
+        <!-- Indexes for agent_versions -->
+        <createIndex indexName="idx_agent_versions_config" tableName="agent_versions">
+            <column name="agent_configuration_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_agent_versions_status" tableName="agent_versions">
+            <column name="status"/>
+        </createIndex>
+
+        <setTableRemarks tableName="agent_versions" remarks="Immutable version snapshots for agent configurations"/>
+
+        <!-- Prompt templates (reusable prompt components) -->
+        <createTable tableName="prompt_templates">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_prompt_templates"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="category" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Template content with variable placeholders -->
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Variables that can be substituted -->
+            <column name="variables" type="JSONB" defaultValue="[]"/>
+
+            <!-- Usage tracking -->
+            <column name="usage_count" type="INTEGER" defaultValueNumeric="0"/>
+
+            <column name="is_system" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="created_by" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <addUniqueConstraint
+            tableName="prompt_templates"
+            columnNames="tenant_id, name"
+            constraintName="uk_prompt_template_tenant_name"/>
+
+        <sql>
+            ALTER TABLE prompt_templates ADD CONSTRAINT chk_prompt_category
+            CHECK (category IN (
+                'SYSTEM_PROMPT', 'CAPABILITIES', 'CONSTRAINTS', 'RESPONSE_FORMAT',
+                'CLINICAL_SAFETY', 'TOOL_USAGE', 'PERSONA', 'CUSTOM'
+            ))
+        </sql>
+
+        <createIndex indexName="idx_prompt_templates_tenant" tableName="prompt_templates">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_prompt_templates_category" tableName="prompt_templates">
+            <column name="category"/>
+        </createIndex>
+
+        <setTableRemarks tableName="prompt_templates" remarks="Reusable prompt components for building agents"/>
+
+        <!-- Agent test sessions -->
+        <createTable tableName="agent_test_sessions">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_agent_test_sessions"/>
+            </column>
+            <column name="agent_configuration_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_test_session_config"
+                    references="agent_configurations(id)" deleteCascade="true"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Test configuration -->
+            <column name="test_type" type="VARCHAR(32)" defaultValue="INTERACTIVE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="test_scenario" type="TEXT"/>
+
+            <!-- Test execution -->
+            <column name="started_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="completed_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="status" type="VARCHAR(32)" defaultValue="IN_PROGRESS">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Results -->
+            <column name="messages" type="JSONB" defaultValue="[]"/>
+            <column name="tool_invocations" type="JSONB" defaultValue="[]"/>
+            <column name="metrics" type="JSONB" defaultValue="{}"/>
+
+            <!-- Feedback -->
+            <column name="tester_feedback" type="TEXT"/>
+            <column name="tester_rating" type="INTEGER"/>
+
+            <column name="created_by" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <sql>
+            ALTER TABLE agent_test_sessions ADD CONSTRAINT chk_test_type
+            CHECK (test_type IN ('INTERACTIVE', 'AUTOMATED', 'SCENARIO'));
+
+            ALTER TABLE agent_test_sessions ADD CONSTRAINT chk_test_status
+            CHECK (status IN ('IN_PROGRESS', 'COMPLETED', 'FAILED', 'CANCELLED'));
+
+            ALTER TABLE agent_test_sessions ADD CONSTRAINT chk_rating
+            CHECK (tester_rating IS NULL OR (tester_rating >= 1 AND tester_rating <= 5))
+        </sql>
+
+        <createIndex indexName="idx_agent_tests_config" tableName="agent_test_sessions">
+            <column name="agent_configuration_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_agent_tests_tenant" tableName="agent_test_sessions">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <setTableRemarks tableName="agent_test_sessions" remarks="Test sessions for validating agent behavior"/>
+
+        <!-- Agent usage analytics (daily aggregates) -->
+        <createTable tableName="agent_usage_analytics">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_agent_usage_analytics"/>
+            </column>
+            <column name="agent_configuration_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_analytics_config"
+                    references="agent_configurations(id)" deleteCascade="true"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="analytics_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Usage metrics -->
+            <column name="total_sessions" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="total_messages" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="unique_users" type="INTEGER" defaultValueNumeric="0"/>
+
+            <!-- Performance metrics -->
+            <column name="total_tokens_used" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="avg_response_time_ms" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="p95_response_time_ms" type="INTEGER" defaultValueNumeric="0"/>
+
+            <!-- Quality metrics -->
+            <column name="tool_invocation_count" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="successful_tool_invocations" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="guardrail_triggers" type="INTEGER" defaultValueNumeric="0"/>
+
+            <!-- User feedback -->
+            <column name="positive_feedback_count" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="negative_feedback_count" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="avg_rating" type="DECIMAL(3,2)"/>
+
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <addUniqueConstraint
+            tableName="agent_usage_analytics"
+            columnNames="agent_configuration_id, analytics_date"
+            constraintName="uk_agent_analytics"/>
+
+        <createIndex indexName="idx_agent_analytics_tenant_date" tableName="agent_usage_analytics">
+            <column name="tenant_id"/>
+            <column name="analytics_date" descending="true"/>
+        </createIndex>
+
+        <setTableRemarks tableName="agent_usage_analytics" remarks="Daily aggregated usage analytics for agents"/>
+
+        <!-- Tool definitions (available tools for agents) -->
+        <createTable tableName="tool_definitions">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_tool_definitions"/>
+            </column>
+            <column name="name" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_tool_name"/>
+            </column>
+            <column name="display_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- JSON Schema for input parameters -->
+            <column name="input_schema" type="JSONB">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Tool metadata -->
+            <column name="requires_patient_context" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="requires_approval" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="risk_level" type="VARCHAR(32)" defaultValue="LOW"/>
+
+            <!-- Access control -->
+            <column name="allowed_roles" type="TEXT[]" defaultValue="{}"/>
+
+            <column name="is_enabled" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <sql>
+            ALTER TABLE tool_definitions ADD CONSTRAINT chk_tool_category
+            CHECK (category IN (
+                'FHIR_QUERY', 'CQL_EXECUTION', 'DATA_RETRIEVAL', 'DATA_MUTATION',
+                'NOTIFICATION', 'REPORTING', 'EXTERNAL_API'
+            ));
+
+            ALTER TABLE tool_definitions ADD CONSTRAINT chk_risk_level
+            CHECK (risk_level IN ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL'))
+        </sql>
+
+        <setTableRemarks tableName="tool_definitions" remarks="Available tools that can be enabled for custom agents"/>
+
+        <!-- Insert default tool definitions -->
+        <insert tableName="tool_definitions">
+            <column name="name" value="fhir_query"/>
+            <column name="display_name" value="FHIR Query"/>
+            <column name="description" value="Query FHIR resources from the healthcare data repository"/>
+            <column name="category" value="FHIR_QUERY"/>
+            <column name="input_schema" valueComputed="'{&quot;type&quot;:&quot;object&quot;,&quot;properties&quot;:{&quot;resourceType&quot;:{&quot;type&quot;:&quot;string&quot;},&quot;patientId&quot;:{&quot;type&quot;:&quot;string&quot;},&quot;searchParams&quot;:{&quot;type&quot;:&quot;object&quot;}},&quot;required&quot;:[&quot;resourceType&quot;]}'::jsonb"/>
+            <column name="requires_patient_context" valueBoolean="false"/>
+            <column name="risk_level" value="LOW"/>
+        </insert>
+
+        <insert tableName="tool_definitions">
+            <column name="name" value="cql_execute"/>
+            <column name="display_name" value="CQL Execution"/>
+            <column name="description" value="Execute CQL quality measures and clinical logic"/>
+            <column name="category" value="CQL_EXECUTION"/>
+            <column name="input_schema" valueComputed="'{&quot;type&quot;:&quot;object&quot;,&quot;properties&quot;:{&quot;measureId&quot;:{&quot;type&quot;:&quot;string&quot;},&quot;patientId&quot;:{&quot;type&quot;:&quot;string&quot;},&quot;expression&quot;:{&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[]}'::jsonb"/>
+            <column name="requires_patient_context" valueBoolean="false"/>
+            <column name="risk_level" value="LOW"/>
+        </insert>
+
+        <insert tableName="tool_definitions">
+            <column name="name" value="publish_event"/>
+            <column name="display_name" value="Publish Event"/>
+            <column name="description" value="Publish events to trigger workflows and notifications"/>
+            <column name="category" value="NOTIFICATION"/>
+            <column name="input_schema" valueComputed="'{&quot;type&quot;:&quot;object&quot;,&quot;properties&quot;:{&quot;eventType&quot;:{&quot;type&quot;:&quot;string&quot;},&quot;patientId&quot;:{&quot;type&quot;:&quot;string&quot;},&quot;priority&quot;:{&quot;type&quot;:&quot;string&quot;},&quot;payload&quot;:{&quot;type&quot;:&quot;object&quot;}},&quot;required&quot;:[&quot;eventType&quot;]}'::jsonb"/>
+            <column name="requires_patient_context" valueBoolean="false"/>
+            <column name="risk_level" value="MEDIUM"/>
+        </insert>
+
+        <insert tableName="tool_definitions">
+            <column name="name" value="send_notification"/>
+            <column name="display_name" value="Send Notification"/>
+            <column name="description" value="Send notifications via multiple channels"/>
+            <column name="category" value="NOTIFICATION"/>
+            <column name="input_schema" valueComputed="'{&quot;type&quot;:&quot;object&quot;,&quot;properties&quot;:{&quot;channel&quot;:{&quot;type&quot;:&quot;string&quot;},&quot;recipientType&quot;:{&quot;type&quot;:&quot;string&quot;},&quot;recipientId&quot;:{&quot;type&quot;:&quot;string&quot;},&quot;message&quot;:{&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;channel&quot;,&quot;recipientType&quot;,&quot;recipientId&quot;]}'::jsonb"/>
+            <column name="requires_patient_context" valueBoolean="false"/>
+            <column name="risk_level" value="MEDIUM"/>
+        </insert>
+
+        <rollback>
+            <dropTable tableName="agent_usage_analytics"/>
+            <dropTable tableName="agent_test_sessions"/>
+            <dropTable tableName="prompt_templates"/>
+            <dropTable tableName="agent_versions"/>
+            <dropTable tableName="tool_definitions"/>
+            <dropTable tableName="agent_configurations"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

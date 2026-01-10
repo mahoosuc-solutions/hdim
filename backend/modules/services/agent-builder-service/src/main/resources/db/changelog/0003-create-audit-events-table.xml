@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0003-create-audit-events-table" author="hdim-platform-team">
+        <comment>HIPAA-compliant audit logging table - 7 year retention required</comment>
+
+        <!-- Audit Events Table -->
+        <createTable tableName="audit_events">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" primaryKeyName="pk_audit_events"/>
+            </column>
+            <column name="timestamp" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)"/>
+            <column name="user_id" type="VARCHAR(100)"/>
+            <column name="username" type="VARCHAR(255)"/>
+            <column name="role" type="VARCHAR(100)"/>
+            <column name="ip_address" type="VARCHAR(45)"/>
+            <column name="user_agent" type="VARCHAR(500)"/>
+            <column name="action" type="VARCHAR(50)"/>
+            <column name="resource_type" type="VARCHAR(100)"/>
+            <column name="resource_id" type="VARCHAR(255)"/>
+            <column name="outcome" type="VARCHAR(50)"/>
+            <column name="service_name" type="VARCHAR(100)"/>
+            <column name="method_name" type="VARCHAR(100)"/>
+            <column name="request_path" type="VARCHAR(500)"/>
+            <column name="purpose_of_use" type="VARCHAR(100)"/>
+            <column name="request_payload" type="JSONB"/>
+            <column name="response_payload" type="JSONB"/>
+            <column name="error_message" type="TEXT"/>
+            <column name="duration_ms" type="BIGINT"/>
+            <column name="fhir_audit_event_id" type="VARCHAR(255)"/>
+            <column name="encrypted" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes for Common Query Patterns -->
+        <createIndex indexName="idx_audit_tenant_timestamp" tableName="audit_events">
+            <column name="tenant_id"/>
+            <column name="timestamp"/>
+        </createIndex>
+
+        <createIndex indexName="idx_audit_user_timestamp" tableName="audit_events">
+            <column name="user_id"/>
+            <column name="timestamp"/>
+        </createIndex>
+
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_audit_resource
+            ON audit_events(resource_type, resource_id, timestamp)
+        </sql>
+
+        <createIndex indexName="idx_audit_timestamp" tableName="audit_events">
+            <column name="timestamp"/>
+        </createIndex>
+
+        <!-- Column and Table Comments (HIPAA documentation) -->
+        <sql>
+            COMMENT ON TABLE audit_events IS 'HIPAA-compliant audit log for system activity - 7 year retention required';
+            COMMENT ON COLUMN audit_events.timestamp IS 'UTC timestamp of the audit event';
+            COMMENT ON COLUMN audit_events.purpose_of_use IS 'HIPAA required - purpose for accessing PHI';
+            COMMENT ON COLUMN audit_events.encrypted IS 'Whether the payload fields contain encrypted data';
+        </sql>
+
+        <rollback>
+            <dropIndex tableName="audit_events" indexName="idx_audit_tenant_timestamp"/>
+            <dropIndex tableName="audit_events" indexName="idx_audit_user_timestamp"/>
+            <dropIndex tableName="audit_events" indexName="idx_audit_resource"/>
+            <dropIndex tableName="audit_events" indexName="idx_audit_timestamp"/>
+            <dropTable tableName="audit_events"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,18 +1,18 @@
 # Database Migration Status
 
-**Last Updated:** 2026-01-10 (Phase 2 Complete)
+**Last Updated:** 2026-01-10 (Phase 3 Complete)
 **Plan:** /home/mahoosuc-solutions/.claude/plans/clever-dazzling-robin.md
 
 ## Progress Overview
 
 | Metric | Status |
 |--------|--------|
-| Services with Liquibase | 17/34 (50%) |
+| Services with Liquibase | 18/34 (53%) |
 | Services with Flyway | 0/34 (0%) ✅ |
 | Services with `ddl-auto: validate` | 33/34 (97%) |
 | Services with PostgreSQL test driver | 34/34 (100%) ✅ |
 | Services with Entity Validation Tests | 28/34 (82%) |
-| **Current Phase** | **Phase 2 - Complete** |
+| **Current Phase** | **Phase 3 - Complete** |
 
 ## Phase Status
 
@@ -20,7 +20,7 @@
 |-------|--------|------------|
 | Phase 1: Fix Critical Issues | ✅ Complete | 100% |
 | Phase 2: Migrate Flyway Services | ✅ Complete | 100% |
-| Phase 3: Gateway Auth Migration | ⏳ Pending | 0% |
+| Phase 3: Gateway Auth Migration | ✅ Complete | 100% |
 | Phase 4: Service-Owned Extensions | ⏳ Pending | 0% |
 | Phase 5: CI/CD Enforcement | ⏳ Pending | 0% |
 
@@ -38,7 +38,7 @@
 | consent-service | 8082 | consent_db | Liquibase ✅ | validate ✅ | ✅ | ✅ | Production Ready |
 | event-processing-service | 8083 | event_db | Liquibase ✅ | validate ✅ | ⚠️ | ✅ | Production Ready |
 | event-router-service | 8095 | event_router_db | ❌ None | validate ✅ | ⚠️ | ✅ | Needs Config |
-| gateway-service | 8080 | gateway_db | ❌ None (init script) | validate ✅ | ⚠️ | ✅ | **Phase 3 Target** |
+| gateway-service | 8080 | gateway_db | Liquibase ✅ | validate ✅ | ✅ | ✅ | Production Ready |
 
 ### AI Services (3 databases)
 
@@ -106,9 +106,9 @@
 
 | Service | Port | Database | Migration Tool | ddl-auto | Test Driver | Validation Test | Status |
 |---------|------|----------|----------------|----------|-------------|-----------------|--------|
-| gateway-admin-service | 8001 | gateway_db | ❌ None | validate ✅ | ⚠️ | ✅ | Shares schema |
-| gateway-clinical-service | 8002 | gateway_db | ❌ None | validate ✅ | ⚠️ | ✅ | Shares schema |
-| gateway-fhir-service | 8003 | gateway_db | ❌ None | validate ✅ | ⚠️ | ✅ | Shares schema |
+| gateway-admin-service | 8001 | gateway_db | ❌ None (shared) | validate ✅ | ✅ | ✅ | Production Ready |
+| gateway-clinical-service | 8002 | gateway_db | ❌ None (shared) | validate ✅ | ✅ | ✅ | Production Ready |
+| gateway-fhir-service | 8003 | gateway_db | ❌ None (shared) | validate ✅ | ✅ | ✅ | Production Ready |
 
 ## Phase 1 Completed Tasks
 
@@ -154,11 +154,11 @@ This document serves as the migration status tracker.
 | cms-connector-service | ddl-auto: multiple profiles | Low | N/A | Config is correct (test profile ok) |
 | cost-analysis-service | No database configured | Critical | Phase 1 | Complete setup |
 
-### High Priority (Phase 3)
+### ✅ High Priority (Phase 3 Complete)
 
-| Service | Issue | Phase | Resolution |
-|---------|-------|-------|------------|
-| gateway-service | Auth tables in init script | Phase 3 | Move to Liquibase |
+| Service | Issue | Resolution | Status |
+|---------|-------|------------|--------|
+| gateway-service | Auth tables in init script | Migrated to Liquibase | ✅ Complete |
 
 ### Medium Priority (Enable Liquibase)
 
@@ -222,9 +222,25 @@ cd backend
    - ✅ Removed all Flyway dependencies
    - ✅ Updated application.yml to use Liquibase
 
+### Phase 3: Gateway Auth Migration ✅ COMPLETE
+
+1. **Migrated Gateway Auth Schema:**
+   - ✅ Extracted auth tables from docker/postgres/init-multi-db.sh
+   - ✅ Created gateway-service Liquibase migrations:
+     - db/changelog/sql/0001-create-auth-tables.sql
+     - db/changelog/0001-create-auth-tables.xml
+     - db/changelog/db.changelog-master.xml
+   - ✅ Enabled Liquibase in gateway-service
+   - ✅ Fixed datasource URL (healthdata_cql → gateway_db)
+   - ✅ Updated gateway-admin-service to use correct database
+   - ✅ Updated gateway-clinical-service to use correct database
+   - ✅ Updated gateway-fhir-service to use correct database
+   - ✅ Removed auth table creation from init script
+   - ✅ Added comment explaining schema is managed by gateway-service
+
 ## Next Steps
 
-### Phase 3 (Next)
+### Phase 4 (Next)
    - [ ] agent-builder-service (3 migrations)
 
 2. **Enable Liquibase for 11 Services:**

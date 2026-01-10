@@ -9,13 +9,13 @@ spring:
     allow-circular-references: true
   
   liquibase:
-    enabled: false  # Gateway uses shared auth module - no database migrations needed
+    enabled: false  # gateway-service manages schema
 
   cache:
     type: none  # Disable Redis cache to avoid circular dependencies
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_cql}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/gateway_db}
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}
     password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver

@@ -59,6 +59,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.postgresql:postgresql")  // PostgreSQL JDBC driver for Testcontainers
 }
 
 

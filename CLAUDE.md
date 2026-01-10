@@ -552,6 +552,11 @@ KAFKA_BOOTSTRAP_SERVERS=localhost:9094
 - `docs/TERMINOLOGY_GLOSSARY.md` - Single source of truth for terminology
 - `backend/docs/GATEWAY_TRUST_ARCHITECTURE.md` - Authentication architecture (gold standard)
 
+### Build & Dependencies
+- `backend/gradle/libs.versions.toml` - Centralized version catalog
+- `backend/DEPENDENCY_MANAGEMENT.md` - Dependency standards
+- `backend/scripts/validate-dependency-versions.sh` - Validation script
+
 ---
 
 ## Build Notes

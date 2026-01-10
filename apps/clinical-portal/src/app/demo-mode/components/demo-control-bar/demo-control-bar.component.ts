@@ -7,6 +7,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDividerModule } from '@angular/material/divider';
 import { DemoModeService, DemoScenario } from '../../services/demo-mode.service';
 
 /**
@@ -31,6 +32,7 @@ import { DemoModeService, DemoScenario } from '../../services/demo-mode.service'
     MatTooltipModule,
     MatChipsModule,
     MatProgressSpinnerModule,
+    MatDividerModule,
   ],
   template: `
     <div class="demo-control-bar" *ngIf="demoService.isDemoMode()">

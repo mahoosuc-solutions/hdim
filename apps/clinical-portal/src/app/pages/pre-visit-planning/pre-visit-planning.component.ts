@@ -15,6 +15,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatDividerModule } from '@angular/material/divider';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 
@@ -71,6 +72,7 @@ export interface PreVisitCareGap {
     MatTooltipModule,
     MatProgressSpinnerModule,
     MatBadgeModule,
+    MatDividerModule,
     LoadingOverlayComponent,
     LoadingButtonComponent,
   ],

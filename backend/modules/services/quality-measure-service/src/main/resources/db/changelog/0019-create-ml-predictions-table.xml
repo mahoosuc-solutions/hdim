@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <changeSet id="0012-create-ml-predictions-table" author="healthdata-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="ml_predictions"/>
+            </not>
+        </preConditions>
         <comment>Create ML predictions table for predictive analytics</comment>
 
         <createTable tableName="ml_predictions">

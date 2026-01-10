@@ -5,7 +5,8 @@
  */
 
 // Services
-export { DemoModeService, DemoScenario, DemoStatus, DemoTooltip } from './services/demo-mode.service';
+export { DemoModeService } from './services/demo-mode.service';
+export type { DemoScenario, DemoStatus, DemoTooltip } from './services/demo-mode.service';
 
 // Components
 export { DemoControlBarComponent } from './components/demo-control-bar/demo-control-bar.component';

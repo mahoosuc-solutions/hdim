@@ -22,6 +22,11 @@
     -->
 
     <changeSet id="0010-1-create-patient-health-summary-table" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="patient_health_summary"/>
+            </not>
+        </preConditions>
         <comment>
             Create patient_health_summary read model table
 
@@ -139,6 +144,11 @@
     </changeSet>
 
     <changeSet id="0010-2-create-population-metrics-table" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="population_metrics"/>
+            </not>
+        </preConditions>
         <comment>
             Create population_metrics read model table
 
@@ -241,6 +251,11 @@
     </changeSet>
 
     <changeSet id="0010-3-create-materialized-view-patient-summary" author="system">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM pg_matviews WHERE matviewname = 'mv_patient_health_dashboard'
+            </sqlCheck>
+        </preConditions>
         <comment>
             Optional: Create materialized view for complex aggregations
 
@@ -300,6 +315,11 @@
     </changeSet>
 
     <changeSet id="0010-4-create-refresh-function" author="system">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM pg_proc WHERE proname = 'refresh_patient_health_dashboard'
+            </sqlCheck>
+        </preConditions>
         <comment>
             Create function to refresh materialized view
 

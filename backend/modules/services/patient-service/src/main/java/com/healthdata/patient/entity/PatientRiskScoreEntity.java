@@ -55,7 +55,7 @@ public class PatientRiskScoreEntity {
     @Column(name = "factors", columnDefinition = "TEXT")
     private String factors;
 
-    @Column(name = "comorbidities", columnDefinition = "TEXT")
+    @Column(name = "comorbidities", columnDefinition = "JSONB")
     private String comorbidities;
 
     @Column(name = "model_version", length = 50)

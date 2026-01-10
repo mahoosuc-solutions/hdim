@@ -58,11 +58,6 @@ public interface CmsIntegrationConfigRepository extends JpaRepository<CmsIntegra
     List<CmsIntegrationConfig> findByApiTypeAndIsActiveTrue(CmsIntegrationConfig.IntegrationType apiType);
 
     /**
-     * Find failed integrations
-     */
-    List<CmsIntegrationConfig> findByStatusAndIsActiveTrue(CmsIntegrationConfig.IntegrationStatus status);
-
-    /**
      * Check if tenant has CMS integration
      */
     boolean existsByTenantId(UUID tenantId);

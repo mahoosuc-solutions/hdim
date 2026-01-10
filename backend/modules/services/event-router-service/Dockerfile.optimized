@@ -1,0 +1,84 @@
+# ============================================================================
+# Optimized Multi-Stage Dockerfile for event-router-service
+# ============================================================================
+# Optimizations:
+# - Multi-stage build (JDK for build, JRE for runtime)
+# - BuildKit cache mounts for dependency caching
+# - Excludes test jars from final image
+# - Container-optimized JVM settings
+# ============================================================================
+
+# ============================================================================
+# BUILD STAGE
+# ============================================================================
+FROM eclipse-temurin:21-jdk-alpine AS builder
+
+WORKDIR /workspace/app
+
+# Copy Gradle wrapper and build files
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle.kts .
+COPY settings.gradle.kts .
+
+# Copy shared modules (required dependencies)
+COPY modules/shared modules/shared
+COPY platform platform
+
+# Copy the service module
+COPY modules/services/event-router-service modules/services/event-router-service
+
+# Build the application with BuildKit cache mount for Gradle dependencies
+RUN --mount=type=cache,target=/root/.gradle \
+    chmod +x gradlew && \
+    ./gradlew :modules:services:event-router-service:bootJar -x test --no-daemon
+
+# ============================================================================
+# RUNTIME STAGE
+# ============================================================================
+FROM eclipse-temurin:21-jre-alpine
+
+LABEL maintainer="HDIM Platform Team"
+LABEL service="event-router-service"
+LABEL description="Event Router Service"
+
+# Install wget for health checks
+RUN apk add --no-cache wget
+
+WORKDIR /app
+
+# Create non-root user for security (HIPAA compliance)
+RUN addgroup -g 1001 -S healthdata && \
+    adduser -u 1001 -S healthdata -G healthdata -h /app
+
+# Copy ONLY the runtime JAR from builder (not test jars)
+COPY --from=builder /workspace/app/modules/services/event-router-service/build/libs/*-SNAPSHOT.jar app.jar
+
+# Set ownership to non-root user
+RUN chown -R healthdata:healthdata /app
+
+# Switch to non-root user
+USER healthdata
+
+# JVM optimization for containers (standardized across all services)
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:+UseG1GC \
+    -XX:+UseStringDeduplication \
+    -XX:+OptimizeStringConcat \
+    -Djava.security.egd=file:/dev/./urandom"
+
+EXPOSE 8095
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8095/event-router/actuator/health || exit 1
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+
+# ============================================================================
+# BUILD INSTRUCTIONS
+# ============================================================================
+# To build with BuildKit cache support (recommended):
+#   cd /mnt/wd-black/dev/projects/hdim-master/backend
+#   DOCKER_BUILDKIT=1 docker build -t hdim-event-router-service:latest -f modules/services/event-router-service/Dockerfile.optimized .
+# ============================================================================

@@ -32,6 +32,9 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
     default-schema: public
 
+  flyway:
+    enabled: false  # Explicitly disable Flyway (using Liquibase for migrations)
+
 # FHIR Server Configuration
 fhir:
   server:

@@ -175,6 +175,10 @@ gateway:
         - /fhir/.well-known/**
       cql-engine-service:
         - /cql-engine/health
+    # Demo user configuration used when auth is not enforced
+    demo-user:
+      tenant-ids:
+        - demo-tenant
     # CORS configuration
     cors:
       allowed-origins:
@@ -695,6 +699,7 @@ resilience4j:
 logging:
   level:
     com.healthdata: INFO
+    com.healthdata.gateway: DEBUG
     org.springframework.security: INFO
     org.springframework.web: INFO
 

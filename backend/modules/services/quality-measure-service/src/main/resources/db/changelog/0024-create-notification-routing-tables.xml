@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <changeSet id="0016-create-alert-routing-configs-table" author="healthdata-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="alert_routing_configs"/>
+            </not>
+        </preConditions>
         <comment>Create alert routing configuration table</comment>
 
         <createTable tableName="alert_routing_configs">
@@ -61,6 +66,11 @@
     </changeSet>
 
     <changeSet id="0016-create-care-team-assignments-table" author="healthdata-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="care_team_assignments"/>
+            </not>
+        </preConditions>
         <comment>Create care team assignments table</comment>
 
         <createTable tableName="care_team_assignments">
@@ -126,6 +136,11 @@
     </changeSet>
 
     <changeSet id="0016-create-care-team-members-table" author="healthdata-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="care_team_members"/>
+            </not>
+        </preConditions>
         <comment>Create care team members table</comment>
 
         <createTable tableName="care_team_members">
@@ -176,6 +191,11 @@
     </changeSet>
 
     <changeSet id="0016-create-notification-preferences-table" author="healthdata-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="notification_preferences"/>
+            </not>
+        </preConditions>
         <comment>Create notification preferences table</comment>
 
         <createTable tableName="notification_preferences">
@@ -223,6 +243,11 @@
     </changeSet>
 
     <changeSet id="0016-create-notifications-table" author="healthdata-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="notifications"/>
+            </not>
+        </preConditions>
         <comment>Create notifications table</comment>
 
         <createTable tableName="notifications">

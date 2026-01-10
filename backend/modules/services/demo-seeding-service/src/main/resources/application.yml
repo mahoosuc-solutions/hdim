@@ -68,8 +68,10 @@ demo:
     enabled: ${DEMO_PERSISTENCE_ENABLED:true}
   # Downstream service URLs
   services:
-    fhir-service:
-      url: ${FHIR_SERVICE_URL:http://fhir-service:8085/fhir}
+    fhir:
+      internal-url: ${FHIR_SERVICE_URL:http://fhir-service:8085/fhir}
+      external-url: ${FHIR_EXTERNAL_URL:}
+      target: ${FHIR_TARGET:internal}
     care-gap-service:
       url: ${CARE_GAP_SERVICE_URL:http://care-gap-service:8086/care-gap}
     gateway-service:

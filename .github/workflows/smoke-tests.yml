@@ -1,0 +1,385 @@
+name: HDIM Smoke Tests
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      demo_mode:
+        description: 'Demo mode (quick or full)'
+        required: false
+        default: 'quick'
+        type: choice
+        options:
+          - quick
+          - full
+
+env:
+  JAVA_VERSION: '21'
+  GRADLE_VERSION: '8.11'
+
+jobs:
+  # Job 1: Gateway Smoke Test (Core Services)
+  gateway-smoke-test:
+    name: Gateway Smoke Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start infrastructure services
+        run: |
+          docker compose up -d postgres redis kafka
+          sleep 10
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            if docker compose exec -T postgres pg_isready -U healthdata; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            echo "Waiting for PostgreSQL... ($i/30)"
+            sleep 2
+          done
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Build core services
+        run: |
+          cd backend
+          ./gradlew :modules:services:gateway-service:build \
+                    :modules:services:quality-measure-service:build \
+                    :modules:services:cql-engine-service:build \
+                    :modules:services:fhir-service:build \
+                    :modules:services:patient-service:build \
+                    :modules:services:care-gap-service:build \
+                    -x test
+
+      - name: Start Gateway and core services
+        run: |
+          docker compose up -d gateway-service \
+                             quality-measure-service \
+                             cql-engine-service \
+                             fhir-service \
+                             patient-service \
+                             care-gap-service
+          sleep 30
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Run gateway smoke test
+        run: |
+          chmod +x scripts/test-gateway-smoke.sh scripts/lib/gateway-test-helpers.sh
+          ./scripts/test-gateway-smoke.sh \
+            --mode=quick \
+            --skip-rate-limiting \
+            --output gateway-smoke-report.json
+
+      - name: Display test results
+        if: always()
+        run: |
+          if [ -f gateway-smoke-report.json ]; then
+            echo "=== Gateway Smoke Test Results ==="
+            jq -r '.summary' gateway-smoke-report.json
+            echo ""
+            echo "Pass Rate: $(jq -r '.summary.passRate' gateway-smoke-report.json)%"
+            echo "Passed: $(jq -r '.summary.passed' gateway-smoke-report.json)"
+            echo "Failed: $(jq -r '.summary.failed' gateway-smoke-report.json)"
+          fi
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gateway-smoke-report
+          path: gateway-smoke-report.json
+          retention-days: 30
+
+      - name: Check test results
+        run: |
+          PASS_RATE=$(jq -r '.summary.passRate' gateway-smoke-report.json)
+          if (( $(echo "$PASS_RATE < 90" | bc -l) )); then
+            echo "Gateway smoke test pass rate ($PASS_RATE%) is below 90%"
+            exit 1
+          fi
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose down -v
+
+  # Job 2: Authentication Flow Test
+  authentication-test:
+    name: Authentication Flow Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start infrastructure
+        run: |
+          docker compose up -d postgres redis
+          sleep 10
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Build Gateway service
+        run: |
+          cd backend
+          ./gradlew :modules:services:gateway-service:build -x test
+
+      - name: Start Gateway service
+        run: |
+          docker compose up -d gateway-service
+          sleep 20
+
+      - name: Run authentication tests
+        run: |
+          if [ -f scripts/test-authentication-flow.sh ]; then
+            chmod +x scripts/test-authentication-flow.sh
+            ./scripts/test-authentication-flow.sh
+          else
+            echo "Authentication test script not found, skipping"
+          fi
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
+
+  # Job 3: Quick Demo Validation
+  quick-demo-validation:
+    name: Quick Demo Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DEMO_MODE_INPUT: ${{ github.event.inputs.demo_mode || 'quick' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start infrastructure
+        run: |
+          docker compose up -d postgres redis kafka
+          sleep 15
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            if docker compose exec -T postgres pg_isready -U healthdata; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            echo "Waiting for PostgreSQL... ($i/30)"
+            sleep 2
+          done
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Build services
+        run: |
+          cd backend
+          ./gradlew :modules:services:fhir-service:build \
+                    :modules:services:cql-engine-service:build \
+                    :modules:services:quality-measure-service:build \
+                    :modules:services:demo-seeding-service:build \
+                    -x test
+
+      - name: Start core services
+        run: |
+          docker compose up -d fhir-service \
+                             cql-engine-service \
+                             quality-measure-service \
+                             demo-seeding-service
+          sleep 40
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Run end-to-end workflow test
+        env:
+          DEMO_MODE: ${{ env.DEMO_MODE_INPUT }}
+          PATIENT_COUNT: '50'
+          SKIP_BUILD: 'true'
+          RUN_GATEWAY_SMOKE: 'false'
+          CLEANUP: 'false'
+        run: |
+          chmod +x scripts/test-end-to-end-workflow.sh \
+                   scripts/lib/gateway-test-helpers.sh
+          ./scripts/test-end-to-end-workflow.sh > e2e-workflow.log 2>&1
+
+      - name: Display test summary
+        if: always()
+        run: |
+          if [ -f e2e-workflow.log ]; then
+            echo "=== End-to-End Workflow Test Log (last 50 lines) ==="
+            tail -50 e2e-workflow.log
+          fi
+
+      - name: Upload workflow log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-workflow-log
+          path: e2e-workflow.log
+          retention-days: 30
+
+      - name: Upload service logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: service-logs
+          path: |
+            /tmp/fhir-service.log
+            /tmp/cql-engine.log
+            /tmp/quality-measure.log
+            /tmp/demo-seeding.log
+          retention-days: 7
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
+
+  # Job 4: System Health Check (Full)
+  system-health-check:
+    name: System Health Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    needs: [gateway-smoke-test, authentication-test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start infrastructure
+        run: |
+          docker compose up -d
+          sleep 20
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Run system health tests
+        env:
+          DEMO_MODE: 'quick'
+          SKIP_E2E: 'false'
+          OUTPUT_DIR: './test-reports'
+        run: |
+          chmod +x scripts/*.sh scripts/lib/*.sh
+          ./scripts/test-system-health.sh > system-health.log 2>&1
+
+      - name: Display health check summary
+        if: always()
+        run: |
+          if [ -f ./test-reports/system-health-report.txt ]; then
+            echo "=== System Health Report ==="
+            cat ./test-reports/system-health-report.txt
+          fi
+
+      - name: Upload health reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: system-health-reports
+          path: |
+            ./test-reports/
+            system-health.log
+          retention-days: 30
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
+
+  # Job 5: Build Status Summary
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [gateway-smoke-test, authentication-test, quick-demo-validation]
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Display summary
+        run: |
+          echo "==================================================================="
+          echo "                    HDIM Smoke Tests Summary"
+          echo "==================================================================="
+          echo ""
+          echo "Test Results:"
+          echo ""
+
+          if [ -f gateway-smoke-report/gateway-smoke-report.json ]; then
+            echo "✓ Gateway Smoke Test:"
+            jq -r '  "  Pass Rate: \(.summary.passRate)%"' \
+              gateway-smoke-report/gateway-smoke-report.json
+            jq -r '  "  Tests: \(.summary.passed)/\(.summary.totalTests) passed"' \
+              gateway-smoke-report/gateway-smoke-report.json
+            echo ""
+          fi
+
+          echo "==================================================================="
+          echo "All test artifacts have been uploaded and are available for review."
+          echo "==================================================================="
+
+      - name: Check overall status
+        run: |
+          echo "All required tests completed"
+          if [ "${{ needs.gateway-smoke-test.result }}" != "success" ]; then
+            echo "Gateway smoke test failed"
+            exit 1
+          fi
+          if [ "${{ needs.quick-demo-validation.result }}" != "success" ]; then
+            echo "Demo validation failed"
+            exit 1
+          fi

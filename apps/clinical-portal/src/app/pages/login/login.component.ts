@@ -460,7 +460,7 @@ export class LoginComponent implements OnInit, OnDestroy {
             ],
           },
         ],
-        tenantId: 'demo-tenant',
+        tenantId: 'acme-health',
         active: true,
       };
 

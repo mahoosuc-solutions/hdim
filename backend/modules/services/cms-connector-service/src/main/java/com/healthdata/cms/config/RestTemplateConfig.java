@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
+import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -96,9 +97,9 @@ public class RestTemplateConfig {
         connectionManager.setDefaultMaxPerRoute(5);
         
         RequestConfig requestConfig = RequestConfig.custom()
-            .setConnectTimeout(Timeout.ofMillis(500))
-            .setResponseTimeout(Timeout.ofMillis(1000))
-            .setConnectionRequestTimeout(Timeout.ofMillis(500))
+            .setConnectTimeout(Timeout.ofMilliseconds(500))
+            .setResponseTimeout(Timeout.ofMilliseconds(1000))
+            .setConnectionRequestTimeout(Timeout.ofMilliseconds(500))
             .build();
         
         HttpClient httpClient = HttpClients.custom()
@@ -129,19 +130,24 @@ public class RestTemplateConfig {
         
         return new RegistryEventConsumer<CircuitBreaker>() {
             @Override
-            public void onEntryAdded(EntryAddedEvent<CircuitBreaker> event) {
+            public void onEntryAddedEvent(EntryAddedEvent<CircuitBreaker> event) {
                 CircuitBreaker circuitBreaker = event.getAddedEntry();
                 circuitBreaker.getEventPublisher()
-                    .onStateTransition(e -> log.warn("CircuitBreaker {} changed state from {} to {}", 
-                        e.getCircuitBreaker().getName(), e.getStateTransition().getFromState(), 
+                    .onStateTransition(e -> log.warn("CircuitBreaker {} changed state from {} to {}",
+                        e.getCircuitBreakerName(), e.getStateTransition().getFromState(),
                         e.getStateTransition().getToState()))
-                    .onError(e -> log.error("CircuitBreaker {} recorded error: {}", 
-                        e.getCircuitBreaker().getName(), e.getThrowable().getMessage()));
+                    .onError(e -> log.error("CircuitBreaker {} recorded error: {}",
+                        e.getCircuitBreakerName(), e.getThrowable().getMessage()));
             }
 
             @Override
-            public void onEntryRemoved(EntryRemovedEvent<CircuitBreaker> event) {
+            public void onEntryRemovedEvent(EntryRemovedEvent<CircuitBreaker> event) {
                 // Handle removal if needed
+            }
+
+            @Override
+            public void onEntryReplacedEvent(EntryReplacedEvent<CircuitBreaker> event) {
+                // Handle replacement if needed
             }
         };
     }
@@ -157,16 +163,21 @@ public class RestTemplateConfig {
         
         return new RegistryEventConsumer<Retry>() {
             @Override
-            public void onEntryAdded(EntryAddedEvent<Retry> event) {
+            public void onEntryAddedEvent(EntryAddedEvent<Retry> event) {
                 Retry retry = event.getAddedEntry();
                 retry.getEventPublisher()
-                    .onRetry(e -> log.warn("Retry {} - attempt {} failed: {}", 
-                        e.getRetry().getName(), e.getNumberOfRetryAttempts(), e.getLastThrowable().getMessage()));
+                    .onRetry(e -> log.warn("Retry {} - attempt {} failed: {}",
+                        e.getName(), e.getNumberOfRetryAttempts(), e.getLastThrowable().getMessage()));
             }
 
             @Override
-            public void onEntryRemoved(EntryRemovedEvent<Retry> event) {
+            public void onEntryRemovedEvent(EntryRemovedEvent<Retry> event) {
                 // Handle removal if needed
+            }
+
+            @Override
+            public void onEntryReplacedEvent(EntryReplacedEvent<Retry> event) {
+                // Handle replacement if needed
             }
         };
     }

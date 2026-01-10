@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <changeSet id="0002-create-measure-results-table" author="healthdata-system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="measure_results"/>
+            </not>
+        </preConditions>
         <comment>Create measure results table for storing quality measure calculation results</comment>
 
         <createTable tableName="measure_results">

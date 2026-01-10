@@ -8,6 +8,10 @@ server:
     context-path: /fhir
 
 spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
   datasource:
     url: jdbc:postgresql://localhost:5435/fhir_db
     username: healthdata
@@ -32,13 +36,6 @@ spring:
   flyway:
     enabled: false
 
-  # Exclude Kafka and Redis auto-configuration for demo
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
-
   cache:
     type: simple
 
@@ -57,6 +54,10 @@ audit:
 # Disable rate limiting for demo
 rate-limiting:
   enabled: false
+
+# Demo-facing base URL for SMART + capability statement
+smart:
+  base-url: http://localhost:18080/fhir
 
 logging:
   level:

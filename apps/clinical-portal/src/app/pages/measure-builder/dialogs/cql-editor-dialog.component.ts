@@ -146,7 +146,7 @@ export interface CqlEditorDialogData {
                   variant="raised"
                   [loading]="aiGenerating"
                   loadingText="Generating..."
-                  [disabled]="!aiPrompt.trim() || data.readOnly"
+                  [disabled]="!aiPrompt.trim() || (data.readOnly ?? false)"
                   ariaLabel="Generate CQL from description"
                   (buttonClick)="generateCql()">
                 </app-loading-button>
@@ -518,10 +518,10 @@ export interface CqlEditorDialogData {
                 }
 
                 @if (specificPatientResult) {
-                  <div class="specific-patient-result" [class]="'outcome-' + specificPatientResult.results[0]?.outcome">
+                  <div class="specific-patient-result" [class]="'outcome-' + (specificPatientResult.results[0]?.outcome ?? 'unknown')">
                     <div class="result-header">
-                      <mat-icon>{{ getOutcomeIcon(specificPatientResult.results[0]?.outcome) }}</mat-icon>
-                      <span>{{ specificPatientResult.results[0]?.outcome | uppercase }}</span>
+                      <mat-icon>{{ getOutcomeIcon(specificPatientResult.results[0]?.outcome ?? '') }}</mat-icon>
+                      <span>{{ (specificPatientResult.results[0]?.outcome ?? 'unknown') | uppercase }}</span>
                     </div>
                     @if (specificPatientResult.results[0]?.matchedCriteria) {
                       <div class="criteria-list">

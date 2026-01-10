@@ -1,0 +1,102 @@
+# ============================================================================
+# Standard Multi-Stage Dockerfile for HDIM Java Services
+# ============================================================================
+# This template includes all optimizations for minimal image size and fast builds:
+# - Multi-stage build (JDK for build, JRE for runtime)
+# - BuildKit cache mounts for dependency caching
+# - Non-root user for security
+# - Container-optimized JVM settings
+# - Health check support
+# ============================================================================
+
+# ============================================================================
+# BUILD STAGE
+# ============================================================================
+FROM eclipse-temurin:21-jdk-alpine AS builder
+
+WORKDIR /workspace/app
+
+# Copy Gradle wrapper and build files
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle.kts .
+COPY settings.gradle.kts .
+
+# Copy shared modules (required dependencies)
+COPY modules/shared modules/shared
+COPY platform platform
+
+# Copy the specific service module
+# CUSTOMIZE: Change service name below
+COPY modules/services/SERVICE_NAME modules/services/SERVICE_NAME
+
+# Build the application with BuildKit cache mount for Gradle dependencies
+# This significantly speeds up rebuilds by caching downloaded dependencies
+RUN --mount=type=cache,target=/root/.gradle \
+    chmod +x gradlew && \
+    ./gradlew :modules:services:SERVICE_NAME:bootJar -x test --no-daemon
+
+# ============================================================================
+# RUNTIME STAGE
+# ============================================================================
+FROM eclipse-temurin:21-jre-alpine
+
+LABEL maintainer="HDIM Platform Team"
+LABEL service="SERVICE_NAME"
+# CUSTOMIZE: Add service description
+LABEL description="SERVICE_DESCRIPTION"
+
+# Install wget for health checks
+RUN apk add --no-cache wget
+
+WORKDIR /app
+
+# Create non-root user for security (HIPAA compliance)
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup -h /app
+
+# Copy ONLY the runtime JAR from builder (not test jars)
+# This is the key size optimization
+COPY --from=builder /workspace/app/modules/services/SERVICE_NAME/build/libs/*-SNAPSHOT.jar app.jar
+
+# Set ownership to non-root user
+RUN chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER appuser
+
+# JVM optimization for containers (standardized across all services)
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:+UseG1GC \
+    -XX:+UseStringDeduplication \
+    -XX:+OptimizeStringConcat \
+    -Djava.security.egd=file:/dev/./urandom"
+
+# CUSTOMIZE: Change port number
+EXPOSE 8080
+
+# CUSTOMIZE: Update health check path
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/SERVICE_NAME/actuator/health || exit 1
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+
+# ============================================================================
+# CUSTOMIZATION CHECKLIST
+# ============================================================================
+# 1. Replace SERVICE_NAME (4 locations)
+# 2. Replace SERVICE_DESCRIPTION (1 location)
+# 3. Update EXPOSE port number (1 location)
+# 4. Update HEALTHCHECK port and path (1 location)
+# ============================================================================
+
+# ============================================================================
+# BUILD INSTRUCTIONS
+# ============================================================================
+# To build with BuildKit cache support (recommended):
+#   DOCKER_BUILDKIT=1 docker build -t hdim-SERVICE_NAME:latest -f Dockerfile ../../..
+#
+# To build without cache:
+#   docker build --no-cache -t hdim-SERVICE_NAME:latest -f Dockerfile ../../..
+# ============================================================================

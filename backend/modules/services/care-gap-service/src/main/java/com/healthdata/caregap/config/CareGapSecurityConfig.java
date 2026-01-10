@@ -1,39 +1,24 @@
 package com.healthdata.caregap.config;
 
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
-import io.micrometer.core.instrument.MeterRegistry;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
+import com.healthdata.caregap.security.TenantHeaderNormalizationFilter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Bean;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Configuration;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Profile;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.core.annotation.Order;
-import io.micrometer.core.instrument.MeterRegistry;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.web.SecurityFilterChain;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.web.cors.CorsConfiguration;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.web.cors.CorsConfigurationSource;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import java.util.Arrays;
-import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * Care Gap Service Security Configuration
@@ -62,7 +47,6 @@ import io.micrometer.core.instrument.MeterRegistry;
  * @see TrustedTenantAccessFilter
  */
 @Configuration
-@EnableMethodSecurity(prePostEnabled = true)
 public class CareGapSecurityConfig {
 
     @Value("${gateway.auth.signing-secret:}")
@@ -125,6 +109,15 @@ public class CareGapSecurityConfig {
     }
 
     /**
+     * Ensures tenant headers are populated for gateway/demo requests.
+     */
+    @Bean
+    @Profile("!test")
+    public TenantHeaderNormalizationFilter tenantHeaderNormalizationFilter() {
+        return new TenantHeaderNormalizationFilter();
+    }
+
+    /**
      * Test profile security filter chain.
      * Permits all HTTP requests without authentication for integration testing.
      */
@@ -153,11 +146,12 @@ public class CareGapSecurityConfig {
      * Protected endpoints: All care gap operations require gateway authentication
      */
     @Bean
-    @Profile("!test")
+    @Profile("!test & !demo")
     @Order(2)
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             TrustedHeaderAuthFilter trustedHeaderAuthFilter,
+            TenantHeaderNormalizationFilter tenantHeaderNormalizationFilter,
             TrustedTenantAccessFilter trustedTenantAccessFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -180,12 +174,46 @@ public class CareGapSecurityConfig {
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
+            // Normalize tenant header before auth/authorization filters.
+            .addFilterBefore(tenantHeaderNormalizationFilter, UsernamePasswordAuthenticationFilter.class)
             // TrustedHeaderAuthFilter extracts user context from gateway headers
             .addFilterBefore(trustedHeaderAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         // CRITICAL SECURITY: Add tenant access filter AFTER header authentication
         // This ensures tenant isolation is enforced for all authenticated requests
         // Uses request attributes (no database lookup)
+        http.addFilterAfter(trustedTenantAccessFilter, TrustedHeaderAuthFilter.class);
+
+        return http.build();
+    }
+
+    /**
+     * Demo profile security filter chain.
+     * Permits all requests while keeping tenant header normalization.
+     *
+     * Demo-mode bypass: method-level authorization is disabled via profile guard.
+     */
+    @Bean
+    @Profile("demo")
+    @Order(2)
+    public SecurityFilterChain demoSecurityFilterChain(
+            HttpSecurity http,
+            TenantHeaderNormalizationFilter tenantHeaderNormalizationFilter,
+            TrustedHeaderAuthFilter trustedHeaderAuthFilter,
+            TrustedTenantAccessFilter trustedTenantAccessFilter) throws Exception {
+        http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll()
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            // Normalize tenant header before any downstream handling.
+            .addFilterBefore(tenantHeaderNormalizationFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(trustedHeaderAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
         http.addFilterAfter(trustedTenantAccessFilter, TrustedHeaderAuthFilter.class);
 
         return http.build();

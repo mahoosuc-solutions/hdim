@@ -3,6 +3,7 @@ package com.healthdata.demo.application;
 import ca.uhn.fhir.context.FhirContext;
 import com.healthdata.demo.client.CareGapServiceClient;
 import com.healthdata.demo.client.FhirServiceClient;
+import com.healthdata.demo.client.QualityMeasureServiceClient;
 import com.healthdata.demo.client.UserSeedingClient;
 import com.healthdata.demo.domain.model.DemoScenario;
 import com.healthdata.demo.domain.model.DemoSession;
@@ -50,6 +51,7 @@ public class DemoSeedingService {
     private final FhirContext fhirContext;
     private final FhirServiceClient fhirServiceClient;
     private final CareGapServiceClient careGapServiceClient;
+    private final QualityMeasureServiceClient qualityMeasureServiceClient;
     private final UserSeedingClient userSeedingClient;
     private final boolean persistToServices;
 
@@ -65,6 +67,7 @@ public class DemoSeedingService {
             FhirContext fhirContext,
             FhirServiceClient fhirServiceClient,
             CareGapServiceClient careGapServiceClient,
+            QualityMeasureServiceClient qualityMeasureServiceClient,
             UserSeedingClient userSeedingClient,
             @Value("${demo.persistence.enabled:true}") boolean persistToServices) {
         this.patientGenerator = patientGenerator;
@@ -78,6 +81,7 @@ public class DemoSeedingService {
         this.fhirContext = fhirContext;
         this.fhirServiceClient = fhirServiceClient;
         this.careGapServiceClient = careGapServiceClient;
+        this.qualityMeasureServiceClient = qualityMeasureServiceClient;
         this.userSeedingClient = userSeedingClient;
         this.persistToServices = persistToServices;
     }
@@ -158,6 +162,23 @@ public class DemoSeedingService {
                     result.setCareGapCount(actualCareGaps);
                 } else {
                     logger.warn("Care Gap service not available - care gaps not created");
+                }
+
+                // Generate evaluation results for demo
+                if (qualityMeasureServiceClient.isServiceAvailable()) {
+                    logger.info("Generating quality measure evaluation results...");
+
+                    // First seed measure definitions
+                    int measureCount = qualityMeasureServiceClient.seedMeasureDefinitions(tenantId);
+                    logger.info("Seeded {} HEDIS measure definitions", measureCount);
+
+                    // Generate evaluation results based on patient data
+                    int evaluationResults = qualityMeasureServiceClient.generateDemoResults(
+                        patientBundle, tenantId, careGapPercentage);
+                    result.setEvaluationResultCount(evaluationResults);
+                    logger.info("Generated {} evaluation results", evaluationResults);
+                } else {
+                    logger.warn("Quality Measure service not available - evaluation results not generated");
                 }
             } else {
                 logger.info("Persistence disabled - data generated in memory only");
@@ -306,7 +327,7 @@ public class DemoSeedingService {
             );
             multiTenant.setDescription(
                 "Demonstrates secure multi-tenant SaaS architecture. " +
-                "Includes 3 demo tenants: Acme Health (5K), Summit Care (12K), Valley Health (8K)."
+                "Includes 3 demo tenants: Demo Tenant (5K), Summit Care (12K), Valley Health (8K)."
             );
             multiTenant.setEstimatedLoadTimeSeconds(60);
             scenarioRepository.save(multiTenant);
@@ -315,6 +336,7 @@ public class DemoSeedingService {
         // Seed demo users for authentication
         if (persistToServices && userSeedingClient.isDatabaseAvailable()) {
             logger.info("Seeding demo users...");
+            userSeedingClient.seedDemoUsers("demo-tenant");
             userSeedingClient.seedDemoUsers("acme-health");
             userSeedingClient.seedDemoUsers("demo-admin");
         }
@@ -413,6 +435,7 @@ public class DemoSeedingService {
         private int requestedCount;
         private int patientCount;
         private int careGapCount;
+        private int evaluationResultCount;
         private int medicationCount;
         private int observationCount;
         private int encounterCount;
@@ -431,6 +454,8 @@ public class DemoSeedingService {
         public void setPatientCount(int patientCount) { this.patientCount = patientCount; }
         public int getCareGapCount() { return careGapCount; }
         public void setCareGapCount(int careGapCount) { this.careGapCount = careGapCount; }
+        public int getEvaluationResultCount() { return evaluationResultCount; }
+        public void setEvaluationResultCount(int evaluationResultCount) { this.evaluationResultCount = evaluationResultCount; }
         public int getMedicationCount() { return medicationCount; }
         public void setMedicationCount(int medicationCount) { this.medicationCount = medicationCount; }
         public int getObservationCount() { return observationCount; }

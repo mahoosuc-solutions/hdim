@@ -3,6 +3,9 @@ server:
   port: 8083
 
 spring:
+  flyway:
+    enabled: false  # Explicitly disable Flyway (using Liquibase for migrations)
+
   # Jackson configuration for HAPI FHIR objects with deeply nested structures
   jackson:
     # Use ISO-8601 date format

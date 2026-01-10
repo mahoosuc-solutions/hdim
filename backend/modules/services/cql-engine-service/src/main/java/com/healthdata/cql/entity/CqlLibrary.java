@@ -43,7 +43,7 @@ public class CqlLibrary {
     @Column(name = "cql_content", columnDefinition = "TEXT")
     private String cqlContent;
 
-    @Column(name = "elm_json", columnDefinition = "TEXT")
+    @Column(name = "elm_json", columnDefinition = "JSONB")
     private String elmJson; // Expression Logical Model (compiled CQL)
 
     @Column(name = "elm_xml", columnDefinition = "TEXT")

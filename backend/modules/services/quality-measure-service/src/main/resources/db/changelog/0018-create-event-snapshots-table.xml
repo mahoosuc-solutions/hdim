@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <changeSet id="0011-create-event-snapshots-table" author="healthdata-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="event_snapshots"/>
+            </not>
+        </preConditions>
         <comment>Create event snapshots table for performance optimization</comment>
 
         <createTable tableName="event_snapshots">

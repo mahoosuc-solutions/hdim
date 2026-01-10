@@ -32,15 +32,21 @@ public class FhirServiceClient {
 
     private final RestTemplate restTemplate;
     private final IParser fhirParser;
-    private final String fhirServiceUrl;
+    private final String fhirInternalUrl;
+    private final String fhirExternalUrl;
+    private final FhirTarget fhirTarget;
 
     public FhirServiceClient(
             RestTemplate restTemplate,
             FhirContext fhirContext,
-            @Value("${demo.services.fhir-service.url:http://fhir-service:8085/fhir}") String fhirServiceUrl) {
+            @Value("${demo.services.fhir.internal-url:http://fhir-service:8085/fhir}") String fhirInternalUrl,
+            @Value("${demo.services.fhir.external-url:}") String fhirExternalUrl,
+            @Value("${demo.services.fhir.target:internal}") String fhirTarget) {
         this.restTemplate = restTemplate;
         this.fhirParser = fhirContext.newJsonParser().setPrettyPrint(false);
-        this.fhirServiceUrl = fhirServiceUrl;
+        this.fhirInternalUrl = fhirInternalUrl;
+        this.fhirExternalUrl = fhirExternalUrl;
+        this.fhirTarget = FhirTarget.fromValue(fhirTarget);
     }
 
     /**
@@ -51,8 +57,8 @@ public class FhirServiceClient {
      * @return PersistenceResult with statistics
      */
     public PersistenceResult persistBundle(Bundle bundle, String tenantId) {
-        logger.info("Persisting {} resources to FHIR service for tenant: {}",
-            bundle.getEntry().size(), tenantId);
+        logger.info("Persisting {} resources to FHIR service for tenant: {} (target: {})",
+            bundle.getEntry().size(), tenantId, fhirTarget);
 
         PersistenceResult result = new PersistenceResult();
         result.setTenantId(tenantId);
@@ -141,14 +147,40 @@ public class FhirServiceClient {
      * Persist a single FHIR resource.
      */
     private void persistResource(String endpoint, Resource resource, String tenantId) {
-        String url = fhirServiceUrl + endpoint;
+        List<String> targets = resolveTargets(resource);
+        RuntimeException lastError = null;
+
+        for (String baseUrl : targets) {
+            try {
+                postResource(baseUrl, endpoint, resource, tenantId);
+                return;
+            } catch (RuntimeException e) {
+                lastError = e;
+                logger.warn("Failed to persist to {}{}: {}", baseUrl, endpoint, e.getMessage());
+            }
+        }
+
+        if (lastError != null) {
+            throw lastError;
+        }
+    }
+
+    private void postResource(String baseUrl, String endpoint, Resource resource, String tenantId) {
+        String url = baseUrl + endpoint;
         String body = fhirParser.encodeResourceToString(resource);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/fhir+json"));
-        headers.set("X-Tenant-Id", tenantId);
-        // Add demo mode header to bypass authentication
-        headers.set("X-Demo-Mode", "true");
+        headers.set("X-Tenant-ID", tenantId);
+
+        // Add gateway-trust headers for authentication (required by downstream services)
+        // These simulate what the gateway would inject after JWT validation
+        headers.set("X-Auth-User-Id", "demo-seeding-service");
+        headers.set("X-Auth-Username", "demo-seeder");
+        headers.set("X-Auth-Tenant-Ids", tenantId);
+        headers.set("X-Auth-Roles", "ADMIN,SYSTEM");
+        // Gateway validation signature - dev mode accepts any signature with "gateway-" prefix
+        headers.set("X-Auth-Validated", "gateway-demo-seeding");
 
         HttpEntity<String> request = new HttpEntity<>(body, headers);
 
@@ -167,13 +199,98 @@ public class FhirServiceClient {
      * Check if the FHIR service is available.
      */
     public boolean isServiceAvailable() {
+        boolean internalAvailable = isInternalAvailable();
+        boolean externalAvailable = isExternalAvailable();
+
+        return switch (fhirTarget) {
+            case INTERNAL -> internalAvailable;
+            case EXTERNAL -> externalAvailable;
+            case BOTH -> internalAvailable && externalAvailable;
+            case HYBRID -> internalAvailable && externalAvailable;
+        };
+    }
+
+    private boolean isInternalAvailable() {
+        return isHealthEndpointAvailable(fhirInternalUrl, true);
+    }
+
+    private boolean isExternalAvailable() {
+        if (fhirExternalUrl == null || fhirExternalUrl.isBlank()) {
+            if (fhirTarget == FhirTarget.EXTERNAL || fhirTarget == FhirTarget.BOTH || fhirTarget == FhirTarget.HYBRID) {
+                logger.warn("FHIR external URL not configured for target: {}", fhirTarget);
+            }
+            return false;
+        }
+        return isHealthEndpointAvailable(fhirExternalUrl, false);
+    }
+
+    private boolean isHealthEndpointAvailable(String baseUrl, boolean isInternal) {
         try {
-            String url = fhirServiceUrl.replace("/fhir", "") + "/actuator/health";
+            String url;
+            if (isInternal) {
+                // For internal services, actuator is under the context path
+                url = baseUrl + "/actuator/health";
+            } else {
+                url = baseUrl + "/metadata";
+            }
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             return response.getStatusCode().is2xxSuccessful();
         } catch (Exception e) {
-            logger.warn("FHIR service not available: {}", e.getMessage());
+            logger.warn("FHIR service not available at {}: {}", baseUrl, e.getMessage());
             return false;
+        }
+    }
+    
+    private List<String> resolveTargets(Resource resource) {
+        List<String> targets = new ArrayList<>();
+        boolean isPatient = resource instanceof Patient;
+
+        switch (fhirTarget) {
+            case INTERNAL -> targets.add(fhirInternalUrl);
+            case EXTERNAL -> {
+                if (fhirExternalUrl != null && !fhirExternalUrl.isBlank()) {
+                    targets.add(fhirExternalUrl);
+                } else {
+                    targets.add(fhirInternalUrl);
+                }
+            }
+            case BOTH -> {
+                targets.add(fhirInternalUrl);
+                if (fhirExternalUrl != null && !fhirExternalUrl.isBlank()) {
+                    targets.add(fhirExternalUrl);
+                }
+            }
+            case HYBRID -> {
+                if (isPatient) {
+                    if (fhirExternalUrl != null && !fhirExternalUrl.isBlank()) {
+                        targets.add(fhirExternalUrl);
+                    } else {
+                        targets.add(fhirInternalUrl);
+                    }
+                } else {
+                    targets.add(fhirInternalUrl);
+                }
+            }
+        }
+        return targets;
+    }
+
+    private enum FhirTarget {
+        INTERNAL,
+        EXTERNAL,
+        BOTH,
+        HYBRID;
+
+        static FhirTarget fromValue(String value) {
+            if (value == null) {
+                return INTERNAL;
+            }
+            try {
+                return FhirTarget.valueOf(value.trim().toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                logger.warn("Unknown FHIR target '{}', defaulting to INTERNAL", value);
+                return INTERNAL;
+            }
         }
     }
 

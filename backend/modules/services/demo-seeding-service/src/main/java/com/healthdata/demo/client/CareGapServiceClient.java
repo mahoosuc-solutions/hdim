@@ -167,8 +167,16 @@ public class CareGapServiceClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("X-Tenant-Id", tenantId);
-        headers.set("X-Demo-Mode", "true");
+        headers.set("X-Tenant-ID", tenantId);
+
+        // Add gateway-trust headers for authentication (required by downstream services)
+        // These simulate what the gateway would inject after JWT validation
+        headers.set("X-Auth-User-Id", "demo-seeding-service");
+        headers.set("X-Auth-Username", "demo-seeder");
+        headers.set("X-Auth-Tenant-Ids", tenantId);
+        headers.set("X-Auth-Roles", "ADMIN,SYSTEM");
+        // Gateway validation signature - dev mode accepts any signature with "gateway-" prefix
+        headers.set("X-Auth-Validated", "gateway-demo-seeding");
 
         HttpEntity<CareGapRequest> request = new HttpEntity<>(gap, headers);
 
@@ -250,7 +258,8 @@ public class CareGapServiceClient {
      */
     public boolean isServiceAvailable() {
         try {
-            String url = careGapServiceUrl.replace("/care-gap", "") + "/actuator/health";
+            // Actuator is under the context path
+            String url = careGapServiceUrl + "/actuator/health";
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             return response.getStatusCode().is2xxSuccessful();
         } catch (Exception e) {

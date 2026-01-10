@@ -4,11 +4,6 @@ plugins {
     java
 }
 
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.3")
-    }
-}
 
 dependencies {
     // Shared modules
@@ -32,10 +27,10 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 
     // Resilience4j for circuit breaker and retry
-    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
-    implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.2.0")
-    implementation("io.github.resilience4j:resilience4j-retry:2.2.0")
-    implementation("io.github.resilience4j:resilience4j-reactor:2.2.0")
+    implementation(libs.resilience4j.spring.boot3)
+    implementation(libs.resilience4j.circuitbreaker)
+    implementation(libs.resilience4j.retry)
+    implementation(libs.resilience4j.reactor)
 
     // HAPI FHIR for FHIR parsing and conversion
     implementation(libs.bundles.hapi.fhir.client)
@@ -52,10 +47,10 @@ dependencies {
     implementation(libs.jackson.datatype.jsr310)
 
     // Database
-    implementation("org.postgresql:postgresql:42.6.0")
+    implementation(libs.postgresql)
 
     // OpenAPI/Swagger
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)

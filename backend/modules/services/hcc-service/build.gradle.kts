@@ -4,21 +4,7 @@ plugins {
     java
 }
 
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.6")
-        mavenBom("com.fasterxml.jackson:jackson-bom:2.17.2")
-    }
-}
 
-configurations.all {
-    resolutionStrategy {
-        force("com.fasterxml.jackson.core:jackson-databind:2.20.1")
-        force("com.fasterxml.jackson.core:jackson-core:2.20.1")
-        force("com.fasterxml.jackson.core:jackson-annotations:2.20.1")
-        force("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.20.1")
-    }
-}
 
 dependencies {
     // Shared modules
@@ -54,7 +40,7 @@ dependencies {
     implementation(libs.bundles.kafka)
 
     // OpenAPI/Swagger for API documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)

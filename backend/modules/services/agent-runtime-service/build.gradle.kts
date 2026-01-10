@@ -83,6 +83,8 @@ dependencies {
     testImplementation(libs.bundles.testcontainers)
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.testcontainers.redis)
+    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.postgresql)  // PostgreSQL JDBC driver for Testcontainers
 
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)

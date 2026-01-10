@@ -70,6 +70,7 @@ dependencies {
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
+    testImplementation(libs.postgresql)  // PostgreSQL JDBC driver for Testcontainers
     testImplementation(libs.bundles.testing)
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.mockito:mockito-core:5.2.0")

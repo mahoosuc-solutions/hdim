@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -15,6 +15,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDividerModule } from '@angular/material/divider';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { API_CONFIG } from '../../config/api.config';
 
 interface QualityMeasure {
   id: string;
@@ -214,13 +216,80 @@ export class QualityMeasuresComponent implements OnInit {
 
   displayedColumns = ['code', 'name', 'category', 'benchmark', 'status', 'lastEvaluated', 'actions'];
 
+  // Loading state
+  isLoading = signal(false);
+  loadError = signal<string | null>(null);
+
+  private http = inject(HttpClient);
+
   constructor(
     private router: Router,
     private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
-    // Load measures from API in real implementation
+    this.loadCareGapStatistics();
+    this.loadPatientCount();
+  }
+
+  /**
+   * Load care gap statistics from the Care Gap API
+   * Aggregates care gaps by measure to show counts per measure
+   */
+  private loadCareGapStatistics(): void {
+    this.isLoading.set(true);
+    this.loadError.set(null);
+
+    const careGapUrl = `${API_CONFIG.CARE_GAP_URL}/api/v1/care-gaps`;
+
+    this.http.get<CareGapApiResponse>(careGapUrl, {
+      headers: { 'X-Tenant-ID': API_CONFIG.DEFAULT_TENANT_ID }
+    }).subscribe({
+      next: (response) => {
+        // Aggregate care gaps by measure code
+        const careGapCounts = new Map<string, number>();
+        const gapList = response.content || [];
+
+        gapList.forEach((gap: CareGapItem) => {
+          const measureId = gap.measureId;
+          careGapCounts.set(measureId, (careGapCounts.get(measureId) || 0) + 1);
+        });
+
+        // Update measures with care gap counts
+        const updatedMeasures = this.measures().map(measure => ({
+          ...measure,
+          careGaps: careGapCounts.get(measure.code) || 0
+        }));
+
+        this.measures.set(updatedMeasures);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Failed to load care gap statistics:', error);
+        this.loadError.set('Failed to load care gap data. Using default measures.');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  /**
+   * Load patient count from FHIR Patient API
+   */
+  private loadPatientCount(): void {
+    const fhirUrl = `${API_CONFIG.FHIR_SERVER_URL}/Patient`;
+
+    this.http.get<FhirBundleResponse>(fhirUrl, {
+      headers: { 'X-Tenant-ID': API_CONFIG.DEFAULT_TENANT_ID }
+    }).subscribe({
+      next: (response) => {
+        const total = response.total || (response.entry?.length || 0);
+        this.totalPatients.set(total);
+      },
+      error: (error) => {
+        console.error('Failed to load patient count:', error);
+        // Keep default value
+      }
+    });
   }
 
   selectMeasure(measure: QualityMeasure): void {
@@ -367,4 +436,28 @@ export class QualityMeasuresComponent implements OnInit {
       minute: '2-digit',
     });
   }
+}
+
+// API Response Types
+interface CareGapApiResponse {
+  content: CareGapItem[];
+  totalElements: number;
+  totalPages: number;
+}
+
+interface CareGapItem {
+  id: string;
+  patientId: string;
+  measureId: string;
+  measureName: string;
+  gapStatus: string;
+  priority: string;
+  gapDescription: string;
+}
+
+interface FhirBundleResponse {
+  resourceType: string;
+  type: string;
+  total?: number;
+  entry?: { resource: unknown }[];
 }

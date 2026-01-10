@@ -12,7 +12,7 @@
 const USE_API_GATEWAY = false; // Direct mode with Angular proxy for CORS
 
 // API Gateway configuration (our Gateway service, not Kong)
-const API_GATEWAY_URL = 'http://localhost:8080'; // Gateway service URL
+const API_GATEWAY_URL = 'http://localhost:18080'; // Gateway service URL
 
 export const API_CONFIG = {
   // API Gateway Settings
@@ -58,7 +58,7 @@ export const API_CONFIG = {
   BASE_URL: USE_API_GATEWAY ? API_GATEWAY_URL : '',
 
   // Tenant Configuration - must match backend test data
-  DEFAULT_TENANT_ID: 'DEMO001',  // Demo tenant for clinical portal
+  DEFAULT_TENANT_ID: 'demo-tenant',  // Demo tenant for clinical portal
 
   // HTTP Settings
   TIMEOUT_MS: 30000, // 30 seconds

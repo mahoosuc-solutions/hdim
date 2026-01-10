@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,14 +19,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.springframework.data.domain.Persistable;
 
+/**
+ * JPA entity for FHIR Patient resources.
+ * Implements Persistable to correctly handle pre-assigned UUIDs with JPA.
+ */
 @Entity
 @Table(name = "patients")
 @Data
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class PatientEntity {
+public class PatientEntity implements Persistable<UUID> {
 
     @Id
     @Column(name = "id", nullable = false, updatable = false)
@@ -77,13 +83,24 @@ public class PatientEntity {
         Instant now = Instant.now();
         this.createdAt = now;
         this.lastModifiedAt = now;
-        if (this.version == null) {
-            this.version = 0;
-        }
+        // Don't set version here - let Hibernate's @Version handling manage it
     }
 
     @PreUpdate
     void onUpdate() {
         this.lastModifiedAt = Instant.now();
+    }
+
+    /**
+     * Determines if entity is new based on version field.
+     * Version is null for new entities (before first persist).
+     * After first persist, Hibernate sets version to 0, then increments on updates.
+     * This allows Spring Data JPA to use persist() instead of merge()
+     * for entities with pre-assigned UUIDs.
+     */
+    @Override
+    public boolean isNew() {
+        // Version is null for new entities, non-null after first persist
+        return version == null;
     }
 }

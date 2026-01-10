@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -52,10 +54,12 @@ public class PatientRiskScoreEntity {
     @Column(name = "valid_until")
     private Instant validUntil;
 
-    @Column(name = "factors", columnDefinition = "TEXT")
+    @Column(name = "factors")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String factors;
 
-    @Column(name = "comorbidities", columnDefinition = "JSONB")
+    @Column(name = "comorbidities")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String comorbidities;
 
     @Column(name = "model_version", length = 50)

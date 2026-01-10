@@ -7,8 +7,10 @@ plugins {
 description = "FHIR R4 Service - FHIR Resource Management"
 
 // Exclude Flyway - this service uses Liquibase for migrations
+configurations.all {
     exclude(group = "org.flywaydb", module = "flyway-core")
     exclude(group = "org.flywaydb", module = "flyway-database-postgresql")
+}
 
 dependencies {
     // Shared modules

@@ -18,9 +18,12 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      connection-timeout: 30000
+      maximum-pool-size: 50      # Increased for high-throughput evaluations (was 10)
+      minimum-idle: 10           # Keep more idle connections ready (was 5)
+      connection-timeout: 20000  # Fail faster to prevent queuing (was 30000)
+      idle-timeout: 300000       # 5 minutes
+      max-lifetime: 1800000      # 30 minutes (connection refresh)
+      leak-detection-threshold: 60000  # Detect connection leaks
 
   jpa:
     hibernate:
@@ -35,6 +38,9 @@ spring:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
     default-schema: public
+
+  flyway:
+    enabled: false  # Explicitly disable Flyway (using Liquibase for migrations)
 
 # FHIR Server Configuration
 fhir:

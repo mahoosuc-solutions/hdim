@@ -5,21 +5,25 @@ spring:
   application:
     name: cql-engine-service
 
+  flyway:
+    enabled: false  # Explicitly disable Flyway (using Liquibase for migrations)
+
   # Note: This service uses JWT authentication via Gateway service
   # No local UserDetailsService needed - removed spring.security.user
 
   # Database Configuration (environment variables from docker-compose)
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/healthdata_cql}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/cql_db}
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}
     password: ${SPRING_DATASOURCE_PASSWORD:dev_password}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
+      maximum-pool-size: 50      # Increased for high-throughput evaluations (was 20)
+      minimum-idle: 10           # Keep more idle connections ready (was 5)
+      connection-timeout: 20000  # Fail faster to prevent queuing (was 30000)
+      idle-timeout: 300000       # 5 minutes (was 600000)
+      max-lifetime: 1800000      # 30 minutes (connection refresh)
+      leak-detection-threshold: 60000  # Detect connection leaks
 
   # JPA Configuration
   jpa:

@@ -8,6 +8,8 @@ import org.cqframework.cql.cql2elm.LibraryManager;
 import org.cqframework.cql.cql2elm.ModelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,6 +41,7 @@ public class CqlLibraryService {
     /**
      * Create a new CQL library
      */
+    @CacheEvict(value = {"cqlLibraries", "cqlLibraryList"}, allEntries = true)
     public CqlLibrary createLibrary(CqlLibrary library) {
         // Validate required fields
         if (library.getTenantId() == null || library.getTenantId().trim().isEmpty()) {
@@ -78,6 +81,7 @@ public class CqlLibraryService {
     /**
      * Update an existing CQL library
      */
+    @CacheEvict(value = {"cqlLibraries", "cqlLibraryList"}, allEntries = true)
     public CqlLibrary updateLibrary(UUID libraryId, CqlLibrary updates) {
         logger.info("Updating CQL library: {}", libraryId);
 
@@ -125,16 +129,20 @@ public class CqlLibraryService {
 
     /**
      * Get a library by ID
+     * Cached with 5-minute TTL (HIPAA compliant)
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "cqlLibraries", key = "#libraryId")
     public Optional<CqlLibrary> getLibraryById(UUID libraryId) {
         return libraryRepository.findById(libraryId);
     }
 
     /**
      * Get a library by tenant and ID
+     * Cached with 5-minute TTL (HIPAA compliant)
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "cqlLibraries", key = "#tenantId + ':' + #libraryId")
     public Optional<CqlLibrary> getLibraryByIdAndTenant(UUID libraryId, String tenantId) {
         return libraryRepository.findById(libraryId)
                 .filter(library -> library.getTenantId().equals(tenantId))
@@ -143,8 +151,10 @@ public class CqlLibraryService {
 
     /**
      * Get a specific library by name and version
+     * Cached with 5-minute TTL (HIPAA compliant)
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "cqlLibraries", key = "#tenantId + ':' + #libraryName + ':' + #version")
     public Optional<CqlLibrary> getLibraryByNameAndVersion(
             String tenantId, String libraryName, String version) {
         return libraryRepository.findByTenantIdAndLibraryNameAndVersionAndActiveTrue(
@@ -153,8 +163,10 @@ public class CqlLibraryService {
 
     /**
      * Get the latest version of a library
+     * Cached with 5-minute TTL (HIPAA compliant)
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "cqlLibraries", key = "#tenantId + ':' + #libraryName + ':latest'")
     public Optional<CqlLibrary> getLatestLibraryVersion(String tenantId, String libraryName) {
         return libraryRepository.findLatestVersionByName(tenantId, libraryName);
     }
@@ -170,8 +182,10 @@ public class CqlLibraryService {
 
     /**
      * Get all active libraries for a tenant
+     * Cached with 5-minute TTL (HIPAA compliant)
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "cqlLibraryList", key = "#tenantId + ':all'")
     public List<CqlLibrary> getAllLibraries(String tenantId) {
         return libraryRepository.findByTenantIdAndActiveTrue(tenantId);
     }

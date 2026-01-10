@@ -6,14 +6,6 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <changeSet id="0014-seed-essential-value-sets" author="healthdata-system">
-        <preConditions onFail="MARK_RAN">
-            <sqlCheck expectedResult="0">
-                SELECT COUNT(*) FROM value_sets
-                WHERE tenant_id = 'acme-health'
-                AND oid = '2.16.840.1.113883.3.464.1003.108.12.1018'
-            </sqlCheck>
-        </preConditions>
-
         <comment>
             Seed essential LOINC, SNOMED, ICD-10, CPT, and RxNorm value sets required for HEDIS measure evaluation.
 
@@ -168,7 +160,7 @@
         <insert tableName="value_sets">
             <column name="id" valueComputed="gen_random_uuid()"/>
             <column name="tenant_id" value="acme-health"/>
-            <column name="oid" value="2.16.840.1.113883.3.464.1003.108.12.1020"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.108.12.1022"/>
             <column name="name" value="Colonoscopy"/>
             <column name="version" value="2024"/>
             <column name="code_system" value="SNOMED"/>

@@ -31,7 +31,7 @@ import java.time.Duration;
  *
  * Configuration Properties:
  * - tracing.enabled: Enable/disable tracing (default: true)
- * - tracing.url: OTLP exporter endpoint (default: http://localhost:4318/v1/traces)
+ * - tracing.url: OTLP exporter endpoint (default: http://jaeger:4318/v1/traces)
  * - spring.application.name: Used as service name in traces
  * - management.tracing.sampling.probability: Sampling rate (default: 1.0 for dev, recommend 0.1 for prod)
  *
@@ -59,7 +59,7 @@ public class TracingAutoConfiguration {
     @Value("${spring.application.name:hdim-service}")
     private String serviceName;
 
-    @Value("${tracing.url:http://localhost:4318/v1/traces}")
+    @Value("${tracing.url:http://jaeger:4318/v1/traces}")
     private String otlpEndpoint;
 
     @Value("${tracing.batch.max-queue-size:2048}")

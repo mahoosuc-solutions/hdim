@@ -5,7 +5,7 @@ kotlin = "2.0.21"
 
 # Spring Framework
 spring-boot = "3.3.6"  # Compatible with Spring Cloud 2023.0.x
-spring-cloud = "2023.0.5"
+spring-cloud = "2023.0.6"  # Updated to align with majority of services
 spring-dependency-management = "1.1.7"
 
 # Healthcare Libraries
@@ -27,7 +27,8 @@ spring-kafka = "3.3.11"
 # API & Documentation
 springdoc-openapi = "2.6.0"
 swagger = "2.2.41"
-jackson = "2.18.2"  # Stable version compatible with Spring Boot
+jackson = "2.20.1"  # Updated for security and features (compatible with Spring Boot 3.3.6)
+resilience4j = "2.2.0"  # Circuit breaker, retry, rate limiting
 
 # Security
 spring-security = "6.5.7"
@@ -115,6 +116,14 @@ swagger-annotations = { module = "io.swagger.core.v3:swagger-annotations", versi
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 
+# Resilience4j
+resilience4j-spring-boot3 = { module = "io.github.resilience4j:resilience4j-spring-boot3", version.ref = "resilience4j" }
+resilience4j-circuitbreaker = { module = "io.github.resilience4j:resilience4j-circuitbreaker", version.ref = "resilience4j" }
+resilience4j-retry = { module = "io.github.resilience4j:resilience4j-retry", version.ref = "resilience4j" }
+resilience4j-ratelimiter = { module = "io.github.resilience4j:resilience4j-ratelimiter", version.ref = "resilience4j" }
+resilience4j-timelimiter = { module = "io.github.resilience4j:resilience4j-timelimiter", version.ref = "resilience4j" }
+resilience4j-reactor = { module = "io.github.resilience4j:resilience4j-reactor", version.ref = "resilience4j" }
+
 # Security
 spring-security-core = { module = "org.springframework.security:spring-security-core", version.ref = "spring-security" }
 spring-security-config = { module = "org.springframework.security:spring-security-config", version.ref = "spring-security" }
@@ -175,6 +184,8 @@ testcontainers = ["testcontainers", "testcontainers-postgresql", "testcontainers
 utilities = ["lombok", "mapstruct", "commons-lang3", "guava"]
 monitoring = ["micrometer-core", "micrometer-registry-prometheus"]
 tracing = ["micrometer-tracing", "micrometer-tracing-bridge-otel", "opentelemetry-exporter-otlp", "opentelemetry-sdk"]
+resilience4j-common = ["resilience4j-spring-boot3", "resilience4j-circuitbreaker", "resilience4j-retry", "resilience4j-ratelimiter"]
+resilience4j-reactive = ["resilience4j-spring-boot3", "resilience4j-circuitbreaker", "resilience4j-retry", "resilience4j-reactor"]
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

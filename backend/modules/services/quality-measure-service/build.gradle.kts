@@ -4,22 +4,7 @@ plugins {
     java
 }
 
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.6")
-        mavenBom("com.fasterxml.jackson:jackson-bom:2.17.2") // Force Jackson 2.17.2
-    }
-}
 
-configurations.all {
-    resolutionStrategy {
-        // Force Jackson to 2.17.2 to match Spring Boot
-        force("com.fasterxml.jackson.core:jackson-databind:2.20.1")
-        force("com.fasterxml.jackson.core:jackson-core:2.20.1")
-        force("com.fasterxml.jackson.core:jackson-annotations:2.20.1")
-        force("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.20.1")
-    }
-}
 
 dependencies {
     // Shared modules
@@ -55,11 +40,11 @@ dependencies {
     implementation(libs.bundles.kafka)
 
     // Resilience4j for circuit breaker and rate limiting
-    implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-ratelimiter:2.1.0")
+    implementation(libs.resilience4j.circuitbreaker)
+    implementation(libs.resilience4j.ratelimiter)
 
     // OpenAPI/Swagger for API documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)

@@ -47,7 +47,7 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus")
 
     // API Documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
     // Lombok
     compileOnly("org.projectlombok:lombok")
@@ -61,11 +61,6 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
 }
 
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.6")
-    }
-}
 
 tasks.bootJar {
     archiveFileName.set("agent-builder-service.jar")

@@ -4,11 +4,6 @@ plugins {
     java
 }
 
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.6")
-    }
-}
 
 dependencies {
     // Shared modules
@@ -28,7 +23,7 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 
     // OpenAPI/Swagger documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)
@@ -47,10 +42,10 @@ dependencies {
     implementation(libs.spring.boot.starter.data.redis)
 
     // Resilience4j for circuit breaker, retry, and rate limiting
-    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-retry:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-ratelimiter:2.1.0")
+    implementation(libs.resilience4j.spring.boot3)
+    implementation(libs.resilience4j.circuitbreaker)
+    implementation(libs.resilience4j.retry)
+    implementation(libs.resilience4j.ratelimiter)
 
     // Lombok for reducing boilerplate
     compileOnly(libs.lombok)

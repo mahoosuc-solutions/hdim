@@ -26,7 +26,7 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus")
 
     // OpenAPI/Swagger documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
     // Database
     implementation("org.liquibase:liquibase-core")
@@ -48,11 +48,11 @@ dependencies {
     implementation("org.graalvm.js:js-scriptengine:23.0.2")
 
     // Resilience4j for fault tolerance
-    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
-    implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.2.0")
-    implementation("io.github.resilience4j:resilience4j-retry:2.2.0")
-    implementation("io.github.resilience4j:resilience4j-ratelimiter:2.2.0")
-    implementation("io.github.resilience4j:resilience4j-timelimiter:2.2.0")
+    implementation(libs.resilience4j.spring.boot3)
+    implementation(libs.resilience4j.circuitbreaker)
+    implementation(libs.resilience4j.retry)
+    implementation(libs.resilience4j.ratelimiter)
+    implementation(libs.resilience4j.timelimiter)
     implementation("org.springframework.boot:spring-boot-starter-aop")
 
     // Test

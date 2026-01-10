@@ -7,10 +7,8 @@ plugins {
 description = "FHIR R4 Service - FHIR Resource Management"
 
 // Exclude Flyway - this service uses Liquibase for migrations
-configurations.all {
     exclude(group = "org.flywaydb", module = "flyway-core")
     exclude(group = "org.flywaydb", module = "flyway-database-postgresql")
-}
 
 dependencies {
     // Shared modules
@@ -47,15 +45,15 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:tracing"))
 
     // Resilience4j for circuit breaker, retry, and rate limiting
-    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
-    implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.2.0")
-    implementation("io.github.resilience4j:resilience4j-retry:2.2.0")
-    implementation("io.github.resilience4j:resilience4j-ratelimiter:2.2.0")
+    implementation(libs.resilience4j.spring.boot3)
+    implementation(libs.resilience4j.circuitbreaker)
+    implementation(libs.resilience4j.retry)
+    implementation(libs.resilience4j.ratelimiter)
 
     // JWT for SMART on FHIR OAuth
-    implementation("io.jsonwebtoken:jjwt-api:0.12.3")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.3")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.3")
+    implementation(libs.jjwt.api)
+    runtimeOnly(libs.jjwt.impl)
+    runtimeOnly(libs.jjwt.jackson)
 
     // WebSocket for real-time subscriptions
     implementation("org.springframework.boot:spring-boot-starter-websocket")

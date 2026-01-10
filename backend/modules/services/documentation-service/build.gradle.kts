@@ -22,7 +22,7 @@ dependencies {
     implementation(libs.spring.boot.starter.validation)
 
     // OpenAPI/Swagger documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)
@@ -46,9 +46,9 @@ dependencies {
     implementation(libs.bundles.kafka)
 
     // Resilience4j for fault tolerance
-    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
-    implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.2.0")
-    implementation("io.github.resilience4j:resilience4j-retry:2.2.0")
+    implementation(libs.resilience4j.spring.boot3)
+    implementation(libs.resilience4j.circuitbreaker)
+    implementation(libs.resilience4j.retry)
     implementation("org.springframework.boot:spring-boot-starter-aop")
 
     // Lombok

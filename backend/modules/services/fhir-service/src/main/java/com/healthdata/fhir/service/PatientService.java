@@ -76,7 +76,11 @@ public class PatientService {
                 .register(meterRegistry);
     }
 
-    @Transactional
+    /**
+     * Create a patient with upsert semantics (create or update if exists).
+     * This method is NOT transactional itself - it delegates to the transactional
+     * doCreateOrUpdatePatient method, allowing for proper retry on concurrency exceptions.
+     */
     public Patient createPatient(String tenantId, Patient patient, String createdBy) {
         PatientValidator.ValidationResult validation = patientValidator.validate(patient);
         if (!validation.isValid()) {
@@ -86,14 +90,84 @@ public class PatientService {
         UUID patientId = ensurePatientId(patient);
         patient.setId(patientId.toString());
 
-        PatientEntity entity = toEntity(tenantId, patientId, patient);
-        PatientEntity saved = patientRepository.save(entity);
+        // Use upsert pattern with retry for concurrent request handling
+        // Each retry attempt gets a fresh transaction
+        return createOrUpdatePatientWithRetry(tenantId, patient, patientId, createdBy, 3);
+    }
+
+    /**
+     * Internal upsert implementation with retry logic for concurrent requests.
+     * Handles OptimisticLockingFailureException by retrying with the newly-created entity.
+     * NOT @Transactional - allows fresh transaction on each retry.
+     */
+    private Patient createOrUpdatePatientWithRetry(String tenantId, Patient patient, UUID patientId,
+                                                    String createdBy, int retriesLeft) {
+        try {
+            return doCreateOrUpdatePatient(tenantId, patient, patientId, createdBy);
+        } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
+            if (retriesLeft > 0) {
+                log.debug("Concurrent modification detected for patient {}, retrying ({} attempts left)",
+                         patientId, retriesLeft);
+                // Another transaction created the patient - retry to update it instead
+                return createOrUpdatePatientWithRetry(tenantId, patient, patientId, createdBy, retriesLeft - 1);
+            }
+            throw e;
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            if (retriesLeft > 0 && e.getMessage() != null &&
+                (e.getMessage().contains("duplicate key") || e.getMessage().contains("unique constraint"))) {
+                log.debug("Duplicate key detected for patient {}, retrying as update ({} attempts left)",
+                         patientId, retriesLeft);
+                // Duplicate key - another transaction inserted first, retry as update
+                return createOrUpdatePatientWithRetry(tenantId, patient, patientId, createdBy, retriesLeft - 1);
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * Transactional inner method for actual create/update operation.
+     * Each call runs in its own transaction, enabling proper retry on failure.
+     */
+    @Transactional
+    public Patient doCreateOrUpdatePatient(String tenantId, Patient patient, UUID patientId, String createdBy) {
+        // Check if patient already exists (upsert pattern for demo seeding idempotency)
+        Optional<PatientEntity> existingOpt = patientRepository.findByTenantIdAndId(tenantId, patientId);
+
+        PatientEntity saved;
+        String eventType;
+
+        if (existingOpt.isPresent()) {
+            // Update existing patient - preserve createdAt, update other fields
+            PatientEntity existing = existingOpt.get();
+            PatientEntity updated = existing.toBuilder()
+                    .resourceJson(JSON_PARSER.encodeResourceToString(patient))
+                    .firstName(extractFirstName(patient))
+                    .lastName(extractLastName(patient))
+                    .gender(patient.getGender() != null ? patient.getGender().toCode() : null)
+                    .birthDate(patient.getBirthDate() != null
+                            ? patient.getBirthDate().toInstant().atZone(ZoneId.of("UTC")).toLocalDate()
+                            : null)
+                    .lastModifiedAt(Instant.now())
+                    .deletedAt(null)  // Clear soft-delete if previously deleted
+                    .deletedBy(null)
+                    .build();
+            saved = patientRepository.save(updated);
+            eventType = "UPDATED";
+            log.debug("Updated existing patient {} in tenant {}", patientId, tenantId);
+        } else {
+            // Create new patient
+            PatientEntity entity = toEntity(tenantId, patientId, patient);
+            saved = patientRepository.save(entity);
+            eventType = "CREATED";
+            log.debug("Created new patient {} in tenant {}", patientId, tenantId);
+        }
+
         Patient savedPatient = fromEntity(saved);
         applyMeta(savedPatient, saved);
 
         cachePut(tenantId, patientId.toString(), savedPatient);
-        kafkaTemplate.send("fhir.patients.created", patientId.toString(),
-                new PatientEvent(patientId.toString(), tenantId, "CREATED", Instant.now(), createdBy));
+        kafkaTemplate.send("fhir.patients." + eventType.toLowerCase(), patientId.toString(),
+                new PatientEvent(patientId.toString(), tenantId, eventType, Instant.now(), createdBy));
 
         return savedPatient;
     }
@@ -283,6 +357,9 @@ public class PatientService {
     }
 
     private PatientEntity toEntity(String tenantId, UUID patientId, Patient patient) {
+        // Note: Do NOT set version here - leave it null for new entities.
+        // The @Version field will be set to 0 by Hibernate on first persist.
+        // Setting version=0 explicitly causes Hibernate to think this is a detached entity.
         return PatientEntity.builder()
                 .id(patientId)
                 .tenantId(tenantId)
@@ -296,14 +373,51 @@ public class PatientService {
                         : null)
                 .createdAt(Instant.now())
                 .lastModifiedAt(Instant.now())
-                .version(0)
+                // version intentionally left null - will be set by @PrePersist
                 .build();
     }
 
     private Patient fromEntity(PatientEntity entity) {
         Patient patient = (Patient) JSON_PARSER.parseResource(entity.getResourceJson());
         patient.setId(entity.getId().toString());
+
+        // Enrich patient with entity columns if resource_json is minimal
+        // This handles cases where seeding stored minimal JSON but populated columns
+        enrichPatientFromEntity(patient, entity);
+
         return patient;
+    }
+
+    /**
+     * Enriches a Patient resource with data from entity columns.
+     * This is needed when resource_json is minimal (e.g., from demo seeding).
+     */
+    private void enrichPatientFromEntity(Patient patient, PatientEntity entity) {
+        // Add name if not present and entity has name data
+        if (!patient.hasName() && (entity.getFirstName() != null || entity.getLastName() != null)) {
+            org.hl7.fhir.r4.model.HumanName name = patient.addName();
+            name.setUse(org.hl7.fhir.r4.model.HumanName.NameUse.OFFICIAL);
+            if (entity.getLastName() != null) {
+                name.setFamily(entity.getLastName());
+            }
+            if (entity.getFirstName() != null) {
+                name.addGiven(entity.getFirstName());
+            }
+        }
+
+        // Add gender if not present
+        if (!patient.hasGender() && entity.getGender() != null) {
+            try {
+                patient.setGender(org.hl7.fhir.r4.model.Enumerations.AdministrativeGender.fromCode(entity.getGender()));
+            } catch (Exception e) {
+                log.debug("Could not parse gender: {}", entity.getGender());
+            }
+        }
+
+        // Add birth date if not present
+        if (!patient.hasBirthDate() && entity.getBirthDate() != null) {
+            patient.setBirthDate(java.sql.Date.valueOf(entity.getBirthDate()));
+        }
     }
 
     private void applyMeta(Patient patient, PatientEntity entity) {

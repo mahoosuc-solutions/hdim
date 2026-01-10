@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0002-add-performance-indexes" author="hdim-platform-team">
+        <comment>Performance Optimization: GIN Indexes for JSONB Columns and additional B-tree indexes for common queries</comment>
+
+        <!-- GIN INDEXES FOR JSONB COLUMNS -->
+
+        <!-- Agent configurations: tool_configuration JSONB -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_agent_config_tools_gin
+            ON agent_configurations USING GIN (tool_configuration jsonb_path_ops)
+        </sql>
+
+        <!-- Agent configurations: guardrail_configuration JSONB -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_agent_config_guardrails_gin
+            ON agent_configurations USING GIN (guardrail_configuration jsonb_path_ops)
+        </sql>
+
+        <!-- Agent configurations: ui_configuration JSONB -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_agent_config_ui_gin
+            ON agent_configurations USING GIN (ui_configuration jsonb_path_ops)
+        </sql>
+
+        <!-- Agent versions: configuration_snapshot JSONB -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_agent_version_snapshot_gin
+            ON agent_versions USING GIN (configuration_snapshot jsonb_path_ops)
+        </sql>
+
+        <!-- Prompt templates: variables JSONB -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_prompt_template_variables_gin
+            ON prompt_templates USING GIN (variables jsonb_path_ops)
+        </sql>
+
+        <!-- Agent test sessions: messages, tool_invocations, metrics JSONB -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_test_session_messages_gin
+            ON agent_test_sessions USING GIN (messages jsonb_path_ops)
+        </sql>
+
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_test_session_metrics_gin
+            ON agent_test_sessions USING GIN (metrics jsonb_path_ops)
+        </sql>
+
+        <!-- Tool definitions: input_schema JSONB -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_tool_def_schema_gin
+            ON tool_definitions USING GIN (input_schema jsonb_path_ops)
+        </sql>
+
+        <!-- B-TREE INDEXES FOR COMMON QUERY PATTERNS -->
+
+        <!-- Composite index for tenant + status queries (most common pattern) -->
+        <createIndex indexName="idx_agent_config_tenant_status" tableName="agent_configurations">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Composite index for tenant + name searches -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_agent_config_tenant_name
+            ON agent_configurations (tenant_id, LOWER(name))
+        </sql>
+
+        <!-- Index for version lookups with status -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_agent_version_status_created
+            ON agent_versions (agent_configuration_id, status, created_at DESC)
+        </sql>
+
+        <!-- Index for latest version queries (covering index) -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_agent_version_latest
+            ON agent_versions (agent_configuration_id, created_at DESC)
+            INCLUDE (version_number, status)
+        </sql>
+
+        <!-- Prompt templates: tenant + category for filtered listings -->
+        <createIndex indexName="idx_prompt_template_tenant_category" tableName="prompt_templates">
+            <column name="tenant_id"/>
+            <column name="category"/>
+        </createIndex>
+
+        <!-- Prompt templates: system templates (frequently accessed) -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_prompt_template_system
+            ON prompt_templates (is_system) WHERE is_system = TRUE
+        </sql>
+
+        <!-- Test sessions: agent + status for active tests -->
+        <createIndex indexName="idx_test_session_agent_status" tableName="agent_test_sessions">
+            <column name="agent_configuration_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Test sessions: recent tests per tenant -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_test_session_tenant_time
+            ON agent_test_sessions (tenant_id, started_at DESC)
+        </sql>
+
+        <!-- Analytics: common time-range queries -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_analytics_tenant_date_range
+            ON agent_usage_analytics (tenant_id, analytics_date DESC)
+        </sql>
+
+        <!-- PARTIAL INDEXES FOR FILTERED QUERIES -->
+
+        <!-- Only active agents (frequently queried, small subset) -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_agent_config_active_only
+            ON agent_configurations (tenant_id, name)
+            WHERE status = 'ACTIVE'
+        </sql>
+
+        <!-- Only draft agents (for builder UI) -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_agent_config_draft_only
+            ON agent_configurations (tenant_id, updated_at DESC)
+            WHERE status = 'DRAFT'
+        </sql>
+
+        <!-- Only published versions (for production deployment) -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_agent_version_published_only
+            ON agent_versions (agent_configuration_id, published_at DESC)
+            WHERE status = 'PUBLISHED'
+        </sql>
+
+        <!-- EXPRESSION INDEXES FOR CASE-INSENSITIVE SEARCHES -->
+
+        <!-- Case-insensitive name search -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_agent_config_name_lower
+            ON agent_configurations (tenant_id, LOWER(name) varchar_pattern_ops)
+        </sql>
+
+        <!-- Case-insensitive description search -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_agent_config_desc_lower
+            ON agent_configurations (tenant_id, LOWER(description) varchar_pattern_ops)
+        </sql>
+
+        <rollback>
+            <dropIndex tableName="agent_configurations" indexName="idx_agent_config_tools_gin"/>
+            <dropIndex tableName="agent_configurations" indexName="idx_agent_config_guardrails_gin"/>
+            <dropIndex tableName="agent_configurations" indexName="idx_agent_config_ui_gin"/>
+            <dropIndex tableName="agent_versions" indexName="idx_agent_version_snapshot_gin"/>
+            <dropIndex tableName="prompt_templates" indexName="idx_prompt_template_variables_gin"/>
+            <dropIndex tableName="agent_test_sessions" indexName="idx_test_session_messages_gin"/>
+            <dropIndex tableName="agent_test_sessions" indexName="idx_test_session_metrics_gin"/>
+            <dropIndex tableName="tool_definitions" indexName="idx_tool_def_schema_gin"/>
+            <dropIndex tableName="agent_configurations" indexName="idx_agent_config_tenant_status"/>
+            <dropIndex tableName="agent_configurations" indexName="idx_agent_config_tenant_name"/>
+            <dropIndex tableName="agent_versions" indexName="idx_agent_version_status_created"/>
+            <dropIndex tableName="agent_versions" indexName="idx_agent_version_latest"/>
+            <dropIndex tableName="prompt_templates" indexName="idx_prompt_template_tenant_category"/>
+            <dropIndex tableName="prompt_templates" indexName="idx_prompt_template_system"/>
+            <dropIndex tableName="agent_test_sessions" indexName="idx_test_session_agent_status"/>
+            <dropIndex tableName="agent_test_sessions" indexName="idx_test_session_tenant_time"/>
+            <dropIndex tableName="agent_usage_analytics" indexName="idx_analytics_tenant_date_range"/>
+            <dropIndex tableName="agent_configurations" indexName="idx_agent_config_active_only"/>
+            <dropIndex tableName="agent_configurations" indexName="idx_agent_config_draft_only"/>
+            <dropIndex tableName="agent_versions" indexName="idx_agent_version_published_only"/>
+            <dropIndex tableName="agent_configurations" indexName="idx_agent_config_name_lower"/>
+            <dropIndex tableName="agent_configurations" indexName="idx_agent_config_desc_lower"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

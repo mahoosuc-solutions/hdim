@@ -256,8 +256,8 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVER_PORT: 8081
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
-      SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
@@ -372,8 +372,8 @@ services:
       SPRING_REDIS_PORT: 6379
       SERVER_PORT: 8084
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
-      SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Disable Redis caching to avoid HAPI FHIR serialization issues with Jackson
       SPRING_CACHE_TYPE: simple
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
@@ -419,9 +419,8 @@ services:
       SPRING_KAFKA_PRODUCER_PROPERTIES_SPRING_JSON_ADD_TYPE_HEADERS: "false"
       SERVER_PORT: 8085
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
-      SPRING_FLYWAY_ENABLED: "false"
-      SPRING_LIQUIBASE_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
@@ -521,8 +520,8 @@ services:
       SPRING_REDIS_PORT: 6379
       SERVER_PORT: 8087
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
-      SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8081/cql-engine
       FHIR_SERVICE_URL: http://fhir-service:8085
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
@@ -657,8 +656,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       SERVER_PORT: 8096
-      SPRING_FLYWAY_ENABLED: "true"
-      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       HDIM_AGENT_RUNTIME_URL: http://agent-runtime-service:8088
       HDIM_SERVICES_AGENT_RUNTIME_URL: http://agent-runtime-service:8088

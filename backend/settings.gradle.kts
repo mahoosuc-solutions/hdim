@@ -25,6 +25,7 @@ include(
     "modules:shared:infrastructure:cache",
     "modules:shared:infrastructure:persistence",
     "modules:shared:infrastructure:authentication",
+    "modules:shared:infrastructure:gateway-core",
     "modules:shared:infrastructure:api-docs",
     "modules:shared:infrastructure:tracing",
     "modules:shared:infrastructure:metrics"
@@ -51,6 +52,9 @@ include(
     "modules:services:analytics-service",
     "modules:services:documentation-service",
     "modules:services:gateway-service",
+    "modules:services:gateway-admin-service",
+    "modules:services:gateway-fhir-service",
+    "modules:services:gateway-clinical-service",
     "modules:services:ai-assistant-service",
     "modules:services:cdr-processor-service",
     "modules:services:ehr-connector-service",
@@ -68,7 +72,8 @@ include(
     "modules:services:migration-workflow-service",
     "modules:services:sales-automation-service",
     "modules:services:notification-service",
-    "modules:services:demo-seeding-service"
+    "modules:services:demo-seeding-service",
+    "modules:services:cms-connector-service"
 )
 
 // Applications

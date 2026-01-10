@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet id="0030-create-result-signatures-table" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="result_signatures"/>
+            </not>
+        </preConditions>
         <comment>Create result_signatures table for immutable audit trail of signed results</comment>
 
         <createTable tableName="result_signatures">

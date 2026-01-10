@@ -35,8 +35,8 @@ public class FhirConfig {
     @Bean
     public RestTemplate restTemplate() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(10000); // 10 seconds
-        factory.setReadTimeout(30000);    // 30 seconds
+        factory.setConnectTimeout(30000); // 30 seconds - increased for Docker network latency
+        factory.setReadTimeout(120000);   // 120 seconds - increased for batch operations
         return new RestTemplate(factory);
     }
 }

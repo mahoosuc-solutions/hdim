@@ -247,7 +247,9 @@ tasks.register("buildAllServices") {
         ":modules:services:quality-measure-service:build",
         ":modules:services:care-gap-service:build",
         ":modules:services:analytics-service:build",
-        ":modules:services:gateway-service:build"
+        ":modules:services:gateway-admin-service:build",
+        ":modules:services:gateway-fhir-service:build",
+        ":modules:services:gateway-clinical-service:build"
     )
 }
 
@@ -263,7 +265,9 @@ tasks.register("testAllServices") {
         ":modules:services:quality-measure-service:test",
         ":modules:services:care-gap-service:test",
         ":modules:services:analytics-service:test",
-        ":modules:services:gateway-service:test"
+        ":modules:services:gateway-admin-service:test",
+        ":modules:services:gateway-fhir-service:test",
+        ":modules:services:gateway-clinical-service:test"
     )
 }
 

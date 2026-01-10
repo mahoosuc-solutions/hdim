@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, delay } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -16,12 +16,20 @@ import { environment } from '../../environments/environment';
 })
 export class AiCqlGenerationService {
 
-  private readonly baseUrl = `${environment.apiUrl}/quality-measure/api/v1/measures/ai`;
+  private readonly baseUrl = `${this.resolveApiBaseUrl()}/quality-measure/api/v1/measures/ai`;
 
   // Demo mode - use mock responses for demonstration
   private readonly demoMode = true;
 
   constructor(private http: HttpClient) {}
+
+  private resolveApiBaseUrl(): string {
+    const browserOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+    if (environment.apiConfig.useApiGateway) {
+      return environment.apiConfig.apiGatewayUrl || browserOrigin;
+    }
+    return browserOrigin;
+  }
 
   /**
    * Generate CQL from natural language description.
@@ -60,8 +68,11 @@ export class AiCqlGenerationService {
     if (this.demoMode) {
       return this.mockGetTemplates(category);
     }
-    const params = category ? { category } : {};
-    return this.http.get<CqlTemplate[]>(`${this.baseUrl}/templates`, { params });
+    const params = category ? new HttpParams().set('category', category) : undefined;
+    return this.http.get<CqlTemplate[]>(`${this.baseUrl}/templates`, {
+      params,
+      observe: 'body',
+    });
   }
 
   /**

@@ -5,6 +5,20 @@ import { workspaceRoot } from '@nx/devkit';
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
 
+// Backend service URLs for API testing
+const gatewayUrl = process.env['GATEWAY_URL'] || 'http://localhost:8001';
+const gatewayEdgeUrl = process.env['GATEWAY_EDGE_URL'] || 'http://localhost:8080';
+const externalFhirUrl = process.env['EXTERNAL_FHIR_URL'] || 'http://localhost:8088';
+const jaegerUrl = process.env['JAEGER_URL'] || 'http://localhost:16686';
+
+// Export for use in test files
+export const TEST_CONFIG = {
+  gatewayUrl,
+  gatewayEdgeUrl,
+  externalFhirUrl,
+  jaegerUrl,
+};
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv

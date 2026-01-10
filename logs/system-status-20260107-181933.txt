@@ -1,0 +1,634 @@
+# HDIM Docker Status Snapshot
+# Timestamp: 2026-01-07T23:19:33Z
+# Workspace: /home/mahoosuc-solutions/projects/hdim-master
+
+## docker compose ps (core profile)
+NAME                                 IMAGE                                 COMMAND                  SERVICE                   CREATED          STATUS                          PORTS
+healthdata-cql-engine-service        hdim-master-cql-engine-service        "sh -c 'java $JAVA_O…"   cql-engine-service        15 minutes ago   Restarting (1) 15 seconds ago   
+healthdata-gateway-service           hdim-master-gateway-service           "sh -c 'java $JAVA_O…"   gateway-service           16 minutes ago   Up 15 minutes (healthy)         0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+healthdata-kafka                     confluentinc/cp-kafka:7.5.0           "/etc/confluent/dock…"   kafka                     16 minutes ago   Up 15 minutes (healthy)         0.0.0.0:9094->9092/tcp, [::]:9094->9092/tcp, 0.0.0.0:9095->9093/tcp, [::]:9095->9093/tcp
+healthdata-postgres                  postgres:16-alpine                    "docker-entrypoint.s…"   postgres                  16 minutes ago   Up 15 minutes (healthy)         0.0.0.0:5435->5432/tcp, [::]:5435->5432/tcp
+healthdata-quality-measure-service   hdim-master-quality-measure-service   "sh -c 'java $JAVA_O…"   quality-measure-service   15 minutes ago   Restarting (1) 17 seconds ago   
+healthdata-redis                     redis:7-alpine                        "docker-entrypoint.s…"   redis                     16 minutes ago   Up 15 minutes (healthy)         0.0.0.0:6380->6379/tcp, [::]:6380->6379/tcp
+healthdata-zookeeper                 confluentinc/cp-zookeeper:7.5.0       "/etc/confluent/dock…"   zookeeper                 16 minutes ago   Up 15 minutes (healthy)         2888/tcp, 3888/tcp, 0.0.0.0:2182->2181/tcp, [::]:2182->2181/tcp
+
+## docker compose ps (default)
+NAME                                 IMAGE                                 COMMAND                  SERVICE                   CREATED          STATUS                          PORTS
+healthdata-cql-engine-service        hdim-master-cql-engine-service        "sh -c 'java $JAVA_O…"   cql-engine-service        15 minutes ago   Restarting (1) 15 seconds ago   
+healthdata-gateway-service           hdim-master-gateway-service           "sh -c 'java $JAVA_O…"   gateway-service           16 minutes ago   Up 15 minutes (healthy)         0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+healthdata-kafka                     confluentinc/cp-kafka:7.5.0           "/etc/confluent/dock…"   kafka                     16 minutes ago   Up 15 minutes (healthy)         0.0.0.0:9094->9092/tcp, [::]:9094->9092/tcp, 0.0.0.0:9095->9093/tcp, [::]:9095->9093/tcp
+healthdata-postgres                  postgres:16-alpine                    "docker-entrypoint.s…"   postgres                  16 minutes ago   Up 15 minutes (healthy)         0.0.0.0:5435->5432/tcp, [::]:5435->5432/tcp
+healthdata-quality-measure-service   hdim-master-quality-measure-service   "sh -c 'java $JAVA_O…"   quality-measure-service   15 minutes ago   Restarting (1) 18 seconds ago   
+healthdata-redis                     redis:7-alpine                        "docker-entrypoint.s…"   redis                     16 minutes ago   Up 15 minutes (healthy)         0.0.0.0:6380->6379/tcp, [::]:6380->6379/tcp
+healthdata-zookeeper                 confluentinc/cp-zookeeper:7.5.0       "/etc/confluent/dock…"   zookeeper                 16 minutes ago   Up 15 minutes (healthy)         2888/tcp, 3888/tcp, 0.0.0.0:2182->2181/tcp, [::]:2182->2181/tcp
+
+## healthdata-gateway-service (last 200 lines)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+Caused by: java.io.IOException: Canceled
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:72) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at io.opentelemetry.exporter.sender.okhttp.internal.RetryInterceptor.intercept(RetryInterceptor.java:96) ~[opentelemetry-exporter-sender-okhttp-1.49.0.jar!/:1.49.0]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:201) ~[okhttp-4.12.0.jar!/:na]
+	... 4 common frames omitted
+
+2026-01-07T23:14:57.137Z ERROR 1 --- [gateway-service] [jaeger:4318/...] [                                                 ] i.o.exporter.internal.http.HttpExporter  : Failed to export spans. The request could not be executed. Full error message: timeout
+
+java.io.InterruptedIOException: timeout
+	at okhttp3.internal.connection.RealCall.timeoutExit(RealCall.kt:398) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.callDone(RealCall.kt:360) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.noMoreExchanges$okhttp(RealCall.kt:325) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:209) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:517) ~[okhttp-4.12.0.jar!/:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+Caused by: java.io.IOException: Canceled
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:72) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at io.opentelemetry.exporter.sender.okhttp.internal.RetryInterceptor.intercept(RetryInterceptor.java:96) ~[opentelemetry-exporter-sender-okhttp-1.49.0.jar!/:1.49.0]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:201) ~[okhttp-4.12.0.jar!/:na]
+	... 4 common frames omitted
+
+2026-01-07T23:15:27.153Z ERROR 1 --- [gateway-service] [jaeger:4318/...] [                                                 ] i.o.exporter.internal.http.HttpExporter  : Failed to export spans. The request could not be executed. Full error message: timeout
+
+java.io.InterruptedIOException: timeout
+	at okhttp3.internal.connection.RealCall.timeoutExit(RealCall.kt:398) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.callDone(RealCall.kt:360) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.noMoreExchanges$okhttp(RealCall.kt:325) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:209) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:517) ~[okhttp-4.12.0.jar!/:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+Caused by: java.io.IOException: Canceled
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:72) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at io.opentelemetry.exporter.sender.okhttp.internal.RetryInterceptor.intercept(RetryInterceptor.java:96) ~[opentelemetry-exporter-sender-okhttp-1.49.0.jar!/:1.49.0]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:201) ~[okhttp-4.12.0.jar!/:na]
+	... 4 common frames omitted
+
+2026-01-07T23:16:00.952Z ERROR 1 --- [gateway-service] [jaeger:4318/...] [                                                 ] i.o.exporter.internal.http.HttpExporter  : Failed to export spans. The request could not be executed. Full error message: timeout
+
+java.io.InterruptedIOException: timeout
+	at okhttp3.internal.connection.RealCall.timeoutExit(RealCall.kt:398) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.callDone(RealCall.kt:360) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.noMoreExchanges$okhttp(RealCall.kt:325) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:209) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:517) ~[okhttp-4.12.0.jar!/:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+Caused by: java.io.IOException: Canceled
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:72) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at io.opentelemetry.exporter.sender.okhttp.internal.RetryInterceptor.intercept(RetryInterceptor.java:96) ~[opentelemetry-exporter-sender-okhttp-1.49.0.jar!/:1.49.0]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:201) ~[okhttp-4.12.0.jar!/:na]
+	... 4 common frames omitted
+
+2026-01-07T23:16:34.089Z ERROR 1 --- [gateway-service] [jaeger:4318/...] [                                                 ] i.o.exporter.internal.http.HttpExporter  : Failed to export spans. The request could not be executed. Full error message: timeout
+
+java.io.InterruptedIOException: timeout
+	at okhttp3.internal.connection.RealCall.timeoutExit(RealCall.kt:398) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.callDone(RealCall.kt:360) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.noMoreExchanges$okhttp(RealCall.kt:325) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:209) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:517) ~[okhttp-4.12.0.jar!/:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+Caused by: java.io.IOException: Canceled
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:72) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at io.opentelemetry.exporter.sender.okhttp.internal.RetryInterceptor.intercept(RetryInterceptor.java:96) ~[opentelemetry-exporter-sender-okhttp-1.49.0.jar!/:1.49.0]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:201) ~[okhttp-4.12.0.jar!/:na]
+	... 4 common frames omitted
+
+2026-01-07T23:17:01.690Z ERROR 1 --- [gateway-service] [jaeger:4318/...] [                                                 ] i.o.exporter.internal.http.HttpExporter  : Failed to export spans. The request could not be executed. Full error message: timeout
+
+java.io.InterruptedIOException: timeout
+	at okhttp3.internal.connection.RealCall.timeoutExit(RealCall.kt:398) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.callDone(RealCall.kt:360) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.noMoreExchanges$okhttp(RealCall.kt:325) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:209) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:517) ~[okhttp-4.12.0.jar!/:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+Caused by: java.io.IOException: Canceled
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:72) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at io.opentelemetry.exporter.sender.okhttp.internal.RetryInterceptor.intercept(RetryInterceptor.java:96) ~[opentelemetry-exporter-sender-okhttp-1.49.0.jar!/:1.49.0]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:201) ~[okhttp-4.12.0.jar!/:na]
+	... 4 common frames omitted
+
+2026-01-07T23:17:34.032Z ERROR 1 --- [gateway-service] [jaeger:4318/...] [                                                 ] i.o.exporter.internal.http.HttpExporter  : Failed to export spans. The request could not be executed. Full error message: timeout
+
+java.io.InterruptedIOException: timeout
+	at okhttp3.internal.connection.RealCall.timeoutExit(RealCall.kt:398) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.callDone(RealCall.kt:360) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.noMoreExchanges$okhttp(RealCall.kt:325) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:209) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:517) ~[okhttp-4.12.0.jar!/:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+Caused by: java.io.IOException: Canceled
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:72) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at io.opentelemetry.exporter.sender.okhttp.internal.RetryInterceptor.intercept(RetryInterceptor.java:96) ~[opentelemetry-exporter-sender-okhttp-1.49.0.jar!/:1.49.0]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:201) ~[okhttp-4.12.0.jar!/:na]
+	... 4 common frames omitted
+
+2026-01-07T23:18:02.548Z ERROR 1 --- [gateway-service] [jaeger:4318/...] [                                                 ] i.o.exporter.internal.http.HttpExporter  : Failed to export spans. The request could not be executed. Full error message: timeout
+
+java.io.InterruptedIOException: timeout
+	at okhttp3.internal.connection.RealCall.timeoutExit(RealCall.kt:398) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.callDone(RealCall.kt:360) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.noMoreExchanges$okhttp(RealCall.kt:325) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:209) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:517) ~[okhttp-4.12.0.jar!/:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+Caused by: java.io.IOException: Canceled
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:72) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at io.opentelemetry.exporter.sender.okhttp.internal.RetryInterceptor.intercept(RetryInterceptor.java:96) ~[opentelemetry-exporter-sender-okhttp-1.49.0.jar!/:1.49.0]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:201) ~[okhttp-4.12.0.jar!/:na]
+	... 4 common frames omitted
+
+2026-01-07T23:18:30.540Z ERROR 1 --- [gateway-service] [jaeger:4318/...] [                                                 ] i.o.exporter.internal.http.HttpExporter  : Failed to export spans. The request could not be executed. Full error message: timeout
+
+java.io.InterruptedIOException: timeout
+	at okhttp3.internal.connection.RealCall.timeoutExit(RealCall.kt:398) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.callDone(RealCall.kt:360) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.noMoreExchanges$okhttp(RealCall.kt:325) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:209) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:517) ~[okhttp-4.12.0.jar!/:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+Caused by: java.io.IOException: Canceled
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:72) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at io.opentelemetry.exporter.sender.okhttp.internal.RetryInterceptor.intercept(RetryInterceptor.java:96) ~[opentelemetry-exporter-sender-okhttp-1.49.0.jar!/:1.49.0]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:201) ~[okhttp-4.12.0.jar!/:na]
+	... 4 common frames omitted
+
+2026-01-07T23:19:03.977Z ERROR 1 --- [gateway-service] [jaeger:4318/...] [                                                 ] i.o.exporter.internal.http.HttpExporter  : Failed to export spans. The request could not be executed. Full error message: timeout
+
+java.io.InterruptedIOException: timeout
+	at okhttp3.internal.connection.RealCall.timeoutExit(RealCall.kt:398) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.callDone(RealCall.kt:360) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.noMoreExchanges$okhttp(RealCall.kt:325) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:209) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:517) ~[okhttp-4.12.0.jar!/:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+Caused by: java.io.IOException: Canceled
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:72) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at io.opentelemetry.exporter.sender.okhttp.internal.RetryInterceptor.intercept(RetryInterceptor.java:96) ~[opentelemetry-exporter-sender-okhttp-1.49.0.jar!/:1.49.0]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:201) ~[okhttp-4.12.0.jar!/:na]
+	... 4 common frames omitted
+
+2026-01-07T23:19:31.900Z ERROR 1 --- [gateway-service] [jaeger:4318/...] [                                                 ] i.o.exporter.internal.http.HttpExporter  : Failed to export spans. The request could not be executed. Full error message: timeout
+
+java.io.InterruptedIOException: timeout
+	at okhttp3.internal.connection.RealCall.timeoutExit(RealCall.kt:398) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.callDone(RealCall.kt:360) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.noMoreExchanges$okhttp(RealCall.kt:325) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:209) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:517) ~[okhttp-4.12.0.jar!/:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+Caused by: java.io.IOException: Canceled
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:72) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at io.opentelemetry.exporter.sender.okhttp.internal.RetryInterceptor.intercept(RetryInterceptor.java:96) ~[opentelemetry-exporter-sender-okhttp-1.49.0.jar!/:1.49.0]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar!/:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:201) ~[okhttp-4.12.0.jar!/:na]
+	... 4 common frames omitted
+
+
+## healthdata-cql-engine-service (last 200 lines)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.command.core.AbstractUpdateCommandStep.run(AbstractUpdateCommandStep.java:112)
+	at liquibase.command.core.UpdateCommandStep.run(UpdateCommandStep.java:105)
+	at liquibase.command.CommandScope.execute(CommandScope.java:220)
+	at liquibase.Liquibase.lambda$update$0(Liquibase.java:216)
+	at liquibase.Scope.lambda$child$0(Scope.java:191)
+	at liquibase.Scope.child(Scope.java:200)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.Liquibase.runInScope(Liquibase.java:1329)
+	at liquibase.Liquibase.update(Liquibase.java:205)
+	at liquibase.Liquibase.update(Liquibase.java:188)
+	at liquibase.integration.spring.SpringLiquibase.performUpdate(SpringLiquibase.java:305)
+	at liquibase.integration.spring.SpringLiquibase.lambda$afterPropertiesSet$0(SpringLiquibase.java:257)
+	at liquibase.Scope.lambda$child$0(Scope.java:191)
+	at liquibase.Scope.child(Scope.java:200)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.Scope.child(Scope.java:257)
+	at liquibase.integration.spring.SpringLiquibase.afterPropertiesSet(SpringLiquibase.java:250)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1853)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1802)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:600)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:200)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:313)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:205)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:954)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:625)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:755)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:335)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1364)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1353)
+	at com.healthdata.cql.CqlEngineServiceApplication.main(CqlEngineServiceApplication.java:49)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:102)
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:64)
+	at org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:40)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "cql_libraries" already exists
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2734)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:518)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:357)
+	at org.postgresql.jdbc.PgStatement.executeCachedSql(PgStatement.java:342)
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:318)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:313)
+	at com.zaxxer.hikari.pool.ProxyStatement.execute(ProxyStatement.java:94)
+	at com.zaxxer.hikari.pool.HikariProxyStatement.execute(HikariProxyStatement.java)
+	at liquibase.executor.jvm.JdbcExecutor$ExecuteStatementCallback.doInStatement(JdbcExecutor.java:491)
+	... 68 common frames omitted
+2026-01-07 23:19:18 - UPDATE SUMMARY
+2026-01-07 23:19:18 - Run:                          0
+2026-01-07 23:19:18 - Previously run:               0
+2026-01-07 23:19:18 - Filtered out:                 0
+2026-01-07 23:19:18 - -------------------------------
+2026-01-07 23:19:18 - Total change sets:           19
+2026-01-07 23:19:18 - Update summary generated
+2026-01-07 23:19:18 - Update command encountered an exception.
+2026-01-07 23:19:18 - Successfully released change log lock
+2026-01-07 23:19:18 - Logging exception.
+2026-01-07 23:19:18 - ERROR: Exception Details
+2026-01-07 23:19:18 - ERROR: Exception Primary Class:  PSQLException
+2026-01-07 23:19:18 - ERROR: Exception Primary Reason:  ERROR: relation "cql_libraries" already exists
+2026-01-07 23:19:18 - ERROR: Exception Primary Source:  PostgreSQL 16.11
+2026-01-07 23:19:18 - Command execution complete
+2026-01-07 23:19:18 - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/autoconfigure/orm/jpa/HibernateJpaConfiguration.class]: Failed to initialize dependency 'liquibase' of LoadTimeWeaverAware bean 'entityManagerFactory': Error creating bean with name 'liquibase' defined in class path resource [org/springframework/boot/autoconfigure/liquibase/LiquibaseAutoConfiguration$LiquibaseConfiguration.class]: liquibase.exception.CommandExecutionException: liquibase.exception.LiquibaseException: liquibase.exception.MigrationFailedException: Migration failed for changeset db/changelog/0001-create-cql-libraries-table.xml::0001-create-cql-libraries-table::healthdata-system:
+     Reason: liquibase.exception.DatabaseException: ERROR: relation "cql_libraries" already exists [Failed SQL: (0) CREATE TABLE public.cql_libraries (id UUID NOT NULL, tenant_id VARCHAR(64) NOT NULL, name VARCHAR(255) NOT NULL, version VARCHAR(50) NOT NULL, status VARCHAR(20) DEFAULT 'DRAFT' NOT NULL, cql_content TEXT NOT NULL, compiled_elm TEXT, description TEXT, publisher VARCHAR(255), created_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, updated_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, created_by VARCHAR(128), CONSTRAINT cql_libraries_pkey PRIMARY KEY (id))]
+2026-01-07 23:19:18 - HikariPool-1 - Shutdown initiated...
+2026-01-07 23:19:18 - HikariPool-1 - Shutdown completed.
+2026-01-07 23:19:18 - Calling shutdown() multiple times.
+2026-01-07 23:19:18 - Calling shutdown() multiple times.
+2026-01-07 23:19:18 - Stopping service [Tomcat]
+2026-01-07 23:19:18 - The web application [cql-engine] appears to have started a thread named [BatchSpanProcessor_WorkerThread-1] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.parkNanos(Unknown Source)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(Unknown Source)
+ java.base/java.util.concurrent.ArrayBlockingQueue.poll(Unknown Source)
+ io.opentelemetry.sdk.trace.export.BatchSpanProcessor$Worker.run(BatchSpanProcessor.java:266)
+ java.base/java.lang.Thread.run(Unknown Source)
+2026-01-07 23:19:18 - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-01-07 23:19:18 - Application run failed
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/autoconfigure/orm/jpa/HibernateJpaConfiguration.class]: Failed to initialize dependency 'liquibase' of LoadTimeWeaverAware bean 'entityManagerFactory': Error creating bean with name 'liquibase' defined in class path resource [org/springframework/boot/autoconfigure/liquibase/LiquibaseAutoConfiguration$LiquibaseConfiguration.class]: liquibase.exception.CommandExecutionException: liquibase.exception.LiquibaseException: liquibase.exception.MigrationFailedException: Migration failed for changeset db/changelog/0001-create-cql-libraries-table.xml::0001-create-cql-libraries-table::healthdata-system:
+     Reason: liquibase.exception.DatabaseException: ERROR: relation "cql_libraries" already exists [Failed SQL: (0) CREATE TABLE public.cql_libraries (id UUID NOT NULL, tenant_id VARCHAR(64) NOT NULL, name VARCHAR(255) NOT NULL, version VARCHAR(50) NOT NULL, status VARCHAR(20) DEFAULT 'DRAFT' NOT NULL, cql_content TEXT NOT NULL, compiled_elm TEXT, description TEXT, publisher VARCHAR(255), created_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, updated_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, created_by VARCHAR(128), CONSTRAINT cql_libraries_pkey PRIMARY KEY (id))]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:326)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:205)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:954)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:625)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:755)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:335)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1364)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1353)
+	at com.healthdata.cql.CqlEngineServiceApplication.main(CqlEngineServiceApplication.java:49)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:102)
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:64)
+	at org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:40)
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'liquibase' defined in class path resource [org/springframework/boot/autoconfigure/liquibase/LiquibaseAutoConfiguration$LiquibaseConfiguration.class]: liquibase.exception.CommandExecutionException: liquibase.exception.LiquibaseException: liquibase.exception.MigrationFailedException: Migration failed for changeset db/changelog/0001-create-cql-libraries-table.xml::0001-create-cql-libraries-table::healthdata-system:
+     Reason: liquibase.exception.DatabaseException: ERROR: relation "cql_libraries" already exists [Failed SQL: (0) CREATE TABLE public.cql_libraries (id UUID NOT NULL, tenant_id VARCHAR(64) NOT NULL, name VARCHAR(255) NOT NULL, version VARCHAR(50) NOT NULL, status VARCHAR(20) DEFAULT 'DRAFT' NOT NULL, cql_content TEXT NOT NULL, compiled_elm TEXT, description TEXT, publisher VARCHAR(255), created_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, updated_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, created_by VARCHAR(128), CONSTRAINT cql_libraries_pkey PRIMARY KEY (id))]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1806)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:600)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:200)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:313)
+	... 15 common frames omitted
+Caused by: liquibase.exception.UnexpectedLiquibaseException: liquibase.exception.CommandExecutionException: liquibase.exception.LiquibaseException: liquibase.exception.MigrationFailedException: Migration failed for changeset db/changelog/0001-create-cql-libraries-table.xml::0001-create-cql-libraries-table::healthdata-system:
+     Reason: liquibase.exception.DatabaseException: ERROR: relation "cql_libraries" already exists [Failed SQL: (0) CREATE TABLE public.cql_libraries (id UUID NOT NULL, tenant_id VARCHAR(64) NOT NULL, name VARCHAR(255) NOT NULL, version VARCHAR(50) NOT NULL, status VARCHAR(20) DEFAULT 'DRAFT' NOT NULL, cql_content TEXT NOT NULL, compiled_elm TEXT, description TEXT, publisher VARCHAR(255), created_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, updated_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, created_by VARCHAR(128), CONSTRAINT cql_libraries_pkey PRIMARY KEY (id))]
+	at liquibase.integration.spring.SpringLiquibase.afterPropertiesSet(SpringLiquibase.java:267)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1853)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1802)
+	... 22 common frames omitted
+Caused by: liquibase.exception.CommandExecutionException: liquibase.exception.LiquibaseException: liquibase.exception.MigrationFailedException: Migration failed for changeset db/changelog/0001-create-cql-libraries-table.xml::0001-create-cql-libraries-table::healthdata-system:
+     Reason: liquibase.exception.DatabaseException: ERROR: relation "cql_libraries" already exists [Failed SQL: (0) CREATE TABLE public.cql_libraries (id UUID NOT NULL, tenant_id VARCHAR(64) NOT NULL, name VARCHAR(255) NOT NULL, version VARCHAR(50) NOT NULL, status VARCHAR(20) DEFAULT 'DRAFT' NOT NULL, cql_content TEXT NOT NULL, compiled_elm TEXT, description TEXT, publisher VARCHAR(255), created_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, updated_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, created_by VARCHAR(128), CONSTRAINT cql_libraries_pkey PRIMARY KEY (id))]
+	at liquibase.command.CommandScope.execute(CommandScope.java:258)
+	at liquibase.Liquibase.lambda$update$0(Liquibase.java:216)
+	at liquibase.Scope.lambda$child$0(Scope.java:191)
+	at liquibase.Scope.child(Scope.java:200)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.Liquibase.runInScope(Liquibase.java:1329)
+	at liquibase.Liquibase.update(Liquibase.java:205)
+	at liquibase.Liquibase.update(Liquibase.java:188)
+	at liquibase.integration.spring.SpringLiquibase.performUpdate(SpringLiquibase.java:305)
+	at liquibase.integration.spring.SpringLiquibase.lambda$afterPropertiesSet$0(SpringLiquibase.java:257)
+	at liquibase.Scope.lambda$child$0(Scope.java:191)
+	at liquibase.Scope.child(Scope.java:200)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.Scope.child(Scope.java:257)
+	at liquibase.integration.spring.SpringLiquibase.afterPropertiesSet(SpringLiquibase.java:250)
+	... 24 common frames omitted
+Caused by: liquibase.exception.LiquibaseException: liquibase.exception.MigrationFailedException: Migration failed for changeset db/changelog/0001-create-cql-libraries-table.xml::0001-create-cql-libraries-table::healthdata-system:
+     Reason: liquibase.exception.DatabaseException: ERROR: relation "cql_libraries" already exists [Failed SQL: (0) CREATE TABLE public.cql_libraries (id UUID NOT NULL, tenant_id VARCHAR(64) NOT NULL, name VARCHAR(255) NOT NULL, version VARCHAR(50) NOT NULL, status VARCHAR(20) DEFAULT 'DRAFT' NOT NULL, cql_content TEXT NOT NULL, compiled_elm TEXT, description TEXT, publisher VARCHAR(255), created_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, updated_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, created_by VARCHAR(128), CONSTRAINT cql_libraries_pkey PRIMARY KEY (id))]
+	at liquibase.changelog.ChangeLogIterator.run(ChangeLogIterator.java:148)
+	at liquibase.command.core.AbstractUpdateCommandStep.lambda$run$0(AbstractUpdateCommandStep.java:114)
+	at liquibase.Scope.lambda$child$0(Scope.java:191)
+	at liquibase.Scope.child(Scope.java:200)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.command.core.AbstractUpdateCommandStep.run(AbstractUpdateCommandStep.java:112)
+	at liquibase.command.core.UpdateCommandStep.run(UpdateCommandStep.java:105)
+	at liquibase.command.CommandScope.execute(CommandScope.java:220)
+	... 40 common frames omitted
+Caused by: liquibase.exception.MigrationFailedException: Migration failed for changeset db/changelog/0001-create-cql-libraries-table.xml::0001-create-cql-libraries-table::healthdata-system:
+     Reason: liquibase.exception.DatabaseException: ERROR: relation "cql_libraries" already exists [Failed SQL: (0) CREATE TABLE public.cql_libraries (id UUID NOT NULL, tenant_id VARCHAR(64) NOT NULL, name VARCHAR(255) NOT NULL, version VARCHAR(50) NOT NULL, status VARCHAR(20) DEFAULT 'DRAFT' NOT NULL, cql_content TEXT NOT NULL, compiled_elm TEXT, description TEXT, publisher VARCHAR(255), created_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, updated_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, created_by VARCHAR(128), CONSTRAINT cql_libraries_pkey PRIMARY KEY (id))]
+	at liquibase.changelog.ChangeSet.execute(ChangeSet.java:820)
+	at liquibase.changelog.visitor.UpdateVisitor.executeAcceptedChange(UpdateVisitor.java:126)
+	at liquibase.changelog.visitor.UpdateVisitor.visit(UpdateVisitor.java:70)
+	at liquibase.changelog.ChangeLogIterator.lambda$run$0(ChangeLogIterator.java:131)
+	at liquibase.Scope.lambda$child$0(Scope.java:191)
+	at liquibase.Scope.child(Scope.java:200)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.changelog.ChangeLogIterator.lambda$run$1(ChangeLogIterator.java:120)
+	at liquibase.Scope.lambda$child$0(Scope.java:191)
+	at liquibase.Scope.child(Scope.java:200)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.Scope.child(Scope.java:257)
+	at liquibase.Scope.child(Scope.java:261)
+	at liquibase.changelog.ChangeLogIterator.run(ChangeLogIterator.java:89)
+	... 48 common frames omitted
+Caused by: liquibase.exception.DatabaseException: ERROR: relation "cql_libraries" already exists [Failed SQL: (0) CREATE TABLE public.cql_libraries (id UUID NOT NULL, tenant_id VARCHAR(64) NOT NULL, name VARCHAR(255) NOT NULL, version VARCHAR(50) NOT NULL, status VARCHAR(20) DEFAULT 'DRAFT' NOT NULL, cql_content TEXT NOT NULL, compiled_elm TEXT, description TEXT, publisher VARCHAR(255), created_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, updated_at TIMESTAMP with time zone DEFAULT NOW() NOT NULL, created_by VARCHAR(128), CONSTRAINT cql_libraries_pkey PRIMARY KEY (id))]
+	at liquibase.executor.jvm.JdbcExecutor$ExecuteStatementCallback.doInStatement(JdbcExecutor.java:497)
+	at liquibase.executor.jvm.JdbcExecutor.execute(JdbcExecutor.java:83)
+	at liquibase.executor.jvm.JdbcExecutor.execute(JdbcExecutor.java:185)
+	at liquibase.executor.AbstractExecutor.execute(AbstractExecutor.java:141)
+	at liquibase.database.AbstractJdbcDatabase.executeStatements(AbstractJdbcDatabase.java:1189)
+	at liquibase.changelog.ChangeSet.execute(ChangeSet.java:776)
+	... 63 common frames omitted
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "cql_libraries" already exists
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2734)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:518)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:357)
+	at org.postgresql.jdbc.PgStatement.executeCachedSql(PgStatement.java:342)
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:318)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:313)
+	at com.zaxxer.hikari.pool.ProxyStatement.execute(ProxyStatement.java:94)
+	at com.zaxxer.hikari.pool.HikariProxyStatement.execute(HikariProxyStatement.java)
+	at liquibase.executor.jvm.JdbcExecutor$ExecuteStatementCallback.doInStatement(JdbcExecutor.java:491)
+	... 68 common frames omitted
+
+## healthdata-quality-measure-service (last 200 lines)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.command.core.AbstractUpdateCommandStep.run(AbstractUpdateCommandStep.java:112)
+	at liquibase.command.core.UpdateCommandStep.run(UpdateCommandStep.java:105)
+	at liquibase.command.CommandScope.execute(CommandScope.java:220)
+	at liquibase.Liquibase.lambda$update$0(Liquibase.java:216)
+	at liquibase.Scope.lambda$child$0(Scope.java:191)
+	at liquibase.Scope.child(Scope.java:200)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.Liquibase.runInScope(Liquibase.java:1329)
+	at liquibase.Liquibase.update(Liquibase.java:205)
+	at liquibase.Liquibase.update(Liquibase.java:188)
+	at liquibase.integration.spring.SpringLiquibase.performUpdate(SpringLiquibase.java:305)
+	at liquibase.integration.spring.SpringLiquibase.lambda$afterPropertiesSet$0(SpringLiquibase.java:257)
+	at liquibase.Scope.lambda$child$0(Scope.java:191)
+	at liquibase.Scope.child(Scope.java:200)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.Scope.child(Scope.java:257)
+	at liquibase.integration.spring.SpringLiquibase.afterPropertiesSet(SpringLiquibase.java:250)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1873)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1822)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:607)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:315)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:207)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:973)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:752)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:318)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1361)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1350)
+	at com.healthdata.quality.QualityMeasureServiceApplication.main(QualityMeasureServiceApplication.java:67)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:106)
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:64)
+	at org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:40)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "quality_measure_results" already exists
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2734)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:518)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:357)
+	at org.postgresql.jdbc.PgStatement.executeCachedSql(PgStatement.java:342)
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:318)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:313)
+	at com.zaxxer.hikari.pool.ProxyStatement.execute(ProxyStatement.java:94)
+	at com.zaxxer.hikari.pool.HikariProxyStatement.execute(HikariProxyStatement.java)
+	at liquibase.executor.jvm.JdbcExecutor$ExecuteStatementCallback.doInStatement(JdbcExecutor.java:491)
+	... 68 common frames omitted
+2026-01-07 23:19:15 - UPDATE SUMMARY
+2026-01-07 23:19:15 - Run:                          0
+2026-01-07 23:19:15 - Previously run:               0
+2026-01-07 23:19:15 - Filtered out:                 0
+2026-01-07 23:19:15 - -------------------------------
+2026-01-07 23:19:15 - Total change sets:           52
+2026-01-07 23:19:15 - Update summary generated
+2026-01-07 23:19:15 - Update command encountered an exception.
+2026-01-07 23:19:15 - Successfully released change log lock
+2026-01-07 23:19:15 - Logging exception.
+2026-01-07 23:19:15 - ERROR: Exception Details
+2026-01-07 23:19:15 - ERROR: Exception Primary Class:  PSQLException
+2026-01-07 23:19:15 - ERROR: Exception Primary Reason:  ERROR: relation "quality_measure_results" already exists
+2026-01-07 23:19:15 - ERROR: Exception Primary Source:  PostgreSQL 16.11
+2026-01-07 23:19:15 - Command execution complete
+2026-01-07 23:19:15 - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/autoconfigure/orm/jpa/HibernateJpaConfiguration.class]: Failed to initialize dependency 'liquibase' of LoadTimeWeaverAware bean 'entityManagerFactory': Error creating bean with name 'liquibase' defined in class path resource [org/springframework/boot/autoconfigure/liquibase/LiquibaseAutoConfiguration$LiquibaseConfiguration.class]: liquibase.exception.CommandExecutionException: liquibase.exception.LiquibaseException: liquibase.exception.MigrationFailedException: Migration failed for changeset db/changelog/0001-create-quality-measure-results-table.xml::0001-create-quality-measure-results-table::healthdata-team5:
+     Reason: liquibase.exception.DatabaseException: ERROR: relation "quality_measure_results" already exists [Failed SQL: (0) CREATE TABLE public.quality_measure_results (id UUID NOT NULL, tenant_id VARCHAR(50) NOT NULL, patient_id UUID NOT NULL, measure_id VARCHAR(100) NOT NULL, measure_name VARCHAR(255) NOT NULL, measure_category VARCHAR(50), measure_year INTEGER, numerator_compliant BOOLEAN NOT NULL, denominator_elligible BOOLEAN NOT NULL, compliance_rate DOUBLE PRECISION, score DOUBLE PRECISION, calculation_date date NOT NULL, cql_library VARCHAR(200), cql_result JSONB, created_at TIMESTAMP with time zone NOT NULL, created_by VARCHAR(100) NOT NULL, version INTEGER DEFAULT 0, CONSTRAINT quality_measure_results_pkey PRIMARY KEY (id))]
+2026-01-07 23:19:15 - HikariPool-1 - Shutdown initiated...
+2026-01-07 23:19:15 - HikariPool-1 - Shutdown completed.
+2026-01-07 23:19:15 - Calling shutdown() multiple times.
+2026-01-07 23:19:15 - Calling shutdown() multiple times.
+2026-01-07 23:19:15 - Stopping service [Tomcat]
+2026-01-07 23:19:15 - The web application [quality-measure] appears to have started a thread named [BatchSpanProcessor_WorkerThread-1] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.parkNanos(Unknown Source)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(Unknown Source)
+ java.base/java.util.concurrent.ArrayBlockingQueue.poll(Unknown Source)
+ io.opentelemetry.sdk.trace.export.BatchSpanProcessor$Worker.run(BatchSpanProcessor.java:266)
+ java.base/java.lang.Thread.run(Unknown Source)
+2026-01-07 23:19:15 - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-01-07 23:19:15 - Application run failed
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/autoconfigure/orm/jpa/HibernateJpaConfiguration.class]: Failed to initialize dependency 'liquibase' of LoadTimeWeaverAware bean 'entityManagerFactory': Error creating bean with name 'liquibase' defined in class path resource [org/springframework/boot/autoconfigure/liquibase/LiquibaseAutoConfiguration$LiquibaseConfiguration.class]: liquibase.exception.CommandExecutionException: liquibase.exception.LiquibaseException: liquibase.exception.MigrationFailedException: Migration failed for changeset db/changelog/0001-create-quality-measure-results-table.xml::0001-create-quality-measure-results-table::healthdata-team5:
+     Reason: liquibase.exception.DatabaseException: ERROR: relation "quality_measure_results" already exists [Failed SQL: (0) CREATE TABLE public.quality_measure_results (id UUID NOT NULL, tenant_id VARCHAR(50) NOT NULL, patient_id UUID NOT NULL, measure_id VARCHAR(100) NOT NULL, measure_name VARCHAR(255) NOT NULL, measure_category VARCHAR(50), measure_year INTEGER, numerator_compliant BOOLEAN NOT NULL, denominator_elligible BOOLEAN NOT NULL, compliance_rate DOUBLE PRECISION, score DOUBLE PRECISION, calculation_date date NOT NULL, cql_library VARCHAR(200), cql_result JSONB, created_at TIMESTAMP with time zone NOT NULL, created_by VARCHAR(100) NOT NULL, version INTEGER DEFAULT 0, CONSTRAINT quality_measure_results_pkey PRIMARY KEY (id))]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:328)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:207)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:973)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:752)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:318)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1361)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1350)
+	at com.healthdata.quality.QualityMeasureServiceApplication.main(QualityMeasureServiceApplication.java:67)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:106)
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:64)
+	at org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:40)
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'liquibase' defined in class path resource [org/springframework/boot/autoconfigure/liquibase/LiquibaseAutoConfiguration$LiquibaseConfiguration.class]: liquibase.exception.CommandExecutionException: liquibase.exception.LiquibaseException: liquibase.exception.MigrationFailedException: Migration failed for changeset db/changelog/0001-create-quality-measure-results-table.xml::0001-create-quality-measure-results-table::healthdata-team5:
+     Reason: liquibase.exception.DatabaseException: ERROR: relation "quality_measure_results" already exists [Failed SQL: (0) CREATE TABLE public.quality_measure_results (id UUID NOT NULL, tenant_id VARCHAR(50) NOT NULL, patient_id UUID NOT NULL, measure_id VARCHAR(100) NOT NULL, measure_name VARCHAR(255) NOT NULL, measure_category VARCHAR(50), measure_year INTEGER, numerator_compliant BOOLEAN NOT NULL, denominator_elligible BOOLEAN NOT NULL, compliance_rate DOUBLE PRECISION, score DOUBLE PRECISION, calculation_date date NOT NULL, cql_library VARCHAR(200), cql_result JSONB, created_at TIMESTAMP with time zone NOT NULL, created_by VARCHAR(100) NOT NULL, version INTEGER DEFAULT 0, CONSTRAINT quality_measure_results_pkey PRIMARY KEY (id))]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1826)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:607)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:315)
+	... 15 common frames omitted
+Caused by: liquibase.exception.UnexpectedLiquibaseException: liquibase.exception.CommandExecutionException: liquibase.exception.LiquibaseException: liquibase.exception.MigrationFailedException: Migration failed for changeset db/changelog/0001-create-quality-measure-results-table.xml::0001-create-quality-measure-results-table::healthdata-team5:
+     Reason: liquibase.exception.DatabaseException: ERROR: relation "quality_measure_results" already exists [Failed SQL: (0) CREATE TABLE public.quality_measure_results (id UUID NOT NULL, tenant_id VARCHAR(50) NOT NULL, patient_id UUID NOT NULL, measure_id VARCHAR(100) NOT NULL, measure_name VARCHAR(255) NOT NULL, measure_category VARCHAR(50), measure_year INTEGER, numerator_compliant BOOLEAN NOT NULL, denominator_elligible BOOLEAN NOT NULL, compliance_rate DOUBLE PRECISION, score DOUBLE PRECISION, calculation_date date NOT NULL, cql_library VARCHAR(200), cql_result JSONB, created_at TIMESTAMP with time zone NOT NULL, created_by VARCHAR(100) NOT NULL, version INTEGER DEFAULT 0, CONSTRAINT quality_measure_results_pkey PRIMARY KEY (id))]
+	at liquibase.integration.spring.SpringLiquibase.afterPropertiesSet(SpringLiquibase.java:267)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1873)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1822)
+	... 22 common frames omitted
+Caused by: liquibase.exception.CommandExecutionException: liquibase.exception.LiquibaseException: liquibase.exception.MigrationFailedException: Migration failed for changeset db/changelog/0001-create-quality-measure-results-table.xml::0001-create-quality-measure-results-table::healthdata-team5:
+     Reason: liquibase.exception.DatabaseException: ERROR: relation "quality_measure_results" already exists [Failed SQL: (0) CREATE TABLE public.quality_measure_results (id UUID NOT NULL, tenant_id VARCHAR(50) NOT NULL, patient_id UUID NOT NULL, measure_id VARCHAR(100) NOT NULL, measure_name VARCHAR(255) NOT NULL, measure_category VARCHAR(50), measure_year INTEGER, numerator_compliant BOOLEAN NOT NULL, denominator_elligible BOOLEAN NOT NULL, compliance_rate DOUBLE PRECISION, score DOUBLE PRECISION, calculation_date date NOT NULL, cql_library VARCHAR(200), cql_result JSONB, created_at TIMESTAMP with time zone NOT NULL, created_by VARCHAR(100) NOT NULL, version INTEGER DEFAULT 0, CONSTRAINT quality_measure_results_pkey PRIMARY KEY (id))]
+	at liquibase.command.CommandScope.execute(CommandScope.java:258)
+	at liquibase.Liquibase.lambda$update$0(Liquibase.java:216)
+	at liquibase.Scope.lambda$child$0(Scope.java:191)
+	at liquibase.Scope.child(Scope.java:200)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.Liquibase.runInScope(Liquibase.java:1329)
+	at liquibase.Liquibase.update(Liquibase.java:205)
+	at liquibase.Liquibase.update(Liquibase.java:188)
+	at liquibase.integration.spring.SpringLiquibase.performUpdate(SpringLiquibase.java:305)
+	at liquibase.integration.spring.SpringLiquibase.lambda$afterPropertiesSet$0(SpringLiquibase.java:257)
+	at liquibase.Scope.lambda$child$0(Scope.java:191)
+	at liquibase.Scope.child(Scope.java:200)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.Scope.child(Scope.java:257)
+	at liquibase.integration.spring.SpringLiquibase.afterPropertiesSet(SpringLiquibase.java:250)
+	... 24 common frames omitted
+Caused by: liquibase.exception.LiquibaseException: liquibase.exception.MigrationFailedException: Migration failed for changeset db/changelog/0001-create-quality-measure-results-table.xml::0001-create-quality-measure-results-table::healthdata-team5:
+     Reason: liquibase.exception.DatabaseException: ERROR: relation "quality_measure_results" already exists [Failed SQL: (0) CREATE TABLE public.quality_measure_results (id UUID NOT NULL, tenant_id VARCHAR(50) NOT NULL, patient_id UUID NOT NULL, measure_id VARCHAR(100) NOT NULL, measure_name VARCHAR(255) NOT NULL, measure_category VARCHAR(50), measure_year INTEGER, numerator_compliant BOOLEAN NOT NULL, denominator_elligible BOOLEAN NOT NULL, compliance_rate DOUBLE PRECISION, score DOUBLE PRECISION, calculation_date date NOT NULL, cql_library VARCHAR(200), cql_result JSONB, created_at TIMESTAMP with time zone NOT NULL, created_by VARCHAR(100) NOT NULL, version INTEGER DEFAULT 0, CONSTRAINT quality_measure_results_pkey PRIMARY KEY (id))]
+	at liquibase.changelog.ChangeLogIterator.run(ChangeLogIterator.java:148)
+	at liquibase.command.core.AbstractUpdateCommandStep.lambda$run$0(AbstractUpdateCommandStep.java:114)
+	at liquibase.Scope.lambda$child$0(Scope.java:191)
+	at liquibase.Scope.child(Scope.java:200)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.command.core.AbstractUpdateCommandStep.run(AbstractUpdateCommandStep.java:112)
+	at liquibase.command.core.UpdateCommandStep.run(UpdateCommandStep.java:105)
+	at liquibase.command.CommandScope.execute(CommandScope.java:220)
+	... 40 common frames omitted
+Caused by: liquibase.exception.MigrationFailedException: Migration failed for changeset db/changelog/0001-create-quality-measure-results-table.xml::0001-create-quality-measure-results-table::healthdata-team5:
+     Reason: liquibase.exception.DatabaseException: ERROR: relation "quality_measure_results" already exists [Failed SQL: (0) CREATE TABLE public.quality_measure_results (id UUID NOT NULL, tenant_id VARCHAR(50) NOT NULL, patient_id UUID NOT NULL, measure_id VARCHAR(100) NOT NULL, measure_name VARCHAR(255) NOT NULL, measure_category VARCHAR(50), measure_year INTEGER, numerator_compliant BOOLEAN NOT NULL, denominator_elligible BOOLEAN NOT NULL, compliance_rate DOUBLE PRECISION, score DOUBLE PRECISION, calculation_date date NOT NULL, cql_library VARCHAR(200), cql_result JSONB, created_at TIMESTAMP with time zone NOT NULL, created_by VARCHAR(100) NOT NULL, version INTEGER DEFAULT 0, CONSTRAINT quality_measure_results_pkey PRIMARY KEY (id))]
+	at liquibase.changelog.ChangeSet.execute(ChangeSet.java:820)
+	at liquibase.changelog.visitor.UpdateVisitor.executeAcceptedChange(UpdateVisitor.java:126)
+	at liquibase.changelog.visitor.UpdateVisitor.visit(UpdateVisitor.java:70)
+	at liquibase.changelog.ChangeLogIterator.lambda$run$0(ChangeLogIterator.java:131)
+	at liquibase.Scope.lambda$child$0(Scope.java:191)
+	at liquibase.Scope.child(Scope.java:200)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.changelog.ChangeLogIterator.lambda$run$1(ChangeLogIterator.java:120)
+	at liquibase.Scope.lambda$child$0(Scope.java:191)
+	at liquibase.Scope.child(Scope.java:200)
+	at liquibase.Scope.child(Scope.java:190)
+	at liquibase.Scope.child(Scope.java:169)
+	at liquibase.Scope.child(Scope.java:257)
+	at liquibase.Scope.child(Scope.java:261)
+	at liquibase.changelog.ChangeLogIterator.run(ChangeLogIterator.java:89)
+	... 48 common frames omitted
+Caused by: liquibase.exception.DatabaseException: ERROR: relation "quality_measure_results" already exists [Failed SQL: (0) CREATE TABLE public.quality_measure_results (id UUID NOT NULL, tenant_id VARCHAR(50) NOT NULL, patient_id UUID NOT NULL, measure_id VARCHAR(100) NOT NULL, measure_name VARCHAR(255) NOT NULL, measure_category VARCHAR(50), measure_year INTEGER, numerator_compliant BOOLEAN NOT NULL, denominator_elligible BOOLEAN NOT NULL, compliance_rate DOUBLE PRECISION, score DOUBLE PRECISION, calculation_date date NOT NULL, cql_library VARCHAR(200), cql_result JSONB, created_at TIMESTAMP with time zone NOT NULL, created_by VARCHAR(100) NOT NULL, version INTEGER DEFAULT 0, CONSTRAINT quality_measure_results_pkey PRIMARY KEY (id))]
+	at liquibase.executor.jvm.JdbcExecutor$ExecuteStatementCallback.doInStatement(JdbcExecutor.java:497)
+	at liquibase.executor.jvm.JdbcExecutor.execute(JdbcExecutor.java:83)
+	at liquibase.executor.jvm.JdbcExecutor.execute(JdbcExecutor.java:185)
+	at liquibase.executor.AbstractExecutor.execute(AbstractExecutor.java:141)
+	at liquibase.database.AbstractJdbcDatabase.executeStatements(AbstractJdbcDatabase.java:1189)
+	at liquibase.changelog.ChangeSet.execute(ChangeSet.java:776)
+	... 63 common frames omitted
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "quality_measure_results" already exists
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2734)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:518)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:357)
+	at org.postgresql.jdbc.PgStatement.executeCachedSql(PgStatement.java:342)
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:318)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:313)
+	at com.zaxxer.hikari.pool.ProxyStatement.execute(ProxyStatement.java:94)
+	at com.zaxxer.hikari.pool.HikariProxyStatement.execute(HikariProxyStatement.java)
+	at liquibase.executor.jvm.JdbcExecutor$ExecuteStatementCallback.doInStatement(JdbcExecutor.java:491)
+	... 68 common frames omitted
+
+## healthdata-postgres (last 200 lines)
+
+PostgreSQL Database directory appears to contain a database; Skipping initialization
+

@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <changeSet id="0009-create-health-score-history-table" author="health-score-service">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="health_score_history"/>
+            </not>
+        </preConditions>
         <comment>
             Create health_score_history table for trend analysis.
             Stores historical snapshots of health scores for tracking patient progress over time.

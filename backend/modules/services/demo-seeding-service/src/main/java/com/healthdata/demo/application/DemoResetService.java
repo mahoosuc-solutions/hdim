@@ -86,7 +86,7 @@ public class DemoResetService {
         long startTime = System.currentTimeMillis();
 
         ResetResult result = new ResetResult();
-        String demoTenantClause = "tenant_id LIKE 'demo-%' OR tenant_id IN ('acme-health', 'summit-care', 'valley-health')";
+        String demoTenantClause = "tenant_id LIKE 'demo-%' OR tenant_id IN ('demo-tenant', 'acme-health', 'summit-care', 'valley-health')";
 
         try {
             // Clear all demo tables (gracefully handle missing tables)
@@ -95,6 +95,24 @@ public class DemoResetService {
 
             int conditionsDeleted = safeDeleteWithClause("conditions", demoTenantClause);
             result.setConditionsDeleted(conditionsDeleted);
+
+            // Clear other FHIR resources for demo tenants
+            String[] fhirTables = {
+                "observations",
+                "medication_requests",
+                "encounters",
+                "procedures",
+                "immunizations",
+                "allergy_intolerances",
+                "diagnostic_reports",
+                "document_references",
+                "care_plans",
+                "goals",
+                "coverages"
+            };
+            for (String table : fhirTables) {
+                safeDeleteWithClause(table, demoTenantClause);
+            }
 
             int careGapsDeleted = safeDeleteWithClause("care_gaps", demoTenantClause);
             result.setCareGapsDeleted(careGapsDeleted);

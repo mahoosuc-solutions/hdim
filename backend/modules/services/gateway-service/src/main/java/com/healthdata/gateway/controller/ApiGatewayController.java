@@ -1,18 +1,14 @@
 package com.healthdata.gateway.controller;
 
+import com.healthdata.gateway.service.GatewayForwarder;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import java.net.URI;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.Set;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * API Gateway Controller
@@ -21,11 +17,10 @@ import java.util.Set;
  * Forwards JWT tokens and tenant headers to downstream services.
  */
 @RestController
-@Slf4j
 @RequiredArgsConstructor
 public class ApiGatewayController {
 
-    private final RestTemplate restTemplate;
+    private final GatewayForwarder forwarder;
 
     @Value("${backend.services.cql-engine.url}")
     private String cqlEngineUrl;
@@ -68,16 +63,6 @@ public class ApiGatewayController {
 
     @Value("${backend.services.sales-automation.url}")
     private String salesAutomationUrl;
-
-    /**
-     * HTTP hop-by-hop headers that should not be forwarded by proxies.
-     * RFC 2616 Section 13.5.1 defines these as connection-specific headers.
-     */
-    private static final Set<String> HOP_BY_HOP_HEADERS = Set.of(
-        "transfer-encoding", "connection", "keep-alive",
-        "proxy-authenticate", "proxy-authorization",
-        "te", "trailers", "upgrade"
-    );
 
     /**
      * Route to CQL Engine Service
@@ -368,77 +353,6 @@ public class ApiGatewayController {
         String serviceUrl,
         String pathPrefix
     ) {
-        try {
-            // Build target URL
-            String path = request.getRequestURI().substring(pathPrefix.length());
-            String queryString = request.getQueryString();
-            
-            UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serviceUrl + path);
-            if (queryString != null) {
-                builder.query(queryString);
-            }
-            URI targetUri = builder.build(true).toUri();
-
-            // Copy headers
-            HttpHeaders headers = new HttpHeaders();
-            Enumeration<String> headerNames = request.getHeaderNames();
-            while (headerNames.hasMoreElements()) {
-                String headerName = headerNames.nextElement();
-                // Forward important headers including:
-                // - X-Auth-* headers injected by GatewayAuthenticationFilter (user identity)
-                // - Standard headers for routing and content negotiation
-                if (headerName.startsWith("X-Auth-") ||
-                    headerName.equalsIgnoreCase("Authorization") ||
-                    headerName.equalsIgnoreCase("X-Tenant-ID") ||
-                    headerName.equalsIgnoreCase("X-User-ID") ||
-                    headerName.equalsIgnoreCase("Content-Type") ||
-                    headerName.equalsIgnoreCase("Accept")) {
-                    headers.put(headerName, Collections.list(request.getHeaders(headerName)));
-                }
-            }
-
-            // In demo mode, X-Auth-Tenant-Ids is set by GatewayAuthenticationFilter
-            // Override X-Tenant-ID to use the first allowed tenant from authenticated context
-            // This ensures tenant ID consistency for demo/gateway-authenticated requests
-            String authTenantIds = request.getHeader("X-Auth-Tenant-Ids");
-            if (authTenantIds != null && !authTenantIds.trim().isEmpty()) {
-                String primaryTenant = authTenantIds.split(",")[0].trim();
-                headers.set("X-Tenant-ID", primaryTenant);
-                log.debug("Set X-Tenant-ID from gateway auth context: {}", primaryTenant);
-            }
-
-            // Create request entity
-            HttpEntity<String> requestEntity = new HttpEntity<>(body, headers);
-
-            // Forward request
-            HttpMethod method = HttpMethod.valueOf(request.getMethod());
-            log.debug("Forwarding {} {} to {}", method, request.getRequestURI(), targetUri);
-
-            ResponseEntity<String> response = restTemplate.exchange(
-                targetUri,
-                method,
-                requestEntity,
-                String.class
-            );
-
-            // Filter out hop-by-hop headers to prevent duplicates when nginx proxies
-            HttpHeaders filteredHeaders = new HttpHeaders();
-            response.getHeaders().forEach((name, values) -> {
-                if (!HOP_BY_HOP_HEADERS.contains(name.toLowerCase())) {
-                    filteredHeaders.put(name, values);
-                }
-            });
-
-            return ResponseEntity
-                .status(response.getStatusCode())
-                .headers(filteredHeaders)
-                .body(response.getBody());
-
-        } catch (Exception e) {
-            log.error("Error forwarding request to {}: {}", serviceUrl, e.getMessage(), e);
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Gateway error: " + e.getMessage());
-        }
+        return forwarder.forwardRequest(request, body, serviceUrl, pathPrefix);
     }
 }

@@ -70,4 +70,24 @@
 
     </changeSet>
 
+    <changeSet id="0006-adjust-multi-tenant-scenario-size" author="healthdata-system">
+        <comment>Reduce multi-tenant scenario size to avoid demo seeding OOM.</comment>
+        <update tableName="demo_scenarios">
+            <column name="patient_count" valueNumeric="8000"/>
+            <column name="description"
+                    value="Demonstrates secure multi-tenant SaaS architecture. Includes 3 demo tenants: Acme Health (2K), Summit Care (3K), Valley Health (3K)."/>
+            <where>name='multi-tenant'</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="0007-adjust-multi-tenant-scenario-size-compact" author="healthdata-system">
+        <comment>Further reduce multi-tenant scenario size for low-memory demo runs.</comment>
+        <update tableName="demo_scenarios">
+            <column name="patient_count" valueNumeric="3000"/>
+            <column name="description"
+                    value="Demonstrates secure multi-tenant SaaS architecture. Includes 3 demo tenants: Acme Health (1K), Summit Care (1K), Valley Health (1K)."/>
+            <where>name='multi-tenant'</where>
+        </update>
+    </changeSet>
+
 </databaseChangeLog>

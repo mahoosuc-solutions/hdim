@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <changeSet id="0008-add-care-gap-auto-closure-fields" author="healthdata-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="care_gaps" columnName="auto_closed"/>
+            </not>
+        </preConditions>
         <comment>Add fields for automated care gap closure tracking</comment>
 
         <!-- Add auto-closed flag -->

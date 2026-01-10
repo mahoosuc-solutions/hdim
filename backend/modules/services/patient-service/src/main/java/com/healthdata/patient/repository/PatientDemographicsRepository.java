@@ -3,6 +3,8 @@ package com.healthdata.patient.repository;
 import com.healthdata.patient.entity.PatientDemographicsEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
@@ -37,4 +39,9 @@ public interface PatientDemographicsRepository extends JpaRepository<PatientDemo
      */
     @Query("SELECT p FROM PatientDemographicsEntity p WHERE p.tenantId = :tenantId AND p.pcpId = :pcpId AND p.active = true")
     List<PatientDemographicsEntity> findByPcpIdAndTenantId(@Param("pcpId") String pcpId, @Param("tenantId") String tenantId);
+
+    /**
+     * Find active patients for a tenant with pagination.
+     */
+    Page<PatientDemographicsEntity> findByTenantIdAndActiveTrue(String tenantId, Pageable pageable);
 }

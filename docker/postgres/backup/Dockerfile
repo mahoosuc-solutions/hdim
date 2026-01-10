@@ -16,8 +16,10 @@ COPY backup.sh /usr/local/bin/backup.sh
 COPY restore.sh /usr/local/bin/restore.sh
 RUN chmod +x /usr/local/bin/backup.sh /usr/local/bin/restore.sh
 
-# Create backup directory
-RUN mkdir -p /backups && chmod 777 /backups
+# Create backup directory (HIPAA compliant - no world-writable)
+RUN mkdir -p /backups && \
+    chmod 755 /backups && \
+    chown -R postgres:postgres /backups
 
 # Create cron job (default: daily at 2 AM)
 # Override with BACKUP_CRON environment variable

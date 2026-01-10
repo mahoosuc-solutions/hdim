@@ -6,6 +6,11 @@
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <changeSet id="0011-create-clinical-alerts-table" author="healthdata">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="clinical_alerts"/>
+            </not>
+        </preConditions>
         <comment>
             Create clinical_alerts table for mental health crisis detection,
             risk escalation alerts, and health score decline tracking.

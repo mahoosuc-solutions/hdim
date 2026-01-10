@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <changeSet id="0013-create-job-executions-table" author="healthdata-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="job_executions"/>
+            </not>
+        </preConditions>
         <comment>Create job executions table for scheduled job tracking</comment>
 
         <createTable tableName="job_executions">

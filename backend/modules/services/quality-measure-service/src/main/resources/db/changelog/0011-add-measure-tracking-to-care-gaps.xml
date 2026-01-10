@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <changeSet id="0008-add-measure-tracking-to-care-gaps" author="healthdata-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="care_gaps" columnName="measure_result_id"/>
+            </not>
+        </preConditions>
         <comment>Add measure result tracking and auto-creation flags to care gaps table</comment>
 
         <!-- Add measure_result_id column to link care gaps to measure results -->

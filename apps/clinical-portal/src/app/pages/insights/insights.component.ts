@@ -409,7 +409,7 @@ import { LoadingButtonComponent } from '../../shared/components/loading-button/l
                 </div>
               } @else {
                 <div class="quality-scores">
-                  @for (score of summary.qualityScores; track score.measureId) {
+                  @for (score of (summary?.qualityScores ?? []); track score.measureId) {
                     <mat-card class="score-card" [class.below-target]="score.score < score.target">
                       <div class="score-header">
                         <span class="measure-name">{{ score.measureName }}</span>

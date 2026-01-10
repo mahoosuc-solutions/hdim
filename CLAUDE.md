@@ -664,8 +664,394 @@ See `backend/docs/ENTITY_MIGRATION_GUIDE.md` for comprehensive documentation inc
 
 ---
 
+## Database Architecture & Schema Management
+
+### Overview
+
+HDIM uses the **Database-per-Service** pattern with **Liquibase** for all schema migrations. Each of the 29 microservices has its own logical database on a shared PostgreSQL instance, ensuring service isolation and independent schema evolution.
+
+**Key Principles:**
+- ✅ One database per service (29 databases total)
+- ✅ Liquibase for ALL services (standard tool)
+- ✅ `ddl-auto: validate` in all environments
+- ✅ Entity-migration synchronization enforced
+- ❌ Never use `ddl-auto: create` or `update` (causes data loss/drift)
+
+### Database Inventory
+
+**PostgreSQL Version:** 15-alpine (upgrading to 16 after migration complete)
+**Total Databases:** 29 (see `DATABASE_ARCHITECTURE_MIGRATION_PLAN.md` for complete list)
+
+**Core Databases:**
+- `fhir_db` - FHIR R4 resources (fhir-service:8085)
+- `patient_db` - Patient demographics (patient-service:8084)
+- `quality_db` - HEDIS measures (quality-measure-service:8087)
+- `cql_db` - CQL evaluation (cql-engine-service:8081)
+- `caregap_db` - Care gap detection (care-gap-service:8086)
+- `gateway_db` - Authentication (gateway-*-service:8080)
+- ... (23 more, see migration plan)
+
+### Migration Standards
+
+#### **Use Liquibase Only**
+
+All services MUST use Liquibase for database migrations. Flyway is NOT supported.
+
+```kotlin
+// build.gradle.kts - Liquibase included via shared persistence module
+dependencies {
+    implementation(project(":modules:shared:infrastructure:persistence"))
+    // This includes: Liquibase 4.29.2, PostgreSQL driver, HikariCP
+}
+```
+
+```yaml
+# docker-compose.yml or application.yml
+spring:
+  liquibase:
+    enabled: true  # MUST be true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+  jpa:
+    hibernate:
+      ddl-auto: validate  # MUST be validate (never create/update)
+```
+
+#### **Migration File Structure**
+
+```
+src/main/resources/db/changelog/
+├── 0000-enable-extensions.xml           # PostgreSQL extensions (pg_trgm, etc.)
+├── 0001-create-patients-table.xml       # Initial schema
+├── 0002-create-insurance-table.xml      # Related tables
+├── 0003-add-composite-indexes.xml       # Performance indexes
+├── 0004-add-risk-score-column.xml       # Schema evolution
+└── db.changelog-master.xml               # Includes all migrations
+```
+
+**Naming Convention:**
+- Use 4-digit sequential numbers: `0001`, `0002`, `0003`
+- Use descriptive names: `create-TABLE-table`, `add-FIELD-to-TABLE`
+- Never reuse numbers or modify existing migrations
+- Never skip numbers (no gaps in sequence)
+
+#### **Master Changelog Template**
+
+```xml
+<!-- db.changelog-master.xml -->
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <include file="db/changelog/0000-enable-extensions.xml"/>
+    <include file="db/changelog/0001-create-patients-table.xml"/>
+    <include file="db/changelog/0002-create-insurance-table.xml"/>
+    <!-- Add new migrations here, never modify existing includes -->
+</databaseChangeLog>
+```
+
+#### **Migration File Template**
+
+```xml
+<!-- 0001-create-patients-table.xml -->
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0001-create-patients-table" author="developer-name">
+        <comment>Create patients table with tenant isolation</comment>
+
+        <createTable tableName="patients">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_patients"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="first_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_of_birth" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE"
+                    defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE"
+                    defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_patients_tenant_id" tableName="patients">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <!-- ALWAYS provide explicit rollback -->
+        <rollback>
+            <dropTable tableName="patients"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>
+```
+
+### PostgreSQL Extensions
+
+Extensions should be managed in Liquibase migrations, not initialization scripts.
+
+```xml
+<!-- 0000-enable-extensions.xml -->
+<changeSet id="0000-enable-extensions" author="hdim-platform-team">
+    <comment>Enable PostgreSQL extensions for full-text search</comment>
+    <sql>CREATE EXTENSION IF NOT EXISTS pg_trgm;</sql>
+    <rollback>DROP EXTENSION IF EXISTS pg_trgm;</rollback>
+</changeSet>
+```
+
+**Common Extensions:**
+- `pg_trgm` - Trigram matching for fuzzy text search (used by fhir, cql, quality, patient services)
+- `uuid-ossp` - UUID generation (optional, prefer `gen_random_uuid()`)
+
+### Database Initialization
+
+The `docker/postgres/init-multi-db.sh` script creates all 29 databases on PostgreSQL startup:
+
+```bash
+# Creates databases only - NO tables, NO extensions
+CREATE DATABASE fhir_db;
+CREATE DATABASE patient_db;
+# ... (all 29 databases)
+
+GRANT ALL PRIVILEGES ON DATABASE fhir_db TO healthdata;
+# ... (all grants)
+```
+
+**What init script does:**
+- ✅ Creates empty databases
+- ✅ Grants privileges to database user
+- ❌ Does NOT create tables (Liquibase does this)
+- ❌ Does NOT create extensions (Liquibase does this)
+
+### Migration Workflow
+
+#### **When Creating a New Entity**
+
+1. Create JPA entity with proper annotations:
+```java
+@Entity
+@Table(name = "appointments")
+public class Appointment {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
+
+    @Column(name = "appointment_date", nullable = false)
+    private LocalDate appointmentDate;
+
+    // ... more fields
+}
+```
+
+2. Create Liquibase migration file:
+```xml
+<!-- 0005-create-appointments-table.xml -->
+<changeSet id="0005-create-appointments-table" author="your-name">
+    <createTable tableName="appointments">
+        <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+            <constraints primaryKey="true"/>
+        </column>
+        <column name="tenant_id" type="VARCHAR(100)">
+            <constraints nullable="false"/>
+        </column>
+        <column name="appointment_date" type="DATE">
+            <constraints nullable="false"/>
+        </column>
+    </createTable>
+    <rollback>
+        <dropTable tableName="appointments"/>
+    </rollback>
+</changeSet>
+```
+
+3. Add migration to master changelog:
+```xml
+<!-- db.changelog-master.xml -->
+<include file="db/changelog/0005-create-appointments-table.xml"/>
+```
+
+4. Run validation test:
+```bash
+./gradlew :modules:services:YOUR-SERVICE:test --tests "*EntityMigrationValidationTest"
+```
+
+5. Verify migration runs successfully:
+```bash
+docker compose up YOUR-SERVICE
+# Check logs for: "Liquibase update successful"
+```
+
+#### **When Modifying an Entity**
+
+**NEVER modify existing migrations!** Always create a NEW migration.
+
+```java
+// Add new field to entity
+@Entity
+@Table(name = "appointments")
+public class Appointment {
+    // ... existing fields
+
+    @Column(name = "status")  // NEW FIELD
+    private String status;
+}
+```
+
+```xml
+<!-- 0006-add-status-to-appointments.xml -->
+<changeSet id="0006-add-status-to-appointments" author="your-name">
+    <comment>Add status field for appointment tracking</comment>
+    <addColumn tableName="appointments">
+        <column name="status" type="VARCHAR(50)" defaultValue="SCHEDULED">
+            <constraints nullable="true"/>  <!-- Allow null for existing rows -->
+        </column>
+    </addColumn>
+    <rollback>
+        <dropColumn tableName="appointments" columnName="status"/>
+    </rollback>
+</changeSet>
+```
+
+### Common Liquibase Operations
+
+**Create Table:**
+```xml
+<createTable tableName="table_name">
+    <column name="id" type="UUID"/>
+    <!-- more columns -->
+</createTable>
+```
+
+**Add Column:**
+```xml
+<addColumn tableName="table_name">
+    <column name="new_column" type="VARCHAR(255)"/>
+</addColumn>
+```
+
+**Create Index:**
+```xml
+<createIndex indexName="idx_table_column" tableName="table_name">
+    <column name="column_name"/>
+</createIndex>
+```
+
+**Add Foreign Key:**
+```xml
+<addForeignKeyConstraint
+    constraintName="fk_appointments_patient"
+    baseTableName="appointments"
+    baseColumnNames="patient_id"
+    referencedTableName="patients"
+    referencedColumnNames="id"/>
+```
+
+**Modify Column:**
+```xml
+<modifyDataType tableName="table_name" columnName="column_name" newDataType="TEXT"/>
+```
+
+**Run Custom SQL:**
+```xml
+<sql>
+    UPDATE patients SET status = 'ACTIVE' WHERE created_at > NOW() - INTERVAL '30 days';
+</sql>
+```
+
+### Troubleshooting
+
+#### **Service Won't Start - Validation Failure**
+
+**Error:**
+```
+Schema-validation: missing table [appointments]
+```
+
+**Fix:** Create Liquibase migration for the missing table or remove unused @Entity
+
+#### **Service Won't Start - Wrong Column Type**
+
+**Error:**
+```
+Schema-validation: wrong column type encountered in column [appointment_date]
+Expected: date, Actual: timestamp with time zone
+```
+
+**Fix:** Create migration to alter column type:
+```xml
+<modifyDataType tableName="appointments" columnName="appointment_date" newDataType="DATE"/>
+```
+
+#### **Migration Failed - Already Exists**
+
+**Error:**
+```
+Liquibase: relation "patients" already exists
+```
+
+**Fix:**
+1. Check `databasechangelog` table to see what ran:
+```bash
+docker exec healthdata-postgres psql -U healthdata -d SERVICE_db \
+  -c "SELECT id, filename FROM databasechangelog ORDER BY orderexecuted;"
+```
+
+2. If migration already ran, remove it from master changelog
+3. If table was created manually, create baseline migration with `<preConditions>`
+
+#### **Need to Rollback Migration**
+
+```bash
+# Rollback last changeset
+docker exec healthdata-postgres psql -U healthdata -d SERVICE_db \
+  -c "DELETE FROM databasechangelog WHERE orderexecuted = (SELECT MAX(orderexecuted) FROM databasechangelog);"
+
+# Manually rollback changes (Liquibase rollback command not yet integrated)
+docker exec healthdata-postgres psql -U healthdata -d SERVICE_db \
+  -c "DROP TABLE appointments;"  # Example rollback
+```
+
+### Migration Plan Reference
+
+For complete details on the database architecture standardization effort:
+
+**See:** `DATABASE_ARCHITECTURE_MIGRATION_PLAN.md`
+
+**Current Status:** Phase 1 Complete (as of 2026-01-10)
+- PostgreSQL 15 running
+- gateway_db tables migrated to Liquibase
+- Validation test framework established
+
+**Next Phase:** Enable Liquibase on 4 core services (fhir, patient, quality-measure, cql-engine)
+
+**Target Completion:** All 34 services using Liquibase with `ddl-auto: validate` (Week 4)
+
+---
+
 ## Getting Help
 
+- **Database architecture**: See `DATABASE_ARCHITECTURE_MIGRATION_PLAN.md`
+- **Entity-migration guide**: See `backend/docs/ENTITY_MIGRATION_GUIDE.md`
 - **System architecture**: See `docs/architecture/SYSTEM_ARCHITECTURE.md`
 - **Technology decisions**: See `docs/architecture/decisions/` (ADRs)
 - **Terminology**: See `docs/TERMINOLOGY_GLOSSARY.md`
@@ -676,5 +1062,5 @@ See `backend/docs/ENTITY_MIGRATION_GUIDE.md` for comprehensive documentation inc
 
 ---
 
-*Last Updated: January 1, 2026*
-*Version: 1.2* - Added Entity-Migration Synchronization section with validation framework
+*Last Updated: January 10, 2026*
+*Version: 1.3* - Added Database Architecture & Schema Management section with migration plan reference

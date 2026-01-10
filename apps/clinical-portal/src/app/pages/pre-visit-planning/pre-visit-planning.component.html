@@ -131,7 +131,7 @@
                     No care gaps
                   </mat-chip>
                 } @else {
-                  <mat-chip [class]="getUrgencyClass(patient.careGaps[0]?.urgency)"
+                  <mat-chip [class]="getUrgencyClass(patient.careGaps[0]?.urgency ?? 'low')"
                             [matBadge]="patient.careGaps.length"
                             matBadgeColor="warn"
                             [matBadgeHidden]="patient.careGaps.length <= 1">

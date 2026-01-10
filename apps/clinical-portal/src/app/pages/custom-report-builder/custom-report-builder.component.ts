@@ -247,7 +247,10 @@ interface ReportSection {
                   </mat-form-field>
 
                   <div class="measure-filters">
-                    <mat-chip-listbox [(value)]="selectedMeasureFilter" class="filter-chips">
+                    <mat-chip-listbox
+                      [value]="selectedMeasureFilter"
+                      (selectionChange)="selectedMeasureFilter = ($any($event).value || 'all')"
+                      class="filter-chips">
                       <mat-chip-option value="all">All</mat-chip-option>
                       <mat-chip-option value="HEDIS">HEDIS</mat-chip-option>
                       <mat-chip-option value="CMS">CMS</mat-chip-option>
@@ -1538,6 +1541,7 @@ export class CustomReportBuilderComponent implements OnInit, OnDestroy {
       return true;
     });
   }
+
 
   // Tag management
   addTag(event: MatChipInputEvent): void {

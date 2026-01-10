@@ -43,7 +43,7 @@ export interface DemoTooltip {
   providedIn: 'root',
 })
 export class DemoModeService {
-  private readonly DEMO_API_URL = environment.apiUrl + '/demo-seeding';
+  private readonly DEMO_API_URL = this.resolveApiBaseUrl() + '/demo';
   private readonly DEMO_MODE_KEY = 'healthdata-demo-mode';
 
   // Signals for reactive state
@@ -52,6 +52,10 @@ export class DemoModeService {
   public readonly status = signal<DemoStatus | null>(null);
   public readonly isLoading = signal<boolean>(false);
   public readonly error = signal<string | null>(null);
+
+  // Backend availability tracking - prevents repeated failed API calls
+  private demoBackendAvailable: boolean | null = null;
+  private backendCheckInProgress = false;
 
   // Recording state
   public readonly isRecording = signal<boolean>(false);
@@ -79,6 +83,14 @@ export class DemoModeService {
   ) {
     // Check URL for demo parameter on init
     this.checkUrlForDemoMode();
+  }
+
+  private resolveApiBaseUrl(): string {
+    const browserOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+    if (environment.apiConfig.useApiGateway) {
+      return environment.apiConfig.apiGatewayUrl || browserOrigin;
+    }
+    return browserOrigin;
   }
 
   /**
@@ -138,9 +150,52 @@ export class DemoModeService {
   }
 
   /**
+   * Check if demo backend is available
+   * Uses a quick health check to avoid 500 error spam in console
+   */
+  private async checkBackendAvailability(): Promise<boolean> {
+    // Return cached result if already checked
+    if (this.demoBackendAvailable !== null) {
+      return this.demoBackendAvailable;
+    }
+
+    // Prevent concurrent checks
+    if (this.backendCheckInProgress) {
+      return false;
+    }
+
+    this.backendCheckInProgress = true;
+
+    try {
+      // Quick check using actuator health endpoint (returns 200 if service exists)
+      const response = await this.http
+        .get(`${this.DEMO_API_URL}/actuator/health`, {
+          observe: 'response',
+        })
+        .toPromise();
+      this.demoBackendAvailable = response?.status === 200;
+    } catch {
+      // Backend not available - this is expected when demo service isn't running
+      this.demoBackendAvailable = false;
+      console.log('[Demo Mode] Demo backend not available - using local-only mode');
+    } finally {
+      this.backendCheckInProgress = false;
+    }
+
+    return this.demoBackendAvailable;
+  }
+
+  /**
    * Load demo status from backend
    */
   public async loadStatus(): Promise<void> {
+    // Skip if backend not available
+    const isAvailable = await this.checkBackendAvailability();
+    if (!isAvailable) {
+      this.error.set('Demo backend not available - recording/tooltips still work');
+      return;
+    }
+
     this.isLoading.set(true);
     this.error.set(null);
 
@@ -165,6 +220,12 @@ export class DemoModeService {
    * Load available scenarios
    */
   public async loadScenarios(): Promise<DemoScenario[]> {
+    // Skip if backend not available
+    const isAvailable = await this.checkBackendAvailability();
+    if (!isAvailable) {
+      return [];
+    }
+
     try {
       const scenarios = await this.http
         .get<DemoScenario[]>(`${this.DEMO_API_URL}/api/v1/demo/scenarios`)
@@ -180,6 +241,13 @@ export class DemoModeService {
    * Load a specific scenario
    */
   public async loadScenario(scenarioId: string): Promise<void> {
+    // Requires backend
+    const isAvailable = await this.checkBackendAvailability();
+    if (!isAvailable) {
+      this.error.set('Demo backend not available');
+      throw new Error('Demo backend not available');
+    }
+
     this.isLoading.set(true);
     this.error.set(null);
 
@@ -204,6 +272,13 @@ export class DemoModeService {
    * Reset demo data
    */
   public async resetDemo(): Promise<void> {
+    // Requires backend
+    const isAvailable = await this.checkBackendAvailability();
+    if (!isAvailable) {
+      this.error.set('Demo backend not available');
+      throw new Error('Demo backend not available');
+    }
+
     this.isLoading.set(true);
     this.error.set(null);
 
@@ -312,6 +387,13 @@ export class DemoModeService {
    * Create a snapshot for demo recording
    */
   public async createSnapshot(name: string): Promise<void> {
+    // Requires backend
+    const isAvailable = await this.checkBackendAvailability();
+    if (!isAvailable) {
+      this.error.set('Demo backend not available');
+      throw new Error('Demo backend not available');
+    }
+
     this.isLoading.set(true);
     try {
       await this.http
@@ -333,6 +415,13 @@ export class DemoModeService {
    * Restore from a snapshot
    */
   public async restoreSnapshot(snapshotId: string): Promise<void> {
+    // Requires backend
+    const isAvailable = await this.checkBackendAvailability();
+    if (!isAvailable) {
+      this.error.set('Demo backend not available');
+      throw new Error('Demo backend not available');
+    }
+
     this.isLoading.set(true);
     try {
       await this.http

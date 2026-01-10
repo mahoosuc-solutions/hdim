@@ -6,7 +6,11 @@
                         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <changeSet id="0015-add-risk-category-tracking" author="tdd-swarm-agent-5">
-
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="risk_assessments" columnName="risk_category"/>
+            </not>
+        </preConditions>
         <comment>
             Phase 4: Risk Stratification Automation - Add category-specific risk tracking
 

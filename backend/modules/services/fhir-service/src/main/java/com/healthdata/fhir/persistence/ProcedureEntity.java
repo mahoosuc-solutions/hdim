@@ -152,7 +152,7 @@ public class ProcedureEntity {
     @Column(name = "created_by", nullable = false, length = 255, updatable = false)
     private String createdBy;
 
-    @Column(name = "modified_by", length = 255)
+    @Column(name = "last_modified_by", nullable = false, length = 255)
     private String modifiedBy;
 
     @Column(name = "created_at", nullable = false, updatable = false)

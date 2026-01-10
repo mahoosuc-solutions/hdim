@@ -39,6 +39,9 @@ spring:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
 
+  flyway:
+    enabled: false  # Explicitly disable Flyway (using Liquibase for migrations)
+
   data:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:localhost}

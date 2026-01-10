@@ -27,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
+import com.healthdata.gateway.config.GatewayAuthProperties;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ApiGatewayController")
@@ -45,7 +46,10 @@ class ApiGatewayControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new ApiGatewayController(restTemplate);
+        GatewayAuthProperties authProperties = new GatewayAuthProperties();
+        authProperties.setEnforced(false);
+        authProperties.getDemoUser().setTenantIds(List.of("tenant-1"));
+        controller = new ApiGatewayController(restTemplate, authProperties);
         ReflectionTestUtils.setField(controller, "cqlEngineUrl", "http://cql");
         ReflectionTestUtils.setField(controller, "qualityMeasureUrl", "http://qm");
         ReflectionTestUtils.setField(controller, "fhirUrl", "http://fhir");

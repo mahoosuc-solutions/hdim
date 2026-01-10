@@ -312,6 +312,7 @@ public class CareGapIdentificationService {
                 .gapDescription(extractGapDescription(cqlResult))
                 .gapReason(extractGapReason(cqlResult))
                 .priority(extractPriority(cqlResult))
+                .severity(extractSeverity(cqlResult))
                 .riskScore(extractRiskScore(cqlResult))
                 .identifiedDate(Instant.now())
                 .dueDate(extractDueDate(cqlResult))
@@ -363,6 +364,16 @@ public class CareGapIdentificationService {
     }
 
     private String extractPriority(JsonNode cqlResult) {
+        if (cqlResult.has("priority")) {
+            return cqlResult.get("priority").asText();
+        }
+        return "medium";
+    }
+
+    private String extractSeverity(JsonNode cqlResult) {
+        if (cqlResult.has("severity")) {
+            return cqlResult.get("severity").asText();
+        }
         if (cqlResult.has("priority")) {
             return cqlResult.get("priority").asText();
         }

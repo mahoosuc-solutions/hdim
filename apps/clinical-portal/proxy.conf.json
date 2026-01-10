@@ -5,7 +5,7 @@
     "changeOrigin": true,
     "logLevel": "debug",
     "pathRewrite": {
-      "^/fhir": "/fhir/fhir"
+      "^/fhir": "/fhir"
     },
     "headers": {
       "X-Tenant-ID": "demo-tenant"
@@ -17,7 +17,7 @@
     "changeOrigin": true,
     "logLevel": "debug",
     "pathRewrite": {
-      "^/quality-measure": "/quality-measure/quality-measure"
+      "^/quality-measure": "/quality-measure"
     },
     "headers": {
       "X-Tenant-ID": "demo-tenant"
@@ -41,7 +41,7 @@
     "changeOrigin": true,
     "logLevel": "debug",
     "pathRewrite": {
-      "^/care-gap": "/care-gap/care-gap"
+      "^/care-gap": "/care-gap"
     },
     "headers": {
       "X-Tenant-ID": "demo-tenant"

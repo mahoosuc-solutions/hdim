@@ -112,6 +112,10 @@
         <sql>
             CREATE INDEX idx_goals_resource_gin ON goals USING GIN (resource_json jsonb_path_ops);
         </sql>
+
+        <rollback>
+            <dropTable tableName="goals"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

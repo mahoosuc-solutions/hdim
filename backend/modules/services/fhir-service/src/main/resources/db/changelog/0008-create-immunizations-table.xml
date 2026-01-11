@@ -256,5 +256,9 @@
                 referencedTableName="patients"
                 referencedColumnNames="id"
                 onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="immunizations"/>
+        </rollback>
     </changeSet>
 </databaseChangeLog>

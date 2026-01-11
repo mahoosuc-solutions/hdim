@@ -63,6 +63,10 @@
         <createIndex indexName="idx_notifications_correlation_id" tableName="notifications">
             <column name="correlation_id"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="notifications"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

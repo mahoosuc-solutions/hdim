@@ -52,6 +52,10 @@
         <createIndex indexName="idx_templates_channel" tableName="notification_templates">
             <column name="channel"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="notification_templates"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

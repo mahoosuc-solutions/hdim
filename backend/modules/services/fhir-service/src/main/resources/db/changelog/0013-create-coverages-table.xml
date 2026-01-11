@@ -115,6 +115,10 @@
         <sql>
             CREATE INDEX idx_coverages_resource_gin ON coverages USING GIN (resource_json jsonb_path_ops);
         </sql>
+
+        <rollback>
+            <dropTable tableName="coverages"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

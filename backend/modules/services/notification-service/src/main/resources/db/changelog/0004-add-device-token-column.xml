@@ -17,6 +17,11 @@
         <createIndex tableName="notifications" indexName="idx_notifications_device_token">
             <column name="device_token"/>
         </createIndex>
+
+        <rollback>
+            <dropIndex tableName="notifications" indexName="idx_notifications_device_token"/>
+            <dropColumn tableName="notifications" columnName="device_token"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

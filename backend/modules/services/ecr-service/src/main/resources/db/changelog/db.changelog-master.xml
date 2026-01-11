@@ -12,6 +12,10 @@
             </sqlCheck>
         </preConditions>
         <sql>CREATE SCHEMA IF NOT EXISTS ecr;</sql>
+
+        <rollback>
+            <sql>DROP SCHEMA IF EXISTS ecr CASCADE;</sql>
+        </rollback>
     </changeSet>
 
     <!-- Electronic Case Reports Table -->
@@ -97,6 +101,10 @@
             <column name="urgency"/>
             <column name="status"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="electronic_case_reports" schemaName="ecr"/>
+        </rollback>
     </changeSet>
 
     <!-- RCTC Trigger Codes Table -->
@@ -152,6 +160,10 @@
             indexName="idx_rctc_active">
             <column name="is_active"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="rctc_trigger_codes" schemaName="ecr"/>
+        </rollback>
     </changeSet>
 
     <!-- Table Comments -->
@@ -162,6 +174,13 @@
             COMMENT ON TABLE ecr.rctc_trigger_codes IS
                 'CDC RCTC (Reportable Condition Trigger Codes) value sets for eCR detection';
         </sql>
+
+        <rollback>
+            <sql>
+                COMMENT ON TABLE ecr.electronic_case_reports IS NULL;
+                COMMENT ON TABLE ecr.rctc_trigger_codes IS NULL;
+            </sql>
+        </rollback>
     </changeSet>
 
     <!-- Seed some common RCTC trigger codes for testing -->
@@ -226,6 +245,12 @@
             <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
             <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
         </insert>
+
+        <rollback>
+            <delete tableName="rctc_trigger_codes" schemaName="ecr">
+                <where>code IN ('U07.1', 'B05', 'A37', 'A22', 'A15') AND code_system = '2.16.840.1.113883.6.90'</where>
+            </delete>
+        </rollback>
     </changeSet>
 
     <!-- Extended RCTC Trigger Codes - CDC Reportable Conditions -->

@@ -71,6 +71,10 @@
         <addUniqueConstraint tableName="result_signatures"
                              columnNames="result_id"
                              constraintName="uk_result_signatures_result_id"/>
+
+        <rollback>
+            <dropTable tableName="result_signatures"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

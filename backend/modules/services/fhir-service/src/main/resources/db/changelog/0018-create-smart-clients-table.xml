@@ -66,6 +66,10 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+
+        <rollback>
+            <dropTable tableName="smart_clients"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="0018-2" author="healthdata">
@@ -85,6 +89,10 @@
             referencedTableName="smart_clients"
             referencedColumnNames="id"
             onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="smart_client_redirect_uris"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="0018-3" author="healthdata">
@@ -104,6 +112,10 @@
             referencedTableName="smart_clients"
             referencedColumnNames="id"
             onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="smart_client_scopes"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="0018-4" author="healthdata">
@@ -123,6 +135,10 @@
             referencedTableName="smart_clients"
             referencedColumnNames="id"
             onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="smart_client_grant_types"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="0018-5" author="healthdata">
@@ -136,6 +152,10 @@
         <createIndex indexName="idx_smart_clients_active" tableName="smart_clients">
             <column name="active"/>
         </createIndex>
+
+        <rollback>
+            <!-- Indexes will be dropped when table is dropped -->
+        </rollback>
     </changeSet>
 
     <changeSet id="0018-6" author="healthdata">
@@ -153,6 +173,12 @@
             <column name="access_token_lifetime" valueNumeric="3600"/>
             <column name="refresh_token_lifetime" valueNumeric="86400"/>
         </insert>
+
+        <rollback>
+            <delete tableName="smart_clients">
+                <where>client_id='demo-smart-app'</where>
+            </delete>
+        </rollback>
     </changeSet>
 
     <changeSet id="0018-7" author="healthdata">
@@ -166,6 +192,12 @@
             SELECT id, 'http://localhost:4200/callback'
             FROM smart_clients WHERE client_id = 'demo-smart-app';
         </sql>
+
+        <rollback>
+            <sql>
+                DELETE FROM smart_client_redirect_uris WHERE client_id IN (SELECT id FROM smart_clients WHERE client_id = 'demo-smart-app');
+            </sql>
+        </rollback>
     </changeSet>
 
     <changeSet id="0018-8" author="healthdata">
@@ -192,6 +224,12 @@
             INSERT INTO smart_client_scopes (client_id, scope)
             SELECT id, 'user/*.read' FROM smart_clients WHERE client_id = 'demo-smart-app';
         </sql>
+
+        <rollback>
+            <sql>
+                DELETE FROM smart_client_scopes WHERE client_id IN (SELECT id FROM smart_clients WHERE client_id = 'demo-smart-app');
+            </sql>
+        </rollback>
     </changeSet>
 
     <changeSet id="0018-9" author="healthdata">
@@ -203,6 +241,12 @@
             INSERT INTO smart_client_grant_types (client_id, grant_type)
             SELECT id, 'refresh_token' FROM smart_clients WHERE client_id = 'demo-smart-app';
         </sql>
+
+        <rollback>
+            <sql>
+                DELETE FROM smart_client_grant_types WHERE client_id IN (SELECT id FROM smart_clients WHERE client_id = 'demo-smart-app');
+            </sql>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

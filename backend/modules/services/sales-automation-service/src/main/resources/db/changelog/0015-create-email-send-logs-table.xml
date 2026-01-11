@@ -101,6 +101,10 @@
         <createIndex indexName="idx_email_logs_status" tableName="email_send_logs">
             <column name="status"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="email_send_logs"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

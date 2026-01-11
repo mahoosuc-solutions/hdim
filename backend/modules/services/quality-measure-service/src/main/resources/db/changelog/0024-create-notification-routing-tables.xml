@@ -63,6 +63,10 @@
         <createIndex indexName="idx_routing_alert_type" tableName="alert_routing_configs">
             <column name="alert_type"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="alert_routing_configs"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="0016-create-care-team-assignments-table" author="healthdata-team">
@@ -133,6 +137,10 @@
             <column name="effective_from"/>
             <column name="effective_to"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="care_team_assignments"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="0016-create-care-team-members-table" author="healthdata-team">
@@ -188,6 +196,10 @@
         <createIndex indexName="idx_care_team_active" tableName="care_team_members">
             <column name="active"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="care_team_members"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="0016-create-notification-preferences-table" author="healthdata-team">
@@ -240,6 +252,10 @@
         <createIndex indexName="idx_notification_pref_tenant" tableName="notification_preferences">
             <column name="tenant_id"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="notification_preferences"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="0016-create-notifications-table" author="healthdata-team">
@@ -307,6 +323,10 @@
         <createIndex indexName="idx_notifications_tenant" tableName="notifications">
             <column name="tenant_id"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="notifications"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

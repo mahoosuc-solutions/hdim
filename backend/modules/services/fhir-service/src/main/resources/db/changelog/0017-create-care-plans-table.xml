@@ -145,6 +145,10 @@
             CREATE INDEX idx_careplan_title_trgm ON care_plans USING GIN (title gin_trgm_ops);
             CREATE INDEX idx_careplan_desc_trgm ON care_plans USING GIN (description gin_trgm_ops);
         </sql>
+
+        <rollback>
+            <dropTable tableName="care_plans"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

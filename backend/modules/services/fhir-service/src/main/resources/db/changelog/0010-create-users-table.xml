@@ -55,6 +55,10 @@
         <createIndex indexName="idx_users_active" tableName="users">
             <column name="active"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="users"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="0010-create-user-tenants-table" author="fhir-service">
@@ -80,6 +84,10 @@
         <createIndex indexName="idx_user_tenants_tenant_id" tableName="user_tenants">
             <column name="tenant_id"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="user_tenants"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="0010-create-user-roles-table" author="fhir-service">
@@ -101,6 +109,10 @@
             referencedTableName="users"
             referencedColumnNames="id"
             onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="user_roles"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="0010-create-refresh-tokens-table" author="fhir-service">
@@ -144,6 +156,10 @@
             referencedTableName="users"
             referencedColumnNames="id"
             onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="refresh_tokens"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

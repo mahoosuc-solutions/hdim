@@ -73,6 +73,10 @@
         <createIndex indexName="idx_email_sequences_active" tableName="email_sequences">
             <column name="is_active"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="email_sequences"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

@@ -204,5 +204,9 @@
                 referencedTableName="patients"
                 referencedColumnNames="id"
                 onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="allergy_intolerances"/>
+        </rollback>
     </changeSet>
 </databaseChangeLog>

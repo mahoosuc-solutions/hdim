@@ -64,6 +64,10 @@
         <createIndex tableName="leads" indexName="idx_leads_zoho">
             <column name="zoho_lead_id"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="leads"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="002-create-accounts-table" author="hdim">
@@ -117,6 +121,10 @@
         <createIndex tableName="accounts" indexName="idx_accounts_zoho">
             <column name="zoho_account_id"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="accounts"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="003-create-contacts-table" author="hdim">
@@ -179,6 +187,10 @@
             referencedTableName="accounts"
             referencedColumnNames="id"
             constraintName="fk_contacts_account"/>
+
+        <rollback>
+            <dropTable tableName="contacts"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="004-create-opportunities-table" author="hdim">
@@ -248,6 +260,10 @@
             referencedTableName="contacts"
             referencedColumnNames="id"
             constraintName="fk_opportunities_contact"/>
+
+        <rollback>
+            <dropTable tableName="opportunities"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="005-create-activities-table" author="hdim">
@@ -304,6 +320,10 @@
         <createIndex tableName="activities" indexName="idx_activities_type">
             <column name="activity_type"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="activities"/>
+        </rollback>
     </changeSet>
 
     <!-- Audit events table for compliance tracking -->
@@ -352,6 +372,10 @@
         <createIndex tableName="audit_events" indexName="idx_audit_timestamp">
             <column name="created_at"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="audit_events"/>
+        </rollback>
     </changeSet>
 
     <!-- LinkedIn Integration -->
@@ -359,6 +383,10 @@
         <addColumn tableName="leads">
             <column name="linkedin_url" type="VARCHAR(500)"/>
         </addColumn>
+
+        <rollback>
+            <dropColumn tableName="leads" columnName="linkedin_url"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="011-create-linkedin-outreach-table" author="hdim">
@@ -426,6 +454,10 @@
         <createIndex tableName="linkedin_outreach" indexName="idx_linkedin_profile">
             <column name="linkedin_profile_url"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="linkedin_outreach"/>
+        </rollback>
     </changeSet>
 
     <!-- Email Sequence Management -->

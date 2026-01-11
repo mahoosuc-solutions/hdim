@@ -12,6 +12,10 @@
             </not>
         </preConditions>
         <sql>CREATE SCHEMA IF NOT EXISTS sdoh;</sql>
+
+        <rollback>
+            <sql>DROP SCHEMA IF EXISTS sdoh CASCADE;</sql>
+        </rollback>
     </changeSet>
 
     <!-- CMS SDOH-1/SDOH-2 Compliant HRSN Screening Sessions Table -->
@@ -111,6 +115,10 @@
             <column name="tenant_id"/>
             <column name="any_domain_positive"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="hrsn_screening_sessions" schemaName="sdoh"/>
+        </rollback>
     </changeSet>
 
     <!-- SDOH Interventions Table -->
@@ -177,6 +185,10 @@
             <column name="tenant_id"/>
             <column name="domain"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="sdoh_interventions" schemaName="sdoh"/>
+        </rollback>
     </changeSet>
 
     <!-- Add comments for CMS compliance documentation -->
@@ -197,6 +209,16 @@
             COMMENT ON TABLE sdoh.sdoh_interventions IS
                 'Tracks interventions and referrals for patients with positive HRSN screens';
         </sql>
+
+        <rollback>
+            <sql>
+                COMMENT ON TABLE sdoh.hrsn_screening_sessions IS NULL;
+                COMMENT ON COLUMN sdoh.hrsn_screening_sessions.all_domains_screened IS NULL;
+                COMMENT ON COLUMN sdoh.hrsn_screening_sessions.any_domain_positive IS NULL;
+                COMMENT ON COLUMN sdoh.hrsn_screening_sessions.billing_code IS NULL;
+                COMMENT ON TABLE sdoh.sdoh_interventions IS NULL;
+            </sql>
+        </rollback>
     </changeSet>
 
     <changeSet id="005-create-sdoh-extended-tables" author="hdim">
@@ -357,6 +379,14 @@
             </column>
             <column name="notes" type="TEXT"/>
         </createTable>
+
+        <rollback>
+            <dropTable tableName="sdoh_risk_scores" schemaName="sdoh"/>
+            <dropTable tableName="resource_referrals" schemaName="sdoh"/>
+            <dropTable tableName="sdoh_diagnoses" schemaName="sdoh"/>
+            <dropTable tableName="sdoh_assessments" schemaName="sdoh"/>
+            <dropTable tableName="community_resources" schemaName="sdoh"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

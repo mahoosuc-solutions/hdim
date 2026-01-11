@@ -176,6 +176,10 @@
             onDelete="SET NULL"/>
 
         <!-- PostgreSQL-specific: Use JSONB for better performance -->
+
+        <rollback>
+            <dropTable tableName="procedures"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

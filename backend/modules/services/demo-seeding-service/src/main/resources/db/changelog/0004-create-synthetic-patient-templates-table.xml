@@ -68,6 +68,10 @@
         <createIndex tableName="synthetic_patient_templates" indexName="idx_patient_templates_active">
             <column name="is_active"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="synthetic_patient_templates"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

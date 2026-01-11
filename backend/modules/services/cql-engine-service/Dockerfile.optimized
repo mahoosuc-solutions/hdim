@@ -69,7 +69,8 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:+UseG1GC \
     -XX:+UseStringDeduplication \
     -XX:+OptimizeStringConcat \
-    -Djava.security.egd=file:/dev/./urandom"
+    -Djava.security.egd=file:/dev/./urandom \
+    -Djava.net.preferIPv4Stack=true"
 
 EXPOSE 8081
 

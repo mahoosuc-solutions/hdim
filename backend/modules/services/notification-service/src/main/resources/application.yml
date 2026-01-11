@@ -14,9 +14,12 @@ spring:
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
+      connection-timeout: 20000      # 20 seconds (reduced from 30s)
+      idle-timeout: 300000           # 5 minutes (FIXED: matches network timeout)
+      max-lifetime: 300000           # 5 minutes (CRITICAL FIX: matches PostgreSQL/Docker TCP timeout)
+      keepalive-time: 240000         # 4 minutes (proactive keepalive before 5-minute timeout)
+      leak-detection-threshold: 60000  # 60 seconds (detect connection leaks)
+      validation-timeout: 5000       # 5 seconds (fail fast on dead connections)
 
   jpa:
     hibernate:

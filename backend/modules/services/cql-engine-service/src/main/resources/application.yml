@@ -7,10 +7,6 @@ spring:
   application:
     name: cql-engine-service
 
-  autoconfigure:
-    exclude:
-      - com.healthdata.authentication.config.AuthenticationAutoConfiguration
-
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_cql}
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}

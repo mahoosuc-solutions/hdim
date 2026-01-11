@@ -98,8 +98,12 @@ management:
         enabled: true
 
 # OpenTelemetry Tracing Configuration
+# Uses environment variables from docker-compose.yml:
+# - OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+# - OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+# - OTEL_SERVICE_NAME: fhir-service
 tracing:
-  url: http://jaeger:4318/v1/traces
+  url: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://jaeger:4318/v1/traces}
 
 # Logging for Docker
 logging:

@@ -33,6 +33,11 @@ jobs:
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
+      - name: Validate Rollback Coverage
+        run: |
+          cd backend
+          ./scripts/test-liquibase-rollback.sh
+
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@v4

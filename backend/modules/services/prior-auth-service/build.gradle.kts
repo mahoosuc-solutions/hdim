@@ -4,6 +4,12 @@ plugins {
     java
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
+}
+
 
 
 dependencies {
@@ -24,7 +30,7 @@ dependencies {
     implementation(libs.spring.boot.starter.validation)
 
     // Spring Cloud OpenFeign (for Payer API clients)
-    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+    implementation(libs.spring.cloud.starter.openfeign)
 
     // HAPI FHIR (for FHIR R4 Claim/ClaimResponse resources)
     implementation(libs.bundles.hapi.fhir.client)
@@ -77,6 +83,12 @@ dependencies {
     testAnnotationProcessor(libs.lombok)
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
+}
+
 tasks.withType<Test> {
     systemProperty("spring.datasource.url", "jdbc:tc:postgresql:15-alpine:///testdb")
     systemProperty("spring.datasource.username", "test")
@@ -84,4 +96,10 @@ tasks.withType<Test> {
     systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
     systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
     systemProperty("spring.profiles.active", "test")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
 }

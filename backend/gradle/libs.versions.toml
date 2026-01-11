@@ -18,6 +18,7 @@ postgresql = "42.7.7"
 hikaricp = "6.0.0"
 hibernate = "6.6.1.Final"
 liquibase = "4.29.2"
+httpclient5 = "5.2.1"
 
 # Caching & Messaging
 redis = "3.5.7"
@@ -27,7 +28,7 @@ spring-kafka = "3.3.11"
 # API & Documentation
 springdoc-openapi = "2.6.0"
 swagger = "2.2.41"
-jackson = "2.18.2"  # Updated for security and features (compatible with Spring Boot 3.3.6)
+jackson = "2.17.2"  # Aligned with Spring Boot 3.3.6 BOM for dependency stability
 resilience4j = "2.2.0"  # Circuit breaker, retry, rate limiting
 
 # Security
@@ -47,6 +48,7 @@ lombok = "1.18.34"
 mapstruct = "1.6.2"
 commons-lang3 = "3.17.0"
 guava = "33.3.1-jre"
+hypersistence-utils = "3.9.0"
 
 # Monitoring & Observability
 micrometer = "1.13.6"
@@ -57,6 +59,11 @@ opentelemetry = "1.32.0"
 # Build Tools
 openapi-generator = "7.18.0"
 gradle-versions-plugin = "0.51.0"
+
+# AI/ML SDKs
+aws-sdk = "2.25.0"
+azure-openai = "1.0.0-beta.10"
+azure-identity = "1.12.2"
 
 # Security Patches (override transitive dependencies)
 logback = "1.5.16"
@@ -81,6 +88,7 @@ spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-star
 spring-cloud-starter-config = { module = "org.springframework.cloud:spring-cloud-starter-config", version.ref = "spring-cloud" }
 spring-cloud-starter-netflix-eureka-client = { module = "org.springframework.cloud:spring-cloud-starter-netflix-eureka-client", version.ref = "spring-cloud" }
 spring-cloud-starter-vault-config = { module = "org.springframework.cloud:spring-cloud-starter-vault-config" }
+spring-cloud-starter-openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign" }
 
 # HAPI FHIR
 hapi-fhir-base = { module = "ca.uhn.hapi.fhir:hapi-fhir-base", version.ref = "hapi-fhir" }
@@ -100,6 +108,7 @@ cql-evaluator-fhir = { module = "com.alphora:cql-evaluator-fhir", version.ref = 
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
 liquibase = { module = "org.liquibase:liquibase-core", version.ref = "liquibase" }
+httpclient5 = { module = "org.apache.httpcomponents.client5:httpclient5", version.ref = "httpclient5" }
 
 # Kafka
 spring-kafka = { module = "org.springframework.kafka:spring-kafka", version.ref = "spring-kafka" }
@@ -115,6 +124,7 @@ swagger-annotations = { module = "io.swagger.core.v3:swagger-annotations", versi
 # JSON Processing
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
 
 # Resilience4j
 resilience4j-spring-boot3 = { module = "io.github.resilience4j:resilience4j-spring-boot3", version.ref = "resilience4j" }
@@ -151,6 +161,7 @@ mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
 mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
+hypersistence-utils-hibernate-63 = { module = "io.hypersistence:hypersistence-utils-hibernate-63", version.ref = "hypersistence-utils" }
 
 # Monitoring
 micrometer-core = { module = "io.micrometer:micrometer-core", version.ref = "micrometer" }
@@ -169,6 +180,13 @@ micrometer-tracing = { module = "io.micrometer:micrometer-tracing", version.ref 
 micrometer-tracing-bridge-otel = { module = "io.micrometer:micrometer-tracing-bridge-otel", version.ref = "micrometer-tracing" }
 opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp", version.ref = "opentelemetry" }
 opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk", version.ref = "opentelemetry" }
+
+# AI/ML SDKs
+aws-sdk-bom = { module = "software.amazon.awssdk:bom", version.ref = "aws-sdk" }
+aws-bedrock-runtime = { module = "software.amazon.awssdk:bedrockruntime" }
+aws-auth = { module = "software.amazon.awssdk:auth" }
+azure-ai-openai = { module = "com.azure:azure-ai-openai", version.ref = "azure-openai" }
+azure-identity = { module = "com.azure:azure-identity", version.ref = "azure-identity" }
 
 [bundles]
 spring-boot-web = ["spring-boot-starter-web", "spring-boot-starter-validation", "spring-boot-starter-actuator"]

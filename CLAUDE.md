@@ -495,6 +495,135 @@ class PatientControllerIntegrationTest {
 
 ---
 
+## Distributed Tracing
+
+HDIM implements **OpenTelemetry** distributed tracing across all 34 microservices for end-to-end request visibility.
+
+### Architecture Overview
+
+**Trace Propagation:** Automatic via interceptors (no code changes needed)
+
+```
+Client → Gateway → Service A → Service B → Kafka → Service C
+         │          │           │           │        │
+         └──────────┴───────────┴───────────┴────────┘
+              All linked by trace-id
+```
+
+### Automatic Trace Propagation
+
+| Transport | Interceptor | Status | Configuration |
+|-----------|-------------|--------|---------------|
+| **HTTP (Feign)** | FeignTraceInterceptor | ✅ Auto-enabled | No config needed |
+| **HTTP (RestTemplate)** | RestTemplateTraceInterceptor | ✅ Auto-enabled | No config needed |
+| **Kafka (Producer)** | KafkaProducerTraceInterceptor | ✅ Configured | Add to application.yml |
+| **Kafka (Consumer)** | KafkaConsumerTraceInterceptor | ✅ Configured | Add to application.yml |
+
+### Kafka Tracing Configuration
+
+For services that use Kafka messaging:
+
+```yaml
+spring:
+  kafka:
+    producer:
+      properties:
+        interceptor.classes: com.healthdata.tracing.KafkaProducerTraceInterceptor
+    consumer:
+      properties:
+        interceptor.classes: com.healthdata.tracing.KafkaConsumerTraceInterceptor
+```
+
+### Environment-Specific Sampling
+
+Control trace volume with environment-specific sampling rates:
+
+```yaml
+---
+# Development Profile - 100% Trace Sampling
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0  # Capture all traces for debugging
+
+---
+# Staging Profile - 50% Trace Sampling
+spring:
+  config:
+    activate:
+      on-profile: staging
+
+management:
+  tracing:
+    sampling:
+      probability: 0.5  # Balance visibility and performance
+
+---
+# Production Profile - 10% Trace Sampling
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+management:
+  tracing:
+    sampling:
+      probability: 0.1  # Cost-effective monitoring
+```
+
+### Adding Custom Spans
+
+For business operations that need explicit tracing:
+
+```java
+@Service
+public class QualityMeasureService {
+
+    private final Tracer tracer;
+
+    public EvaluationResult evaluateMeasure(String measureId, String patientId) {
+        Span span = tracer.spanBuilder("evaluate_measure")
+                .setAttribute("measure.id", measureId)
+                .setAttribute("patient.id", patientId)
+                .startSpan();
+
+        try (Scope scope = span.makeCurrent()) {
+            EvaluationResult result = performEvaluation(measureId, patientId);
+            span.setAttribute("result.score", result.getScore());
+            span.setStatus(StatusCode.OK);
+            return result;
+        } catch (Exception e) {
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR, e.getMessage());
+            throw e;
+        } finally {
+            span.end();
+        }
+    }
+}
+```
+
+### Jaeger Integration
+
+**Access Jaeger UI:** `http://localhost:16686`
+
+**Query Examples:**
+- Find slow requests: `service=fhir-service duration>5s`
+- Find errors: `service=patient-service error=true`
+- Find patient operations: `patient.id=PATIENT123`
+
+### Documentation
+
+- **Complete Guide:** `backend/docs/DISTRIBUTED_TRACING_GUIDE.md`
+- **Shared Tracing Module:** `modules/shared/infrastructure/tracing/`
+
+---
+
 ## Configuration Files
 
 ### Key Configuration Locations
@@ -1114,7 +1243,8 @@ cd backend
 
 ## Getting Help
 
-- **Database migration runbook**: See `backend/docs/DATABASE_MIGRATION_RUNBOOK.md` ⭐ **NEW**
+- **Distributed tracing**: See `backend/docs/DISTRIBUTED_TRACING_GUIDE.md` ⭐ **NEW**
+- **Database migration runbook**: See `backend/docs/DATABASE_MIGRATION_RUNBOOK.md`
 - **Database architecture**: See `DATABASE_ARCHITECTURE_MIGRATION_PLAN.md`
 - **Database migration status**: See `backend/docs/DATABASE_MIGRATION_STATUS.md`
 - **Entity-migration guide**: See `backend/docs/ENTITY_MIGRATION_GUIDE.md`
@@ -1128,5 +1258,5 @@ cd backend
 
 ---
 
-*Last Updated: January 10, 2026*
-*Version: 1.4* - Updated database migration status: Phases 1-4 complete, CI/CD enforcement added
+*Last Updated: January 11, 2026*
+*Version: 1.5* - Phase 3 & 4 complete: Database performance optimization and distributed tracing implementation

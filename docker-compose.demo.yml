@@ -18,7 +18,7 @@
 services:
   postgres:
     container_name: hdim-demo-postgres
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: healthdata
       POSTGRES_PASSWORD: demo_password_2024

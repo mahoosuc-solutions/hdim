@@ -15,7 +15,7 @@ services:
   # Infrastructure Services
   postgres:
     container_name: healthdata-postgres
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: healthdata
       POSTGRES_PASSWORD: healthdata_password

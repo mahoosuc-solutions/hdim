@@ -20,7 +20,7 @@ services:
   postgres:
     container_name: healthdata-postgres
     restart: unless-stopped
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     profiles: ["light", "core", "ai", "analytics", "demo", "full"]
     # Increase max_connections to support all microservices (28 services × ~10 connections each)
     command: postgres -c max_connections=300 -c shared_buffers=256MB

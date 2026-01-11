@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class EntityMigrationValidationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("quality_test")
             .withUsername("testuser")
             .withPassword("testpass");

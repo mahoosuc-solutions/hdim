@@ -59,6 +59,7 @@ dependencies {
     testImplementation(libs.bundles.testing)
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.testcontainers.redis)
     testImplementation(libs.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
 }

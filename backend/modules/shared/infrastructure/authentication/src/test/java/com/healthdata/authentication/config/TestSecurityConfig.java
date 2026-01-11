@@ -11,6 +11,8 @@ import com.healthdata.authentication.domain.User;
 import com.healthdata.authentication.repository.UserRepository;
 import com.healthdata.authentication.repository.RefreshTokenRepository;
 import com.healthdata.cache.CacheEvictionService;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cache.CacheManager;
@@ -199,5 +201,14 @@ public class TestSecurityConfig {
     @Bean
     public CookieService cookieService() {
         return new CookieService();
+    }
+
+    /**
+     * MeterRegistry for test environment.
+     * Provides a simple in-memory meter registry for MFA audit aspect metrics.
+     */
+    @Bean
+    public MeterRegistry meterRegistry() {
+        return new SimpleMeterRegistry();
     }
 }

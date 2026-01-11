@@ -65,7 +65,7 @@ class EcrApiIntegrationTest {
 
     // Testcontainers PostgreSQL - singleton pattern for all tests
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
         .withDatabaseName("ecrtestdb")
         .withUsername("test")
         .withPassword("test");

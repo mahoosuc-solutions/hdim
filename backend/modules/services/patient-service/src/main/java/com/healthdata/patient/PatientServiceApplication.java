@@ -1,6 +1,7 @@
 package com.healthdata.patient;
 
 import com.healthdata.authentication.config.AuthenticationJwtAutoConfiguration;
+import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -15,10 +16,13 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * health status dashboards, and applies consent filters for patient data.
  *
  * SECURITY: Uses gateway-trust authentication pattern (TrustedHeaderAuthFilter)
- * instead of direct JWT validation. Excludes JwtAuthenticationFilter from
- * component scanning and AuthenticationJwtAutoConfiguration from auto-config.
+ * instead of direct JWT validation. Excludes AuthenticationAutoConfiguration
+ * and AuthenticationJwtAutoConfiguration from auto-config since only gateway needs ApiKey entity.
  */
-@SpringBootApplication(exclude = AuthenticationJwtAutoConfiguration.class)
+@SpringBootApplication(exclude = {
+    AuthenticationAutoConfiguration.class,
+    AuthenticationJwtAutoConfiguration.class
+})
 @EnableFeignClients
 @EnableCaching
 @EnableJpaRepositories(basePackages = {

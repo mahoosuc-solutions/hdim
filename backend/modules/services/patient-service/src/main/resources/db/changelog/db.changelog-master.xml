@@ -13,5 +13,6 @@
     <include file="db/changelog/0003-create-patient-risk-scores-table.xml"/>
     <include file="db/changelog/0004-add-composite-indexes-and-jsonb.xml"/>
     <include file="db/changelog/0005-create-provider-panel-assignment.xml"/>
+    <include file="db/changelog/0006-create-audit-events-table.xml"/>
 
 </databaseChangeLog>

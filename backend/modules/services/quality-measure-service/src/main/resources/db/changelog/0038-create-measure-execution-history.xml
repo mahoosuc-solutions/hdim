@@ -170,16 +170,16 @@
 
     <!-- Trigger to auto-calculate duration_ms -->
     <changeSet id="0038-create-meh-duration-trigger" author="claude-code">
-        <sql><![CDATA[
+        <sql splitStatements="false"><![CDATA[
             CREATE OR REPLACE FUNCTION calculate_execution_duration()
-            RETURNS TRIGGER AS $$
+            RETURNS TRIGGER AS $function$
             BEGIN
                 IF NEW.end_time IS NOT NULL AND NEW.start_time IS NOT NULL THEN
                     NEW.duration_ms := EXTRACT(EPOCH FROM (NEW.end_time - NEW.start_time)) * 1000;
                 END IF;
                 RETURN NEW;
             END;
-            $$ LANGUAGE plpgsql;
+            $function$ LANGUAGE plpgsql;
 
             CREATE TRIGGER trg_meh_calculate_duration
                 BEFORE INSERT OR UPDATE ON measure_execution_history

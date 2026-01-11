@@ -63,7 +63,7 @@ class EntityMigrationValidationTest {
     private static final String SCHEMA_NAME = "prior_auth";
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("prior_auth_test")
             .withUsername("testuser")
             .withPassword("testpass")

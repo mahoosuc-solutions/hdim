@@ -17,7 +17,7 @@
 - **Framework**: Spring Boot 3.x
 - **Build**: Gradle 8.11+ (Kotlin DSL)
 - **FHIR**: HAPI FHIR 7.x (R4)
-- **Database**: PostgreSQL 15
+- **Database**: PostgreSQL 16
 - **Cache**: Redis 7
 - **Messaging**: Apache Kafka 3.x
 - **API Gateway**: Kong
@@ -684,7 +684,7 @@ HDIM uses the **Database-per-Service** pattern with **Liquibase** for all schema
 
 ### Database Inventory
 
-**PostgreSQL Version:** 15-alpine (upgrading to 16 after migration complete)
+**PostgreSQL Version:** 16-alpine
 **Total Databases:** 29 (see `DATABASE_ARCHITECTURE_MIGRATION_PLAN.md` for complete list)
 
 **Core Databases:**
@@ -1050,7 +1050,7 @@ For complete details on the database architecture standardization effort:
 - 🔄 Phase 5: CI/CD enforcement (in progress)
 
 **Key Achievements:**
-- PostgreSQL 15 running with 29 databases
+- PostgreSQL 16 running with 29 databases
 - Init script simplified to database creation only
 - All schema management moved to service Liquibase migrations
 - Gateway authentication schema version-controlled

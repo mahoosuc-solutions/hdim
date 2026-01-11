@@ -60,7 +60,7 @@ class EntityMigrationValidationTest {
     }
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("agent_runtime_test")
             .withUsername("testuser")
             .withPassword("testpass")

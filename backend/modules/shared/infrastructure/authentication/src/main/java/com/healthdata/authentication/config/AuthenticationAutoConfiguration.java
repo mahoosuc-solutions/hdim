@@ -45,9 +45,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 // NOTE: Only services with @Service annotation are auto-scanned (JwtTokenService, CookieService).
 // Gateway-only services (LogoutService, MfaService, RefreshTokenService, ApiKeyService)
 // intentionally have NO @Service annotation - they are explicitly configured in GatewayAuthenticationConfig.
+// NOTE: Only scanning 'domain' package (User, UserRole). The 'entity' package (ApiKey) is gateway-only
+// and must be explicitly scanned by gateway-service via @EntityScan.
 @EntityScan(basePackages = {
-    "com.healthdata.authentication.domain",
-    "com.healthdata.authentication.entity"
+    "com.healthdata.authentication.domain"
 })
 public class AuthenticationAutoConfiguration {
 

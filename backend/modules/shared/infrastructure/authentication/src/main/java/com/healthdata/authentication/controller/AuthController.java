@@ -5,10 +5,12 @@ import com.healthdata.authentication.domain.User;
 import com.healthdata.authentication.dto.*;
 import com.healthdata.authentication.entity.RefreshToken;
 import com.healthdata.authentication.repository.UserRepository;
+import com.healthdata.authentication.audit.MfaAuditEvent;
 import com.healthdata.authentication.service.CookieService;
 import com.healthdata.authentication.service.JwtTokenService;
 import com.healthdata.authentication.service.LogoutService;
 import com.healthdata.authentication.service.MfaService;
+import com.healthdata.authentication.service.MfaPolicyService;
 import com.healthdata.authentication.service.MfaTokenService;
 import com.healthdata.authentication.service.RefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -75,6 +77,7 @@ public class AuthController {
     private final MfaService mfaService;
     private final MfaTokenService mfaTokenService;
     private final CookieService cookieService;
+    private final com.healthdata.authentication.service.MfaPolicyService mfaPolicyService;
 
     /**
      * Authenticate user with username/password.
@@ -138,6 +141,27 @@ public class AuthController {
             user.resetFailedLoginAttempts();
             userRepository.save(user);
 
+            // HIPAA §164.312(d) - Enforce MFA policy for administrative accounts
+            if (mfaPolicyService.isMfaRequired(user) && !user.isMfaConfigured()) {
+                long daysRemaining = mfaPolicyService.getGracePeriodRemainingDays(user);
+
+                if (daysRemaining <= 0) {
+                    // Grace period expired - block login
+                    log.warn("MFA_AUDIT: event={}, userId={}, ip={}, username={}, outcome=LOGIN_BLOCKED",
+                        MfaAuditEvent.MFA_LOGIN_BLOCKED, user.getId(),
+                        extractIpAddress(httpRequest), user.getUsername());
+
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "MFA setup required. Your admin account must enable Multi-Factor Authentication " +
+                        "for security compliance. Please contact your administrator for account recovery.");
+                } else {
+                    // Within grace period - allow login with warning
+                    log.warn("Admin login allowed with MFA grace period - {} days remaining for user: {}",
+                        daysRemaining, user.getUsername());
+                    // Warning will be added to response below
+                }
+            }
+
             // Check if MFA is enabled
             if (user.isMfaConfigured()) {
                 log.info("MFA required for user: {}", user.getUsername());
@@ -175,18 +199,32 @@ public class AuthController {
             log.debug("Set HttpOnly cookies for user: {}", user.getUsername());
 
             // Build JWT response (tokens also included for legacy client support)
-            JwtAuthenticationResponse response = JwtAuthenticationResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .expiresIn(jwtConfig.getAccessTokenExpirationSeconds())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .roles(user.getRoles())
-                .tenantIds(user.getTenantIds())
-                .mfaEnabled(false)
-                .message("Login successful")
-                .build();
+            JwtAuthenticationResponse.JwtAuthenticationResponseBuilder responseBuilder =
+                JwtAuthenticationResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .tokenType("Bearer")
+                    .expiresIn(jwtConfig.getAccessTokenExpirationSeconds())
+                    .username(user.getUsername())
+                    .email(user.getEmail())
+                    .roles(user.getRoles())
+                    .tenantIds(user.getTenantIds())
+                    .mfaEnabled(false);
+
+            // Add MFA warning if admin is in grace period
+            if (mfaPolicyService.isMfaRequired(user) && !user.isMfaConfigured()) {
+                long daysRemaining = mfaPolicyService.getGracePeriodRemainingDays(user);
+                String warningMessage = String.format(
+                    "Login successful. WARNING: Your admin account must enable MFA within %d days. " +
+                    "Use POST /api/v1/auth/mfa/setup to configure Multi-Factor Authentication.",
+                    daysRemaining
+                );
+                responseBuilder.message(warningMessage);
+            } else {
+                responseBuilder.message("Login successful");
+            }
+
+            JwtAuthenticationResponse response = responseBuilder.build();
 
             return ResponseEntity.ok(response);
 

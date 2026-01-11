@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!--
+        Phase 4: Measure Configuration Profiles
+
+        Creates measure_config_profiles table for reusable measure configuration
+        templates that can be applied to patient populations.
+
+        Features:
+        - Population-based rule engine
+        - Priority-based override resolution
+        - Clinical governance approval workflow
+        - Reusable configuration templates
+        - Multi-tenant isolation
+    -->
+    <changeSet id="0036-create-measure-config-profiles" author="claude-code">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="measure_config_profiles"/>
+            </not>
+        </preConditions>
+
+        <comment>Create measure configuration profiles for reusable measure settings templates</comment>
+
+        <createTable tableName="measure_config_profiles">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_measure_config_profiles"/>
+            </column>
+
+            <!-- Tenant Isolation -->
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Profile Identity -->
+            <column name="profile_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="profile_code" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+
+            <!-- Target Population -->
+            <column name="population_criteria" type="JSONB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Configuration -->
+            <column name="config_overrides" type="JSONB">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Status -->
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="effective_from" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="effective_until" type="DATE"/>
+
+            <!-- Clinical Governance -->
+            <column name="approved_by" type="UUID"/>
+            <column name="approved_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="approval_notes" type="TEXT"/>
+
+            <!-- Audit -->
+            <column name="created_by" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Unique constraint on profile code per tenant -->
+        <addUniqueConstraint
+            constraintName="uk_mcp_profile_code"
+            tableName="measure_config_profiles"
+            columnNames="tenant_id, profile_code"/>
+
+        <!-- Indexes for performance -->
+        <createIndex indexName="idx_mcp_tenant_active" tableName="measure_config_profiles">
+            <column name="tenant_id"/>
+            <column name="active"/>
+        </createIndex>
+
+        <createIndex indexName="idx_mcp_effective_period" tableName="measure_config_profiles">
+            <column name="effective_from"/>
+            <column name="effective_until"/>
+        </createIndex>
+
+        <createIndex indexName="idx_mcp_priority" tableName="measure_config_profiles">
+            <column name="priority" descending="true"/>
+            <column name="active"/>
+        </createIndex>
+
+        <!-- GIN indexes for JSONB columns -->
+        <sql>
+            CREATE INDEX idx_mcp_population_criteria ON measure_config_profiles USING GIN (population_criteria);
+            CREATE INDEX idx_mcp_config_overrides ON measure_config_profiles USING GIN (config_overrides);
+        </sql>
+
+        <!-- Comments for documentation -->
+        <sql>
+            COMMENT ON TABLE measure_config_profiles IS 'Reusable measure configuration templates for patient populations';
+            COMMENT ON COLUMN measure_config_profiles.profile_code IS 'Unique code for API/programmatic access (e.g., ELDERLY_DM_75PLUS)';
+            COMMENT ON COLUMN measure_config_profiles.population_criteria IS 'JSONB rules defining which patients this profile applies to';
+            COMMENT ON COLUMN measure_config_profiles.priority IS 'Higher priority profiles override lower priority (default 0)';
+            COMMENT ON COLUMN measure_config_profiles.config_overrides IS 'Map of measure parameter -> override value';
+        </sql>
+
+        <rollback>
+            <dropTable tableName="measure_config_profiles"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Add CHECK constraints -->
+    <changeSet id="0036-add-mcp-check-constraints" author="claude-code">
+        <sql>
+            ALTER TABLE measure_config_profiles
+                ADD CONSTRAINT chk_mcp_effective_dates
+                    CHECK (effective_until IS NULL OR effective_until >= effective_from);
+
+            ALTER TABLE measure_config_profiles
+                ADD CONSTRAINT chk_mcp_approval
+                    CHECK (
+                        (approved_by IS NULL AND approved_at IS NULL) OR
+                        (approved_by IS NOT NULL AND approved_at IS NOT NULL)
+                    );
+
+            ALTER TABLE measure_config_profiles
+                ADD CONSTRAINT chk_mcp_profile_code_format
+                    CHECK (profile_code ~ '^[A-Z0-9_]+$');
+        </sql>
+
+        <rollback>
+            <sql>
+                ALTER TABLE measure_config_profiles DROP CONSTRAINT IF EXISTS chk_mcp_effective_dates;
+                ALTER TABLE measure_config_profiles DROP CONSTRAINT IF EXISTS chk_mcp_approval;
+                ALTER TABLE measure_config_profiles DROP CONSTRAINT IF EXISTS chk_mcp_profile_code_format;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,238 @@
+name: Annual Disaster Recovery Test
+
+# HIPAA §164.308(a)(7)(ii)(B) - Disaster Recovery Plan Testing
+# Automated annual disaster recovery testing for HDIM platform
+
+on:
+  schedule:
+    # Run annually on January 1st at 00:00 UTC
+    - cron: '0 0 1 1 *'
+
+  workflow_dispatch:  # Allow manual triggering
+    inputs:
+      scenario:
+        description: 'Test scenario to run (1-4, or all)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+      skip_cleanup:
+        description: 'Skip cleanup after tests (for debugging)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  disaster-recovery-test:
+    name: DR Test Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 300  # 5 hours maximum
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Display system information
+        run: |
+          echo "==================== System Information ===================="
+          echo "Runner: $(uname -a)"
+          echo "Docker: $(docker --version)"
+          echo "Docker Compose: $(docker-compose --version)"
+          echo "CPU: $(nproc) cores"
+          echo "Memory: $(free -h | awk '/^Mem:/ {print $2}')"
+          echo "Disk: $(df -h / | awk 'NR==2 {print $4" available"}')"
+          echo "==========================================================="
+
+      - name: Create DR test environment configuration
+        run: |
+          cd backend/testing/disaster-recovery
+
+          # Create .env.dr-test if it doesn't exist
+          if [ ! -f .env.dr-test ]; then
+            cat > .env.dr-test <<EOF
+          # DR Test Environment Configuration
+          POSTGRES_HOST=localhost
+          POSTGRES_PORT=15435
+          POSTGRES_USER=healthdata
+          POSTGRES_PASSWORD=healthdata_test_password
+          POSTGRES_DB=gateway_db
+
+          REDIS_HOST=localhost
+          REDIS_PORT=16380
+
+          KAFKA_BOOTSTRAP_SERVERS=localhost:19094
+
+          # Test-specific settings
+          DR_TEST_MODE=true
+          LOG_LEVEL=INFO
+          EOF
+          fi
+
+          echo "✅ DR test environment configuration created"
+
+      - name: Pre-flight checks
+        run: |
+          echo "Running pre-flight checks..."
+
+          # Check disk space
+          AVAILABLE_GB=$(df / | awk 'NR==2 {print int($4/1024/1024)}')
+          if [ $AVAILABLE_GB -lt 20 ]; then
+            echo "❌ Insufficient disk space: ${AVAILABLE_GB}GB available (minimum: 20GB)"
+            exit 1
+          fi
+          echo "✅ Disk space OK: ${AVAILABLE_GB}GB available"
+
+          # Check Docker daemon
+          if ! docker ps > /dev/null 2>&1; then
+            echo "❌ Docker daemon not accessible"
+            exit 1
+          fi
+          echo "✅ Docker daemon OK"
+
+          # Check scripts executable
+          if [ ! -x backend/testing/disaster-recovery/scripts/run-dr-test.sh ]; then
+            echo "Making scripts executable..."
+            chmod +x backend/testing/disaster-recovery/scripts/*.sh
+          fi
+          echo "✅ Scripts executable"
+
+      - name: Execute DR test suite
+        id: dr_test
+        env:
+          # SECURITY: Using workflow dispatch inputs (trusted) not user-generated content
+          SCENARIO: ${{ github.event.inputs.scenario || 'all' }}
+          SKIP_CLEANUP: ${{ github.event.inputs.skip_cleanup || 'false' }}
+        run: |
+          cd backend/testing/disaster-recovery
+
+          # Set environment variables
+          export DR_TEST_SKIP_CLEANUP="$SKIP_CLEANUP"
+
+          # Execute DR tests
+          echo "==================== Starting DR Test Suite ===================="
+          echo "Scenario: $SCENARIO"
+          echo "Skip Cleanup: $SKIP_CLEANUP"
+          echo "==============================================================="
+
+          # Run tests and capture exit code
+          if ./scripts/run-dr-test.sh --scenario "$SCENARIO"; then
+            echo "dr_test_status=passed" >> $GITHUB_OUTPUT
+            echo "✅ DR test suite PASSED"
+          else
+            echo "dr_test_status=failed" >> $GITHUB_OUTPUT
+            echo "❌ DR test suite FAILED"
+            exit 1
+          fi
+
+      - name: Upload DR test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dr-test-report-${{ github.run_number }}
+          path: |
+            backend/testing/disaster-recovery/reports/*-dr-test-*-report.md
+          retention-days: 2555  # ~7 years for HIPAA compliance
+
+      - name: Upload DR test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dr-test-logs-${{ github.run_number }}
+          path: |
+            backend/testing/disaster-recovery/reports/*-dr-test-*.log
+          retention-days: 2555  # ~7 years for HIPAA compliance
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          cd backend/testing/disaster-recovery/reports
+
+          # Find the latest report
+          LATEST_REPORT=$(ls -t *-dr-test-*-report.md 2>/dev/null | head -1)
+
+          if [ -z "$LATEST_REPORT" ]; then
+            echo "⚠️ No DR test report found"
+            echo "## DR Test Report Not Found" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+          # Extract summary from report and add to job summary
+          echo "## HDIM Annual Disaster Recovery Test Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Test Run:** #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date +'%Y-%m-%d %H:%M:%S %Z')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Add report content
+          cat "$LATEST_REPORT" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "==================== DR TEST FAILED ===================="
+          echo "The annual disaster recovery test has failed."
+          echo "Please review the test logs and report for details."
+          echo ""
+          echo "Action Required:"
+          echo "1. Review test artifacts (uploaded to GitHub)"
+          echo "2. Identify root cause of failure"
+          echo "3. Remediate issues"
+          echo "4. Re-run DR test manually: workflow_dispatch"
+          echo "5. Update DR procedures based on findings"
+          echo ""
+          echo "HIPAA Compliance: §164.308(a)(7)(ii)(B)"
+          echo "Failure must be documented and remediated."
+          echo "========================================================"
+
+          # In production, send notification to Slack/email
+          # Example: curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} -d '{"text":"DR test failed!"}'
+
+      - name: Cleanup test environment
+        if: always() && github.event.inputs.skip_cleanup != 'true'
+        run: |
+          echo "Cleaning up DR test environment..."
+
+          # Stop any running containers
+          docker-compose -f backend/testing/disaster-recovery/docker-compose.dr-test.yml down -v 2>/dev/null || true
+
+          # Remove temporary files
+          rm -rf /tmp/dr-test-* 2>/dev/null || true
+
+          echo "✅ Cleanup complete"
+
+  notify-success:
+    name: Notify Success
+    needs: disaster-recovery-test
+    if: success()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Success notification
+        run: |
+          echo "==================== DR TEST PASSED ===================="
+          echo "✅ Annual disaster recovery test completed successfully!"
+          echo ""
+          echo "Results:"
+          echo "- Test run: #${{ github.run_number }}"
+          echo "- Date: $(date +'%Y-%m-%d')"
+          echo "- Status: PASSED"
+          echo ""
+          echo "Next Steps:"
+          echo "1. Review test report (uploaded as artifact)"
+          echo "2. Archive report for HIPAA compliance"
+          echo "3. Update DR procedures if needed"
+          echo "4. Schedule management review"
+          echo ""
+          echo "Next DR Test: January 1, $(date -d '+1 year' +%Y)"
+          echo "========================================================"
+
+          # In production, send success notification
+          # Example: curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} -d '{"text":"✅ DR test passed!"}'

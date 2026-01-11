@@ -27,14 +27,13 @@ import org.springframework.kafka.annotation.EnableKafka;
 })
 @EnableJpaRepositories(basePackages = {
     "com.healthdata.fhir.persistence",
-    "com.healthdata.fhir.bulk",  // Include bulk export repository
-    "com.healthdata.authentication.repository"
+    "com.healthdata.fhir.bulk"  // Include bulk export repository
+    // NOTE: authentication.repository excluded - contains ApiKey/RefreshToken repos (Gateway-only)
 })
 @EntityScan(basePackages = {
     "com.healthdata.fhir.persistence",
     "com.healthdata.fhir.bulk",  // Include BulkExportJob entity
-    "com.healthdata.authentication.domain",
-    "com.healthdata.authentication.entity"  // Include RefreshToken entity
+    "com.healthdata.authentication.domain"  // Include User and RefreshToken entities (no ApiKey)
 })
 @EnableCaching
 @EnableKafka

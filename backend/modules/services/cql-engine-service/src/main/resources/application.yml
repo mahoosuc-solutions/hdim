@@ -73,6 +73,9 @@ spring.kafka:
   producer:
     key-serializer: org.apache.kafka.common.serialization.StringSerializer
     value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    properties:
+      # Distributed tracing: Propagate trace context through Kafka messages
+      interceptor.classes: com.healthdata.tracing.KafkaProducerTraceInterceptor
 
 # HEDIS Measure Configuration
 # ⚠️ CRITICAL HIPAA COMPLIANCE SETTING - DO NOT INCREASE TTL ⚠️

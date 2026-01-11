@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+IntelliJ IDEA Live Templates for Liquibase Migrations
+Installation: Copy to ~/.IntelliJIdea<version>/config/templates/Liquibase.xml
+Restart IntelliJ IDEA after installation
+-->
+<templateSet group="Liquibase">
+
+  <!-- Master Changelog Template -->
+  <template name="lbmaster" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&lt;databaseChangeLog xmlns=&quot;http://www.liquibase.org/xml/ns/dbchangelog&quot;&#10;    xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;&#10;    xsi:schemaLocation=&quot;http://www.liquibase.org/xml/ns/dbchangelog&#10;        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd&quot;&gt;&#10;&#10;    &lt;!-- PostgreSQL extensions (if needed) --&gt;&#10;    &lt;include file=&quot;db/changelog/0000-enable-extensions.xml&quot;/&gt;&#10;&#10;    &lt;!-- Schema migrations --&gt;&#10;    $END$&#10;&#10;&lt;/databaseChangeLog&gt;" description="Liquibase master changelog" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="XML" value="true"/>
+    </context>
+  </template>
+
+  <!-- Changeset with SQL File Template -->
+  <template name="lbchangeset" value="&lt;changeSet id=&quot;$ID$&quot; author=&quot;$AUTHOR$&quot;&gt;&#10;    &lt;comment&gt;$COMMENT$&lt;/comment&gt;&#10;&#10;    &lt;sqlFile path=&quot;db/changelog/sql/$ID$.sql&quot;&#10;             relativeToChangelogFile=&quot;true&quot;/&gt;&#10;&#10;    &lt;rollback&gt;&#10;        &lt;sql&gt;$ROLLBACK_SQL$&lt;/sql&gt;&#10;    &lt;/rollback&gt;&#10;&lt;/changeSet&gt;" description="Liquibase changeset with SQL file" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="XML" value="true"/>
+    </context>
+  </template>
+
+  <!-- Create Table Changeset -->
+  <template name="lbcreatetable" value="&lt;changeSet id=&quot;$ID$-create-$TABLE$-table&quot; author=&quot;$AUTHOR$&quot;&gt;&#10;    &lt;comment&gt;Create $TABLE$ table$END$&lt;/comment&gt;&#10;&#10;    &lt;createTable tableName=&quot;$TABLE$&quot;&gt;&#10;        &lt;column name=&quot;id&quot; type=&quot;UUID&quot; defaultValueComputed=&quot;gen_random_uuid()&quot;&gt;&#10;            &lt;constraints primaryKey=&quot;true&quot; primaryKeyName=&quot;pk_$TABLE$&quot;/&gt;&#10;        &lt;/column&gt;&#10;        &lt;column name=&quot;tenant_id&quot; type=&quot;VARCHAR(100)&quot;&gt;&#10;            &lt;constraints nullable=&quot;false&quot;/&gt;&#10;        &lt;/column&gt;&#10;        &lt;column name=&quot;created_at&quot; type=&quot;TIMESTAMP WITH TIME ZONE&quot;&#10;                defaultValueComputed=&quot;CURRENT_TIMESTAMP&quot;&gt;&#10;            &lt;constraints nullable=&quot;false&quot;/&gt;&#10;        &lt;/column&gt;&#10;        &lt;column name=&quot;updated_at&quot; type=&quot;TIMESTAMP WITH TIME ZONE&quot;/&gt;&#10;    &lt;/createTable&gt;&#10;&#10;    &lt;createIndex indexName=&quot;idx_$TABLE$_tenant_id&quot; tableName=&quot;$TABLE$&quot;&gt;&#10;        &lt;column name=&quot;tenant_id&quot;/&gt;&#10;    &lt;/createIndex&gt;&#10;&#10;    &lt;rollback&gt;&#10;        &lt;dropTable tableName=&quot;$TABLE$&quot;/&gt;&#10;    &lt;/rollback&gt;&#10;&lt;/changeSet&gt;" description="Create table with tenant isolation" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="XML" value="true"/>
+    </context>
+  </template>
+
+  <!-- Add Column Changeset -->
+  <template name="lbaddcolumn" value="&lt;changeSet id=&quot;$ID$-add-$COLUMN$-to-$TABLE$&quot; author=&quot;$AUTHOR$&quot;&gt;&#10;    &lt;comment&gt;Add $COLUMN$ column to $TABLE$ table$END$&lt;/comment&gt;&#10;&#10;    &lt;addColumn tableName=&quot;$TABLE$&quot;&gt;&#10;        &lt;column name=&quot;$COLUMN$&quot; type=&quot;$TYPE$&quot;&gt;&#10;            &lt;constraints nullable=&quot;$NULLABLE$&quot;/&gt;&#10;        &lt;/column&gt;&#10;    &lt;/addColumn&gt;&#10;&#10;    &lt;rollback&gt;&#10;        &lt;dropColumn tableName=&quot;$TABLE$&quot; columnName=&quot;$COLUMN$&quot;/&gt;&#10;    &lt;/rollback&gt;&#10;&lt;/changeSet&gt;" description="Add column to table" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="XML" value="true"/>
+    </context>
+  </template>
+
+  <!-- Create Index Changeset -->
+  <template name="lbindex" value="&lt;changeSet id=&quot;$ID$-create-index-$INDEX$&quot; author=&quot;$AUTHOR$&quot;&gt;&#10;    &lt;comment&gt;Create index on $TABLE$($COLUMNS$)$END$&lt;/comment&gt;&#10;&#10;    &lt;createIndex indexName=&quot;$INDEX$&quot; tableName=&quot;$TABLE$&quot;&gt;&#10;        &lt;column name=&quot;$COLUMNS$&quot;/&gt;&#10;    &lt;/createIndex&gt;&#10;&#10;    &lt;rollback&gt;&#10;        &lt;dropIndex indexName=&quot;$INDEX$&quot; tableName=&quot;$TABLE$&quot;/&gt;&#10;    &lt;/rollback&gt;&#10;&lt;/changeSet&gt;" description="Create index" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="XML" value="true"/>
+    </context>
+  </template>
+
+  <!-- Add Foreign Key Changeset -->
+  <template name="lbfk" value="&lt;changeSet id=&quot;$ID$-add-fk-$CONSTRAINT$&quot; author=&quot;$AUTHOR$&quot;&gt;&#10;    &lt;comment&gt;Add foreign key from $BASE_TABLE$ to $REF_TABLE$$END$&lt;/comment&gt;&#10;&#10;    &lt;addForeignKeyConstraint&#10;        constraintName=&quot;$CONSTRAINT$&quot;&#10;        baseTableName=&quot;$BASE_TABLE$&quot;&#10;        baseColumnNames=&quot;$BASE_COLUMN$&quot;&#10;        referencedTableName=&quot;$REF_TABLE$&quot;&#10;        referencedColumnNames=&quot;$REF_COLUMN$&quot;&#10;        onDelete=&quot;$DELETE_ACTION$&quot;/&gt;&#10;&#10;    &lt;rollback&gt;&#10;        &lt;dropForeignKeyConstraint&#10;            baseTableName=&quot;$BASE_TABLE$&quot;&#10;            constraintName=&quot;$CONSTRAINT$&quot;/&gt;&#10;    &lt;/rollback&gt;&#10;&lt;/changeSet&gt;" description="Add foreign key constraint" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="XML" value="true"/>
+    </context>
+  </template>
+
+  <!-- Modify Data Type Changeset -->
+  <template name="lbmodifytype" value="&lt;changeSet id=&quot;$ID$-modify-$COLUMN$-type&quot; author=&quot;$AUTHOR$&quot;&gt;&#10;    &lt;comment&gt;Change $TABLE$.$COLUMN$ type to $NEW_TYPE$$END$&lt;/comment&gt;&#10;&#10;    &lt;modifyDataType tableName=&quot;$TABLE$&quot;&#10;                    columnName=&quot;$COLUMN$&quot;&#10;                    newDataType=&quot;$NEW_TYPE$&quot;/&gt;&#10;&#10;    &lt;rollback&gt;&#10;        &lt;modifyDataType tableName=&quot;$TABLE$&quot;&#10;                        columnName=&quot;$COLUMN$&quot;&#10;                        newDataType=&quot;$OLD_TYPE$&quot;/&gt;&#10;    &lt;/rollback&gt;&#10;&lt;/changeSet&gt;" description="Modify column data type" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="XML" value="true"/>
+    </context>
+  </template>
+
+  <!-- Enable PostgreSQL Extensions -->
+  <template name="lbextensions" value="&lt;changeSet id=&quot;0000-enable-extensions&quot; author=&quot;$SERVICE$&quot;&gt;&#10;    &lt;comment&gt;Enable PostgreSQL extensions for full-text search$END$&lt;/comment&gt;&#10;    &#10;    &lt;sql&gt;CREATE EXTENSION IF NOT EXISTS pg_trgm;&lt;/sql&gt;&#10;    &#10;    &lt;rollback&gt;&#10;        &lt;sql&gt;DROP EXTENSION IF EXISTS pg_trgm;&lt;/sql&gt;&#10;    &lt;/rollback&gt;&#10;&lt;/changeSet&gt;" description="Enable PostgreSQL extensions" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="XML" value="true"/>
+    </context>
+  </template>
+
+  <!-- Add Not Null Constraint -->
+  <template name="lbnotnull" value="&lt;changeSet id=&quot;$ID$-add-not-null-$COLUMN$&quot; author=&quot;$AUTHOR$&quot;&gt;&#10;    &lt;comment&gt;Add NOT NULL constraint to $TABLE$.$COLUMN$$END$&lt;/comment&gt;&#10;&#10;    &lt;!-- Set default value for existing NULL rows --&gt;&#10;    &lt;update tableName=&quot;$TABLE$&quot;&gt;&#10;        &lt;column name=&quot;$COLUMN$&quot; value=&quot;$DEFAULT_VALUE$&quot;/&gt;&#10;        &lt;where&gt;$COLUMN$ IS NULL&lt;/where&gt;&#10;    &lt;/update&gt;&#10;&#10;    &lt;addNotNullConstraint tableName=&quot;$TABLE$&quot;&#10;                          columnName=&quot;$COLUMN$&quot;&#10;                          columnDataType=&quot;$TYPE$&quot;/&gt;&#10;&#10;    &lt;rollback&gt;&#10;        &lt;dropNotNullConstraint tableName=&quot;$TABLE$&quot; columnName=&quot;$COLUMN$&quot;/&gt;&#10;    &lt;/rollback&gt;&#10;&lt;/changeSet&gt;" description="Add NOT NULL constraint" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="XML" value="true"/>
+    </context>
+  </template>
+
+  <!-- Rename Column Changeset -->
+  <template name="lbrename" value="&lt;changeSet id=&quot;$ID$-rename-$OLD$-to-$NEW$&quot; author=&quot;$AUTHOR$&quot;&gt;&#10;    &lt;comment&gt;Rename column $OLD$ to $NEW$ in $TABLE$$END$&lt;/comment&gt;&#10;&#10;    &lt;renameColumn tableName=&quot;$TABLE$&quot;&#10;                  oldColumnName=&quot;$OLD$&quot;&#10;                  newColumnName=&quot;$NEW$&quot;&#10;                  columnDataType=&quot;$TYPE$&quot;/&gt;&#10;&#10;    &lt;rollback&gt;&#10;        &lt;renameColumn tableName=&quot;$TABLE$&quot;&#10;                      oldColumnName=&quot;$NEW$&quot;&#10;                      newColumnName=&quot;$OLD$&quot;&#10;                      columnDataType=&quot;$TYPE$&quot;/&gt;&#10;    &lt;/rollback&gt;&#10;&lt;/changeSet&gt;" description="Rename column" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="XML" value="true"/>
+    </context>
+  </template>
+
+</templateSet>

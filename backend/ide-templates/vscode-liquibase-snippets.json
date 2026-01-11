@@ -1,0 +1,233 @@
+{
+  "Liquibase Master Changelog": {
+    "prefix": "lbmaster",
+    "scope": "xml",
+    "body": [
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+      "<databaseChangeLog xmlns=\"http://www.liquibase.org/xml/ns/dbchangelog\"",
+      "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"",
+      "    xsi:schemaLocation=\"http://www.liquibase.org/xml/ns/dbchangelog",
+      "        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd\">",
+      "",
+      "    <!-- PostgreSQL extensions (if needed) -->",
+      "    <include file=\"db/changelog/0000-enable-extensions.xml\"/>",
+      "",
+      "    <!-- Schema migrations -->",
+      "    $0",
+      "",
+      "</databaseChangeLog>"
+    ],
+    "description": "Liquibase master changelog template"
+  },
+
+  "Liquibase Changeset with SQL File": {
+    "prefix": "lbchangeset",
+    "scope": "xml",
+    "body": [
+      "<changeSet id=\"${1:id}\" author=\"${2:author}\">",
+      "    <comment>${3:comment}</comment>",
+      "",
+      "    <sqlFile path=\"db/changelog/sql/${1:id}.sql\"",
+      "             relativeToChangelogFile=\"true\"/>",
+      "",
+      "    <rollback>",
+      "        <sql>${4:rollback SQL}</sql>",
+      "    </rollback>",
+      "</changeSet>"
+    ],
+    "description": "Liquibase changeset with SQL file"
+  },
+
+  "Liquibase Create Table": {
+    "prefix": "lbcreatetable",
+    "scope": "xml",
+    "body": [
+      "<changeSet id=\"${1:0001}-create-${2:table}-table\" author=\"${3:author}\">",
+      "    <comment>Create ${2:table} table${4}</comment>",
+      "",
+      "    <createTable tableName=\"${2:table}\">",
+      "        <column name=\"id\" type=\"UUID\" defaultValueComputed=\"gen_random_uuid()\">",
+      "            <constraints primaryKey=\"true\" primaryKeyName=\"pk_${2:table}\"/>",
+      "        </column>",
+      "        <column name=\"tenant_id\" type=\"VARCHAR(100)\">",
+      "            <constraints nullable=\"false\"/>",
+      "        </column>",
+      "        <column name=\"created_at\" type=\"TIMESTAMP WITH TIME ZONE\"",
+      "                defaultValueComputed=\"CURRENT_TIMESTAMP\">",
+      "            <constraints nullable=\"false\"/>",
+      "        </column>",
+      "        <column name=\"updated_at\" type=\"TIMESTAMP WITH TIME ZONE\"/>",
+      "    </createTable>",
+      "",
+      "    <createIndex indexName=\"idx_${2:table}_tenant_id\" tableName=\"${2:table}\">",
+      "        <column name=\"tenant_id\"/>",
+      "    </createIndex>",
+      "",
+      "    <rollback>",
+      "        <dropTable tableName=\"${2:table}\"/>",
+      "    </rollback>",
+      "</changeSet>"
+    ],
+    "description": "Create table with tenant isolation"
+  },
+
+  "Liquibase Add Column": {
+    "prefix": "lbaddcolumn",
+    "scope": "xml",
+    "body": [
+      "<changeSet id=\"${1:0002}-add-${2:column}-to-${3:table}\" author=\"${4:author}\">",
+      "    <comment>Add ${2:column} column to ${3:table} table${5}</comment>",
+      "",
+      "    <addColumn tableName=\"${3:table}\">",
+      "        <column name=\"${2:column}\" type=\"${6:VARCHAR(255)}\">",
+      "            <constraints nullable=\"${7:true}\"/>",
+      "        </column>",
+      "    </addColumn>",
+      "",
+      "    <rollback>",
+      "        <dropColumn tableName=\"${3:table}\" columnName=\"${2:column}\"/>",
+      "    </rollback>",
+      "</changeSet>"
+    ],
+    "description": "Add column to table"
+  },
+
+  "Liquibase Create Index": {
+    "prefix": "lbindex",
+    "scope": "xml",
+    "body": [
+      "<changeSet id=\"${1:0003}-create-index-${2:idx_name}\" author=\"${3:author}\">",
+      "    <comment>Create index on ${4:table}(${5:column})${6}</comment>",
+      "",
+      "    <createIndex indexName=\"${2:idx_name}\" tableName=\"${4:table}\">",
+      "        <column name=\"${5:column}\"/>",
+      "    </createIndex>",
+      "",
+      "    <rollback>",
+      "        <dropIndex indexName=\"${2:idx_name}\" tableName=\"${4:table}\"/>",
+      "    </rollback>",
+      "</changeSet>"
+    ],
+    "description": "Create index"
+  },
+
+  "Liquibase Add Foreign Key": {
+    "prefix": "lbfk",
+    "scope": "xml",
+    "body": [
+      "<changeSet id=\"${1:0004}-add-fk-${2:constraint_name}\" author=\"${3:author}\">",
+      "    <comment>Add foreign key from ${4:child_table} to ${5:parent_table}${6}</comment>",
+      "",
+      "    <addForeignKeyConstraint",
+      "        constraintName=\"${2:constraint_name}\"",
+      "        baseTableName=\"${4:child_table}\"",
+      "        baseColumnNames=\"${7:child_column}\"",
+      "        referencedTableName=\"${5:parent_table}\"",
+      "        referencedColumnNames=\"${8:parent_column}\"",
+      "        onDelete=\"${9:CASCADE}\"/>",
+      "",
+      "    <rollback>",
+      "        <dropForeignKeyConstraint",
+      "            baseTableName=\"${4:child_table}\"",
+      "            constraintName=\"${2:constraint_name}\"/>",
+      "    </rollback>",
+      "</changeSet>"
+    ],
+    "description": "Add foreign key constraint"
+  },
+
+  "Liquibase Modify Data Type": {
+    "prefix": "lbmodifytype",
+    "scope": "xml",
+    "body": [
+      "<changeSet id=\"${1:0005}-modify-${2:column}-type\" author=\"${3:author}\">",
+      "    <comment>Change ${4:table}.${2:column} type to ${5:new_type}${6}</comment>",
+      "",
+      "    <modifyDataType tableName=\"${4:table}\"",
+      "                    columnName=\"${2:column}\"",
+      "                    newDataType=\"${5:new_type}\"/>",
+      "",
+      "    <rollback>",
+      "        <modifyDataType tableName=\"${4:table}\"",
+      "                        columnName=\"${2:column}\"",
+      "                        newDataType=\"${7:old_type}\"/>",
+      "    </rollback>",
+      "</changeSet>"
+    ],
+    "description": "Modify column data type"
+  },
+
+  "Liquibase Enable Extensions": {
+    "prefix": "lbextensions",
+    "scope": "xml",
+    "body": [
+      "<changeSet id=\"0000-enable-extensions\" author=\"${1:service-name}\">",
+      "    <comment>Enable PostgreSQL extensions for full-text search${2}</comment>",
+      "    ",
+      "    <sql>CREATE EXTENSION IF NOT EXISTS pg_trgm;</sql>",
+      "    ",
+      "    <rollback>",
+      "        <sql>DROP EXTENSION IF EXISTS pg_trgm;</sql>",
+      "    </rollback>",
+      "</changeSet>"
+    ],
+    "description": "Enable PostgreSQL extensions"
+  },
+
+  "Liquibase Add Not Null": {
+    "prefix": "lbnotnull",
+    "scope": "xml",
+    "body": [
+      "<changeSet id=\"${1:0006}-add-not-null-${2:column}\" author=\"${3:author}\">",
+      "    <comment>Add NOT NULL constraint to ${4:table}.${2:column}${5}</comment>",
+      "",
+      "    <!-- Set default value for existing NULL rows -->",
+      "    <update tableName=\"${4:table}\">",
+      "        <column name=\"${2:column}\" value=\"${6:default_value}\"/>",
+      "        <where>${2:column} IS NULL</where>",
+      "    </update>",
+      "",
+      "    <addNotNullConstraint tableName=\"${4:table}\"",
+      "                          columnName=\"${2:column}\"",
+      "                          columnDataType=\"${7:type}\"/>",
+      "",
+      "    <rollback>",
+      "        <dropNotNullConstraint tableName=\"${4:table}\" columnName=\"${2:column}\"/>",
+      "    </rollback>",
+      "</changeSet>"
+    ],
+    "description": "Add NOT NULL constraint"
+  },
+
+  "Liquibase Rename Column": {
+    "prefix": "lbrename",
+    "scope": "xml",
+    "body": [
+      "<changeSet id=\"${1:0007}-rename-${2:old_name}-to-${3:new_name}\" author=\"${4:author}\">",
+      "    <comment>Rename column ${2:old_name} to ${3:new_name} in ${5:table}${6}</comment>",
+      "",
+      "    <renameColumn tableName=\"${5:table}\"",
+      "                  oldColumnName=\"${2:old_name}\"",
+      "                  newColumnName=\"${3:new_name}\"",
+      "                  columnDataType=\"${7:type}\"/>",
+      "",
+      "    <rollback>",
+      "        <renameColumn tableName=\"${5:table}\"",
+      "                      oldColumnName=\"${3:new_name}\"",
+      "                      newColumnName=\"${2:old_name}\"",
+      "                      columnDataType=\"${7:type}\"/>",
+      "    </rollback>",
+      "</changeSet>"
+    ],
+    "description": "Rename column"
+  },
+
+  "Liquibase Include": {
+    "prefix": "lbinclude",
+    "scope": "xml",
+    "body": [
+      "<include file=\"db/changelog/${1:0001-create-table}.xml\"/>"
+    ],
+    "description": "Include changeset in master"
+  }
+}

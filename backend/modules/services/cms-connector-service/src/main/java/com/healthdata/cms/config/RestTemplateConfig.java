@@ -65,13 +65,10 @@ public class RestTemplateConfig {
             .setDefaultRequestConfig(requestConfig)
             .build();
         
-        // Create request factory
+        // Create request factory (timeouts configured via RequestConfig in HttpClient)
         HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
         factory.setHttpClient(httpClient);
-        factory.setConnectTimeout(1000); // 1 second
-        factory.setReadTimeout(5000); // 5 seconds
-        factory.setConnectionRequestTimeout(1000);
-        
+
         return builder
             .requestFactory(() -> new BufferingClientHttpRequestFactory(factory))
             .setConnectTimeout(java.time.Duration.ofSeconds(1))
@@ -106,12 +103,11 @@ public class RestTemplateConfig {
             .setConnectionManager(connectionManager)
             .setDefaultRequestConfig(requestConfig)
             .build();
-        
+
+        // Create request factory (timeouts configured via RequestConfig in HttpClient)
         HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
         factory.setHttpClient(httpClient);
-        factory.setConnectTimeout(500);
-        factory.setReadTimeout(1000);
-        
+
         return builder
             .requestFactory(() -> new BufferingClientHttpRequestFactory(factory))
             .setConnectTimeout(java.time.Duration.ofMillis(500))

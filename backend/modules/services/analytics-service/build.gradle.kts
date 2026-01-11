@@ -4,6 +4,12 @@ plugins {
     java
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
+}
+
 
 dependencies {
     // Shared modules
@@ -22,7 +28,7 @@ dependencies {
     implementation(libs.spring.boot.starter.validation)
 
     // Spring Cloud OpenFeign for inter-service communication
-    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+    implementation(libs.spring.cloud.starter.openfeign)
 
     // OpenAPI/Swagger documentation
     implementation(libs.springdoc.openapi.starter.webmvc.ui)
@@ -36,7 +42,7 @@ dependencies {
 
     // Hypersistence for PostgreSQL JSONB support
     // Version 3.9.0+ required for Hibernate 6.5+ compatibility
-    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.0")
+    implementation(libs.hypersistence.utils.hibernate.63)
 
     // Spring Cache with Redis
     implementation(libs.spring.boot.starter.data.redis)
@@ -71,6 +77,12 @@ dependencies {
     testAnnotationProcessor(libs.lombok)
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
+}
+
 tasks.withType<Test> {
     systemProperty("spring.datasource.url", "jdbc:tc:postgresql:15-alpine:///testdb")
     systemProperty("spring.datasource.username", "test")
@@ -78,4 +90,10 @@ tasks.withType<Test> {
     systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
     systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
     systemProperty("spring.profiles.active", "test")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
 }

@@ -22,6 +22,15 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
+  # Liquibase Configuration
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  # Disable Flyway (using Liquibase instead)
+  flyway:
+    enabled: false
+
   # Redis for caching
   data:
     redis:

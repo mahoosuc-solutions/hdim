@@ -5,6 +5,12 @@ plugins {
     kotlin("plugin.spring")
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
+}
+
 dependencies {
     // Shared modules
     implementation(project(":modules:shared:domain:common"))
@@ -29,7 +35,7 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
 
     // OpenFeign for service communication
-    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+    implementation(libs.spring.cloud.starter.openfeign)
 
     // Kafka for event broadcasting
     implementation("org.springframework.kafka:spring-kafka")
@@ -62,9 +68,21 @@ dependencies {
     testImplementation(project(":platform:test-fixtures"))
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
+}
+
 
 tasks.bootJar {
     archiveFileName.set("approval-service.jar")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
 }
 
 tasks.withType<Test> {
@@ -74,4 +92,10 @@ tasks.withType<Test> {
     systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
     systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
     systemProperty("spring.profiles.active", "test")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
 }

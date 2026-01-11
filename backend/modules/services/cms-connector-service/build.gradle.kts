@@ -4,6 +4,12 @@ plugins {
     java
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
+}
+
 
 dependencies {
     // Shared modules
@@ -24,7 +30,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
 
     // Spring Cloud OpenFeign (for HTTP clients)
-    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+    implementation(libs.spring.cloud.starter.openfeign)
 
     // Resilience4j for circuit breaker and retry
     implementation(libs.resilience4j.spring.boot3)
@@ -40,7 +46,7 @@ dependencies {
     implementation("org.springframework.security:spring-security-oauth2-client")
 
     // HTTP Client
-    implementation("org.apache.httpcomponents.client5:httpclient5:5.2.1")
+    implementation(libs.httpclient5)
 
     // JSON Processing
     implementation(libs.jackson.databind)
@@ -83,8 +89,20 @@ dependencies {
     testAnnotationProcessor(libs.lombok)
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
 }
 
 tasks.withType<Test> {
@@ -94,4 +112,10 @@ tasks.withType<Test> {
     systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
     systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
     systemProperty("spring.profiles.active", "test")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
 }

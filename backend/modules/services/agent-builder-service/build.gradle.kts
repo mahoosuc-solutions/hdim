@@ -5,6 +5,12 @@ plugins {
     kotlin("plugin.spring")
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
+}
+
 dependencies {
     // Shared modules
     // Note: This service uses Pattern 3 (No Auth) - gateway handles authentication
@@ -29,22 +35,22 @@ dependencies {
     // Liquibase included via :modules:shared:infrastructure:persistence
 
     // OpenFeign for service communication
-    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+    implementation(libs.spring.cloud.starter.openfeign)
 
     // Kafka for event publishing
-    implementation("org.springframework.kafka:spring-kafka")
+    implementation(libs.spring.kafka)
 
     // JSON processing
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation(libs.jackson.module.kotlin)
+    implementation(libs.jackson.datatype.jsr310)
 
     // Resilience
-    implementation("io.github.resilience4j:resilience4j-spring-boot3")
-    implementation("io.github.resilience4j:resilience4j-circuitbreaker")
-    implementation("io.github.resilience4j:resilience4j-ratelimiter")
+    implementation(libs.resilience4j.spring.boot3)
+    implementation(libs.resilience4j.circuitbreaker)
+    implementation(libs.resilience4j.ratelimiter)
 
     // Observability
-    implementation("io.micrometer:micrometer-registry-prometheus")
+    implementation(libs.micrometer.registry.prometheus)
 
     // API Documentation
     implementation(libs.springdoc.openapi.starter.webmvc.ui)

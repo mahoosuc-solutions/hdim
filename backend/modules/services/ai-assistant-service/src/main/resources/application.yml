@@ -29,6 +29,15 @@ spring:
         jdbc:
           batch_size: 50
 
+  # Liquibase Configuration
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  # Disable Flyway (using Liquibase instead)
+  flyway:
+    enabled: false
+
   # Redis Cache Configuration
   data:
     redis:

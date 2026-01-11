@@ -4,7 +4,11 @@ plugins {
     java
 }
 
-
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
+}
 
 dependencies {
     // Shared modules
@@ -30,7 +34,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
     // Spring Cloud OpenFeign (for calling other services)
-    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+    implementation(libs.spring.cloud.starter.openfeign)
 
     // Jackson for JSON processing
     implementation(libs.jackson.databind)
@@ -51,13 +55,13 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-aop")
 
     // AWS SDK for Bedrock
-    implementation(platform("software.amazon.awssdk:bom:2.25.0"))
-    implementation("software.amazon.awssdk:bedrockruntime")
-    implementation("software.amazon.awssdk:auth")
+    implementation(platform(libs.aws.sdk.bom))
+    implementation(libs.aws.bedrock.runtime)
+    implementation(libs.aws.auth)
 
     // Azure OpenAI SDK
-    implementation("com.azure:azure-ai-openai:1.0.0-beta.10")
-    implementation("com.azure:azure-identity:1.12.2")
+    implementation(libs.azure.ai.openai)
+    implementation(libs.azure.identity)
 
     // OpenAPI/Swagger for API documentation
     implementation(libs.springdoc.openapi.starter.webmvc.ui)

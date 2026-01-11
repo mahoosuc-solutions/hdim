@@ -854,6 +854,280 @@ CREATE TABLE table_name (
 
 ---
 
+## Rollback Testing Framework
+
+### Overview
+
+The HDIM platform includes automated tools for testing Liquibase rollback functionality. These tools ensure all migrations have proper rollback SQL defined and can be safely reversed if needed.
+
+### Test Rollback SQL Definitions
+
+**Script:** `backend/scripts/test-liquibase-rollback.sh`
+
+This script analyzes all Liquibase changesets across all services and verifies that each has a proper `<rollback>` tag defined.
+
+**Usage:**
+```bash
+cd backend
+./scripts/test-liquibase-rollback.sh
+```
+
+**Output:**
+```
+═══════════════════════════════════════════════════════════════════
+  Liquibase Rollback Testing Framework
+═══════════════════════════════════════════════════════════════════
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Service: patient-service
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Analyzing changesets for patient-service...
+    ✓ 0001-create-patient-demographics-table - Has rollback
+    ✓ 0002-create-patient-insurance-table - Has rollback
+    ✗ 0003-add-composite-indexes - Missing rollback
+
+  Service Summary:
+    Total changesets: 3
+    With rollback: 2
+    Without rollback: 1
+
+═══════════════════════════════════════════════════════════════════
+  Final Report
+═══════════════════════════════════════════════════════════════════
+
+Services:
+  Total services scanned: 34
+  Services with migrations: 22
+
+Changesets:
+  Total changesets: 156
+  With rollback: 148 (95%)
+  Without rollback: 8 (5%)
+
+⚠ Services with missing rollback SQL:
+  ✗ patient-service (1 missing)
+  ✗ quality-measure-service (2 missing)
+```
+
+**Integration with CI/CD:**
+
+Add to `.github/workflows/database-validation.yml`:
+
+```yaml
+- name: Test Rollback SQL
+  run: |
+    cd backend
+    ./scripts/test-liquibase-rollback.sh
+```
+
+### Execute Rollback
+
+**Script:** `backend/scripts/rollback-migration.sh`
+
+This script executes actual rollback for a specific service and changeset.
+
+**⚠️ WARNING:** This modifies the database. Always backup first!
+
+**Usage:**
+```bash
+# Rollback last changeset
+./scripts/rollback-migration.sh patient-service count:1
+
+# Rollback last 3 changesets
+./scripts/rollback-migration.sh quality-measure-service count:3
+
+# Rollback specific changeset
+./scripts/rollback-migration.sh fhir-service changeset:0004-add-risk-score-column
+```
+
+**Safety Checklist:**
+1. ✅ Backup database before rollback
+2. ✅ Test in non-production environment first
+3. ✅ Verify rollback SQL in XML file
+4. ✅ Confirm application still works after rollback
+5. ✅ Run entity-migration validation test
+
+**Example Workflow:**
+
+```bash
+# 1. Create backup
+docker exec healthdata-postgres pg_dump -U healthdata patient_db > backup_patient_db_$(date +%Y%m%d_%H%M%S).sql
+
+# 2. Execute rollback
+./scripts/rollback-migration.sh patient-service changeset:0005-add-provider-notes
+
+# 3. Verify schema
+docker exec healthdata-postgres psql -U healthdata -d patient_db -c "\d+ appointments"
+
+# 4. Run validation test
+./gradlew :modules:services:patient-service:test --tests "*EntityMigrationValidationTest"
+
+# 5. Restart service
+docker compose restart patient-service
+```
+
+### Manual Rollback Process
+
+If the script doesn't work or you need more control:
+
+**Step 1: Identify Changeset**
+```bash
+docker exec healthdata-postgres psql -U healthdata -d patient_db -c \
+  "SELECT orderexecuted, id, author FROM databasechangelog ORDER BY orderexecuted DESC LIMIT 5;"
+```
+
+**Step 2: Extract Rollback SQL**
+```bash
+# Find the changeset XML file
+grep -r "id=\"0005-add-provider-notes\"" backend/modules/services/patient-service/src/main/resources/db/changelog --include="*.xml" -l
+
+# View the rollback section
+cat backend/modules/services/patient-service/src/main/resources/db/changelog/0005-add-provider-notes.xml
+```
+
+**Step 3: Execute Rollback SQL**
+```bash
+# Execute the SQL from the <rollback> tag
+docker exec healthdata-postgres psql -U healthdata -d patient_db -c \
+  "ALTER TABLE appointments DROP COLUMN IF EXISTS provider_notes;"
+```
+
+**Step 4: Remove from Changelog**
+```bash
+docker exec healthdata-postgres psql -U healthdata -d patient_db -c \
+  "DELETE FROM databasechangelog WHERE id = '0005-add-provider-notes';"
+```
+
+**Step 5: Verify**
+```bash
+# Check table structure
+docker exec healthdata-postgres psql -U healthdata -d patient_db -c "\d+ appointments"
+
+# Run validation test
+./gradlew :modules:services:patient-service:test --tests "*EntityMigrationValidationTest"
+```
+
+### Best Practices
+
+**1. Always Include Rollback SQL**
+```xml
+<changeSet id="0005-add-column" author="developer-name">
+    <addColumn tableName="table_name">
+        <column name="new_column" type="VARCHAR(255)"/>
+    </addColumn>
+
+    <!-- REQUIRED: Explicit rollback -->
+    <rollback>
+        <dropColumn tableName="table_name" columnName="new_column"/>
+    </rollback>
+</changeSet>
+```
+
+**2. Test Rollback Before Production**
+```bash
+# In dev environment
+./scripts/rollback-migration.sh patient-service changeset:0005-add-column
+
+# Verify application still works
+# Re-apply migration
+docker compose restart patient-service
+```
+
+**3. Document Non-Reversible Changes**
+```xml
+<changeSet id="0010-data-migration" author="developer-name">
+    <comment>
+        Migrates patient data to new format.
+        WARNING: This migration is NOT reversible - data transformation is lossy.
+        Backup required before applying.
+    </comment>
+
+    <sql>UPDATE patients SET status = 'ACTIVE' WHERE status IS NULL;</sql>
+
+    <rollback>
+        <comment>Cannot rollback - original NULL values cannot be restored</comment>
+        <sql>-- Manual intervention required to restore data from backup</sql>
+    </rollback>
+</changeSet>
+```
+
+**4. Use Transactions**
+```xml
+<changeSet id="0011-multi-step" author="developer-name" runInTransaction="true">
+    <!-- Multiple operations in one transaction -->
+    <addColumn tableName="table_name">
+        <column name="column1" type="VARCHAR(100)"/>
+    </addColumn>
+    <addColumn tableName="table_name">
+        <column name="column2" type="INT"/>
+    </addColumn>
+
+    <rollback>
+        <dropColumn tableName="table_name" columnName="column2"/>
+        <dropColumn tableName="table_name" columnName="column1"/>
+    </rollback>
+</changeSet>
+```
+
+**5. Rollback Order Matters**
+```xml
+<!-- Rollback operations execute in REVERSE order within <rollback> tag -->
+<rollback>
+    <sql>DROP TABLE child_table;</sql>      <!-- Executes FIRST -->
+    <sql>DROP TABLE parent_table;</sql>     <!-- Executes SECOND -->
+</rollback>
+```
+
+### Troubleshooting Rollback
+
+**Problem: Rollback fails due to foreign key**
+```
+ERROR: cannot drop column because other objects depend on it
+```
+
+**Solution:** Drop dependent objects first
+```xml
+<rollback>
+    <sql>ALTER TABLE child_table DROP CONSTRAINT fk_child_parent;</sql>
+    <sql>ALTER TABLE parent_table DROP COLUMN parent_id;</sql>
+</rollback>
+```
+
+**Problem: Cannot rollback data migration**
+```
+Cannot restore original NULL values
+```
+
+**Solution:** Document as non-reversible, require backup
+```xml
+<rollback>
+    <comment>
+        This migration cannot be automatically rolled back.
+        Restore data from backup created before migration.
+        Backup file: backup_YYYYMMDD_HHMMSS.sql
+    </comment>
+</rollback>
+```
+
+**Problem: Rollback SQL not found**
+```
+ERROR: No rollback SQL found for changeset
+```
+
+**Solution:** Add explicit rollback
+```xml
+<changeSet id="0012-complex-change" author="developer-name">
+    <sql>/* Complex SQL */</sql>
+
+    <!-- Add this -->
+    <rollback>
+        <sql>/* Reverse complex SQL */</sql>
+    </rollback>
+</changeSet>
+```
+
+---
+
 ## References
 
 - **Migration Status:** `backend/docs/DATABASE_MIGRATION_STATUS.md`

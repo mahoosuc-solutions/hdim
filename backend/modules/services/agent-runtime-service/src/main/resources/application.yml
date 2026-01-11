@@ -21,6 +21,10 @@ server:
       idle-timeout: 300000
       connection-timeout: 20000
 
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
   jpa:
     hibernate:
       ddl-auto: validate

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+    <changeSet id="0003-create-agent-versions-table" author="hdim">
+        <comment>Create agent_versions table for agent configuration version history</comment>
+
+        <createTable tableName="agent_versions">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="agent_configuration_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version_number" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="configuration_snapshot" type="JSONB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(32)" defaultValue="DRAFT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="change_summary" type="TEXT"/>
+            <column name="created_by" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="fk_agent_versions_config"
+                                 baseTableName="agent_versions"
+                                 baseColumnNames="agent_configuration_id"
+                                 referencedTableName="agent_configurations"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addUniqueConstraint tableName="agent_versions"
+                             columnNames="agent_configuration_id, version_number"
+                             constraintName="uk_agent_version"/>
+
+        <addCheckConstraint tableName="agent_versions"
+                            constraintName="chk_version_status"
+                            checkConstraint="status IN ('DRAFT', 'ACTIVE', 'ROLLED_BACK')"/>
+
+        <createIndex tableName="agent_versions" indexName="idx_agent_versions_config">
+            <column name="agent_configuration_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="agent_versions"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

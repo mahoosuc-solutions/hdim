@@ -808,6 +808,35 @@ src/main/resources/db/changelog/
 </databaseChangeLog>
 ```
 
+### Rollback SQL Coverage
+
+**Status:** ✅ 100% coverage achieved (199/199 changesets)
+
+Every Liquibase changeset in the HDIM platform includes explicit rollback SQL, ensuring safe reversion of database changes in production.
+
+**Validation:**
+- Automated via `backend/scripts/test-liquibase-rollback.sh`
+- Enforced in CI/CD workflow on every PR
+- Comprehensive patterns documented in `backend/docs/DATABASE_MIGRATION_RUNBOOK.md`
+
+**Common Rollback Patterns:**
+
+| Operation | Rollback |
+|-----------|----------|
+| Create table | `<dropTable tableName="..."/>` |
+| Add column | `<dropColumn tableName="..." columnName="..."/>` |
+| Insert data | `<delete tableName="..."><where>...</where></delete>` |
+| Update data | Reverse update with original values |
+| Create index | `<dropIndex tableName="..." indexName="..."/>` |
+| Add comments | `COMMENT ON ... IS NULL` |
+| ANALYZE | Empty rollback (statistics only) |
+
+**Why 100% Coverage Matters:**
+- Enables safe production rollbacks without data loss
+- Validates migration reversibility during development
+- Reduces deployment risk for database changes
+- Provides disaster recovery capability
+
 ### PostgreSQL Extensions
 
 Extensions should be managed in Liquibase migrations, not initialization scripts.

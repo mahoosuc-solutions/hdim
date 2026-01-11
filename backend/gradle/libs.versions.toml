@@ -27,7 +27,7 @@ spring-kafka = "3.3.11"
 # API & Documentation
 springdoc-openapi = "2.6.0"
 swagger = "2.2.41"
-jackson = "2.20.1"  # Updated for security and features (compatible with Spring Boot 3.3.6)
+jackson = "2.18.2"  # Updated for security and features (compatible with Spring Boot 3.3.6)
 resilience4j = "2.2.0"  # Circuit breaker, retry, rate limiting
 
 # Security

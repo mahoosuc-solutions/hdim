@@ -1,6 +1,6 @@
 # Database Migration Status
 
-**Last Updated:** 2026-01-10 (Phase 3 Complete)
+**Last Updated:** 2026-01-10 (Phase 4 Complete)
 **Plan:** /home/mahoosuc-solutions/.claude/plans/clever-dazzling-robin.md
 
 ## Progress Overview
@@ -12,7 +12,8 @@
 | Services with `ddl-auto: validate` | 33/34 (97%) |
 | Services with PostgreSQL test driver | 34/34 (100%) ✅ |
 | Services with Entity Validation Tests | 28/34 (82%) |
-| **Current Phase** | **Phase 3 - Complete** |
+| Init script simplified | ✅ Database creation only |
+| **Current Phase** | **Phase 4 - Complete** |
 
 ## Phase Status
 
@@ -21,7 +22,7 @@
 | Phase 1: Fix Critical Issues | ✅ Complete | 100% |
 | Phase 2: Migrate Flyway Services | ✅ Complete | 100% |
 | Phase 3: Gateway Auth Migration | ✅ Complete | 100% |
-| Phase 4: Service-Owned Extensions | ⏳ Pending | 0% |
+| Phase 4: Service-Owned Extensions | ✅ Complete | 100% |
 | Phase 5: CI/CD Enforcement | ⏳ Pending | 0% |
 
 ## Service-to-Database Mapping
@@ -238,9 +239,22 @@ cd backend
    - ✅ Removed auth table creation from init script
    - ✅ Added comment explaining schema is managed by gateway-service
 
+### Phase 4: Service-Owned Extensions ✅ COMPLETE
+
+1. **Migrated Extension Management:**
+   - ✅ Created extension changesets for 4 services:
+     - fhir-service: 0000-enable-extensions.xml
+     - cql-engine-service: 0000-enable-extensions.xml
+     - quality-measure-service: 0000-enable-extensions.xml
+     - patient-service: 0000-enable-extensions.xml
+   - ✅ Updated master changelogs to include extensions FIRST
+   - ✅ Removed extension creation from init script
+   - ✅ Added comments documenting service ownership
+   - ✅ Init script now only creates empty databases
+
 ## Next Steps
 
-### Phase 4 (Next)
+### Phase 5 (Final)
    - [ ] agent-builder-service (3 migrations)
 
 2. **Enable Liquibase for 11 Services:**

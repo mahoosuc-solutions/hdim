@@ -20,6 +20,11 @@ spring:
         default_schema: prior_auth
     open-in-view: false
 
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: prior_auth
+
   data:
     redis:
       host: ${REDIS_HOST:localhost}

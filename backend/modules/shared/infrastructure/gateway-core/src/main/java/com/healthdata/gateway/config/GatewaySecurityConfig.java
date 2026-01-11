@@ -151,7 +151,8 @@ public class GatewaySecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints - handled by PublicPathRegistry in GatewayAuthenticationFilter
                 .requestMatchers("/api/v1/auth/login").permitAll()
-                .requestMatchers("/api/v1/auth/register").permitAll()
+                // Note: /api/v1/auth/register requires ADMIN/SUPER_ADMIN authentication
+                // It is NOT in permitAll() so that @PreAuthorize annotation works correctly
                 .requestMatchers("/api/v1/auth/refresh").permitAll()
                 .requestMatchers("/api/v1/auth/logout").permitAll()
                 .requestMatchers("/api/v1/auth/mfa/verify").permitAll()  // MFA verification

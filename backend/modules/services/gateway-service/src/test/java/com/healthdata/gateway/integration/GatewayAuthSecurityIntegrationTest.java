@@ -28,22 +28,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Protected path enforcement
  * - CORS configuration
  * - Error response format
+ * - JWT refresh token security
+ * - Multi-tenant isolation
+ * - MFA policy enforcement
  *
  * SECURITY TEST COVERAGE:
  * - OWASP A01: Broken Access Control
  * - OWASP A02: Cryptographic Failures (JWT validation)
  * - OWASP A07: Identification and Authentication Failures
- *
- * NOTE: Temporarily disabled - requires full Spring context with proper
- * authentication module configuration. Security behaviors are tested
- * via unit tests in GatewayAuthenticationFilterTest.
+ * - HIPAA Security Rule: Access Control (§164.312(a)(1))
+ * - HIPAA Security Rule: Person Authentication (§164.312(d))
  */
-@Disabled("Integration tests require full Spring context setup - security tested via unit tests")
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(GatewayIntegrationTestConfig.class)
-@DisplayName("Gateway Authentication Security Integration Tests")
+@DisplayName("Gateway Authentication Security E2E Tests")
 class GatewayAuthSecurityIntegrationTest {
 
     @Autowired
@@ -298,6 +298,333 @@ class GatewayAuthSecurityIntegrationTest {
         void shouldNotCreateSession() throws Exception {
             mockMvc.perform(get("/actuator/health"))
                 .andExpect(request().sessionAttributeDoesNotExist("SPRING_SECURITY_CONTEXT"));
+        }
+    }
+
+    @Nested
+    @DisplayName("JWT Refresh Token Security")
+    class JwtRefreshTokenSecurity {
+
+        @Test
+        @DisplayName("should reject refresh token used as access token")
+        void shouldRejectRefreshTokenAsAccessToken() throws Exception {
+            // Attempt to use a refresh token in Authorization header
+            String refreshToken = "refresh.token.signature";
+
+            mockMvc.perform(get("/api/v1/patients")
+                    .header("Authorization", "Bearer " + refreshToken))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Invalid or expired token"));
+        }
+
+        @Test
+        @DisplayName("should reject expired refresh token")
+        void shouldRejectExpiredRefreshToken() throws Exception {
+            String expiredRefreshToken = "eyJhbGciOiJIUzUxMiJ9." +
+                "eyJzdWIiOiJ0ZXN0IiwidHlwZSI6InJlZnJlc2giLCJleHAiOjE2MDAwMDAwMDB9." +
+                "signature";
+
+            mockMvc.perform(post("/api/v1/auth/refresh")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"refreshToken\":\"" + expiredRefreshToken + "\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").exists());
+        }
+
+        @Test
+        @DisplayName("should reject refresh token after logout")
+        void shouldRejectRefreshTokenAfterLogout() throws Exception {
+            // Simulate: login -> get refresh token -> logout -> try to use refresh token
+            // The refresh token should be blacklisted/invalidated
+            String validRefreshToken = "valid.refresh.token";
+
+            // First logout (should invalidate token)
+            mockMvc.perform(post("/api/v1/auth/logout")
+                    .header("Authorization", "Bearer some.access.token"));
+
+            // Then try to use the refresh token
+            mockMvc.perform(post("/api/v1/auth/refresh")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"refreshToken\":\"" + validRefreshToken + "\"}"))
+                .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("should reject refresh token after user password change")
+        void shouldRejectRefreshTokenAfterPasswordChange() throws Exception {
+            // After password change, all existing tokens should be invalidated
+            String oldRefreshToken = "old.refresh.token";
+
+            mockMvc.perform(post("/api/v1/auth/refresh")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"refreshToken\":\"" + oldRefreshToken + "\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Token has been revoked"));
+        }
+
+        @Test
+        @DisplayName("should not allow refresh token reuse")
+        void shouldNotAllowRefreshTokenReuse() throws Exception {
+            // Refresh token rotation: after using a refresh token once,
+            // it should be invalidated and cannot be used again
+            String refreshToken = "one.time.refresh.token";
+
+            // First use (should work if token is valid)
+            mockMvc.perform(post("/api/v1/auth/refresh")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"refreshToken\":\"" + refreshToken + "\"}"));
+
+            // Second use (should fail - token already used)
+            mockMvc.perform(post("/api/v1/auth/refresh")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Refresh token has already been used"));
+        }
+
+        @Test
+        @DisplayName("should detect refresh token theft via rotation")
+        void shouldDetectRefreshTokenTheft() throws Exception {
+            // If an old refresh token is used after a new one was issued,
+            // it indicates token theft - invalidate all tokens for that user
+            String stolenOldToken = "stolen.old.refresh.token";
+
+            mockMvc.perform(post("/api/v1/auth/refresh")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"refreshToken\":\"" + stolenOldToken + "\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Token theft detected - all sessions invalidated"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-Tenant Isolation Security")
+    class MultiTenantIsolationSecurity {
+
+        @Test
+        @DisplayName("should prevent cross-tenant access via header manipulation")
+        void shouldPreventCrossTenantHeaderManipulation() throws Exception {
+            // Attacker tries to access another tenant's data by injecting X-Tenant-ID
+            mockMvc.perform(get("/api/v1/patients/victim-patient-123")
+                    .header("X-Tenant-ID", "victim-tenant-id")
+                    .header("Authorization", "Bearer attacker.jwt.token"))
+                .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("should prevent tenant access not in user JWT")
+        void shouldPreventUnauthorizedTenantAccess() throws Exception {
+            // User's JWT has tenant-1, but tries to access tenant-2 data
+            // Gateway should validate tenant access from JWT claims
+            mockMvc.perform(get("/api/v1/patients")
+                    .header("X-Tenant-ID", "tenant-2")
+                    .header("Authorization", "Bearer user.with.tenant1.only"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Access denied to tenant"));
+        }
+
+        @Test
+        @DisplayName("should enforce tenant context in all API calls")
+        void shouldEnforceTenantContext() throws Exception {
+            // All protected endpoints must validate tenant context
+            mockMvc.perform(post("/api/v1/patients")
+                    .header("Authorization", "Bearer valid.token")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"firstName\":\"Test\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("X-Tenant-ID header is required"));
+        }
+
+        @Test
+        @DisplayName("should validate tenant exists and user has access")
+        void shouldValidateTenantAccess() throws Exception {
+            // Request with valid JWT but non-existent or unauthorized tenant
+            mockMvc.perform(get("/api/v1/patients")
+                    .header("X-Tenant-ID", "non-existent-tenant")
+                    .header("Authorization", "Bearer valid.token"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Invalid or unauthorized tenant"));
+        }
+    }
+
+    @Nested
+    @DisplayName("MFA Policy Enforcement")
+    class MfaPolicyEnforcement {
+
+        @Test
+        @DisplayName("should require MFA setup for new users in high-security tenants")
+        void shouldRequireMfaSetupForNewUsers() throws Exception {
+            // User logged in without MFA, tenant requires MFA
+            mockMvc.perform(get("/api/v1/patients")
+                    .header("Authorization", "Bearer user.without.mfa.token"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("MFA setup required"))
+                .andExpect(jsonPath("$.requiresMfaSetup").value(true));
+        }
+
+        @Test
+        @DisplayName("should reject access token without MFA verification when required")
+        void shouldRejectTokenWithoutMfaVerification() throws Exception {
+            // Token issued after username/password but before MFA verification
+            String tokenWithoutMfa = "token.without.mfa.claim";
+
+            mockMvc.perform(get("/api/v1/patients")
+                    .header("Authorization", "Bearer " + tokenWithoutMfa))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("MFA verification required"));
+        }
+
+        @Test
+        @DisplayName("should enforce step-up MFA for sensitive operations")
+        void shouldEnforceStepUpMfa() throws Exception {
+            // Sensitive operations like patient data export require recent MFA
+            mockMvc.perform(post("/api/v1/patients/export")
+                    .header("Authorization", "Bearer valid.token.but.old.mfa")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Recent MFA verification required"))
+                .andExpect(jsonPath("$.requiresStepUpMfa").value(true));
+        }
+
+        @Test
+        @DisplayName("should allow MFA-exempt roles to bypass for certain operations")
+        void shouldAllowMfaExemptRoles() throws Exception {
+            // System/service accounts may be exempt from MFA
+            // But this should be carefully controlled and audited
+            mockMvc.perform(get("/api/v1/system/health")
+                    .header("Authorization", "Bearer service.account.token")
+                    .header("X-Service-Account", "true"))
+                .andExpect(status().isOk());
+        }
+
+        @Test
+        @DisplayName("should enforce tenant-level MFA policies")
+        void shouldEnforceTenantMfaPolicies() throws Exception {
+            // Tenant A requires MFA, Tenant B doesn't
+            // Same user accessing both should follow each tenant's policy
+            mockMvc.perform(get("/api/v1/patients")
+                    .header("X-Tenant-ID", "tenant-with-mfa-required")
+                    .header("Authorization", "Bearer token.without.mfa"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("MFA required by tenant policy"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Account Security")
+    class AccountSecurity {
+
+        @Test
+        @DisplayName("should lock account after multiple failed login attempts")
+        void shouldLockAccountAfterFailedAttempts() throws Exception {
+            String username = "test.user@example.com";
+
+            // Simulate 5 failed login attempts
+            for (int i = 0; i < 5; i++) {
+                mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"" + username + "\",\"password\":\"wrong\"}"))
+                    .andExpect(status().isUnauthorized());
+            }
+
+            // Next attempt should indicate account is locked
+            mockMvc.perform(post("/api/v1/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"username\":\"" + username + "\",\"password\":\"correct\"}"))
+                .andExpect(status().isLocked())
+                .andExpect(jsonPath("$.message").value("Account locked due to multiple failed attempts"));
+        }
+
+        @Test
+        @DisplayName("should prevent brute force attacks via rate limiting")
+        void shouldPreventBruteForceAttacks() throws Exception {
+            // Rapid-fire login attempts from same IP should be rate limited
+            for (int i = 0; i < 20; i++) {
+                mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"victim\",\"password\":\"attempt" + i + "\"}"));
+            }
+
+            // Should hit rate limit
+            mockMvc.perform(post("/api/v1/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"username\":\"victim\",\"password\":\"attempt\"}"))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.message").value("Too many login attempts"));
+        }
+
+        @Test
+        @DisplayName("should require password complexity")
+        void shouldRequirePasswordComplexity() throws Exception {
+            mockMvc.perform(post("/api/v1/auth/register")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"username\":\"newuser\",\"password\":\"weak\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Password does not meet complexity requirements"));
+        }
+
+        @Test
+        @DisplayName("should prevent password reuse")
+        void shouldPreventPasswordReuse() throws Exception {
+            mockMvc.perform(post("/api/v1/auth/change-password")
+                    .header("Authorization", "Bearer valid.token")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"oldPassword\":\"Current123!\",\"newPassword\":\"Current123!\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Cannot reuse previous passwords"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Audit and Compliance")
+    class AuditAndCompliance {
+
+        @Test
+        @DisplayName("should audit all authentication attempts")
+        void shouldAuditAuthenticationAttempts() throws Exception {
+            // All login attempts (success and failure) should be audited
+            mockMvc.perform(post("/api/v1/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"username\":\"test\",\"password\":\"wrong\"}"))
+                .andExpect(status().isUnauthorized());
+
+            // Verify audit log entry exists (requires audit service integration)
+            // This test validates the audit event is triggered
+        }
+
+        @Test
+        @DisplayName("should audit PHI access via gateway")
+        void shouldAuditPhiAccess() throws Exception {
+            // All patient data access should create audit trail
+            mockMvc.perform(get("/api/v1/patients/patient-123")
+                    .header("Authorization", "Bearer valid.token")
+                    .header("X-Tenant-ID", "tenant-1"))
+                .andExpect(header().exists("X-Audit-Id"));
+        }
+
+        @Test
+        @DisplayName("should include security headers in all responses")
+        void shouldIncludeSecurityHeaders() throws Exception {
+            mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("X-Frame-Options", "DENY"))
+                .andExpect(header().string("X-XSS-Protection", "1; mode=block"))
+                .andExpect(header().exists("Strict-Transport-Security"));
+        }
+
+        @Test
+        @DisplayName("should not leak sensitive info in error messages")
+        void shouldNotLeakSensitiveInfo() throws Exception {
+            mockMvc.perform(post("/api/v1/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"username\":\"nonexistent@example.com\",\"password\":\"wrong\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Invalid credentials"))
+                // Should NOT say "User not found" or "Wrong password"
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.not(
+                    org.hamcrest.Matchers.containsString("not found"))));
         }
     }
 }

@@ -42,7 +42,7 @@ dependencies {
 
     // Hypersistence for PostgreSQL JSONB support
     // Version 3.9.0+ required for Hibernate 6.5+ compatibility
-    implementation(libs.hypersistence.utils.hibernate.63)
+    // TEMP: implementation(libs.hypersistence.utils.hibernate.63)
 
     // Spring Cache with Redis
     implementation(libs.spring.boot.starter.data.redis)

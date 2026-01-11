@@ -55,5 +55,25 @@
 
     <!-- Issue #152: Measure Versioning and Audit Trail -->
     <include file="db/changelog/0031-create-measure-versions-table.xml"/>
+    <include file="db/changelog/0014-create-audit-events-table.xml"/>
+
+    <!-- Fix column type mismatch: NUMERIC -> DOUBLE PRECISION -->
+    <include file="db/changelog/0032-fix-chronic-disease-monitoring-column-types.xml"/>
+    <include file="db/changelog/0033-ensure-chronic-disease-monitoring-double-precision.xml"/>
+
+    <!-- Phase 2: Patient-Specific Measure Assignments -->
+    <include file="db/changelog/0034-create-patient-measure-assignments.xml"/>
+
+    <!-- Phase 3: Patient-Specific Measure Overrides -->
+    <include file="db/changelog/0035-create-patient-measure-overrides.xml"/>
+
+    <!-- Phase 4: Measure Configuration Profiles -->
+    <include file="db/changelog/0036-create-measure-config-profiles.xml"/>
+    <include file="db/changelog/0037-create-patient-profile-assignments.xml"/>
+
+    <!-- Phase 5: Comprehensive Audit and Tracking -->
+    <include file="db/changelog/0038-create-measure-execution-history.xml"/>
+    <include file="db/changelog/0039-create-measure-modification-audit.xml"/>
+    <include file="db/changelog/0040-create-patient-measure-eligibility-cache.xml"/>
 
 </databaseChangeLog>

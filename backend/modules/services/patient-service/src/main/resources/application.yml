@@ -25,6 +25,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        # Disable Hibernate's auto-detection of entities on classpath
+        # Only use entities explicitly configured via @EntityScan
+        archive:
+          autodetection: none
     show-sql: false
 
   liquibase:

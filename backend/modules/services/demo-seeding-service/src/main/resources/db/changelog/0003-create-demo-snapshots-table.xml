@@ -47,6 +47,10 @@
         <createIndex tableName="demo_snapshots" indexName="idx_demo_snapshots_created">
             <column name="created_at" descending="true"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="demo_snapshots"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

@@ -58,6 +58,10 @@
         <createIndex indexName="idx_notifications_created_at" tableName="notifications">
             <column name="created_at"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="notifications"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

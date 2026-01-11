@@ -84,6 +84,10 @@
             <column name="priority" value="CRITICAL"/>
             <column name="enabled" value="true"/>
         </insert>
+
+        <rollback>
+            <dropTable tableName="event_routing_rules"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

@@ -57,6 +57,10 @@
         <createIndex indexName="idx_bulk_export_completed_at" tableName="bulk_export_jobs">
             <column name="completed_at"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="bulk_export_jobs"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

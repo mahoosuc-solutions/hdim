@@ -81,6 +81,10 @@
         <createIndex indexName="idx_sequence_steps_order" tableName="email_sequence_steps">
             <column name="step_order"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="email_sequence_steps"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

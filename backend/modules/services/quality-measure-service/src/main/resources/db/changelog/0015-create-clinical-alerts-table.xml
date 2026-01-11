@@ -165,6 +165,17 @@
             COMMENT ON COLUMN clinical_alerts.source_event_type IS 'Type of event that triggered alert (e.g., mental-health-assessment)';
             COMMENT ON COLUMN clinical_alerts.source_event_id IS 'ID of source event (assessment ID, score change event ID, etc.)';
         </sql>
+
+        <rollback>
+            <sql>
+                COMMENT ON TABLE clinical_alerts IS NULL;
+                COMMENT ON COLUMN clinical_alerts.alert_type IS NULL;
+                COMMENT ON COLUMN clinical_alerts.severity IS NULL;
+                COMMENT ON COLUMN clinical_alerts.escalated IS NULL;
+                COMMENT ON COLUMN clinical_alerts.source_event_type IS NULL;
+                COMMENT ON COLUMN clinical_alerts.source_event_id IS NULL;
+            </sql>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

@@ -43,6 +43,10 @@
         <createIndex indexName="idx_preferences_user_id" tableName="notification_preferences">
             <column name="user_id"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="notification_preferences"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

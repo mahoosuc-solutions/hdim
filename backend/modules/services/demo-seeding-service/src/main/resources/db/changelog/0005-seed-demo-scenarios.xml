@@ -68,6 +68,11 @@
             <column name="created_at" valueDate="CURRENT_TIMESTAMP"/>
         </insert>
 
+        <rollback>
+            <delete tableName="demo_scenarios">
+                <where>name IN ('hedis-evaluation', 'patient-journey', 'multi-tenant', 'risk-stratification', 'sdoh-screening', 'cds-alerts', 'qrda-export')</where>
+            </delete>
+        </rollback>
     </changeSet>
 
     <changeSet id="0006-adjust-multi-tenant-scenario-size" author="healthdata-system">
@@ -78,6 +83,15 @@
                     value="Demonstrates secure multi-tenant SaaS architecture. Includes 3 demo tenants: Acme Health (2K), Summit Care (3K), Valley Health (3K)."/>
             <where>name='multi-tenant'</where>
         </update>
+
+        <rollback>
+            <update tableName="demo_scenarios">
+                <column name="patient_count" valueNumeric="12000"/>
+                <column name="description"
+                        value="Demonstrates secure multi-tenant SaaS architecture. Includes 3 demo tenants with varying patient volumes."/>
+                <where>name='multi-tenant'</where>
+            </update>
+        </rollback>
     </changeSet>
 
     <changeSet id="0007-adjust-multi-tenant-scenario-size-compact" author="healthdata-system">
@@ -88,6 +102,15 @@
                     value="Demonstrates secure multi-tenant SaaS architecture. Includes 3 demo tenants: Acme Health (1K), Summit Care (1K), Valley Health (1K)."/>
             <where>name='multi-tenant'</where>
         </update>
+
+        <rollback>
+            <update tableName="demo_scenarios">
+                <column name="patient_count" valueNumeric="8000"/>
+                <column name="description"
+                        value="Demonstrates secure multi-tenant SaaS architecture. Includes 3 demo tenants: Acme Health (2K), Summit Care (3K), Valley Health (3K)."/>
+                <where>name='multi-tenant'</where>
+            </update>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

@@ -145,6 +145,10 @@
             onDelete="CASCADE"/>
 
         <!-- PostgreSQL-specific: Use JSONB for better performance -->
+
+        <rollback>
+            <dropTable tableName="encounters"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

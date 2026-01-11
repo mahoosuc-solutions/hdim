@@ -42,6 +42,15 @@
         <createIndex tableName="demo_snapshots" indexName="idx_demo_snapshots_restore_count">
             <column name="restore_count" descending="true"/>
         </createIndex>
+
+        <rollback>
+            <dropIndex tableName="demo_sessions" indexName="idx_demo_sessions_scenario_status"/>
+            <sql>DROP INDEX IF EXISTS idx_demo_sessions_state_gin;</sql>
+            <sql>DROP INDEX IF EXISTS idx_demo_sessions_metrics_gin;</sql>
+            <sql>DROP INDEX IF EXISTS idx_demo_snapshots_metadata_gin;</sql>
+            <dropIndex tableName="demo_snapshots" indexName="idx_demo_snapshots_scenario_status"/>
+            <dropIndex tableName="demo_snapshots" indexName="idx_demo_snapshots_restore_count"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="0006-analyze-tables" author="demo-seeding-service" runAlways="true">
@@ -52,6 +61,10 @@
             ANALYZE demo_snapshots;
             ANALYZE synthetic_patient_templates;
         </sql>
+
+        <rollback>
+            <!-- ANALYZE only updates statistics, no rollback needed -->
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

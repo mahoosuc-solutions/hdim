@@ -45,6 +45,10 @@
         <createIndex indexName="idx_custom_measures_name" tableName="custom_measures">
             <column name="name"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="custom_measures"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

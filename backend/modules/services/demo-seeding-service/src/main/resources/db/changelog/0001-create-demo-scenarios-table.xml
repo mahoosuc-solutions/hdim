@@ -58,6 +58,10 @@
         <createIndex tableName="demo_scenarios" indexName="idx_demo_scenarios_active">
             <column name="is_active"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="demo_scenarios"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

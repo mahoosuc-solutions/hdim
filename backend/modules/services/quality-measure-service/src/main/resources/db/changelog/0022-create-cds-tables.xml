@@ -78,6 +78,10 @@
         <addUniqueConstraint tableName="cds_rules"
             columnNames="tenant_id, rule_code"
             constraintName="uk_cds_rule_tenant_code"/>
+
+        <rollback>
+            <dropTable tableName="cds_rules"/>
+        </rollback>
     </changeSet>
 
     <!-- CDS Recommendations Table -->
@@ -175,6 +179,10 @@
             referencedTableName="cds_rules"
             referencedColumnNames="id"
             onDelete="SET NULL"/>
+
+        <rollback>
+            <dropTable tableName="cds_recommendations"/>
+        </rollback>
     </changeSet>
 
     <!-- CDS Acknowledgments Table -->
@@ -246,6 +254,10 @@
             referencedTableName="cds_recommendations"
             referencedColumnNames="id"
             onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="cds_acknowledgments"/>
+        </rollback>
     </changeSet>
 
     <!-- Insert Default CDS Rules -->
@@ -331,6 +343,12 @@
             <column name="default_urgency" value="SOON"/>
             <column name="active" valueBoolean="true"/>
         </insert>
+
+        <rollback>
+            <delete tableName="cds_rules">
+                <where>tenant_id='default' AND rule_code IN ('AWV-001', 'DM-A1C-001', 'MH-PHQ9-001', 'MED-ADH-001', 'SDOH-FOOD-001')</where>
+            </delete>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

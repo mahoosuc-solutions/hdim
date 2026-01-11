@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDIM User Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center gradient-bg">
+        <div class="bg-white p-8 rounded-lg shadow-2xl w-96">
+            <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">HDIM</h1>
+            <h2 class="text-xl font-semibold text-center mb-6 text-gray-600">User Management</h2>
+
+            <div id="loginError" class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded"></div>
+
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" id="loginUsername"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                           value="bootstrap_admin" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="loginPassword"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                           value="password123" required>
+                </div>
+                <button type="submit"
+                        class="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 transition duration-200">
+                    Sign In
+                </button>
+            </form>
+
+            <div class="mt-6 text-sm text-gray-600 text-center">
+                <p class="font-semibold">Default Credentials:</p>
+                <p>Username: <code class="bg-gray-100 px-1 rounded">bootstrap_admin</code></p>
+                <p>Password: <code class="bg-gray-100 px-1 rounded">password123</code></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <header class="bg-white shadow">
+            <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">HDIM User Management</h1>
+                        <p class="text-sm text-gray-500">Logged in as: <span id="currentUser" class="font-semibold"></span></p>
+                    </div>
+                    <button id="logoutBtn"
+                            class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition duration-200">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <!-- Actions Bar -->
+            <div class="mb-6 flex justify-between items-center">
+                <button id="createUserBtn"
+                        class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-200">
+                    + Create New User
+                </button>
+                <button id="refreshUsersBtn"
+                        class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-200">
+                    🔄 Refresh
+                </button>
+            </div>
+
+            <!-- User List -->
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roles</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenants</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody" class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="7" class="px-6 py-4 text-center text-gray-500">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create User Modal -->
+    <div id="createUserModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Create New User</h3>
+
+                <div id="createUserError" class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded"></div>
+
+                <form id="createUserForm" class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+                        <input type="text" id="newUsername" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                        <input type="email" id="newEmail" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                        <input type="password" id="newPassword" value="password123" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                        <input type="text" id="newFirstName" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                        <input type="text" id="newLastName" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
+                        <select id="newRole" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="SUPER_ADMIN">Super Admin</option>
+                            <option value="ADMIN" selected>Admin</option>
+                            <option value="EVALUATOR">Evaluator</option>
+                            <option value="ANALYST">Analyst</option>
+                            <option value="VIEWER">Viewer</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tenant ID *</label>
+                        <input type="text" id="newTenantId" value="TEST_TENANT_001" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+
+                    <div class="flex gap-2 mt-4">
+                        <button type="submit"
+                                class="flex-1 bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition duration-200">
+                            Create User
+                        </button>
+                        <button type="button" id="cancelCreateBtn"
+                                class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400 transition duration-200">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const GATEWAY_URL = 'http://localhost:8080';
+        const API_BASE = `${GATEWAY_URL}/api/v1/auth`;
+
+        // State
+        let accessToken = null;
+        let currentUsername = null;
+        let users = [];
+
+        // DOM Elements
+        const loginScreen = document.getElementById('loginScreen');
+        const mainApp = document.getElementById('mainApp');
+        const loginForm = document.getElementById('loginForm');
+        const loginError = document.getElementById('loginError');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const currentUserSpan = document.getElementById('currentUser');
+        const userTableBody = document.getElementById('userTableBody');
+        const createUserBtn = document.getElementById('createUserBtn');
+        const createUserModal = document.getElementById('createUserModal');
+        const createUserForm = document.getElementById('createUserForm');
+        const createUserError = document.getElementById('createUserError');
+        const cancelCreateBtn = document.getElementById('cancelCreateBtn');
+        const refreshUsersBtn = document.getElementById('refreshUsersBtn');
+
+        // Helper: Create DOM element safely
+        function createElement(tag, className, textContent) {
+            const el = document.createElement(tag);
+            if (className) el.className = className;
+            if (textContent) el.textContent = textContent;
+            return el;
+        }
+
+        // Login Handler
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Login failed');
+                }
+
+                accessToken = data.accessToken;
+                currentUsername = data.username;
+                currentUserSpan.textContent = currentUsername;
+
+                loginScreen.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+
+                await loadUsers();
+            } catch (error) {
+                loginError.textContent = error.message;
+                loginError.classList.remove('hidden');
+            }
+        });
+
+        // Logout Handler
+        logoutBtn.addEventListener('click', () => {
+            accessToken = null;
+            currentUsername = null;
+            loginScreen.classList.remove('hidden');
+            mainApp.classList.add('hidden');
+            loginError.classList.add('hidden');
+        });
+
+        // Load Users
+        async function loadUsers() {
+            userTableBody.textContent = '';
+            const row = createElement('tr');
+            const cell = createElement('td', 'px-6 py-4 text-center text-gray-500');
+            cell.colSpan = 7;
+            cell.textContent = 'User listing requires database query. Use "Create New User" to add test users.';
+            row.appendChild(cell);
+            userTableBody.appendChild(row);
+        }
+
+        // Show Create User Modal
+        createUserBtn.addEventListener('click', () => {
+            createUserModal.classList.remove('hidden');
+            createUserError.classList.add('hidden');
+        });
+
+        // Hide Create User Modal
+        cancelCreateBtn.addEventListener('click', () => {
+            createUserModal.classList.add('hidden');
+            createUserForm.reset();
+        });
+
+        // Create User Handler
+        createUserForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const userData = {
+                username: document.getElementById('newUsername').value,
+                email: document.getElementById('newEmail').value,
+                password: document.getElementById('newPassword').value,
+                firstName: document.getElementById('newFirstName').value,
+                lastName: document.getElementById('newLastName').value,
+                roles: [document.getElementById('newRole').value],
+                tenantIds: [document.getElementById('newTenantId').value]
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to create user');
+                }
+
+                // Success!
+                alert(`User ${userData.username} created successfully!`);
+                createUserModal.classList.add('hidden');
+                createUserForm.reset();
+
+                // Show success message in table (using safe DOM methods)
+                userTableBody.textContent = '';
+                const row = createElement('tr');
+                const cell = createElement('td', 'px-6 py-4 text-center');
+                cell.colSpan = 7;
+
+                const successDiv = createElement('div', 'bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded');
+                const message = createElement('div');
+                message.textContent = `✓ User ${userData.username} created successfully!`;
+
+                const passwordInfo = createElement('span', 'text-sm');
+                passwordInfo.textContent = `Password: ${userData.password}`;
+
+                const br = createElement('br');
+                message.appendChild(br);
+                message.appendChild(passwordInfo);
+                successDiv.appendChild(message);
+                cell.appendChild(successDiv);
+                row.appendChild(cell);
+                userTableBody.appendChild(row);
+
+            } catch (error) {
+                createUserError.textContent = error.message;
+                createUserError.classList.remove('hidden');
+            }
+        });
+
+        // Refresh Users
+        refreshUsersBtn.addEventListener('click', loadUsers);
+
+        // Close modal on outside click
+        createUserModal.addEventListener('click', (e) => {
+            if (e.target === createUserModal) {
+                createUserModal.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

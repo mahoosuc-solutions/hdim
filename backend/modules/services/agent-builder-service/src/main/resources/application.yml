@@ -20,12 +20,14 @@ spring:
     driver-class-name: org.postgresql.Driver
     hikari:
       # Performance-tuned connection pool
-      maximum-pool-size: 30
-      minimum-idle: 10
-      connection-timeout: 20000
-      idle-timeout: 300000
-      max-lifetime: 1200000
-      leak-detection-threshold: 60000
+      maximum-pool-size: 20              # MEDIUM traffic tier (AI agent builder) - reduced from 30
+      minimum-idle: 5
+      connection-timeout: 20000          # 20 seconds (fail fast)
+      idle-timeout: 300000               # 5 minutes (matches Docker/PostgreSQL TCP timeout)
+      max-lifetime: 1800000              # 30 minutes (CRITICAL: prevent stale connections) - FIXED from 1200000
+      keepalive-time: 240000             # 4 minutes (proactive keepalive before 5-minute timeout)
+      leak-detection-threshold: 60000    # 60 seconds (detect connection leaks)
+      validation-timeout: 5000           # 5 seconds (fail fast on dead connections)
       pool-name: agent-builder-pool
       # Prepared statement caching
       data-source-properties:

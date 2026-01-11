@@ -13,9 +13,14 @@ spring:
     password: ${DB_PASSWORD:healthdata_password}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 10
+      maximum-pool-size: 20             # MEDIUM traffic tier (HCC risk adjustment)
       minimum-idle: 5
-      connection-timeout: 30000
+      connection-timeout: 20000          # 20 seconds (fail fast)
+      idle-timeout: 300000               # 5 minutes (matches Docker/PostgreSQL TCP timeout)
+      max-lifetime: 1800000              # 30 minutes (CRITICAL: prevent stale connections)
+      keepalive-time: 240000             # 4 minutes (proactive keepalive before 5-minute timeout)
+      leak-detection-threshold: 60000    # 60 seconds (detect connection leaks)
+      validation-timeout: 5000           # 5 seconds (fail fast on dead connections)
 
   jpa:
     hibernate:
@@ -87,11 +92,17 @@ spring.kafka:
   producer:
     key-serializer: org.apache.kafka.common.serialization.StringSerializer
     value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    properties:
+      # Distributed tracing: Propagate trace context through Kafka messages
+      interceptor.classes: com.healthdata.tracing.KafkaProducerTraceInterceptor
   consumer:
     group-id: hcc-service
     auto-offset-reset: earliest
     key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    properties:
+      # Distributed tracing: Extract trace context from Kafka messages
+      interceptor.classes: com.healthdata.tracing.KafkaConsumerTraceInterceptor
 
 # HCC Configuration
 hcc:

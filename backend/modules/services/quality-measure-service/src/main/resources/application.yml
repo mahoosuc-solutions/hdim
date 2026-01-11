@@ -105,11 +105,17 @@ spring.kafka:
   producer:
     key-serializer: org.apache.kafka.common.serialization.StringSerializer
     value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    properties:
+      # Distributed tracing: Propagate trace context through Kafka messages
+      interceptor.classes: com.healthdata.tracing.KafkaProducerTraceInterceptor
   consumer:
     group-id: quality-measure-service
     auto-offset-reset: earliest
     key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    properties:
+      # Distributed tracing: Extract trace context from Kafka messages
+      interceptor.classes: com.healthdata.tracing.KafkaConsumerTraceInterceptor
 
 # HIPAA Audit Configuration
 audit:

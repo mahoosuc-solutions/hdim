@@ -12,6 +12,10 @@
             </sqlCheck>
         </preConditions>
         <sql>CREATE SCHEMA IF NOT EXISTS hcc;</sql>
+
+        <rollback>
+            <sql>DROP SCHEMA IF EXISTS hcc CASCADE;</sql>
+        </rollback>
     </changeSet>
 
     <!-- Diagnosis to HCC Crosswalk Table -->
@@ -39,6 +43,10 @@
         <createIndex tableName="diagnosis_hcc_map" schemaName="hcc" indexName="idx_hcc_v28">
             <column name="hcc_code_v28"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="diagnosis_hcc_map" schemaName="hcc"/>
+        </rollback>
     </changeSet>
 
     <!-- Patient HCC Profiles Table -->
@@ -85,6 +93,10 @@
             <column name="tenant_id"/>
             <column name="patient_id"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="patient_hcc_profiles" schemaName="hcc"/>
+        </rollback>
     </changeSet>
 
     <!-- Documentation Gaps Table -->
@@ -144,6 +156,10 @@
             <column name="tenant_id"/>
             <column name="status"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="documentation_gaps" schemaName="hcc"/>
+        </rollback>
     </changeSet>
 
     <!-- Recapture Opportunities Table -->
@@ -192,6 +208,10 @@
             <column name="tenant_id"/>
             <column name="patient_id"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="recapture_opportunities" schemaName="hcc"/>
+        </rollback>
     </changeSet>
 
     <!-- Comments -->
@@ -206,6 +226,15 @@
             COMMENT ON TABLE hcc.recapture_opportunities IS
                 'Chronic condition HCCs from prior year needing annual recapture';
         </sql>
+
+        <rollback>
+            <sql>
+                COMMENT ON TABLE hcc.diagnosis_hcc_map IS NULL;
+                COMMENT ON TABLE hcc.patient_hcc_profiles IS NULL;
+                COMMENT ON TABLE hcc.documentation_gaps IS NULL;
+                COMMENT ON TABLE hcc.recapture_opportunities IS NULL;
+            </sql>
+        </rollback>
     </changeSet>
 
     <!-- HCC V24/V28 Crosswalk Seed Data -->

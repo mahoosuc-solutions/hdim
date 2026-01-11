@@ -106,6 +106,12 @@
         <sql>
             COMMENT ON TABLE measure_versions IS 'HIPAA COMPLIANCE: Records in this table are immutable after creation. The cql_text and value_sets columns must never be modified - only new versions should be created.';
         </sql>
+
+        <rollback>
+            <sql>
+                COMMENT ON TABLE measure_versions IS NULL;
+            </sql>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

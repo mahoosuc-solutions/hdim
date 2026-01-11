@@ -149,6 +149,10 @@
             referencedColumnNames="id"
             onDelete="SET NULL"/>
 
+
+        <rollback>
+            <dropTable tableName="medication_administrations"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

@@ -56,6 +56,10 @@
             <column name="tenant_id"/>
             <column name="patient_id"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="provider_panel_assignment"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

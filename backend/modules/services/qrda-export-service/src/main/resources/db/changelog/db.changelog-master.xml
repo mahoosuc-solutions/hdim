@@ -12,6 +12,10 @@
             </sqlCheck>
         </preConditions>
         <sql>CREATE SCHEMA IF NOT EXISTS quality;</sql>
+
+        <rollback>
+            <sql>DROP SCHEMA IF EXISTS quality CASCADE;</sql>
+        </rollback>
     </changeSet>
 
     <changeSet id="002-create-qrda-export-jobs-table" author="hdim">
@@ -58,6 +62,10 @@
             <column name="tenant_id"/>
             <column name="created_at"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="qrda_export_jobs" schemaName="quality"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="003-create-cms-submissions-table" author="hdim">
@@ -110,6 +118,10 @@
         <createIndex tableName="cms_submissions" schemaName="quality" indexName="idx_cms_submissions_tracking">
             <column name="cms_tracking_number"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="cms_submissions" schemaName="quality"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

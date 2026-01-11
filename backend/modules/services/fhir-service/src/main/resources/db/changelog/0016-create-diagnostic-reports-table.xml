@@ -136,6 +136,10 @@
         <sql>
             CREATE INDEX idx_diagrpt_resource_gin ON diagnostic_reports USING GIN (resource_json jsonb_path_ops);
         </sql>
+
+        <rollback>
+            <dropTable tableName="diagnostic_reports"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

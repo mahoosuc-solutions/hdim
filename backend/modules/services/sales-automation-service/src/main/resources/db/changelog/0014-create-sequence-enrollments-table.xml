@@ -107,6 +107,10 @@
         <createIndex indexName="idx_enrollments_next_email" tableName="sequence_enrollments">
             <column name="next_email_at"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="sequence_enrollments"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

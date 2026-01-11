@@ -38,6 +38,10 @@
         <createIndex indexName="idx_retry_count" tableName="dead_letter_events">
             <column name="retry_count"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="dead_letter_events"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

@@ -72,6 +72,10 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+
+        <rollback>
+            <dropTable tableName="fhir_subscriptions"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="0019-2" author="healthdata">
@@ -97,6 +101,10 @@
         <createIndex indexName="idx_fhir_subscriptions_end_time" tableName="fhir_subscriptions">
             <column name="end_time"/>
         </createIndex>
+
+        <rollback>
+            <!-- Indexes will be dropped when table is dropped -->
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

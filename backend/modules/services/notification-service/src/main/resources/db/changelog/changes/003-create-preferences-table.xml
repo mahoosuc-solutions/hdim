@@ -42,6 +42,10 @@
             <column name="tenant_id"/>
             <column name="user_id"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="notification_preferences"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

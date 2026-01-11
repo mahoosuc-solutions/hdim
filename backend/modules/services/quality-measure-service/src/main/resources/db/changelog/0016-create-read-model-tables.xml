@@ -141,6 +141,10 @@
         <createIndex indexName="idx_phs_last_updated" tableName="patient_health_summary">
             <column name="last_updated_at"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="patient_health_summary"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="0010-2-create-population-metrics-table" author="system">
@@ -248,6 +252,10 @@
         <createIndex indexName="idx_pm_calculated_at" tableName="population_metrics">
             <column name="calculated_at"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="population_metrics"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="0010-3-create-materialized-view-patient-summary" author="system">

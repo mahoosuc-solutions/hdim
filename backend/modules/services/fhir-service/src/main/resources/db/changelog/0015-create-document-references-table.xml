@@ -154,6 +154,10 @@
         <sql>
             CREATE INDEX idx_docref_description_trgm ON document_references USING GIN (description gin_trgm_ops);
         </sql>
+
+        <rollback>
+            <dropTable tableName="document_references"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

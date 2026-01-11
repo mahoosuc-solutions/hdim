@@ -12,6 +12,10 @@
             DROP MATERIALIZED VIEW IF EXISTS mv_patient_health_dashboard CASCADE;
             DROP FUNCTION IF EXISTS refresh_patient_health_dashboard();
         </sql>
+
+        <rollback>
+            <!-- View and function will be recreated by rolling back changesets 0017-3 and 0017-4 -->
+        </rollback>
     </changeSet>
 
     <!-- Step 2: Convert patient_id columns to UUID -->

@@ -45,6 +45,10 @@
             <column name="tenant_id"/>
             <column name="birth_date"/>
         </createIndex>
+
+        <rollback>
+            <dropTable tableName="patients"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

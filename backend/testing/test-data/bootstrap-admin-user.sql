@@ -7,9 +7,12 @@
 --   Email: admin@healthdata.local
 --
 -- Usage:
---   docker exec healthdata-postgres psql -U healthdata -d gateway_db -f /path/to/bootstrap-admin-user.sql
+--   docker exec -i healthdata-postgres psql -U healthdata -d gateway_db < bootstrap-admin-user.sql
 --
 -- SECURITY WARNING: This is for TESTING ONLY. Never use in production!
+
+-- Enable pgcrypto extension for BCrypt hashing
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- Check if user already exists
 DO $$
@@ -19,11 +22,11 @@ BEGIN
     IF EXISTS (SELECT 1 FROM users WHERE username = 'bootstrap_admin') THEN
         RAISE NOTICE 'User bootstrap_admin already exists. Skipping creation.';
     ELSE
-        -- Generate UUID for the user
+        -- Generate UUID and password hash
         v_user_id := gen_random_uuid();
 
         -- Insert bootstrap admin user
-        -- Password: password123 (BCrypt hash with strength 10)
+        -- Password: password123 (BCrypt hash generated via pgcrypto)
         INSERT INTO users (
             id,
             username,
@@ -41,7 +44,7 @@ BEGIN
             v_user_id,
             'bootstrap_admin',
             'admin@healthdata.local',
-            '$2a$10$N9qo8uLOickgx2ZMRZoMy.iQCH.PknEdgPBEJP2vHFAP1phdxN8oG',  -- password123
+            crypt('password123', gen_salt('bf')),  -- BCrypt hash
             'Bootstrap',
             'Administrator',
             true,                             -- active

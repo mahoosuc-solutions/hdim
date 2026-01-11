@@ -25,10 +25,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * - /actuator/health/** - Health checks
  * - /actuator/info - Info endpoint
  * - /api/v1/auth/login - Login endpoint
- * - /api/v1/auth/register - Registration endpoint
  * - /api/v1/auth/refresh - Token refresh endpoint
  * - /v3/api-docs/** - OpenAPI docs
  * - /swagger-ui/** - Swagger UI
+ *
+ * Note: /api/v1/auth/register is NOT public - requires ADMIN/SUPER_ADMIN authentication
  */
 @Slf4j
 @Component
@@ -51,7 +52,6 @@ public class PublicPathRegistry {
         "/actuator/health/**",
         "/actuator/info",
         "/api/v1/auth/login",
-        "/api/v1/auth/register",
         "/api/v1/auth/refresh",
         "/api/v1/auth/logout",
         "/api/v1/auth/mfa/verify",  // MFA verification uses mfaToken, not JWT

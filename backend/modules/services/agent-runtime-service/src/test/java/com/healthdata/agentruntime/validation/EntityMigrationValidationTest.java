@@ -31,18 +31,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Uses @DataJpaTest with minimal configuration - only JPA entities and repositories.
  * No service or controller beans are loaded to avoid dependency issues.
  *
+ * Runs Liquibase migrations to create database schema, then validates that any
+ * JPA entities (if present) match the database schema.
+ *
  * Note: agent-runtime-service is primarily an LLM/agent orchestration service
- * and does not define its own JPA entities. It uses entities from agent-builder-service
- * via API calls. This test validates that no unintended entities exist.
+ * and does not define its own JPA entities. Database tables exist for tracking
+ * agent executions, configurations, and metrics, but may be accessed via JDBC
+ * or other mechanisms. This test validates that no unintended entities exist.
  *
  * This test is in a separate package (com.healthdata.agentruntime.validation) to
  * avoid Spring Boot auto-scanning for @SpringBootConfiguration in com.healthdata.agent.
  */
 @DataJpaTest(
     properties = {
-        "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.liquibase.enabled=false",
-        "spring.flyway.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=validate",
+        "spring.liquibase.enabled=true",
+        "spring.liquibase.change-log=classpath:db/changelog/db.changelog-master.xml",
         "spring.data.jpa.repositories.enabled=false"
     }
 )

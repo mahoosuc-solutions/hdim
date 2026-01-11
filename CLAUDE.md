@@ -1042,20 +1042,52 @@ For complete details on the database architecture standardization effort:
 
 **See:** `DATABASE_ARCHITECTURE_MIGRATION_PLAN.md`
 
-**Current Status:** Phase 1 Complete (as of 2026-01-10)
-- PostgreSQL 15 running
-- gateway_db tables migrated to Liquibase
-- Validation test framework established
+**Current Status:** Phase 1-4 Complete (as of 2026-01-10)
+- ✅ Phase 1: Fixed critical ddl-auto issues
+- ✅ Phase 2: Migrated Flyway services to Liquibase
+- ✅ Phase 3: Moved gateway auth tables to Liquibase
+- ✅ Phase 4: Service-owned extension management
+- 🔄 Phase 5: CI/CD enforcement (in progress)
 
-**Next Phase:** Enable Liquibase on 4 core services (fhir, patient, quality-measure, cql-engine)
+**Key Achievements:**
+- PostgreSQL 15 running with 29 databases
+- Init script simplified to database creation only
+- All schema management moved to service Liquibase migrations
+- Gateway authentication schema version-controlled
+- PostgreSQL extensions managed by services
 
-**Target Completion:** All 34 services using Liquibase with `ddl-auto: validate` (Week 4)
+### CI/CD Validation
+
+**Entity-migration validation is enforced in CI/CD:**
+
+**GitHub Actions:** Automated validation on PRs
+```yaml
+# .github/workflows/database-validation.yml
+# Runs entity-migration tests when JPA entities or migrations change
+```
+
+**Pre-commit Hook:** Local validation before committing
+```bash
+# Install hook
+ln -s ../../backend/scripts/pre-commit-db-validation.sh .git/hooks/pre-commit
+
+# Validates entities when modified
+./backend/scripts/pre-commit-db-validation.sh
+```
+
+**Manual Validation:**
+```bash
+cd backend
+./gradlew test --tests "*EntityMigrationValidationTest"
+```
 
 ---
 
 ## Getting Help
 
+- **Database migration runbook**: See `backend/docs/DATABASE_MIGRATION_RUNBOOK.md` ⭐ **NEW**
 - **Database architecture**: See `DATABASE_ARCHITECTURE_MIGRATION_PLAN.md`
+- **Database migration status**: See `backend/docs/DATABASE_MIGRATION_STATUS.md`
 - **Entity-migration guide**: See `backend/docs/ENTITY_MIGRATION_GUIDE.md`
 - **System architecture**: See `docs/architecture/SYSTEM_ARCHITECTURE.md`
 - **Technology decisions**: See `docs/architecture/decisions/` (ADRs)
@@ -1068,4 +1100,4 @@ For complete details on the database architecture standardization effort:
 ---
 
 *Last Updated: January 10, 2026*
-*Version: 1.3* - Added Database Architecture & Schema Management section with migration plan reference
+*Version: 1.4* - Updated database migration status: Phases 1-4 complete, CI/CD enforcement added

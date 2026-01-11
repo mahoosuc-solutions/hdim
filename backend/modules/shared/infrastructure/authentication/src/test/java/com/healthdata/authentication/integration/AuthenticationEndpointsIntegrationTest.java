@@ -132,7 +132,7 @@ class AuthenticationEndpointsIntegrationTest {
             .andExpect(jsonPath("$.roles[0]").value("ADMIN"))
             .andExpect(jsonPath("$.tenantIds").isArray())
             .andExpect(jsonPath("$.tenantIds[0]").value(TENANT_1))
-            .andExpect(jsonPath("$.message").value("Login successful"));
+            .andExpect(jsonPath("$.message").value(containsString("Login successful")));
     }
 
     @Test

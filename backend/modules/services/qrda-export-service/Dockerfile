@@ -27,7 +27,8 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:MaxRAMPercentage=75.0 \
     -XX:+UseG1GC \
     -XX:+UseStringDeduplication \
-    -Djava.security.egd=file:/dev/./urandom"
+    -Djava.security.egd=file:/dev/./urandom \
+    -Djava.net.preferIPv4Stack=true"
 
 EXPOSE 8104
 

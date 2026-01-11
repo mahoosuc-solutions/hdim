@@ -164,3 +164,39 @@ logging:
     name: logs/fhir-service.log
     max-size: 10MB
     max-history: 30
+
+---
+# Development Profile - 100% Trace Sampling
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0  # 100% sampling - capture all traces for debugging
+
+---
+# Staging Profile - 50% Trace Sampling
+spring:
+  config:
+    activate:
+      on-profile: staging
+
+management:
+  tracing:
+    sampling:
+      probability: 0.5  # 50% sampling - balance between visibility and performance
+
+---
+# Production Profile - 10% Trace Sampling
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+management:
+  tracing:
+    sampling:
+      probability: 0.1  # 10% sampling - reduce overhead, still get representative sample

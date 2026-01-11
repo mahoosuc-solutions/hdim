@@ -190,9 +190,9 @@
 
     <!-- Trigger to auto-calculate next_review_date -->
     <changeSet id="0035-create-pmo-review-trigger" author="claude-code">
-        <sql><![CDATA[
+        <sql splitStatements="false"><![CDATA[
             CREATE OR REPLACE FUNCTION calculate_next_review_date()
-            RETURNS TRIGGER AS $$
+            RETURNS TRIGGER AS $function$
             BEGIN
                 IF NEW.requires_periodic_review = true AND NEW.active = true THEN
                     IF NEW.last_reviewed_at IS NULL THEN
@@ -207,7 +207,7 @@
                 END IF;
                 RETURN NEW;
             END;
-            $$ LANGUAGE plpgsql;
+            $function$ LANGUAGE plpgsql;
 
             CREATE TRIGGER trg_pmo_calculate_next_review
                 BEFORE INSERT OR UPDATE ON patient_measure_overrides

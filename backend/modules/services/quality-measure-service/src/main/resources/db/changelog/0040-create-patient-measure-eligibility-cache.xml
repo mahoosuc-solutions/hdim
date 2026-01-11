@@ -125,9 +125,9 @@
 
     <!-- Create function to auto-invalidate expired cache entries -->
     <changeSet id="0040-create-pmec-cleanup-function" author="claude-code">
-        <sql><![CDATA[
+        <sql splitStatements="false"><![CDATA[
             CREATE OR REPLACE FUNCTION invalidate_expired_cache_entries()
-            RETURNS INTEGER AS $$
+            RETURNS INTEGER AS $function$
             DECLARE
                 rows_updated INTEGER;
             BEGIN
@@ -139,7 +139,7 @@
                 GET DIAGNOSTICS rows_updated = ROW_COUNT;
                 RETURN rows_updated;
             END;
-            $$ LANGUAGE plpgsql;
+            $function$ LANGUAGE plpgsql;
 
             COMMENT ON FUNCTION invalidate_expired_cache_entries() IS 'Marks expired cache entries as invalidated. Should be called periodically by scheduled job.';
         ]]></sql>
@@ -153,12 +153,12 @@
 
     <!-- Create function to invalidate cache when patient data changes -->
     <changeSet id="0040-create-pmec-invalidation-helper" author="claude-code">
-        <sql><![CDATA[
+        <sql splitStatements="false"><![CDATA[
             CREATE OR REPLACE FUNCTION invalidate_patient_eligibility_cache(
                 p_patient_id UUID,
                 p_measure_id UUID DEFAULT NULL
             )
-            RETURNS INTEGER AS $$
+            RETURNS INTEGER AS $function$
             DECLARE
                 rows_updated INTEGER;
             BEGIN
@@ -180,7 +180,7 @@
                 GET DIAGNOSTICS rows_updated = ROW_COUNT;
                 RETURN rows_updated;
             END;
-            $$ LANGUAGE plpgsql;
+            $function$ LANGUAGE plpgsql;
 
             COMMENT ON FUNCTION invalidate_patient_eligibility_cache(UUID, UUID) IS 'Helper function to invalidate patient eligibility cache. Called when patient data or measure definition changes.';
         ]]></sql>

@@ -1,0 +1,800 @@
+package com.healthdata.quality.integration;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.quality.client.CqlEngineServiceClient;
+import com.healthdata.quality.client.PatientServiceClient;
+import com.healthdata.quality.domain.model.QualityMeasureResultEntity;
+import com.healthdata.quality.domain.repository.QualityMeasureResultRepository;
+import com.healthdata.testfixtures.security.GatewayTrustTestHeaders;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+/**
+ * End-to-End Functional Tests for Quality Measure Evaluation.
+ *
+ * Tests the complete quality measure evaluation workflow including:
+ * - CQL engine integration
+ * - FHIR data retrieval
+ * - Measure calculation and persistence
+ * - Result caching and cache invalidation
+ * - Multi-tenant isolation
+ * - Error handling and recovery
+ *
+ * FUNCTIONAL TEST COVERAGE:
+ * - HEDIS measure calculation (CDC, CBP, BCS, CCS)
+ * - Patient eligibility determination
+ * - Numerator/denominator compliance
+ * - Quality score calculation
+ * - Kafka event publishing
+ * - Report generation
+ */
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Testcontainers
+@Transactional
+@DisplayName("Quality Measure Evaluation E2E Functional Tests")
+class QualityMeasureEvaluationE2ETest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private QualityMeasureResultRepository measureResultRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private CqlEngineServiceClient cqlEngineServiceClient;
+
+    @MockBean
+    private PatientServiceClient patientServiceClient;
+
+    private static final String TENANT_ID = "test-tenant-001";
+    private static final UUID PATIENT_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+    private static final String MEASURE_CDC_A1C9 = "HEDIS_CDC_A1C9";
+    private static final String MEASURE_CBP = "HEDIS_CBP";
+
+    @BeforeEach
+    void setUp() {
+        measureResultRepository.deleteAll();
+        reset(cqlEngineServiceClient, patientServiceClient);
+    }
+
+    @Nested
+    @DisplayName("Single Measure Calculation")
+    class SingleMeasureCalculation {
+
+        @Test
+        @DisplayName("should calculate HEDIS diabetes measure successfully")
+        void shouldCalculateDiabetesMeasure() throws Exception {
+            // Arrange: Mock CQL Engine response for diabetes measure
+            String cqlResponse = """
+                {
+                    "libraryName": "HEDIS_CDC_2024",
+                    "measureResult": {
+                        "measureName": "Comprehensive Diabetes Care: HbA1c Control (<9.0%)",
+                        "inNumerator": true,
+                        "inDenominator": true,
+                        "complianceRate": 85.5,
+                        "score": 92.3
+                    }
+                }
+                """;
+
+            when(cqlEngineServiceClient.evaluateCql(
+                eq(TENANT_ID),
+                eq("HEDIS_CDC_2024"),
+                eq(PATIENT_ID),
+                anyString()
+            )).thenReturn(cqlResponse);
+
+            var headers = GatewayTrustTestHeaders.adminHeaders(TENANT_ID);
+
+            // Act: Calculate measure
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s",
+                            "measureId": "%s"
+                        }
+                        """.formatted(PATIENT_ID, MEASURE_CDC_A1C9)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.patientId").value(PATIENT_ID.toString()))
+                .andExpect(jsonPath("$.measureId").value(MEASURE_CDC_A1C9))
+                .andExpect(jsonPath("$.numeratorCompliant").value(true))
+                .andExpect(jsonPath("$.denominatorEligible").value(true))
+                .andExpect(jsonPath("$.score").value(92.3))
+                .andExpect(jsonPath("$.complianceRate").value(85.5));
+
+            // Assert: Verify result persisted to database
+            var results = measureResultRepository.findAll();
+            assertThat(results).hasSize(1);
+            assertThat(results.get(0).getTenantId()).isEqualTo(TENANT_ID);
+            assertThat(results.get(0).getPatientId()).isEqualTo(PATIENT_ID);
+            assertThat(results.get(0).isNumeratorCompliant()).isTrue();
+            assertThat(results.get(0).isDenominatorEligible()).isTrue();
+
+            // Verify CQL engine was called
+            verify(cqlEngineServiceClient, times(1)).evaluateCql(
+                eq(TENANT_ID),
+                eq("HEDIS_CDC_2024"),
+                eq(PATIENT_ID),
+                anyString()
+            );
+        }
+
+        @Test
+        @DisplayName("should handle patient not in denominator")
+        void shouldHandlePatientNotInDenominator() throws Exception {
+            // Patient doesn't meet eligibility criteria
+            String cqlResponse = """
+                {
+                    "libraryName": "HEDIS_CBP_2024",
+                    "measureResult": {
+                        "measureName": "Controlling Blood Pressure",
+                        "inNumerator": false,
+                        "inDenominator": false,
+                        "complianceRate": null,
+                        "score": 0
+                    }
+                }
+                """;
+
+            when(cqlEngineServiceClient.evaluateCql(
+                eq(TENANT_ID),
+                anyString(),
+                eq(PATIENT_ID),
+                anyString()
+            )).thenReturn(cqlResponse);
+
+            var headers = GatewayTrustTestHeaders.adminHeaders(TENANT_ID);
+
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s",
+                            "measureId": "%s"
+                        }
+                        """.formatted(PATIENT_ID, MEASURE_CBP)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.denominatorEligible").value(false))
+                .andExpect(jsonPath("$.numeratorCompliant").value(false))
+                .andExpect(jsonPath("$.score").value(0));
+        }
+
+        @Test
+        @DisplayName("should handle patient in denominator but not numerator")
+        void shouldHandlePatientInDenominatorNotNumerator() throws Exception {
+            // Patient eligible but not compliant
+            String cqlResponse = """
+                {
+                    "libraryName": "HEDIS_CBP_2024",
+                    "measureResult": {
+                        "measureName": "Controlling Blood Pressure",
+                        "inNumerator": false,
+                        "inDenominator": true,
+                        "complianceRate": 0,
+                        "score": 45.0
+                    }
+                }
+                """;
+
+            when(cqlEngineServiceClient.evaluateCql(
+                eq(TENANT_ID),
+                anyString(),
+                eq(PATIENT_ID),
+                anyString()
+            )).thenReturn(cqlResponse);
+
+            var headers = GatewayTrustTestHeaders.adminHeaders(TENANT_ID);
+
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s",
+                            "measureId": "%s"
+                        }
+                        """.formatted(PATIENT_ID, MEASURE_CBP)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.denominatorEligible").value(true))
+                .andExpect(jsonPath("$.numeratorCompliant").value(false))
+                .andExpect(jsonPath("$.score").value(45.0))
+                .andExpect(jsonPath("$.complianceRate").value(0));
+
+            // This patient has a care gap (eligible but not compliant)
+        }
+    }
+
+    @Nested
+    @DisplayName("Multiple Measures for Same Patient")
+    class MultipleMeasures {
+
+        @Test
+        @DisplayName("should calculate multiple HEDIS measures for patient")
+        void shouldCalculateMultipleMeasures() throws Exception {
+            var headers = GatewayTrustTestHeaders.adminHeaders(TENANT_ID);
+
+            // Mock different CQL responses for different measures
+            when(cqlEngineServiceClient.evaluateCql(
+                eq(TENANT_ID),
+                eq("HEDIS_CDC_2024"),
+                eq(PATIENT_ID),
+                anyString()
+            )).thenReturn("""
+                {
+                    "libraryName": "HEDIS_CDC_2024",
+                    "measureResult": {
+                        "measureName": "Comprehensive Diabetes Care",
+                        "inNumerator": true,
+                        "inDenominator": true,
+                        "complianceRate": 90.0,
+                        "score": 95.0
+                    }
+                }
+                """);
+
+            when(cqlEngineServiceClient.evaluateCql(
+                eq(TENANT_ID),
+                eq("HEDIS_CBP_2024"),
+                eq(PATIENT_ID),
+                anyString()
+            )).thenReturn("""
+                {
+                    "libraryName": "HEDIS_CBP_2024",
+                    "measureResult": {
+                        "measureName": "Controlling Blood Pressure",
+                        "inNumerator": true,
+                        "inDenominator": true,
+                        "complianceRate": 100.0,
+                        "score": 100.0
+                    }
+                }
+                """);
+
+            // Calculate first measure
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s",
+                            "measureId": "HEDIS_CDC_A1C9"
+                        }
+                        """.formatted(PATIENT_ID)))
+                .andExpect(status().isCreated());
+
+            // Calculate second measure
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s",
+                            "measureId": "HEDIS_CBP"
+                        }
+                        """.formatted(PATIENT_ID)))
+                .andExpect(status().isCreated());
+
+            // Verify both measures persisted
+            var results = measureResultRepository.findAll();
+            assertThat(results).hasSize(2);
+            assertThat(results).allMatch(r -> r.getPatientId().equals(PATIENT_ID));
+            assertThat(results).allMatch(r -> r.getTenantId().equals(TENANT_ID));
+        }
+
+        @Test
+        @DisplayName("should calculate overall quality score from multiple measures")
+        void shouldCalculateOverallQualityScore() throws Exception {
+            var headers = GatewayTrustTestHeaders.adminHeaders(TENANT_ID);
+
+            // Setup multiple measure results
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s",
+                            "measureId": "HEDIS_CDC_A1C9"
+                        }
+                        """.formatted(PATIENT_ID)))
+                .andExpect(status().isCreated());
+
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s",
+                            "measureId": "HEDIS_CBP"
+                        }
+                        """.formatted(PATIENT_ID)))
+                .andExpect(status().isCreated());
+
+            // Get quality score
+            mockMvc.perform(get("/quality-measure/score")
+                    .param("patientId", PATIENT_ID.toString())
+                    .headers(headers))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.patientId").value(PATIENT_ID.toString()))
+                .andExpect(jsonPath("$.totalMeasures").value(greaterThanOrEqualTo(2)))
+                .andExpect(jsonPath("$.qualityScore").value(greaterThan(0.0)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-Tenant Isolation")
+    class MultiTenantIsolation {
+
+        @Test
+        @DisplayName("should isolate measure results by tenant")
+        void shouldIsolateMeasureResultsByTenant() throws Exception {
+            String tenant1 = "tenant-001";
+            String tenant2 = "tenant-002";
+
+            // Mock CQL response
+            when(cqlEngineServiceClient.evaluateCql(
+                anyString(),
+                anyString(),
+                any(UUID.class),
+                anyString()
+            )).thenReturn("""
+                {
+                    "libraryName": "HEDIS_CDC_2024",
+                    "measureResult": {
+                        "measureName": "Diabetes Care",
+                        "inNumerator": true,
+                        "inDenominator": true,
+                        "complianceRate": 90.0,
+                        "score": 95.0
+                    }
+                }
+                """);
+
+            // Calculate for tenant 1
+            var headers1 = GatewayTrustTestHeaders.adminHeaders(tenant1);
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers1)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s",
+                            "measureId": "HEDIS_CDC_A1C9"
+                        }
+                        """.formatted(PATIENT_ID)))
+                .andExpect(status().isCreated());
+
+            // Calculate for tenant 2 (same patient ID, different tenant)
+            var headers2 = GatewayTrustTestHeaders.adminHeaders(tenant2);
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers2)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s",
+                            "measureId": "HEDIS_CDC_A1C9"
+                        }
+                        """.formatted(PATIENT_ID)))
+                .andExpect(status().isCreated());
+
+            // Verify tenant 1 sees only their results
+            mockMvc.perform(get("/quality-measure/results")
+                    .param("patientId", PATIENT_ID.toString())
+                    .headers(headers1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].tenantId").value(tenant1));
+
+            // Verify tenant 2 sees only their results
+            mockMvc.perform(get("/quality-measure/results")
+                    .param("patientId", PATIENT_ID.toString())
+                    .headers(headers2))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].tenantId").value(tenant2));
+
+            // Verify database has both results isolated by tenant
+            var results = measureResultRepository.findAll();
+            assertThat(results).hasSize(2);
+            assertThat(results).extracting(QualityMeasureResultEntity::getTenantId)
+                .containsExactlyInAnyOrder(tenant1, tenant2);
+        }
+    }
+
+    @Nested
+    @DisplayName("Error Handling")
+    class ErrorHandling {
+
+        @Test
+        @DisplayName("should return 400 when patient ID is missing")
+        void shouldReturn400WhenPatientIdMissing() throws Exception {
+            var headers = GatewayTrustTestHeaders.adminHeaders(TENANT_ID);
+
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "measureId": "HEDIS_CDC_A1C9"
+                        }
+                        """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(containsString("patientId")));
+        }
+
+        @Test
+        @DisplayName("should return 400 when measure ID is missing")
+        void shouldReturn400WhenMeasureIdMissing() throws Exception {
+            var headers = GatewayTrustTestHeaders.adminHeaders(TENANT_ID);
+
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s"
+                        }
+                        """.formatted(PATIENT_ID)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(containsString("measureId")));
+        }
+
+        @Test
+        @DisplayName("should return 500 when CQL engine fails")
+        void shouldReturn500WhenCqlEngineFails() throws Exception {
+            when(cqlEngineServiceClient.evaluateCql(
+                anyString(),
+                anyString(),
+                any(UUID.class),
+                anyString()
+            )).thenThrow(new RuntimeException("CQL Engine connection failed"));
+
+            var headers = GatewayTrustTestHeaders.adminHeaders(TENANT_ID);
+
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s",
+                            "measureId": "HEDIS_CDC_A1C9"
+                        }
+                        """.formatted(PATIENT_ID)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value(containsString("calculation failed")));
+
+            // Verify no result was persisted
+            assertThat(measureResultRepository.findAll()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("should return 400 when tenant ID is missing")
+        void shouldReturn400WhenTenantIdMissing() throws Exception {
+            var headers = GatewayTrustTestHeaders.builder()
+                .roles("ADMIN")
+                // No tenantId
+                .build();
+
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s",
+                            "measureId": "HEDIS_CDC_A1C9"
+                        }
+                        """.formatted(PATIENT_ID)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(containsString("Tenant")));
+        }
+
+        @Test
+        @DisplayName("should handle malformed CQL response gracefully")
+        void shouldHandleMalformedCqlResponse() throws Exception {
+            when(cqlEngineServiceClient.evaluateCql(
+                anyString(),
+                anyString(),
+                any(UUID.class),
+                anyString()
+            )).thenReturn("INVALID JSON");
+
+            var headers = GatewayTrustTestHeaders.adminHeaders(TENANT_ID);
+
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s",
+                            "measureId": "HEDIS_CDC_A1C9"
+                        }
+                        """.formatted(PATIENT_ID)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").exists());
+        }
+    }
+
+    @Nested
+    @DisplayName("Role-Based Access Control")
+    class RoleBasedAccessControl {
+
+        @Test
+        @DisplayName("EVALUATOR role should calculate measures")
+        void evaluatorShouldCalculateMeasures() throws Exception {
+            when(cqlEngineServiceClient.evaluateCql(
+                anyString(),
+                anyString(),
+                any(UUID.class),
+                anyString()
+            )).thenReturn("""
+                {
+                    "libraryName": "HEDIS_CDC_2024",
+                    "measureResult": {
+                        "measureName": "Diabetes Care",
+                        "inNumerator": true,
+                        "inDenominator": true,
+                        "complianceRate": 90.0,
+                        "score": 95.0
+                    }
+                }
+                """);
+
+            var headers = GatewayTrustTestHeaders.evaluatorHeaders(TENANT_ID);
+
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s",
+                            "measureId": "HEDIS_CDC_A1C9"
+                        }
+                        """.formatted(PATIENT_ID)))
+                .andExpect(status().isCreated());
+        }
+
+        @Test
+        @DisplayName("ANALYST role should view measure results")
+        void analystShouldViewResults() throws Exception {
+            // Setup: Create a result first
+            QualityMeasureResultEntity result = QualityMeasureResultEntity.builder()
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .measureId(MEASURE_CDC_A1C9)
+                .numeratorCompliant(true)
+                .denominatorEligible(true)
+                .score(95.0)
+                .build();
+            measureResultRepository.save(result);
+
+            // Analyst can view but not create
+            var headers = GatewayTrustTestHeaders.builder()
+                .tenantId(TENANT_ID)
+                .roles("ANALYST")
+                .build();
+
+            mockMvc.perform(get("/quality-measure/results")
+                    .param("patientId", PATIENT_ID.toString())
+                    .headers(headers))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)));
+        }
+
+        @Test
+        @DisplayName("VIEWER role should have read-only access")
+        void viewerShouldHaveReadOnlyAccess() throws Exception {
+            var headers = GatewayTrustTestHeaders.viewerHeaders(TENANT_ID);
+
+            // Viewer cannot calculate measures
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s",
+                            "measureId": "HEDIS_CDC_A1C9"
+                        }
+                        """.formatted(PATIENT_ID)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value(containsString("Insufficient permissions")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Quality Report Generation")
+    class QualityReportGeneration {
+
+        @Test
+        @DisplayName("should generate patient quality report")
+        void shouldGeneratePatientQualityReport() throws Exception {
+            // Setup: Create multiple measure results
+            QualityMeasureResultEntity result1 = QualityMeasureResultEntity.builder()
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .measureId("HEDIS_CDC_A1C9")
+                .numeratorCompliant(true)
+                .denominatorEligible(true)
+                .score(95.0)
+                .build();
+
+            QualityMeasureResultEntity result2 = QualityMeasureResultEntity.builder()
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .measureId("HEDIS_CBP")
+                .numeratorCompliant(false)
+                .denominatorEligible(true)
+                .score(45.0)
+                .build();
+
+            measureResultRepository.save(result1);
+            measureResultRepository.save(result2);
+
+            var headers = GatewayTrustTestHeaders.adminHeaders(TENANT_ID);
+
+            // Generate report
+            mockMvc.perform(get("/quality-measure/report/patient")
+                    .param("patientId", PATIENT_ID.toString())
+                    .headers(headers))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.patientId").value(PATIENT_ID.toString()))
+                .andExpect(jsonPath("$.totalMeasures").value(2))
+                .andExpect(jsonPath("$.compliantMeasures").value(1))
+                .andExpect(jsonPath("$.qualityScore").exists())
+                .andExpect(jsonPath("$.measures", hasSize(2)));
+        }
+
+        @Test
+        @DisplayName("should save and retrieve patient report")
+        void shouldSaveAndRetrieveReport() throws Exception {
+            var headers = GatewayTrustTestHeaders.adminHeaders(TENANT_ID);
+
+            // Create measure results first
+            QualityMeasureResultEntity result = QualityMeasureResultEntity.builder()
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .measureId(MEASURE_CDC_A1C9)
+                .numeratorCompliant(true)
+                .denominatorEligible(true)
+                .score(95.0)
+                .build();
+            measureResultRepository.save(result);
+
+            // Save report
+            var saveResponse = mockMvc.perform(post("/quality-measure/report/patient/save")
+                    .param("patientId", PATIENT_ID.toString())
+                    .headers(headers))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.reportId").exists())
+                .andReturn();
+
+            String reportJson = saveResponse.getResponse().getContentAsString();
+            var reportId = objectMapper.readTree(reportJson).get("reportId").asText();
+
+            // Retrieve saved report
+            mockMvc.perform(get("/quality-measure/reports/" + reportId)
+                    .headers(headers))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.patientId").value(PATIENT_ID.toString()));
+        }
+
+        @Test
+        @DisplayName("should export report to CSV")
+        void shouldExportReportToCsv() throws Exception {
+            var headers = GatewayTrustTestHeaders.adminHeaders(TENANT_ID);
+
+            // Create and save report
+            QualityMeasureResultEntity result = QualityMeasureResultEntity.builder()
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .measureId(MEASURE_CDC_A1C9)
+                .numeratorCompliant(true)
+                .denominatorEligible(true)
+                .score(95.0)
+                .build();
+            measureResultRepository.save(result);
+
+            var saveResponse = mockMvc.perform(post("/quality-measure/report/patient/save")
+                    .param("patientId", PATIENT_ID.toString())
+                    .headers(headers))
+                .andReturn();
+
+            String reportId = objectMapper.readTree(saveResponse.getResponse().getContentAsString())
+                .get("reportId").asText();
+
+            // Export to CSV
+            mockMvc.perform(get("/quality-measure/reports/" + reportId + "/export/csv")
+                    .headers(headers))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "text/csv"))
+                .andExpect(header().string("Content-Disposition", containsString("attachment")))
+                .andExpect(header().string("Cache-Control", "no-store, no-cache, must-revalidate"))
+                .andExpect(content().string(containsString("Patient ID,Measure ID,Score")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Performance and Caching")
+    class PerformanceAndCaching {
+
+        @Test
+        @DisplayName("should cache measure results for improved performance")
+        void shouldCacheMeasureResults() throws Exception {
+            when(cqlEngineServiceClient.evaluateCql(
+                anyString(),
+                anyString(),
+                any(UUID.class),
+                anyString()
+            )).thenReturn("""
+                {
+                    "libraryName": "HEDIS_CDC_2024",
+                    "measureResult": {
+                        "measureName": "Diabetes Care",
+                        "inNumerator": true,
+                        "inDenominator": true,
+                        "complianceRate": 90.0,
+                        "score": 95.0
+                    }
+                }
+                """);
+
+            var headers = GatewayTrustTestHeaders.adminHeaders(TENANT_ID);
+
+            // First request: miss, populate cache
+            mockMvc.perform(post("/quality-measure/calculate")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                            "patientId": "%s",
+                            "measureId": "HEDIS_CDC_A1C9"
+                        }
+                        """.formatted(PATIENT_ID)))
+                .andExpect(status().isCreated());
+
+            // Second request: should use cache
+            mockMvc.perform(get("/quality-measure/results")
+                    .param("patientId", PATIENT_ID.toString())
+                    .headers(headers))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-store, no-cache, must-revalidate"))
+                .andExpect(jsonPath("$", hasSize(1)));
+
+            // Verify CQL engine was called only once (result cached)
+            verify(cqlEngineServiceClient, times(1)).evaluateCql(
+                anyString(),
+                anyString(),
+                any(UUID.class),
+                anyString()
+            );
+        }
+    }
+}

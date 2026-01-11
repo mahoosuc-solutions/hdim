@@ -1,0 +1,320 @@
+name: Week 3 E2E Tests with Coverage
+
+on:
+  push:
+    branches: [main, develop, master]
+    paths:
+      - 'backend/modules/services/consent-service/**'
+      - 'backend/modules/services/qrda-export-service/**'
+      - 'backend/modules/services/hcc-service/**'
+      - '.github/workflows/week3-e2e-tests-with-coverage.yml'
+  pull_request:
+    branches: [main, develop, master]
+    paths:
+      - 'backend/modules/services/consent-service/**'
+      - 'backend/modules/services/qrda-export-service/**'
+      - 'backend/modules/services/hcc-service/**'
+  schedule:
+    # Run nightly at 3 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Test suite to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - consent
+          - qrda
+          - hcc
+
+env:
+  JAVA_VERSION: '21'
+  GRADLE_OPTS: "-Xmx2g -XX:MaxMetaspaceSize=512m"
+
+jobs:
+  # ========================================================================
+  # Patient Consent Workflow E2E Tests
+  # ========================================================================
+  consent-workflow-tests:
+    name: Patient Consent Workflow (30 tests)
+    runs-on: ubuntu-latest
+    if: |
+      github.event.inputs.test_suite == 'all' ||
+      github.event.inputs.test_suite == 'consent' ||
+      github.event.inputs.test_suite == ''
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: consent_test_db
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x backend/gradlew
+        working-directory: .
+
+      - name: Run Consent Workflow E2E Tests with Coverage
+        working-directory: backend
+        run: |
+          ./gradlew :modules:services:consent-service:test \
+            --tests "PatientConsentWorkflowE2ETest" \
+            --info \
+            jacocoTestReport
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/consent_test_db
+          SPRING_DATASOURCE_USERNAME: testuser
+          SPRING_DATASOURCE_PASSWORD: testpass
+
+      - name: Upload Coverage Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: consent-coverage-report
+          path: |
+            backend/modules/services/consent-service/build/reports/jacoco/test/html
+            backend/modules/services/consent-service/build/reports/jacoco/test/jacocoTestReport.xml
+          retention-days: 30
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: consent-test-results
+          path: backend/modules/services/consent-service/build/test-results/test
+          retention-days: 7
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Consent Workflow Test Results
+          path: backend/modules/services/consent-service/build/test-results/test/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+  # ========================================================================
+  # QRDA Export Validation E2E Tests
+  # ========================================================================
+  qrda-export-tests:
+    name: QRDA Export Validation (25 tests)
+    runs-on: ubuntu-latest
+    if: |
+      github.event.inputs.test_suite == 'all' ||
+      github.event.inputs.test_suite == 'qrda' ||
+      github.event.inputs.test_suite == ''
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: qrda_test_db
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x backend/gradlew
+
+      - name: Run QRDA Export E2E Tests with Coverage
+        working-directory: backend
+        run: |
+          ./gradlew :modules:services:qrda-export-service:test \
+            --tests "QrdaExportValidationE2ETest" \
+            --info \
+            jacocoTestReport
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/qrda_test_db
+          SPRING_DATASOURCE_USERNAME: testuser
+          SPRING_DATASOURCE_PASSWORD: testpass
+
+      - name: Upload Coverage Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: qrda-coverage-report
+          path: |
+            backend/modules/services/qrda-export-service/build/reports/jacoco/test/html
+            backend/modules/services/qrda-export-service/build/reports/jacoco/test/jacocoTestReport.xml
+          retention-days: 30
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qrda-test-results
+          path: backend/modules/services/qrda-export-service/build/test-results/test
+          retention-days: 7
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: QRDA Export Test Results
+          path: backend/modules/services/qrda-export-service/build/test-results/test/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+  # ========================================================================
+  # HCC Risk Adjustment E2E Tests
+  # ========================================================================
+  hcc-risk-adjustment-tests:
+    name: HCC Risk Adjustment (20 tests)
+    runs-on: ubuntu-latest
+    if: |
+      github.event.inputs.test_suite == 'all' ||
+      github.event.inputs.test_suite == 'hcc' ||
+      github.event.inputs.test_suite == ''
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: hcc_test_db
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x backend/gradlew
+
+      - name: Run HCC Risk Adjustment E2E Tests with Coverage
+        working-directory: backend
+        run: |
+          ./gradlew :modules:services:hcc-service:test \
+            --tests "HccRiskAdjustmentE2ETest" \
+            --info \
+            jacocoTestReport
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/hcc_test_db
+          SPRING_DATASOURCE_USERNAME: testuser
+          SPRING_DATASOURCE_PASSWORD: testpass
+
+      - name: Upload Coverage Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: hcc-coverage-report
+          path: |
+            backend/modules/services/hcc-service/build/reports/jacoco/test/html
+            backend/modules/services/hcc-service/build/reports/jacoco/test/jacocoTestReport.xml
+          retention-days: 30
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hcc-test-results
+          path: backend/modules/services/hcc-service/build/test-results/test
+          retention-days: 7
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: HCC Risk Adjustment Test Results
+          path: backend/modules/services/hcc-service/build/test-results/test/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+  # ========================================================================
+  # Aggregate Coverage Report
+  # ========================================================================
+  aggregate-coverage:
+    name: Aggregate Coverage Report
+    needs: [consent-workflow-tests, qrda-export-tests, hcc-risk-adjustment-tests]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*-coverage-report'
+          path: coverage-reports
+
+      - name: Generate Combined Coverage Report
+        run: |
+          echo "# Week 3 E2E Test Coverage Summary" > $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Tests | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Patient Consent Workflow | 30 | ![Coverage](https://img.shields.io/badge/coverage-check%20artifact-blue) |" >> $GITHUB_STEP_SUMMARY
+          echo "| QRDA Export Validation | 25 | ![Coverage](https://img.shields.io/badge/coverage-check%20artifact-blue) |" >> $GITHUB_STEP_SUMMARY
+          echo "| HCC Risk Adjustment | 20 | ![Coverage](https://img.shields.io/badge/coverage-check%20artifact-blue) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Week 3 Tests**: 75" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Coverage Details" >> $GITHUB_STEP_SUMMARY
+          echo "Coverage reports are available in the workflow artifacts." >> $GITHUB_STEP_SUMMARY
+
+  # ========================================================================
+  # Notification on Failure
+  # ========================================================================
+  notify-on-failure:
+    name: Notify on Test Failure
+    needs: [consent-workflow-tests, qrda-export-tests, hcc-risk-adjustment-tests]
+    runs-on: ubuntu-latest
+    if: failure() && (github.event_name == 'schedule' || github.ref == 'refs/heads/main')
+
+    steps:
+      - name: Send notification
+        run: |
+          echo "Week 3 E2E tests failed on scheduled run or main branch"
+          echo "Check the workflow run for details"

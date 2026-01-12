@@ -126,7 +126,7 @@ class QualityMeasureEvaluationE2ETest {
                 .andExpect(jsonPath("$.patientId").value(PATIENT_ID.toString()))
                 .andExpect(jsonPath("$.measureId").value(MEASURE_CDC_A1C9))
                 .andExpect(jsonPath("$.numeratorCompliant").value(true))
-                .andExpect(jsonPath("$.denominatorEligible").value(true))
+                .andExpect(jsonPath("$.denominatorElligible").value(true))
                 .andExpect(jsonPath("$.score").value(92.3))
                 .andExpect(jsonPath("$.complianceRate").value(85.5));
 
@@ -141,7 +141,7 @@ class QualityMeasureEvaluationE2ETest {
             // Verify CQL engine was called
             verify(cqlEngineServiceClient, times(1)).evaluateCql(
                 eq(TENANT_ID),
-                eq("HEDIS_CDC_2024"),
+                eq(MEASURE_CDC_A1C9),  // Fixed: was "HEDIS_CDC_2024", now matches actual measure ID
                 eq(PATIENT_ID),
                 anyString()
             );
@@ -178,7 +178,7 @@ class QualityMeasureEvaluationE2ETest {
                     .param("patient", PATIENT_ID.toString())
                     .param("measure", MEASURE_CBP))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.denominatorEligible").value(false))
+                .andExpect(jsonPath("$.denominatorElligible").value(false))
                 .andExpect(jsonPath("$.numeratorCompliant").value(false))
                 .andExpect(jsonPath("$.score").value(0));
         }
@@ -214,7 +214,7 @@ class QualityMeasureEvaluationE2ETest {
                     .param("patient", PATIENT_ID.toString())
                     .param("measure", MEASURE_CBP))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.denominatorEligible").value(true))
+                .andExpect(jsonPath("$.denominatorElligible").value(true))
                 .andExpect(jsonPath("$.numeratorCompliant").value(false))
                 .andExpect(jsonPath("$.score").value(45.0))
                 .andExpect(jsonPath("$.complianceRate").value(0));

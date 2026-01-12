@@ -651,6 +651,7 @@ class QualityMeasureEvaluationE2ETest {
 
             measureResultRepository.save(result1);
             measureResultRepository.save(result2);
+            measureResultRepository.flush(); // Ensure entities are persisted before HTTP request
 
             var headers = GatewayTrustTestHeaders.adminHeaders(TENANT_ID);
 

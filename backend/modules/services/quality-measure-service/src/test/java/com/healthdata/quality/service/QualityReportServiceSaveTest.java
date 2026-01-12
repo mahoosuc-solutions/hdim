@@ -64,8 +64,7 @@ class QualityReportServiceSaveTest {
     @BeforeEach
     void setUp() throws Exception {
         // reportService will be created with mocked dependencies
-        // Mock ObjectMapper to return valid JSON string
-        when(objectMapper.writeValueAsString(any())).thenReturn("{\"patientId\":\"test\",\"totalMeasures\":5}");
+        // Note: ObjectMapper mocking moved to individual tests that need it
     }
 
     @Test
@@ -76,6 +75,7 @@ class QualityReportServiceSaveTest {
         List<QualityMeasureResultEntity> results = createMockResults();
         MeasureCalculationService.QualityScore score = new MeasureCalculationService.QualityScore(5, 4, 80.0);
 
+        when(objectMapper.writeValueAsString(any())).thenReturn("{\"patientId\":\"test\",\"totalMeasures\":5}");
         when(calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID)).thenReturn(results);
         when(calculationService.getQualityScore(TENANT_ID, PATIENT_ID)).thenReturn(score);
         when(careGapServiceClient.getCareGapSummary(TENANT_ID, PATIENT_ID)).thenReturn("{\"gaps\": 1}");
@@ -105,6 +105,7 @@ class QualityReportServiceSaveTest {
         int year = 2024;
         List<QualityMeasureResultEntity> results = createMockResults();
 
+        when(objectMapper.writeValueAsString(any())).thenReturn("{\"patientId\":\"test\",\"totalMeasures\":5}");
         when(resultRepository.findByMeasureYear(TENANT_ID, year)).thenReturn(results);
         when(savedReportRepository.save(any(SavedReportEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -224,6 +225,7 @@ class QualityReportServiceSaveTest {
         List<QualityMeasureResultEntity> results = createMockResults();
         MeasureCalculationService.QualityScore score = new MeasureCalculationService.QualityScore(5, 4, 80.0);
 
+        when(objectMapper.writeValueAsString(any())).thenReturn("{\"patientId\":\"test\",\"totalMeasures\":5}");
         when(calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID)).thenReturn(results);
         when(calculationService.getQualityScore(TENANT_ID, PATIENT_ID)).thenReturn(score);
         when(careGapServiceClient.getCareGapSummary(TENANT_ID, PATIENT_ID))
@@ -247,6 +249,7 @@ class QualityReportServiceSaveTest {
         List<QualityMeasureResultEntity> results = createMockResults();
         MeasureCalculationService.QualityScore score = new MeasureCalculationService.QualityScore(5, 4, 80.0);
 
+        when(objectMapper.writeValueAsString(any())).thenReturn("{\"patientId\":\"test\",\"totalMeasures\":5}");
         when(calculationService.getPatientMeasureResults(TENANT_ID, PATIENT_ID)).thenReturn(results);
         when(calculationService.getQualityScore(TENANT_ID, PATIENT_ID)).thenReturn(score);
 

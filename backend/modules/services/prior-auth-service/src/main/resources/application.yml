@@ -10,15 +10,6 @@ spring:
     username: ${DB_USER:healthdata}
     password: ${DB_PASSWORD:healthdata}
     driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 20             # MEDIUM traffic tier (prior authorization workflow)
-      minimum-idle: 5
-      connection-timeout: 20000          # 20 seconds (fail fast)
-      idle-timeout: 300000               # 5 minutes (matches Docker/PostgreSQL TCP timeout)
-      max-lifetime: 1800000              # 30 minutes (CRITICAL: prevent stale connections)
-      keepalive-time: 240000             # 4 minutes (proactive keepalive before 5-minute timeout)
-      leak-detection-threshold: 60000    # 60 seconds (detect connection leaks)
-      validation-timeout: 5000           # 5 seconds (fail fast on dead connections)
 
   jpa:
     hibernate:
@@ -34,6 +25,13 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
     default-schema: prior_auth
 
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: MEDIUM  # Prior authorization: 10-100 req/sec, moderate workflow
+
+spring:
   data:
     redis:
       host: ${REDIS_HOST:localhost}

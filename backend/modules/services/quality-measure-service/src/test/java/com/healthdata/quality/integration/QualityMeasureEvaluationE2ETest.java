@@ -110,7 +110,7 @@ class QualityMeasureEvaluationE2ETest {
 
             when(cqlEngineServiceClient.evaluateCql(
                 eq(TENANT_ID),
-                eq("HEDIS_CDC_2024"),
+                eq(MEASURE_CDC_A1C9),  // Fixed: was "HEDIS_CDC_2024", now matches actual measure ID
                 eq(PATIENT_ID),
                 anyString()
             )).thenReturn(cqlResponse);
@@ -235,7 +235,7 @@ class QualityMeasureEvaluationE2ETest {
             // Mock different CQL responses for different measures
             when(cqlEngineServiceClient.evaluateCql(
                 eq(TENANT_ID),
-                eq("HEDIS_CDC_2024"),
+                eq("HEDIS_CDC_A1C9"),  // Fixed: was "HEDIS_CDC_2024", now matches actual measure ID
                 eq(PATIENT_ID),
                 anyString()
             )).thenReturn("""
@@ -253,7 +253,7 @@ class QualityMeasureEvaluationE2ETest {
 
             when(cqlEngineServiceClient.evaluateCql(
                 eq(TENANT_ID),
-                eq("HEDIS_CBP_2024"),
+                eq("HEDIS_CBP"),  // Fixed: was "HEDIS_CBP_2024", now matches actual measure ID
                 eq(PATIENT_ID),
                 anyString()
             )).thenReturn("""
@@ -294,6 +294,43 @@ class QualityMeasureEvaluationE2ETest {
         @DisplayName("should calculate overall quality score from multiple measures")
         void shouldCalculateOverallQualityScore() throws Exception {
             var headers = GatewayTrustTestHeaders.adminHeaders(TENANT_ID);
+
+            // Mock CQL responses for both measures
+            when(cqlEngineServiceClient.evaluateCql(
+                eq(TENANT_ID),
+                eq("HEDIS_CDC_A1C9"),
+                eq(PATIENT_ID),
+                anyString()
+            )).thenReturn("""
+                {
+                    "libraryName": "HEDIS_CDC_2024",
+                    "measureResult": {
+                        "measureName": "Comprehensive Diabetes Care",
+                        "inNumerator": true,
+                        "inDenominator": true,
+                        "complianceRate": 90.0,
+                        "score": 95.0
+                    }
+                }
+                """);
+
+            when(cqlEngineServiceClient.evaluateCql(
+                eq(TENANT_ID),
+                eq("HEDIS_CBP"),
+                eq(PATIENT_ID),
+                anyString()
+            )).thenReturn("""
+                {
+                    "libraryName": "HEDIS_CBP_2024",
+                    "measureResult": {
+                        "measureName": "Controlling Blood Pressure",
+                        "inNumerator": true,
+                        "inDenominator": true,
+                        "complianceRate": 100.0,
+                        "score": 100.0
+                    }
+                }
+                """);
 
             // Setup multiple measure results
             mockMvc.perform(post("/quality-measure/calculate")

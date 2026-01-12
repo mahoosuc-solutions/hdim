@@ -45,7 +45,7 @@ class MeasureAssignmentServiceTest {
     private PatientMeasureAssignmentRepository assignmentRepository;
 
     @Mock
-    private PatientMeasureEligibilityCacheRepository eligibilityCacheRepository;
+    private PatientMeasureEligibilityCacheRepository cacheRepository;
 
     @InjectMocks
     private MeasureAssignmentService measureAssignmentService;
@@ -187,7 +187,7 @@ class MeasureAssignmentServiceTest {
         assertThat(result.getMeasureId()).isEqualTo(measureId);
         verify(assignmentRepository).findActiveByPatientAndMeasure(tenantId, patientId, measureId);
         verify(assignmentRepository).save(any(PatientMeasureAssignmentEntity.class));
-        verify(eligibilityCacheRepository).invalidateByPatientAndMeasure(tenantId, patientId, measureId);
+        verify(cacheRepository).invalidateByPatientAndMeasure(tenantId, patientId, measureId);
     }
 
     @Test
@@ -205,7 +205,7 @@ class MeasureAssignmentServiceTest {
                 .hasMessageContaining("already assigned");
 
         verify(assignmentRepository, never()).save(any());
-        verify(eligibilityCacheRepository, never()).invalidateByPatientAndMeasure(any(), any(), any());
+        verify(cacheRepository, never()).invalidateByPatientAndMeasure(any(), any(), any());
     }
 
     // ========================================
@@ -222,7 +222,7 @@ class MeasureAssignmentServiceTest {
 
         when(assignmentRepository.findActiveByPatientAndMeasure(eq(tenantId), eq(patientId), any()))
                 .thenReturn(Optional.empty());
-        when(assignmentRepository.save(any(PatientMeasureAssignmentEntity.class)))
+        when(assignmentRepository.saveAll(anyList()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
@@ -234,7 +234,7 @@ class MeasureAssignmentServiceTest {
         assertThat(result.get(0).getAutoAssigned()).isTrue();
         assertThat(result.get(1).getAutoAssigned()).isTrue();
         verify(assignmentRepository).saveAll(any());
-        verify(eligibilityCacheRepository, times(2)).invalidateByPatientAndMeasure(eq(tenantId), eq(patientId), any());
+        verify(cacheRepository, times(2)).invalidateByPatientAndMeasure(eq(tenantId), eq(patientId), any());
     }
 
     @Test
@@ -251,7 +251,7 @@ class MeasureAssignmentServiceTest {
         // measureId2 does not
         when(assignmentRepository.findActiveByPatientAndMeasure(tenantId, patientId, measureId2))
                 .thenReturn(Optional.empty());
-        when(assignmentRepository.save(any(PatientMeasureAssignmentEntity.class)))
+        when(assignmentRepository.saveAll(anyList()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
@@ -261,7 +261,7 @@ class MeasureAssignmentServiceTest {
         // Then
         assertThat(result).hasSize(1); // Only measureId2 assigned
         verify(assignmentRepository).saveAll(any());
-        verify(eligibilityCacheRepository, times(1)).invalidateByPatientAndMeasure(tenantId, patientId, measureId2);
+        verify(cacheRepository, times(1)).invalidateByPatientAndMeasure(tenantId, patientId, measureId2);
     }
 
     @Test
@@ -273,6 +273,8 @@ class MeasureAssignmentServiceTest {
 
         when(assignmentRepository.findActiveByPatientAndMeasure(tenantId, patientId, measureId1))
                 .thenReturn(Optional.of(testAssignment));
+        when(assignmentRepository.saveAll(anyList()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
         List<PatientMeasureAssignmentEntity> result = measureAssignmentService.autoAssignMeasures(
@@ -280,8 +282,8 @@ class MeasureAssignmentServiceTest {
 
         // Then
         assertThat(result).isEmpty();
-        verify(assignmentRepository, never()).saveAll(any());
-        verify(eligibilityCacheRepository, never()).invalidateByPatientAndMeasure(any(), any(), any());
+        verify(assignmentRepository).saveAll(argThat(list -> ((List<?>) list).isEmpty())); // Called with empty list
+        verify(cacheRepository, never()).invalidateByPatientAndMeasure(any(), any(), any());
     }
 
     // ========================================
@@ -309,7 +311,7 @@ class MeasureAssignmentServiceTest {
         assertThat(result.getEffectiveUntil()).isEqualTo(LocalDate.now());
         assertThat(result.getUpdatedAt()).isNotNull();
         verify(assignmentRepository).save(testAssignment);
-        verify(eligibilityCacheRepository).invalidateByPatientAndMeasure(tenantId, patientId, measureId);
+        verify(cacheRepository).invalidateByPatientAndMeasure(tenantId, patientId, measureId);
     }
 
     @Test

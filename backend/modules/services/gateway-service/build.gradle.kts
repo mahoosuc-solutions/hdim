@@ -6,6 +6,8 @@ plugins {
 
 dependencies {
     implementation(project(":modules:shared:infrastructure:gateway-core"))
+    implementation(project(":modules:shared:infrastructure:persistence"))
+    implementation(project(":modules:shared:infrastructure:database-config"))
 
     // Testing
     testImplementation(project(":platform:test-fixtures"))

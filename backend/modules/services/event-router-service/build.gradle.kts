@@ -19,6 +19,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
+    // Shared infrastructure
+    implementation(project(":modules:shared:infrastructure:persistence"))
+    implementation(project(":modules:shared:infrastructure:database-config"))
+
     // Kafka
     implementation("org.springframework.kafka:spring-kafka")
 

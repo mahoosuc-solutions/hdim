@@ -408,7 +408,7 @@ class PatientMeasureAssignmentRepositoryTest {
             boolean autoAssigned) {
 
         PatientMeasureAssignmentEntity assignment = new PatientMeasureAssignmentEntity();
-        assignment.setId(UUID.randomUUID());
+        // Don't set ID - let JPA generate it via @GeneratedValue
         assignment.setTenantId(tenantId);
         assignment.setPatientId(patientId);
         assignment.setMeasureId(measureId);

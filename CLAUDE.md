@@ -1243,7 +1243,10 @@ cd backend
 
 ## Getting Help
 
-- **Distributed tracing**: See `backend/docs/DISTRIBUTED_TRACING_GUIDE.md` ⭐ **NEW**
+- **Database connection pooling**: See `backend/modules/shared/infrastructure/database-config/README.md` ⭐ **NEW**
+- **Database-config adoption guide**: See `backend/docs/DATABASE_CONFIG_ADOPTION_GUIDE.md` ⭐ **NEW**
+- **Database-config pilot validation**: See `backend/docs/DATABASE_CONFIG_PILOT_VALIDATION.md` ⭐ **NEW**
+- **Distributed tracing**: See `backend/docs/DISTRIBUTED_TRACING_GUIDE.md`
 - **Database migration runbook**: See `backend/docs/DATABASE_MIGRATION_RUNBOOK.md`
 - **Database architecture**: See `DATABASE_ARCHITECTURE_MIGRATION_PLAN.md`
 - **Database migration status**: See `backend/docs/DATABASE_MIGRATION_STATUS.md`
@@ -1258,5 +1261,5 @@ cd backend
 
 ---
 
-*Last Updated: January 11, 2026*
-*Version: 1.5* - Phase 3 & 4 complete: Database performance optimization and distributed tracing implementation
+*Last Updated: January 12, 2026*
+*Version: 1.6* - Database-config module implemented with 3 pilot service migrations (11% complete)

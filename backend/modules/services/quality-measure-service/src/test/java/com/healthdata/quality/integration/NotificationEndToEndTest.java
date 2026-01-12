@@ -11,6 +11,7 @@ import com.healthdata.quality.service.notification.MockNotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -237,6 +238,7 @@ class NotificationEndToEndTest {
     // ==================== MENTAL HEALTH NOTIFICATIONS ====================
 
     @Test
+    @Timeout(300) // 5 minutes timeout for E2E test with async notifications
     @DisplayName("E2E Test 4: Severe PHQ-9 (score ≥20) → WebSocket + Email + SMS")
     void testSeverePHQ9Assessment_TriggersAllChannels() {
         // Given: Severe PHQ-9 assessment (score = 25)
@@ -485,6 +487,7 @@ class NotificationEndToEndTest {
     }
 
     @Test
+    @Timeout(300) // 5 minutes timeout for concurrent notification test
     @DisplayName("E2E Test 12: Concurrent notifications don't interfere")
     void testConcurrentNotifications() throws InterruptedException {
         // Given: Multiple threads submitting assessments

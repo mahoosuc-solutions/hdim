@@ -1,6 +1,7 @@
 package com.healthdata.quality.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import com.healthdata.quality.client.CqlEngineServiceClient;
 import com.healthdata.quality.client.PatientServiceClient;
 import com.healthdata.quality.persistence.QualityMeasureResultEntity;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -52,6 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
+@EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @ActiveProfiles("test")
 @Testcontainers
 @Transactional

@@ -419,6 +419,11 @@ class PatientMeasureAssignmentRepositoryTest {
         assignment.setAutoAssigned(autoAssigned);
         assignment.setCreatedBy(UUID.randomUUID());
         assignment.setCreatedAt(java.time.OffsetDateTime.now());
+
+        // Persist entity to database
+        entityManager.persist(assignment);
+        entityManager.flush();
+
         return assignment;
     }
 }

@@ -120,13 +120,8 @@ class QualityMeasureEvaluationE2ETest {
             // Act: Calculate measure
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s",
-                            "measureId": "%s"
-                        }
-                        """.formatted(PATIENT_ID, MEASURE_CDC_A1C9)))
+                    .param("patient", PATIENT_ID.toString())
+                    .param("measure", MEASURE_CDC_A1C9))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.patientId").value(PATIENT_ID.toString()))
                 .andExpect(jsonPath("$.measureId").value(MEASURE_CDC_A1C9))
@@ -180,13 +175,8 @@ class QualityMeasureEvaluationE2ETest {
 
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s",
-                            "measureId": "%s"
-                        }
-                        """.formatted(PATIENT_ID, MEASURE_CBP)))
+                    .param("patient", PATIENT_ID.toString())
+                    .param("measure", MEASURE_CBP))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.denominatorEligible").value(false))
                 .andExpect(jsonPath("$.numeratorCompliant").value(false))
@@ -221,13 +211,8 @@ class QualityMeasureEvaluationE2ETest {
 
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s",
-                            "measureId": "%s"
-                        }
-                        """.formatted(PATIENT_ID, MEASURE_CBP)))
+                    .param("patient", PATIENT_ID.toString())
+                    .param("measure", MEASURE_CBP))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.denominatorEligible").value(true))
                 .andExpect(jsonPath("$.numeratorCompliant").value(false))
@@ -287,25 +272,15 @@ class QualityMeasureEvaluationE2ETest {
             // Calculate first measure
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s",
-                            "measureId": "HEDIS_CDC_A1C9"
-                        }
-                        """.formatted(PATIENT_ID)))
+                    .param("patient", PATIENT_ID.toString())
+                    .param("measure", "HEDIS_CDC_A1C9"))
                 .andExpect(status().isCreated());
 
             // Calculate second measure
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s",
-                            "measureId": "HEDIS_CBP"
-                        }
-                        """.formatted(PATIENT_ID)))
+                    .param("patient", PATIENT_ID.toString())
+                    .param("measure", "HEDIS_CBP"))
                 .andExpect(status().isCreated());
 
             // Verify both measures persisted
@@ -323,24 +298,14 @@ class QualityMeasureEvaluationE2ETest {
             // Setup multiple measure results
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s",
-                            "measureId": "HEDIS_CDC_A1C9"
-                        }
-                        """.formatted(PATIENT_ID)))
+                    .param("patient", PATIENT_ID.toString())
+                    .param("measure", "HEDIS_CDC_A1C9"))
                 .andExpect(status().isCreated());
 
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s",
-                            "measureId": "HEDIS_CBP"
-                        }
-                        """.formatted(PATIENT_ID)))
+                    .param("patient", PATIENT_ID.toString())
+                    .param("measure", "HEDIS_CBP"))
                 .andExpect(status().isCreated());
 
             // Get quality score
@@ -387,26 +352,16 @@ class QualityMeasureEvaluationE2ETest {
             var headers1 = GatewayTrustTestHeaders.adminHeaders(tenant1);
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers1)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s",
-                            "measureId": "HEDIS_CDC_A1C9"
-                        }
-                        """.formatted(PATIENT_ID)))
+                    .param("patient", PATIENT_ID.toString())
+                    .param("measure", "HEDIS_CDC_A1C9"))
                 .andExpect(status().isCreated());
 
             // Calculate for tenant 2 (same patient ID, different tenant)
             var headers2 = GatewayTrustTestHeaders.adminHeaders(tenant2);
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers2)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s",
-                            "measureId": "HEDIS_CDC_A1C9"
-                        }
-                        """.formatted(PATIENT_ID)))
+                    .param("patient", PATIENT_ID.toString())
+                    .param("measure", "HEDIS_CDC_A1C9"))
                 .andExpect(status().isCreated());
 
             // Verify tenant 1 sees only their results
@@ -444,14 +399,10 @@ class QualityMeasureEvaluationE2ETest {
 
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "measureId": "HEDIS_CDC_A1C9"
-                        }
-                        """))
+                    .param("measure", "HEDIS_CDC_A1C9"))
+                    // Missing patient parameter
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("patientId")));
+                .andExpect(jsonPath("$.message").value(containsString("Patient")));
         }
 
         @Test
@@ -461,14 +412,10 @@ class QualityMeasureEvaluationE2ETest {
 
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s"
-                        }
-                        """.formatted(PATIENT_ID)))
+                    .param("patient", PATIENT_ID.toString()))
+                    // Missing measure parameter
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("measureId")));
+                .andExpect(jsonPath("$.message").value(containsString("Measure")));
         }
 
         @Test
@@ -485,13 +432,8 @@ class QualityMeasureEvaluationE2ETest {
 
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s",
-                            "measureId": "HEDIS_CDC_A1C9"
-                        }
-                        """.formatted(PATIENT_ID)))
+                    .param("patient", PATIENT_ID.toString())
+                    .param("measure", "HEDIS_CDC_A1C9"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").value(containsString("calculation failed")));
 
@@ -509,13 +451,8 @@ class QualityMeasureEvaluationE2ETest {
 
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s",
-                            "measureId": "HEDIS_CDC_A1C9"
-                        }
-                        """.formatted(PATIENT_ID)))
+                    .param("patient", PATIENT_ID.toString())
+                    .param("measure", "HEDIS_CDC_A1C9"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(containsString("Tenant")));
         }
@@ -534,13 +471,8 @@ class QualityMeasureEvaluationE2ETest {
 
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s",
-                            "measureId": "HEDIS_CDC_A1C9"
-                        }
-                        """.formatted(PATIENT_ID)))
+                    .param("patient", PATIENT_ID.toString())
+                    .param("measure", "HEDIS_CDC_A1C9"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").exists());
         }
@@ -575,13 +507,8 @@ class QualityMeasureEvaluationE2ETest {
 
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s",
-                            "measureId": "HEDIS_CDC_A1C9"
-                        }
-                        """.formatted(PATIENT_ID)))
+                    .param("patient", PATIENT_ID.toString())
+                    .param("measure", "HEDIS_CDC_A1C9"))
                 .andExpect(status().isCreated());
         }
 
@@ -620,13 +547,8 @@ class QualityMeasureEvaluationE2ETest {
             // Viewer cannot calculate measures
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s",
-                            "measureId": "HEDIS_CDC_A1C9"
-                        }
-                        """.formatted(PATIENT_ID)))
+                    .param("patient", PATIENT_ID.toString())
+                    .param("measure", "HEDIS_CDC_A1C9"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message").value(containsString("Insufficient permissions")));
         }
@@ -774,13 +696,8 @@ class QualityMeasureEvaluationE2ETest {
             // First request: miss, populate cache
             mockMvc.perform(post("/quality-measure/calculate")
                     .headers(headers)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                            "patientId": "%s",
-                            "measureId": "HEDIS_CDC_A1C9"
-                        }
-                        """.formatted(PATIENT_ID)))
+                    .param("patient", PATIENT_ID.toString())
+                    .param("measure", "HEDIS_CDC_A1C9"))
                 .andExpect(status().isCreated());
 
             // Second request: should use cache

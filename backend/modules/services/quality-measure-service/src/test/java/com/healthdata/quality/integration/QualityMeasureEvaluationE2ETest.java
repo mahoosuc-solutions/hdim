@@ -347,7 +347,7 @@ class QualityMeasureEvaluationE2ETest {
 
             // Get quality score
             mockMvc.perform(get("/quality-measure/score")
-                    .param("patientId", PATIENT_ID.toString())
+                    .param("patient", PATIENT_ID.toString())
                     .headers(headers))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.patientId").value(PATIENT_ID.toString()))
@@ -403,7 +403,7 @@ class QualityMeasureEvaluationE2ETest {
 
             // Verify tenant 1 sees only their results
             mockMvc.perform(get("/quality-measure/results")
-                    .param("patientId", PATIENT_ID.toString())
+                    .param("patient", PATIENT_ID.toString())
                     .headers(headers1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
@@ -411,7 +411,7 @@ class QualityMeasureEvaluationE2ETest {
 
             // Verify tenant 2 sees only their results
             mockMvc.perform(get("/quality-measure/results")
-                    .param("patientId", PATIENT_ID.toString())
+                    .param("patient", PATIENT_ID.toString())
                     .headers(headers2))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
@@ -570,7 +570,7 @@ class QualityMeasureEvaluationE2ETest {
                 .build();
 
             mockMvc.perform(get("/quality-measure/results")
-                    .param("patientId", PATIENT_ID.toString())
+                    .param("patient", PATIENT_ID.toString())
                     .headers(headers))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)));
@@ -624,7 +624,7 @@ class QualityMeasureEvaluationE2ETest {
 
             // Generate report
             mockMvc.perform(get("/quality-measure/report/patient")
-                    .param("patientId", PATIENT_ID.toString())
+                    .param("patient", PATIENT_ID.toString())
                     .headers(headers))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.patientId").value(PATIENT_ID.toString()))
@@ -652,7 +652,7 @@ class QualityMeasureEvaluationE2ETest {
 
             // Save report
             var saveResponse = mockMvc.perform(post("/quality-measure/report/patient/save")
-                    .param("patientId", PATIENT_ID.toString())
+                    .param("patient", PATIENT_ID.toString())
                     .headers(headers))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.reportId").exists())
@@ -685,7 +685,7 @@ class QualityMeasureEvaluationE2ETest {
             measureResultRepository.save(result);
 
             var saveResponse = mockMvc.perform(post("/quality-measure/report/patient/save")
-                    .param("patientId", PATIENT_ID.toString())
+                    .param("patient", PATIENT_ID.toString())
                     .headers(headers))
                 .andReturn();
 
@@ -739,7 +739,7 @@ class QualityMeasureEvaluationE2ETest {
 
             // Second request: should use cache
             mockMvc.perform(get("/quality-measure/results")
-                    .param("patientId", PATIENT_ID.toString())
+                    .param("patient", PATIENT_ID.toString())
                     .headers(headers))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "no-store, no-cache, must-revalidate"))

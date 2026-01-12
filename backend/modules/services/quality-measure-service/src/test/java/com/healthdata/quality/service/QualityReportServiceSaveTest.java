@@ -51,6 +51,9 @@ class QualityReportServiceSaveTest {
     @Mock
     private MeasureCalculationService calculationService;
 
+    @Mock
+    private ObjectMapper objectMapper;
+
     @InjectMocks
     private QualityReportService reportService;
 
@@ -58,11 +61,11 @@ class QualityReportServiceSaveTest {
     private static final UUID PATIENT_ID = UUID.randomUUID();
     private static final String CREATED_BY = "test-user";
 
-    private ObjectMapper objectMapper = new ObjectMapper();
-
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         // reportService will be created with mocked dependencies
+        // Mock ObjectMapper to return valid JSON string
+        when(objectMapper.writeValueAsString(any())).thenReturn("{\"patientId\":\"test\",\"totalMeasures\":5}");
     }
 
     @Test
@@ -257,8 +260,8 @@ class QualityReportServiceSaveTest {
         SavedReportEntity captured = captor.getValue();
         assertThat(captured.getReportData()).isNotNull();
 
-        // Verify it's valid JSON
-        objectMapper.readTree(captured.getReportData());
+        // Verify it's valid JSON (use real ObjectMapper for parsing)
+        new ObjectMapper().readTree(captured.getReportData());
     }
 
     @Test

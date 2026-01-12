@@ -11,16 +11,12 @@ spring:
     username: ${DB_USERNAME:healthdata}
     password: ${DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
+
+# HealthData Database Configuration
+healthdata:
+  database:
     hikari:
-      maximum-pool-size: 20              # MEDIUM traffic tier (CDR/HL7 processor)
-      minimum-idle: 5
-      connection-timeout: 20000          # 20 seconds (fail fast)
-      idle-timeout: 300000               # 5 minutes (matches Docker/PostgreSQL TCP timeout)
-      max-lifetime: 1800000              # 30 minutes (CRITICAL: prevent stale connections)
-      keepalive-time: 240000             # 4 minutes (proactive keepalive before 5-minute timeout)
-      leak-detection-threshold: 60000    # 60 seconds (detect connection leaks)
-      validation-timeout: 5000           # 5 seconds (fail fast on dead connections)
-      pool-name: HikariPool-CDR
+      traffic-tier: MEDIUM  # CDR/HL7 processor: 10-100 req/sec, clinical data repository
 
   # JPA Configuration
   jpa:

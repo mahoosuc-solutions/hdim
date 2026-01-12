@@ -18,6 +18,7 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:security"))
     implementation(project(":modules:shared:infrastructure:audit"))
     implementation(project(":modules:shared:infrastructure:persistence"))
+    implementation(project(":modules:shared:infrastructure:database-config"))
 
     // Spring Boot
     implementation(libs.bundles.spring.boot.web)

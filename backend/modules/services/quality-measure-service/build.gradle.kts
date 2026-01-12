@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.spring.dependency.management)
     java
+    jacoco
 }
 
 dependencyManagement {
@@ -106,6 +107,44 @@ tasks.withType<Test> {
     systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
     systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
     systemProperty("spring.profiles.active", "test")
+
+    // Enable JaCoCo test coverage
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+
+    // Configure coverage thresholds (for information, not enforced)
+    doLast {
+        println("JaCoCo coverage report generated at: build/reports/jacoco/test/html/index.html")
+        println("Target coverage: ≥70% overall, ≥80% service layer")
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.70".toBigDecimal()  // 70% minimum coverage target
+            }
+        }
+        rule {
+            element = "PACKAGE"
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.80".toBigDecimal()  // 80% for service layer
+            }
+            includes = listOf("com.healthdata.quality.service.*")
+        }
+    }
 }
 
 dependencyManagement {

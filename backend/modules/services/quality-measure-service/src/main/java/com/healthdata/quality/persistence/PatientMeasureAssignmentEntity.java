@@ -66,6 +66,9 @@ public class PatientMeasureAssignmentEntity implements Serializable {
     @Column(name = "assigned_by")
     private UUID assignedBy;
 
+    @Column(name = "assigned_at")
+    private OffsetDateTime assignedAt;
+
     @Column(name = "assignment_reason", columnDefinition = "TEXT")
     private String assignmentReason;
 
@@ -88,6 +91,16 @@ public class PatientMeasureAssignmentEntity implements Serializable {
     @Column(name = "auto_assigned", nullable = false)
     @Builder.Default
     private Boolean autoAssigned = false;
+
+    // Deactivation Fields
+    @Column(name = "deactivated_by")
+    private UUID deactivatedBy;
+
+    @Column(name = "deactivated_at")
+    private OffsetDateTime deactivatedAt;
+
+    @Column(name = "deactivation_reason", columnDefinition = "TEXT")
+    private String deactivationReason;
 
     // Audit Fields
     @Column(name = "created_by", nullable = false)

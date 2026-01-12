@@ -149,7 +149,7 @@ class PatientMeasureAssignmentRepositoryTest {
 
         // Then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).isActive()).isTrue();
+        assertThat(result.get(0).getActive()).isTrue();
         assertThat(result.get(0).getMeasureId()).isEqualTo(measure1);
     }
 
@@ -190,7 +190,7 @@ class PatientMeasureAssignmentRepositoryTest {
         // Then
         assertThat(result).isPresent();
         assertThat(result.get().getMeasureId()).isEqualTo(measure1);
-        assertThat(result.get().isActive()).isTrue();
+        assertThat(result.get().getActive()).isTrue();
     }
 
     @Test
@@ -223,14 +223,14 @@ class PatientMeasureAssignmentRepositoryTest {
         // Assignment effective now
         PatientMeasureAssignmentEntity currentAssignment = createAssignment(
                 tenant1, patient1, measure1, true, false);
-        currentAssignment.setEffectiveStartDate(yesterday);
-        currentAssignment.setEffectiveEndDate(tomorrow);
+        currentAssignment.setEffectiveFrom(yesterday);
+        currentAssignment.setEffectiveUntil(tomorrow);
         entityManager.persist(currentAssignment);
 
         // Assignment not yet effective
         PatientMeasureAssignmentEntity futureAssignment = createAssignment(
                 tenant1, patient1, measure2, true, false);
-        futureAssignment.setEffectiveStartDate(tomorrow);
+        futureAssignment.setEffectiveFrom(tomorrow);
         entityManager.persist(futureAssignment);
 
         entityManager.flush();
@@ -251,8 +251,8 @@ class PatientMeasureAssignmentRepositoryTest {
         LocalDate today = LocalDate.now();
         PatientMeasureAssignmentEntity assignment = createAssignment(
                 tenant1, patient1, measure1, true, false);
-        assignment.setEffectiveStartDate(today.minusDays(30));
-        assignment.setEffectiveEndDate(null); // No end date
+        assignment.setEffectiveFrom(today.minusDays(30));
+        assignment.setEffectiveUntil(null); // No end date
         entityManager.persistAndFlush(assignment);
 
         // When
@@ -270,8 +270,8 @@ class PatientMeasureAssignmentRepositoryTest {
         LocalDate today = LocalDate.now();
         PatientMeasureAssignmentEntity expiredAssignment = createAssignment(
                 tenant1, patient1, measure1, true, false);
-        expiredAssignment.setEffectiveStartDate(today.minusDays(60));
-        expiredAssignment.setEffectiveEndDate(today.minusDays(1)); // Expired yesterday
+        expiredAssignment.setEffectiveFrom(today.minusDays(60));
+        expiredAssignment.setEffectiveUntil(today.minusDays(1)); // Expired yesterday
         entityManager.persistAndFlush(expiredAssignment);
 
         // When
@@ -300,7 +300,7 @@ class PatientMeasureAssignmentRepositoryTest {
 
         // Then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).isAutoAssigned()).isTrue();
+        assertThat(result.get(0).getAutoAssigned()).isTrue();
     }
 
     @Test
@@ -317,7 +317,7 @@ class PatientMeasureAssignmentRepositoryTest {
 
         // Then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).isAutoAssigned()).isFalse();
+        assertThat(result.get(0).getAutoAssigned()).isFalse();
     }
 
     @Test
@@ -334,7 +334,7 @@ class PatientMeasureAssignmentRepositoryTest {
 
         // Then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).isActive()).isTrue();
+        assertThat(result.get(0).getActive()).isTrue();
     }
 
     // ========================================
@@ -403,8 +403,8 @@ class PatientMeasureAssignmentRepositoryTest {
         assignment.setPatientId(patientId);
         assignment.setMeasureId(measureId);
         assignment.setAssignedBy(UUID.randomUUID());
-        assignment.setAssignedAt(Instant.now());
-        assignment.setEffectiveStartDate(LocalDate.now());
+        assignment.setAssignedAt(java.time.OffsetDateTime.now());
+        assignment.setEffectiveFrom(LocalDate.now());
         assignment.setActive(active);
         assignment.setAutoAssigned(autoAssigned);
         return entityManager.persist(assignment);

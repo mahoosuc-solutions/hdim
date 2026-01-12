@@ -19,8 +19,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 
@@ -147,6 +149,47 @@ public class TracingAutoConfiguration {
             .setTracerProvider(tracerProvider)
             .setPropagators(contextPropagators)
             .build();
+    }
+
+    /**
+     * RestTemplate customizer to add trace propagation interceptor.
+     * Automatically applied to all RestTemplate beans in the application.
+     */
+    @Bean
+    @ConditionalOnClass(RestTemplate.class)
+    @ConditionalOnMissingBean(RestTemplateTraceInterceptor.class)
+    public RestTemplateCustomizer restTemplateTracingCustomizer(OpenTelemetry openTelemetry) {
+        logger.info("Configuring RestTemplate trace propagation interceptor");
+        RestTemplateTraceInterceptor interceptor = new RestTemplateTraceInterceptor(openTelemetry);
+        return restTemplate -> restTemplate.getInterceptors().add(interceptor);
+    }
+
+    /**
+     * Kafka producer trace interceptor bean.
+     * Configuration note: Services must add interceptor.classes to Kafka producer config.
+     */
+    @Bean
+    @ConditionalOnClass(name = "org.apache.kafka.clients.producer.ProducerInterceptor")
+    @ConditionalOnMissingBean(KafkaProducerTraceInterceptor.class)
+    public KafkaProducerTraceInterceptor kafkaProducerTraceInterceptor(OpenTelemetry openTelemetry) {
+        logger.info("Configuring Kafka producer trace propagation interceptor");
+        KafkaProducerTraceInterceptor interceptor = new KafkaProducerTraceInterceptor();
+        interceptor.setOpenTelemetry(openTelemetry);
+        return interceptor;
+    }
+
+    /**
+     * Kafka consumer trace interceptor bean.
+     * Configuration note: Services must add interceptor.classes to Kafka consumer config.
+     */
+    @Bean
+    @ConditionalOnClass(name = "org.apache.kafka.clients.consumer.ConsumerInterceptor")
+    @ConditionalOnMissingBean(KafkaConsumerTraceInterceptor.class)
+    public KafkaConsumerTraceInterceptor kafkaConsumerTraceInterceptor(OpenTelemetry openTelemetry) {
+        logger.info("Configuring Kafka consumer trace propagation interceptor");
+        KafkaConsumerTraceInterceptor interceptor = new KafkaConsumerTraceInterceptor();
+        interceptor.setOpenTelemetry(openTelemetry);
+        return interceptor;
     }
 
     private String getEnvironment() {

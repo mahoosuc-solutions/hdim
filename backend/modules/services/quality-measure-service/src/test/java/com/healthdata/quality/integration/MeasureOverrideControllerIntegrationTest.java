@@ -4,14 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.quality.controller.MeasureOverrideController;
 import com.healthdata.quality.persistence.PatientMeasureOverrideEntity;
 import com.healthdata.quality.service.MeasureOverrideService;
+import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -48,7 +52,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - HTTP status codes
  * - Error handling
  */
-@WebMvcTest(MeasureOverrideController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+@EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
+@ActiveProfiles("test")
 @DisplayName("MeasureOverrideController Integration Tests")
 class MeasureOverrideControllerIntegrationTest {
 

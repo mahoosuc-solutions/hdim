@@ -51,42 +51,43 @@ No high-priority issues have been identified in v1.2.0 at the time of release.
 
 ## Medium Priority Issues
 
-### 1. Test Package Import Inconsistency
+### 1. Test Package Import Inconsistency ✅ RESOLVED
 
 **Issue ID:** HDIM-1201
-**Severity:** Medium
+**Severity:** Medium → **RESOLVED**
 **Component:** quality-measure-service (tests)
-**Affects:** Test execution, CI/CD pipelines
+**Resolution:** Fixed in commit `ddb64793` (January 11, 2026)
 
 **Description:**
 
-Several existing test files in quality-measure-service use incorrect package imports:
-- Importing from `com.healthdata.quality.domain.repository.*`
-- Correct package is `com.healthdata.quality.persistence.*`
+Several existing test files in quality-measure-service used incorrect package imports:
+- ❌ Was importing from `com.healthdata.quality.domain.repository.*`
+- ✅ Now importing from `com.healthdata.quality.persistence.*`
 
-**Affected Files:**
+**Fixed Files:**
 ```
 backend/modules/services/quality-measure-service/src/test/java/com/healthdata/quality/integration/
-├── QualityMeasureEvaluationE2ETest.java
-├── PopulationBatchCalculationE2ETest.java
-└── (potentially other E2E tests)
+├── QualityMeasureEvaluationE2ETest.java ✅
+├── PopulationBatchCalculationE2ETest.java ✅
 ```
 
-**Impact:**
-- Test compilation failures when running `./gradlew :modules:services:quality-measure-service:test`
-- CI/CD test execution failures
-- False negative test results (tests not running)
-
-**Workaround:**
-
-Manually fix imports before running tests:
+**Verification:**
 ```bash
-# Find and replace across all test files
-cd backend/modules/services/quality-measure-service/src/test/java
-find . -name "*.java" -exec sed -i 's/domain\.repository/persistence/g' {} \;
+# Verify no incorrect imports remain
+grep -r "domain\.repository" backend/modules/services/quality-measure-service/src/test/
+# Returns: No results ✅
+
+# Verify correct imports present
+grep "persistence\." backend/modules/services/quality-measure-service/src/test/java/com/healthdata/quality/integration/QualityMeasureEvaluationE2ETest.java
+# Returns: import com.healthdata.quality.persistence.* ✅
 ```
 
-**Planned Fix:** v1.2.1 (February 2026)
+**Impact After Fix:**
+- ✅ All tests compile successfully (BUILD SUCCESSFUL)
+- ✅ CI/CD pipelines unblocked
+- ✅ Test execution working correctly
+
+**Status:** CLOSED (v1.2.0)
 
 ---
 
@@ -242,25 +243,37 @@ OpenAPI 3.0 specifications have not been generated for v1.2.0 endpoints:
 - Measure Override API (8 endpoints)
 - Other services' v1.2.0 changes
 
+**Root Cause Analysis (January 11, 2026):**
+- ✅ springdoc-openapi dependency IS included in all services
+- ❌ SpringDoc is NOT configured in application.yml
+- ❌ OpenAPI endpoints return 404 errors
+- Configuration required:
+  ```yaml
+  springdoc:
+    api-docs:
+      enabled: true
+      path: /v3/api-docs
+    swagger-ui:
+      enabled: true
+      path: /swagger-ui.html
+  ```
+
 **Impact:**
 - No machine-readable API documentation
 - Manual API exploration required
 - Swagger UI not available for new endpoints
+- **Services still function normally** - documentation-only impact
 
 **Workaround:**
 
-Generate at runtime:
-```bash
-# Start service
-docker compose up -d quality-measure-service
+Use Postman/Insomnia with manual endpoint testing, or reference:
+- API endpoint documentation in RELEASE_NOTES_v1.2.0.md
+- Controller source code for request/response schemas
 
-# Fetch OpenAPI spec
-curl http://localhost:8087/quality-measure/v3/api-docs > openapi-quality-measure-v1.2.0.json
-```
-
-Or use Postman/Insomnia with manual endpoint testing.
-
-**Planned Fix:** v1.2.0 final release (included in Phase 2 documentation)
+**Planned Fix:** v1.2.1 (February 2026)
+- Add springdoc configuration to all 6 core services
+- Generate and publish OpenAPI specifications
+- Enable Swagger UI for interactive documentation
 
 ---
 
@@ -537,9 +550,9 @@ docker compose logs jaeger | grep -i "otlp\|error"
 **Target Release Date:** February 15, 2026
 
 **Fixes:**
-- [ ] HDIM-1201: Fix test package imports across all services
+- [x] HDIM-1201: Fix test package imports across all services ✅ **COMPLETED in v1.2.0**
 - [ ] HDIM-1204: Add E2E workflow tests for measure assignment and override
-- [ ] HDIM-1205: Generate and publish OpenAPI specifications
+- [ ] HDIM-1205: Generate and publish OpenAPI specifications (requires springdoc configuration)
 
 **Estimated Effort:** 1 week
 
@@ -591,6 +604,7 @@ If you encounter issues not listed in this document:
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-01-11 | Initial known issues documentation for v1.2.0 pre-release |
+| 1.1 | 2026-01-11 | Updated HDIM-1201 to RESOLVED status; Added root cause analysis for HDIM-1205 |
 
 ---
 

@@ -886,6 +886,7 @@ jobs:
 - [ ] Custom domain configured
 - [ ] Error tracking configured
 - [ ] Uptime monitoring active
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### 6.2 Content Validation
 
@@ -900,6 +901,7 @@ jobs:
 - [ ] Testimonials/case studies present
 - [ ] Pricing page accurate
 - [ ] Contact information correct
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### 6.3 Marketing Validation
 

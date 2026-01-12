@@ -449,6 +449,7 @@ Update components:
 6. [ ] Database replication healthy
 7. [ ] Cache hit rate normal
 8. [ ] All pods healthy and ready
+9. [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 ```
 
 ### Recovery Testing

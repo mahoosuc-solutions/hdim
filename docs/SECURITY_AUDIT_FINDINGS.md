@@ -612,6 +612,7 @@ Before production deployment, verify:
 - [ ] HTTPS enforced in production
 - [ ] Penetration testing completed
 - [ ] OWASP ZAP scan passed
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ---
 

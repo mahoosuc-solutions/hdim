@@ -642,6 +642,7 @@ ls -l demo-data-snapshots/
 - [ ] Bookmarks bar hidden
 - [ ] Demo user logged in
 - [ ] Test run through script completed
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### Recording Setup
 

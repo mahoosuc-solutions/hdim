@@ -26,6 +26,7 @@
 - [ ] Microphone tested for voiceover
 - [ ] Browser at 100% zoom, full screen
 - [ ] Close unnecessary tabs/notifications
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ---
 

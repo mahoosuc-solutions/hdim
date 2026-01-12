@@ -6,6 +6,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.metamodel.EntityType;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -77,8 +78,11 @@ class EntityMigrationValidationTest {
      *
      * When this test fails, it provides detailed error messages indicating exactly which
      * entity and column have the issue.
+     *
+     * Note: This test can take 3-4 minutes due to validating many entities.
      */
     @Test
+    @Timeout(300)  // 5 minutes timeout for comprehensive validation
     void validateAllEntitiesMatchDatabaseSchema() {
         // Get all entities from the persistence unit
         Set<EntityType<?>> entities = entityManagerFactory.getMetamodel().getEntities();

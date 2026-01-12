@@ -41,6 +41,9 @@ dependencies {
     // Spring Cloud OpenFeign for auth header forwarding interceptor
     compileOnly("org.springframework.cloud:spring-cloud-starter-openfeign:4.3.1")
 
+    // OpenTelemetry for trace propagation (compileOnly - optional at runtime)
+    compileOnly("io.opentelemetry:opentelemetry-api:1.32.0")
+
     // Lombok
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)

@@ -1,14 +1,18 @@
 package com.healthdata.quality.persistence;
 
+import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,12 +37,15 @@ import static org.assertj.core.api.Assertions.assertThat;
  * - Effective date range queries
  * - Auto-assigned vs manual assignment filtering
  */
-@DataJpaTest
+@SpringBootTest
+@EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
+@ActiveProfiles("test")
+@Transactional
 @DisplayName("PatientMeasureAssignmentRepository Tests")
 class PatientMeasureAssignmentRepositoryTest {
 
     @Autowired
-    private TestEntityManager entityManager;
+    private EntityManager entityManager;
 
     @Autowired
     private PatientMeasureAssignmentRepository repository;
@@ -70,7 +77,8 @@ class PatientMeasureAssignmentRepositoryTest {
         // Given
         PatientMeasureAssignmentEntity assignment = createAssignment(
                 tenant1, patient1, measure1, true, false);
-        entityManager.persistAndFlush(assignment);
+        entityManager.persist(assignment);
+        entityManager.flush();
 
         // When
         Optional<PatientMeasureAssignmentEntity> result = repository.findByIdAndTenantId(
@@ -88,7 +96,8 @@ class PatientMeasureAssignmentRepositoryTest {
         // Given
         PatientMeasureAssignmentEntity assignment = createAssignment(
                 tenant1, patient1, measure1, true, false);
-        entityManager.persistAndFlush(assignment);
+        entityManager.persist(assignment);
+        entityManager.flush();
 
         // When
         Optional<PatientMeasureAssignmentEntity> result = repository.findByIdAndTenantId(
@@ -253,7 +262,8 @@ class PatientMeasureAssignmentRepositoryTest {
                 tenant1, patient1, measure1, true, false);
         assignment.setEffectiveFrom(today.minusDays(30));
         assignment.setEffectiveUntil(null); // No end date
-        entityManager.persistAndFlush(assignment);
+        entityManager.persist(assignment);
+        entityManager.flush();
 
         // When
         List<PatientMeasureAssignmentEntity> result = repository.findEffectiveAssignments(
@@ -272,7 +282,7 @@ class PatientMeasureAssignmentRepositoryTest {
                 tenant1, patient1, measure1, true, false);
         expiredAssignment.setEffectiveFrom(today.minusDays(60));
         expiredAssignment.setEffectiveUntil(today.minusDays(1)); // Expired yesterday
-        entityManager.persistAndFlush(expiredAssignment);
+        entityManager.persist(expiredAssignment);
 
         // When
         List<PatientMeasureAssignmentEntity> result = repository.findEffectiveAssignments(
@@ -407,6 +417,8 @@ class PatientMeasureAssignmentRepositoryTest {
         assignment.setEffectiveFrom(LocalDate.now());
         assignment.setActive(active);
         assignment.setAutoAssigned(autoAssigned);
-        return entityManager.persist(assignment);
+        assignment.setCreatedBy(UUID.randomUUID());
+        assignment.setCreatedAt(java.time.OffsetDateTime.now());
+        return assignment;
     }
 }

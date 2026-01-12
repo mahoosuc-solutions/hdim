@@ -260,7 +260,7 @@ class QualityMeasureControllerTest {
 
         UUID patientId = UUID.randomUUID();
         QualityReportService.QualityReport report =
-            new QualityReportService.QualityReport(patientId, 3, 2, 66.7, Map.of(), null);
+            new QualityReportService.QualityReport(patientId, 3, 2, 66.7, List.of(), Map.of(), null);
         when(reportService.getPatientQualityReport("tenant-1", patientId)).thenReturn(report);
 
         var response = controller.getPatientQualityReport("tenant-1", patientId);

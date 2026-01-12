@@ -31,7 +31,7 @@ public class QualityReportService {
     private final PatientServiceClient patientServiceClient;
     private final CareGapServiceClient careGapServiceClient;
     private final MeasureCalculationService calculationService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     /**
      * Get comprehensive quality report for a patient
@@ -63,6 +63,7 @@ public class QualityReportService {
                 results.size(),
                 score.compliantMeasures(),
                 score.scorePercentage(),
+                results,
                 resultsByCategory,
                 careGapSummaryJson
         );
@@ -112,6 +113,7 @@ public class QualityReportService {
             long totalMeasures,
             long compliantMeasures,
             double qualityScore,
+            List<QualityMeasureResultEntity> measures,
             Map<String, Long> measuresByCategory,
             String careGapSummary
     ) {}

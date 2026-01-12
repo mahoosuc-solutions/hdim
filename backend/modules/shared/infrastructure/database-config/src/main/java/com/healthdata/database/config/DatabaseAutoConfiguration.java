@@ -7,6 +7,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -41,10 +42,11 @@ import javax.sql.DataSource;
  * - No custom DataSource bean exists
  * - Standard Spring datasource properties exist
  *
- * This configuration runs AFTER DataSourceAutoConfiguration but only applies
- * if no DataSource bean was created (preserving explicit configurations).
+ * This configuration runs BEFORE DataSourceAutoConfiguration to provide
+ * our custom HikariCP configuration when traffic-tier is set.
  */
-@AutoConfiguration(after = DataSourceAutoConfiguration.class)
+@AutoConfiguration
+@AutoConfigureBefore(DataSourceAutoConfiguration.class)
 @ConditionalOnClass(HikariDataSource.class)
 @ConditionalOnProperty(name = "healthdata.database.enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(DatabaseConfigurationProperties.class)
@@ -103,10 +105,8 @@ public class DatabaseAutoConfiguration {
     }
 
     /**
-     * Configure HikariDataSource bean if no DataSource exists.
-     *
-     * This is opt-in: services must set healthdata.database.hikari.traffic-tier
-     * or this bean will not be created (allows gradual adoption).
+     * Configure HikariDataSource bean with our custom settings.
+     * This runs BEFORE DataSourceAutoConfiguration, so it takes precedence.
      */
     @Bean
     @ConditionalOnMissingBean(DataSource.class)

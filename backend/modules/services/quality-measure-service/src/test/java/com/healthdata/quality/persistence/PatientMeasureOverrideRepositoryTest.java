@@ -526,7 +526,7 @@ class PatientMeasureOverrideRepositoryTest {
             boolean active) {
 
         PatientMeasureOverrideEntity override = new PatientMeasureOverrideEntity();
-        override.setId(UUID.randomUUID());
+        // Don't set ID - let JPA generate it via @GeneratedValue
         override.setTenantId(tenantId);
         override.setPatientId(patientId);
         override.setMeasureId(measureId);

@@ -20,6 +20,7 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:authentication"))
     implementation(project(":modules:shared:infrastructure:security"))
     implementation(project(":modules:shared:infrastructure:persistence"))
+    implementation(project(":modules:shared:infrastructure:database-config"))
     implementation(project(":modules:shared:infrastructure:audit"))
 
     // Spring Boot

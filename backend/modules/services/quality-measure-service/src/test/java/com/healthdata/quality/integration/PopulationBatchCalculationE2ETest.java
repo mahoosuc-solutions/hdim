@@ -2,10 +2,10 @@ package com.healthdata.quality.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.quality.client.CqlEngineServiceClient;
-import com.healthdata.quality.domain.model.JobExecutionEntity;
-import com.healthdata.quality.domain.model.QualityMeasureResultEntity;
-import com.healthdata.quality.domain.repository.JobExecutionRepository;
-import com.healthdata.quality.domain.repository.QualityMeasureResultRepository;
+import com.healthdata.quality.persistence.JobExecutionEntity;
+import com.healthdata.quality.persistence.QualityMeasureResultEntity;
+import com.healthdata.quality.persistence.JobExecutionRepository;
+import com.healthdata.quality.persistence.QualityMeasureResultRepository;
 import com.healthdata.testfixtures.security.GatewayTrustTestHeaders;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -136,7 +136,7 @@ class PopulationBatchCalculationE2ETest {
                 .get("jobId").asText();
 
             // Verify job entity created
-            var job = jobExecutionRepository.findByJobId(jobId);
+            var job = jobExecutionRepository.findById(UUID.fromString(jobId));
             assertThat(job).isPresent();
             assertThat(job.get().getTenantId()).isEqualTo(TENANT_ID);
             assertThat(job.get().getStatus()).isIn("STARTING", "CALCULATING");

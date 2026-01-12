@@ -24,6 +24,12 @@ dependencies {
     // Actuator for tracing endpoints
     compileOnly("org.springframework.boot:spring-boot-starter-actuator")
 
+    // Spring Web for RestTemplate support (compileOnly - optional at runtime)
+    compileOnly("org.springframework.boot:spring-boot-starter-web")
+
+    // Kafka for trace propagation (compileOnly - optional at runtime)
+    compileOnly("org.springframework.kafka:spring-kafka")
+
     // Logging
     compileOnly("org.slf4j:slf4j-api")
 }

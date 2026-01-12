@@ -106,7 +106,7 @@ public class MeasureAssignmentController {
      * DELETE /quality-measure/measure-assignments/{assignmentId}
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
-    @DeleteMapping(value = "/measure-assignments/{assignmentId}")
+    @DeleteMapping(value = "/measure-assignments/{assignmentId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PatientMeasureAssignmentEntity> deactivateAssignment(
             @RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
             @RequestHeader("X-Auth-User-Id") UUID deactivatedBy,
@@ -154,7 +154,7 @@ public class MeasureAssignmentController {
      * GET /quality-measure/patients/{patientId}/measure-assignments/count
      */
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
-    @GetMapping(value = "/patients/{patientId}/measure-assignments/count")
+    @GetMapping(value = "/patients/{patientId}/measure-assignments/count", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CountResponse> countAssignments(
             @RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
             @PathVariable UUID patientId

@@ -223,7 +223,9 @@ services:
       GATEWAY_AUTH_DEMO_USER_ROLES: "ADMIN,CLINICIAN,ANALYST"
       # OpenTelemetry - use Jaeger container hostname (not localhost)
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
       OTEL_SERVICE_NAME: gateway-service
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
     ports:
       - "8080:8080"
     healthcheck:
@@ -556,8 +558,10 @@ services:
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
       # OpenTelemetry - use Jaeger container hostname
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
       OTEL_SERVICE_NAME: quality-measure-service
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
     ports:
       - "8087:8087"
     healthcheck:

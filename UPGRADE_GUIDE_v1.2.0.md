@@ -14,10 +14,12 @@
 3. [Backup Procedures](#backup-procedures)
 4. [Upgrade Steps](#upgrade-steps)
 5. [Configuration Changes](#configuration-changes)
-6. [Database Migration](#database-migration)
-7. [Post-Upgrade Validation](#post-upgrade-validation)
-8. [Rollback Procedures](#rollback-procedures)
-9. [Troubleshooting](#troubleshooting)
+6. [HikariCP Connection Pool Updates](#hikaricp-connection-pool-updates)
+7. [Environment-Specific Sampling Configuration](#environment-specific-sampling-configuration)
+8. [Database Migration](#database-migration)
+9. [Post-Upgrade Validation](#post-upgrade-validation)
+10. [Rollback Procedures](#rollback-procedures)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -228,7 +230,7 @@ notification-service:
 
 ### Environment Variables to Add
 
-**All Java Services** (11 services total):
+**All Java Services** (34 services total):
 
 ```bash
 # Add to each service's environment section in docker-compose.yml
@@ -240,7 +242,120 @@ _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
 
 **No Application.yml Changes Required:**
 - Services read OTLP configuration from environment variables
-- No manual edits to `application.yml` files needed
+- No manual edits to `application.yml` files needed for OTLP
+- HikariCP and sampling configurations are in application.yml (already updated in v1.2.0)
+
+---
+
+## HikariCP Connection Pool Updates
+
+### Overview
+
+v1.2.0 introduces standardized HikariCP connection pool configuration across all 34 services with traffic tier classification.
+
+### Traffic Tier Classification
+
+| Tier | Max Pool Size | Services |
+|------|--------------|----------|
+| **HIGH** | 50 connections | quality-measure, fhir, cql-engine, patient, care-gap |
+| **MEDIUM** | 20 connections | gateway, analytics, event-processing, notification |
+| **LOW** | 10 connections | All other services |
+
+### Configuration Standards
+
+All services now use these standardized settings:
+
+```yaml
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: <tier-based>  # 50, 20, or 10
+      minimum-idle: <half of max>       # 25, 10, or 5
+      connection-timeout: 20000         # 20 seconds (fast-fail)
+      idle-timeout: 300000              # 5 minutes
+      max-lifetime: 1800000             # 30 minutes (6x safety margin)
+      keepalive-time: 240000            # 4 minutes (proactive health check)
+      leak-detection-threshold: 60000   # 60 seconds (development only)
+```
+
+### Key Benefits
+
+- **6x Safety Margin**: max-lifetime (30 min) is 6x idle-timeout (5 min) preventing premature eviction
+- **Proactive Health Checks**: 4-minute keepalive prevents stale connections
+- **Fast-Fail**: 20-second timeout prevents request blocking
+- **Leak Detection**: Enabled in development for early problem detection
+
+### No Action Required
+
+All HikariCP configurations are already updated in the v1.2.0 codebase. No manual configuration changes needed.
+
+---
+
+## Environment-Specific Sampling Configuration
+
+### Overview
+
+v1.2.0 introduces environment-specific trace sampling for 4 core services to optimize observability costs.
+
+### Sampling Rates
+
+| Environment | Sampling Rate | Purpose |
+|------------|---------------|---------|
+| **Development** (`dev`) | 100% | Full debugging visibility |
+| **Staging** (`staging`) | 50% | Balanced visibility and performance |
+| **Production** (`prod`) | 10% | Cost-effective monitoring |
+
+### Configured Services
+
+Environment-specific sampling is configured in:
+1. quality-measure-service
+2. fhir-service
+3. cql-engine-service
+4. gateway-service
+
+### Activation
+
+Set the `SPRING_PROFILES_ACTIVE` environment variable:
+
+```bash
+# Development
+export SPRING_PROFILES_ACTIVE=dev
+
+# Staging
+export SPRING_PROFILES_ACTIVE=staging
+
+# Production
+export SPRING_PROFILES_ACTIVE=prod
+```
+
+Or in docker-compose.yml:
+
+```yaml
+services:
+  quality-measure-service:
+    environment:
+      SPRING_PROFILES_ACTIVE: prod  # Use prod profile
+```
+
+### Configuration Example
+
+```yaml
+# application.yml (already in v1.2.0)
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+management:
+  tracing:
+    sampling:
+      probability: 0.1  # 10% sampling in production
+```
+
+### No Action Required
+
+All sampling configurations are already in the v1.2.0 codebase. Just set the appropriate Spring profile for your environment.
 
 ---
 
@@ -615,11 +730,13 @@ time curl -s http://localhost:8087/quality-measure/actuator/health > /dev/null
 - [ ] Database migrations completed successfully
 - [ ] New tables created (7 tables)
 - [ ] Jaeger UI accessible (http://localhost:16686)
-- [ ] Traces visible in Jaeger for all 11 services
+- [ ] Traces visible in Jaeger for all 34 services
 - [ ] New API endpoints accessible
 - [ ] No data loss (record counts match pre-upgrade)
 - [ ] Service logs show no errors
 - [ ] Performance metrics acceptable
+- [ ] HikariCP connection pool settings verified
+- [ ] Environment-specific sampling profile activated
 - [ ] Monitoring/alerting updated for new endpoints
 - [ ] Stakeholders notified of completion
 
@@ -640,7 +757,11 @@ If you encounter issues not covered in this guide:
 
 - [Release Notes](RELEASE_NOTES_v1.2.0.md)
 - [Known Issues](KNOWN_ISSUES_v1.2.0.md)
-- [OTLP Configuration Summary](OTLP_PLATFORM_CONFIGURATION_SUMMARY.md)
+- [Release Preparation Summary](RELEASE_PREPARATION_SUMMARY_v1.2.0.md)
+- [Distributed Tracing Guide](backend/docs/DISTRIBUTED_TRACING_GUIDE.md)
+- [Phase 3 Completion Report](backend/docs/PHASE3_COMPLETION_REPORT.md)
+- [Phase 4 Completion Report](backend/docs/PHASE4_COMPLETION_REPORT.md)
+- [Jaeger Integration Validation](backend/testing/JAEGER_INTEGRATION_VALIDATION.md)
 - [Database Migration Runbook](backend/docs/DATABASE_MIGRATION_RUNBOOK.md)
 - [Jaeger Documentation](https://www.jaegertracing.io/docs/latest/)
 

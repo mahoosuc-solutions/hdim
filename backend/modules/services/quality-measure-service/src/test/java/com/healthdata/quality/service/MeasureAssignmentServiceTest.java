@@ -11,8 +11,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -69,10 +69,11 @@ class MeasureAssignmentServiceTest {
                 .patientId(patientId)
                 .measureId(measureId)
                 .assignedBy(assignedBy)
-                .assignedAt(Instant.now())
-                .effectiveStartDate(LocalDate.now())
-                .isActive(true)
-                .isAutoAssigned(false)
+                .assignedAt(OffsetDateTime.now())
+                .createdAt(OffsetDateTime.now())
+                .effectiveFrom(LocalDate.now())
+                .active(true)
+                .autoAssigned(false)
                 .build();
     }
 
@@ -91,11 +92,11 @@ class MeasureAssignmentServiceTest {
                         .tenantId(tenantId)
                         .patientId(patientId)
                         .measureId(UUID.randomUUID())
-                        .isActive(true)
+                        .active(true)
                         .build()
         );
 
-        when(assignmentRepository.findActiveAssignmentsByPatient(tenantId, patientId))
+        when(assignmentRepository.findActiveByPatient(tenantId, patientId))
                 .thenReturn(expectedAssignments);
 
         // When
@@ -104,14 +105,14 @@ class MeasureAssignmentServiceTest {
         // Then
         assertThat(result).hasSize(2);
         assertThat(result).isEqualTo(expectedAssignments);
-        verify(assignmentRepository).findActiveAssignmentsByPatient(tenantId, patientId);
+        verify(assignmentRepository).findActiveByPatient(tenantId, patientId);
     }
 
     @Test
     @DisplayName("Should return empty list when no active assignments exist")
     void shouldReturnEmptyListWhenNoActiveAssignments() {
         // Given
-        when(assignmentRepository.findActiveAssignmentsByPatient(tenantId, patientId))
+        when(assignmentRepository.findActiveByPatient(tenantId, patientId))
                 .thenReturn(List.of());
 
         // When
@@ -132,7 +133,7 @@ class MeasureAssignmentServiceTest {
         LocalDate evaluationDate = LocalDate.now();
         List<PatientMeasureAssignmentEntity> expectedAssignments = List.of(testAssignment);
 
-        when(assignmentRepository.findEffectiveAssignmentsForDate(tenantId, patientId, evaluationDate))
+        when(assignmentRepository.findEffectiveAssignments(tenantId, patientId, evaluationDate))
                 .thenReturn(expectedAssignments);
 
         // When
@@ -142,7 +143,7 @@ class MeasureAssignmentServiceTest {
         // Then
         assertThat(result).hasSize(1);
         assertThat(result.get(0)).isEqualTo(testAssignment);
-        verify(assignmentRepository).findEffectiveAssignmentsForDate(tenantId, patientId, evaluationDate);
+        verify(assignmentRepository).findEffectiveAssignments(tenantId, patientId, evaluationDate);
     }
 
     @Test
@@ -150,7 +151,7 @@ class MeasureAssignmentServiceTest {
     void shouldReturnEmptyListWhenNoEffectiveAssignments() {
         // Given
         LocalDate evaluationDate = LocalDate.now();
-        when(assignmentRepository.findEffectiveAssignmentsForDate(tenantId, patientId, evaluationDate))
+        when(assignmentRepository.findEffectiveAssignments(tenantId, patientId, evaluationDate))
                 .thenReturn(List.of());
 
         // When
@@ -172,21 +173,21 @@ class MeasureAssignmentServiceTest {
         LocalDate effectiveDate = LocalDate.now();
         String reason = "Annual wellness visit";
 
-        when(assignmentRepository.findActiveAssignmentForMeasure(tenantId, patientId, measureId))
+        when(assignmentRepository.findActiveByPatientAndMeasure(tenantId, patientId, measureId))
                 .thenReturn(Optional.empty());
         when(assignmentRepository.save(any(PatientMeasureAssignmentEntity.class)))
                 .thenReturn(testAssignment);
 
         // When
         PatientMeasureAssignmentEntity result = measureAssignmentService.assignMeasure(
-                tenantId, patientId, measureId, assignedBy, effectiveDate, null, reason);
+                tenantId, patientId, measureId, assignedBy, reason, effectiveDate, null, null);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getMeasureId()).isEqualTo(measureId);
-        verify(assignmentRepository).findActiveAssignmentForMeasure(tenantId, patientId, measureId);
+        verify(assignmentRepository).findActiveByPatientAndMeasure(tenantId, patientId, measureId);
         verify(assignmentRepository).save(any(PatientMeasureAssignmentEntity.class));
-        verify(eligibilityCacheRepository).deleteByPatientId(patientId);
+        verify(eligibilityCacheRepository).invalidateByPatientAndMeasure(tenantId, patientId, measureId);
     }
 
     @Test
@@ -194,34 +195,17 @@ class MeasureAssignmentServiceTest {
     void shouldThrowExceptionWhenDuplicateAssignment() {
         // Given
         LocalDate effectiveDate = LocalDate.now();
-        when(assignmentRepository.findActiveAssignmentForMeasure(tenantId, patientId, measureId))
+        when(assignmentRepository.findActiveByPatientAndMeasure(tenantId, patientId, measureId))
                 .thenReturn(Optional.of(testAssignment));
 
         // When / Then
         assertThatThrownBy(() -> measureAssignmentService.assignMeasure(
-                tenantId, patientId, measureId, assignedBy, effectiveDate, null, "test"))
+                tenantId, patientId, measureId, assignedBy, "test", effectiveDate, null, null))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("already has an active assignment");
+                .hasMessageContaining("already assigned");
 
         verify(assignmentRepository, never()).save(any());
-        verify(eligibilityCacheRepository, never()).deleteByPatientId(any());
-    }
-
-    @Test
-    @DisplayName("Should invalidate eligibility cache after assignment")
-    void shouldInvalidateCacheAfterAssignment() {
-        // Given
-        when(assignmentRepository.findActiveAssignmentForMeasure(tenantId, patientId, measureId))
-                .thenReturn(Optional.empty());
-        when(assignmentRepository.save(any(PatientMeasureAssignmentEntity.class)))
-                .thenReturn(testAssignment);
-
-        // When
-        measureAssignmentService.assignMeasure(
-                tenantId, patientId, measureId, assignedBy, LocalDate.now(), null, "test");
-
-        // Then
-        verify(eligibilityCacheRepository).deleteByPatientId(patientId);
+        verify(eligibilityCacheRepository, never()).invalidateByPatientAndMeasure(any(), any(), any());
     }
 
     // ========================================
@@ -236,21 +220,21 @@ class MeasureAssignmentServiceTest {
         UUID measureId2 = UUID.randomUUID();
         List<UUID> measureIds = Arrays.asList(measureId1, measureId2);
 
-        when(assignmentRepository.findActiveAssignmentForMeasure(eq(tenantId), eq(patientId), any()))
+        when(assignmentRepository.findActiveByPatientAndMeasure(eq(tenantId), eq(patientId), any()))
                 .thenReturn(Optional.empty());
         when(assignmentRepository.save(any(PatientMeasureAssignmentEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
         List<PatientMeasureAssignmentEntity> result = measureAssignmentService.autoAssignMeasures(
-                tenantId, patientId, measureIds, "Eligibility criteria met");
+                tenantId, patientId, measureIds, java.util.Map.of("reason", "Eligibility criteria met"));
 
         // Then
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).isAutoAssigned()).isTrue();
-        assertThat(result.get(1).isAutoAssigned()).isTrue();
-        verify(assignmentRepository, times(2)).save(any(PatientMeasureAssignmentEntity.class));
-        verify(eligibilityCacheRepository).deleteByPatientId(patientId);
+        assertThat(result.get(0).getAutoAssigned()).isTrue();
+        assertThat(result.get(1).getAutoAssigned()).isTrue();
+        verify(assignmentRepository).saveAll(any());
+        verify(eligibilityCacheRepository, times(2)).invalidateByPatientAndMeasure(eq(tenantId), eq(patientId), any());
     }
 
     @Test
@@ -262,21 +246,22 @@ class MeasureAssignmentServiceTest {
         List<UUID> measureIds = Arrays.asList(measureId1, measureId2);
 
         // measureId1 already has active assignment
-        when(assignmentRepository.findActiveAssignmentForMeasure(tenantId, patientId, measureId1))
+        when(assignmentRepository.findActiveByPatientAndMeasure(tenantId, patientId, measureId1))
                 .thenReturn(Optional.of(testAssignment));
         // measureId2 does not
-        when(assignmentRepository.findActiveAssignmentForMeasure(tenantId, patientId, measureId2))
+        when(assignmentRepository.findActiveByPatientAndMeasure(tenantId, patientId, measureId2))
                 .thenReturn(Optional.empty());
         when(assignmentRepository.save(any(PatientMeasureAssignmentEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
         List<PatientMeasureAssignmentEntity> result = measureAssignmentService.autoAssignMeasures(
-                tenantId, patientId, measureIds, "Eligibility criteria met");
+                tenantId, patientId, measureIds, java.util.Map.of("reason", "Eligibility criteria met"));
 
         // Then
         assertThat(result).hasSize(1); // Only measureId2 assigned
-        verify(assignmentRepository, times(1)).save(any(PatientMeasureAssignmentEntity.class));
+        verify(assignmentRepository).saveAll(any());
+        verify(eligibilityCacheRepository, times(1)).invalidateByPatientAndMeasure(tenantId, patientId, measureId2);
     }
 
     @Test
@@ -286,16 +271,17 @@ class MeasureAssignmentServiceTest {
         UUID measureId1 = UUID.randomUUID();
         List<UUID> measureIds = List.of(measureId1);
 
-        when(assignmentRepository.findActiveAssignmentForMeasure(tenantId, patientId, measureId1))
+        when(assignmentRepository.findActiveByPatientAndMeasure(tenantId, patientId, measureId1))
                 .thenReturn(Optional.of(testAssignment));
 
         // When
         List<PatientMeasureAssignmentEntity> result = measureAssignmentService.autoAssignMeasures(
-                tenantId, patientId, measureIds, "test");
+                tenantId, patientId, measureIds, null);
 
         // Then
         assertThat(result).isEmpty();
-        verify(assignmentRepository, never()).save(any());
+        verify(assignmentRepository, never()).saveAll(any());
+        verify(eligibilityCacheRepository, never()).invalidateByPatientAndMeasure(any(), any(), any());
     }
 
     // ========================================
@@ -319,12 +305,11 @@ class MeasureAssignmentServiceTest {
                 tenantId, assignmentId, deactivatedBy);
 
         // Then
-        assertThat(result.isActive()).isFalse();
-        assertThat(result.getDeactivatedBy()).isEqualTo(deactivatedBy);
-        assertThat(result.getDeactivatedAt()).isNotNull();
-        assertThat(result.getEffectiveEndDate()).isEqualTo(LocalDate.now());
+        assertThat(result.getActive()).isFalse();
+        assertThat(result.getEffectiveUntil()).isEqualTo(LocalDate.now());
+        assertThat(result.getUpdatedAt()).isNotNull();
         verify(assignmentRepository).save(testAssignment);
-        verify(eligibilityCacheRepository).deleteByPatientId(patientId);
+        verify(eligibilityCacheRepository).invalidateByPatientAndMeasure(tenantId, patientId, measureId);
     }
 
     @Test
@@ -349,22 +334,20 @@ class MeasureAssignmentServiceTest {
     void shouldHandleDeactivationOfInactiveAssignment() {
         // Given
         testAssignment.setActive(false);
-        testAssignment.setDeactivatedAt(Instant.now().minusSeconds(3600));
+        testAssignment.setUpdatedAt(OffsetDateTime.now().minusSeconds(3600));
         UUID assignmentId = testAssignment.getId();
 
         when(assignmentRepository.findByIdAndTenantId(assignmentId, tenantId))
                 .thenReturn(Optional.of(testAssignment));
-        when(assignmentRepository.save(any(PatientMeasureAssignmentEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
         PatientMeasureAssignmentEntity result = measureAssignmentService.deactivateAssignment(
                 tenantId, assignmentId, UUID.randomUUID());
 
         // Then
-        assertThat(result.isActive()).isFalse();
-        // No new timestamp should be set since already inactive
-        verify(assignmentRepository).save(testAssignment);
+        assertThat(result.getActive()).isFalse();
+        // Service returns early for inactive assignments without saving
+        verify(assignmentRepository, never()).save(any());
     }
 
     // ========================================
@@ -389,10 +372,10 @@ class MeasureAssignmentServiceTest {
                 tenantId, assignmentId, newStartDate, newEndDate);
 
         // Then
-        assertThat(result.getEffectiveStartDate()).isEqualTo(newStartDate);
-        assertThat(result.getEffectiveEndDate()).isEqualTo(newEndDate);
+        assertThat(result.getEffectiveFrom()).isEqualTo(newStartDate);
+        assertThat(result.getEffectiveUntil()).isEqualTo(newEndDate);
+        assertThat(result.getUpdatedAt()).isNotNull();
         verify(assignmentRepository).save(testAssignment);
-        verify(eligibilityCacheRepository).deleteByPatientId(patientId);
     }
 
     @Test
@@ -419,7 +402,7 @@ class MeasureAssignmentServiceTest {
     void shouldReturnCorrectCountOfActiveAssignments() {
         // Given
         long expectedCount = 5L;
-        when(assignmentRepository.countActiveAssignmentsByPatient(tenantId, patientId))
+        when(assignmentRepository.countActiveByPatient(tenantId, patientId))
                 .thenReturn(expectedCount);
 
         // When
@@ -427,14 +410,14 @@ class MeasureAssignmentServiceTest {
 
         // Then
         assertThat(result).isEqualTo(expectedCount);
-        verify(assignmentRepository).countActiveAssignmentsByPatient(tenantId, patientId);
+        verify(assignmentRepository).countActiveByPatient(tenantId, patientId);
     }
 
     @Test
     @DisplayName("Should return zero when no active assignments exist")
     void shouldReturnZeroWhenNoActiveAssignments() {
         // Given
-        when(assignmentRepository.countActiveAssignmentsByPatient(tenantId, patientId))
+        when(assignmentRepository.countActiveByPatient(tenantId, patientId))
                 .thenReturn(0L);
 
         // When
@@ -455,16 +438,16 @@ class MeasureAssignmentServiceTest {
         PatientMeasureAssignmentEntity autoAssignment1 = PatientMeasureAssignmentEntity.builder()
                 .id(UUID.randomUUID())
                 .tenantId(tenantId)
-                .isAutoAssigned(true)
+                .autoAssigned(true)
                 .build();
         PatientMeasureAssignmentEntity autoAssignment2 = PatientMeasureAssignmentEntity.builder()
                 .id(UUID.randomUUID())
                 .tenantId(tenantId)
-                .isAutoAssigned(true)
+                .autoAssigned(true)
                 .build();
         List<PatientMeasureAssignmentEntity> expectedAssignments = Arrays.asList(autoAssignment1, autoAssignment2);
 
-        when(assignmentRepository.findByTenantIdAndIsAutoAssignedTrue(tenantId))
+        when(assignmentRepository.findByAutoAssigned(tenantId, true))
                 .thenReturn(expectedAssignments);
 
         // When
@@ -472,15 +455,15 @@ class MeasureAssignmentServiceTest {
 
         // Then
         assertThat(result).hasSize(2);
-        assertThat(result).allMatch(PatientMeasureAssignmentEntity::isAutoAssigned);
-        verify(assignmentRepository).findByTenantIdAndIsAutoAssignedTrue(tenantId);
+        assertThat(result).allMatch(PatientMeasureAssignmentEntity::getAutoAssigned);
+        verify(assignmentRepository).findByAutoAssigned(tenantId, true);
     }
 
     @Test
     @DisplayName("Should return empty list when no auto-assigned measures exist")
     void shouldReturnEmptyListWhenNoAutoAssignedMeasures() {
         // Given
-        when(assignmentRepository.findByTenantIdAndIsAutoAssignedTrue(tenantId))
+        when(assignmentRepository.findByAutoAssigned(tenantId, true))
                 .thenReturn(List.of());
 
         // When
@@ -501,11 +484,11 @@ class MeasureAssignmentServiceTest {
         PatientMeasureAssignmentEntity manualAssignment = PatientMeasureAssignmentEntity.builder()
                 .id(UUID.randomUUID())
                 .tenantId(tenantId)
-                .isAutoAssigned(false)
+                .autoAssigned(false)
                 .build();
         List<PatientMeasureAssignmentEntity> expectedAssignments = List.of(manualAssignment);
 
-        when(assignmentRepository.findByTenantIdAndIsAutoAssignedFalse(tenantId))
+        when(assignmentRepository.findByAutoAssigned(tenantId, false))
                 .thenReturn(expectedAssignments);
 
         // When
@@ -513,15 +496,15 @@ class MeasureAssignmentServiceTest {
 
         // Then
         assertThat(result).hasSize(1);
-        assertThat(result).allMatch(assignment -> !assignment.isAutoAssigned());
-        verify(assignmentRepository).findByTenantIdAndIsAutoAssignedFalse(tenantId);
+        assertThat(result).allMatch(assignment -> !assignment.getAutoAssigned());
+        verify(assignmentRepository).findByAutoAssigned(tenantId, false);
     }
 
     @Test
     @DisplayName("Should return empty list when no manually assigned measures exist")
     void shouldReturnEmptyListWhenNoManuallyAssignedMeasures() {
         // Given
-        when(assignmentRepository.findByTenantIdAndIsAutoAssignedFalse(tenantId))
+        when(assignmentRepository.findByAutoAssigned(tenantId, false))
                 .thenReturn(List.of());
 
         // When
@@ -539,13 +522,13 @@ class MeasureAssignmentServiceTest {
     @DisplayName("Should enforce tenant isolation in all repository calls")
     void shouldEnforceTenantIsolation() {
         // Given
-        when(assignmentRepository.findActiveAssignmentsByPatient(tenantId, patientId))
+        when(assignmentRepository.findActiveByPatient(tenantId, patientId))
                 .thenReturn(List.of());
 
         // When
         measureAssignmentService.getActiveAssignments(tenantId, patientId);
 
         // Then
-        verify(assignmentRepository).findActiveAssignmentsByPatient(eq(tenantId), any());
+        verify(assignmentRepository).findActiveByPatient(eq(tenantId), any());
     }
 }

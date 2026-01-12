@@ -337,7 +337,7 @@ class MeasureOverrideServiceTest {
 
         // When
         PatientMeasureOverrideEntity result = measureOverrideService.approveOverride(
-                tenantId, overrideId, approvedBy, "Reviewed and approved");
+                tenantId, overrideId, approvedBy, "Approved for clinical validity");
 
         // Then
         assertThat(result.getApprovedBy()).isEqualTo(approvedBy);
@@ -355,7 +355,7 @@ class MeasureOverrideServiceTest {
 
         // When / Then
         assertThatThrownBy(() -> measureOverrideService.approveOverride(
-                tenantId, overrideId, UUID.randomUUID(), "notes"))
+                tenantId, overrideId, UUID.randomUUID(), "Approval notes"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Override not found");
 
@@ -376,7 +376,7 @@ class MeasureOverrideServiceTest {
 
         // When
         PatientMeasureOverrideEntity result = measureOverrideService.approveOverride(
-                tenantId, overrideId, UUID.randomUUID(), "notes");
+                tenantId, overrideId, UUID.randomUUID(), "Re-approval attempt");
 
         // Then
         assertThat(result.getApprovedBy()).isEqualTo(originalApprover); // Unchanged

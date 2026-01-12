@@ -3,8 +3,8 @@ package com.healthdata.quality.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.quality.client.CqlEngineServiceClient;
 import com.healthdata.quality.client.PatientServiceClient;
-import com.healthdata.quality.domain.model.QualityMeasureResultEntity;
-import com.healthdata.quality.domain.repository.QualityMeasureResultRepository;
+import com.healthdata.quality.persistence.QualityMeasureResultEntity;
+import com.healthdata.quality.persistence.QualityMeasureResultRepository;
 import com.healthdata.testfixtures.security.GatewayTrustTestHeaders;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -137,8 +137,8 @@ class QualityMeasureEvaluationE2ETest {
             assertThat(results).hasSize(1);
             assertThat(results.get(0).getTenantId()).isEqualTo(TENANT_ID);
             assertThat(results.get(0).getPatientId()).isEqualTo(PATIENT_ID);
-            assertThat(results.get(0).isNumeratorCompliant()).isTrue();
-            assertThat(results.get(0).isDenominatorEligible()).isTrue();
+            assertThat(results.get(0).getNumeratorCompliant()).isTrue();
+            assertThat(results.get(0).getDenominatorElligible()).isTrue();
 
             // Verify CQL engine was called
             verify(cqlEngineServiceClient, times(1)).evaluateCql(
@@ -591,7 +591,7 @@ class QualityMeasureEvaluationE2ETest {
                 .patientId(PATIENT_ID)
                 .measureId(MEASURE_CDC_A1C9)
                 .numeratorCompliant(true)
-                .denominatorEligible(true)
+                .denominatorElligible(true)
                 .score(95.0)
                 .build();
             measureResultRepository.save(result);
@@ -642,7 +642,7 @@ class QualityMeasureEvaluationE2ETest {
                 .patientId(PATIENT_ID)
                 .measureId("HEDIS_CDC_A1C9")
                 .numeratorCompliant(true)
-                .denominatorEligible(true)
+                .denominatorElligible(true)
                 .score(95.0)
                 .build();
 
@@ -651,7 +651,7 @@ class QualityMeasureEvaluationE2ETest {
                 .patientId(PATIENT_ID)
                 .measureId("HEDIS_CBP")
                 .numeratorCompliant(false)
-                .denominatorEligible(true)
+                .denominatorElligible(true)
                 .score(45.0)
                 .build();
 
@@ -683,7 +683,7 @@ class QualityMeasureEvaluationE2ETest {
                 .patientId(PATIENT_ID)
                 .measureId(MEASURE_CDC_A1C9)
                 .numeratorCompliant(true)
-                .denominatorEligible(true)
+                .denominatorElligible(true)
                 .score(95.0)
                 .build();
             measureResultRepository.save(result);
@@ -717,7 +717,7 @@ class QualityMeasureEvaluationE2ETest {
                 .patientId(PATIENT_ID)
                 .measureId(MEASURE_CDC_A1C9)
                 .numeratorCompliant(true)
-                .denominatorEligible(true)
+                .denominatorElligible(true)
                 .score(95.0)
                 .build();
             measureResultRepository.save(result);

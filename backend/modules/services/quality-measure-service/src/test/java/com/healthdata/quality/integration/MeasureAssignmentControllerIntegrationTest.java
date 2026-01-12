@@ -14,8 +14,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -76,10 +76,11 @@ class MeasureAssignmentControllerIntegrationTest {
                 .patientId(patientId)
                 .measureId(measureId)
                 .assignedBy(assignedBy)
-                .assignedAt(Instant.now())
-                .effectiveStartDate(LocalDate.now())
-                .isActive(true)
-                .isAutoAssigned(false)
+                .assignedAt(OffsetDateTime.now())
+                .createdAt(OffsetDateTime.now())
+                .effectiveFrom(LocalDate.now())
+                .active(true)
+                .autoAssigned(false)
                 .build();
     }
 
@@ -351,8 +352,8 @@ class MeasureAssignmentControllerIntegrationTest {
         request.setEffectiveFrom(newStartDate);
         request.setEffectiveUntil(newEndDate);
 
-        testAssignment.setEffectiveStartDate(newStartDate);
-        testAssignment.setEffectiveEndDate(newEndDate);
+        testAssignment.setEffectiveFrom(newStartDate);
+        testAssignment.setEffectiveUntil(newEndDate);
 
         when(assignmentService.updateEffectiveDates(tenantId, assignmentId, newStartDate, newEndDate))
                 .thenReturn(testAssignment);

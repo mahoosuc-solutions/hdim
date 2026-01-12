@@ -63,6 +63,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import({NotificationTestConfiguration.class, TestCacheConfiguration.class})
 @ActiveProfiles("test")
 @Testcontainers(disabledWithoutDocker = true)
+@org.springframework.test.annotation.DirtiesContext(classMode = org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_CLASS)
 @DisplayName("Notification System End-to-End Tests")
 class NotificationEndToEndTest {
 

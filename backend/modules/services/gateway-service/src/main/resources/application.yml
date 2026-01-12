@@ -20,15 +20,6 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}
     password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 10              # MEDIUM traffic tier (gateway routes to services)
-      minimum-idle: 5
-      connection-timeout: 20000          # 20 seconds (fail fast)
-      idle-timeout: 300000               # 5 minutes (matches Docker/PostgreSQL TCP timeout)
-      max-lifetime: 300000               # 5 minutes (CRITICAL: prevent stale connections)
-      keepalive-time: 240000             # 4 minutes (proactive keepalive before 5-minute timeout)
-      leak-detection-threshold: 60000    # 60 seconds (detect connection leaks)
-      validation-timeout: 5000           # 5 seconds (fail fast on dead connections)
 
   jpa:
     hibernate:
@@ -53,6 +44,12 @@ authentication:
     enabled: false
   rateLimit:
     enabled: false
+
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: LOW  # Main API gateway: Fixed pool size (10 connections)
 
 # Multi-Factor Authentication (MFA) Configuration
 # HIPAA §164.312(d) - Person or Entity Authentication

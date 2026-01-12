@@ -371,8 +371,8 @@ class MeasureAssignmentControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.effectiveStartDate").value(newStartDate.toString()))
-                .andExpect(jsonPath("$.effectiveEndDate").value(newEndDate.toString()));
+                .andExpect(jsonPath("$.effectiveFrom").value(newStartDate.toString()))
+                .andExpect(jsonPath("$.effectiveUntil").value(newEndDate.toString()));
 
         verify(assignmentService).updateEffectiveDates(tenantId, assignmentId, newStartDate, newEndDate);
     }

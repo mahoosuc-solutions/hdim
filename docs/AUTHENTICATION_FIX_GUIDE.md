@@ -184,6 +184,7 @@ After applying fix:
 - [ ] Service can authenticate JWT tokens
 - [ ] No authentication controllers are loaded (Gateway-only)
 - [ ] Service can communicate with dependencies (CQL Engine, FHIR, etc.)
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ## Common Issues
 

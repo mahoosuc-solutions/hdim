@@ -601,6 +601,7 @@ open "http://localhost:4200/quality-measures?demo=true"
 - [ ] Zero errors during recording
 - [ ] Reset time < 30 seconds
 - [ ] UI is polished and professional
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### Video Quality
 - [ ] Clear value proposition in first 30 seconds
@@ -608,6 +609,7 @@ open "http://localhost:4200/quality-measures?demo=true"
 - [ ] Smooth, professional pacing
 - [ ] No technical glitches visible
 - [ ] Compelling narrative flow
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### Business Impact
 - [ ] Sales team trained on demo platform

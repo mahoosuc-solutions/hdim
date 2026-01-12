@@ -464,6 +464,7 @@ Before committing any documentation, verify against [DOCUMENTATION_QUALITY_CHECK
 - [ ] Technical claims include proof points
 - [ ] Code examples compile and follow conventions
 - [ ] HIPAA compliance language correct
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 - [ ] No prohibited buzzwords
 - [ ] All links verified
 - [ ] Version history updated

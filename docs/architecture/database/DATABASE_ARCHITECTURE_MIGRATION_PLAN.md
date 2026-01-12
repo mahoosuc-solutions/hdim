@@ -1559,6 +1559,7 @@ Before starting each phase, verify:
 - [ ] **Team notification sent** (maintenance window if needed)
 - [ ] **Docker images built** (if Dockerfile changes)
 - [ ] **Environment variables prepared** (.env file with all required secrets)
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### Post-Migration Validation (Per Service)
 
@@ -2023,6 +2024,7 @@ Developer: __________________________
   □ db.changelog-master.xml includes all migrations
   □ Validation test created (*EntityMigrationValidationTest)
   □ Database backup completed
+  □ License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 □ Migration
   □ docker-compose.yml updated (LIQUIBASE_ENABLED: true, DDL_AUTO: validate)

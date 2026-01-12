@@ -602,6 +602,7 @@ Before marking any asset complete:
 - [ ] Resolution appropriate for intended use
 - [ ] No HIPAA-violating imagery (realistic PHI, actual patient data)
 - [ ] Approved by clinical reviewer for accuracy
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ---
 

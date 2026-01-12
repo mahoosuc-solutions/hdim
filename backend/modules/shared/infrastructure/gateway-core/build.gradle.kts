@@ -42,6 +42,7 @@ dependencies {
     api(project(":modules:shared:infrastructure:authentication"))
     api(project(":modules:shared:infrastructure:audit"))
     api(project(":modules:shared:infrastructure:persistence"))
+    api(project(":modules:shared:infrastructure:database-config"))
     api(project(":modules:shared:infrastructure:cache"))
 
     // Spring Boot Auto-configuration

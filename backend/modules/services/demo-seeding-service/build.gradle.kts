@@ -11,6 +11,7 @@ dependencies {
     // Shared modules
     implementation(project(":modules:shared:domain:common"))
     implementation(project(":modules:shared:infrastructure:persistence"))
+    implementation(project(":modules:shared:infrastructure:database-config"))
 
     // Spring Boot
     implementation(libs.bundles.spring.boot.web)

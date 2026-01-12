@@ -193,6 +193,7 @@ See [DISTRIBUTION_ARCHITECTURE.md](./DISTRIBUTION_ARCHITECTURE.md) for detailed 
 - [API Documentation](./BACKEND_API_SPECIFICATION.md) - REST APIs
 - [Security Guide](./docs/PRODUCTION_SECURITY_GUIDE.md) - HIPAA compliance
 - [Scaling Guide](./DISTRIBUTION_ARCHITECTURE.md#scaling) - Performance tuning
+- [Compliance](./docs/compliance/THIRD_PARTY_NOTICES.md) - Third-party licensing and notices
 
 ### Sales & Marketing
 - [Sales Strategy](./CLINICAL_SALES_STRATEGY.md) - Target personas

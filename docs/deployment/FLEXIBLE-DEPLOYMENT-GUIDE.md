@@ -1795,6 +1795,9 @@ TCO = Infrastructure + Personnel + Licensing + Maintenance + Opportunity Cost
 - [ ] CapEx vs OpEx preference: ____________
 - [ ] Time to first deployment: ____________
 
+**F. Compliance & Licensing**
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
+
 **Scoring:**
 - Mostly A answers (high scale): Kubernetes or Hybrid
 - Strong B requirements (high availability): Clustered, Kubernetes, or SaaS

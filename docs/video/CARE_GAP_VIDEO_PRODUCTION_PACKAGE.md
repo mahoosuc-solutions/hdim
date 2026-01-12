@@ -716,6 +716,7 @@ Before recording, verify:
 - [ ] Browser zoom at 100%
 - [ ] Notifications/popups disabled
 - [ ] Clock hidden or showing professional time
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ---
 

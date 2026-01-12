@@ -467,6 +467,7 @@ Kafka Consumers:
 - [ ] Alert configuration
 - [ ] Staging deployment
 - [ ] Production deployment
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ---
 

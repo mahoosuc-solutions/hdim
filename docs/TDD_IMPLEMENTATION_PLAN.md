@@ -2689,6 +2689,8 @@ Each user story is considered "Done" when:
 
 #### 9.2.1 Backend Service Acceptance
 
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
+
 **FHIR Service**:
 - [ ] All 150+ FHIR resource types supported
 - [ ] CRUD operations work for Patient, Observation, Condition, MedicationRequest

@@ -295,6 +295,7 @@ gateway:
 - [ ] DevOps review (Kubernetes changes)
 - [ ] QA test plan approval
 - [ ] Ready for implementation
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ---
 

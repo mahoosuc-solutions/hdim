@@ -11,7 +11,6 @@ spring-dependency-management = "1.1.7"
 # Healthcare Libraries
 hapi-fhir = "7.6.0"
 cql-engine = "3.3.1"
-cql-evaluator = "3.3.1"
 
 # Databases & Persistence
 postgresql = "42.7.7"
@@ -102,7 +101,6 @@ hapi-fhir-jpaserver-base = { module = "ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base
 # CQL Engine
 cql-engine = { module = "org.opencds.cqf.cql:engine", version.ref = "cql-engine" }
 cql-engine-fhir = { module = "org.opencds.cqf.cql:engine.fhir", version.ref = "cql-engine" }
-cql-evaluator-fhir = { module = "com.alphora:cql-evaluator-fhir", version.ref = "cql-evaluator" }
 
 # Databases
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
@@ -195,7 +193,7 @@ spring-boot-redis = ["spring-boot-starter-data-redis"]
 spring-boot-security = ["spring-boot-starter-security", "jjwt-api", "jjwt-impl", "jjwt-jackson"]
 hapi-fhir-server = ["hapi-fhir-base", "hapi-fhir-structures-r4", "hapi-fhir-validation", "hapi-fhir-validation-resources-r4", "hapi-fhir-server", "hapi-fhir-jpaserver-base"]
 hapi-fhir-client = ["hapi-fhir-base", "hapi-fhir-structures-r4", "hapi-fhir-client"]
-cql = ["cql-engine", "cql-engine-fhir", "cql-evaluator-fhir"]
+cql = ["cql-engine", "cql-engine-fhir"]
 kafka = ["spring-kafka", "kafka-clients"]
 testing = ["spring-boot-starter-test", "junit-jupiter", "mockito-core", "mockito-junit-jupiter", "rest-assured"]
 testcontainers = ["testcontainers", "testcontainers-postgresql", "testcontainers-kafka", "testcontainers-redis"]

@@ -113,6 +113,7 @@ Clear Before Recording:
 - [ ] Timing verified against script checkpoints
 - [ ] All demo data displays correctly
 - [ ] Backup plan ready if issues occur
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ---
 
@@ -260,6 +261,7 @@ Keep these ready if you need to recover mid-recording:
 - [ ] Transitions are clean
 - [ ] No technical glitches visible
 - [ ] Timing is within target range
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### File Management
 

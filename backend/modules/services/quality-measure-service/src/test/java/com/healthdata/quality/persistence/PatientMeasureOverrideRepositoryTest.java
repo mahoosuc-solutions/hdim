@@ -541,6 +541,11 @@ class PatientMeasureOverrideRepositoryTest {
         override.setRequiresPeriodicReview(false);
         override.setCreatedBy(UUID.randomUUID());
         override.setCreatedAt(OffsetDateTime.now());
+
+        // Persist entity to database
+        entityManager.persist(override);
+        entityManager.flush();
+
         return override;
     }
 }

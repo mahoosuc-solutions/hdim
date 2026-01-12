@@ -1,11 +1,15 @@
 package com.healthdata.quality.persistence;
 
+import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -36,12 +40,15 @@ import static org.assertj.core.api.Assertions.assertThat;
  * - Approval workflow filtering
  * - Periodic review scheduling
  */
-@DataJpaTest
+@SpringBootTest
+@EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
+@ActiveProfiles("test")
+@Transactional
 @DisplayName("PatientMeasureOverrideRepository Tests")
 class PatientMeasureOverrideRepositoryTest {
 
     @Autowired
-    private TestEntityManager entityManager;
+    private EntityManager entityManager;
 
     @Autowired
     private PatientMeasureOverrideRepository repository;
@@ -73,7 +80,8 @@ class PatientMeasureOverrideRepositoryTest {
         // Given
         PatientMeasureOverrideEntity override = createOverride(
                 tenant1, patient1, measure1, "PARAMETER", true);
-        entityManager.persistAndFlush(override);
+        entityManager.persist(override);
+        entityManager.flush();
 
         // When
         Optional<PatientMeasureOverrideEntity> result = repository.findByIdAndTenantId(
@@ -91,7 +99,8 @@ class PatientMeasureOverrideRepositoryTest {
         // Given
         PatientMeasureOverrideEntity override = createOverride(
                 tenant1, patient1, measure1, "PARAMETER", true);
-        entityManager.persistAndFlush(override);
+        entityManager.persist(override);
+        entityManager.flush();
 
         // When
         Optional<PatientMeasureOverrideEntity> result = repository.findByIdAndTenantId(
@@ -245,7 +254,8 @@ class PatientMeasureOverrideRepositoryTest {
                 tenant1, patient1, measure1, "PARAMETER", true);
         override.setEffectiveFrom(today.minusDays(30));
         override.setEffectiveUntil(null); // No end date
-        entityManager.persistAndFlush(override);
+        entityManager.persist(override);
+        entityManager.flush();
 
         // When
         List<PatientMeasureOverrideEntity> result = repository.findEffectiveOverrides(
@@ -264,7 +274,8 @@ class PatientMeasureOverrideRepositoryTest {
                 tenant1, patient1, measure1, "PARAMETER", true);
         expiredOverride.setEffectiveFrom(today.minusDays(90));
         expiredOverride.setEffectiveUntil(today.minusDays(1)); // Expired yesterday
-        entityManager.persistAndFlush(expiredOverride);
+        entityManager.persist(expiredOverride);
+        entityManager.flush();
 
         // When
         List<PatientMeasureOverrideEntity> result = repository.findEffectiveOverrides(
@@ -529,6 +540,7 @@ class PatientMeasureOverrideRepositoryTest {
         override.setEffectiveFrom(LocalDate.now());
         override.setRequiresPeriodicReview(false);
         override.setCreatedBy(UUID.randomUUID());
-        return entityManager.persist(override);
+        override.setCreatedAt(OffsetDateTime.now());
+        return override;
     }
 }

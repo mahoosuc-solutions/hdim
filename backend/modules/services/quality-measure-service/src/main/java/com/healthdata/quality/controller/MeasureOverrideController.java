@@ -180,7 +180,7 @@ public class MeasureOverrideController {
      * DELETE /quality-measure/measure-overrides/{overrideId}
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
-    @DeleteMapping(value = "/measure-overrides/{overrideId}")
+    @DeleteMapping(value = "/measure-overrides/{overrideId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PatientMeasureOverrideEntity> deactivateOverride(
             @RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
             @RequestHeader("X-Auth-User-Id") UUID deactivatedBy,

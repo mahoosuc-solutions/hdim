@@ -1,0 +1,394 @@
+<div class="mpi-audit-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <h1>Master Patient Index Audit</h1>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="exportMPIReport()">
+        <i class="icon-download"></i> Export Report
+      </button>
+      <button class="btn btn-primary" (click)="refreshData()">
+        <i class="icon-refresh"></i> Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- MPI Metrics Overview -->
+  <div class="metrics-cards">
+    <div class="metric-card merge">
+      <div class="metric-label">Total Merges</div>
+      <div class="metric-value">{{ mpiMetrics.totalMerges }}</div>
+      <div class="metric-subtext">{{ mpiMetrics.autoMergedRecords }} automated</div>
+    </div>
+    
+    <div class="metric-card unmerge">
+      <div class="metric-label">Total Unmerges</div>
+      <div class="metric-value">{{ mpiMetrics.totalUnmerges }}</div>
+      <div class="metric-subtext">Rollback operations</div>
+    </div>
+    
+    <div class="metric-card warning">
+      <div class="metric-label">Pending Resolutions</div>
+      <div class="metric-value">{{ mpiMetrics.pendingResolutions }}</div>
+      <div class="metric-subtext">Requires manual review</div>
+    </div>
+    
+    <div class="metric-card alert">
+      <div class="metric-label">Data Quality Issues</div>
+      <div class="metric-value">{{ mpiMetrics.dataQualityIssues }}</div>
+      <div class="metric-subtext">Active issues</div>
+    </div>
+    
+    <div class="metric-card">
+      <div class="metric-label">Duplicates Detected</div>
+      <div class="metric-value">{{ mpiMetrics.duplicatesDetected }}</div>
+      <div class="metric-subtext">Last 30 days</div>
+    </div>
+    
+    <div class="metric-card">
+      <div class="metric-label">Avg Match Score</div>
+      <div class="metric-value">{{ (matchQualityMetrics.averageMatchScore * 100).toFixed(1) }}%</div>
+      <div class="metric-subtext">Match confidence</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab === 'events'" (click)="activeTab = 'events'">
+      Audit Events
+    </button>
+    <button class="tab" [class.active]="activeTab === 'merges'" (click)="activeTab = 'merges'">
+      Merge History
+    </button>
+    <button class="tab" [class.active]="activeTab === 'data-quality'" (click)="activeTab = 'data-quality'">
+      Data Quality ({{ dataQualityIssues.length }})
+    </button>
+    <button class="tab" [class.active]="activeTab === 'metrics'" (click)="activeTab = 'metrics'">
+      Match Metrics
+    </button>
+  </div>
+
+  <!-- Audit Events Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'events'">
+    <!-- Filters -->
+    <div class="filters">
+      <select [(ngModel)]="filterEventType" (change)="applyFilters()">
+        <option value="all">All Event Types</option>
+        <option value="PATIENT_MERGE">Patient Merge</option>
+        <option value="PATIENT_UNMERGE">Patient Unmerge</option>
+        <option value="IDENTITY_RESOLUTION">Identity Resolution</option>
+        <option value="DUPLICATE_DETECTION">Duplicate Detection</option>
+        <option value="CROSS_REFERENCE_UPDATE">Cross Reference Update</option>
+        <option value="DATA_QUALITY_FLAG">Data Quality Flag</option>
+      </select>
+      
+      <select [(ngModel)]="filterDateRange" (change)="applyFilters()">
+        <option value="today">Today</option>
+        <option value="yesterday">Yesterday</option>
+        <option value="last-7-days">Last 7 Days</option>
+        <option value="last-30-days">Last 30 Days</option>
+      </select>
+      
+      <input type="text" [(ngModel)]="filterUserId" (change)="applyFilters()" 
+             placeholder="Filter by User ID">
+    </div>
+
+    <!-- Event List -->
+    <div class="event-list">
+      <div class="event-card" *ngFor="let event of mpiEvents" (click)="viewEventDetails(event)">
+        <div class="event-header">
+          <span class="event-type-badge" [class]="getEventTypeClass(event.eventType)">
+            {{ event.eventType.replace('_', ' ') }}
+          </span>
+          <span class="status-badge" [class]="getStatusClass(event.status)">
+            {{ event.status }}
+          </span>
+          <span class="timestamp">{{ event.timestamp | date:'short' }}</span>
+        </div>
+        
+        <div class="event-body">
+          <div class="patient-ids">
+            <div class="patient-id">
+              <strong>Source:</strong> {{ event.sourcePatientId }}
+            </div>
+            <div class="patient-id" *ngIf="event.targetPatientId">
+              <strong>Target:</strong> {{ event.targetPatientId }}
+            </div>
+          </div>
+          
+          <div class="match-score" [class]="getMatchScoreClass(event.matchScore)">
+            Match Score: {{ (event.matchScore * 100).toFixed(1) }}%
+          </div>
+          
+          <div class="merge-reason">
+            <strong>Reason:</strong> {{ event.mergeReason }}
+          </div>
+          
+          <div class="event-meta">
+            <span class="user-info">
+              <i class="icon-user"></i> {{ event.userId }}
+            </span>
+            <span class="tenant-info">
+              <i class="icon-building"></i> {{ event.tenantId }}
+            </span>
+            <span class="automation-badge" *ngIf="event.automatedMerge">
+              <i class="icon-robot"></i> Automated
+            </span>
+          </div>
+          
+          <div class="validation-errors" *ngIf="event.validationErrors.length > 0">
+            <strong>Validation Errors:</strong>
+            <ul>
+              <li *ngFor="let error of event.validationErrors">{{ error }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <div class="empty-state" *ngIf="mpiEvents.length === 0">
+        <i class="icon-search"></i>
+        <p>No MPI audit events found</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Merge History Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'merges'">
+    <div class="merge-list">
+      <div class="merge-card" *ngFor="let merge of mergeEvents">
+        <div class="merge-header">
+          <h3>Merge Operation</h3>
+          <span class="timestamp">{{ merge.timestamp | date:'short' }}</span>
+        </div>
+        
+        <div class="merge-body">
+          <div class="merge-details">
+            <div class="detail-row">
+              <label>Merged Patient:</label>
+              <span>{{ merge.mergedPatientId }}</span>
+            </div>
+            <div class="detail-row">
+              <label>Surviving Record:</label>
+              <span>{{ merge.survivingRecordId }}</span>
+            </div>
+            <div class="detail-row">
+              <label>Merged By:</label>
+              <span>{{ merge.mergedBy }}</span>
+            </div>
+            <div class="detail-row">
+              <label>Match Score:</label>
+              <span [class]="getMatchScoreClass(merge.matchScore)">
+                {{ (merge.matchScore * 100).toFixed(1) }}%
+              </span>
+            </div>
+            <div class="detail-row">
+              <label>Resolution Strategy:</label>
+              <span>{{ merge.resolutionStrategy }}</span>
+            </div>
+          </div>
+          
+          <div class="conflicted-fields" *ngIf="merge.fieldsConflicted.length > 0">
+            <strong>Conflicted Fields:</strong>
+            <div class="field-tags">
+              <span class="field-tag" *ngFor="let field of merge.fieldsConflicted">
+                {{ field }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="merge-actions">
+            <button class="btn btn-sm btn-secondary" (click)="validateMerge(merge)">
+              Validate
+            </button>
+            <button class="btn btn-sm btn-warning" 
+                    (click)="rollbackMerge(merge)"
+                    [disabled]="!merge.canRollback || merge.rolledBack">
+              <i class="icon-undo"></i> Rollback
+            </button>
+            <span class="rolled-back-badge" *ngIf="merge.rolledBack">
+              ROLLED BACK
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="empty-state" *ngIf="mergeEvents.length === 0">
+        <i class="icon-merge"></i>
+        <p>No merge operations found</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Quality Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'data-quality'">
+    <div class="data-quality-list">
+      <div class="quality-issue-card" *ngFor="let issue of dataQualityIssues" 
+           [class]="'severity-' + issue.severity.toLowerCase()">
+        <div class="issue-header">
+          <span class="severity-badge" [class]="'severity-' + issue.severity.toLowerCase()">
+            {{ issue.severity }}
+          </span>
+          <span class="issue-type">{{ issue.issueType.replace('_', ' ') }}</span>
+          <span class="timestamp">{{ issue.timestamp | date:'short' }}</span>
+        </div>
+        
+        <div class="issue-body">
+          <div class="patient-id">
+            <strong>Patient:</strong> {{ issue.patientId }}
+          </div>
+          
+          <div class="description">
+            {{ issue.description }}
+          </div>
+          
+          <div class="resolution-info" *ngIf="issue.resolved">
+            <i class="icon-check-circle"></i>
+            Resolved by {{ issue.resolvedBy }} on {{ issue.resolutionDate | date:'short' }}
+          </div>
+          
+          <div class="issue-actions" *ngIf="!issue.resolved">
+            <button class="btn btn-sm btn-primary" (click)="resolveDataQualityIssue(issue)">
+              <i class="icon-check"></i> Resolve Issue
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="empty-state" *ngIf="dataQualityIssues.length === 0">
+        <i class="icon-check-circle"></i>
+        <p>No data quality issues</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Match Metrics Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'metrics'">
+    <div class="metrics-grid">
+      <div class="metric-section">
+        <h3>Match Quality Distribution</h3>
+        <div class="metric-chart">
+          <div class="chart-placeholder">
+            <div class="bar high-confidence" 
+                 style="height: {{ matchQualityMetrics.highConfidenceMatches / 2 }}px">
+              <span>High (≥90%)<br>{{ matchQualityMetrics.highConfidenceMatches }}</span>
+            </div>
+            <div class="bar medium-confidence" 
+                 style="height: {{ matchQualityMetrics.mediumConfidenceMatches / 2 }}px">
+              <span>Medium (70-90%)<br>{{ matchQualityMetrics.mediumConfidenceMatches }}</span>
+            </div>
+            <div class="bar low-confidence" 
+                 style="height: {{ matchQualityMetrics.lowConfidenceMatches / 2 }}px">
+              <span>Low (<70%)<br>{{ matchQualityMetrics.lowConfidenceMatches }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="metric-section">
+        <h3>MPI Operations Summary</h3>
+        <ul class="metric-list">
+          <li>
+            <span>Total Merges:</span>
+            <strong>{{ mpiMetrics.totalMerges }}</strong>
+          </li>
+          <li>
+            <span>Automated Merges:</span>
+            <strong>{{ mpiMetrics.autoMergedRecords }}</strong>
+          </li>
+          <li>
+            <span>Manual Reviews:</span>
+            <strong>{{ mpiMetrics.manualReviewRequired }}</strong>
+          </li>
+          <li>
+            <span>Rollbacks:</span>
+            <strong>{{ mpiMetrics.totalUnmerges }}</strong>
+          </li>
+          <li>
+            <span>Cross References:</span>
+            <strong>{{ mpiMetrics.crossReferencesValidated }}</strong>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Detail Panel -->
+  <div class="detail-panel" *ngIf="selectedEvent">
+    <div class="detail-header">
+      <h3>Event Details</h3>
+      <button class="btn-close" (click)="closeEventDetails()">×</button>
+    </div>
+    
+    <div class="detail-body">
+      <div class="detail-section">
+        <h4>Event Information</h4>
+        <div class="detail-row">
+          <label>Event ID:</label>
+          <span>{{ selectedEvent.eventId }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Event Type:</label>
+          <span>{{ selectedEvent.eventType }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Timestamp:</label>
+          <span>{{ selectedEvent.timestamp | date:'full' }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Status:</label>
+          <span class="status-badge" [class]="getStatusClass(selectedEvent.status)">
+            {{ selectedEvent.status }}
+          </span>
+        </div>
+      </div>
+      
+      <div class="detail-section">
+        <h4>Patient Information</h4>
+        <div class="detail-row">
+          <label>Source Patient:</label>
+          <span>{{ selectedEvent.sourcePatientId }}</span>
+        </div>
+        <div class="detail-row" *ngIf="selectedEvent.targetPatientId">
+          <label>Target Patient:</label>
+          <span>{{ selectedEvent.targetPatientId }}</span>
+        </div>
+      </div>
+      
+      <div class="detail-section">
+        <h4>Match Details</h4>
+        <div class="detail-row">
+          <label>Match Score:</label>
+          <span [class]="getMatchScoreClass(selectedEvent.matchScore)">
+            {{ (selectedEvent.matchScore * 100).toFixed(2) }}%
+          </span>
+        </div>
+        <div class="detail-row">
+          <label>Merge Reason:</label>
+          <span>{{ selectedEvent.mergeReason }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Automated:</label>
+          <span>{{ selectedEvent.automatedMerge ? 'Yes' : 'No' }}</span>
+        </div>
+      </div>
+      
+      <div class="detail-section">
+        <h4>User & Tenant</h4>
+        <div class="detail-row">
+          <label>User ID:</label>
+          <span>{{ selectedEvent.userId }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Tenant ID:</label>
+          <span>{{ selectedEvent.tenantId }}</span>
+        </div>
+      </div>
+      
+      <div class="detail-section" *ngIf="selectedEvent.validationErrors.length > 0">
+        <h4>Validation Errors</h4>
+        <ul class="error-list">
+          <li *ngFor="let error of selectedEvent.validationErrors">{{ error }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

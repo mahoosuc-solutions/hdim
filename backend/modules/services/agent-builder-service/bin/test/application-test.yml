@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:15-alpine:///testdb
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+  flyway:
+    enabled: false
+
+jwt:
+  secret: test-secret-key-for-testing-purposes-only-minimum-256-bits
+
+hdim:
+  agent-runtime:
+    url: http://localhost:8095
+
+  agent-builder:
+    max-agents-per-tenant: 50
+    max-versions-per-agent: 100

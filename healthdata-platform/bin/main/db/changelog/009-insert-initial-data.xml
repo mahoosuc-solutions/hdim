@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd">
+
+    <changeSet id="009-001-insert-default-quality-measures" author="healthdata">
+        <comment>Insert default quality measures</comment>
+        <insert tableName="measures" schemaName="quality">
+            <column name="measure_id" value="HbA1c-Control"/>
+            <column name="name" value="Diabetes: HbA1c Control"/>
+            <column name="description" value="Percentage of patients with diabetes who have HbA1c less than 8%"/>
+            <column name="category" value="Clinical"/>
+            <column name="version" value="2024.1"/>
+            <column name="active" value="true"/>
+        </insert>
+        <insert tableName="measures" schemaName="quality">
+            <column name="measure_id" value="BP-Control"/>
+            <column name="name" value="Blood Pressure Control"/>
+            <column name="description" value="Percentage of patients with hypertension who have BP less than 140/90"/>
+            <column name="category" value="Clinical"/>
+            <column name="version" value="2024.1"/>
+            <column name="active" value="true"/>
+        </insert>
+        <insert tableName="measures" schemaName="quality">
+            <column name="measure_id" value="Medication-Adherence"/>
+            <column name="name" value="Medication Adherence"/>
+            <column name="description" value="Percentage of patients adhering to prescribed medications"/>
+            <column name="category" value="Process"/>
+            <column name="version" value="2024.1"/>
+            <column name="active" value="true"/>
+        </insert>
+        <insert tableName="measures" schemaName="quality">
+            <column name="measure_id" value="Preventive-Screening"/>
+            <column name="name" value="Preventive Care Screening"/>
+            <column name="description" value="Completion of age-appropriate preventive screenings"/>
+            <column name="category" value="Preventive"/>
+            <column name="version" value="2024.1"/>
+            <column name="active" value="true"/>
+        </insert>
+        <insert tableName="measures" schemaName="quality">
+            <column name="measure_id" value="Mental-Health-Screen"/>
+            <column name="name" value="Depression Screening"/>
+            <column name="description" value="Annual depression screening for adults"/>
+            <column name="category" value="Behavioral"/>
+            <column name="version" value="2024.1"/>
+            <column name="active" value="true"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="009-002-insert-default-notification-templates" author="healthdata">
+        <comment>Insert default notification templates</comment>
+        <insert tableName="templates" schemaName="notification">
+            <column name="template_id" value="care-gap-reminder"/>
+            <column name="name" value="Care Gap Reminder"/>
+            <column name="channel" value="EMAIL"/>
+            <column name="subject" value="You have an upcoming care requirement"/>
+            <column name="body" value="Dear {{patientName}}, you have a care gap for {{measureName}} that needs attention. Please contact your healthcare provider or clinic to address this gap."/>
+            <column name="active" value="true"/>
+        </insert>
+        <insert tableName="templates" schemaName="notification">
+            <column name="template_id" value="appointment-reminder"/>
+            <column name="name" value="Appointment Reminder"/>
+            <column name="channel" value="SMS"/>
+            <column name="body" value="Reminder: You have an appointment on {{date}} at {{time}}. Reply CONFIRM to confirm or CANCEL to cancel."/>
+            <column name="active" value="true"/>
+        </insert>
+        <insert tableName="templates" schemaName="notification">
+            <column name="template_id" value="measure-result"/>
+            <column name="name" value="Quality Measure Result"/>
+            <column name="channel" value="EMAIL"/>
+            <column name="subject" value="Your Health Score Update"/>
+            <column name="body" value="Your recent health assessment score is {{score}}. {{recommendations}}"/>
+            <column name="active" value="true"/>
+        </insert>
+        <insert tableName="templates" schemaName="notification">
+            <column name="template_id" value="lab-result-notification"/>
+            <column name="name" value="Lab Result Available"/>
+            <column name="channel" value="EMAIL"/>
+            <column name="subject" value="Your Lab Results are Ready"/>
+            <column name="body" value="Dear {{patientName}}, your lab results for {{testName}} are now available. {{actionRequired}}"/>
+            <column name="active" value="true"/>
+        </insert>
+        <insert tableName="templates" schemaName="notification">
+            <column name="template_id" value="medication-reminder"/>
+            <column name="name" value="Medication Reminder"/>
+            <column name="channel" value="SMS"/>
+            <column name="body" value="Time to take your {{medicationName}}. If you have any questions, contact your pharmacy."/>
+            <column name="active" value="true"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="009-003-insert-default-notification-channels" author="healthdata">
+        <comment>Insert additional notification template for in-app notifications</comment>
+        <insert tableName="templates" schemaName="notification">
+            <column name="template_id" value="health-alert"/>
+            <column name="name" value="Health Alert"/>
+            <column name="channel" value="IN_APP"/>
+            <column name="body" value="Alert: {{alertMessage}}. Please review your health information and take appropriate action."/>
+            <column name="active" value="true"/>
+        </insert>
+        <insert tableName="templates" schemaName="notification">
+            <column name="template_id" value="system-announcement"/>
+            <column name="name" value="System Announcement"/>
+            <column name="channel" value="IN_APP"/>
+            <column name="body" value="{{announcement}}"/>
+            <column name="active" value="true"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="009-004-create-data-validation-trigger" author="healthdata">
+        <comment>Create trigger to automatically update patient updated_at timestamp</comment>
+        <sql dbms="postgresql">
+            CREATE OR REPLACE FUNCTION patient.update_patient_timestamp()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                NEW.updated_at = CURRENT_TIMESTAMP;
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+
+            CREATE TRIGGER trigger_update_patient_timestamp
+            BEFORE UPDATE ON patient.patients
+            FOR EACH ROW
+            EXECUTE FUNCTION patient.update_patient_timestamp();
+        </sql>
+        <rollback>
+            DROP TRIGGER IF EXISTS trigger_update_patient_timestamp ON patient.patients;
+            DROP FUNCTION IF EXISTS patient.update_patient_timestamp();
+        </rollback>
+    </changeSet>
+
+    <changeSet id="009-005-create-notification-preference-default-trigger" author="healthdata">
+        <comment>Create function to insert default notification preferences for new patients</comment>
+        <sql dbms="postgresql">
+            CREATE OR REPLACE FUNCTION notification.create_default_preferences()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                INSERT INTO notification.preferences (patient_id, tenant_id, email_enabled, sms_enabled, push_enabled, in_app_enabled)
+                VALUES (NEW.id, NEW.tenant_id, true, true, true, true);
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+
+            CREATE TRIGGER trigger_create_default_preferences
+            AFTER INSERT ON patient.patients
+            FOR EACH ROW
+            EXECUTE FUNCTION notification.create_default_preferences();
+        </sql>
+        <rollback>
+            DROP TRIGGER IF EXISTS trigger_create_default_preferences ON patient.patients;
+            DROP FUNCTION IF EXISTS notification.create_default_preferences();
+        </rollback>
+    </changeSet>
+
+    <changeSet id="009-006-create-audit-log-function" author="healthdata">
+        <comment>Create function to automatically log data changes to audit log</comment>
+        <sql dbms="postgresql">
+            CREATE OR REPLACE FUNCTION audit.audit_data_changes()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                IF TG_OP = 'INSERT' THEN
+                    INSERT INTO audit.data_change_log (table_name, record_id, column_name, new_value, changed_by, tenant_id)
+                    SELECT TG_TABLE_NAME, NEW.id::text, key, value, 'SYSTEM',
+                           CASE WHEN NEW.tenant_id IS NOT NULL THEN NEW.tenant_id ELSE 'DEFAULT' END
+                    FROM jsonb_each_text(row_to_json(NEW)::jsonb)
+                    WHERE key NOT IN ('id', 'created_at', 'updated_at', 'version');
+                ELSIF TG_OP = 'UPDATE' THEN
+                    INSERT INTO audit.data_change_log (table_name, record_id, column_name, old_value, new_value, changed_by, tenant_id)
+                    SELECT TG_TABLE_NAME, NEW.id::text, key,
+                           row_to_json(OLD)::jsonb->>key,
+                           row_to_json(NEW)::jsonb->>key,
+                           'SYSTEM',
+                           CASE WHEN NEW.tenant_id IS NOT NULL THEN NEW.tenant_id ELSE 'DEFAULT' END
+                    FROM jsonb_object_keys(row_to_json(NEW)::jsonb) AS key
+                    WHERE row_to_json(OLD)::jsonb->>key IS DISTINCT FROM row_to_json(NEW)::jsonb->>key;
+                END IF;
+                RETURN NULL;
+            END;
+            $$ LANGUAGE plpgsql;
+        </sql>
+        <rollback>
+            DROP FUNCTION IF EXISTS audit.audit_data_changes();
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

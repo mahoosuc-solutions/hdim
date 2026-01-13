@@ -1,0 +1,14 @@
+📋 CARE GAP
+
+Patient: [(${patientName})]
+MRN: [(${mrn})]
+
+Gap: [(${gapType})]
+[(${gapMessage})]
+
+Measure: [(${measure})]
+Due: [(${dueDate})]
+
+Address gap: [(${actionUrl})]
+
+- HealthData-in-Motion

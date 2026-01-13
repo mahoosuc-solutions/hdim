@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0004-update-care-gaps-table" author="healthdata-team4">
+        <comment>Update care gaps table to add new fields for CQL integration and comprehensive tracking</comment>
+
+        <!-- Add measure year -->
+        <addColumn tableName="care_gaps">
+            <column name="measure_year" type="integer">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add gap reason -->
+        <addColumn tableName="care_gaps">
+            <column name="gap_reason" type="text">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add risk score -->
+        <addColumn tableName="care_gaps">
+            <column name="risk_score" type="double precision">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add recommendation fields -->
+        <addColumn tableName="care_gaps">
+            <column name="recommendation" type="text">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="care_gaps">
+            <column name="recommendation_type" type="varchar(100)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="care_gaps">
+            <column name="recommended_action" type="text">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add CQL integration fields -->
+        <addColumn tableName="care_gaps">
+            <column name="cql_library" type="varchar(200)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="care_gaps">
+            <column name="cql_expression" type="varchar(200)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="care_gaps">
+            <column name="cql_result" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add FHIR reference fields -->
+        <addColumn tableName="care_gaps">
+            <column name="related_encounter_id" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="care_gaps">
+            <column name="related_condition_id" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="care_gaps">
+            <column name="related_procedure_id" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add closure information fields -->
+        <addColumn tableName="care_gaps">
+            <column name="closed_by" type="varchar(100)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="care_gaps">
+            <column name="closure_reason" type="text">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="care_gaps">
+            <column name="closure_action" type="text">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add audit fields -->
+        <addColumn tableName="care_gaps">
+            <column name="created_by" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="care_gaps">
+            <column name="updated_by" type="varchar(100)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="care_gaps">
+            <column name="version" type="integer" defaultValue="0">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Update patient_id to UUID type -->
+        <modifyDataType tableName="care_gaps"
+                        columnName="patient_id"
+                        newDataType="uuid"/>
+
+        <!-- Create additional indexes -->
+        <createIndex indexName="idx_care_gaps_gap_category" tableName="care_gaps">
+            <column name="tenant_id"/>
+            <column name="gap_category"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_care_gaps_priority_status" tableName="care_gaps">
+            <column name="tenant_id"/>
+            <column name="priority"/>
+            <column name="status"/>
+            <column name="due_date"/>
+        </createIndex>
+
+        <createIndex indexName="idx_care_gaps_patient_status" tableName="care_gaps">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_care_gaps_measure_year" tableName="care_gaps">
+            <column name="tenant_id"/>
+            <column name="measure_year"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex indexName="idx_care_gaps_measure_year" tableName="care_gaps"/>
+            <dropIndex indexName="idx_care_gaps_patient_status" tableName="care_gaps"/>
+            <dropIndex indexName="idx_care_gaps_priority_status" tableName="care_gaps"/>
+            <dropIndex indexName="idx_care_gaps_gap_category" tableName="care_gaps"/>
+            <dropColumn tableName="care_gaps" columnName="version"/>
+            <dropColumn tableName="care_gaps" columnName="updated_by"/>
+            <dropColumn tableName="care_gaps" columnName="created_by"/>
+            <dropColumn tableName="care_gaps" columnName="closure_action"/>
+            <dropColumn tableName="care_gaps" columnName="closure_reason"/>
+            <dropColumn tableName="care_gaps" columnName="closed_by"/>
+            <dropColumn tableName="care_gaps" columnName="related_procedure_id"/>
+            <dropColumn tableName="care_gaps" columnName="related_condition_id"/>
+            <dropColumn tableName="care_gaps" columnName="related_encounter_id"/>
+            <dropColumn tableName="care_gaps" columnName="cql_result"/>
+            <dropColumn tableName="care_gaps" columnName="cql_expression"/>
+            <dropColumn tableName="care_gaps" columnName="cql_library"/>
+            <dropColumn tableName="care_gaps" columnName="recommended_action"/>
+            <dropColumn tableName="care_gaps" columnName="recommendation_type"/>
+            <dropColumn tableName="care_gaps" columnName="recommendation"/>
+            <dropColumn tableName="care_gaps" columnName="risk_score"/>
+            <dropColumn tableName="care_gaps" columnName="gap_reason"/>
+            <dropColumn tableName="care_gaps" columnName="measure_year"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,337 @@
+package com.healthdata.authentication.filter;
+
+import com.healthdata.authentication.config.RateLimitConfig;
+import com.healthdata.authentication.monitoring.RateLimitMetrics;
+import com.healthdata.authentication.service.RedisBucketProviderService;
+import com.healthdata.authentication.service.RateLimitStatsService;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.Refill;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Rate limiting filter to prevent brute force attacks and API abuse.
+ * Uses Bucket4j token bucket algorithm with Redis backend for distributed rate limiting.
+ *
+ * ARCHITECTURE:
+ * - Primary: Redis-backed distributed rate limiting (shared across instances)
+ * - Fallback: In-memory rate limiting if Redis unavailable
+ *
+ * SECURITY CRITICAL: This filter protects against:
+ * - Brute force password attacks on login endpoint
+ * - Automated account creation on register endpoint
+ * - API abuse and DoS attacks on all endpoints
+ *
+ * Rate Limits (configurable):
+ * - Login: 5 requests per minute per IP + 20 requests per hour per IP
+ * - Register: 3 requests per hour per IP
+ * - API: 100 requests per minute per IP
+ *
+ * Returns 429 Too Many Requests when rate limit is exceeded.
+ */
+@Component
+@Slf4j
+@ConditionalOnProperty(prefix = "rate-limiting", name = "enabled", havingValue = "true", matchIfMissing = true)
+public class RateLimitingFilter extends OncePerRequestFilter {
+
+    private final RateLimitConfig config;
+    private final Map<String, Bucket> inMemoryCache = new ConcurrentHashMap<>();
+
+    // Redis-backed services (optional - may not be available)
+    @Autowired(required = false)
+    private RedisBucketProviderService bucketProvider;
+
+    @Autowired(required = false)
+    private RateLimitStatsService statsService;
+
+    @Autowired(required = false)
+    private RateLimitMetrics metrics;
+
+    private volatile boolean redisAvailable = true;
+
+    public RateLimitingFilter(RateLimitConfig config) {
+        this.config = config;
+    }
+
+    /**
+     * Filter method that enforces rate limiting on incoming requests.
+     *
+     * @param request HTTP request
+     * @param response HTTP response
+     * @param filterChain Filter chain to continue processing
+     * @throws ServletException if servlet error occurs
+     * @throws IOException if I/O error occurs
+     */
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+
+        String requestURI = request.getRequestURI();
+        String clientIP = getClientIP(request);
+        String key = clientIP + ":" + requestURI;
+
+        log.debug("Rate limiting check for IP: {}, URI: {}", clientIP, requestURI);
+
+        Bucket bucket = resolveBucket(key, requestURI);
+
+        // Try to consume 1 token from the bucket
+        if (bucket.tryConsume(1)) {
+            // Token available, allow request to proceed
+            log.debug("Rate limit check passed for IP: {}, URI: {}", clientIP, requestURI);
+
+            // Record allowed request in metrics
+            if (metrics != null) {
+                try {
+                    metrics.recordRequest(requestURI, true);
+                } catch (Exception e) {
+                    log.error("Error recording metrics: {}", e.getMessage());
+                }
+            }
+
+            filterChain.doFilter(request, response);
+        } else {
+            // No tokens available, rate limit exceeded
+            log.warn("Rate limit exceeded for IP: {}, URI: {}", clientIP, requestURI);
+
+            // Record blocked IP in stats service
+            if (statsService != null) {
+                try {
+                    statsService.recordBlockedIP(clientIP);
+                } catch (Exception e) {
+                    log.error("Error recording blocked IP: {}", e.getMessage());
+                }
+            }
+
+            // Record blocked request in metrics
+            if (metrics != null) {
+                try {
+                    metrics.recordRequest(requestURI, false);
+                    metrics.recordBlock(requestURI, clientIP);
+                } catch (Exception e) {
+                    log.error("Error recording metrics: {}", e.getMessage());
+                }
+            }
+
+            response.setStatus(429); // 429 Too Many Requests (HttpServletResponse.SC_TOO_MANY_REQUESTS not available in Jakarta Servlet API)
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+
+            String jsonResponse = String.format(
+                "{\"error\":\"Too Many Requests\",\"message\":\"Rate limit exceeded. Please try again later.\",\"status\":429,\"path\":\"%s\"}",
+                requestURI
+            );
+
+            response.getWriter().write(jsonResponse);
+            response.getWriter().flush();
+        }
+    }
+
+    /**
+     * Resolves or creates a bucket for the given cache key.
+     * Attempts to use Redis-backed bucket first, falls back to in-memory if Redis unavailable.
+     *
+     * @param key Cache key (IP:URI)
+     * @param requestURI Request URI to determine rate limit
+     * @return Bucket for rate limiting
+     */
+    private Bucket resolveBucket(String key, String requestURI) {
+        // Try Redis first if available
+        if (redisAvailable && bucketProvider != null) {
+            try {
+                Bucket bucket = bucketProvider.getBucket(key, () -> createBucketConfiguration(requestURI));
+                log.debug("Using Redis-backed bucket for key: {}", key);
+                return bucket;
+            } catch (Exception e) {
+                log.warn("Redis unavailable for rate limiting, falling back to in-memory. Error: {}", e.getMessage());
+                redisAvailable = false;
+
+                // Record Redis error and fallback in metrics
+                if (metrics != null) {
+                    try {
+                        metrics.recordRedisError();
+                        metrics.recordFallback();
+                    } catch (Exception me) {
+                        log.error("Error recording metrics: {}", me.getMessage());
+                    }
+                }
+                // Fall through to in-memory cache
+            }
+        }
+
+        // Fallback to in-memory cache
+        log.debug("Using in-memory bucket for key: {}", key);
+        return inMemoryCache.computeIfAbsent(key, k -> createInMemoryBucket(requestURI));
+    }
+
+    /**
+     * Creates bucket configuration for Redis-backed buckets.
+     * Used by Bucket4j ProxyManager.
+     *
+     * @param requestURI Request URI to determine rate limit
+     * @return Bucket configuration
+     */
+    private BucketConfiguration createBucketConfiguration(String requestURI) {
+        if (requestURI.contains("/api/v1/auth/login")) {
+            // Login endpoint: 5 requests per minute AND 20 requests per hour
+            log.debug("Creating login rate limit configuration: {} per minute, {} per hour",
+                    config.getLogin().getPerMinute(), config.getLogin().getPerHour());
+
+            Bandwidth minuteLimit = Bandwidth.classic(
+                    config.getLogin().getPerMinute(),
+                    Refill.intervally(config.getLogin().getPerMinute(), Duration.ofMinutes(1))
+            );
+
+            Bandwidth hourLimit = Bandwidth.classic(
+                    config.getLogin().getPerHour(),
+                    Refill.intervally(config.getLogin().getPerHour(), Duration.ofHours(1))
+            );
+
+            return BucketConfiguration.builder()
+                    .addLimit(minuteLimit)
+                    .addLimit(hourLimit)
+                    .build();
+
+        } else if (requestURI.contains("/api/v1/auth/register")) {
+            // Register endpoint: 3 requests per hour
+            log.debug("Creating register rate limit configuration: {} per hour",
+                    config.getRegister().getPerHour());
+
+            Bandwidth limit = Bandwidth.classic(
+                    config.getRegister().getPerHour(),
+                    Refill.intervally(config.getRegister().getPerHour(), Duration.ofHours(1))
+            );
+
+            return BucketConfiguration.builder()
+                    .addLimit(limit)
+                    .build();
+
+        } else {
+            // General API endpoints: 100 requests per minute
+            log.debug("Creating general API rate limit configuration: {} per minute",
+                    config.getApi().getPerMinute());
+
+            Bandwidth limit = Bandwidth.classic(
+                    config.getApi().getPerMinute(),
+                    Refill.intervally(config.getApi().getPerMinute(), Duration.ofMinutes(1))
+            );
+
+            return BucketConfiguration.builder()
+                    .addLimit(limit)
+                    .build();
+        }
+    }
+
+    /**
+     * Creates in-memory bucket (fallback when Redis unavailable).
+     *
+     * @param requestURI Request URI to determine rate limit
+     * @return In-memory Bucket
+     */
+    private Bucket createInMemoryBucket(String requestURI) {
+        Bandwidth limit;
+
+        if (requestURI.contains("/api/v1/auth/login")) {
+            // Login endpoint: 5 requests per minute AND 20 requests per hour
+            log.debug("Creating in-memory login rate limit bucket: {} per minute, {} per hour",
+                    config.getLogin().getPerMinute(), config.getLogin().getPerHour());
+
+            Bandwidth minuteLimit = Bandwidth.classic(
+                    config.getLogin().getPerMinute(),
+                    Refill.intervally(config.getLogin().getPerMinute(), Duration.ofMinutes(1))
+            );
+
+            Bandwidth hourLimit = Bandwidth.classic(
+                    config.getLogin().getPerHour(),
+                    Refill.intervally(config.getLogin().getPerHour(), Duration.ofHours(1))
+            );
+
+            return Bucket.builder()
+                    .addLimit(minuteLimit)
+                    .addLimit(hourLimit)
+                    .build();
+
+        } else if (requestURI.contains("/api/v1/auth/register")) {
+            // Register endpoint: 3 requests per hour
+            log.debug("Creating in-memory register rate limit bucket: {} per hour",
+                    config.getRegister().getPerHour());
+
+            limit = Bandwidth.classic(
+                    config.getRegister().getPerHour(),
+                    Refill.intervally(config.getRegister().getPerHour(), Duration.ofHours(1))
+            );
+
+        } else {
+            // General API endpoints: 100 requests per minute
+            log.debug("Creating in-memory general API rate limit bucket: {} per minute",
+                    config.getApi().getPerMinute());
+
+            limit = Bandwidth.classic(
+                    config.getApi().getPerMinute(),
+                    Refill.intervally(config.getApi().getPerMinute(), Duration.ofMinutes(1))
+            );
+        }
+
+        return Bucket.builder()
+                .addLimit(limit)
+                .build();
+    }
+
+    /**
+     * Extracts client IP address from the request.
+     * Handles X-Forwarded-For header for requests behind proxies/load balancers.
+     *
+     * SECURITY NOTE: X-Forwarded-For can be spoofed, but in a properly configured
+     * environment with a trusted proxy, this provides the real client IP.
+     *
+     * @param request HTTP request
+     * @return Client IP address
+     */
+    private String getClientIP(HttpServletRequest request) {
+        String xfHeader = request.getHeader("X-Forwarded-For");
+        if (xfHeader != null && !xfHeader.isEmpty()) {
+            // X-Forwarded-For can contain multiple IPs: client, proxy1, proxy2, ...
+            // The first IP is the original client IP
+            String clientIP = xfHeader.split(",")[0].trim();
+            log.debug("Client IP from X-Forwarded-For: {}", clientIP);
+            return clientIP;
+        }
+
+        String remoteAddr = request.getRemoteAddr();
+        log.debug("Client IP from RemoteAddr: {}", remoteAddr);
+        return remoteAddr;
+    }
+
+    /**
+     * Determines if this filter should be applied to the request.
+     * Currently applies to all requests, but could be customized to skip certain paths.
+     *
+     * @param request HTTP request
+     * @return true if filter should be applied
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        // Apply rate limiting to all requests
+        // Could be customized to skip health check endpoints, actuator, etc.
+        String path = request.getRequestURI();
+
+        // Skip rate limiting for health check and actuator endpoints
+        return path.startsWith("/actuator/") ||
+               path.equals("/health") ||
+               path.equals("/ready");
+    }
+}

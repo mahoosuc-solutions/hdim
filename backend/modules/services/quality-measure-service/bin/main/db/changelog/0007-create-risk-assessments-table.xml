@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0007-create-risk-assessments-table" author="healthdata-team">
+        <comment>Create risk assessments table for patient risk stratification</comment>
+
+        <createTable tableName="risk_assessments">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="tenant_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="patient_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="risk_score" type="integer">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="risk_level" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Risk factors stored as JSONB array -->
+            <column name="risk_factors" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Predicted outcomes stored as JSONB array -->
+            <column name="predicted_outcomes" type="jsonb"/>
+
+            <!-- Recommendations stored as JSONB array -->
+            <column name="recommendations" type="jsonb"/>
+
+            <column name="assessment_date" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Index for patient + date queries -->
+        <createIndex indexName="idx_ra_patient_date" tableName="risk_assessments">
+            <column name="patient_id"/>
+            <column name="assessment_date" descending="true"/>
+        </createIndex>
+
+        <!-- Index for patient + risk level queries -->
+        <createIndex indexName="idx_ra_risk_level" tableName="risk_assessments">
+            <column name="patient_id"/>
+            <column name="risk_level"/>
+        </createIndex>
+
+        <!-- Index for tenant isolation -->
+        <createIndex indexName="idx_ra_tenant" tableName="risk_assessments">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <!-- Composite index for tenant + patient queries -->
+        <createIndex indexName="idx_ra_tenant_patient" tableName="risk_assessments">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <!-- Composite index for tenant + risk level (population health queries) -->
+        <createIndex indexName="idx_ra_tenant_risk_level" tableName="risk_assessments">
+            <column name="tenant_id"/>
+            <column name="risk_level"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="risk_assessments"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

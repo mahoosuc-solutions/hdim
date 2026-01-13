@@ -1,0 +1,209 @@
+server:
+  port: 8087
+  servlet:
+    context-path: /quality-measure
+
+# CORS Configuration for development
+cors:
+  allowed-origins: "http://localhost:4200,http://localhost:3000,http://localhost:5173"
+  allowed-methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
+  allowed-headers: "*"
+  exposed-headers: "Authorization,X-Tenant-ID"
+  allow-credentials: true
+  max-age: 3600
+
+spring:
+  application:
+    name: quality-measure-service
+
+  flyway:
+    enabled: false  # Explicitly disable Flyway (using Liquibase for migrations)
+
+  # Note: This service uses JWT authentication via Gateway service
+  # No local UserDetailsService needed - removed spring.security.user
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/quality_db}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 50      # Increased for high-throughput evaluations (was 10)
+      minimum-idle: 10           # Keep more idle connections ready (was 5)
+      connection-timeout: 20000  # Fail faster to prevent queuing (was 30000)
+      idle-timeout: 300000       # 5 minutes
+      max-lifetime: 1800000      # 30 minutes (connection refresh)
+      leak-detection-threshold: 60000  # Detect connection leaks
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2000ms
+
+  # ⚠️ HIPAA COMPLIANCE: PHI cache TTL must be ≤ 5 minutes (300000ms)
+  # See: backend/HIPAA-CACHE-COMPLIANCE.md
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000  # 5 minutes (HIPAA compliant for PHI)
+
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: quality-measure-service
+      auto-offset-reset: earliest
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: java.util.HashMap
+
+# FHIR Server Configuration
+fhir:
+  server:
+    url: http://fhir-service-mock:8080/fhir
+
+# Patient Service Configuration (not deployed yet)
+patient:
+  service:
+    url: http://patient-service:8084/patient
+
+# Care Gap Service Configuration (not deployed yet)
+care-gap:
+  service:
+    url: http://care-gap-service:8086/care-gap
+
+# CQL Engine Configuration
+cql:
+  engine:
+    url: ${CQL_ENGINE_SERVICE_URL:http://cql-engine-service:8081/cql-engine}
+    # ⚠️ SECURITY: Service-to-service auth handled by JWT tokens or mTLS
+    # Credentials configured via environment variables when needed
+    auth:
+      username: ${CQL_ENGINE_AUTH_USERNAME:}
+      password: ${CQL_ENGINE_AUTH_PASSWORD:}
+
+# Feign Client Configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 15000
+        loggerLevel: basic
+      patient-service:
+        url: http://patient-service:8084
+        connectTimeout: 5000
+        readTimeout: 15000
+      care-gap-service:
+        url: http://care-gap-service:8086
+        connectTimeout: 5000
+        readTimeout: 15000
+      cql-engine-service:
+        url: http://cql-engine-service:8081
+        connectTimeout: 5000
+        readTimeout: 30000  # CQL evaluation can take longer
+
+# HIPAA Audit Configuration
+audit:
+  enabled: true
+  encryption:
+    enabled: true
+
+# WebSocket Configuration
+# HIPAA-Compliant WebSocket Security Settings (Docker/Dev Environment)
+websocket:
+  enabled: true
+
+  # CORS - Allowed Origins (development only)
+  # ⚠️ WARNING: In production, replace with https:// URLs and enable WSS
+  allowed-origins: http://localhost:4200,http://localhost:4201,http://localhost:4202,http://localhost:3000,http://localhost:8082,http://localhost:5173
+
+  # Security Settings
+  security:
+    # SSL/TLS enforcement (disabled for local Docker development)
+    # ⚠️ MUST BE ENABLED IN PRODUCTION: Set WEBSOCKET_REQUIRE_SSL=true
+    require-ssl: ${WEBSOCKET_REQUIRE_SSL:false}
+
+    # Session Timeout (HIPAA §164.312(a)(2)(iii) - Automatic Logoff)
+    session-timeout-minutes: 15
+
+    # Connection limits
+    max-connections-per-user: 3
+
+    # Message size limits
+    max-message-size-kb: 64
+
+    # Rate Limiting (prevent brute-force and DoS attacks)
+    rate-limit:
+      enabled: true
+      connections-per-minute: 10
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+
+# Springdoc OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+  show-actuator: true
+
+# OpenTelemetry Tracing Configuration
+tracing:
+  url: http://jaeger:4318/v1/traces
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.healthdata.quality: DEBUG
+    ca.uhn.fhir: INFO
+    org.springframework.cloud.openfeign: DEBUG
+    com.healthdata.quality.websocket: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Shared cache module configuration (uses healthdata.cache prefix)
+healthdata:
+  cache:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2s
+      default-ttl: 5m

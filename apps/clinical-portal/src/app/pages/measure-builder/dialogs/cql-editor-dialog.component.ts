@@ -16,7 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { LoadingButtonComponent } from '../../../shared/components/loading-button/loading-button.component';
-import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
+import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
 import {
   CqlGenerationService,
   CqlGenerationResponse,

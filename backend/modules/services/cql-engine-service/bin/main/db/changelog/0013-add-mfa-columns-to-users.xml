@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0013-add-mfa-columns" author="healthdata-system">
+        <comment>Add MFA (Multi-Factor Authentication) columns to users table for TOTP support</comment>
+
+        <!-- MFA enabled flag -->
+        <addColumn tableName="users">
+            <column name="mfa_enabled" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <!-- MFA secret key (Base32 encoded TOTP secret) -->
+        <addColumn tableName="users">
+            <column name="mfa_secret" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- MFA recovery codes (comma-separated) -->
+        <addColumn tableName="users">
+            <column name="mfa_recovery_codes" type="varchar(1000)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Timestamp when MFA was enabled -->
+        <addColumn tableName="users">
+            <column name="mfa_enabled_at" type="timestamp with time zone">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="users" columnName="mfa_enabled_at"/>
+            <dropColumn tableName="users" columnName="mfa_recovery_codes"/>
+            <dropColumn tableName="users" columnName="mfa_secret"/>
+            <dropColumn tableName="users" columnName="mfa_enabled"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0013-add-oauth-columns" author="healthdata-system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="users" columnName="oauth_provider"/>
+            </not>
+        </preConditions>
+
+        <comment>Add OAuth provider columns if not already present</comment>
+
+        <!-- OAuth provider name -->
+        <addColumn tableName="users">
+            <column name="oauth_provider" type="varchar(50)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- OAuth provider user ID -->
+        <addColumn tableName="users">
+            <column name="oauth_provider_id" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="users" columnName="oauth_provider_id"/>
+            <dropColumn tableName="users" columnName="oauth_provider"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0013-create-mfa-index" author="healthdata-system">
+        <comment>Add index for MFA-enabled user queries</comment>
+
+        <createIndex indexName="idx_users_mfa_enabled" tableName="users">
+            <column name="mfa_enabled"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="users" indexName="idx_users_mfa_enabled"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,72 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - alert [ref=e3]
+  - status [ref=e4]
+  - alert [ref=e5]
+  - navigation "Global navigation" [ref=e6]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - link "🏗️ Bolduc Builders" [ref=e10] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e11]: 🏗️
+          - generic [ref=e12]: Bolduc Builders
+        - generic [ref=e13]:
+          - link "Builder" [ref=e14] [cursor=pointer]:
+            - /url: /
+          - link "Dashboard" [ref=e15] [cursor=pointer]:
+            - /url: /dashboard
+          - button "Projects menu" [ref=e17] [cursor=pointer]:
+            - generic [ref=e18]: 🏗️
+            - generic [ref=e19]: Projects
+            - img [ref=e20]
+          - button "Work menu" [ref=e23] [cursor=pointer]:
+            - generic [ref=e24]: ⚙️
+            - generic [ref=e25]: Work
+            - img [ref=e26]
+          - button "Documents menu" [ref=e29] [cursor=pointer]:
+            - generic [ref=e30]: 📄
+            - generic [ref=e31]: Documents
+            - img [ref=e32]
+          - button "Communication menu" [ref=e35] [cursor=pointer]:
+            - generic [ref=e36]: 💬
+            - generic [ref=e37]: Communication
+            - img [ref=e38]
+          - button "Scheduling menu" [ref=e41] [cursor=pointer]:
+            - generic [ref=e42]: 📅
+            - generic [ref=e43]: Scheduling
+            - img [ref=e44]
+          - button "Financial menu" [ref=e47] [cursor=pointer]:
+            - generic [ref=e48]: 💰
+            - generic [ref=e49]: Financial
+            - img [ref=e50]
+          - button "Procurement menu" [ref=e53] [cursor=pointer]:
+            - generic [ref=e54]: 🛒
+            - generic [ref=e55]: Procurement
+            - img [ref=e56]
+      - generic [ref=e58]:
+        - button "Search (Cmd+K)" [ref=e59] [cursor=pointer]:
+          - img [ref=e60]
+        - button "Toggle theme (currently light)" [ref=e62] [cursor=pointer]:
+          - img [ref=e63]
+          - generic [ref=e69]: Switch to dark theme
+        - link "Notifications" [ref=e70] [cursor=pointer]:
+          - /url: /notifications
+          - img [ref=e71]
+        - link "Login" [ref=e74] [cursor=pointer]:
+          - /url: /login
+  - main [ref=e75]:
+    - generic [ref=e77]:
+      - generic [ref=e78]: "404"
+      - heading "Page Not Found" [level=1] [ref=e79]
+      - paragraph [ref=e80]: The page you're looking for doesn't exist or has been moved.
+      - generic [ref=e81]:
+        - link "Go Home" [ref=e82] [cursor=pointer]:
+          - /url: /
+        - link "Dashboard" [ref=e83] [cursor=pointer]:
+          - /url: /dashboard
+      - paragraph [ref=e84]: If you believe this is a mistake, please contact support.
+```

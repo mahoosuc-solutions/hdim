@@ -1,0 +1,317 @@
+<div class="ai-audit-dashboard">
+  <div class="dashboard-header">
+    <h1>AI Audit Dashboard</h1>
+    <p class="subtitle">Real-time monitoring of AI decisions, configuration changes, and user actions</p>
+  </div>
+
+  <!-- Analytics Cards -->
+  <div class="analytics-cards" *ngIf="activeTab === 'stream' || activeTab === 'analytics'">
+    <div class="card metric-card">
+      <div class="card-body">
+        <div class="metric-label">AI Decisions (24h)</div>
+        <div class="metric-value">{{ analytics.totalAIDecisions }}</div>
+      </div>
+    </div>
+
+    <div class="card metric-card">
+      <div class="card-body">
+        <div class="metric-label">Avg Confidence</div>
+        <div class="metric-value">{{ (analytics.averageConfidence * 100).toFixed(0) }}%</div>
+      </div>
+    </div>
+
+    <div class="card metric-card">
+      <div class="card-body">
+        <div class="metric-label">Acceptance Rate</div>
+        <div class="metric-value">{{ (analytics.acceptanceRate * 100).toFixed(0) }}%</div>
+      </div>
+    </div>
+
+    <div class="card metric-card">
+      <div class="card-body">
+        <div class="metric-label">High-Risk Changes</div>
+        <div class="metric-value text-danger">{{ analytics.highRiskChanges }}</div>
+      </div>
+    </div>
+
+    <div class="card metric-card">
+      <div class="card-body">
+        <div class="metric-label">Pending Approvals</div>
+        <div class="metric-value text-warning">{{ analytics.pendingApprovals }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'stream'" (click)="selectTab('stream')">
+        <i class="fas fa-stream"></i> Live Stream
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'query'" (click)="selectTab('query')">
+        <i class="fas fa-search"></i> Natural Language Query
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'analytics'" (click)="selectTab('analytics')">
+        <i class="fas fa-chart-line"></i> Analytics
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'trail'" (click)="selectTab('trail')">
+        <i class="fas fa-project-diagram"></i> Audit Trails
+      </a>
+    </li>
+  </ul>
+
+  <!-- Live Stream Tab -->
+  <div *ngIf="activeTab === 'stream'" class="tab-content">
+    <div class="stream-container">
+      <!-- AI Decisions Stream -->
+      <div class="stream-section">
+        <h3><i class="fas fa-brain"></i> AI Agent Decisions</h3>
+        <div class="event-list">
+          <div *ngFor="let decision of aiDecisions" class="event-card ai-decision-card">
+            <div class="event-header">
+              <span class="event-time">{{ formatTimestamp(decision.timestamp) }}</span>
+              <span class="badge" [class]="'badge-' + getConfidenceColor(decision.confidenceScore)">
+                {{ (decision.confidenceScore * 100).toFixed(0) }}% confidence
+              </span>
+            </div>
+            <div class="event-body">
+              <div class="event-title">{{ decision.decisionType.replace(/_/g, ' ') }}</div>
+              <div class="event-details">
+                <strong>Agent:</strong> {{ decision.agentType.replace(/_/g, ' ') }}<br>
+                <strong>Resource:</strong> {{ decision.resourceType }}<br>
+                <strong>Recommendation:</strong> 
+                {{ decision.recommendation.configType }} = 
+                {{ decision.recommendation.currentValue }} → {{ decision.recommendation.recommendedValue }}<br>
+                <strong>Expected Impact:</strong> {{ decision.recommendation.expectedImpact }}
+              </div>
+            </div>
+            <div class="event-footer">
+              <button class="btn btn-sm btn-outline-primary" (click)="viewDecisionDetails(decision)">
+                <i class="fas fa-eye"></i> Details
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" (click)="replayDecision(decision)">
+                <i class="fas fa-redo"></i> Replay
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="aiDecisions.length === 0" class="empty-state">
+            <i class="fas fa-robot fa-3x"></i>
+            <p>No AI decisions in the selected time range</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configuration Changes Stream -->
+      <div class="stream-section">
+        <h3><i class="fas fa-cogs"></i> Configuration Changes</h3>
+        <div class="event-list">
+          <div *ngFor="let change of configChanges" class="event-card config-change-card">
+            <div class="event-header">
+              <span class="event-time">{{ formatTimestamp(change.timestamp) }}</span>
+              <span class="badge" [class]="getImpactBadgeClass(change.impactSeverity)">
+                {{ change.impactSeverity.replace(/_/g, ' ') }}
+              </span>
+            </div>
+            <div class="event-body">
+              <div class="event-title">{{ change.changeType.replace(/_/g, ' ') }}</div>
+              <div class="event-details">
+                <strong>Service:</strong> {{ change.serviceName }}<br>
+                <strong>Key:</strong> {{ change.configKey }}<br>
+                <strong>Change:</strong> {{ change.previousValue }} → {{ change.newValue }}<br>
+                <strong>Triggered By:</strong> {{ change.triggeredBy }}
+              </div>
+            </div>
+            <div class="event-footer">
+              <button class="btn btn-sm btn-outline-primary" (click)="viewAuditTrail(change.correlationId)">
+                <i class="fas fa-history"></i> View Trail
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="configChanges.length === 0" class="empty-state">
+            <i class="fas fa-cog fa-3x"></i>
+            <p>No configuration changes in the selected time range</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Actions Stream -->
+      <div class="stream-section">
+        <h3><i class="fas fa-users"></i> User Actions</h3>
+        <div class="event-list">
+          <div *ngFor="let action of userActions" class="event-card user-action-card">
+            <div class="event-header">
+              <span class="event-time">{{ formatTimestamp(action.timestamp) }}</span>
+              <span class="badge badge-success" *ngIf="action.actionStatus === 'COMPLETED'">
+                {{ action.actionStatus }}
+              </span>
+            </div>
+            <div class="event-body">
+              <div class="event-title">{{ action.actionType.replace(/_/g, ' ') }}</div>
+              <div class="event-details">
+                <strong>User:</strong> {{ action.username }}<br>
+                <strong>Service:</strong> {{ action.serviceName }}<br>
+                <strong>Action:</strong> {{ action.aiRecommendationAction }}<br>
+                <strong *ngIf="action.userFeedbackRating">Rating:</strong> 
+                <span *ngIf="action.userFeedbackRating">
+                  <i class="fas fa-star text-warning" *ngFor="let star of [1,2,3,4,5].slice(0, action.userFeedbackRating)"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="userActions.length === 0" class="empty-state">
+            <i class="fas fa-user fa-3x"></i>
+            <p>No user actions in the selected time range</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Natural Language Query Tab -->
+  <div *ngIf="activeTab === 'query'" class="tab-content">
+    <div class="nlq-container">
+      <div class="card">
+        <div class="card-body">
+          <h3><i class="fas fa-comment-dots"></i> Ask a Question</h3>
+          <p class="text-muted">Query audit events using natural language</p>
+
+          <div class="input-group mb-3">
+            <input 
+              type="text" 
+              class="form-control" 
+              [(ngModel)]="naturalLanguageQuery"
+              placeholder="e.g., Show me all AI decisions from the last 24 hours"
+              (keyup.enter)="executeNaturalLanguageQuery()"
+            >
+            <button 
+              class="btn btn-primary" 
+              type="button" 
+              (click)="executeNaturalLanguageQuery()"
+              [disabled]="queryLoading"
+            >
+              <i class="fas fa-search"></i> Search
+            </button>
+          </div>
+
+          <div class="example-queries">
+            <small class="text-muted">Example queries:</small>
+            <div class="btn-group btn-group-sm mt-2" role="group">
+              <button type="button" class="btn btn-outline-secondary btn-sm" 
+                      (click)="naturalLanguageQuery = 'Show me all AI decisions from the last 24 hours'; executeNaturalLanguageQuery()">
+                Last 24 hours
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm"
+                      (click)="naturalLanguageQuery = 'What configuration changes were made yesterday?'; executeNaturalLanguageQuery()">
+                Yesterday's changes
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm"
+                      (click)="naturalLanguageQuery = 'Who rejected AI recommendations this week?'; executeNaturalLanguageQuery()">
+                Rejected recommendations
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="queryLoading" class="text-center my-4">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+
+          <div *ngIf="queryError" class="alert alert-danger mt-3">
+            <i class="fas fa-exclamation-triangle"></i> {{ queryError }}
+          </div>
+
+          <div *ngIf="queryResults.length > 0 && !queryLoading" class="query-results mt-4">
+            <h4>Results ({{ queryResults.length }})</h4>
+            <div class="result-list">
+              <div *ngFor="let result of queryResults" class="result-item">
+                <span class="badge badge-info">{{ result.type }}</span>
+                <strong>{{ formatTimestamp(result.timestamp) }}</strong> - {{ result.description }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics Tab -->
+  <div *ngIf="activeTab === 'analytics'" class="tab-content">
+    <div class="analytics-container">
+      <div class="card">
+        <div class="card-body">
+          <h3><i class="fas fa-chart-bar"></i> Analytics Dashboard</h3>
+          <p class="text-muted">Comprehensive analytics and trends</p>
+          
+          <!-- Placeholder for charts -->
+          <div class="row mt-4">
+            <div class="col-md-6">
+              <div class="chart-placeholder">
+                <h5>AI Decision Confidence Over Time</h5>
+                <p class="text-muted">Line chart showing confidence trends</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="chart-placeholder">
+                <h5>Configuration Changes by Type</h5>
+                <p class="text-muted">Pie chart showing change distribution</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-4">
+            <div class="col-md-6">
+              <div class="chart-placeholder">
+                <h5>User Action Types</h5>
+                <p class="text-muted">Bar chart of action distribution</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="chart-placeholder">
+                <h5>Performance Impact</h5>
+                <p class="text-muted">Impact severity distribution</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audit Trails Tab -->
+  <div *ngIf="activeTab === 'trail'" class="tab-content">
+    <div class="trail-container">
+      <div class="card">
+        <div class="card-body">
+          <h3><i class="fas fa-project-diagram"></i> Audit Trail Viewer</h3>
+          <p class="text-muted">Trace complete decision-to-execution flows</p>
+
+          <div class="input-group mb-3">
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Enter correlation ID"
+            >
+            <button class="btn btn-primary" type="button">
+              <i class="fas fa-search"></i> Load Trail
+            </button>
+          </div>
+
+          <div class="trail-placeholder text-center py-5">
+            <i class="fas fa-route fa-3x text-muted"></i>
+            <p class="text-muted mt-3">Enter a correlation ID to view the complete audit trail</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

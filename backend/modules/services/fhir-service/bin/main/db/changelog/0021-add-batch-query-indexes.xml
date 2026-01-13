@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0021-01" author="claude-code">
+        <comment>
+        Issue #137: Optimize FHIR Queries for Primary Care Dashboard
+
+        Add composite indexes optimized for batch patient queries:
+        - Batch patient lookup by tenant and multiple IDs
+        - Active patient filtering with deleted_at IS NULL
+        - Dashboard query performance optimization
+
+        Expected performance improvement:
+        - Batch patient query: 1.5s -> 500ms
+        - Dashboard load time: 4-6s -> 2s
+        </comment>
+
+        <!-- Composite index for batch patient lookups -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_patients_tenant_id_deleted
+            ON patients(tenant_id, id, deleted_at)
+            WHERE deleted_at IS NULL;
+        </sql>
+
+        <!-- Index for active patient count queries -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_patients_tenant_active
+            ON patients(tenant_id)
+            WHERE deleted_at IS NULL;
+        </sql>
+
+        <!-- Index for patient name search with active filter -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_patients_tenant_lastname_active
+            ON patients(tenant_id, last_name)
+            WHERE deleted_at IS NULL;
+        </sql>
+
+        <rollback>
+            DROP INDEX IF EXISTS idx_patients_tenant_id_deleted;
+            DROP INDEX IF EXISTS idx_patients_tenant_active;
+            DROP INDEX IF EXISTS idx_patients_tenant_lastname_active;
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

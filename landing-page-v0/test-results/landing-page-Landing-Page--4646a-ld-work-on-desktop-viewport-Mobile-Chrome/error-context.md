@@ -1,0 +1,150 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - alert [ref=e3]
+  - status [ref=e4]
+  - alert [ref=e5]
+  - navigation "Global navigation" [ref=e6]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - link "🏗️ Bolduc Builders" [ref=e10] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e11]: 🏗️
+          - generic [ref=e12]: Bolduc Builders
+        - generic [ref=e13]:
+          - link "Builder" [ref=e14] [cursor=pointer]:
+            - /url: /
+          - link "Dashboard" [ref=e15] [cursor=pointer]:
+            - /url: /dashboard
+          - button "Projects menu" [ref=e17] [cursor=pointer]:
+            - generic [ref=e18]: 🏗️
+            - generic [ref=e19]: Projects
+            - img [ref=e20]
+          - button "Work menu" [ref=e23] [cursor=pointer]:
+            - generic [ref=e24]: ⚙️
+            - generic [ref=e25]: Work
+            - img [ref=e26]
+          - button "Documents menu" [ref=e29] [cursor=pointer]:
+            - generic [ref=e30]: 📄
+            - generic [ref=e31]: Documents
+            - img [ref=e32]
+          - button "Communication menu" [ref=e35] [cursor=pointer]:
+            - generic [ref=e36]: 💬
+            - generic [ref=e37]: Communication
+            - img [ref=e38]
+          - button "Scheduling menu" [ref=e41] [cursor=pointer]:
+            - generic [ref=e42]: 📅
+            - generic [ref=e43]: Scheduling
+            - img [ref=e44]
+          - button "Financial menu" [ref=e47] [cursor=pointer]:
+            - generic [ref=e48]: 💰
+            - generic [ref=e49]: Financial
+            - img [ref=e50]
+          - button "Procurement menu" [ref=e53] [cursor=pointer]:
+            - generic [ref=e54]: 🛒
+            - generic [ref=e55]: Procurement
+            - img [ref=e56]
+      - generic [ref=e58]:
+        - button "Search (Cmd+K)" [ref=e59] [cursor=pointer]:
+          - img [ref=e60]
+        - button "Toggle theme (currently light)" [ref=e62] [cursor=pointer]:
+          - img [ref=e63]
+          - generic [ref=e69]: Switch to dark theme
+        - link "Notifications" [ref=e70] [cursor=pointer]:
+          - /url: /notifications
+          - img [ref=e71]
+        - link "Login" [ref=e74] [cursor=pointer]:
+          - /url: /login
+  - main [ref=e75]:
+    - generic [ref=e77]:
+      - generic [ref=e78]:
+        - generic [ref=e79]:
+          - paragraph [ref=e80]: Luxury Builder Workbench
+          - strong [ref=e81]: Configure, visualize, launch workflows
+          - paragraph [ref=e82]: Ready
+          - generic [ref=e83]:
+            - generic [ref=e84]: Autosave available from 1:04:18 PM.
+            - generic [ref=e85]:
+              - button "Restore" [ref=e86] [cursor=pointer]
+              - button "Dismiss" [ref=e87] [cursor=pointer]
+        - generic [ref=e88]:
+          - link "Open AI Chat Assistant" [ref=e89] [cursor=pointer]:
+            - /url: /chat
+            - text: 💬 AI Chat
+          - button "Upload sketch to interpret floorplan" [ref=e90] [cursor=pointer]: Upload Sketch
+          - button "Add Room" [ref=e91] [cursor=pointer]
+          - button "Undo last action" [disabled] [ref=e92]: Undo
+          - button "Redo last action" [disabled] [ref=e93]: Redo
+          - button "Save Draft" [ref=e94] [cursor=pointer]
+          - button "Export GLTF" [ref=e95] [cursor=pointer]
+      - main [ref=e96]:
+        - complementary [ref=e97]:
+          - generic [ref=e98]:
+            - button "Add Room" [ref=e99] [cursor=pointer]
+            - button "Save Draft" [ref=e100] [cursor=pointer]
+            - button "Load House" [ref=e101] [cursor=pointer]
+          - generic [ref=e102]:
+            - generic [ref=e104]: Project
+            - generic [ref=e105]:
+              - generic [ref=e106]:
+                - generic [ref=e107]: Client Name*
+                - textbox "Client Namerequired" [ref=e108]:
+                  - /placeholder: Bolduc Builders
+                  - text: Unknown Client
+              - generic [ref=e109]:
+                - generic [ref=e110]: Project Name
+                - textbox "Project Name" [ref=e111]:
+                  - /placeholder: Lot 4 – Lake View
+                  - text: Untitled Project
+              - generic [ref=e112]:
+                - generic [ref=e113]: House ID
+                - textbox "House ID" [disabled] [ref=e114]:
+                  - /placeholder: auto
+          - generic [ref=e115]:
+            - generic [ref=e116]:
+              - generic [ref=e117]: Rooms
+              - generic [ref=e118]: "1"
+            - generic [ref=e121]:
+              - button "living room 18ft × 20ft 9ft H" [ref=e122] [cursor=pointer]:
+                - strong [ref=e123]: living room
+                - generic [ref=e124]:
+                  - generic [ref=e125]: 18ft × 20ft
+                  - generic [ref=e126]: 9ft H
+              - button "Delete living room room" [ref=e127] [cursor=pointer]:
+                - img [ref=e128]
+          - generic [ref=e130]:
+            - generic [ref=e131]: Selection
+            - paragraph [ref=e132]: Select a room to inspect dimensions and materials.
+          - generic [ref=e133]:
+            - generic [ref=e134]: Materials
+            - paragraph [ref=e135]: Select a room to assign finishes.
+          - generic [ref=e137]:
+            - generic [ref=e138]:
+              - generic [ref=e139]: Layout Tools
+              - generic [ref=e140]: 1 rooms
+            - generic [ref=e141]:
+              - paragraph [ref=e142]: Snap Strength
+              - generic [ref=e143]:
+                - button "Free" [ref=e144] [cursor=pointer]
+                - button "Soft" [ref=e145] [cursor=pointer]
+                - button "Hard" [ref=e146] [cursor=pointer]
+            - generic [ref=e147]:
+              - button "Align X — left edges" [disabled] [ref=e148]
+              - button "Align Y — top edges" [disabled] [ref=e149]
+              - button "Distribute X — equal spacing" [disabled] [ref=e150]
+              - button "Distribute Y — equal spacing" [disabled] [ref=e151]
+          - generic [ref=e152]:
+            - generic [ref=e153]: Workflows
+            - generic [ref=e154]:
+              - button "Export GLTF" [ref=e155] [cursor=pointer]
+              - button "Trigger Render" [ref=e156] [cursor=pointer]
+              - button "Estimate Costs" [ref=e157] [cursor=pointer]
+            - paragraph [ref=e158]: Select a room to preview finishes.
+        - generic [ref=e162]:
+          - generic [ref=e163]: 2D
+          - checkbox "2D 3D" [checked] [ref=e164]
+          - generic [ref=e165]: 3D
+```

@@ -1,0 +1,138 @@
+# Docker-specific configuration for Patient Service
+server:
+  port: 8084
+  servlet:
+    context-path: /patient
+
+spring:
+  application:
+    name: patient-service
+
+  flyway:
+    enabled: false  # Explicitly disable Flyway (using Liquibase for migrations)
+
+  # Note: This service uses JWT authentication via Gateway service
+  # No local UserDetailsService needed
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/healthdata_patient
+    username: healthdata
+    password: ${SPRING_DATASOURCE_PASSWORD:dev_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 8
+          min-idle: 2
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 120000  # 2 minutes (HIPAA compliant for PHI)
+
+# FHIR Server Configuration
+fhir:
+  server:
+    url: http://fhir-service:8085/fhir
+
+# Consent Service Configuration
+consent:
+  server:
+    url: http://consent-service:8082/consent
+
+# Feign Client Configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 10000
+        loggerLevel: basic
+      fhir-service:
+        url: http://fhir-service:8085
+        connectTimeout: 5000
+        readTimeout: 10000
+      consent-service:
+        url: http://consent-service:8082
+        connectTimeout: 5000
+        readTimeout: 10000
+
+# HIPAA Audit Configuration
+audit:
+  enabled: true
+  encryption:
+    enabled: true
+
+# Rate Limiting Configuration
+rate-limiting:
+  enabled: true
+  login:
+    per-minute: 5
+    per-hour: 20
+  register:
+    per-hour: 3
+  api:
+    per-minute: 100
+
+# Health Check Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+    db:
+      enabled: true
+    redis:
+      enabled: true
+    diskspace:
+      enabled: true
+
+# OpenTelemetry Tracing Configuration
+tracing:
+  url: http://jaeger:4318/v1/traces
+
+# Logging for Docker
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+    org.springframework.data.redis: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

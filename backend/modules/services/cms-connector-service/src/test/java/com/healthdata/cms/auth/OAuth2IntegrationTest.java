@@ -141,7 +141,9 @@ class OAuth2IntegrationTest {
             .andRespond(withSuccess(
                 objectMapper.writeValueAsString(bcdaResponse),
                 MediaType.APPLICATION_JSON
-            ))
+            ));
+        
+        mockServer.expect(anything())
             .andRespond(withSuccess(
                 objectMapper.writeValueAsString(dpcResponse),
                 MediaType.APPLICATION_JSON

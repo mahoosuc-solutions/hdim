@@ -53,7 +53,7 @@ Successfully completed all optional database improvements (1-4) following the co
    - docker-compose.demo.yml
    - docker-compose-demo.yml
    - docker-compose.test.yml
-   - All updated: `postgres:15-alpine` → `postgres:16-alpine`
+   - All updated: `postgres:16-alpine` → `postgres:16-alpine`
 
 2. **Test Infrastructure**
    - 28 Java test files updated

@@ -44,6 +44,12 @@ authentication:
   rateLimit:
     enabled: false
 
+config:
+  promotions:
+    demo-tenant-id: ${CONFIG_PROMOTIONS_DEMO_TENANT_ID:demo-clinic}
+    require-demo: ${CONFIG_PROMOTIONS_REQUIRE_DEMO:true}
+    require-two-person-approval: ${CONFIG_PROMOTIONS_REQUIRE_TWO_PERSON_APPROVAL:true}
+
 # JWT Configuration
 # ⚠️ SECURITY: JWT secret MUST be provided via environment variable in production
 # Generate with: openssl rand -base64 32

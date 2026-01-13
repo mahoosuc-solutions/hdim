@@ -7,8 +7,9 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDividerModule } from '@angular/material/divider';
-import { DemoModeService, DemoScenario } from '../../services/demo-mode.service';
+import { DemoModeService } from '../../services/demo-mode.service';
 
 /**
  * Demo Control Bar Component
@@ -32,6 +33,7 @@ import { DemoModeService, DemoScenario } from '../../services/demo-mode.service'
     MatTooltipModule,
     MatChipsModule,
     MatProgressSpinnerModule,
+    MatProgressBarModule,
     MatDividerModule,
   ],
   template: `
@@ -47,9 +49,54 @@ import { DemoModeService, DemoScenario } from '../../services/demo-mode.service'
         <div class="scenario-info" *ngIf="demoService.activeScenario() as scenario">
           <mat-chip-listbox>
             <mat-chip-option selected disabled>
-              {{ scenario.name }}
+              {{ scenario.displayName || scenario.name }}
             </mat-chip-option>
           </mat-chip-listbox>
+        </div>
+
+        <!-- Session Status -->
+        <div class="scenario-info" *ngIf="demoService.status() as status">
+          <mat-chip-listbox>
+            <mat-chip-option selected disabled>
+              {{ status.sessionStatus || 'IDLE' }}
+            </mat-chip-option>
+          </mat-chip-listbox>
+        </div>
+
+        <!-- Last Load Results -->
+        <div class="scenario-info" *ngIf="demoService.lastLoadResult() as result">
+          <span class="load-summary">
+            {{ result.patientCount }} patients • {{ result.careGapCount }} care gaps • {{ result.loadTimeMs }}ms
+          </span>
+        </div>
+
+        <!-- Progress -->
+        <div class="scenario-info progress-info" *ngIf="demoService.progress() as progress">
+          <div class="progress-text">
+            <span class="progress-stage">{{ progress.stage }}</span>
+            <span class="progress-message" *ngIf="progress.message">{{ progress.message }}</span>
+            <span class="progress-message" *ngIf="progress.cancelRequested">Cancel requested</span>
+          </div>
+          <mat-progress-bar
+            mode="determinate"
+            [value]="progress.progressPercent"
+            class="demo-progress-bar"
+          ></mat-progress-bar>
+          <span class="progress-metrics">
+            {{ progress.patientsGenerated || 0 }} patients • {{ progress.careGapsCreated || 0 }} care gaps
+          </span>
+          <span class="progress-metrics" *ngIf="progress.patientsPersisted || progress.measuresSeeded">
+            {{ progress.patientsPersisted || 0 }} persisted • {{ progress.measuresSeeded || 0 }} measures
+          </span>
+          <span class="progress-metrics" *ngIf="progress.updatedAt">
+            Updated {{ formatTimestamp(progress.updatedAt) }}
+          </span>
+          <span class="progress-metrics" *ngIf="progress.tenantId">
+            Tenant {{ progress.tenantId }}
+          </span>
+          <span class="progress-metrics" *ngIf="progress.sessionId">
+            Session {{ progress.sessionId }}
+          </span>
         </div>
 
         <!-- Recording Controls -->
@@ -93,21 +140,13 @@ import { DemoModeService, DemoScenario } from '../../services/demo-mode.service'
             <mat-icon>movie</mat-icon>
           </button>
           <mat-menu #scenarioMenu="matMenu">
-            <button mat-menu-item (click)="loadScenario('hedis-evaluation')">
-              <mat-icon>assessment</mat-icon>
-              <span>HEDIS Evaluation</span>
-            </button>
-            <button mat-menu-item (click)="loadScenario('patient-journey')">
-              <mat-icon>person</mat-icon>
-              <span>Patient Journey</span>
-            </button>
-            <button mat-menu-item (click)="loadScenario('risk-stratification')">
-              <mat-icon>speed</mat-icon>
-              <span>Risk Stratification</span>
-            </button>
-            <button mat-menu-item (click)="loadScenario('multi-tenant')">
-              <mat-icon>business</mat-icon>
-              <span>Multi-Tenant Admin</span>
+            <button
+              mat-menu-item
+              *ngFor="let scenario of scenarioOptions"
+              (click)="loadScenario(scenario.name)"
+            >
+              <mat-icon>{{ scenario.icon }}</mat-icon>
+              <span>{{ scenario.label }}</span>
             </button>
           </mat-menu>
 
@@ -115,9 +154,22 @@ import { DemoModeService, DemoScenario } from '../../services/demo-mode.service'
             <mat-icon>more_vert</mat-icon>
           </button>
           <mat-menu #actionsMenu="matMenu">
+            <button mat-menu-item (click)="cancelLoad()" [disabled]="!canCancelLoad()">
+              <mat-icon>cancel</mat-icon>
+              <span>Cancel Load</span>
+            </button>
+            <button mat-menu-item (click)="stopSession()" [disabled]="!demoService.status()">
+              <mat-icon>stop_circle</mat-icon>
+              <span>Stop Session</span>
+            </button>
+            <mat-divider></mat-divider>
             <button mat-menu-item (click)="createSnapshot()">
               <mat-icon>photo_camera</mat-icon>
               <span>Create Snapshot</span>
+            </button>
+            <button mat-menu-item (click)="resetCurrentTenant()">
+              <mat-icon>delete_sweep</mat-icon>
+              <span>Reset Current Scenario</span>
             </button>
             <button mat-menu-item (click)="resetDemo()">
               <mat-icon>refresh</mat-icon>
@@ -213,6 +265,45 @@ import { DemoModeService, DemoScenario } from '../../services/demo-mode.service'
         flex-shrink: 0;
       }
 
+      .progress-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 220px;
+      }
+
+      .progress-text {
+        display: flex;
+        gap: 8px;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .progress-stage {
+        font-weight: 600;
+      }
+
+      .progress-message {
+        opacity: 0.8;
+      }
+
+      .progress-metrics {
+        font-size: 11px;
+        opacity: 0.8;
+      }
+
+      .demo-progress-bar {
+        height: 6px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .load-summary {
+        font-size: 12px;
+        opacity: 0.9;
+        white-space: nowrap;
+      }
+
       .recording-controls {
         display: flex;
         align-items: center;
@@ -288,12 +379,24 @@ import { DemoModeService, DemoScenario } from '../../services/demo-mode.service'
   ],
 })
 export class DemoControlBarComponent implements OnInit {
-  scenarios: DemoScenario[] = [];
+  scenarioOptions: Array<{ name: string; label: string; icon: string }> = [];
 
   constructor(public demoService: DemoModeService) {}
 
   async ngOnInit(): Promise<void> {
-    this.scenarios = await this.demoService.loadScenarios();
+    const scenarios = await this.demoService.loadScenarios();
+    this.scenarioOptions = scenarios.length
+      ? scenarios.map((scenario) => ({
+          name: scenario.name,
+          label: scenario.displayName || scenario.name,
+          icon: this.getScenarioIcon(scenario.name),
+        }))
+      : [
+          { name: 'hedis-evaluation', label: 'HEDIS Evaluation', icon: 'assessment' },
+          { name: 'patient-journey', label: 'Patient Journey', icon: 'person' },
+          { name: 'risk-stratification', label: 'Risk Stratification', icon: 'speed' },
+          { name: 'multi-tenant', label: 'Multi-Tenant Admin', icon: 'business' },
+        ];
   }
 
   async loadScenario(scenarioId: string): Promise<void> {
@@ -310,6 +413,46 @@ export class DemoControlBarComponent implements OnInit {
         await this.demoService.resetDemo();
       } catch (err) {
         console.error('Failed to reset demo:', err);
+      }
+    }
+  }
+
+  canCancelLoad(): boolean {
+    const progress = this.demoService.progress();
+    if (!progress) {
+      return false;
+    }
+    return !['COMPLETE', 'FAILED', 'CANCELLED'].includes(progress.stage) && !progress.cancelRequested;
+  }
+
+  async cancelLoad(): Promise<void> {
+    if (!confirm('Cancel the current scenario load?')) {
+      return;
+    }
+    try {
+      await this.demoService.cancelCurrentLoad();
+    } catch (err) {
+      console.error('Failed to cancel scenario load:', err);
+    }
+  }
+
+  async stopSession(): Promise<void> {
+    if (!confirm('Stop the current demo session?')) {
+      return;
+    }
+    try {
+      await this.demoService.stopCurrentSession();
+    } catch (err) {
+      console.error('Failed to stop demo session:', err);
+    }
+  }
+
+  async resetCurrentTenant(): Promise<void> {
+    if (confirm('Reset current scenario data for its tenant?')) {
+      try {
+        await this.demoService.resetCurrentTenant();
+      } catch (err) {
+        console.error('Failed to reset current tenant:', err);
       }
     }
   }
@@ -342,5 +485,21 @@ export class DemoControlBarComponent implements OnInit {
   clearError(): void {
     // Clear error by reloading status
     this.demoService.loadStatus();
+  }
+
+  formatTimestamp(value: string): string {
+    const parsed = Date.parse(value);
+    if (Number.isNaN(parsed)) {
+      return value;
+    }
+    return new Date(parsed).toLocaleTimeString();
+  }
+
+  private getScenarioIcon(name: string): string {
+    if (name.includes('hedis')) return 'assessment';
+    if (name.includes('risk')) return 'speed';
+    if (name.includes('journey')) return 'person';
+    if (name.includes('tenant')) return 'business';
+    return 'movie';
   }
 }

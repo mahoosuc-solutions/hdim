@@ -752,7 +752,7 @@ Integration tests use TestContainers for real PostgreSQL database and verify ful
 class ConsentIntegrationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
         .withDatabaseName("testdb")
         .withUsername("test")
         .withPassword("test");
@@ -1371,7 +1371,7 @@ public class ConsentTestConfiguration {
 | Kafka event not published | Serialization error or Kafka unavailable | Check logs for ObjectMapper errors; Kafka failures are swallowed |
 | Revocation fails | Consent already revoked or expired | Check current status before revoke; only active consents can be revoked |
 | Cache returning stale data | TTL not configured correctly | Verify RedisCacheConfiguration has 5-minute TTL |
-| TestContainers timeout | Docker not running or slow pull | Ensure Docker Desktop running; pre-pull postgres:15 image |
+| TestContainers timeout | Docker not running or slow pull | Ensure Docker Desktop running; pre-pull postgres:16 image |
 
 ### Manual Testing
 

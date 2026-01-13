@@ -241,7 +241,7 @@ liquibase --changelog-file=db.changelog-master.xml \
 
 1. **Test Locally**:
    ```bash
-   docker run --name healthdata-db -e POSTGRES_PASSWORD=password -d postgres:15
+   docker run --name healthdata-db -e POSTGRES_PASSWORD=password -d postgres:16
    ./gradlew bootRun
    ```
 

@@ -2,6 +2,7 @@ package com.healthdata.shared.security.config;
 
 import com.healthdata.shared.security.jwt.JwtAuthenticationFilter;
 import com.healthdata.shared.security.jwt.JwtTokenProvider;
+import com.healthdata.shared.security.tenant.TenantAccessFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -46,6 +47,7 @@ public class SecurityConfig {
 
     private final JwtTokenProvider tokenProvider;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final TenantAccessFilter tenantAccessFilter;
 
     /**
      * Configure HTTP security with JWT authentication
@@ -106,6 +108,8 @@ public class SecurityConfig {
                         // Care gap endpoints - require PROVIDER or ADMIN role
                         .requestMatchers("/api/care-gaps/**")
                                 .hasAnyRole("PROVIDER", "ADMIN", "CARE_MANAGER")
+                        .requestMatchers("/api/caregaps/**")
+                                .hasAnyRole("PROVIDER", "ADMIN", "CARE_MANAGER")
 
                         // Notification endpoints - require PATIENT or ADMIN role
                         .requestMatchers("/api/notifications/**")
@@ -139,6 +143,7 @@ public class SecurityConfig {
 
         // Add JWT authentication filter
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(tenantAccessFilter, JwtAuthenticationFilter.class);
 
         log.info("Spring Security configuration completed successfully");
         return http.build();
@@ -159,7 +164,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // Configure allowed origins
-        configuration.setAllowedOrigins(Arrays.asList(
+        configuration.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:3000",      // React development
                 "http://localhost:4200",      // Angular development
                 "http://localhost:8080",      // Backend same-origin

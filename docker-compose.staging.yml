@@ -556,7 +556,7 @@ services:
   # Prometheus Monitoring
   # ============================================================================
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.48.0
     container_name: healthdata-prometheus-staging
     restart: unless-stopped
     ports:
@@ -581,7 +581,7 @@ services:
   # Grafana Dashboards
   # ============================================================================
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:10.2.3
     container_name: healthdata-grafana-staging
     restart: unless-stopped
     ports:

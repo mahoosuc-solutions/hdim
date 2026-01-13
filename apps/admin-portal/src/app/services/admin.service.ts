@@ -1,7 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, of, catchError, map } from 'rxjs';
-import { API_CONFIG, ADMIN_ENDPOINTS, HTTP_HEADERS, buildAdminUrl } from '../config/api.config';
+import {
+  API_CONFIG,
+  ADMIN_ENDPOINTS,
+  GATEWAY_ENDPOINTS,
+  HTTP_HEADERS,
+  buildAdminUrl,
+  buildGatewayUrl,
+} from '../config/api.config';
 import {
   User,
   CreateUserRequest,
@@ -16,6 +23,9 @@ import {
   AuditLog,
   AuditLogFilter,
   PagedResponse,
+  ConfigVersion,
+  ConfigAuditEntry,
+  ConfigApproval,
 } from '../models/admin.model';
 
 @Injectable({
@@ -276,6 +286,178 @@ export class AdminService {
       })),
       catchError(() => of(this.getMockAuditLogs()))
     );
+  }
+
+  // =====================
+  // Config Versioning
+  // =====================
+
+  getConfigVersions(serviceName: string, tenantId: string): Observable<ConfigVersion[]> {
+    return this.http.get<any>(buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_VERSIONS(serviceName, tenantId)), {
+      headers: this.getHeaders(),
+    }).pipe(
+      map((response) => (response || []).map((item: any) => this.mapConfigVersion(item))),
+      catchError(() => of([]))
+    );
+  }
+
+  getConfigCurrent(serviceName: string, tenantId: string): Observable<ConfigVersion | null> {
+    return this.http.get<any>(buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_CURRENT(serviceName, tenantId)), {
+      headers: this.getHeaders(),
+    }).pipe(
+      map((response) => (response ? this.mapConfigVersion(response) : null)),
+      catchError(() => of(null))
+    );
+  }
+
+  createConfigVersion(
+    serviceName: string,
+    tenantId: string,
+    payload: { config: Record<string, unknown>; changeSummary?: string; activate?: boolean }
+  ): Observable<ConfigVersion> {
+    return this.http.post<any>(
+      buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_VERSIONS(serviceName, tenantId)),
+      payload,
+      { headers: this.getHeaders() }
+    ).pipe(
+      map((response) => this.mapConfigVersion(response))
+    );
+  }
+
+  promoteConfigVersion(
+    serviceName: string,
+    tenantId: string,
+    payload: { sourceVersionId: string; changeSummary?: string; activate?: boolean }
+  ): Observable<ConfigVersion> {
+    return this.http.post<any>(
+      buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_PROMOTE(serviceName, tenantId)),
+      payload,
+      { headers: this.getHeaders() }
+    ).pipe(
+      map((response) => this.mapConfigVersion(response))
+    );
+  }
+
+  activateConfigVersion(
+    serviceName: string,
+    tenantId: string,
+    versionId: string,
+    reason?: string
+  ): Observable<ConfigVersion> {
+    return this.http.post<any>(
+      buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_ACTIVATE(serviceName, tenantId, versionId)),
+      reason ? { reason } : {},
+      { headers: this.getHeaders() }
+    ).pipe(
+      map((response) => this.mapConfigVersion(response))
+    );
+  }
+
+  getConfigAudit(serviceName: string, tenantId: string): Observable<ConfigAuditEntry[]> {
+    return this.http.get<any>(buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_AUDIT(serviceName, tenantId)), {
+      headers: this.getHeaders(),
+    }).pipe(
+      map((response) => (response || []).map((item: any) => this.mapConfigAudit(item))),
+      catchError(() => of([]))
+    );
+  }
+
+  getConfigApprovals(serviceName: string, tenantId: string, versionId: string): Observable<ConfigApproval[]> {
+    return this.http.get<any>(
+      buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_APPROVALS(serviceName, tenantId, versionId)),
+      { headers: this.getHeaders() }
+    ).pipe(
+      map((response) => (response || []).map((item: any) => this.mapConfigApproval(item))),
+      catchError(() => of([]))
+    );
+  }
+
+  requestConfigApproval(
+    serviceName: string,
+    tenantId: string,
+    versionId: string,
+    comment?: string
+  ): Observable<ConfigApproval> {
+    return this.http.post<any>(
+      buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_APPROVAL_REQUEST(serviceName, tenantId, versionId)),
+      comment ? { comment } : {},
+      { headers: this.getHeaders() }
+    ).pipe(
+      map((response) => this.mapConfigApproval(response))
+    );
+  }
+
+  approveConfigVersion(
+    serviceName: string,
+    tenantId: string,
+    versionId: string,
+    comment?: string
+  ): Observable<ConfigApproval> {
+    return this.http.post<any>(
+      buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_APPROVAL_APPROVE(serviceName, tenantId, versionId)),
+      comment ? { comment } : {},
+      { headers: this.getHeaders() }
+    ).pipe(
+      map((response) => this.mapConfigApproval(response))
+    );
+  }
+
+  rejectConfigVersion(
+    serviceName: string,
+    tenantId: string,
+    versionId: string,
+    comment?: string
+  ): Observable<ConfigApproval> {
+    return this.http.post<any>(
+      buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_APPROVAL_REJECT(serviceName, tenantId, versionId)),
+      comment ? { comment } : {},
+      { headers: this.getHeaders() }
+    ).pipe(
+      map((response) => this.mapConfigApproval(response))
+    );
+  }
+
+  private mapConfigVersion(response: any): ConfigVersion {
+    return {
+      id: response.id,
+      tenantId: response.tenantId,
+      serviceName: response.serviceName,
+      versionNumber: response.versionNumber,
+      status: response.status,
+      config: response.config ?? null,
+      configHash: response.configHash,
+      changeSummary: response.changeSummary,
+      sourceVersionId: response.sourceVersionId,
+      createdBy: response.createdBy,
+      createdAt: response.createdAt ? new Date(response.createdAt) : undefined,
+      updatedAt: response.updatedAt ? new Date(response.updatedAt) : undefined,
+    };
+  }
+
+  private mapConfigAudit(response: any): ConfigAuditEntry {
+    return {
+      id: response.id,
+      tenantId: response.tenantId,
+      serviceName: response.serviceName,
+      versionId: response.versionId,
+      action: response.action,
+      actor: response.actor,
+      details: response.details ?? null,
+      createdAt: response.createdAt ? new Date(response.createdAt) : undefined,
+    };
+  }
+
+  private mapConfigApproval(response: any): ConfigApproval {
+    return {
+      id: response.id,
+      tenantId: response.tenantId,
+      serviceName: response.serviceName,
+      versionId: response.versionId,
+      action: response.action,
+      actor: response.actor,
+      comment: response.comment,
+      createdAt: response.createdAt ? new Date(response.createdAt) : undefined,
+    };
   }
 
   // =====================

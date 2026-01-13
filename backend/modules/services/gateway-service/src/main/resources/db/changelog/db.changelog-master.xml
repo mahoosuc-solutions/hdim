@@ -7,5 +7,6 @@
 
     <include file="db/changelog/0001-create-auth-tables.xml"/>
     <include file="db/changelog/0002-create-api-keys-tables.xml"/>
+    <include file="db/changelog/0003-create-tenant-service-configs.xml"/>
 
 </databaseChangeLog>

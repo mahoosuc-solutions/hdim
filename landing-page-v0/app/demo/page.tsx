@@ -451,13 +451,11 @@ export default function DemoPage() {
 
                 <div className="flex justify-center gap-4">
                   <a
-                    href="http://localhost:4200"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href="/explorer"
                     className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <ExternalLink className="w-5 h-5 mr-2" />
-                    Open Clinical Portal
+                    Explore Demo Portal
                   </a>
                   <button
                     onClick={() => {

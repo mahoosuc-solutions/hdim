@@ -22,7 +22,7 @@ restart: unless-stopped
 services:
   postgres:
     container_name: healthdata-postgres
-    image: postgres:15
+    image: postgres:16
     restart: unless-stopped  # <-- ADD THIS LINE
     ports:
       - "5435:5432"

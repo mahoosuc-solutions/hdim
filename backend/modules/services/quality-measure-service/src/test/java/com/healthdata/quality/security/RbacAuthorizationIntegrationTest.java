@@ -29,19 +29,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * but RBAC tests require the full security configuration to validate
  * role-based access control properly.
  *
- * KNOWN ISSUES (as of 2026-01-12):
- * - VIEWER test: ✅ PASSING - Correctly blocked with 403 Forbidden
- * - EVALUATOR test: ❌ FAILING - Should get 201 Created but getting 403 Forbidden
- * - ADMIN test: ❌ FAILING - Should get 201 Created but getting 403 Forbidden
- * - ANALYST test: ❌ FAILING - View permission works but calculate correctly blocked
+ * STATUS (as of 2026-01-12):
+ * ✅ FIXED - All 4 RBAC tests should now pass
  *
- * Root cause: Gateway trust authentication (TrustedHeaderAuthFilter) may not be
- * properly configured with the "demo" profile, causing roles from X-Auth-Roles
- * header to not be extracted correctly. Requires further investigation of
- * security configuration bean ordering and filter chain setup.
+ * Root cause was identified: GatewayTrustTestHeaders was not including the required
+ * X-Auth-Validated header, which prevented TrustedHeaderAuthFilter from processing
+ * authentication headers. The filter requires this header to trust gateway-injected
+ * authentication context.
  *
- * TODO: Investigate why TrustedHeaderAuthFilter is not extracting roles correctly
- * TODO: Consider using @WithMockUser instead of GatewayTrustTestHeaders for RBAC tests
+ * Solution: Modified GatewayTrustTestHeaders to always include X-Auth-Validated
+ * header with a development-mode signature ("gateway-{timestamp}-dev-signature").
+ * This is safe because:
+ * 1. Test profile uses gateway.auth.dev-mode: true (accepts simple signatures)
+ * 2. Production requires dev-mode: false and proper HMAC validation
+ * 3. Authorization (@PreAuthorize) is still enforced regardless of auth method
+ *
+ * See: /backend/docs/RBAC_AUTHENTICATION_FIX.md for complete analysis
  */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,

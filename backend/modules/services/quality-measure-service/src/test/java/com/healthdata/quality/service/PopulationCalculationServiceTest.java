@@ -47,6 +47,11 @@ class PopulationCalculationServiceTest {
         );
         when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(bundle);
 
+        com.healthdata.quality.persistence.JobExecutionRepository jobRepo =
+            mock(com.healthdata.quality.persistence.JobExecutionRepository.class);
+        when(jobRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(jobRepo.findById(any())).thenReturn(java.util.Optional.empty());
+
         PopulationCalculationService service = new PopulationCalculationService(
             measureCalculationService,
             measureRegistry,
@@ -54,15 +59,19 @@ class PopulationCalculationServiceTest {
             kafkaTemplate,
             circuitBreaker,
             rateLimiter,
-            executor
+            executor,
+            jobRepo
         );
 
-        CompletableFuture<String> jobFuture = service.calculateAllMeasuresForPopulation(
+        Map<String, Object> response = service.startPopulationCalculation(
             "tenant-1",
             "http://fhir.test",
-            "user-1"
+            "user-1",
+            null,
+            null
         );
-        String jobId = jobFuture.get();
+        String jobId = (String) response.get("jobId");
+        Thread.sleep(500); // Wait for async execution
 
         PopulationCalculationService.BatchCalculationJob job = service.getJobStatus(jobId);
         assertThat(job).isNotNull();
@@ -97,6 +106,11 @@ class PopulationCalculationServiceTest {
         when(measureRegistry.getMeasureIds()).thenReturn(List.of("measure-1"));
         when(restTemplate.getForObject(anyString(), eq(Map.class))).thenThrow(new RuntimeException("boom"));
 
+        com.healthdata.quality.persistence.JobExecutionRepository jobRepo =
+            mock(com.healthdata.quality.persistence.JobExecutionRepository.class);
+        when(jobRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(jobRepo.findById(any())).thenReturn(java.util.Optional.empty());
+
         PopulationCalculationService service = new PopulationCalculationService(
             measureCalculationService,
             measureRegistry,
@@ -104,15 +118,19 @@ class PopulationCalculationServiceTest {
             kafkaTemplate,
             circuitBreaker,
             rateLimiter,
-            executor
+            executor,
+            jobRepo
         );
 
-        CompletableFuture<String> jobFuture = service.calculateAllMeasuresForPopulation(
+        Map<String, Object> response = service.startPopulationCalculation(
             "tenant-1",
             "http://fhir.test",
-            "user-1"
+            "user-1",
+            null,
+            null
         );
-        String jobId = jobFuture.get();
+        String jobId = (String) response.get("jobId");
+        Thread.sleep(500); // Wait for async execution
 
         PopulationCalculationService.BatchCalculationJob job = service.getJobStatus(jobId);
         assertThat(job).isNotNull();
@@ -137,6 +155,11 @@ class PopulationCalculationServiceTest {
         );
         when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(bundle);
 
+        com.healthdata.quality.persistence.JobExecutionRepository jobRepo =
+            mock(com.healthdata.quality.persistence.JobExecutionRepository.class);
+        when(jobRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(jobRepo.findById(any())).thenReturn(java.util.Optional.empty());
+
         PopulationCalculationService service = new PopulationCalculationService(
             measureCalculationService,
             measureRegistry,
@@ -144,14 +167,19 @@ class PopulationCalculationServiceTest {
             kafkaTemplate,
             circuitBreaker,
             rateLimiter,
-            Runnable::run
+            Runnable::run,
+            jobRepo
         );
 
-        String jobId = service.calculateAllMeasuresForPopulation(
+        Map<String, Object> response = service.startPopulationCalculation(
             "tenant-1",
             "http://fhir.test",
-            "user-1"
-        ).get();
+            "user-1",
+            null,
+            null
+        );
+        String jobId = (String) response.get("jobId");
+        Thread.sleep(200); // Wait for async execution
 
         PopulationCalculationService.BatchCalculationJob job = service.getJobStatus(jobId);
         assertThat(job.getStatus()).isEqualTo(PopulationCalculationService.JobStatus.FAILED);
@@ -172,6 +200,11 @@ class PopulationCalculationServiceTest {
         when(measureRegistry.getMeasureIds()).thenReturn(List.of("measure-1"));
         when(restTemplate.getForObject(anyString(), eq(Map.class))).thenReturn(Map.of());
 
+        com.healthdata.quality.persistence.JobExecutionRepository jobRepo =
+            mock(com.healthdata.quality.persistence.JobExecutionRepository.class);
+        when(jobRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(jobRepo.findById(any())).thenReturn(java.util.Optional.empty());
+
         PopulationCalculationService service = new PopulationCalculationService(
             measureCalculationService,
             measureRegistry,
@@ -179,14 +212,19 @@ class PopulationCalculationServiceTest {
             kafkaTemplate,
             circuitBreaker,
             rateLimiter,
-            Runnable::run
+            Runnable::run,
+            jobRepo
         );
 
-        String jobId = service.calculateAllMeasuresForPopulation(
+        Map<String, Object> response = service.startPopulationCalculation(
             "tenant-1",
             "http://fhir.test",
-            "user-1"
-        ).get();
+            "user-1",
+            null,
+            null
+        );
+        String jobId = (String) response.get("jobId");
+        Thread.sleep(200); // Wait for async execution
 
         PopulationCalculationService.BatchCalculationJob job = service.getJobStatus(jobId);
         assertThat(job.getStatus()).isEqualTo(PopulationCalculationService.JobStatus.COMPLETED);
@@ -217,6 +255,11 @@ class PopulationCalculationServiceTest {
         org.mockito.Mockito.doThrow(new RuntimeException("calc failed"))
             .when(measureCalculationService).calculateMeasure(anyString(), any(), anyString(), anyString());
 
+        com.healthdata.quality.persistence.JobExecutionRepository jobRepo =
+            mock(com.healthdata.quality.persistence.JobExecutionRepository.class);
+        when(jobRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(jobRepo.findById(any())).thenReturn(java.util.Optional.empty());
+
         PopulationCalculationService service = new PopulationCalculationService(
             measureCalculationService,
             measureRegistry,
@@ -224,14 +267,19 @@ class PopulationCalculationServiceTest {
             kafkaTemplate,
             circuitBreaker,
             rateLimiter,
-            executor
+            executor,
+            jobRepo
         );
 
-        String jobId = service.calculateAllMeasuresForPopulation(
+        Map<String, Object> response = service.startPopulationCalculation(
             "tenant-1",
             "http://fhir.test",
-            "user-1"
-        ).get();
+            "user-1",
+            null,
+            null
+        );
+        String jobId = (String) response.get("jobId");
+        Thread.sleep(200); // Wait for async execution
 
         PopulationCalculationService.BatchCalculationJob job = service.getJobStatus(jobId);
         assertThat(job.getStatus()).isEqualTo(PopulationCalculationService.JobStatus.COMPLETED);
@@ -251,7 +299,8 @@ class PopulationCalculationServiceTest {
             kafkaTemplate,
             CircuitBreaker.ofDefaults("measure-calc"),
             mock(RateLimiter.class),
-            Runnable::run
+            Runnable::run,
+            mock(com.healthdata.quality.persistence.JobExecutionRepository.class)
         );
 
         PopulationCalculationService.BatchCalculationJob job =
@@ -281,7 +330,8 @@ class PopulationCalculationServiceTest {
             mock(KafkaTemplate.class),
             CircuitBreaker.ofDefaults("measure-calc"),
             mock(RateLimiter.class),
-            Runnable::run
+            Runnable::run,
+            mock(com.healthdata.quality.persistence.JobExecutionRepository.class)
         );
 
         PopulationCalculationService.BatchCalculationJob job1 =
@@ -314,7 +364,8 @@ class PopulationCalculationServiceTest {
             mock(KafkaTemplate.class),
             CircuitBreaker.ofDefaults("measure-calc"),
             mock(RateLimiter.class),
-            Runnable::run
+            Runnable::run,
+            mock(com.healthdata.quality.persistence.JobExecutionRepository.class)
         );
 
         PopulationCalculationService.BatchCalculationJob job =
@@ -347,7 +398,8 @@ class PopulationCalculationServiceTest {
             kafkaTemplate,
             CircuitBreaker.ofDefaults("measure-calc"),
             mock(RateLimiter.class),
-            Runnable::run
+            Runnable::run,
+            mock(com.healthdata.quality.persistence.JobExecutionRepository.class)
         );
 
         PopulationCalculationService.BatchCalculationJob job =

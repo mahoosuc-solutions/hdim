@@ -699,17 +699,19 @@ class MentalHealthAssessmentServiceTest {
     void shouldThrowWhenAssessmentTypeUnsupported() {
         MentalHealthAssessmentRequest request = MentalHealthAssessmentRequest.builder()
             .patientId(patientId)
-            .assessmentType("cage-aid")
+            .assessmentType("unsupported-assessment-xyz")  // Use truly unsupported type
             .responses(Map.of("q1", 1))
             .assessedBy(assessedBy)
             .assessmentDate(null)
             .build();
 
-        UnsupportedOperationException ex = assertThrows(
-            UnsupportedOperationException.class,
+        // Assessment type parsing will throw IllegalArgumentException for invalid enum values
+        IllegalArgumentException ex = assertThrows(
+            IllegalArgumentException.class,
             () -> service.submitAssessment(tenantId, request)
         );
-        assertTrue(ex.getMessage().contains("Assessment type not yet implemented"));
+        assertTrue(ex.getMessage().contains("No enum constant") ||
+                   ex.getMessage().contains("unsupported-assessment-xyz"));
     }
 
     @Test

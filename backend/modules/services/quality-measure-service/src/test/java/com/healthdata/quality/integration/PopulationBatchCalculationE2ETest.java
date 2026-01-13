@@ -21,9 +21,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -79,6 +82,9 @@ class PopulationBatchCalculationE2ETest {
     @MockBean
     private CqlEngineServiceClient cqlEngineServiceClient;
 
+    @MockBean
+    private RestTemplate restTemplate;
+
     private static final String TENANT_ID = "test-tenant-batch";
 
     @BeforeEach
@@ -86,6 +92,25 @@ class PopulationBatchCalculationE2ETest {
         measureResultRepository.deleteAll();
         jobExecutionRepository.deleteAll();
         reset(cqlEngineServiceClient);
+        reset(restTemplate);
+
+        // Mock FHIR server patient fetch - return 3 test patients
+        UUID patient1 = UUID.randomUUID();
+        UUID patient2 = UUID.randomUUID();
+        UUID patient3 = UUID.randomUUID();
+
+        Map<String, Object> mockFhirBundle = Map.of(
+            "resourceType", "Bundle",
+            "type", "searchset",
+            "entry", List.of(
+                Map.of("resource", Map.of("resourceType", "Patient", "id", patient1.toString())),
+                Map.of("resource", Map.of("resourceType", "Patient", "id", patient2.toString())),
+                Map.of("resource", Map.of("resourceType", "Patient", "id", patient3.toString()))
+            )
+        );
+
+        when(restTemplate.getForObject(anyString(), eq(Map.class)))
+            .thenReturn(mockFhirBundle);
     }
 
     @Nested
@@ -404,7 +429,7 @@ class PopulationBatchCalculationE2ETest {
                 any(UUID.class),
                 anyString()
             )).thenAnswer(invocation -> {
-                Thread.sleep(100); // Simulate slow processing
+                Thread.sleep(800); // Simulate slow processing (increased to prevent race condition)
                 return """
                     {
                         "libraryName": "HEDIS_CDC_2024",
@@ -434,10 +459,12 @@ class PopulationBatchCalculationE2ETest {
             String jobId = objectMapper.readTree(submitResponse.getResponse().getContentAsString())
                 .get("jobId").asText();
 
-            // Wait for job to start
-            Thread.sleep(1000);
+            // Wait for job to start processing (but not complete)
+            // With 800ms per patient * 3 patients = 2.4s total
+            // Cancel after 500ms to catch it mid-execution
+            Thread.sleep(500);
 
-            // Cancel job
+            // Cancel job while it's still running
             mockMvc.perform(put("/quality-measure/population/jobs/" + jobId + "/cancel")
                     .headers(headers))
                 .andExpect(status().isOk())

@@ -10,6 +10,15 @@ spring:
     compatibility-verifier:
       enabled: false
 
+  # Jackson Configuration - Fix LocalDate serialization to ISO-8601 format
+  # Without this: "effectiveFrom": [2026, 1, 13] (array - WRONG)
+  # With this:    "effectiveFrom": "2026-01-13" (ISO-8601 string - CORRECT)
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+    deserialization:
+      ADJUST_DATES_TO_CONTEXT_TIME_ZONE: false
+
   datasource:
     url: jdbc:postgresql://localhost:5435/healthdata_quality_measure
     username: healthdata

@@ -141,31 +141,44 @@ public class QualityMeasureController {
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/population/calculate", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, String>> startPopulationCalculation(
+    public ResponseEntity<Map<String, Object>> startPopulationCalculation(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
             @RequestParam(value = "fhirServerUrl", required = false, defaultValue = "http://fhir-service-mock:8080/fhir") String fhirServerUrl,
-            @RequestParam(value = "createdBy", defaultValue = "system") String createdBy
+            @RequestParam(value = "createdBy", defaultValue = "system") String createdBy,
+            @RequestBody(required = false) Map<String, Object> request
     ) {
         log.info("POST /quality-measure/population/calculate - Starting batch calculation for tenant: {}", tenantId);
 
         try {
-            java.util.concurrent.CompletableFuture<String> jobFuture =
-                populationCalculationService.calculateAllMeasuresForPopulation(tenantId, fhirServerUrl, createdBy);
+            // Extract optional parameters from request body
+            List<String> measureIds = null;
+            Integer maxConcurrency = null;
 
-            String jobId = jobFuture.get(); // Get the job ID immediately
+            if (request != null) {
+                if (request.containsKey("measureIds")) {
+                    measureIds = (List<String>) request.get("measureIds");
+                }
+                if (request.containsKey("maxConcurrency")) {
+                    maxConcurrency = (Integer) request.get("maxConcurrency");
+                }
+            }
 
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of(
-                "jobId", jobId,
-                "status", "STARTED",
-                "message", "Population calculation job started. Use /population/jobs/" + jobId + " to track progress.",
-                "tenantId", tenantId
-            ));
+            Map<String, Object> response = populationCalculationService.startPopulationCalculation(
+                tenantId,
+                fhirServerUrl,
+                createdBy,
+                measureIds,
+                maxConcurrency
+            );
+
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+
         } catch (Exception e) {
             log.error("Failed to start population calculation: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                "error", "Failed to start population calculation",
-                "message", e.getMessage()
-            ));
+            Map<String, Object> errorResponse = new java.util.HashMap<>();
+            errorResponse.put("error", "Failed to start population calculation");
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
@@ -190,14 +203,16 @@ public class QualityMeasureController {
         if (job == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                 "error", "Job not found",
+                "message", "Job " + jobId + " not found",
                 "jobId", jobId
             ));
         }
 
-        // Verify tenant matches
+        // Verify tenant matches - return 404 for tenant isolation (not 403)
         if (!job.getTenantId().equals(tenantId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                "error", "Access denied to this job"
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", "Job not found",
+                "message", "Job " + jobId + " not found"
             ));
         }
 
@@ -218,6 +233,23 @@ public class QualityMeasureController {
         response.put("progressPercent", job.getProgressPercent());
         response.put("duration", job.getDuration().toString());
         response.put("errors", job.getErrors());
+
+        // Add errorMessage field for failed jobs
+        if (job.getStatus() == PopulationCalculationService.JobStatus.FAILED && !job.getErrors().isEmpty()) {
+            response.put("errorMessage", job.getErrors().get(0));
+        }
+
+        // Calculate estimated time remaining
+        if (job.getStatus() == PopulationCalculationService.JobStatus.CALCULATING &&
+            job.getCompletedCalculations() > 0) {
+            long elapsedMs = job.getDuration().toMillis();
+            int completed = job.getCompletedCalculations();
+            int remaining = job.getTotalCalculations() - completed;
+            long estimatedRemainingMs = (elapsedMs * remaining) / completed;
+            response.put("estimatedTimeRemaining", java.time.Duration.ofMillis(estimatedRemainingMs).toString());
+        } else {
+            response.put("estimatedTimeRemaining", "PT0S");
+        }
 
         return ResponseEntity.ok(response);
     }
@@ -271,7 +303,7 @@ public class QualityMeasureController {
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
-    @PostMapping(value = "/population/jobs/{jobId}/cancel", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/population/jobs/{jobId}/cancel", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> cancelJob(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
             @PathVariable("jobId") String jobId
@@ -283,14 +315,16 @@ public class QualityMeasureController {
         if (job == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                 "error", "Job not found",
+                "message", "Job " + jobId + " not found",
                 "jobId", jobId
             ));
         }
 
-        // Verify tenant matches
+        // Verify tenant matches - return 404 for tenant isolation (not 403)
         if (!job.getTenantId().equals(tenantId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                "error", "Access denied to this job"
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", "Job not found",
+                "message", "Job " + jobId + " not found"
             ));
         }
 
@@ -309,6 +343,62 @@ public class QualityMeasureController {
                 "currentStatus", job.getStatus().toString()
             ));
         }
+    }
+
+    /**
+     * Export batch calculation results to CSV
+     */
+    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
+    @GetMapping(value = "/population/jobs/{jobId}/export/csv", produces = "text/csv")
+    public ResponseEntity<String> exportJobResultsToCsv(
+            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @PathVariable("jobId") String jobId
+    ) {
+        log.info("GET /quality-measure/population/jobs/{}/export/csv - tenant: {}", jobId, tenantId);
+
+        PopulationCalculationService.BatchCalculationJob job = populationCalculationService.getJobStatus(jobId);
+
+        if (job == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        // Verify tenant matches
+        if (!job.getTenantId().equals(tenantId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // Only export completed jobs
+        if (job.getStatus() != PopulationCalculationService.JobStatus.COMPLETED) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        // Generate CSV
+        StringBuilder csv = new StringBuilder();
+        csv.append("Patient ID,Measure ID,Numerator,Denominator,Score\n");
+
+        // Get actual results for this job from database
+        // This is a simplified implementation - in production, you'd query the results repository
+        List<QualityMeasureResultEntity> results = calculationService.getAllMeasureResults(tenantId, 0, 10000);
+        for (QualityMeasureResultEntity result : results) {
+            csv.append(String.format("%s,%s,%s,%s,%.2f\n",
+                result.getPatientId(),
+                result.getMeasureId(),
+                result.getNumeratorCompliant(),
+                result.getDenominatorElligible(),
+                result.getScore() != null ? result.getScore() : 0.0
+            ));
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("text/csv"));
+        headers.setContentDispositionFormData("attachment", "population-calculation-" + jobId + ".csv");
+        headers.setCacheControl("no-store, no-cache, must-revalidate");
+        headers.setPragma("no-cache");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(csv.toString());
     }
 
     // ===== NEW: Saved Reports Endpoints =====

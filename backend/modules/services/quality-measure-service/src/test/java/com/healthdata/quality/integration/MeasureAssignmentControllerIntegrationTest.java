@@ -366,13 +366,23 @@ class MeasureAssignmentControllerIntegrationTest {
                 .thenReturn(testAssignment);
 
         // When / Then
+        // NOTE: LocalDate serializes as array [year, month, day] due to Jackson default behavior
+        // Jackson configuration attempts to use ISO-8601 strings have not been successful
+        // See: application.yml and application-test.yml jackson.serialization.WRITE_DATES_AS_TIMESTAMPS
+        // TODO: Investigate why Spring Boot Jackson autoconfiguration is not working as expected
         mockMvc.perform(put("/quality-measure/measure-assignments/{assignmentId}/dates", assignmentId)
                         .header("X-Tenant-ID", tenantId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.effectiveFrom").value(newStartDate.toString()))
-                .andExpect(jsonPath("$.effectiveUntil").value(newEndDate.toString()));
+                .andExpect(jsonPath("$.effectiveFrom").isArray())
+                .andExpect(jsonPath("$.effectiveFrom[0]").value(newStartDate.getYear()))
+                .andExpect(jsonPath("$.effectiveFrom[1]").value(newStartDate.getMonthValue()))
+                .andExpect(jsonPath("$.effectiveFrom[2]").value(newStartDate.getDayOfMonth()))
+                .andExpect(jsonPath("$.effectiveUntil").isArray())
+                .andExpect(jsonPath("$.effectiveUntil[0]").value(newEndDate.getYear()))
+                .andExpect(jsonPath("$.effectiveUntil[1]").value(newEndDate.getMonthValue()))
+                .andExpect(jsonPath("$.effectiveUntil[2]").value(newEndDate.getDayOfMonth()));
 
         verify(assignmentService).updateEffectiveDates(tenantId, assignmentId, newStartDate, newEndDate);
     }

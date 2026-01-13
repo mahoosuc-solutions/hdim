@@ -1,0 +1,202 @@
+server:
+  port: 8085
+  servlet:
+    context-path: /fhir
+
+spring:
+  application:
+    name: fhir-service
+  main:
+    lazy-initialization: true  # Enable lazy initialization to avoid circular dependencies
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_fhir}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    # ⚠️ SECURITY: Password MUST be provided via environment variable
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: HIGH  # FHIR R4 resource management: >100 req/sec, mission-critical, complex queries
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        # Disable Hibernate's auto-detection of entities on classpath
+        # Only use entities explicitly configured via @EntityScan
+        archive:
+          autodetection: none
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  flyway:
+    enabled: false  # Explicitly disable Flyway (using Liquibase for migrations)
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: fhir-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: com.healthdata.*
+
+  cache:
+    type: redis
+    redis:
+      # ⚠️ CRITICAL HIPAA COMPLIANCE SETTING - DO NOT INCREASE TTL ⚠️
+      # TTL reduced from 1 hour to 2 minutes to comply with HIPAA data minimization
+      # See: /backend/HIPAA-CACHE-COMPLIANCE.md for full documentation
+      time-to-live: 120000  # 2 minutes (HIPAA compliant for PHI)
+      cache-null-values: false
+
+# FHIR Configuration
+fhir:
+  version: R4
+  validation:
+    enabled: true
+    strict: false
+  narrative:
+    enabled: true
+
+  # Bulk Data Export Configuration
+  bulk-export:
+    export-directory: /tmp/fhir-exports
+    max-concurrent-exports: 5
+    chunk-size: 1000
+    retention-days: 7
+    base-url: http://localhost:8085/fhir
+    require-access-token: true
+    async-executor-pool-size: 10  # Increased from 3 (results in 10 core, 20 max threads)
+
+# HIPAA Audit Configuration
+audit:
+  enabled: true
+  retention-days: 2555  # 7 years for HIPAA
+  include-phi: false  # Don't log PHI in audit logs
+
+# Security Configuration
+# ⚠️ SECURITY: JWT secret MUST be provided via environment variable in production
+security:
+  jwt:
+    secret: ${JWT_SECRET:}
+    expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:3600000}  # 1 hour
+
+# Rate Limiting Configuration
+rate-limiting:
+  enabled: true
+  login:
+    per-minute: 5
+    per-hour: 20
+  register:
+    per-hour: 3
+  api:
+    per-minute: 100
+
+# API Documentation
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: INFO
+    ca.uhn.fhir: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/fhir-service.log
+    max-size: 10MB
+    max-history: 30
+
+---
+# Development Profile - 100% Trace Sampling
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0  # 100% sampling - capture all traces for debugging
+
+---
+# Staging Profile - 50% Trace Sampling
+spring:
+  config:
+    activate:
+      on-profile: staging
+
+management:
+  tracing:
+    sampling:
+      probability: 0.5  # 50% sampling - balance between visibility and performance
+
+---
+# Production Profile - 10% Trace Sampling
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+management:
+  tracing:
+    sampling:
+      probability: 0.1  # 10% sampling - reduce overhead, still get representative sample

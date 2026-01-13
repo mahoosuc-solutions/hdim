@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- PostgreSQL extensions must come FIRST -->
+    <include file="db/changelog/0000-enable-extensions.xml"/>
+
+    <include file="db/changelog/0001-create-patient-demographics-table.xml"/>
+    <include file="db/changelog/0002-create-patient-insurance-table.xml"/>
+    <include file="db/changelog/0003-create-patient-risk-scores-table.xml"/>
+    <include file="db/changelog/0004-add-composite-indexes-and-jsonb.xml"/>
+    <include file="db/changelog/0005-create-provider-panel-assignment.xml"/>
+    <include file="db/changelog/0006-create-audit-events-table.xml"/>
+
+</databaseChangeLog>

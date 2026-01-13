@@ -250,7 +250,7 @@
   </app-loading-overlay>
 
   <!-- Compliance Trend Chart - Full Width -->
-  <mat-card class="trend-chart-card" *ngIf="!loading && complianceTrendChartData.length > 0 && complianceTrendChartData[0]?.series?.length > 1">
+  <mat-card class="trend-chart-card" *ngIf="!loading && (complianceTrendChartData.labels?.length || 0) > 1">
     <mat-card-header>
       <mat-icon class="header-icon" color="primary">trending_up</mat-icon>
       <mat-card-title>Compliance Trend</mat-card-title>
@@ -258,20 +258,12 @@
     </mat-card-header>
     <mat-card-content>
       <div class="trend-chart-container">
-        <ngx-charts-line-chart
-          [view]="lineChartView"
-          [results]="complianceTrendChartData"
-          [xAxis]="lineChartShowXAxis"
-          [yAxis]="lineChartShowYAxis"
-          [legend]="lineChartShowLegend"
-          [showXAxisLabel]="lineChartShowXAxisLabel"
-          [showYAxisLabel]="lineChartShowYAxisLabel"
-          [xAxisLabel]="lineChartXAxisLabel"
-          [yAxisLabel]="lineChartYAxisLabel"
-          [scheme]="lineChartColorScheme"
-          [gradient]="lineChartGradient"
-          [autoScale]="true">
-        </ngx-charts-line-chart>
+        <canvas
+          baseChart
+          [data]="complianceTrendChartData"
+          [options]="complianceTrendChartOptions"
+          [type]="'line'">
+        </canvas>
       </div>
     </mat-card-content>
   </mat-card>
@@ -287,14 +279,12 @@
       </mat-card-header>
       <mat-card-content>
         <div class="chart-container">
-          <ngx-charts-pie-chart
-            [view]="pieChartView"
-            [results]="outcomeDistributionChartData"
-            [labels]="pieChartShowLabels"
-            [doughnut]="pieChartIsDoughnut"
-            [legend]="pieChartLegend"
-            [scheme]="pieChartColorScheme">
-          </ngx-charts-pie-chart>
+          <canvas
+            baseChart
+            [data]="outcomeDistributionChartData"
+            [options]="outcomeDistributionChartOptions"
+            [type]="'doughnut'">
+          </canvas>
         </div>
       </mat-card-content>
     </mat-card>
@@ -308,26 +298,19 @@
       </mat-card-header>
       <mat-card-content>
         <div class="chart-container">
-          <ngx-charts-bar-vertical
-            [view]="barChartView"
-            [results]="categoryComplianceChartData"
-            [xAxis]="barChartShowXAxis"
-            [yAxis]="barChartShowYAxis"
-            [legend]="barChartShowLegend"
-            [showXAxisLabel]="barChartShowXAxisLabel"
-            [showYAxisLabel]="barChartShowYAxisLabel"
-            [xAxisLabel]="barChartXAxisLabel"
-            [yAxisLabel]="barChartYAxisLabel"
-            [scheme]="barChartColorScheme"
-            [gradient]="barChartGradient">
-          </ngx-charts-bar-vertical>
+          <canvas
+            baseChart
+            [data]="categoryComplianceChartData"
+            [options]="categoryComplianceChartOptions"
+            [type]="'bar'">
+          </canvas>
         </div>
       </mat-card-content>
     </mat-card>
   </div>
 
   <!-- Measure Performance Chart -->
-  <mat-card class="measure-performance-card" *ngIf="!loading && measurePerformanceChartData.length > 0">
+  <mat-card class="measure-performance-card" *ngIf="!loading && (measurePerformanceChartData.labels?.length || 0) > 0">
     <mat-card-header>
       <mat-icon class="header-icon" color="primary">leaderboard</mat-icon>
       <mat-card-title>Top Performing Measures</mat-card-title>
@@ -335,17 +318,12 @@
     </mat-card-header>
     <mat-card-content>
       <div class="performance-chart-container">
-        <ngx-charts-bar-horizontal
-          [view]="horizontalBarView"
-          [results]="measurePerformanceChartData"
-          [xAxis]="true"
-          [yAxis]="true"
-          [showXAxisLabel]="true"
-          [showYAxisLabel]="false"
-          [xAxisLabel]="'Compliance Rate (%)'"
-          [scheme]="horizontalBarColorScheme"
-          [gradient]="true">
-        </ngx-charts-bar-horizontal>
+        <canvas
+          baseChart
+          [data]="measurePerformanceChartData"
+          [options]="measurePerformanceChartOptions"
+          [type]="'bar'">
+        </canvas>
       </div>
     </mat-card-content>
   </mat-card>

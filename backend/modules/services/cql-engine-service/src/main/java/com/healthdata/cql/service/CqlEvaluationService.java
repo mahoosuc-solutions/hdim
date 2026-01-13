@@ -38,16 +38,19 @@ public class CqlEvaluationService {
     private final CqlLibraryRepository libraryRepository;
     private final MeasureTemplateEngine templateEngine;
     private final ObjectMapper objectMapper;
+    private final CqlAuditIntegration cqlAuditIntegration;
 
     public CqlEvaluationService(
             CqlEvaluationRepository evaluationRepository,
             CqlLibraryRepository libraryRepository,
             MeasureTemplateEngine templateEngine,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            CqlAuditIntegration cqlAuditIntegration) {
         this.evaluationRepository = evaluationRepository;
         this.libraryRepository = libraryRepository;
         this.templateEngine = templateEngine;
         this.objectMapper = objectMapper;
+        this.cqlAuditIntegration = cqlAuditIntegration;
     }
 
     /**
@@ -104,10 +107,22 @@ public class CqlEvaluationService {
             // Update evaluation record
             evaluation.setEvaluationResult(resultJson);
             evaluation.setStatus("SUCCESS");
-            evaluation.setDurationMs(System.currentTimeMillis() - startTime);
+            long durationMs = System.currentTimeMillis() - startTime;
+            evaluation.setDurationMs(durationMs);
 
             logger.info("Evaluation completed successfully: measure={}, patient={}, inDenominator={}, inNumerator={}",
                     measureId, patientId, result.isInDenominator(), result.isInNumerator());
+
+            // Publish audit event for CQL evaluation
+            cqlAuditIntegration.publishCqlEvaluationEvent(
+                    tenantId,
+                    patientId.toString(),
+                    measureId,
+                    evaluationId.toString(),
+                    result,
+                    "system", // TODO: Get actual user from security context
+                    durationMs
+            );
 
         } catch (JsonProcessingException e) {
             logger.error("Error serializing evaluation result: {}", e.getMessage(), e);

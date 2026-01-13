@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0001-create-prior-auth-schema" author="prior-auth-service">
+        <comment>Create prior_auth schema for Da Vinci PAS implementation</comment>
+
+        <sqlFile path="db/changelog/sql/0001-create-prior-auth-schema.sql"
+                 relativeToChangelogFile="true"/>
+
+        <rollback>
+            <sql>DROP SCHEMA IF EXISTS prior_auth CASCADE;</sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

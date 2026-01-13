@@ -1,0 +1,335 @@
+##############################################################################
+# HealthData Platform - Test Configuration
+# This file contains all test-specific Spring configuration
+# Active with @ActiveProfiles("test") or when running tests
+##############################################################################
+
+spring:
+  application:
+    name: healthdata-platform-test
+
+  # In-Memory H2 Database Configuration for Tests
+  # Provides fast, isolated database for each test
+  datasource:
+    # H2 in-memory database
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+    # Connection pool configuration
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 5000
+      idle-timeout: 10000
+      max-lifetime: 30000
+      auto-commit: true
+
+  # H2 Web Console (useful for debugging tests)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # JPA/Hibernate Configuration for Tests
+  jpa:
+    # Use create-drop for tests to ensure clean schema each run
+    hibernate:
+      ddl-auto: create-drop
+    # PostgreSQL dialect even for H2 to maintain compatibility
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 10
+        order_inserts: true
+        order_updates: true
+        # Disable second-level cache in tests for isolation
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+        # Lazy loading configurations
+        enable_lazy_load_no_trans: true
+    # Disable open-in-view pattern in tests
+    open-in-view: false
+    # Show SQL in test output for debugging
+    show-sql: false
+
+  # Liquibase Configuration - Disabled in Tests
+  # Tests use Hibernate's ddl-auto instead for faster setup
+  liquibase:
+    enabled: false
+
+  # Caching Configuration for Tests
+  cache:
+    type: simple  # Use simple in-memory cache for tests
+    cache-names:
+      - patients
+      - measures
+      - caregaps
+      - fhir-resources
+
+  # Security Configuration - Test Friendly
+  security:
+    jwt:
+      secret: test-secret-key-for-jwt-testing-purposes-only-min-256-bits-long
+      expiration: 900000 # 15 minutes
+      refresh-expiration: 604800000 # 7 days
+
+  # Email Configuration - Disabled for Tests
+  # Prevents accidental email sending during tests
+  mail:
+    host: localhost
+    port: 1025  # MailHog test server
+    username: test
+    password: test
+    test-connection: false
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+          connectiontimeout: 1000
+          timeout: 1000
+          writetimeout: 1000
+
+  # WebSocket Configuration - Disabled for Tests
+  websocket:
+    message-broker:
+      relay-host: localhost
+      relay-port: 61613
+      client-login: guest
+      client-passcode: guest
+
+  # Task Execution - Small Pool for Tests
+  task:
+    execution:
+      pool:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+    scheduling:
+      pool:
+        size: 2
+
+  # Jackson Configuration
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: UTC
+
+  # Servlet Configuration
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# Server Configuration for Tests
+server:
+  port: 0  # Random port assignment
+  servlet:
+    context-path: /
+  compression:
+    enabled: false  # Disable compression in tests
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-exception: false
+
+# Actuator Configuration - Minimal for Tests
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  # Disable metrics export for tests
+  metrics:
+    export:
+      simple:
+        enabled: true
+  # Disable tracing for tests
+  tracing:
+    sampling:
+      probability: 0.0
+
+# Logging Configuration for Tests
+logging:
+  level:
+    root: WARN
+    com.healthdata: DEBUG
+    org.springframework: WARN
+    org.springframework.security: WARN
+    org.springframework.test: INFO
+    org.hibernate: WARN
+    org.hibernate.SQL: DEBUG
+    org.h2: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Spring Modulith Configuration for Tests
+spring.modulith:
+  events:
+    jdbc:
+      enabled: false  # Use in-memory event publishing for tests
+    completion:
+      enabled: false
+  runtime:
+    observability:
+      enabled: false
+
+# Application-Specific Test Configuration
+healthdata:
+  # FHIR Configuration - Mock URLs
+  fhir:
+    server-base: http://localhost:8080/fhir
+    terminology-server: http://localhost:8080/terminology
+
+  # Quality Measures Configuration - Smaller Batches for Tests
+  quality:
+    measures:
+      cache-ttl: 300  # 5 minutes for tests
+      batch-size: 10
+      parallel-execution: false  # Single-threaded for deterministic tests
+      max-threads: 1
+
+  # Care Gap Configuration
+  caregap:
+    auto-close:
+      enabled: false  # Disable auto-close in tests
+      grace-period-days: 30
+    priority-calculation:
+      enabled: false
+
+  # Notification Configuration - All Disabled for Tests
+  notification:
+    channels:
+      email:
+        enabled: false
+        from: test@healthdata.com
+        template-path: classpath:templates/email/
+      sms:
+        enabled: false
+        provider: mock
+      push:
+        enabled: false
+    batch:
+      size: 10
+      delay-ms: 100
+    retry:
+      max-attempts: 1
+      backoff-ms: 100
+
+  # CQL Engine Configuration - Tests Only
+  cql:
+    cache:
+      libraries: true
+      valuesets: true
+      ttl: 300  # 5 minutes
+    execution:
+      timeout-seconds: 10
+      parallel: false  # Single-threaded for tests
+
+  # Batch Processing Configuration - Small Pool for Tests
+  batch:
+    core-pool-size: 2
+    max-pool-size: 4
+    queue-capacity: 100
+    thread-prefix: test-batch-
+
+  # Feature Flags - Disable Optional Features in Tests
+  features:
+    real-time-updates: false  # Disable WebSocket features
+    batch-processing: true
+    audit-logging: false
+    mental-health-assessments: true
+    risk-stratification: true
+    predictive-analytics: false
+    ai-recommendations: false
+
+# Test-Specific Settings
+# These settings are only active during tests
+test:
+  database:
+    # Enable in-memory database logging
+    log-sql: false
+    # Cleanup strategy
+    cleanup-strategy: drop  # drop, truncate, or none
+
+  async:
+    # Run async methods synchronously in tests
+    run-async-synchronously: true
+
+  mock:
+    # Mock external service calls
+    external-services: true
+
+  timeout:
+    # Default timeout for async operations in tests (milliseconds)
+    async-timeout: 5000
+    # Default timeout for database operations (milliseconds)
+    database-timeout: 10000
+
+##############################################################################
+# Spring Profiles for Different Test Scenarios
+##############################################################################
+
+---
+# Profile: test-integration
+# For full integration tests with more realistic configurations
+spring:
+  config:
+    activate:
+      on-profile: test-integration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=1m
+
+---
+# Profile: test-performance
+# For performance testing with optimized settings
+spring:
+  config:
+    activate:
+      on-profile: test-performance
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=10000,expireAfterWrite=5m
+
+healthdata:
+  quality:
+    measures:
+      parallel-execution: true
+      max-threads: 4
+  cql:
+    execution:
+      parallel: true
+
+---
+# Profile: test-security
+# For security testing with all security features enabled
+spring:
+  config:
+    activate:
+      on-profile: test-security
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/oauth
+          jwk-set-uri: http://localhost:8080/.well-known/jwks.json
+
+healthdata:
+  features:
+    audit-logging: true

@@ -1,0 +1,171 @@
+spring:
+  application:
+    name: payer-workflows-service
+
+  # ⚠️ SECURITY: Database credentials MUST be provided via environment variables
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/healthdata_payer}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: LOW  # Payer workflow automation: <10 req/sec, periodic batch jobs
+
+  # Redis Cache Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+
+  # ⚠️ HIPAA COMPLIANCE: PHI cache TTL must be ≤ 5 minutes (300000ms)
+  # See: backend/HIPAA-CACHE-COMPLIANCE.md
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000  # 5 minutes (HIPAA compliant for PHI)
+      cache-null-values: false
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: payer-workflows-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        # Distributed tracing: Extract trace context from Kafka messages
+        interceptor.classes: com.healthdata.tracing.KafkaConsumerTraceInterceptor
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # Distributed tracing: Propagate trace context through Kafka messages
+        interceptor.classes: com.healthdata.tracing.KafkaProducerTraceInterceptor
+
+server:
+  port: ${SERVER_PORT:8098}
+  servlet:
+    context-path: /
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# OpenAPI/Swagger Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+
+# JWT Configuration (from shared authentication module)
+# ⚠️ SECURITY: JWT secret MUST be provided via environment variable
+jwt:
+  secret: ${JWT_SECRET:}
+  expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:86400000}  # 24 hours
+  refresh-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}  # 7 days
+
+# Payer-Specific Configuration
+payer:
+  star-ratings:
+    # CMS Star Rating calculation settings
+    cut-point-year: 2024
+    enable-improvement-tracking: true
+    cache-ttl-minutes: 60
+
+  medicaid:
+    # Supported states
+    supported-states: NY,CA,TX,FL,PA,OH,MI,GA,NC,NJ
+    # State compliance cache
+    compliance-cache-ttl-minutes: 30
+
+  dashboard:
+    # Dashboard metrics refresh interval
+    metrics-refresh-minutes: 15
+    # Financial impact calculation
+    enable-financial-projections: true
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.healthdata.payer: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Production Profile
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    root: WARN
+    com.healthdata.payer: INFO
+
+# Test Profile
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+logging:
+  level:
+    com.healthdata.payer: DEBUG

@@ -1,0 +1,47 @@
+server:
+  port: 0
+
+# JWT Configuration for tests
+jwt:
+  secret: test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+  access-token-expiration: 1h
+  refresh-token-expiration: 1d
+  issuer: healthdata-test
+  audience: healthdata-api-test
+
+spring:
+  application:
+    name: payer-workflows-test
+
+  main:
+    allow-bean-definition-overriding: true
+
+  task:
+    scheduling:
+      enabled: false
+
+  datasource:
+    url: jdbc:tc:postgresql:15-alpine:///testdb
+    username: sa
+    password:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+
+  liquibase:
+    enabled: false
+
+# Disable rate limiting for tests
+rate-limiting:
+  enabled: false
+
+logging:
+  level:
+    root: WARN
+    com.healthdata.payer: DEBUG

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0003-create-document-views-table" author="agent-5">
+        <comment>Create table for tracking document views and analytics</comment>
+
+        <createTable tableName="document_views">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="document_id" type="VARCHAR(100)">
+                <constraints nullable="false" foreignKeyName="fk_view_document"
+                            references="document_metadata(id)" deleteCascade="true"/>
+            </column>
+            <column name="user_id" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="session_id" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="ip_address" type="VARCHAR(45)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="user_agent" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="referrer" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="time_spent_seconds" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)" defaultValue="default">
+                <constraints nullable="false"/>
+            </column>
+            <column name="viewed_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes for analytics queries -->
+        <createIndex indexName="idx_view_document" tableName="document_views">
+            <column name="document_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_view_user" tableName="document_views">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_view_tenant" tableName="document_views">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_view_viewed_at" tableName="document_views">
+            <column name="viewed_at"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="document_views"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0003-create-view-count-trigger" author="agent-5">
+        <comment>Create trigger to update view_count in document_metadata</comment>
+
+        <sql>
+            CREATE OR REPLACE FUNCTION update_document_view_count()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                UPDATE document_metadata
+                SET view_count = view_count + 1,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = NEW.document_id
+                AND tenant_id = NEW.tenant_id;
+
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+
+            CREATE TRIGGER trigger_increment_view_count
+            AFTER INSERT ON document_views
+            FOR EACH ROW
+            EXECUTE FUNCTION update_document_view_count();
+        </sql>
+
+        <rollback>
+            <sql>
+                DROP TRIGGER IF EXISTS trigger_increment_view_count ON document_views;
+                DROP FUNCTION IF EXISTS update_document_view_count();
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

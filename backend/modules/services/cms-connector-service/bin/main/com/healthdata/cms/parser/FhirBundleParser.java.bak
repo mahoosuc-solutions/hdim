@@ -1,0 +1,422 @@
+package com.healthdata.cms.parser;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.cms.model.CmsClaim;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * FHIR Bundle Parser for NDJSON (Newline-Delimited JSON)
+ *
+ * Parses Medicare claims from CMS BCDA/DPC APIs in FHIR R4 format.
+ * Converts ExplanationOfBenefit resources into CmsClaim entities.
+ *
+ * Features:
+ * - NDJSON streaming (one FHIR resource per line)
+ * - ExplanationOfBenefit extraction
+ * - Patient/Beneficiary ID extraction
+ * - Claim metadata extraction (dates, amounts, types)
+ * - Error handling and validation
+ * - Memory-efficient streaming (doesn't load entire file)
+ *
+ * Reference: https://www.hl7.org/fhir/R4/explanationofbenefit.html
+ */
+@Slf4j
+@Component
+public class FhirBundleParser {
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final DateTimeFormatter FHIR_DATETIME_FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
+    private static final String FHIR_RESOURCE_TYPE = "resourceType";
+    private static final String EXPLANATION_OF_BENEFIT = "ExplanationOfBenefit";
+
+    /**
+     * Parse NDJSON stream into list of parsed claims
+     *
+     * @param inputStream NDJSON file stream (one FHIR resource per line)
+     * @param tenantId    Tenant identifier for multi-tenancy
+     * @param dataSource  Source of claims (BCDA, DPC, AB2D)
+     * @return List of parsed CmsClaim objects
+     */
+    public List<CmsClaim> parseNdjsonStream(InputStream inputStream, UUID tenantId, CmsClaim.ClaimSource dataSource) {
+        log.info("Starting NDJSON parsing for tenant: {}. Data source: {}", tenantId, dataSource.getDisplayName());
+
+        List<CmsClaim> claims = new ArrayList<>();
+        int lineNumber = 0;
+        int successCount = 0;
+        int errorCount = 0;
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lineNumber++;
+
+                if (line.trim().isEmpty()) {
+                    log.debug("Skipping empty line {}", lineNumber);
+                    continue;
+                }
+
+                try {
+                    CmsClaim claim = parseLine(line, tenantId, dataSource, lineNumber);
+                    if (claim != null) {
+                        claims.add(claim);
+                        successCount++;
+                    }
+                } catch (Exception e) {
+                    errorCount++;
+                    log.warn("Error parsing line {}: {}", lineNumber, e.getMessage());
+                    // Continue processing other lines despite this error
+                }
+            }
+
+            log.info("NDJSON parsing complete. Lines: {}. Success: {}. Errors: {}",
+                    lineNumber, successCount, errorCount);
+
+            return claims;
+
+        } catch (IOException e) {
+            log.error("IO error reading NDJSON stream", e);
+            throw new RuntimeException("Failed to read NDJSON stream: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Parse single NDJSON line into CmsClaim
+     */
+    private CmsClaim parseLine(String line, UUID tenantId, CmsClaim.ClaimSource dataSource, int lineNumber) {
+        try {
+            JsonNode rootNode = objectMapper.readTree(line);
+
+            // Verify this is an ExplanationOfBenefit resource
+            String resourceType = rootNode.path(FHIR_RESOURCE_TYPE).asText();
+            if (!EXPLANATION_OF_BENEFIT.equals(resourceType)) {
+                log.debug("Skipping non-ExplanationOfBenefit resource: {} (line {})", resourceType, lineNumber);
+                return null;
+            }
+
+            // Extract claim ID
+            String claimId = extractClaimId(rootNode);
+            if (claimId == null || claimId.isEmpty()) {
+                log.warn("Claim missing ID field (line {})", lineNumber);
+                return null;
+            }
+
+            // Extract beneficiary/patient ID
+            String beneficiaryId = extractBeneficiaryId(rootNode);
+            if (beneficiaryId == null || beneficiaryId.isEmpty()) {
+                log.warn("Claim {} missing beneficiary ID (line {})", claimId, lineNumber);
+                return null;
+            }
+
+            // Build CmsClaim entity
+            CmsClaim claim = CmsClaim.builder()
+                    .id(UUID.randomUUID())
+                    .claimId(claimId)
+                    .beneficiaryId(beneficiaryId)
+                    .dataSource(dataSource)
+                    .fhirResource(rootNode)
+                    .tenantId(tenantId)
+                    .importedAt(LocalDateTime.now(ZoneId.of("UTC")))
+                    .claimDate(extractClaimDate(rootNode))
+                    .serviceStartDate(extractServiceStartDate(rootNode))
+                    .serviceEndDate(extractServiceEndDate(rootNode))
+                    .claimType(extractClaimType(rootNode))
+                    .claimAmount(extractClaimAmount(rootNode))
+                    .allowedAmount(extractAllowedAmount(rootNode))
+                    .paidAmount(extractPaidAmount(rootNode))
+                    .isProcessed(false)
+                    .hasValidationErrors(false)
+                    .build();
+
+            log.debug("Parsed claim: {} for beneficiary: {}", claimId, beneficiaryId);
+            return claim;
+
+        } catch (com.fasterxml.jackson.core.JsonParseException e) {
+            log.error("Invalid JSON on line {}: {}", lineNumber, e.getMessage());
+            throw new RuntimeException("Invalid JSON: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Extract claim ID from ExplanationOfBenefit
+     * Tries: id, identifier[0].value, claimReference
+     */
+    private String extractClaimId(JsonNode eobNode) {
+        // Try id field first
+        if (eobNode.has("id")) {
+            String id = eobNode.path("id").asText();
+            if (!id.isEmpty()) return id;
+        }
+
+        // Try identifier array
+        if (eobNode.has("identifier") && eobNode.path("identifier").isArray()) {
+            for (JsonNode identifier : eobNode.path("identifier")) {
+                if (identifier.has("value")) {
+                    String value = identifier.path("value").asText();
+                    if (!value.isEmpty()) return value;
+                }
+            }
+        }
+
+        // Try claimReference
+        if (eobNode.has("claim")) {
+            JsonNode claim = eobNode.path("claim");
+            if (claim.has("reference")) {
+                String ref = claim.path("reference").asText();
+                if (!ref.isEmpty()) return ref;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract beneficiary/patient ID from ExplanationOfBenefit
+     * Tries: patient.reference, patientIdentifier.value
+     */
+    private String extractBeneficiaryId(JsonNode eobNode) {
+        // Try patient.reference
+        if (eobNode.has("patient")) {
+            JsonNode patient = eobNode.path("patient");
+            if (patient.has("reference")) {
+                String ref = patient.path("reference").asText();
+                if (!ref.isEmpty()) {
+                    // Extract ID from reference like "Patient/12345"
+                    return ref.contains("/") ? ref.split("/")[1] : ref;
+                }
+            }
+        }
+
+        // Try billablePeriod.start as backup (shouldn't happen)
+        return null;
+    }
+
+    /**
+     * Extract claim date from ExplanationOfBenefit
+     * Tries: created, billablePeriod.start
+     */
+    private LocalDateTime extractClaimDate(JsonNode eobNode) {
+        try {
+            // Try created field (typically claim processing date)
+            if (eobNode.has("created")) {
+                String created = eobNode.path("created").asText();
+                return parseDateTime(created);
+            }
+
+            // Try billablePeriod.start (service start date)
+            if (eobNode.has("billablePeriod")) {
+                JsonNode period = eobNode.path("billablePeriod");
+                if (period.has("start")) {
+                    String start = period.path("start").asText();
+                    return parseDateTime(start);
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Error extracting claim date: {}", e.getMessage());
+        }
+
+        return LocalDateTime.now(ZoneId.of("UTC"));
+    }
+
+    /**
+     * Extract service start date
+     */
+    private LocalDateTime extractServiceStartDate(JsonNode eobNode) {
+        try {
+            if (eobNode.has("billablePeriod")) {
+                JsonNode period = eobNode.path("billablePeriod");
+                if (period.has("start")) {
+                    String start = period.path("start").asText();
+                    return parseDateTime(start);
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Error extracting service start date: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Extract service end date
+     */
+    private LocalDateTime extractServiceEndDate(JsonNode eobNode) {
+        try {
+            if (eobNode.has("billablePeriod")) {
+                JsonNode period = eobNode.path("billablePeriod");
+                if (period.has("end")) {
+                    String end = period.path("end").asText();
+                    return parseDateTime(end);
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Error extracting service end date: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Extract claim type (Part A, B, or D)
+     * Based on type field or claim classification
+     */
+    private CmsClaim.ClaimType extractClaimType(JsonNode eobNode) {
+        try {
+            if (eobNode.has("type")) {
+                JsonNode type = eobNode.path("type");
+                String coding = type.path("coding").path(0).path("code").asText().toLowerCase();
+
+                if (coding.contains("inpatient") || coding.contains("hospital")) {
+                    return CmsClaim.ClaimType.INPATIENT;
+                } else if (coding.contains("outpatient")) {
+                    return CmsClaim.ClaimType.OUTPATIENT;
+                } else if (coding.contains("pharmacy")) {
+                    return CmsClaim.ClaimType.PHARMACY;
+                }
+            }
+
+            // Try to infer from provider type
+            if (eobNode.has("provider")) {
+                JsonNode provider = eobNode.path("provider");
+                String providerType = provider.path("identifier").path(0).path("system").asText().toLowerCase();
+                if (providerType.contains("npi")) {
+                    return CmsClaim.ClaimType.OUTPATIENT;
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Error extracting claim type: {}", e.getMessage());
+        }
+
+        return null; // Unknown type
+    }
+
+    /**
+     * Extract total claim amount
+     */
+    private Double extractClaimAmount(JsonNode eobNode) {
+        try {
+            if (eobNode.has("total")) {
+                for (JsonNode total : eobNode.path("total")) {
+                    if (total.path("category").path("coding").path(0).path("code").asText()
+                            .equals("submitted")) {
+                        double amount = total.path("amount").path("value").asDouble();
+                        return amount > 0 ? amount : null;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Error extracting claim amount: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Extract allowed amount (what insurance allows)
+     */
+    private Double extractAllowedAmount(JsonNode eobNode) {
+        try {
+            if (eobNode.has("total")) {
+                for (JsonNode total : eobNode.path("total")) {
+                    if (total.path("category").path("coding").path(0).path("code").asText()
+                            .equals("allowed")) {
+                        double amount = total.path("amount").path("value").asDouble();
+                        return amount > 0 ? amount : null;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Error extracting allowed amount: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Extract paid amount (what was actually paid)
+     */
+    private Double extractPaidAmount(JsonNode eobNode) {
+        try {
+            if (eobNode.has("total")) {
+                for (JsonNode total : eobNode.path("total")) {
+                    if (total.path("category").path("coding").path(0).path("code").asText()
+                            .equals("benefit")) {
+                        double amount = total.path("amount").path("value").asDouble();
+                        return amount > 0 ? amount : null;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Error extracting paid amount: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Parse FHIR datetime (ISO 8601 format)
+     * Handles: 2024-01-01, 2024-01-01T12:00:00Z, 2024-01-01T12:00:00-05:00
+     */
+    private LocalDateTime parseDateTime(String dateTimeStr) {
+        if (dateTimeStr == null || dateTimeStr.isEmpty()) {
+            return null;
+        }
+
+        try {
+            // Try ISO datetime parsing
+            return java.time.ZonedDateTime.parse(dateTimeStr, FHIR_DATETIME_FORMATTER)
+                    .withZoneSameInstant(ZoneId.of("UTC"))
+                    .toLocalDateTime();
+        } catch (Exception e) {
+            try {
+                // Try just date parsing (YYYY-MM-DD)
+                return java.time.LocalDate.parse(dateTimeStr).atStartOfDay();
+            } catch (Exception e2) {
+                log.debug("Unable to parse date: {}", dateTimeStr);
+                return null;
+            }
+        }
+    }
+
+    /**
+     * Get statistics about parsed claims
+     */
+    public static class ParseStatistics {
+        private int totalClaims;
+        private int claimsWithErrors;
+        private Map<CmsClaim.ClaimType, Integer> claimsByType = new HashMap<>();
+        private Map<String, Integer> claimsBySource = new HashMap<>();
+
+        public ParseStatistics(List<CmsClaim> claims) {
+            this.totalClaims = claims.size();
+            this.claimsWithErrors = (int) claims.stream()
+                    .filter(c -> c.getHasValidationErrors() != null && c.getHasValidationErrors())
+                    .count();
+
+            // Count by type
+            claims.stream()
+                    .filter(c -> c.getClaimType() != null)
+                    .collect(Collectors.groupingBy(CmsClaim::getClaimType, Collectors.counting()))
+                    .forEach((type, count) -> claimsByType.put(type, count.intValue()));
+
+            // Count by source
+            claims.stream()
+                    .collect(Collectors.groupingBy(c -> c.getDataSource().getDisplayName(), Collectors.counting()))
+                    .forEach((source, count) -> claimsBySource.put(source, count.intValue()));
+        }
+
+        public int getTotalClaims() { return totalClaims; }
+        public int getClaimsWithErrors() { return claimsWithErrors; }
+        public Map<CmsClaim.ClaimType, Integer> getClaimsByType() { return claimsByType; }
+        public Map<String, Integer> getClaimsBySource() { return claimsBySource; }
+    }
+}

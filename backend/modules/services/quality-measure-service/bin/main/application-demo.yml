@@ -1,0 +1,88 @@
+# Demo profile for Quality Measure Service
+# Use with: --spring.profiles.active=demo
+# Tables are managed via Liquibase migrations
+
+server:
+  port: 8087
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/quality_db
+    username: healthdata
+    password: demo_password_123
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+    show-sql: false
+
+  # Use Liquibase for schema management
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+  flyway:
+    enabled: false
+
+  # Kafka configuration for demo
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: quality-measure-demo
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  # Redis configuration (using Docker container name)
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2000ms
+
+  cache:
+    type: redis
+
+# JWT Configuration
+jwt:
+  secret: DemoSecretKeyForJWTMustBeAtLeast256BitsLongForHS256Algorithm123456789
+  access-token-expiration: 1h
+  refresh-token-expiration: 1d
+  issuer: healthdata-demo
+  audience: healthdata-api-demo
+
+# Service client URLs for demo (using Docker container names)
+service:
+  cql-engine:
+    base-url: http://cql-engine-service:8081/cql-engine
+  fhir:
+    base-url: http://fhir-service:8085/fhir
+  patient:
+    base-url: http://patient-service:8084/patient
+
+# Audit configuration
+audit:
+  enabled: true
+
+# Gateway trust auth
+gateway:
+  auth:
+    dev-mode: true
+
+# Disable websocket for demo (avoids Kafka dependency)
+websocket:
+  enabled: false
+
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+    org.hibernate.SQL: WARN

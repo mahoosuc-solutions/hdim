@@ -1,0 +1,243 @@
+server:
+  port: 8087
+  servlet:
+    context-path: /quality-measure
+
+spring:
+  application:
+    name: quality-measure-service
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
+  # Jackson Configuration - Fix LocalDate serialization to ISO-8601 format
+  # Without this: "effectiveFrom": [2026, 1, 13] (array - WRONG)
+  # With this:    "effectiveFrom": "2026-01-13" (ISO-8601 string - CORRECT)
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+    deserialization:
+      ADJUST_DATES_TO_CONTEXT_TIME_ZONE: false
+
+  datasource:
+    url: jdbc:postgresql://localhost:5435/healthdata_quality_measure
+    username: healthdata
+    password: ${DB_PASSWORD:healthdata_password}
+    driver-class-name: org.postgresql.Driver
+
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: HIGH  # HEDIS quality measure evaluation: >100 req/sec, core business logic, primary revenue service
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        # Disable Hibernate's auto-detection of entities on classpath
+        # Only use entities explicitly configured via @EntityScan
+        archive:
+          autodetection: none
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+  flyway:
+    enabled: false  # Explicitly disable Flyway (using Liquibase for migrations)
+
+# FHIR Server Configuration
+fhir:
+  server:
+    url: http://localhost:8085/fhir
+
+# Patient Service Configuration
+patient:
+  service:
+    url: http://localhost:8084/patient
+
+# Care Gap Service Configuration
+care-gap:
+  service:
+    url: http://localhost:8086/care-gap
+
+# CQL Engine Configuration
+cql:
+  engine:
+    url: http://localhost:8081/cql-engine
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:dev_secret_key_for_local_testing_only_change_in_production}
+  expiration: 3600000  # 1 hour
+
+# Feign Client Configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 15000
+        loggerLevel: basic
+      patient-service:
+        url: http://localhost:8084
+        connectTimeout: 5000
+        readTimeout: 15000
+      care-gap-service:
+        url: http://localhost:8086
+        connectTimeout: 5000
+        readTimeout: 15000
+      cql-engine-service:
+        url: http://localhost:8081
+        connectTimeout: 5000
+        readTimeout: 30000  # CQL evaluation can take longer
+
+# Cache Configuration (Redis)
+# ⚠️ CRITICAL HIPAA COMPLIANCE SETTING - DO NOT INCREASE TTL ⚠️
+# TTL reduced from 10 minutes to 2 minutes to comply with HIPAA data minimization
+# See: /backend/HIPAA-CACHE-COMPLIANCE.md for full documentation
+spring.cache:
+  type: redis
+  redis:
+    time-to-live: 120000  # 2 minutes for measure results (HIPAA compliant for PHI)
+
+# Kafka Configuration
+spring.kafka:
+  bootstrap-servers: localhost:9092
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    properties:
+      # Distributed tracing: Propagate trace context through Kafka messages
+      interceptor.classes: com.healthdata.tracing.KafkaProducerTraceInterceptor
+  consumer:
+    group-id: quality-measure-service
+    auto-offset-reset: earliest
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    properties:
+      # Distributed tracing: Extract trace context from Kafka messages
+      interceptor.classes: com.healthdata.tracing.KafkaConsumerTraceInterceptor
+
+# HIPAA Audit Configuration
+audit:
+  enabled: true
+  encryption:
+    enabled: true
+
+# Rate Limiting Configuration
+rate-limiting:
+  enabled: true
+  login:
+    per-minute: 5
+    per-hour: 20
+  register:
+    per-hour: 3
+  api:
+    per-minute: 100
+
+# WebSocket Configuration
+# HIPAA-Compliant WebSocket Security Settings
+websocket:
+  enabled: true
+
+  # CORS - Allowed Origins (development only - use WSS in production)
+  # ⚠️ WARNING: http:// URLs are for LOCAL DEVELOPMENT ONLY
+  # ⚠️ PRODUCTION MUST USE https:// URLs with WSS protocol
+  allowed-origins: http://localhost:4200,http://localhost:4201,http://localhost:4202,http://localhost:3000,http://localhost:8082
+
+  # Security Settings
+  security:
+    # Enforce WSS (WebSocket Secure) in production
+    # Development: ws:// allowed
+    # Production: Only wss:// (TLS encrypted) connections accepted
+    require-ssl: ${WEBSOCKET_REQUIRE_SSL:false}  # Set to true in production
+
+    # Session Timeout (HIPAA §164.312(a)(2)(iii) - Automatic Logoff)
+    # Maximum connection duration before automatic disconnect
+    session-timeout-minutes: 15  # HIPAA recommended: 15 minutes of inactivity
+
+    # Maximum number of concurrent connections per user (prevent resource exhaustion)
+    max-connections-per-user: 3
+
+    # Maximum message size (prevent DoS attacks)
+    max-message-size-kb: 64  # 64KB maximum message size
+
+    # Rate Limiting (prevent brute-force and DoS attacks)
+    rate-limit:
+      enabled: true
+      connections-per-minute: 10  # Max connection attempts per IP per minute
+
+# Notification Configuration
+notification:
+  email:
+    # Default email recipient for notifications when no specific recipient is found
+    # This is a fallback address (e.g., care team distribution list)
+    default-recipient: care-team@example.com
+  mental-health:
+    default-recipients:
+      email: care-team@hospital.com
+      sms: "+12345678900"
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.healthdata.quality: DEBUG
+    ca.uhn.fhir: INFO
+    com.healthdata.quality.websocket: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+---
+# Development Profile - 100% Trace Sampling
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0  # 100% sampling - capture all traces for debugging
+
+---
+# Staging Profile - 50% Trace Sampling
+spring:
+  config:
+    activate:
+      on-profile: staging
+
+management:
+  tracing:
+    sampling:
+      probability: 0.5  # 50% sampling - balance between visibility and performance
+
+---
+# Production Profile - 10% Trace Sampling
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+management:
+  tracing:
+    sampling:
+      probability: 0.1  # 10% sampling - reduce overhead, still get representative sample

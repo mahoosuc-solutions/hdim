@@ -1,0 +1,97 @@
+server:
+  port: 0  # Random port for tests
+
+# JWT Authentication Configuration for Tests
+jwt:
+  secret: test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+  access-token-expiration: 1h
+  refresh-token-expiration: 1d
+  issuer: healthdata-in-motion-test
+  audience: healthdata-api-test
+
+spring:
+  application:
+    name: migration-workflow-service-test
+
+  datasource:
+    url: jdbc:tc:postgresql:15-alpine:///testdb
+    username: sa
+    password:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    routing:
+      enabled: false
+
+# Override shared persistence properties for tests
+datasource:
+  routing:
+    enabled: false
+  primary:
+    url: jdbc:tc:postgresql:15-alpine:///testdb
+    username: sa
+    password:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+healthdata:
+  persistence:
+    primary:
+      url: jdbc:tc:postgresql:15-alpine:///testdb
+      username: sa
+      password:
+      driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+      pool-name: test-pool
+      maximum-pool-size: 5
+      minimum-idle: 1
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        # Disable hibernate-types to avoid UUID array issues with H2
+        type.contributors: none
+    show-sql: false
+
+  liquibase:
+    enabled: false
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaStreamsAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaReactiveAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+      - com.healthdata.security.SecurityAutoConfiguration
+      - com.healthdata.audit.AuditAutoConfiguration
+
+  cache:
+    type: simple
+
+  # Kafka Configuration (disable for tests)
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+    consumer:
+      bootstrap-servers: localhost:9092
+      auto-offset-reset: earliest
+
+# Migration service configuration for tests
+migration:
+  default-batch-size: 100
+  checkpoint-interval: 500
+  progress-update-interval: 1000
+  max-concurrent-jobs: 3
+  sftp-connection-timeout: 30000
+  mllp-default-port: 2575
+
+# HIPAA Audit Configuration
+audit:
+  enabled: false
+
+logging:
+  level:
+    root: WARN
+    com.healthdata.migration: INFO
+    org.springframework.test: INFO

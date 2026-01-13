@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0003-create-star-ratings-table" author="healthdata-system">
+        <comment>Create star ratings table for Medicare STAR program tracking</comment>
+
+        <createTable tableName="star_ratings">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Rating Details -->
+            <column name="measure_id" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="measure_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="domain" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Performance -->
+            <column name="performance_rate" type="decimal(5,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cut_point_star_1" type="decimal(5,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="cut_point_star_2" type="decimal(5,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="cut_point_star_3" type="decimal(5,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="cut_point_star_4" type="decimal(5,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="cut_point_star_5" type="decimal(5,2)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Calculated Star Rating -->
+            <column name="star_rating" type="decimal(2,1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="star_category" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Measurement Period -->
+            <column name="measurement_year" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="calculation_date" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Additional Context -->
+            <column name="numerator" type="integer">
+                <constraints nullable="true"/>
+            </column>
+            <column name="denominator" type="integer">
+                <constraints nullable="true"/>
+            </column>
+            <column name="weight" type="decimal(3,2)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Audit -->
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint
+            tableName="star_ratings"
+            columnNames="tenant_id, measure_id, measurement_year"
+            constraintName="uk_star_rating_measure_year"/>
+
+        <createIndex indexName="idx_star_ratings_tenant_year" tableName="star_ratings">
+            <column name="tenant_id"/>
+            <column name="measurement_year" descending="true"/>
+        </createIndex>
+
+        <createIndex indexName="idx_star_ratings_measure" tableName="star_ratings">
+            <column name="measure_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_star_ratings_domain" tableName="star_ratings">
+            <column name="domain"/>
+        </createIndex>
+
+        <createIndex indexName="idx_star_ratings_category" tableName="star_ratings">
+            <column name="star_category"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="star_ratings"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

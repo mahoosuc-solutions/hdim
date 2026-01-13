@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0032-fix-chronic-disease-monitoring-column-types" author="claude-code">
+        <comment>Fix column types in chronic_disease_monitoring to match Java Double type (DOUBLE PRECISION instead of NUMERIC)</comment>
+
+        <!-- Change latest_value from NUMERIC to DOUBLE PRECISION -->
+        <modifyDataType tableName="chronic_disease_monitoring"
+                        columnName="latest_value"
+                        newDataType="DOUBLE PRECISION"/>
+
+        <!-- Change previous_value from NUMERIC to DOUBLE PRECISION -->
+        <modifyDataType tableName="chronic_disease_monitoring"
+                        columnName="previous_value"
+                        newDataType="DOUBLE PRECISION"/>
+
+        <rollback>
+            <!-- Rollback to original DECIMAL(10,2) type -->
+            <modifyDataType tableName="chronic_disease_monitoring"
+                            columnName="latest_value"
+                            newDataType="DECIMAL(10,2)"/>
+            <modifyDataType tableName="chronic_disease_monitoring"
+                            columnName="previous_value"
+                            newDataType="DECIMAL(10,2)"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

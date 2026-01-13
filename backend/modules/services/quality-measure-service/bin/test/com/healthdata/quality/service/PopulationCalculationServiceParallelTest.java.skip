@@ -1,0 +1,528 @@
+package com.healthdata.quality.service;
+
+import com.healthdata.quality.client.CqlEngineServiceClient;
+import com.healthdata.quality.measure.MeasureRegistry;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.web.client.RestTemplate;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+/**
+ * TDD Test Suite for Parallel Population Calculation
+ *
+ * Tests the optimized parallel processing implementation:
+ * - Parallel patient processing with CompletableFuture
+ * - Thread pool configuration and resource management
+ * - Concurrent measure evaluation
+ * - Progress tracking with multiple threads
+ * - Error handling in parallel execution
+ * - Throughput measurement (patients/minute)
+ *
+ * Performance Target: >1000 patients/minute (vs baseline ~100/min sequential)
+ */
+@ExtendWith(MockitoExtension.class)
+class PopulationCalculationServiceParallelTest {
+
+    @Mock
+    private MeasureCalculationService measureCalculationService;
+
+    @Mock
+    private MeasureRegistry measureRegistry;
+
+    @Mock
+    private RestTemplate restTemplate;
+
+    @Mock
+    private KafkaTemplate<String, String> kafkaTemplate;
+
+    private PopulationCalculationService service;
+
+    @BeforeEach
+    void setUp() {
+        service = new PopulationCalculationService(
+            measureCalculationService,
+            measureRegistry,
+            restTemplate,
+            kafkaTemplate
+        );
+    }
+
+    /**
+     * TEST 1: Parallel Patient Processing
+     *
+     * Verify that patients are processed in parallel using CompletableFuture
+     */
+    @Test
+    void shouldProcessPatientsInParallel() throws Exception {
+        // Given: 100 patients and 3 measures
+        List<String> patientIds = generatePatientIds(100);
+        List<String> measureIds = Arrays.asList("HEDIS-CBP", "HEDIS-CDC", "HEDIS-COL");
+
+        when(measureRegistry.getMeasureIds()).thenReturn(measureIds);
+
+        // Mock FHIR server response
+        mockFhirServerResponse(patientIds);
+
+        // Mock measure calculation (simulate 100ms per calculation)
+        AtomicInteger concurrentCalls = new AtomicInteger(0);
+        AtomicInteger maxConcurrent = new AtomicInteger(0);
+
+        when(measureCalculationService.calculateMeasure(anyString(), anyString(), anyString(), anyString()))
+            .thenAnswer(invocation -> {
+                int current = concurrentCalls.incrementAndGet();
+                maxConcurrent.updateAndGet(max -> Math.max(max, current));
+
+                // Simulate processing time
+                Thread.sleep(100);
+
+                concurrentCalls.decrementAndGet();
+                return mock(com.healthdata.quality.persistence.QualityMeasureResultEntity.class);
+            });
+
+        // When: Execute population calculation
+        Instant start = Instant.now();
+        CompletableFuture<String> jobFuture = service.calculateAllMeasuresForPopulation(
+            "tenant-001",
+            "http://fhir-server:8080/fhir",
+            "test-user"
+        );
+        String jobId = jobFuture.get(30, TimeUnit.SECONDS);
+        Duration duration = Duration.between(start, Instant.now());
+
+        // Then: Verify parallel execution
+        assertThat(jobId).isNotNull();
+        assertThat(maxConcurrent.get()).isGreaterThan(1)
+            .withFailMessage("Expected parallel execution, but max concurrent calls was " + maxConcurrent.get());
+
+        // With parallel execution, should complete much faster than sequential
+        // Sequential would take: 100 patients × 3 measures × 100ms = 30 seconds
+        // Parallel with ~10 threads should take: ~3-5 seconds
+        assertThat(duration.getSeconds())
+            .isLessThan(10)
+            .withFailMessage("Parallel execution should complete in <10s, but took " + duration.getSeconds() + "s");
+
+        // Verify all calculations were performed
+        verify(measureCalculationService, times(300)).calculateMeasure(
+            eq("tenant-001"),
+            anyString(),
+            anyString(),
+            eq("test-user")
+        );
+    }
+
+    /**
+     * TEST 2: Thread Pool Configuration
+     *
+     * Verify optimal thread pool size and configuration
+     */
+    @Test
+    void shouldUseOptimalThreadPoolConfiguration() throws Exception {
+        // Given: Thread pool should be configured based on CPU cores
+        int availableCores = Runtime.getRuntime().availableProcessors();
+        int expectedThreads = Math.max(10, availableCores * 2);
+
+        List<String> patientIds = generatePatientIds(50);
+        List<String> measureIds = Arrays.asList("HEDIS-CBP", "HEDIS-CDC");
+
+        when(measureRegistry.getMeasureIds()).thenReturn(measureIds);
+        mockFhirServerResponse(patientIds);
+
+        // Track concurrent executions
+        AtomicInteger concurrentCalls = new AtomicInteger(0);
+        AtomicInteger maxConcurrent = new AtomicInteger(0);
+
+        when(measureCalculationService.calculateMeasure(anyString(), anyString(), anyString(), anyString()))
+            .thenAnswer(invocation -> {
+                int current = concurrentCalls.incrementAndGet();
+                maxConcurrent.updateAndGet(max -> Math.max(max, current));
+                Thread.sleep(50);
+                concurrentCalls.decrementAndGet();
+                return mock(com.healthdata.quality.persistence.QualityMeasureResultEntity.class);
+            });
+
+        // When: Execute calculation
+        CompletableFuture<String> jobFuture = service.calculateAllMeasuresForPopulation(
+            "tenant-001",
+            "http://fhir-server:8080/fhir",
+            "test-user"
+        );
+        jobFuture.get(30, TimeUnit.SECONDS);
+
+        // Then: Verify thread pool was properly utilized
+        assertThat(maxConcurrent.get())
+            .isGreaterThanOrEqualTo(5)
+            .isLessThanOrEqualTo(expectedThreads)
+            .withFailMessage("Thread pool size should be between 5 and " + expectedThreads +
+                           ", but max concurrent was " + maxConcurrent.get());
+    }
+
+    /**
+     * TEST 3: Concurrent Measure Evaluation
+     *
+     * Verify multiple measures for same patient can be evaluated concurrently
+     */
+    @Test
+    void shouldEvaluateMultipleMeasuresConcurrently() throws Exception {
+        // Given: 10 patients, 10 measures
+        List<String> patientIds = generatePatientIds(10);
+        List<String> measureIds = generateMeasureIds(10);
+
+        when(measureRegistry.getMeasureIds()).thenReturn(measureIds);
+        mockFhirServerResponse(patientIds);
+
+        Map<String, Set<String>> concurrentMeasuresPerPatient = new ConcurrentHashMap<>();
+
+        when(measureCalculationService.calculateMeasure(anyString(), anyString(), anyString(), anyString()))
+            .thenAnswer(invocation -> {
+                String patientId = invocation.getArgument(1);
+                String measureId = invocation.getArgument(2);
+
+                concurrentMeasuresPerPatient.computeIfAbsent(patientId, k -> ConcurrentHashMap.newKeySet())
+                    .add(measureId);
+
+                Thread.sleep(100);
+                return mock(com.healthdata.quality.persistence.QualityMeasureResultEntity.class);
+            });
+
+        // When: Execute calculation
+        CompletableFuture<String> jobFuture = service.calculateAllMeasuresForPopulation(
+            "tenant-001",
+            "http://fhir-server:8080/fhir",
+            "test-user"
+        );
+        jobFuture.get(30, TimeUnit.SECONDS);
+
+        // Then: Verify concurrent measure evaluation
+        assertThat(concurrentMeasuresPerPatient).isNotEmpty();
+
+        // At least some patients should have had multiple measures evaluated concurrently
+        long patientsWithConcurrentMeasures = concurrentMeasuresPerPatient.values().stream()
+            .filter(measures -> measures.size() > 1)
+            .count();
+
+        assertThat(patientsWithConcurrentMeasures).isGreaterThan(0);
+    }
+
+    /**
+     * TEST 4: Progress Tracking with Multiple Threads
+     *
+     * Verify progress updates are thread-safe and accurate
+     */
+    @Test
+    void shouldTrackProgressAccuratelyWithMultipleThreads() throws Exception {
+        // Given: 50 patients, 2 measures = 100 total calculations
+        List<String> patientIds = generatePatientIds(50);
+        List<String> measureIds = Arrays.asList("HEDIS-CBP", "HEDIS-CDC");
+
+        when(measureRegistry.getMeasureIds()).thenReturn(measureIds);
+        mockFhirServerResponse(patientIds);
+
+        when(measureCalculationService.calculateMeasure(anyString(), anyString(), anyString(), anyString()))
+            .thenAnswer(invocation -> {
+                Thread.sleep(10);
+                return mock(com.healthdata.quality.persistence.QualityMeasureResultEntity.class);
+            });
+
+        List<String> progressMessages = new CopyOnWriteArrayList<>();
+        when(kafkaTemplate.send(eq("population-calculation-progress"), anyString(), anyString()))
+            .thenAnswer(invocation -> {
+                progressMessages.add(invocation.getArgument(2));
+                return null;
+            });
+
+        // When: Execute calculation
+        CompletableFuture<String> jobFuture = service.calculateAllMeasuresForPopulation(
+            "tenant-001",
+            "http://fhir-server:8080/fhir",
+            "test-user"
+        );
+        String jobId = jobFuture.get(30, TimeUnit.SECONDS);
+
+        // Then: Verify progress tracking
+        var job = service.getJobStatus(jobId);
+
+        assertThat(job).isNotNull();
+        assertThat(job.getTotalCalculations()).isEqualTo(100);
+        assertThat(job.getCompletedCalculations()).isEqualTo(100);
+        assertThat(job.getSuccessfulCalculations()).isEqualTo(100);
+        assertThat(job.getFailedCalculations()).isEqualTo(0);
+        assertThat(job.getProgressPercent()).isEqualTo(100);
+
+        // Progress messages should show increasing progress
+        assertThat(progressMessages).isNotEmpty();
+        assertThat(progressMessages.get(progressMessages.size() - 1))
+            .contains("\"progress\":100");
+    }
+
+    /**
+     * TEST 5: Error Handling in Parallel Execution
+     *
+     * Verify errors in one thread don't break other threads
+     */
+    @Test
+    void shouldHandleErrorsInParallelExecutionGracefully() throws Exception {
+        // Given: 20 patients, 2 measures, with some failures
+        List<String> patientIds = generatePatientIds(20);
+        List<String> measureIds = Arrays.asList("HEDIS-CBP", "HEDIS-CDC");
+
+        when(measureRegistry.getMeasureIds()).thenReturn(measureIds);
+        mockFhirServerResponse(patientIds);
+
+        AtomicInteger callCount = new AtomicInteger(0);
+        when(measureCalculationService.calculateMeasure(anyString(), anyString(), anyString(), anyString()))
+            .thenAnswer(invocation -> {
+                // Fail every 5th calculation
+                if (callCount.incrementAndGet() % 5 == 0) {
+                    throw new RuntimeException("Simulated failure");
+                }
+                Thread.sleep(10);
+                return mock(com.healthdata.quality.persistence.QualityMeasureResultEntity.class);
+            });
+
+        // When: Execute calculation
+        CompletableFuture<String> jobFuture = service.calculateAllMeasuresForPopulation(
+            "tenant-001",
+            "http://fhir-server:8080/fhir",
+            "test-user"
+        );
+        String jobId = jobFuture.get(30, TimeUnit.SECONDS);
+
+        // Then: Job should complete despite errors
+        var job = service.getJobStatus(jobId);
+
+        assertThat(job).isNotNull();
+        assertThat(job.getStatus()).isEqualTo(PopulationCalculationService.JobStatus.COMPLETED);
+        assertThat(job.getTotalCalculations()).isEqualTo(40);
+        assertThat(job.getCompletedCalculations()).isEqualTo(40);
+
+        // Should have ~8 failures (40 / 5)
+        assertThat(job.getFailedCalculations()).isBetween(7, 9);
+        assertThat(job.getSuccessfulCalculations()).isBetween(31, 33);
+
+        // Errors should be tracked
+        assertThat(job.getErrors()).isNotEmpty();
+    }
+
+    /**
+     * TEST 6: Throughput Measurement (Patients/Minute)
+     *
+     * Verify performance meets target of >1000 patients/minute
+     */
+    @Test
+    void shouldAchieveTargetThroughputOfThousandPatientsPerMinute() throws Exception {
+        // Given: 100 patients, 5 measures (simulating realistic load)
+        List<String> patientIds = generatePatientIds(100);
+        List<String> measureIds = generateMeasureIds(5);
+
+        when(measureRegistry.getMeasureIds()).thenReturn(measureIds);
+        mockFhirServerResponse(patientIds);
+
+        // Simulate 50ms per calculation (realistic FHIR + CQL processing)
+        when(measureCalculationService.calculateMeasure(anyString(), anyString(), anyString(), anyString()))
+            .thenAnswer(invocation -> {
+                Thread.sleep(50);
+                return mock(com.healthdata.quality.persistence.QualityMeasureResultEntity.class);
+            });
+
+        // When: Execute calculation and measure throughput
+        Instant start = Instant.now();
+        CompletableFuture<String> jobFuture = service.calculateAllMeasuresForPopulation(
+            "tenant-001",
+            "http://fhir-server:8080/fhir",
+            "test-user"
+        );
+        String jobId = jobFuture.get(60, TimeUnit.SECONDS);
+        Duration duration = Duration.between(start, Instant.now());
+
+        var job = service.getJobStatus(jobId);
+
+        // Then: Calculate throughput
+        double durationMinutes = duration.toMillis() / 60000.0;
+        double throughputPatientsPerMinute = 100.0 / durationMinutes;
+
+        assertThat(throughputPatientsPerMinute)
+            .isGreaterThan(1000.0)
+            .withFailMessage("Throughput was " + String.format("%.2f", throughputPatientsPerMinute) +
+                           " patients/minute. Target is >1000 patients/minute.");
+
+        // Log performance metrics
+        System.out.println("=== Performance Metrics ===");
+        System.out.println("Patients: " + job.getTotalPatients());
+        System.out.println("Measures: " + job.getTotalMeasures());
+        System.out.println("Total Calculations: " + job.getTotalCalculations());
+        System.out.println("Duration: " + duration.getSeconds() + "s");
+        System.out.println("Throughput: " + String.format("%.2f", throughputPatientsPerMinute) + " patients/minute");
+        System.out.println("Success Rate: " +
+            String.format("%.2f%%", (job.getSuccessfulCalculations() * 100.0 / job.getTotalCalculations())));
+    }
+
+    /**
+     * TEST 7: Chunking for Large Populations
+     *
+     * Verify large patient populations are processed in chunks
+     */
+    @Test
+    void shouldProcessLargePopulationsInChunks() throws Exception {
+        // Given: 2500 patients (should be chunked into 3 batches of 1000)
+        List<String> patientIds = generatePatientIds(2500);
+        List<String> measureIds = Arrays.asList("HEDIS-CBP");
+
+        when(measureRegistry.getMeasureIds()).thenReturn(measureIds);
+        mockFhirServerResponse(patientIds);
+
+        when(measureCalculationService.calculateMeasure(anyString(), anyString(), anyString(), anyString()))
+            .thenAnswer(invocation -> {
+                Thread.sleep(5);
+                return mock(com.healthdata.quality.persistence.QualityMeasureResultEntity.class);
+            });
+
+        // When: Execute calculation
+        CompletableFuture<String> jobFuture = service.calculateAllMeasuresForPopulation(
+            "tenant-001",
+            "http://fhir-server:8080/fhir",
+            "test-user"
+        );
+        String jobId = jobFuture.get(60, TimeUnit.SECONDS);
+
+        // Then: All patients should be processed
+        var job = service.getJobStatus(jobId);
+        assertThat(job.getTotalPatients()).isEqualTo(2500);
+        assertThat(job.getCompletedCalculations()).isEqualTo(2500);
+        assertThat(job.getStatus()).isEqualTo(PopulationCalculationService.JobStatus.COMPLETED);
+    }
+
+    /**
+     * TEST 8: Circuit Breaker for Downstream Service Failures
+     *
+     * Verify circuit breaker prevents cascading failures
+     */
+    @Test
+    void shouldActivateCircuitBreakerOnDownstreamFailures() throws Exception {
+        // Given: Downstream service failing consistently
+        List<String> patientIds = generatePatientIds(50);
+        List<String> measureIds = Arrays.asList("HEDIS-CBP");
+
+        when(measureRegistry.getMeasureIds()).thenReturn(measureIds);
+        mockFhirServerResponse(patientIds);
+
+        AtomicInteger failureCount = new AtomicInteger(0);
+        when(measureCalculationService.calculateMeasure(anyString(), anyString(), anyString(), anyString()))
+            .thenAnswer(invocation -> {
+                // First 10 calls fail
+                if (failureCount.getAndIncrement() < 10) {
+                    throw new RuntimeException("Service unavailable");
+                }
+                return mock(com.healthdata.quality.persistence.QualityMeasureResultEntity.class);
+            });
+
+        // When: Execute calculation
+        CompletableFuture<String> jobFuture = service.calculateAllMeasuresForPopulation(
+            "tenant-001",
+            "http://fhir-server:8080/fhir",
+            "test-user"
+        );
+        String jobId = jobFuture.get(30, TimeUnit.SECONDS);
+
+        // Then: Circuit breaker should have triggered
+        var job = service.getJobStatus(jobId);
+
+        // Note: This test expects circuit breaker to be implemented
+        // For now, verify graceful degradation
+        assertThat(job.getStatus()).isIn(
+            PopulationCalculationService.JobStatus.COMPLETED,
+            PopulationCalculationService.JobStatus.FAILED
+        );
+    }
+
+    /**
+     * TEST 9: Rate Limiting to Prevent Overwhelming Downstream
+     *
+     * Verify rate limiting prevents overwhelming downstream services
+     */
+    @Test
+    void shouldApplyRateLimitingToDownstreamCalls() throws Exception {
+        // Given: Rate limit of 100 calls/second
+        List<String> patientIds = generatePatientIds(200);
+        List<String> measureIds = Arrays.asList("HEDIS-CBP");
+
+        when(measureRegistry.getMeasureIds()).thenReturn(measureIds);
+        mockFhirServerResponse(patientIds);
+
+        List<Instant> callTimestamps = new CopyOnWriteArrayList<>();
+        when(measureCalculationService.calculateMeasure(anyString(), anyString(), anyString(), anyString()))
+            .thenAnswer(invocation -> {
+                callTimestamps.add(Instant.now());
+                return mock(com.healthdata.quality.persistence.QualityMeasureResultEntity.class);
+            });
+
+        // When: Execute calculation
+        CompletableFuture<String> jobFuture = service.calculateAllMeasuresForPopulation(
+            "tenant-001",
+            "http://fhir-server:8080/fhir",
+            "test-user"
+        );
+        jobFuture.get(30, TimeUnit.SECONDS);
+
+        // Then: Verify rate limiting (check calls in first second)
+        Instant firstCall = callTimestamps.get(0);
+        long callsInFirstSecond = callTimestamps.stream()
+            .filter(timestamp -> Duration.between(firstCall, timestamp).toMillis() < 1000)
+            .count();
+
+        // With proper rate limiting, should not exceed limit by much
+        // Note: This is a soft limit due to thread scheduling
+        assertThat(callsInFirstSecond)
+            .isLessThanOrEqualTo(150) // Allow some buffer
+            .withFailMessage("Rate limiting not working properly. " +
+                           callsInFirstSecond + " calls in first second");
+    }
+
+    // Helper methods
+
+    private List<String> generatePatientIds(int count) {
+        List<String> ids = new ArrayList<>();
+        for (int i = 1; i <= count; i++) {
+            ids.add("patient-" + String.format("%04d", i));
+        }
+        return ids;
+    }
+
+    private List<String> generateMeasureIds(int count) {
+        List<String> ids = new ArrayList<>();
+        for (int i = 1; i <= count; i++) {
+            ids.add("measure-" + String.format("%02d", i));
+        }
+        return ids;
+    }
+
+    private void mockFhirServerResponse(List<String> patientIds) {
+        Map<String, Object> bundle = new HashMap<>();
+        List<Map<String, Object>> entries = new ArrayList<>();
+
+        for (String patientId : patientIds) {
+            Map<String, Object> entry = new HashMap<>();
+            Map<String, Object> resource = new HashMap<>();
+            resource.put("id", patientId);
+            entry.put("resource", resource);
+            entries.add(entry);
+        }
+
+        bundle.put("entry", entries);
+
+        when(restTemplate.getForObject(anyString(), eq(Map.class)))
+            .thenReturn(bundle);
+    }
+}

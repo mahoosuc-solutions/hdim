@@ -1,0 +1,325 @@
+<div class="qa-audit-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <h1>Quality Assurance Audit Dashboard</h1>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="exportQAReport()">
+        <i class="icon-download"></i> Export QA Report
+      </button>
+      <button class="btn btn-primary" (click)="refreshQAData()">
+        <i class="icon-refresh"></i> Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- QA Metrics Overview -->
+  <div class="metrics-cards">
+    <div class="metric-card">
+      <div class="metric-label">Total Reviewed</div>
+      <div class="metric-value">{{ qaMetrics.totalReviewed }}</div>
+      <div class="metric-trend">Today</div>
+    </div>
+    
+    <div class="metric-card success">
+      <div class="metric-label">Approved</div>
+      <div class="metric-value">{{ qaMetrics.approvedDecisions }}</div>
+      <div class="metric-subtext">{{ (qaMetrics.approvedDecisions / qaMetrics.totalReviewed * 100).toFixed(1) }}% approval rate</div>
+    </div>
+    
+    <div class="metric-card warning">
+      <div class="metric-label">Rejected</div>
+      <div class="metric-value">{{ qaMetrics.rejectedDecisions }}</div>
+      <div class="metric-subtext">{{ (qaMetrics.rejectedDecisions / qaMetrics.totalReviewed * 100).toFixed(1) }}% rejection rate</div>
+    </div>
+    
+    <div class="metric-card alert">
+      <div class="metric-label">Flagged for Escalation</div>
+      <div class="metric-value">{{ qaMetrics.flaggedForEscalation }}</div>
+      <div class="metric-subtext">Requires physician review</div>
+    </div>
+    
+    <div class="metric-card">
+      <div class="metric-label">Avg Confidence Score</div>
+      <div class="metric-value">{{ (qaMetrics.averageConfidenceScore * 100).toFixed(1) }}%</div>
+      <div class="metric-subtext">{{ qaMetrics.lowConfidenceCount }} low confidence</div>
+    </div>
+    
+    <div class="metric-card">
+      <div class="metric-label">False Positive Rate</div>
+      <div class="metric-value">{{ (qaMetrics.falsePositiveRate * 100).toFixed(1) }}%</div>
+      <div class="metric-subtext">Quality indicator</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab === 'review-queue'" (click)="activeTab = 'review-queue'">
+      Review Queue ({{ pendingReviewDecisions.length }})
+    </button>
+    <button class="tab" [class.active]="activeTab === 'flagged'" (click)="activeTab = 'flagged'">
+      Flagged Items ({{ flaggedDecisions.length }})
+    </button>
+    <button class="tab" [class.active]="activeTab === 'metrics'" (click)="activeTab = 'metrics'">
+      Quality Metrics
+    </button>
+    <button class="tab" [class.active]="activeTab === 'trends'" (click)="activeTab = 'trends'">
+      Trend Analysis
+    </button>
+  </div>
+
+  <!-- Review Queue Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'review-queue'">
+    <!-- Filters -->
+    <div class="filters">
+      <select [(ngModel)]="filterAgentType" (change)="applyFilters()">
+        <option value="all">All Agent Types</option>
+        <option value="CARE_GAP_IDENTIFIER">Care Gap Identifier</option>
+        <option value="MEDICATION_OPTIMIZATION">Medication Optimization</option>
+        <option value="RISK_STRATIFICATION">Risk Stratification</option>
+        <option value="CONFIGURATION_ENGINE">Configuration Engine</option>
+      </select>
+      
+      <select [(ngModel)]="filterConfidenceRange" (change)="applyFilters()">
+        <option value="all">All Confidence Levels</option>
+        <option value="high">High (≥80%)</option>
+        <option value="medium">Medium (50-80%)</option>
+        <option value="low">Low (<50%)</option>
+      </select>
+      
+      <select [(ngModel)]="filterDateRange" (change)="applyFilters()">
+        <option value="today">Today</option>
+        <option value="yesterday">Yesterday</option>
+        <option value="last-7-days">Last 7 Days</option>
+        <option value="last-30-days">Last 30 Days</option>
+      </select>
+      
+      <select [(ngModel)]="filterReviewStatus" (change)="applyFilters()">
+        <option value="pending">Pending Review</option>
+        <option value="reviewed">Reviewed</option>
+        <option value="flagged">Flagged</option>
+      </select>
+    </div>
+
+    <!-- Decision Review List -->
+    <div class="review-queue">
+      <div class="decision-card" *ngFor="let decision of pendingReviewDecisions" 
+           [class.selected]="currentReviewDecision?.eventId === decision.eventId"
+           (click)="startReview(decision)">
+        
+        <div class="decision-header">
+          <span class="priority-badge" [class]="'priority-' + decision.reviewPriority">
+            {{ getPriorityLabel(decision.reviewPriority) }}
+          </span>
+          <span class="timestamp">{{ decision.timestamp | date:'short' }}</span>
+        </div>
+        
+        <div class="decision-body">
+          <div class="decision-info">
+            <strong>{{ decision.decisionType }}</strong>
+            <span class="agent-type">{{ decision.agentType }}</span>
+          </div>
+          
+          <div class="patient-info">
+            <i class="icon-patient"></i> Patient: {{ decision.patientId }}
+          </div>
+          
+          <div class="recommendation">
+            <strong>Recommendation:</strong> {{ decision.recommendedAction }}
+          </div>
+          
+          <div class="reasoning">
+            <strong>Reasoning:</strong> {{ decision.reasoning }}
+          </div>
+          
+          <div class="decision-meta">
+            <span class="confidence-score" [class]="getConfidenceClass(decision.confidenceScore)">
+              Confidence: {{ (decision.confidenceScore * 100).toFixed(1) }}%
+            </span>
+            <span class="clinical-impact" [class]="'impact-' + decision.clinicalImpact">
+              Impact: {{ decision.clinicalImpact }}
+            </span>
+            <span class="physician-review" *ngIf="decision.requiresPhysicianReview">
+              <i class="icon-alert"></i> Requires Physician Review
+            </span>
+          </div>
+        </div>
+        
+        <div class="decision-actions">
+          <button class="btn btn-sm btn-success" (click)="approveDecision(); $event.stopPropagation()">
+            Approve
+          </button>
+          <button class="btn btn-sm btn-danger" (click)="rejectDecision(); $event.stopPropagation()">
+            Reject
+          </button>
+          <button class="btn btn-sm btn-warning" (click)="flagForEscalation(); $event.stopPropagation()">
+            Flag
+          </button>
+          <button class="btn btn-sm btn-secondary" (click)="markFalsePositive(decision); $event.stopPropagation()">
+            False Positive
+          </button>
+        </div>
+      </div>
+      
+      <div class="empty-state" *ngIf="pendingReviewDecisions.length === 0">
+        <i class="icon-check-circle"></i>
+        <p>No decisions pending review</p>
+      </div>
+    </div>
+
+    <!-- Review Panel -->
+    <div class="review-panel" *ngIf="currentReviewDecision">
+      <h3>Review Decision</h3>
+      
+      <div class="review-details">
+        <div class="detail-row">
+          <label>Event ID:</label>
+          <span>{{ currentReviewDecision.eventId }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Patient:</label>
+          <span>{{ currentReviewDecision.patientId }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Agent Type:</label>
+          <span>{{ currentReviewDecision.agentType }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Confidence:</label>
+          <span [class]="getConfidenceClass(currentReviewDecision.confidenceScore)">
+            {{ (currentReviewDecision.confidenceScore * 100).toFixed(1) }}%
+          </span>
+        </div>
+      </div>
+      
+      <div class="review-notes">
+        <label for="reviewNotes">Review Notes:</label>
+        <textarea id="reviewNotes" [(ngModel)]="reviewNotes" 
+                  placeholder="Enter your review notes and quality assessment..."></textarea>
+      </div>
+      
+      <div class="review-actions">
+        <button class="btn btn-success" (click)="approveDecision()">
+          <i class="icon-check"></i> Approve Decision
+        </button>
+        <button class="btn btn-danger" (click)="rejectDecision()">
+          <i class="icon-x"></i> Reject Decision
+        </button>
+        <button class="btn btn-warning" (click)="flagForEscalation()">
+          <i class="icon-flag"></i> Flag for Escalation
+        </button>
+        <button class="btn btn-secondary" (click)="cancelReview()">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flagged Items Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'flagged'">
+    <div class="flagged-list">
+      <div class="decision-card flagged" *ngFor="let decision of flaggedDecisions">
+        <div class="decision-header">
+          <span class="flagged-badge">FLAGGED FOR PHYSICIAN REVIEW</span>
+          <span class="timestamp">{{ decision.timestamp | date:'short' }}</span>
+        </div>
+        
+        <div class="decision-body">
+          <div class="decision-info">
+            <strong>{{ decision.decisionType }}</strong>
+            <span class="agent-type">{{ decision.agentType }}</span>
+          </div>
+          
+          <div class="recommendation">
+            <strong>Recommendation:</strong> {{ decision.recommendedAction }}
+          </div>
+          
+          <div class="reasoning">
+            <strong>Reasoning:</strong> {{ decision.reasoning }}
+          </div>
+        </div>
+      </div>
+      
+      <div class="empty-state" *ngIf="flaggedDecisions.length === 0">
+        <i class="icon-check"></i>
+        <p>No flagged decisions</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quality Metrics Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'metrics'">
+    <div class="metrics-grid">
+      <div class="metric-section">
+        <h3>Review Outcomes</h3>
+        <div class="metric-chart">
+          <!-- TODO: Add chart visualization -->
+          <div class="chart-placeholder">
+            <div class="bar" style="height: {{ qaMetrics.approvedDecisions / qaMetrics.totalReviewed * 100 }}%">
+              <span>Approved<br>{{ qaMetrics.approvedDecisions }}</span>
+            </div>
+            <div class="bar" style="height: {{ qaMetrics.rejectedDecisions / qaMetrics.totalReviewed * 100 }}%">
+              <span>Rejected<br>{{ qaMetrics.rejectedDecisions }}</span>
+            </div>
+            <div class="bar" style="height: {{ qaMetrics.flaggedForEscalation / qaMetrics.totalReviewed * 100 }}%">
+              <span>Flagged<br>{{ qaMetrics.flaggedForEscalation }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="metric-section">
+        <h3>Accuracy Indicators</h3>
+        <ul class="metric-list">
+          <li>
+            <span>False Positive Rate:</span>
+            <strong>{{ (qaMetrics.falsePositiveRate * 100).toFixed(2) }}%</strong>
+          </li>
+          <li>
+            <span>False Negative Rate:</span>
+            <strong>{{ (qaMetrics.falseNegativeRate * 100).toFixed(2) }}%</strong>
+          </li>
+          <li>
+            <span>Average Confidence:</span>
+            <strong>{{ (qaMetrics.averageConfidenceScore * 100).toFixed(1) }}%</strong>
+          </li>
+          <li>
+            <span>Low Confidence Decisions:</span>
+            <strong>{{ qaMetrics.lowConfidenceCount }}</strong>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trend Analysis Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'trends'">
+    <div class="trends-grid">
+      <div class="trend-section">
+        <h3>Confidence Score Trends</h3>
+        <div class="trend-chart">
+          <!-- TODO: Add line chart visualization -->
+          <div class="trend-data">
+            <div class="trend-row" *ngFor="let trend of confidenceTrends">
+              <span class="trend-date">{{ trend.date }}</span>
+              <span class="trend-value">{{ (trend.avgConfidence * 100).toFixed(1) }}%</span>
+              <span class="trend-count">{{ trend.lowConfidenceCount }} low</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="trend-section">
+        <h3>Accuracy Trends</h3>
+        <div class="trend-chart">
+          <div class="trend-data">
+            <div class="trend-row" *ngFor="let trend of accuracyTrends">
+              <span class="trend-date">{{ trend.date }}</span>
+              <span class="trend-value success">{{ (trend.approvalRate * 100).toFixed(1) }}% approved</span>
+              <span class="trend-value warning">{{ (trend.rejectionRate * 100).toFixed(1) }}% rejected</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

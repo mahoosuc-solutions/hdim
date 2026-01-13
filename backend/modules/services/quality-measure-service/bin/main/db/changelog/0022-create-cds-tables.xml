@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- CDS Rules Table -->
+    <changeSet id="0015-01-create-cds-rules-table" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cds_rules"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="cds_rules">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rule_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rule_code" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="category" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cql_library_id" type="UUID"/>
+            <column name="cql_library_name" type="VARCHAR(255)"/>
+            <column name="cql_expression" type="VARCHAR(255)"/>
+            <column name="recommendation_template" type="TEXT"/>
+            <column name="evidence_source" type="TEXT"/>
+            <column name="clinical_guideline" type="VARCHAR(255)"/>
+            <column name="action_items" type="TEXT"/>
+            <column name="default_urgency" type="VARCHAR(20)" defaultValue="ROUTINE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requires_acknowledgment" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="applicable_conditions" type="TEXT"/>
+            <column name="exclusion_criteria" type="TEXT"/>
+            <column name="version" type="VARCHAR(20)"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="cds_rules" indexName="idx_cds_rule_tenant_active">
+            <column name="tenant_id"/>
+            <column name="active"/>
+        </createIndex>
+
+        <createIndex tableName="cds_rules" indexName="idx_cds_rule_category">
+            <column name="category"/>
+        </createIndex>
+
+        <createIndex tableName="cds_rules" indexName="idx_cds_rule_priority">
+            <column name="priority"/>
+        </createIndex>
+
+        <addUniqueConstraint tableName="cds_rules"
+            columnNames="tenant_id, rule_code"
+            constraintName="uk_cds_rule_tenant_code"/>
+
+        <rollback>
+            <dropTable tableName="cds_rules"/>
+        </rollback>
+    </changeSet>
+
+    <!-- CDS Recommendations Table -->
+    <changeSet id="0015-02-create-cds-recommendations-table" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cds_recommendations"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="cds_recommendations">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rule_id" type="UUID"/>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="category" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="urgency" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(30)" defaultValue="ACTIVE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="INTEGER" defaultValueNumeric="5">
+                <constraints nullable="false"/>
+            </column>
+            <column name="action_items" type="TEXT"/>
+            <column name="suggested_intervention" type="TEXT"/>
+            <column name="evidence_source" type="TEXT"/>
+            <column name="clinical_guideline" type="VARCHAR(255)"/>
+            <column name="related_care_gap_id" type="UUID"/>
+            <column name="related_measure_id" type="VARCHAR(50)"/>
+            <column name="related_measure_name" type="VARCHAR(255)"/>
+            <column name="due_date" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="evaluated_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="acknowledged_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="acknowledged_by" type="VARCHAR(255)"/>
+            <column name="acknowledgment_notes" type="TEXT"/>
+            <column name="completed_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="completed_by" type="VARCHAR(255)"/>
+            <column name="completion_outcome" type="TEXT"/>
+            <column name="declined_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="declined_by" type="VARCHAR(255)"/>
+            <column name="decline_reason" type="TEXT"/>
+            <column name="cql_evaluation_result" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="cds_recommendations" indexName="idx_cds_rec_patient_status">
+            <column name="patient_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="cds_recommendations" indexName="idx_cds_rec_patient_urgency">
+            <column name="patient_id"/>
+            <column name="urgency"/>
+        </createIndex>
+
+        <createIndex tableName="cds_recommendations" indexName="idx_cds_rec_patient_category">
+            <column name="patient_id"/>
+            <column name="category"/>
+        </createIndex>
+
+        <createIndex tableName="cds_recommendations" indexName="idx_cds_rec_rule">
+            <column name="rule_id"/>
+        </createIndex>
+
+        <createIndex tableName="cds_recommendations" indexName="idx_cds_rec_due_date">
+            <column name="due_date"/>
+        </createIndex>
+
+        <createIndex tableName="cds_recommendations" indexName="idx_cds_rec_related_care_gap">
+            <column name="related_care_gap_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="cds_recommendations"
+            baseColumnNames="rule_id"
+            constraintName="fk_cds_rec_rule"
+            referencedTableName="cds_rules"
+            referencedColumnNames="id"
+            onDelete="SET NULL"/>
+
+        <rollback>
+            <dropTable tableName="cds_recommendations"/>
+        </rollback>
+    </changeSet>
+
+    <!-- CDS Acknowledgments Table -->
+    <changeSet id="0015-03-create-cds-acknowledgments-table" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cds_acknowledgments"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="cds_acknowledgments">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="recommendation_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_name" type="VARCHAR(255)"/>
+            <column name="user_role" type="VARCHAR(100)"/>
+            <column name="action_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason" type="TEXT"/>
+            <column name="notes" type="TEXT"/>
+            <column name="outcome" type="TEXT"/>
+            <column name="follow_up_date" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="follow_up_notes" type="TEXT"/>
+            <column name="previous_status" type="VARCHAR(30)"/>
+            <column name="new_status" type="VARCHAR(30)"/>
+            <column name="client_ip" type="VARCHAR(45)"/>
+            <column name="user_agent" type="VARCHAR(500)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="cds_acknowledgments" indexName="idx_cds_ack_recommendation">
+            <column name="recommendation_id"/>
+        </createIndex>
+
+        <createIndex tableName="cds_acknowledgments" indexName="idx_cds_ack_patient">
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex tableName="cds_acknowledgments" indexName="idx_cds_ack_user">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex tableName="cds_acknowledgments" indexName="idx_cds_ack_action">
+            <column name="action_type"/>
+        </createIndex>
+
+        <createIndex tableName="cds_acknowledgments" indexName="idx_cds_ack_created">
+            <column name="created_at"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="cds_acknowledgments"
+            baseColumnNames="recommendation_id"
+            constraintName="fk_cds_ack_recommendation"
+            referencedTableName="cds_recommendations"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="cds_acknowledgments"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Insert Default CDS Rules -->
+    <changeSet id="0015-04-insert-default-cds-rules" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM cds_rules WHERE tenant_id = 'default'
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="cds_rules">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="default"/>
+            <column name="rule_name" value="Annual Wellness Visit Due"/>
+            <column name="rule_code" value="AWV-001"/>
+            <column name="description" value="Patient has not had an Annual Wellness Visit in the past 12 months"/>
+            <column name="category" value="PREVENTIVE"/>
+            <column name="priority" valueNumeric="3"/>
+            <column name="recommendation_template" value="Schedule an Annual Wellness Visit to review health status, update preventive care, and discuss health goals."/>
+            <column name="evidence_source" value="Medicare Preventive Services Guidelines"/>
+            <column name="action_items" value='["Schedule AWV appointment", "Review preventive care gaps", "Update medication list"]'/>
+            <column name="default_urgency" value="ROUTINE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <insert tableName="cds_rules">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="default"/>
+            <column name="rule_name" value="Diabetes A1C Monitoring"/>
+            <column name="rule_code" value="DM-A1C-001"/>
+            <column name="description" value="Diabetic patient needs A1C testing (no test in past 3 months)"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="priority" valueNumeric="2"/>
+            <column name="recommendation_template" value="Order HbA1c test for diabetes monitoring. Patient has not had A1c tested in the recommended interval."/>
+            <column name="evidence_source" value="American Diabetes Association Standards of Care"/>
+            <column name="clinical_guideline" value="ADA-2024"/>
+            <column name="action_items" value='["Order HbA1c lab test", "Review current diabetes medications", "Assess for complications"]'/>
+            <column name="default_urgency" value="SOON"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <insert tableName="cds_rules">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="default"/>
+            <column name="rule_name" value="Depression Screening PHQ-9"/>
+            <column name="rule_code" value="MH-PHQ9-001"/>
+            <column name="description" value="Patient due for depression screening"/>
+            <column name="category" value="MENTAL_HEALTH"/>
+            <column name="priority" valueNumeric="3"/>
+            <column name="recommendation_template" value="Administer PHQ-9 depression screening questionnaire during visit."/>
+            <column name="evidence_source" value="USPSTF Recommendations"/>
+            <column name="action_items" value='["Administer PHQ-9", "Review results with patient", "Discuss treatment options if indicated"]'/>
+            <column name="default_urgency" value="ROUTINE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <insert tableName="cds_rules">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="default"/>
+            <column name="rule_name" value="Medication Adherence Alert"/>
+            <column name="rule_code" value="MED-ADH-001"/>
+            <column name="description" value="Patient may have medication adherence issues based on refill patterns"/>
+            <column name="category" value="MEDICATION"/>
+            <column name="priority" valueNumeric="2"/>
+            <column name="recommendation_template" value="Discuss medication adherence with patient. Review barriers to taking medications as prescribed."/>
+            <column name="evidence_source" value="CDC Medication Adherence Guidelines"/>
+            <column name="action_items" value='["Review medication list", "Assess adherence barriers", "Consider medication simplification", "Discuss side effects"]'/>
+            <column name="default_urgency" value="URGENT"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <insert tableName="cds_rules">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="default"/>
+            <column name="rule_name" value="SDOH Food Insecurity Referral"/>
+            <column name="rule_code" value="SDOH-FOOD-001"/>
+            <column name="description" value="Patient screened positive for food insecurity"/>
+            <column name="category" value="SDOH"/>
+            <column name="priority" valueNumeric="2"/>
+            <column name="recommendation_template" value="Connect patient with food assistance resources. Consider referral to community health worker or social services."/>
+            <column name="evidence_source" value="CMS Social Determinants of Health Guidelines"/>
+            <column name="action_items" value='["Provide food assistance resources", "Refer to community resources", "Schedule follow-up", "Document Z-code in problem list"]'/>
+            <column name="default_urgency" value="SOON"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="cds_rules">
+                <where>tenant_id='default' AND rule_code IN ('AWV-001', 'DM-A1C-001', 'MH-PHQ9-001', 'MED-ADH-001', 'SDOH-FOOD-001')</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

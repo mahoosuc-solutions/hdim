@@ -19,6 +19,8 @@ import java.util.UUID;
  * - Thread pool adjustments
  * - Kafka partition recommendations
  * - Customer tier classifications
+ * - CQL measure evaluations
+ * - Care gap identification decisions
  * - AI reasoning and confidence scores
  * 
  * Enables:
@@ -137,7 +139,9 @@ public class AIAgentDecisionEvent {
         CUSTOMER_CLASSIFIER,     // Customer tier classification
         LOAD_PREDICTOR,         // Traffic prediction
         COST_OPTIMIZER,         // Cost vs performance optimization
-        ANOMALY_DETECTOR        // Detect configuration anomalies
+        ANOMALY_DETECTOR,       // Detect configuration anomalies
+        CQL_ENGINE,             // CQL clinical quality language engine
+        CARE_GAP_IDENTIFIER     // Care gap identification agent
     }
 
     /**
@@ -154,7 +158,11 @@ public class AIAgentDecisionEvent {
         RETENTION_POLICY_RECOMMENDATION,
         COMPRESSION_TYPE_RECOMMENDATION,
         BATCH_SIZE_RECOMMENDATION,
-        AUTO_SCALING_POLICY
+        AUTO_SCALING_POLICY,
+        MEASURE_MET,              // CQL evaluation result - measure met
+        MEASURE_NOT_MET,          // CQL evaluation result - measure not met
+        BATCH_EVALUATION,         // Batch CQL evaluation
+        CARE_GAP_IDENTIFICATION   // Care gap identification
     }
 
     /**
@@ -209,14 +217,32 @@ public class AIAgentDecisionEvent {
         @JsonProperty("expectedImpact")
         private String expectedImpact; // Human-readable impact description
 
+        @JsonProperty("implementationComplexity")
+        private String implementationComplexity; // Low, Medium, High
+
         @JsonProperty("riskLevel")
         private RiskLevel riskLevel;
 
         @JsonProperty("rollbackPlan")
         private String rollbackPlan;
 
+        @JsonProperty("rollbackProcedure")
+        private String rollbackProcedure; // Alternative name for rollback plan
+
         @JsonProperty("validationCriteria")
         private Map<String, Object> validationCriteria; // How to verify the change worked
+
+        @JsonProperty("validationSteps")
+        private String validationSteps; // Steps to validate the change
+
+        @JsonProperty("costImpact")
+        private String costImpact; // Cost estimate
+
+        @JsonProperty("timeToImplement")
+        private String timeToImplement; // Time estimate
+
+        @JsonProperty("approvalRequired")
+        private Boolean approvalRequired; // Whether approval is needed
     }
 
     public enum RiskLevel {
@@ -263,25 +289,4 @@ public class AIAgentDecisionEvent {
         private String userId;
     }
 
-    /**
-     * Builder initialization
-     */
-    public static class AIAgentDecisionEventBuilder {
-        public AIAgentDecisionEvent build() {
-            if (eventId == null) {
-                eventId = UUID.randomUUID();
-            }
-            if (timestamp == null) {
-                timestamp = Instant.now();
-            }
-            return new AIAgentDecisionEvent(
-                eventId, timestamp, tenantId, eventType, agentId, agentType, 
-                agentVersion, modelName, decisionType, resourceType, resourceId, 
-                customerProfile, inputMetrics, historicalData, userQuery, 
-                recommendation, confidenceScore, reasoning, alternativeOptions, 
-                outcome, appliedByUser, userFeedback, inferenceTimeMs, tokenCount, 
-                costEstimate, requestId, correlationId, previousEventId
-            );
-        }
-    }
 }

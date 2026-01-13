@@ -85,7 +85,7 @@ public class QAReviewService {
     public QAReviewResult approveDecision(String tenantId, String decisionId, QAReviewRequest request) {
         log.info("Approving decision: {} by: {}", decisionId, request.getReviewedBy());
 
-        AIAuditEvent event = auditEventRepository.findByDecisionIdAndTenantId(decisionId, tenantId)
+        AIAgentDecisionEventEntity event = auditEventRepository.findByDecisionIdAndTenantId(decisionId, tenantId)
                 .orElseThrow(() -> new RuntimeException("Decision not found: " + decisionId));
 
         // Create or update review
@@ -121,7 +121,7 @@ public class QAReviewService {
     public QAReviewResult rejectDecision(String tenantId, String decisionId, QAReviewRequest request) {
         log.info("Rejecting decision: {} by: {}", decisionId, request.getReviewedBy());
 
-        AIAuditEvent event = auditEventRepository.findByDecisionIdAndTenantId(decisionId, tenantId)
+        AIAgentDecisionEventEntity event = auditEventRepository.findByDecisionIdAndTenantId(decisionId, tenantId)
                 .orElseThrow(() -> new RuntimeException("Decision not found: " + decisionId));
 
         // Create or update review
@@ -158,7 +158,7 @@ public class QAReviewService {
     public QAReviewResult flagDecision(String tenantId, String decisionId, QAFlagRequest request) {
         log.info("Flagging decision: {} as: {} by: {}", decisionId, request.getFlagType(), request.getReviewedBy());
 
-        AIAuditEvent event = auditEventRepository.findByDecisionIdAndTenantId(decisionId, tenantId)
+        AIAgentDecisionEventEntity event = auditEventRepository.findByDecisionIdAndTenantId(decisionId, tenantId)
                 .orElseThrow(() -> new RuntimeException("Decision not found: " + decisionId));
 
         // Create or update review

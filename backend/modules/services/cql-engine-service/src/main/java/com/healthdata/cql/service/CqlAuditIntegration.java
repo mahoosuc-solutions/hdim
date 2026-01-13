@@ -3,9 +3,8 @@ package com.healthdata.cql.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.healthdata.audit.event.AIAgentDecisionEvent;
-import com.healthdata.audit.event.AIAgentType;
-import com.healthdata.audit.publisher.AIAuditEventPublisher;
+import com.healthdata.audit.models.ai.AIAgentDecisionEvent;
+import com.healthdata.audit.service.ai.AIAuditEventPublisher;
 import com.healthdata.cql.measure.MeasureResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -80,24 +79,27 @@ public class CqlAuditIntegration {
 
             // Create audit event
             AIAgentDecisionEvent event = AIAgentDecisionEvent.builder()
-                    .eventId(UUID.randomUUID().toString())
+                    .eventId(UUID.randomUUID())
                     .tenantId(tenantId)
-                    .timestamp(new Date())
-                    .agentType(AIAgentType.CQL_ENGINE)
+                    .timestamp(java.time.Instant.now())
+                    .agentId("cql-engine")
+                    .agentType(AIAgentDecisionEvent.AgentType.CQL_ENGINE)
                     .agentVersion("1.0.0")
-                    .decisionId(evaluationId)
-                    .correlationId(evaluationId)
-                    .userId(evaluatedBy)
-                    .customerProfile(customerProfile)
-                    .inputParameters(inputParams)
-                    .decisionType(measureResult.isInNumerator() ? "MEASURE_MET" : "MEASURE_NOT_MET")
-                    .recommendation(recommendation)
+                    .modelName("HEDIS-CQL-Engine")
+                    .resourceType("Patient")
+                    .resourceId(patientId)
+                    .decisionType(measureResult.isInNumerator() ? 
+                        AIAgentDecisionEvent.DecisionType.MEASURE_MET : 
+                        AIAgentDecisionEvent.DecisionType.MEASURE_NOT_MET)
+                    .customerProfile(buildCustomerProfileObject(customerProfile))
+                    .inputMetrics(inputParams)
+                    .recommendation(buildRecommendationObject(recommendation))
                     .confidenceScore(confidenceScore)
-                    .reasoning(reasoning)
-                    .performanceMetrics(performanceMetrics)
+                    .reasoning(buildReasoningString(reasoning))
+                    .correlationId(evaluationId)
                     .build();
 
-            auditEventPublisher.publishDecisionEvent(event);
+            auditEventPublisher.publishAIDecision(event);
             log.debug("Published CQL evaluation audit event: {}", event.getEventId());
 
         } catch (Exception e) {
@@ -148,32 +150,28 @@ public class CqlAuditIntegration {
             );
 
             AIAgentDecisionEvent event = AIAgentDecisionEvent.builder()
-                    .eventId(UUID.randomUUID().toString())
+                    .eventId(UUID.randomUUID())
                     .tenantId(tenantId)
-                    .timestamp(new Date())
-                    .agentType(AIAgentType.CQL_ENGINE)
+                    .timestamp(java.time.Instant.now())
+                    .agentId("cql-engine")
+                    .agentType(AIAgentDecisionEvent.AgentType.CQL_ENGINE)
                     .agentVersion("1.0.0")
-                    .decisionId(batchId)
-                    .correlationId(batchId)
-                    .userId(executedBy)
-                    .customerProfile(customerProfile)
-                    .inputParameters(Map.of(
+                    .decisionType(AIAgentDecisionEvent.DecisionType.BATCH_EVALUATION)
+                    .resourceType("Patient")
+                    .resourceId(patientId)
+                    .customerProfile(buildCustomerProfileObject(customerProfile))
+                    .inputMetrics(Map.of(
                             "evaluationType", "BATCH",
                             "evaluationCount", evaluationCount
                     ))
-                    .decisionType("BATCH_EVALUATION")
-                    .recommendation(objectMapper.convertValue(recommendation, Map.class))
+                    .recommendation(buildRecommendationObject(objectMapper.convertValue(recommendation, Map.class)))
                     .confidenceScore(evaluationCount > 0 ? 
                             (double) successCount / evaluationCount : 0.0)
-                    .reasoning(reasoning)
-                    .performanceMetrics(Map.of(
-                            "totalEvaluations", evaluationCount,
-                            "successCount", successCount,
-                            "failureCount", failureCount
-                    ))
+                    .reasoning(buildReasoningString(reasoning))
+                    .correlationId(batchId)
                     .build();
 
-            auditEventPublisher.publishDecisionEvent(event);
+            auditEventPublisher.publishAIDecision(event);
             log.debug("Published batch CQL evaluation audit event: {}", event.getEventId());
 
         } catch (Exception e) {
@@ -193,6 +191,15 @@ public class CqlAuditIntegration {
     }
 
     /**
+     * Build customer profile object for audit event
+     */
+    private AIAgentDecisionEvent.CustomerProfile buildCustomerProfileObject(Map<String, Object> profile) {
+        return AIAgentDecisionEvent.CustomerProfile.builder()
+                .customerTier("STANDARD")
+                .build();
+    }
+
+    /**
      * Build recommendation from measure result
      */
     private Map<String, Object> buildMeasureRecommendation(MeasureResult result, String measureId) {
@@ -200,7 +207,7 @@ public class CqlAuditIntegration {
         recommendation.put("measureId", measureId);
         recommendation.put("inDenominator", result.isInDenominator());
         recommendation.put("inNumerator", result.isInNumerator());
-        recommendation.put("inExclusion", result.isInExclusion());
+        recommendation.put("hasExclusion", result.getExclusionReason() != null);
         recommendation.put("measureMet", result.isInNumerator() && result.isInDenominator());
         
         if (result.getScore() != null) {
@@ -215,6 +222,17 @@ public class CqlAuditIntegration {
     }
 
     /**
+     * Build recommendation object for audit event
+     */
+    private AIAgentDecisionEvent.ConfigurationRecommendation buildRecommendationObject(Map<String, Object> rec) {
+        return AIAgentDecisionEvent.ConfigurationRecommendation.builder()
+                .recommendedValue(rec.get("measureId"))
+                .expectedImpact("Clinical quality measure evaluation")
+                .riskLevel(AIAgentDecisionEvent.RiskLevel.LOW)
+                .build();
+    }
+
+    /**
      * Build reasoning from measure result
      */
     private List<String> buildMeasureReasoning(MeasureResult result) {
@@ -223,8 +241,8 @@ public class CqlAuditIntegration {
         reasoning.add(String.format("Patient in denominator: %s", result.isInDenominator()));
         reasoning.add(String.format("Patient in numerator: %s", result.isInNumerator()));
         
-        if (result.isInExclusion()) {
-            reasoning.add("Patient in exclusion population");
+        if (result.getExclusionReason() != null) {
+            reasoning.add(String.format("Patient in exclusion: %s", result.getExclusionReason()));
         }
         
         if (result.getDetails() != null && !result.getDetails().isEmpty()) {
@@ -240,6 +258,13 @@ public class CqlAuditIntegration {
         }
         
         return reasoning;
+    }
+
+    /**
+     * Build reasoning string for audit event
+     */
+    private String buildReasoningString(List<String> reasoning) {
+        return String.join("; ", reasoning);
     }
 
     /**
@@ -289,7 +314,7 @@ public class CqlAuditIntegration {
         Map<String, Object> metrics = new HashMap<>();
         metrics.put("executionTimeMs", durationMs);
         metrics.put("dataPointsEvaluated", result.getDetails() != null ? result.getDetails().size() : 0);
-        metrics.put("evaluationComplexity", result.isInExclusion() ? "HIGH" : "MEDIUM");
+        metrics.put("evaluationComplexity", result.getExclusionReason() != null ? "HIGH" : "MEDIUM");
         return metrics;
     }
 }

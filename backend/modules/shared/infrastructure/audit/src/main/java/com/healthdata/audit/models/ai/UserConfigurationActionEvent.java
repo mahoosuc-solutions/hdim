@@ -292,28 +292,4 @@ public class UserConfigurationActionEvent {
         EXPIRED
     }
 
-    /**
-     * Builder initialization
-     */
-    public static class UserConfigurationActionEventBuilder {
-        public UserConfigurationActionEvent build() {
-            if (eventId == null) {
-                eventId = UUID.randomUUID();
-            }
-            if (timestamp == null) {
-                timestamp = Instant.now();
-            }
-            return new UserConfigurationActionEvent(
-                eventId, timestamp, tenantId, eventType, userId, username,
-                userRole, userEmail, actionType, actionSource, sessionId,
-                ipAddress, userAgent, serviceName, resourceType, resourceId,
-                configurationKey, requestedValue, appliedValue, aiRecommendationId,
-                aiRecommendationAction, naturalLanguageQuery, aiResponseId,
-                userFeedbackRating, userFeedbackComment, actionStatus,
-                validationErrors, warningMessages, errorMessage, successMessage,
-                impactAssessment, requiresApproval, approvalStatus, approvedBy,
-                approvedAt, requestId, correlationId, changeTicketId, environment
-            );
-        }
-    }
 }

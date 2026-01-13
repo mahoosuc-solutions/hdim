@@ -39,13 +39,17 @@ class ScenarioLoaderServiceTest {
 
     private ScenarioLoaderService service;
 
+    @Mock
+    private DemoProgressService progressService;
+
     @BeforeEach
     void setUp() {
         service = new ScenarioLoaderService(
                 scenarioRepository,
                 sessionRepository,
                 seedingService,
-                resetService
+                resetService,
+                progressService
         );
     }
 

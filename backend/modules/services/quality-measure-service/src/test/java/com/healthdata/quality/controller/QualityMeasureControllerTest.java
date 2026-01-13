@@ -185,7 +185,8 @@ class QualityMeasureControllerTest {
 
         var response = controller.getJobStatus("tenant-1", "job-1");
 
-        assertThat(response.getStatusCode().value()).isEqualTo(403);
+        // Returns 404 for tenant isolation (don't reveal job exists)
+        assertThat(response.getStatusCode().value()).isEqualTo(404);
     }
 
     @Test
@@ -340,7 +341,8 @@ class QualityMeasureControllerTest {
 
         var response = controller.cancelJob("tenant-1", "job-1");
 
-        assertThat(response.getStatusCode().value()).isEqualTo(403);
+        // Returns 404 for tenant isolation (don't reveal job exists)
+        assertThat(response.getStatusCode().value()).isEqualTo(404);
     }
 
     @Test

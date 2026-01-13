@@ -345,20 +345,9 @@ public class PopulationCalculationService {
 
             log.info("Fetched {} patient IDs from FHIR server", patientIds.size());
 
-            // If no patients found, create dummy patient IDs for testing
-            if (patientIds.isEmpty()) {
-                log.warn("No patients found in FHIR server, creating dummy patient for testing");
-                patientIds.add(UUID.randomUUID());
-                patientIds.add(UUID.randomUUID());
-                patientIds.add(UUID.randomUUID());
-            }
-
         } catch (Exception e) {
-            log.warn("Error fetching patients from FHIR server: {}, using dummy patients", e.getMessage());
-            // For testing: return dummy patients if FHIR server unavailable
-            patientIds.add(UUID.randomUUID());
-            patientIds.add(UUID.randomUUID());
-            patientIds.add(UUID.randomUUID());
+            log.error("Failed to fetch patients from FHIR server: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch patients from FHIR server", e);
         }
 
         return patientIds;

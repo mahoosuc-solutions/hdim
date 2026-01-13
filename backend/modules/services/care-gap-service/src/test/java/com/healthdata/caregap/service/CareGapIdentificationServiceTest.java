@@ -45,6 +45,9 @@ class CareGapIdentificationServiceTest {
     @Mock
     private KafkaTemplate<String, String> kafkaTemplate;
 
+    @Mock
+    private CareGapAuditIntegration careGapAuditIntegration;
+
     @Captor
     private ArgumentCaptor<CareGapEntity> gapCaptor;
 
@@ -63,7 +66,8 @@ class CareGapIdentificationServiceTest {
                 careGapRepository,
                 patientServiceClient,
                 cqlEngineServiceClient,
-                kafkaTemplate
+                kafkaTemplate,
+                careGapAuditIntegration
         );
     }
 

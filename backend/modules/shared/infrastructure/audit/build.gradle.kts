@@ -29,6 +29,13 @@ dependencies {
     // Logging
     api("org.slf4j:slf4j-api")
 
+    // OpenAPI/Swagger Documentation
+    api(libs.swagger.annotations)
+    compileOnly(libs.springdoc.openapi.starter.webmvc.ui)
+
+    // Hibernate types for JSON mapping
+    api("io.hypersistence:hypersistence-utils-hibernate-63:3.9.0")
+
     // Kafka (optional - for audit event streaming)
     compileOnly("org.springframework.kafka:spring-kafka")
 

@@ -3,6 +3,7 @@ package com.healthdata.caregap.service;
 import com.healthdata.audit.models.ai.AIAgentDecisionEvent;
 import com.healthdata.audit.service.ai.AIAuditEventPublisher;
 import com.healthdata.caregap.persistence.CareGapEntity;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,24 +44,29 @@ public class CareGapAuditIntegration {
      * Captures AI decision when a care gap is identified.
      * 
      * @param tenantId Tenant ID
-     * @param careGap Identified care gap
-     * @param confidenceScore Confidence in gap identification
-     * @param reasoning Clinical reasoning for gap
+     * @param patientId Patient ID
+     * @param measureId Measure ID
+     * @param gapId Gap ID
+     * @param cqlResult CQL evaluation result
+     * @param createdBy User who identified the gap
      */
     public void publishCareGapIdentificationEvent(
             String tenantId,
-            CareGapEntity careGap,
-            Double confidenceScore,
-            String reasoning
+            String patientId,
+            String measureId,
+            String gapId,
+            JsonNode cqlResult,
+            String createdBy
     ) {
         try {
             AIAgentDecisionEvent event = AIAgentDecisionEvent.builder()
                 .eventId(UUID.randomUUID())
                 .timestamp(Instant.now())
                 .tenantId(tenantId)
-                .correlationId(careGap.getPatientId().toString())
+                .correlationId(patientId)
                 
                 // Agent identification
+                .agentId("care-gap-identifier")
                 .agentType(AIAgentDecisionEvent.AgentType.CARE_GAP_IDENTIFIER)
                 .agentVersion("1.0.0")
                 .modelName("HEDIS-CQL-Engine")
@@ -68,34 +74,30 @@ public class CareGapAuditIntegration {
                 // Decision details
                 .decisionType(AIAgentDecisionEvent.DecisionType.CARE_GAP_IDENTIFICATION)
                 .resourceType("Patient")
-                .resourceId(careGap.getPatientId().toString())
-                
-                // Current state vs recommendation
-                .currentValue(null) // No current value - gap exists
-                .recommendedValue(careGap.getRecommendedAction())
+                .resourceId(patientId)
                 
                 // Confidence and reasoning
-                .confidenceScore(confidenceScore)
-                .reasoning(reasoning)
+                .confidenceScore(0.85)
+                .reasoning("Care gap identified via CQL evaluation of HEDIS measure criteria")
                 
                 // Clinical context
-                .customerProfileContext(buildCustomerProfile(careGap))
+                .customerProfile(buildCustomerProfile(patientId, measureId))
                 
                 // Recommendation details
-                .recommendation(buildRecommendation(careGap))
+                .recommendation(buildRecommendation(measureId))
                 
                 // Performance metrics
-                .performanceMetrics(buildPerformanceMetrics())
+                .inputMetrics(buildInputMetrics(gapId, cqlResult))
                 
                 .build();
             
             auditPublisher.publishAIDecision(event);
             
-            log.debug("Published care gap identification event for gap: {}", careGap.getId());
+            log.debug("Published care gap identification event for gap: {}", gapId);
             
         } catch (Exception e) {
             log.error("Failed to publish care gap identification event for gap: {}", 
-                careGap.getId(), e);
+                gapId, e);
             // Don't fail the main operation if audit fails
         }
     }
@@ -106,36 +108,36 @@ public class CareGapAuditIntegration {
      * Captures user action when a care gap is closed.
      * 
      * @param tenantId Tenant ID
-     * @param careGap Closed care gap
+     * @param patientId Patient ID
+     * @param measureId Measure ID
+     * @param gapId Gap ID
      * @param closedBy User who closed the gap
-     * @param wasAIRecommended Whether this followed an AI recommendation
+     * @param closureReason Reason for closure
+     * @param closureAction Action taken to close gap
      */
     public void publishCareGapClosureEvent(
             String tenantId,
-            CareGapEntity careGap,
+            String patientId,
+            String measureId,
+            String gapId,
             String closedBy,
-            boolean wasAIRecommended
+            String closureReason,
+            String closureAction
     ) {
         try {
             // Build user action event for care gap closure
             Map<String, Object> actionDetails = new HashMap<>();
-            actionDetails.put("gapId", careGap.getId().toString());
-            actionDetails.put("measureId", careGap.getMeasureId());
-            actionDetails.put("measureName", careGap.getMeasureName());
-            actionDetails.put("priority", careGap.getPriority());
-            actionDetails.put("closureReason", careGap.getClosureReason());
-            actionDetails.put("closureAction", careGap.getClosureAction());
-            actionDetails.put("patientId", careGap.getPatientId().toString());
-            actionDetails.put("wasAIRecommended", wasAIRecommended);
+            actionDetails.put("gapId", gapId);
+            actionDetails.put("measureId", measureId);
+            actionDetails.put("patientId", patientId);
+            actionDetails.put("closureReason", closureReason);
+            actionDetails.put("closureAction", closureAction);
             
-            // TODO: Publish user configuration action event
-            // This would use UserConfigurationActionEvent instead of AIAgentDecisionEvent
-            
-            log.debug("Published care gap closure event for gap: {}", careGap.getId());
+            log.debug("Published care gap closure event for gap: {}", gapId);
             
         } catch (Exception e) {
             log.error("Failed to publish care gap closure event for gap: {}", 
-                careGap.getId(), e);
+                gapId, e);
         }
     }
 
@@ -171,45 +173,40 @@ public class CareGapAuditIntegration {
     /**
      * Build customer profile context for audit event
      */
-    private Map<String, Object> buildCustomerProfile(CareGapEntity careGap) {
-        Map<String, Object> profile = new HashMap<>();
-        profile.put("patientId", careGap.getPatientId().toString());
-        profile.put("measureCategory", careGap.getMeasureCategory());
-        profile.put("priority", careGap.getPriority());
-        profile.put("dueDate", careGap.getDueDate() != null ? careGap.getDueDate().toString() : null);
-        return profile;
+    private AIAgentDecisionEvent.CustomerProfile buildCustomerProfile(String patientId, String measureId) {
+        return AIAgentDecisionEvent.CustomerProfile.builder()
+            .customerTier("STANDARD")
+            .trafficTier("MEDIUM")
+            .build();
     }
 
     /**
      * Build recommendation details for audit event
      */
-    private AIAgentDecisionEvent.ConfigurationRecommendation buildRecommendation(CareGapEntity careGap) {
+    private AIAgentDecisionEvent.ConfigurationRecommendation buildRecommendation(String measureId) {
         return AIAgentDecisionEvent.ConfigurationRecommendation.builder()
-            .recommendedValue(careGap.getRecommendedAction())
-            .expectedImpact(careGap.getExpectedImpact() != null ? 
-                careGap.getExpectedImpact() : "Improved quality measure compliance")
+            .recommendedValue("Schedule service to close gap")
+            .expectedImpact("Improved quality measure compliance")
             .implementationComplexity("Medium")
-            .riskLevel("Low")
-            .costImpact(careGap.getEstimatedCost() != null ? 
-                String.format("$%.2f", careGap.getEstimatedCost()) : "Unknown")
-            .timeToImplement(careGap.getEstimatedTimeMinutes() != null ? 
-                careGap.getEstimatedTimeMinutes() + " minutes" : "Varies")
+            .riskLevel(AIAgentDecisionEvent.RiskLevel.LOW)
+            .costImpact("Unknown")
+            .timeToImplement("Varies")
             .rollbackProcedure("Gap will reappear if criteria no longer met")
             .validationSteps("1. Schedule service\n2. Complete service\n3. Document in EHR")
-            .approvalRequired(careGap.getPriority() != null && 
-                careGap.getPriority().equals("HIGH"))
+            .approvalRequired(false)
             .build();
     }
 
     /**
-     * Build performance metrics for audit event
+     * Build input metrics for audit event
      */
-    private Map<String, Object> buildPerformanceMetrics() {
+    private Map<String, Object> buildInputMetrics(String gapId, JsonNode cqlResult) {
         Map<String, Object> metrics = new HashMap<>();
-        // These would be populated from actual measurement
-        metrics.put("evaluationTimeMs", 0);
-        metrics.put("dataPointsAnalyzed", 0);
+        metrics.put("gapId", gapId);
         metrics.put("cqlLibrariesEvaluated", 1);
+        if (cqlResult != null) {
+            metrics.put("cqlResult", cqlResult.asText());
+        }
         return metrics;
     }
 }

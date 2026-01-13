@@ -241,30 +241,4 @@ public class ConfigurationEngineEvent {
         CRITICAL               // Service degradation requiring immediate action
     }
 
-    /**
-     * Builder initialization
-     */
-    public static class ConfigurationEngineEventBuilder {
-        public ConfigurationEngineEvent build() {
-            if (eventId == null) {
-                eventId = UUID.randomUUID();
-            }
-            if (timestamp == null) {
-                timestamp = Instant.now();
-            }
-            if (changeId == null) {
-                changeId = UUID.randomUUID();
-            }
-            return new ConfigurationEngineEvent(
-                eventId, timestamp, tenantId, eventType, changeId, changeType,
-                changeSource, triggeredBy, serviceName, configurationScope,
-                resourceType, resourceId, configKey, previousValue, newValue,
-                effectiveValue, reason, triggerMetrics, expectedImpact,
-                aiRecommendationId, executionStatus, appliedAt, validationStatus,
-                validationMetrics, errorMessage, rollbackRequired, rolledBackAt,
-                performanceImpact, requestId, correlationId, changeApprovalId,
-                environment
-            );
-        }
-    }
 }

@@ -149,34 +149,44 @@ public class ClinicalDecisionService {
         
         Double approvalRate = totalDecisions > 0 ? (approvedDecisions.doubleValue() / totalDecisions) * 100 : 0.0;
         Double averageConfidenceScore = clinicalDecisionRepository.getAverageConfidenceScore(tenantId);
-        
+
+        // Calculate override rate
+        Long overrideCount = clinicalDecisionRepository.countOverridesForTenant(tenantId);
+        Double overrideRate = totalDecisions > 0 ? (overrideCount.doubleValue() / totalDecisions) * 100 : 0.0;
+
+        // Calculate average review time
+        Double averageReviewTime = clinicalDecisionRepository.getAverageReviewTimeHours(tenantId);
+        if (averageReviewTime == null) {
+            averageReviewTime = 0.0;
+        }
+
         // Decision type distribution
         Long medicationAlerts = clinicalDecisionRepository.countByTenantIdAndDecisionType(tenantId, "MEDICATION_ALERT");
         Long careGaps = clinicalDecisionRepository.countByTenantIdAndDecisionType(tenantId, "CARE_GAP");
         Long riskStratifications = clinicalDecisionRepository.countByTenantIdAndDecisionType(tenantId, "RISK_STRATIFICATION");
         Long clinicalPathways = clinicalDecisionRepository.countByTenantIdAndDecisionType(tenantId, "CLINICAL_PATHWAY");
-        
+
         // Severity distribution
         Long critical = clinicalDecisionRepository.countByTenantIdAndSeverity(tenantId, "CRITICAL");
         Long high = clinicalDecisionRepository.countByTenantIdAndSeverity(tenantId, "HIGH");
         Long moderate = clinicalDecisionRepository.countByTenantIdAndSeverity(tenantId, "MODERATE");
         Long low = clinicalDecisionRepository.countByTenantIdAndSeverity(tenantId, "LOW");
-        
+
         // Evidence grade distribution
         Long gradeA = clinicalDecisionRepository.countByTenantIdAndEvidenceGrade(tenantId, "A");
         Long gradeB = clinicalDecisionRepository.countByTenantIdAndEvidenceGrade(tenantId, "B");
         Long gradeC = clinicalDecisionRepository.countByTenantIdAndEvidenceGrade(tenantId, "C");
         Long gradeD = clinicalDecisionRepository.countByTenantIdAndEvidenceGrade(tenantId, "D");
-        
+
         return ClinicalMetrics.builder()
             .totalDecisions(totalDecisions)
             .approvedDecisions(approvedDecisions)
             .rejectedDecisions(rejectedDecisions)
             .pendingReview(pendingReview)
             .approvalRate(approvalRate)
-            .overrideRate(0.0) // TODO: Calculate from override tracking
+            .overrideRate(overrideRate)
             .averageConfidenceScore(averageConfidenceScore != null ? averageConfidenceScore : 0.0)
-            .averageReviewTimeHours(24) // TODO: Calculate from review timestamps
+            .averageReviewTimeHours(averageReviewTime != null ? averageReviewTime.intValue() : null)
             .decisionTypeDistribution(ClinicalMetrics.DecisionTypeDistribution.builder()
                 .medicationAlerts(medicationAlerts)
                 .careGaps(careGaps)

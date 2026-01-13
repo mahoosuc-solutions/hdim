@@ -44,6 +44,13 @@ export const appRoutes: Route[] = [
             (m) => m.AuditLogsComponent
           ),
       },
+      {
+        path: 'config-versions',
+        loadComponent: () =>
+          import('./pages/config-versions/config-versions.component').then(
+            (m) => m.ConfigVersionsComponent
+          ),
+      },
     ],
   },
   {

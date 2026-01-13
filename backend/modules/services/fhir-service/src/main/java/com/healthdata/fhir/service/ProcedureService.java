@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.healthdata.fhir.persistence.ProcedureEntity;
 import com.healthdata.fhir.persistence.ProcedureRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
@@ -46,7 +47,8 @@ public class ProcedureService {
     private static final IParser JSON_PARSER = FHIR_CONTEXT.newJsonParser();
 
     private final ProcedureRepository procedureRepository;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
     /**
      * Create a new Procedure resource
@@ -79,7 +81,7 @@ public class ProcedureService {
         Procedure savedProcedure = toFhirResource(saved);
 
         // Publish event
-        publishProcedureEvent("fhir.procedures.created", tenantId, procedureId.toString(), savedProcedure);
+        publishProcedureEvent("fhir.procedures.created", tenantId, procedureId.toString(), savedProcedure, createdBy);
 
         return savedProcedure;
     }
@@ -143,7 +145,7 @@ public class ProcedureService {
         Procedure updatedProcedure = toFhirResource(updated);
 
         // Publish event
-        publishProcedureEvent("fhir.procedures.updated", tenantId, id, updatedProcedure);
+        publishProcedureEvent("fhir.procedures.updated", tenantId, id, updatedProcedure, modifiedBy);
 
         return updatedProcedure;
     }
@@ -168,7 +170,7 @@ public class ProcedureService {
         log.info("Deleted procedure with ID: {}", id);
 
         // Publish event
-        publishProcedureEvent("fhir.procedures.deleted", tenantId, id, null);
+        publishProcedureEvent("fhir.procedures.deleted", tenantId, id, null, deletedBy);
     }
 
     /**
@@ -486,10 +488,33 @@ public class ProcedureService {
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
 
-    private void publishProcedureEvent(String topic, String tenantId, String procedureId, Procedure procedure) {
+    private void publishProcedureEvent(
+            String topic,
+            String tenantId,
+            String procedureId,
+            Procedure procedure,
+            String actor) {
         try {
-            String payload = procedure != null ? JSON_PARSER.encodeResourceToString(procedure) : "{}";
-            kafkaTemplate.send(topic, tenantId + ":" + procedureId, payload);
+            java.util.Map<String, Object> event = new java.util.HashMap<>();
+            event.put("eventId", java.util.UUID.randomUUID().toString());
+            event.put("eventType", topic);
+            event.put("resourceType", "Procedure");
+            event.put("resourceId", procedureId);
+            event.put("tenantId", tenantId);
+            if (procedure != null) {
+                event.put("patientId", extractPatientId(procedure).toString());
+            }
+            event.put("occurredAt", java.time.Instant.now().toString());
+            event.put("actor", actor);
+            if (procedure != null) {
+                String json = JSON_PARSER.encodeResourceToString(procedure);
+                try {
+                    event.put("resource", objectMapper.readValue(json, java.util.Map.class));
+                } catch (Exception e) {
+                    event.put("resource", json);
+                }
+            }
+            kafkaTemplate.send(topic, tenantId + ":" + procedureId, event);
             log.debug("Published procedure event to topic: {}", topic);
         } catch (Exception e) {
             log.error("Failed to publish procedure event", e);

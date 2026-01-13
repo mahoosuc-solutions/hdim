@@ -647,7 +647,7 @@ dependencies {
 4. Update `docker-compose.yml`:
    ```yaml
    postgres:
-     image: postgres:15-alpine  # Changed from postgres:16-alpine
+     image: postgres:16-alpine  # Changed from postgres:16-alpine
    ```
 5. Restart infrastructure: `docker compose --profile light up -d`
 6. Verify PostgreSQL version: `docker exec healthdata-postgres psql --version`
@@ -851,7 +851,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public abstract class EntityMigrationValidationTestBase {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
         .withDatabaseName("testdb")
         .withUsername("test")
         .withPassword("test");
@@ -1834,7 +1834,7 @@ docker compose up -d
 # Revert to PostgreSQL 15
 docker compose down
 docker volume rm healthdata_postgres_data
-# Update docker-compose.yml to postgres:15-alpine
+# Update docker-compose.yml to postgres:16-alpine
 docker compose --profile light up -d
 # Restore from Phase 3 backup
 docker exec -i healthdata-postgres psql -U healthdata < backup_phase3.sql

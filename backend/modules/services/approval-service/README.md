@@ -1359,7 +1359,7 @@ Verifies tenant data isolation in approval workflows.
 class ApprovalMultiTenantIsolationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
 
     @Autowired
     private ApprovalRequestRepository requestRepository;
@@ -1581,7 +1581,7 @@ Benchmarks approval workflow performance.
 class ApprovalPerformanceTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
 
     @Container
     static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")

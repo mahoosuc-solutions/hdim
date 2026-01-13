@@ -388,7 +388,7 @@ Tests full API workflow with TestContainers PostgreSQL:
 class EcrApiIntegrationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
         .withDatabaseName("ecrtestdb")
         .withUsername("test")
         .withPassword("test");
@@ -664,7 +664,7 @@ class PerformanceTests {
 class EcrApiIntegrationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
         .withDatabaseName("ecrtestdb")
         .withUsername("test")
         .withPassword("test");

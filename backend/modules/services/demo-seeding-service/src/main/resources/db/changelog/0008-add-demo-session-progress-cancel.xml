@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="0008-add-demo-session-progress-cancel" author="demo-seeding-service">
+        <comment>Add cancel flag to demo_session_progress</comment>
+
+        <addColumn tableName="demo_session_progress">
+            <column name="cancel_requested" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="demo_session_progress" columnName="cancel_requested"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

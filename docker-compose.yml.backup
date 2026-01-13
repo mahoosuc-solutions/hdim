@@ -19,7 +19,7 @@ services:
 
   postgres:
     container_name: healthdata-postgres
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     profiles: ["light", "core", "ai", "analytics", "full"]
     environment:
       POSTGRES_USER: healthdata

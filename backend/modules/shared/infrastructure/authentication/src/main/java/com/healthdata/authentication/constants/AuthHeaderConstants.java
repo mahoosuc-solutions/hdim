@@ -114,7 +114,8 @@ public final class AuthHeaderConstants {
      * @return true if header is an auth header
      */
     public static boolean isAuthHeader(String headerName) {
-        return headerName != null && headerName.startsWith(AUTH_HEADER_PREFIX);
+        return headerName != null
+                && headerName.regionMatches(true, 0, AUTH_HEADER_PREFIX, 0, AUTH_HEADER_PREFIX.length());
     }
 
     /**

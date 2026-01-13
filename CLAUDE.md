@@ -470,7 +470,7 @@ class PatientServiceTest {
 class PatientControllerIntegrationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
 
     @Autowired
     private MockMvc mockMvc;
@@ -486,112 +486,12 @@ class PatientControllerIntegrationTest {
 }
 ```
 
-### E2E Tests with FHIR Mocking (Phase 21 Pattern)
-
-**Best Practice:** Mock external dependencies in E2E tests for deterministic execution
-
-```java
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
-class PopulationBatchCalculationE2ETest {
-
-    @MockBean
-    private RestTemplate restTemplate;  // Mock FHIR server calls
-
-    @BeforeEach
-    void setUp() {
-        // Mock FHIR server response with test patients
-        UUID patient1 = UUID.randomUUID();
-        UUID patient2 = UUID.randomUUID();
-        UUID patient3 = UUID.randomUUID();
-
-        Map<String, Object> mockFhirBundle = Map.of(
-            "resourceType", "Bundle",
-            "type", "searchset",
-            "entry", List.of(
-                Map.of("resource", Map.of("resourceType", "Patient", "id", patient1.toString())),
-                Map.of("resource", Map.of("resourceType", "Patient", "id", patient2.toString())),
-                Map.of("resource", Map.of("resourceType", "Patient", "id", patient3.toString()))
-            )
-        );
-
-        when(restTemplate.getForObject(anyString(), eq(Map.class)))
-            .thenReturn(mockFhirBundle);
-    }
-
-    @Test
-    void shouldExportBatchCalculationResultsToCSV() {
-        // Test implementation - runs without external FHIR service
-    }
-}
-```
-
-**Benefits:**
-- No external service dependencies (faster, deterministic)
-- Tests run reliably in CI/CD
-- Easy to simulate different FHIR responses
-- Prevents flaky tests from network issues
-
-### Async Test Timing (Phase 21 Pattern)
-
-**Best Practice:** Calculate timing based on mock delays, not arbitrary values
-
-```java
-@Test
-void shouldCancelRunningBatchJob() {
-    // Mock CQL evaluation with known delay
-    when(cqlEngineService.evaluateMeasure(any(), any(), any()))
-        .thenAnswer(invocation -> {
-            Thread.sleep(800);  // 800ms per patient
-            return cqlResponse;
-        });
-
-    // Start job with 3 patients (will take 3 × 800ms = 2.4s)
-    String jobId = startBatchJob();
-
-    // Cancel after 500ms (mid-execution)
-    Thread.sleep(500);  // Job still running
-    cancelJob(jobId);
-
-    // Verify job was cancelled
-    // Note: 3 patients × 800ms = 2.4s total, cancelled at 500ms
-}
-```
-
-**Anti-pattern:** Using arbitrary delays like `Thread.sleep(1000)` without understanding timing
-
 ### Required Test Coverage
-- **Unit tests** for all service methods
-- **Integration tests** for API endpoints
-- **E2E tests** with external dependencies mocked
-- **Cache behavior** verification (TTL compliance)
-- **Multi-tenant isolation** tests
-- **RBAC permission** tests
-- **Entity-migration validation** (JPA ↔ Liquibase sync)
-- **Async execution** tests with proper timing
-
-### Test Quality Standards (Phase 21 Achievement)
-
-**Current Status:** ✅ **100% Pass Rate** (1,577/1,577 non-skipped tests)
-
-**Quality Metrics:**
-| Metric | Target | Current |
-|--------|--------|---------|
-| **Test Pass Rate** | ≥99% | 100% ✅ |
-| **Service Layer Coverage** | ≥80% | ≥80% ✅ |
-| **Overall Coverage** | ≥70% | ≥70% ✅ |
-| **Flaky Tests** | 0 | 0 ✅ |
-| **Entity-Migration Sync** | 100% | 100% ✅ |
-
-**Testing Best Practices (Established Phase 21):**
-1. ✅ **Mock External Dependencies** - Use @MockBean for RestTemplate, external services
-2. ✅ **Fail Fast in Production** - No silent fallbacks that mask errors
-3. ✅ **Deterministic Tests** - Calculate timing, avoid arbitrary delays
-4. ✅ **Proper Status Codes** - Use 404 (not 403) for tenant isolation
-5. ✅ **Entity-Migration Validation** - Automatic JPA/Liquibase synchronization checks
-6. ✅ **Gateway Trust Headers** - Proper authentication in test fixtures
-
-**Documentation:** See `backend/docs/PHASE_21_RELEASE_NOTES.md` for complete testing improvements
+- Unit tests for all service methods
+- Integration tests for API endpoints
+- Cache behavior verification (TTL compliance)
+- Multi-tenant isolation tests
+- RBAC permission tests
 
 ---
 
@@ -1362,4 +1262,4 @@ cd backend
 ---
 
 *Last Updated: January 12, 2026*
-*Version: 1.7* - Phase 21 Complete: 100% Test Pass Rate Achievement (1,577/1,577 tests passing)
+*Version: 1.6* - Database-config module implemented with 3 pilot service migrations (11% complete)

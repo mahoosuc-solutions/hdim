@@ -11,5 +11,7 @@
     <include file="db/changelog/0004-create-synthetic-patient-templates-table.xml"/>
     <include file="db/changelog/0005-seed-demo-scenarios.xml"/>
     <include file="db/changelog/0006-performance-indexes.xml"/>
+    <include file="db/changelog/0007-create-demo-session-progress-table.xml"/>
+    <include file="db/changelog/0008-add-demo-session-progress-cancel.xml"/>
 
 </databaseChangeLog>

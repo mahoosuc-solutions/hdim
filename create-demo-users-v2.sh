@@ -6,9 +6,15 @@
 
 set -e
 
-DB_CONTAINER="healthdata-postgres"
-DB_NAME="healthdata_cql"
+COMPOSE_FILE="docker-compose.demo.yml"
+if [ ! -f "$COMPOSE_FILE" ]; then
+    COMPOSE_FILE="docker-compose.yml"
+fi
+
+DB_SERVICE="postgres"
+DB_NAME="gateway_db"
 DB_USER="healthdata"
+AUTH_URL="http://localhost:18080/api/v1/auth/login"
 
 echo "Generating BCrypt hash for demo123..."
 HASH=$(python3 << 'PYEOF'
@@ -106,12 +112,12 @@ SELECT username, first_name, last_name, email, active, email_verified FROM users
 SQLEOF
 
 # Execute SQL
-docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" < /tmp/demo-users.sql
+docker compose -f "$COMPOSE_FILE" exec -T "$DB_SERVICE" psql -U "$DB_USER" -d "$DB_NAME" < /tmp/demo-users.sql
 
 echo ""
 echo "✓ Demo users created successfully!"
 echo ""
 echo "Testing login..."
-curl -s -X POST http://localhost:9000/api/v1/auth/login \
+curl -s -X POST "$AUTH_URL" \
   -H "Content-Type: application/json" \
   -d '{"username":"demo.doctor","password":"demo123"}' | jq -r 'if .accessToken then "✓ Login test PASSED" else "✗ Login test FAILED: " + .message end'

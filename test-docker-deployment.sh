@@ -15,21 +15,25 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Configuration
-GATEWAY_URL="http://localhost:8080"
+COMPOSE_FILE="docker-compose.demo.yml"
+if [ ! -f "$COMPOSE_FILE" ]; then
+    COMPOSE_FILE="docker-compose.yml"
+fi
+GATEWAY_URL="http://localhost:18080"
 
 echo -e "${BLUE}📋 System Status Check${NC}"
 echo "-------------------"
 
 # Check Gateway
-if docker compose ps gateway-service | grep -q "Up"; then
-    echo -e "${GREEN}✅ Gateway Service: Running${NC}"
+if docker compose -f "$COMPOSE_FILE" ps gateway-edge | grep -q "Up"; then
+    echo -e "${GREEN}✅ Gateway Edge: Running${NC}"
 else
-    echo -e "${RED}❌ Gateway Service: Not running${NC}"
+    echo -e "${RED}❌ Gateway Edge: Not running${NC}"
     exit 1
 fi
 
 # Check PostgreSQL
-if docker compose ps postgres | grep -q "Up"; then
+if docker compose -f "$COMPOSE_FILE" ps postgres | grep -q "Up"; then
     echo -e "${GREEN}✅ PostgreSQL: Running${NC}"
 else
     echo -e "${RED}❌ PostgreSQL: Not running${NC}"
@@ -37,7 +41,7 @@ else
 fi
 
 # Check Redis
-if docker compose ps redis | grep -q "Up"; then
+if docker compose -f "$COMPOSE_FILE" ps redis | grep -q "Up"; then
     echo -e "${GREEN}✅ Redis: Running${NC}"
 else
     echo -e "${YELLOW}⚠️  Redis: Not running (optional)${NC}"
@@ -162,7 +166,7 @@ fi
 echo ""
 echo -e "${BLUE}💾 Database Connection Test${NC}"
 echo "-------------------------"
-USER_COUNT=$(docker exec healthdata-postgres psql -U healthdata -d gateway_db -t -c "SELECT COUNT(*) FROM users;" 2>/dev/null | tr -d '[:space:]')
+USER_COUNT=$(docker compose -f "$COMPOSE_FILE" exec -T postgres psql -U healthdata -d gateway_db -t -c "SELECT COUNT(*) FROM users;" 2>/dev/null | tr -d '[:space:]')
 
 if [ -n "$USER_COUNT" ]; then
     echo -e "${GREEN}✅ Database connected${NC}"
@@ -177,14 +181,14 @@ echo "===================================================="
 echo -e "${GREEN}✅ Docker Deployment Test Complete!${NC}"
 echo ""
 echo "Summary:"
-echo "  ✅ Gateway Service: Running on port 8080"
+echo "  ✅ Gateway Edge: Running on port 18080"
 echo "  ✅ Authentication: Working (JWT tokens generated)"
 echo "  ✅ Token Refresh: Configured"
 echo "  ✅ Database: Connected ($USER_COUNT users)"
 echo ""
 echo "Gateway Details:"
-echo "  Container: healthdata-gateway-service"
-echo "  Image: healthdata/gateway-service:latest"
+echo "  Container: gateway-edge"
+echo "  Image: nginx:1.27-alpine"
 echo "  URL: $GATEWAY_URL"
 echo "  Health: $GATEWAY_URL/actuator/health"
 echo ""

@@ -566,7 +566,7 @@ version: '3.8'
 
 services:
   demo-postgres:
-    image: postgres:15
+    image: postgres:16
     environment:
       POSTGRES_DB: healthdata_demo
     volumes:

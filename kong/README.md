@@ -415,7 +415,7 @@ Use managed PostgreSQL in production:
 
 ```yaml
 kong-database:
-  image: postgres:15-alpine
+  image: postgres:16-alpine
   environment:
     POSTGRES_DB: kong
     POSTGRES_USER: kong

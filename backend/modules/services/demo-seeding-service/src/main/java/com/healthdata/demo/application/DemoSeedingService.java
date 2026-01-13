@@ -39,6 +39,7 @@ import java.util.UUID;
 public class DemoSeedingService {
 
     private static final Logger logger = LoggerFactory.getLogger(DemoSeedingService.class);
+    private static final int CANCEL_CHECK_INTERVAL = 25;
 
     private final SyntheticPatientGenerator patientGenerator;
     private final MedicationGenerator medicationGenerator;
@@ -53,6 +54,7 @@ public class DemoSeedingService {
     private final CareGapServiceClient careGapServiceClient;
     private final QualityMeasureServiceClient qualityMeasureServiceClient;
     private final UserSeedingClient userSeedingClient;
+    private final DemoProgressService progressService;
     private final boolean persistToServices;
 
     public DemoSeedingService(
@@ -69,6 +71,7 @@ public class DemoSeedingService {
             CareGapServiceClient careGapServiceClient,
             QualityMeasureServiceClient qualityMeasureServiceClient,
             UserSeedingClient userSeedingClient,
+            DemoProgressService progressService,
             @Value("${demo.persistence.enabled:true}") boolean persistToServices) {
         this.patientGenerator = patientGenerator;
         this.medicationGenerator = medicationGenerator;
@@ -83,6 +86,7 @@ public class DemoSeedingService {
         this.careGapServiceClient = careGapServiceClient;
         this.qualityMeasureServiceClient = qualityMeasureServiceClient;
         this.userSeedingClient = userSeedingClient;
+        this.progressService = progressService;
         this.persistToServices = persistToServices;
     }
 
@@ -95,6 +99,10 @@ public class DemoSeedingService {
      * @return Generation result with statistics
      */
     public GenerationResult generatePatientCohort(int count, String tenantId, int careGapPercentage) {
+        return generatePatientCohort(count, tenantId, careGapPercentage, null);
+    }
+
+    public GenerationResult generatePatientCohort(int count, String tenantId, int careGapPercentage, UUID sessionId) {
         logger.info("Starting generation of {} patients for tenant: {}", count, tenantId);
         Instant startTime = Instant.now();
 
@@ -103,14 +111,28 @@ public class DemoSeedingService {
         result.setRequestedCount(count);
 
         try {
+            if (sessionId != null) {
+                progressService.updateStage(sessionId, DemoProgressService.Stage.GENERATING_PATIENTS, 15,
+                    "Generating synthetic patients");
+                checkCancellation(sessionId, "Cancelled before patient generation");
+            }
+
             // Generate base patients
             Bundle patientBundle = patientGenerator.generateCohort(count, tenantId);
             result.setPatientCount(patientBundle.getEntry().size());
+            if (sessionId != null) {
+                progressService.updateCounts(sessionId, result.getPatientCount(), null, null, null);
+            }
 
             // Enhance each patient with additional resources
             // Use a copy to avoid ConcurrentModificationException when generators add entries
             int careGapCount = 0;
+            int entryIndex = 0;
             for (Bundle.BundleEntryComponent entry : new java.util.ArrayList<>(patientBundle.getEntry())) {
+                if (sessionId != null && entryIndex % CANCEL_CHECK_INTERVAL == 0) {
+                    checkCancellation(sessionId, "Cancelled during patient generation");
+                }
+                entryIndex++;
                 if (entry.getResource() instanceof Patient patient) {
                     boolean createCareGap = (careGapCount * 100 / count) < careGapPercentage;
 
@@ -139,6 +161,11 @@ public class DemoSeedingService {
             // Persist to downstream services if enabled
             if (persistToServices) {
                 logger.info("Persisting generated data to downstream services...");
+                if (sessionId != null) {
+                    progressService.updateStage(sessionId, DemoProgressService.Stage.PERSISTING_FHIR, 45,
+                        "Persisting FHIR resources");
+                    checkCancellation(sessionId, "Cancelled before FHIR persistence");
+                }
 
                 // Persist FHIR resources
                 if (fhirServiceClient.isServiceAvailable()) {
@@ -151,20 +178,36 @@ public class DemoSeedingService {
 
                     // Update counts from actual persistence
                     result.setPatientCount(persistResult.getPatientCount());
+                    if (sessionId != null) {
+                        progressService.updateCounts(sessionId, null, result.getPatientCount(), null, null);
+                    }
                 } else {
                     logger.warn("FHIR service not available - data generated but not persisted");
                 }
 
                 // Create care gaps
+                if (sessionId != null) {
+                    progressService.updateStage(sessionId, DemoProgressService.Stage.CREATING_CARE_GAPS, 65,
+                        "Creating care gaps");
+                    checkCancellation(sessionId, "Cancelled before care gap generation");
+                }
                 if (careGapServiceClient.isServiceAvailable()) {
                     int actualCareGaps = careGapServiceClient.createCareGapsFromBundle(
                         patientBundle, tenantId, careGapCount);
                     result.setCareGapCount(actualCareGaps);
+                    if (sessionId != null) {
+                        progressService.updateCounts(sessionId, null, null, actualCareGaps, null);
+                    }
                 } else {
                     logger.warn("Care Gap service not available - care gaps not created");
                 }
 
                 // Generate evaluation results for demo
+                if (sessionId != null) {
+                    progressService.updateStage(sessionId, DemoProgressService.Stage.SEEDING_MEASURES, 80,
+                        "Seeding quality measures");
+                    checkCancellation(sessionId, "Cancelled before measure seeding");
+                }
                 if (qualityMeasureServiceClient.isServiceAvailable()) {
                     logger.info("Generating quality measure evaluation results...");
 
@@ -176,6 +219,9 @@ public class DemoSeedingService {
                     int evaluationResults = qualityMeasureServiceClient.generateDemoResults(
                         patientBundle, tenantId, careGapPercentage);
                     result.setEvaluationResultCount(evaluationResults);
+                    if (sessionId != null) {
+                        progressService.updateCounts(sessionId, null, null, null, measureCount);
+                    }
                     logger.info("Generated {} evaluation results", evaluationResults);
                 } else {
                     logger.warn("Quality Measure service not available - evaluation results not generated");
@@ -189,15 +235,27 @@ public class DemoSeedingService {
             Instant endTime = Instant.now();
             result.setGenerationTimeMs(endTime.toEpochMilli() - startTime.toEpochMilli());
 
+            if (sessionId != null) {
+                progressService.updateStage(sessionId, DemoProgressService.Stage.COMPLETE, 100, "Scenario ready");
+            }
+
             logger.info("Generation complete: {} patients, {} care gaps, {} medications, {} observations in {}ms (persisted: {})",
                 result.getPatientCount(), result.getCareGapCount(),
                 result.getMedicationCount(), result.getObservationCount(),
                 result.getGenerationTimeMs(), persistToServices);
 
+        } catch (DemoSeedingCancelledException e) {
+            result.setSuccess(false);
+            result.setErrorMessage(e.getMessage());
+            result.setGenerationTimeMs(Instant.now().toEpochMilli() - startTime.toEpochMilli());
+            logger.info("Generation cancelled: {}", e.getMessage());
         } catch (Exception e) {
             logger.error("Error generating patient cohort", e);
             result.setSuccess(false);
             result.setErrorMessage(e.getMessage());
+            if (sessionId != null) {
+                progressService.markFailed(sessionId, e.getMessage());
+            }
         }
 
         return result;
@@ -271,7 +329,7 @@ public class DemoSeedingService {
                 "hedis-evaluation",
                 "HEDIS Quality Measure Evaluation",
                 DemoScenario.ScenarioType.HEDIS_EVALUATION,
-                5000,
+                500,
                 "acme-health"
             );
             hedis.setDescription(
@@ -288,7 +346,7 @@ public class DemoSeedingService {
                 "patient-journey",
                 "Patient Care Journey",
                 DemoScenario.ScenarioType.PATIENT_JOURNEY,
-                1000,
+                250,
                 "acme-health"
             );
             patientJourney.setDescription(
@@ -305,7 +363,7 @@ public class DemoSeedingService {
                 "risk-stratification",
                 "Risk Stratification & Analytics",
                 DemoScenario.ScenarioType.RISK_STRATIFICATION,
-                10000,
+                1000,
                 "acme-health"
             );
             risk.setDescription(
@@ -322,7 +380,7 @@ public class DemoSeedingService {
                 "multi-tenant",
                 "Multi-Tenant Administration",
                 DemoScenario.ScenarioType.MULTI_TENANT,
-                25000,
+                1500,
                 "demo-admin"
             );
             multiTenant.setDescription(
@@ -426,6 +484,19 @@ public class DemoSeedingService {
         genTemplate.setPersonaName(template.getPersonaName());
         // Set additional attributes as needed
         return genTemplate;
+    }
+
+    private void checkCancellation(UUID sessionId, String message) {
+        if (sessionId != null && progressService.isCancelRequested(sessionId)) {
+            progressService.markCancelled(sessionId, message);
+            throw new DemoSeedingCancelledException(message);
+        }
+    }
+
+    private static class DemoSeedingCancelledException extends RuntimeException {
+        DemoSeedingCancelledException(String message) {
+            super(message);
+        }
     }
 
     // Result and status classes

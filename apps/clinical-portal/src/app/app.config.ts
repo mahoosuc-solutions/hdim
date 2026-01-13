@@ -8,6 +8,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
+import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';
 import { appRoutes } from './app.routes';
 import { tenantInterceptor } from './interceptors/tenant.interceptor';
 import { authInterceptor } from './interceptors/auth.interceptor';
@@ -32,5 +33,11 @@ export const appConfig: ApplicationConfig = {
     // NgRx Store and Effects
     provideStore(reducers),
     provideEffects([PatientEffects, CareRecommendationEffects]),
+    {
+      provide: NGX_MONACO_EDITOR_CONFIG,
+      useValue: {
+        baseUrl: 'assets/monaco-editor/min',
+      },
+    },
   ],
 };

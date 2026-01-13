@@ -42,7 +42,7 @@ public class HealthDataController {
     // ==================== Patient Endpoints ====================
 
     @PostMapping("/patients")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('PROVIDER', 'ADMIN')")
     public ResponseEntity<Patient> createPatient(@RequestBody Patient patient) {
         log.info("Creating patient: {} {}", patient.getFirstName(), patient.getLastName());
         Patient created = patientService.createPatient(patient);
@@ -50,7 +50,7 @@ public class HealthDataController {
     }
 
     @GetMapping("/patients/{id}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'PROVIDER', 'ADMIN', 'CARE_MANAGER')")
     public ResponseEntity<Patient> getPatient(@PathVariable String id) {
         return patientService.getPatient(id)
             .map(ResponseEntity::ok)
@@ -58,7 +58,7 @@ public class HealthDataController {
     }
 
     @GetMapping("/patients")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'PROVIDER', 'ADMIN', 'CARE_MANAGER')")
     public ResponseEntity<Page<Patient>> searchPatients(
             @RequestParam String tenantId,
             @RequestParam(required = false) String query,
@@ -68,7 +68,7 @@ public class HealthDataController {
     }
 
     @PutMapping("/patients/{id}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('PROVIDER', 'ADMIN')")
     public ResponseEntity<Patient> updatePatient(
             @PathVariable String id,
             @RequestBody Patient patient) {
@@ -79,7 +79,7 @@ public class HealthDataController {
     // ==================== Quality Measure Endpoints ====================
 
     @PostMapping("/measures/calculate")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MeasureResult> calculateMeasure(
             @RequestParam String patientId,
             @RequestParam String measureId) {
@@ -103,7 +103,7 @@ public class HealthDataController {
     }
 
     @GetMapping("/measures/status")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'PROVIDER', 'ADMIN', 'CARE_MANAGER')")
     public ResponseEntity<QualityMeasureService.MeasureStatus> getMeasureStatus(
             @RequestParam String patientId,
             @RequestParam String measureId) {
@@ -114,7 +114,7 @@ public class HealthDataController {
     // ==================== Care Gap Management ====================
 
     @GetMapping("/caregaps/{patientId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('PROVIDER', 'ADMIN', 'CARE_MANAGER')")
     public ResponseEntity<List<?>> getCareGaps(@PathVariable String patientId) {
         log.info("Fetching care gaps for patient: {}", patientId);
         var gaps = careGapDetector.detectCareGaps(patientId);
@@ -133,7 +133,7 @@ public class HealthDataController {
     }
 
     @PostMapping("/caregaps/{gapId}/close")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('PROVIDER', 'ADMIN', 'CARE_MANAGER')")
     public ResponseEntity<Map<String, String>> closeCareGap(
             @PathVariable String gapId,
             @RequestParam String reason) {
@@ -145,7 +145,7 @@ public class HealthDataController {
     // ==================== FHIR Resources ====================
 
     @GetMapping("/fhir/observations/{patientId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('PROVIDER', 'ADMIN', 'CARE_MANAGER')")
     public ResponseEntity<List<?>> getObservations(@PathVariable String patientId) {
         log.info("Fetching observations for patient: {}", patientId);
         // Uncomment when FhirService is injected
@@ -155,7 +155,7 @@ public class HealthDataController {
     }
 
     @GetMapping("/fhir/conditions/{patientId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('PROVIDER', 'ADMIN', 'CARE_MANAGER')")
     public ResponseEntity<List<?>> getConditions(@PathVariable String patientId) {
         log.info("Fetching conditions for patient: {}", patientId);
         // var conditions = fhirService.getConditionsForPatient(patientId);
@@ -164,7 +164,7 @@ public class HealthDataController {
     }
 
     @GetMapping("/fhir/medications/{patientId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('PROVIDER', 'ADMIN', 'CARE_MANAGER')")
     public ResponseEntity<List<?>> getMedications(@PathVariable String patientId) {
         log.info("Fetching medications for patient: {}", patientId);
         // var medications = fhirService.getMedicationsForPatient(patientId);
@@ -188,7 +188,7 @@ public class HealthDataController {
     // ==================== Patient Health Overview ====================
 
     @GetMapping("/patient-health/overview")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'PROVIDER', 'ADMIN', 'CARE_MANAGER')")
     public ResponseEntity<PatientHealthOverview> getPatientHealthOverview(
             @RequestParam String patientId) {
 

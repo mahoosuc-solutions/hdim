@@ -54,7 +54,7 @@ Container: healthdata-postgres
 #### Container Details
 ```
 Container Name: healthdata-postgres
-Image: postgres:15-alpine
+Image: postgres:16-alpine
 Status: Up (healthy)
 Ports: 0.0.0.0:5435->5432/tcp
 Health: accepting connections
@@ -202,7 +202,7 @@ Total: 12/12 PASSED (100%) ✅
 
 **Output**:
 ```
-✅ Image pulled: postgres:15-alpine
+✅ Image pulled: postgres:16-alpine
 ✅ Network created: healthdata-network
 ✅ Volume created: postgres_data
 ✅ Container started: healthdata-postgres

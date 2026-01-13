@@ -303,7 +303,7 @@ services:
   # FHIR Service (HAPI FHIR)
   # ===========================================================================
   fhir-service:
-    image: hapiproject/hapi:latest
+    image: hapiproject/hapi:v7.0.2
     container_name: healthdata-fhir-prod
     restart: always
     ports:
@@ -380,7 +380,7 @@ services:
   # Prometheus Monitoring
   # ===========================================================================
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.48.0
     container_name: healthdata-prometheus-prod
     restart: always
     ports:
@@ -416,7 +416,7 @@ services:
   # Grafana Dashboards
   # ===========================================================================
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:10.2.3
     container_name: healthdata-grafana-prod
     restart: always
     ports:
@@ -457,7 +457,7 @@ services:
   # NGINX API Gateway (Optional - or use Kong)
   # ===========================================================================
   api-gateway:
-    image: nginx:alpine
+    image: nginx:1.27-alpine
     container_name: healthdata-api-gateway-prod
     restart: always
     ports:

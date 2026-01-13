@@ -1,22 +1,51 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
+import { API_CONFIG } from '../../config/api.config';
 import { environment } from '../../../environments/environment';
 
 export interface DemoScenario {
   id: string;
   name: string;
+  displayName: string;
   description: string;
-  duration: number;
-  valueProp: string;
+  patientCount: number;
+  tenantId: string;
+  estimatedLoadTimeSeconds: number | null;
 }
 
 export interface DemoStatus {
-  isInitialized: boolean;
-  activeScenario: DemoScenario | null;
+  ready: boolean;
+  scenarioCount: number;
+  templateCount: number;
+  currentSessionId: string | null;
+  currentScenario: string | null;
+  sessionStatus: string | null;
+}
+
+export interface LoadScenarioResponse {
+  scenarioName: string;
+  sessionId: string | null;
   patientCount: number;
   careGapCount: number;
-  lastReset: string | null;
+  loadTimeMs: number;
+  success: boolean;
+  errorMessage?: string | null;
+}
+
+export interface DemoProgress {
+  sessionId: string;
+  scenarioName: string;
+  tenantId: string;
+  stage: string;
+  progressPercent: number;
+  patientsGenerated?: number | null;
+  patientsPersisted?: number | null;
+  careGapsCreated?: number | null;
+  measuresSeeded?: number | null;
+  message?: string | null;
+  updatedAt?: string | null;
+  cancelRequested?: boolean;
 }
 
 export interface DemoTooltip {
@@ -50,12 +79,16 @@ export class DemoModeService {
   public readonly isDemoMode = signal<boolean>(false);
   public readonly activeScenario = signal<DemoScenario | null>(null);
   public readonly status = signal<DemoStatus | null>(null);
+  public readonly scenarios = signal<DemoScenario[]>([]);
+  public readonly lastLoadResult = signal<LoadScenarioResponse | null>(null);
+  public readonly progress = signal<DemoProgress | null>(null);
   public readonly isLoading = signal<boolean>(false);
   public readonly error = signal<string | null>(null);
 
   // Backend availability tracking - prevents repeated failed API calls
   private demoBackendAvailable: boolean | null = null;
   private backendCheckInProgress = false;
+  private progressInterval: ReturnType<typeof setInterval> | null = null;
 
   // Recording state
   public readonly isRecording = signal<boolean>(false);
@@ -86,6 +119,9 @@ export class DemoModeService {
   }
 
   private resolveApiBaseUrl(): string {
+    if (API_CONFIG.API_GATEWAY_URL) {
+      return API_CONFIG.API_GATEWAY_URL;
+    }
     const browserOrigin = typeof window !== 'undefined' ? window.location.origin : '';
     if (environment.apiConfig.useApiGateway) {
       return environment.apiConfig.apiGatewayUrl || browserOrigin;
@@ -167,9 +203,9 @@ export class DemoModeService {
     this.backendCheckInProgress = true;
 
     try {
-      // Quick check using actuator health endpoint (returns 200 if service exists)
+      // Quick check using demo status endpoint to avoid actuator CORS issues
       const response = await this.http
-        .get(`${this.DEMO_API_URL}/actuator/health`, {
+        .get(`${this.DEMO_API_URL}/api/v1/demo/status`, {
           observe: 'response',
         })
         .toPromise();
@@ -204,8 +240,21 @@ export class DemoModeService {
         .get<DemoStatus>(`${this.DEMO_API_URL}/api/v1/demo/status`)
         .toPromise();
       this.status.set(status || null);
-      if (status?.activeScenario) {
-        this.activeScenario.set(status.activeScenario);
+      if (status?.currentScenario) {
+        const scenarioMatch = this.scenarios().find(
+          (scenario) => scenario.name === status.currentScenario
+        );
+        this.activeScenario.set(
+          scenarioMatch || {
+            id: status.currentSessionId || status.currentScenario,
+            name: status.currentScenario,
+            displayName: status.currentScenario,
+            description: '',
+            patientCount: 0,
+            tenantId: '',
+            estimatedLoadTimeSeconds: null,
+          }
+        );
       }
     } catch (err: unknown) {
       console.warn('[Demo Mode] Could not load status:', err);
@@ -223,6 +272,7 @@ export class DemoModeService {
     // Skip if backend not available
     const isAvailable = await this.checkBackendAvailability();
     if (!isAvailable) {
+      this.scenarios.set([]);
       return [];
     }
 
@@ -230,9 +280,12 @@ export class DemoModeService {
       const scenarios = await this.http
         .get<DemoScenario[]>(`${this.DEMO_API_URL}/api/v1/demo/scenarios`)
         .toPromise();
-      return scenarios || [];
+      const resolved = scenarios || [];
+      this.scenarios.set(resolved);
+      return resolved;
     } catch (err) {
       console.error('[Demo Mode] Could not load scenarios:', err);
+      this.scenarios.set([]);
       return [];
     }
   }
@@ -250,13 +303,31 @@ export class DemoModeService {
 
     this.isLoading.set(true);
     this.error.set(null);
+    this.lastLoadResult.set(null);
+    this.progress.set(null);
+    this.startProgressPolling();
+    const statusInterval = setInterval(() => {
+      this.loadStatus();
+    }, 1000);
 
     try {
       const result = await this.http
-        .post<{ scenario: DemoScenario }>(`${this.DEMO_API_URL}/api/v1/demo/scenarios/${scenarioId}/load`, {})
+        .post<LoadScenarioResponse>(`${this.DEMO_API_URL}/api/v1/demo/scenarios/${encodeURIComponent(scenarioId)}`, {})
         .toPromise();
-      if (result?.scenario) {
-        this.activeScenario.set(result.scenario);
+      if (result) {
+        this.lastLoadResult.set(result);
+        const scenarioMatch = this.scenarios().find((scenario) => scenario.name === result.scenarioName);
+        this.activeScenario.set(
+          scenarioMatch || {
+            id: result.sessionId || result.scenarioName,
+            name: result.scenarioName,
+            displayName: result.scenarioName,
+            description: '',
+            patientCount: result.patientCount,
+            tenantId: '',
+            estimatedLoadTimeSeconds: null,
+          }
+        );
       }
       await this.loadStatus();
     } catch (err: unknown) {
@@ -264,6 +335,9 @@ export class DemoModeService {
       this.error.set(message);
       throw err;
     } finally {
+      clearInterval(statusInterval);
+      await this.pollProgress();
+      this.stopProgressPolling();
       this.isLoading.set(false);
     }
   }
@@ -287,6 +361,7 @@ export class DemoModeService {
         .post(`${this.DEMO_API_URL}/api/v1/demo/reset`, {})
         .toPromise();
       this.activeScenario.set(null);
+      this.progress.set(null);
       await this.loadStatus();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to reset demo';
@@ -294,6 +369,103 @@ export class DemoModeService {
       throw err;
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  public async resetCurrentTenant(): Promise<void> {
+    const isAvailable = await this.checkBackendAvailability();
+    if (!isAvailable) {
+      this.error.set('Demo backend not available');
+      throw new Error('Demo backend not available');
+    }
+
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    try {
+      await this.http
+        .post(`${this.DEMO_API_URL}/api/v1/demo/reset/current-tenant`, {})
+        .toPromise();
+      this.lastLoadResult.set(null);
+      this.progress.set(null);
+      await this.loadStatus();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to reset current tenant';
+      this.error.set(message);
+      throw err;
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  private startProgressPolling(): void {
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+    }
+    this.progressInterval = setInterval(() => {
+      this.pollProgress();
+    }, 1000);
+  }
+
+  private stopProgressPolling(): void {
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+      this.progressInterval = null;
+    }
+  }
+
+  private async pollProgress(): Promise<void> {
+    try {
+      const progress = await this.http
+        .get<DemoProgress>(`${this.DEMO_API_URL}/api/v1/demo/sessions/current/progress`)
+        .toPromise();
+      if (progress) {
+        this.progress.set(progress);
+        if (progress.stage === 'COMPLETE' || progress.stage === 'FAILED' || progress.stage === 'CANCELLED') {
+          this.stopProgressPolling();
+        }
+      }
+    } catch {
+      // Progress endpoint may not exist or no active session yet.
+    }
+  }
+
+  public async cancelCurrentLoad(): Promise<void> {
+    const isAvailable = await this.checkBackendAvailability();
+    if (!isAvailable) {
+      this.error.set('Demo backend not available');
+      throw new Error('Demo backend not available');
+    }
+
+    try {
+      await this.http
+        .post(`${this.DEMO_API_URL}/api/v1/demo/sessions/current/cancel`, {})
+        .toPromise();
+      this.error.set(null);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to cancel scenario load';
+      this.error.set(message);
+      throw err;
+    }
+  }
+
+  public async stopCurrentSession(): Promise<void> {
+    const isAvailable = await this.checkBackendAvailability();
+    if (!isAvailable) {
+      this.error.set('Demo backend not available');
+      throw new Error('Demo backend not available');
+    }
+
+    try {
+      await this.http
+        .post(`${this.DEMO_API_URL}/api/v1/demo/sessions/current/stop`, {})
+        .toPromise();
+      this.progress.set(null);
+      await this.loadStatus();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to stop demo session';
+      this.error.set(message);
+      throw err;
     }
   }
 

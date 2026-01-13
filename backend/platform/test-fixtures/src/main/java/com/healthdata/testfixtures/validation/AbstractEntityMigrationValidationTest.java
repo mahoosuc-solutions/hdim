@@ -67,7 +67,7 @@ public abstract class AbstractEntityMigrationValidationTest {
      * container reuse to prevent stale state issues from previous test runs.
      */
     @Container
-    protected static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+    protected static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("entity_validation_test")
             .withUsername("testuser")
             .withPassword("testpass");

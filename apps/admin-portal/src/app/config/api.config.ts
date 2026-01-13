@@ -42,6 +42,29 @@ export const ADMIN_ENDPOINTS = {
   ALERTS: '/alerts',
 };
 
+export const GATEWAY_ENDPOINTS = {
+  CONFIG_VERSIONS: (serviceName: string, tenantId: string) =>
+    `/v1/configs/${serviceName}/tenants/${tenantId}/versions`,
+  CONFIG_VERSION: (serviceName: string, tenantId: string, versionId: string) =>
+    `/v1/configs/${serviceName}/tenants/${tenantId}/versions/${versionId}`,
+  CONFIG_CURRENT: (serviceName: string, tenantId: string) =>
+    `/v1/configs/${serviceName}/tenants/${tenantId}/current`,
+  CONFIG_PROMOTE: (serviceName: string, tenantId: string) =>
+    `/v1/configs/${serviceName}/tenants/${tenantId}/promote`,
+  CONFIG_ACTIVATE: (serviceName: string, tenantId: string, versionId: string) =>
+    `/v1/configs/${serviceName}/tenants/${tenantId}/activate/${versionId}`,
+  CONFIG_AUDIT: (serviceName: string, tenantId: string) =>
+    `/v1/configs/${serviceName}/tenants/${tenantId}/audit`,
+  CONFIG_APPROVALS: (serviceName: string, tenantId: string, versionId: string) =>
+    `/v1/configs/${serviceName}/tenants/${tenantId}/versions/${versionId}/approvals`,
+  CONFIG_APPROVAL_REQUEST: (serviceName: string, tenantId: string, versionId: string) =>
+    `/v1/configs/${serviceName}/tenants/${tenantId}/versions/${versionId}/approvals/request`,
+  CONFIG_APPROVAL_APPROVE: (serviceName: string, tenantId: string, versionId: string) =>
+    `/v1/configs/${serviceName}/tenants/${tenantId}/versions/${versionId}/approvals/approve`,
+  CONFIG_APPROVAL_REJECT: (serviceName: string, tenantId: string, versionId: string) =>
+    `/v1/configs/${serviceName}/tenants/${tenantId}/versions/${versionId}/approvals/reject`,
+};
+
 export const HTTP_HEADERS = {
   TENANT_ID: 'X-Tenant-ID',
   CONTENT_TYPE: 'Content-Type',
@@ -50,4 +73,8 @@ export const HTTP_HEADERS = {
 
 export function buildAdminUrl(endpoint: string): string {
   return `${API_CONFIG.ADMIN_API_URL}${endpoint}`;
+}
+
+export function buildGatewayUrl(endpoint: string): string {
+  return `${API_CONFIG.GATEWAY_URL}${endpoint}`;
 }

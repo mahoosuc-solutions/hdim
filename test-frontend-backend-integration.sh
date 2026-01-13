@@ -18,19 +18,37 @@ echo "Frontend-Backend Integration Test"
 echo "========================================"
 echo ""
 
-API_BASE="http://localhost:8087/quality-measure/patient-health"
-TENANT_ID="default"
-PATIENT_ID="test-integration-$(date +%s)"
+GATEWAY_URL="http://localhost:18080"
+API_BASE="$GATEWAY_URL/api/quality/patient-health"
+TENANT_ID="demo-clinic"
+PATIENT_ID=$(python3 - <<'PYEOF'
+import uuid
+print(uuid.uuid4())
+PYEOF
+)
 
 echo -e "${BLUE}Testing Patient Health API Endpoints${NC}"
 echo "Patient ID: $PATIENT_ID"
 echo ""
+
+# Authenticate through gateway
+LOGIN_RESPONSE=$(curl -s -X POST "$GATEWAY_URL/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"demo.admin","password":"demo123"}')
+
+ACCESS_TOKEN=$(LOGIN_RESPONSE="$LOGIN_RESPONSE" python3 -c 'import json,os; data=json.loads(os.environ["LOGIN_RESPONSE"]); print(data.get("accessToken",""))' 2>/dev/null || echo "")
+if [ -z "$ACCESS_TOKEN" ]; then
+  echo -e "${RED}✗ Login failed, no access token returned${NC}"
+  echo "Response: $LOGIN_RESPONSE"
+  exit 1
+fi
 
 # Test 1: Submit PHQ-9 Assessment
 echo -e "${YELLOW}1. Submitting PHQ-9 Assessment...${NC}"
 RESPONSE=$(curl -s -X POST "$API_BASE/mental-health/assessments" \
   -H "Content-Type: application/json" \
   -H "X-Tenant-ID: $TENANT_ID" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -d "{
     \"patientId\": \"$PATIENT_ID\",
     \"assessmentType\": \"phq-9\",
@@ -50,7 +68,8 @@ fi
 # Test 2: Get Patient Health Overview
 echo -e "${YELLOW}2. Fetching Patient Health Overview...${NC}"
 RESPONSE=$(curl -s "$API_BASE/overview/$PATIENT_ID" \
-  -H "X-Tenant-ID: $TENANT_ID")
+  -H "X-Tenant-ID: $TENANT_ID" \
+  -H "Authorization: Bearer $ACCESS_TOKEN")
 
 HEALTH_SCORE=$(echo "$RESPONSE" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('healthScore', {}).get('overallScore', 'ERROR'))" 2>/dev/null || echo "ERROR")
 
@@ -64,7 +83,8 @@ fi
 # Test 3: Get Care Gaps
 echo -e "${YELLOW}3. Fetching Care Gaps...${NC}"
 RESPONSE=$(curl -s "$API_BASE/care-gaps/$PATIENT_ID?status=OPEN" \
-  -H "X-Tenant-ID: $TENANT_ID")
+  -H "X-Tenant-ID: $TENANT_ID" \
+  -H "Authorization: Bearer $ACCESS_TOKEN")
 
 GAP_COUNT=$(echo "$RESPONSE" | python3 -c "import sys, json; data=json.load(sys.stdin); print(len(data))" 2>/dev/null || echo "0")
 
@@ -77,7 +97,8 @@ fi
 # Test 4: Get Risk Stratification
 echo -e "${YELLOW}4. Calculating Risk Stratification...${NC}"
 RESPONSE=$(curl -s -X POST "$API_BASE/risk-stratification/$PATIENT_ID/calculate" \
-  -H "X-Tenant-ID: $TENANT_ID")
+  -H "X-Tenant-ID: $TENANT_ID" \
+  -H "Authorization: Bearer $ACCESS_TOKEN")
 
 RISK_SCORE=$(echo "$RESPONSE" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('riskScore', 'ERROR'))" 2>/dev/null || echo "ERROR")
 
@@ -91,7 +112,8 @@ fi
 # Test 5: Get Mental Health Assessment History
 echo -e "${YELLOW}5. Fetching Assessment History...${NC}"
 RESPONSE=$(curl -s "$API_BASE/mental-health/assessments/$PATIENT_ID?limit=10" \
-  -H "X-Tenant-ID: $TENANT_ID")
+  -H "X-Tenant-ID: $TENANT_ID" \
+  -H "Authorization: Bearer $ACCESS_TOKEN")
 
 ASSESSMENT_COUNT=$(echo "$RESPONSE" | python3 -c "import sys, json; data=json.load(sys.stdin); print(len(data))" 2>/dev/null || echo "0")
 

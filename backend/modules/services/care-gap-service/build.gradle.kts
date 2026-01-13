@@ -73,6 +73,7 @@ dependencies {
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
+    testImplementation(libs.testcontainers.kafka)
     testImplementation(libs.bundles.testing)
     testImplementation("org.springframework.security:spring-security-test")
     testCompileOnly(libs.lombok)

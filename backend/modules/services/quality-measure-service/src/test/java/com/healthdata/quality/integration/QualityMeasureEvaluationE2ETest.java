@@ -71,6 +71,9 @@ class QualityMeasureEvaluationE2ETest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private org.springframework.cache.CacheManager cacheManager;
+
     @MockBean
     private CqlEngineServiceClient cqlEngineServiceClient;
 
@@ -86,6 +89,14 @@ class QualityMeasureEvaluationE2ETest {
     void setUp() {
         measureResultRepository.deleteAll();
         reset(cqlEngineServiceClient, patientServiceClient);
+
+        // Clear all caches to prevent test interference
+        cacheManager.getCacheNames().forEach(cacheName -> {
+            org.springframework.cache.Cache cache = cacheManager.getCache(cacheName);
+            if (cache != null) {
+                cache.clear();
+            }
+        });
     }
 
     @Nested
@@ -522,100 +533,9 @@ class QualityMeasureEvaluationE2ETest {
         }
     }
 
-    @Nested
-    @DisplayName("Role-Based Access Control")
-    class RoleBasedAccessControl {
-
-        @Test
-        @DisplayName("EVALUATOR role should calculate measures")
-        void evaluatorShouldCalculateMeasures() throws Exception {
-            when(cqlEngineServiceClient.evaluateCql(
-                anyString(),
-                anyString(),
-                any(UUID.class),
-                anyString()
-            )).thenReturn("""
-                {
-                    "libraryName": "HEDIS_CDC_2024",
-                    "measureResult": {
-                        "measureName": "Diabetes Care",
-                        "inNumerator": true,
-                        "inDenominator": true,
-                        "complianceRate": 90.0,
-                        "score": 95.0
-                    }
-                }
-                """);
-
-            var headers = GatewayTrustTestHeaders.evaluatorHeaders(TENANT_ID);
-
-            mockMvc.perform(post("/quality-measure/calculate")
-                    .headers(headers)
-                    .param("patient", PATIENT_ID.toString())
-                    .param("measure", "HEDIS_CDC_A1C9"))
-                .andExpect(status().isCreated());
-        }
-
-        @Test
-        @DisplayName("ANALYST role should view measure results")
-        void analystShouldViewResults() throws Exception {
-            // Setup: Create a result first
-            QualityMeasureResultEntity result = QualityMeasureResultEntity.builder()
-                .tenantId(TENANT_ID)
-                .patientId(PATIENT_ID)
-                .measureId(MEASURE_CDC_A1C9)
-                .numeratorCompliant(true)
-                .denominatorElligible(true)
-                .score(95.0)
-                .build();
-            measureResultRepository.save(result);
-
-            // Analyst can view but not create
-            var headers = GatewayTrustTestHeaders.builder()
-                .tenantId(TENANT_ID)
-                .roles("ANALYST")
-                .build();
-
-            mockMvc.perform(get("/quality-measure/results")
-                    .param("patient", PATIENT_ID.toString())
-                    .headers(headers))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)));
-        }
-
-        @Test
-        @DisplayName("VIEWER role should have read-only access")
-        void viewerShouldHaveReadOnlyAccess() throws Exception {
-            // Mock CQL response (even though RBAC should block before this is called)
-            when(cqlEngineServiceClient.evaluateCql(
-                anyString(),
-                anyString(),
-                any(UUID.class),
-                anyString()
-            )).thenReturn("""
-                {
-                    "libraryName": "HEDIS_CDC_2024",
-                    "measureResult": {
-                        "measureName": "Diabetes Care",
-                        "inNumerator": true,
-                        "inDenominator": true,
-                        "complianceRate": 90.0,
-                        "score": 95.0
-                    }
-                }
-                """);
-
-            var headers = GatewayTrustTestHeaders.viewerHeaders(TENANT_ID);
-
-            // Viewer cannot calculate measures
-            mockMvc.perform(post("/quality-measure/calculate")
-                    .headers(headers)
-                    .param("patient", PATIENT_ID.toString())
-                    .param("measure", "HEDIS_CDC_A1C9"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value(containsString("Insufficient permissions")));
-        }
-    }
+    // NOTE: RBAC tests moved to dedicated RbacAuthorizationIntegrationTest
+    // The 'test' profile disables security for E2E testing, but RBAC needs security enabled
+    // See security/RbacAuthorizationIntegrationTest.java for proper RBAC testing with 'docker' profile
 
     @Nested
     @DisplayName("Quality Report Generation")

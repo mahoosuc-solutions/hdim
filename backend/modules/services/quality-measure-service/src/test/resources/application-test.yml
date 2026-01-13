@@ -15,6 +15,15 @@ spring:
   main:
     allow-bean-definition-overriding: true
 
+  # Jackson Configuration - Fix LocalDate serialization to ISO-8601 format
+  # Without this: "effectiveFrom": [2026, 1, 13] (array - WRONG)
+  # With this:    "effectiveFrom": "2026-01-13" (ISO-8601 string - CORRECT)
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+    deserialization:
+      ADJUST_DATES_TO_CONTEXT_TIME_ZONE: false
+
   datasource:
     url: jdbc:tc:postgresql:15-alpine:///testdb?TC_STARTUP_TIMEOUT=180
     username: sa

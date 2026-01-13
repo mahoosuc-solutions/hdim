@@ -49,6 +49,7 @@ public class PopulationCalculationService {
     private final CircuitBreaker measureCalculationCircuitBreaker;
     private final RateLimiter measureCalculationRateLimiter;
     private final Executor batchExecutor;
+    private final com.healthdata.quality.persistence.JobExecutionRepository jobExecutionRepository;
 
     // In-memory job tracking (for development - use Redis/DB for production)
     private final Map<String, BatchCalculationJob> activeJobs = new ConcurrentHashMap<>();
@@ -62,41 +63,105 @@ public class PopulationCalculationService {
      * @param tenantId Tenant ID
      * @param fhirServerUrl FHIR server base URL
      * @param createdBy User who triggered the calculation
-     * @return Job ID for tracking progress
+     * @param measureIds Optional list of specific measure IDs (if null, calculates all)
+     * @param maxConcurrency Optional max concurrency override
+     * @return Job information with ID and initial status
      */
-    @Async
-    public CompletableFuture<String> calculateAllMeasuresForPopulation(
+    public Map<String, Object> startPopulationCalculation(
             String tenantId,
             String fhirServerUrl,
-            String createdBy
+            String createdBy,
+            List<String> measureIds,
+            Integer maxConcurrency
     ) {
-        String jobId = UUID.randomUUID().toString();
+        UUID jobId = UUID.randomUUID();
         log.info("Starting population calculation job {} for tenant {}", jobId, tenantId);
 
-        BatchCalculationJob job = new BatchCalculationJob(jobId, tenantId, createdBy);
-        activeJobs.put(jobId, job);
+        // Create database entity first
+        com.healthdata.quality.persistence.JobExecutionEntity jobEntity =
+            com.healthdata.quality.persistence.JobExecutionEntity.builder()
+                .id(jobId)
+                .tenantId(tenantId)
+                .jobName("POPULATION_CALCULATION")
+                .status("STARTING")
+                .startedAt(Instant.now())
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .metrics(new java.util.HashMap<>())
+                .build();
+
+        jobExecutionRepository.save(jobEntity);
+
+        // Create in-memory tracker
+        BatchCalculationJob job = new BatchCalculationJob(jobId.toString(), tenantId, createdBy);
+        activeJobs.put(jobId.toString(), job);
+
+        // Start async processing
+        CompletableFuture.runAsync(() -> executePopulationCalculation(
+            jobId.toString(),
+            tenantId,
+            fhirServerUrl,
+            createdBy,
+            measureIds,
+            maxConcurrency
+        ), batchExecutor);
+
+        // Return immediately with job info
+        Map<String, Object> response = new java.util.HashMap<>();
+        response.put("jobId", jobId.toString());
+        response.put("status", "STARTING");
+        response.put("tenantId", tenantId);
+        response.put("totalPatients", 0); // Will be updated once fetched
+        response.put("startedAt", jobEntity.getStartedAt().toString());
+
+        return response;
+    }
+
+    /**
+     * Execute population calculation asynchronously
+     */
+    private void executePopulationCalculation(
+            String jobId,
+            String tenantId,
+            String fhirServerUrl,
+            String createdBy,
+            List<String> requestedMeasureIds,
+            Integer maxConcurrency
+    ) {
+        BatchCalculationJob job = activeJobs.get(jobId);
+        if (job == null) {
+            log.error("Job {} not found in active jobs", jobId);
+            return;
+        }
 
         try {
             // Step 1: Get all patients from FHIR server
             job.updateStatus(JobStatus.FETCHING_PATIENTS);
+            updateJobEntity(jobId, "FETCHING_PATIENTS", null, null);
             publishProgress(jobId, "Fetching patients from FHIR server...", 0);
 
             List<UUID> patientIds = fetchAllPatientIds(fhirServerUrl, tenantId);
             job.setTotalPatients(patientIds.size());
             log.info("Found {} patients for calculation", patientIds.size());
 
-            // Step 2: Get all available measures
-            List<String> measureIds = measureRegistry.getMeasureIds();
-            job.setTotalMeasures(measureIds.size());
-            log.info("Found {} measures to calculate", measureIds.size());
+            // Step 2: Get measures to calculate
+            List<String> measureIdsToCalculate;
+            if (requestedMeasureIds != null && !requestedMeasureIds.isEmpty()) {
+                measureIdsToCalculate = requestedMeasureIds;
+            } else {
+                measureIdsToCalculate = measureRegistry.getMeasureIds();
+            }
+            job.setTotalMeasures(measureIdsToCalculate.size());
+            log.info("Found {} measures to calculate", measureIdsToCalculate.size());
 
-            int totalCalculations = patientIds.size() * measureIds.size();
+            int totalCalculations = patientIds.size() * measureIdsToCalculate.size();
             job.setTotalCalculations(totalCalculations);
 
             // Step 3: Calculate all measures for all patients (PARALLEL)
             job.updateStatus(JobStatus.CALCULATING);
+            updateJobEntity(jobId, "CALCULATING", null, null);
             publishProgress(jobId, String.format("Calculating %d measures for %d patients in parallel...",
-                measureIds.size(), patientIds.size()), 5);
+                measureIdsToCalculate.size(), patientIds.size()), 5);
 
             AtomicInteger completed = new AtomicInteger(0);
             AtomicInteger successful = new AtomicInteger(0);
@@ -116,7 +181,7 @@ public class PopulationCalculationService {
                 List<CompletableFuture<Void>> chunkFutures = new ArrayList<>();
 
                 for (UUID patientId : chunk) {
-                    for (String measureId : measureIds) {
+                    for (String measureId : measureIdsToCalculate) {
                         CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                             try {
                                 // Apply rate limiting
@@ -178,24 +243,64 @@ public class PopulationCalculationService {
             }
 
             // Step 4: Complete
-            job.updateStatus(JobStatus.COMPLETED);
-            job.setCompletedAt(Instant.now());
-            publishProgress(jobId,
-                String.format("Calculation complete! Total: %d, Success: %d, Failed: %d",
-                    totalCalculations, successful.get(), failed.get()),
-                100);
-
-            log.info("Population calculation job {} completed. Success: {}, Failed: {}",
-                jobId, successful.get(), failed.get());
+            // If all calculations failed, mark job as FAILED
+            if (successful.get() == 0 && failed.get() > 0) {
+                job.updateStatus(JobStatus.FAILED);
+                job.setCompletedAt(Instant.now());
+                String errorMsg = String.format("All %d calculations failed", failed.get());
+                updateJobEntity(jobId, "FAILED", null, errorMsg);
+                publishProgress(jobId, errorMsg, 100);
+                log.error("Population calculation job {} failed: all calculations failed", jobId);
+            } else {
+                job.updateStatus(JobStatus.COMPLETED);
+                job.setCompletedAt(Instant.now());
+                updateJobEntity(jobId, "COMPLETED", null, null);
+                publishProgress(jobId,
+                    String.format("Calculation complete! Total: %d, Success: %d, Failed: %d",
+                        totalCalculations, successful.get(), failed.get()),
+                    100);
+                log.info("Population calculation job {} completed. Success: {}, Failed: {}",
+                    jobId, successful.get(), failed.get());
+            }
 
         } catch (Exception e) {
             log.error("Population calculation job {} failed: {}", jobId, e.getMessage(), e);
             job.updateStatus(JobStatus.FAILED);
             job.addError("Fatal error: " + e.getMessage());
+            updateJobEntity(jobId, "FAILED", null, "Fatal error: " + e.getMessage());
             publishProgress(jobId, "Calculation failed: " + e.getMessage(), 0);
         }
+    }
 
-        return CompletableFuture.completedFuture(jobId);
+    /**
+     * Update job entity in database
+     */
+    private void updateJobEntity(String jobId, String status, String resultMessage, String errorMessage) {
+        try {
+            UUID uuid = UUID.fromString(jobId);
+            jobExecutionRepository.findById(uuid).ifPresent(entity -> {
+                entity.setStatus(status);
+                if (resultMessage != null) {
+                    entity.setResultMessage(resultMessage);
+                }
+                if (errorMessage != null) {
+                    entity.setErrorMessage(errorMessage);
+                }
+                if ("COMPLETED".equals(status) || "FAILED".equals(status)) {
+                    entity.setCompletedAt(Instant.now());
+                    if (entity.getStartedAt() != null) {
+                        long durationMs = java.time.Duration.between(
+                            entity.getStartedAt(),
+                            entity.getCompletedAt()
+                        ).toMillis();
+                        entity.setDurationMs(durationMs);
+                    }
+                }
+                jobExecutionRepository.save(entity);
+            });
+        } catch (Exception e) {
+            log.warn("Failed to update job entity {}: {}", jobId, e.getMessage());
+        }
     }
 
     /**
@@ -228,10 +333,12 @@ public class PopulationCalculationService {
 
             if (bundle != null && bundle.containsKey("entry")) {
                 List<Map<String, Object>> entries = (List<Map<String, Object>>) bundle.get("entry");
-                for (Map<String, Object> entry : entries) {
-                    Map<String, Object> resource = (Map<String, Object>) entry.get("resource");
-                    if (resource != null && resource.containsKey("id")) {
-                        patientIds.add(UUID.fromString(resource.get("id").toString()));
+                if (entries != null) {
+                    for (Map<String, Object> entry : entries) {
+                        Map<String, Object> resource = (Map<String, Object>) entry.get("resource");
+                        if (resource != null && resource.containsKey("id")) {
+                            patientIds.add(UUID.fromString(resource.get("id").toString()));
+                        }
                     }
                 }
             }
@@ -239,8 +346,8 @@ public class PopulationCalculationService {
             log.info("Fetched {} patient IDs from FHIR server", patientIds.size());
 
         } catch (Exception e) {
-            log.error("Error fetching patients from FHIR server: {}", e.getMessage());
-            throw new RuntimeException("Failed to fetch patients", e);
+            log.error("Failed to fetch patients from FHIR server: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch patients from FHIR server", e);
         }
 
         return patientIds;
@@ -285,6 +392,7 @@ public class PopulationCalculationService {
         BatchCalculationJob job = activeJobs.get(jobId);
         if (job != null && job.getStatus() == JobStatus.CALCULATING) {
             job.updateStatus(JobStatus.CANCELLED);
+            updateJobEntity(jobId, "CANCELLED", "Job cancelled by user", null);
             publishProgress(jobId, "Job cancelled by user", job.getProgressPercent());
             return true;
         }

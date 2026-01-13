@@ -116,11 +116,16 @@ class QualityMeasureControllerTest {
             mock(ReportExportService.class)
         );
 
-        when(populationService.calculateAllMeasuresForPopulation(
-            eq("tenant-1"), anyString(), eq("user-1")))
-            .thenReturn(CompletableFuture.completedFuture("job-1"));
+        Map<String, Object> mockResponse = Map.of(
+            "jobId", "job-1",
+            "status", "STARTING",
+            "tenantId", "tenant-1"
+        );
+        when(populationService.startPopulationCalculation(
+            eq("tenant-1"), anyString(), eq("user-1"), any(), any()))
+            .thenReturn(mockResponse);
 
-        var response = controller.startPopulationCalculation("tenant-1", "http://fhir", "user-1");
+        var response = controller.startPopulationCalculation("tenant-1", "http://fhir", "user-1", null);
 
         assertThat(response.getStatusCode().value()).isEqualTo(202);
         assertThat(response.getBody()).containsEntry("jobId", "job-1");
@@ -136,12 +141,11 @@ class QualityMeasureControllerTest {
             mock(ReportExportService.class)
         );
 
-        CompletableFuture<String> failed = new CompletableFuture<>();
-        failed.completeExceptionally(new RuntimeException("boom"));
-        when(populationService.calculateAllMeasuresForPopulation(
-            eq("tenant-1"), anyString(), eq("system"))).thenReturn(failed);
+        when(populationService.startPopulationCalculation(
+            eq("tenant-1"), anyString(), eq("system"), any(), any()))
+            .thenThrow(new RuntimeException("boom"));
 
-        var response = controller.startPopulationCalculation("tenant-1", "http://fhir", "system");
+        var response = controller.startPopulationCalculation("tenant-1", "http://fhir", "system", null);
 
         assertThat(response.getStatusCode().value()).isEqualTo(500);
         assertThat(response.getBody()).containsEntry("error", "Failed to start population calculation");

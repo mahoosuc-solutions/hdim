@@ -317,6 +317,11 @@ public final class GatewayTrustTestHeaders {
             if (includeHmac) {
                 String signature = generateHmacSignature(userId, tenantId, roles, signingSecret);
                 headers.add(AUTH_VALIDATED_HEADER, signature);
+            } else {
+                // For development/testing mode, include a simple validated header with the gateway prefix
+                // This allows TrustedHeaderAuthFilter in development mode to accept the headers
+                long timestamp = System.currentTimeMillis() / 1000;
+                headers.add(AUTH_VALIDATED_HEADER, "gateway-" + timestamp + "-dev-signature");
             }
 
             return headers;
@@ -340,6 +345,9 @@ public final class GatewayTrustTestHeaders {
         request.addHeader(AUTH_USERNAME_HEADER, "test.user@test.hdim.io");
         request.addHeader(AUTH_TENANT_IDS_HEADER, tenantId);
         request.addHeader(AUTH_ROLES_HEADER, String.join(",", roles));
+        // Add validated header for development mode
+        long timestamp = System.currentTimeMillis() / 1000;
+        request.addHeader(AUTH_VALIDATED_HEADER, "gateway-" + timestamp + "-dev-signature");
     }
 
     /**
@@ -355,12 +363,14 @@ public final class GatewayTrustTestHeaders {
             String tenantId,
             String... roles) {
 
+        long timestamp = System.currentTimeMillis() / 1000;
         return builder
                 .header(TENANT_ID_HEADER, tenantId)
                 .header(AUTH_USER_ID_HEADER, UUID.randomUUID().toString())
                 .header(AUTH_USERNAME_HEADER, "test.user@test.hdim.io")
                 .header(AUTH_TENANT_IDS_HEADER, tenantId)
-                .header(AUTH_ROLES_HEADER, String.join(",", roles));
+                .header(AUTH_ROLES_HEADER, String.join(",", roles))
+                .header(AUTH_VALIDATED_HEADER, "gateway-" + timestamp + "-dev-signature");
     }
 
     /**
@@ -376,6 +386,9 @@ public final class GatewayTrustTestHeaders {
         headers.add(AUTH_USERNAME_HEADER, "test.user@test.hdim.io");
         headers.add(AUTH_TENANT_IDS_HEADER, tenantId);
         headers.add(AUTH_ROLES_HEADER, String.join(",", roles));
+        // Add validated header for development mode
+        long timestamp = System.currentTimeMillis() / 1000;
+        headers.add(AUTH_VALIDATED_HEADER, "gateway-" + timestamp + "-dev-signature");
     }
 
     // =========================================================================

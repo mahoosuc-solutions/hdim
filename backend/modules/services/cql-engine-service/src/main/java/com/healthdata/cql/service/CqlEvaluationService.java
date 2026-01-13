@@ -12,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -114,13 +116,14 @@ public class CqlEvaluationService {
                     measureId, patientId, result.isInDenominator(), result.isInNumerator());
 
             // Publish audit event for CQL evaluation
+            String evaluatedBy = getAuthenticatedUsername();
             cqlAuditIntegration.publishCqlEvaluationEvent(
                     tenantId,
                     patientId.toString(),
                     measureId,
                     evaluationId.toString(),
                     result,
-                    "system", // TODO: Get actual user from security context
+                    evaluatedBy,
                     durationMs
             );
 
@@ -408,5 +411,18 @@ public class CqlEvaluationService {
         evaluationRepository.deleteByTenantIdAndEvaluationDateBefore(tenantId, cutoffDate);
 
         logger.info("Deleted old evaluations for tenant: {}", tenantId);
+    }
+
+    /**
+     * Get the authenticated username from security context
+     *
+     * @return The username of the authenticated user, or "system" if no user is authenticated
+     */
+    private String getAuthenticatedUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            return authentication.getName();
+        }
+        return "system";
     }
 }

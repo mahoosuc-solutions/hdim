@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd">
+
+    <changeSet id="008-001-create-tenant-isolation-indexes" author="healthdata">
+        <comment>Create composite indexes for tenant isolation across all schemas</comment>
+        <sql dbms="postgresql">
+            CREATE INDEX idx_fhir_obs_tenant_effective ON fhir.observations(tenant_id, effective_date DESC);
+            CREATE INDEX idx_fhir_cond_tenant_status ON fhir.conditions(tenant_id, clinical_status);
+            CREATE INDEX idx_fhir_med_tenant_status ON fhir.medication_requests(tenant_id, status);
+            CREATE INDEX idx_quality_results_tenant_calc ON quality.measure_results(tenant_id, calculation_date DESC);
+            CREATE INDEX idx_quality_scores_tenant_calc ON quality.health_scores(tenant_id, calculated_at DESC);
+            CREATE INDEX idx_caregap_tenant_priority ON caregap.care_gaps(tenant_id, priority, status);
+        </sql>
+        <rollback>
+            DROP INDEX IF EXISTS fhir.idx_fhir_obs_tenant_effective;
+            DROP INDEX IF EXISTS fhir.idx_fhir_cond_tenant_status;
+            DROP INDEX IF EXISTS fhir.idx_fhir_med_tenant_status;
+            DROP INDEX IF EXISTS quality.idx_quality_results_tenant_calc;
+            DROP INDEX IF EXISTS quality.idx_quality_scores_tenant_calc;
+            DROP INDEX IF EXISTS caregap.idx_caregap_tenant_priority;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="008-002-create-performance-indexes" author="healthdata">
+        <comment>Create additional performance indexes for common queries</comment>
+        <sql dbms="postgresql">
+            CREATE INDEX idx_patient_search ON patient.patients(tenant_id, last_name, first_name);
+            CREATE INDEX idx_measure_results_compliance ON quality.measure_results(tenant_id, compliant, calculation_date DESC);
+            CREATE INDEX idx_care_gaps_priority_due ON caregap.care_gaps(tenant_id, priority, due_date)
+                WHERE status IN ('OPEN', 'IN_PROGRESS');
+            CREATE INDEX idx_notifications_recipient ON notification.history(tenant_id, recipient, sent_at DESC);
+        </sql>
+        <rollback>
+            DROP INDEX IF EXISTS patient.idx_patient_search;
+            DROP INDEX IF EXISTS quality.idx_measure_results_compliance;
+            DROP INDEX IF EXISTS caregap.idx_care_gaps_priority_due;
+            DROP INDEX IF EXISTS notification.idx_notifications_recipient;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="008-003-create-jsonb-indexes" author="healthdata">
+        <comment>Create GIN indexes on JSONB columns for efficient JSON queries</comment>
+        <sql dbms="postgresql">
+            CREATE INDEX idx_fhir_obs_resource_gin ON fhir.observations USING gin(fhir_resource);
+            CREATE INDEX idx_quality_details_gin ON quality.measure_results USING gin(details);
+            CREATE INDEX idx_health_components_gin ON quality.health_scores USING gin(score_components);
+            CREATE INDEX idx_care_gap_metadata_gin ON caregap.care_gaps USING gin(metadata);
+            CREATE INDEX idx_notif_metadata_gin ON notification.history USING gin(metadata);
+            CREATE INDEX idx_audit_old_values_gin ON audit.audit_log USING gin(old_values);
+            CREATE INDEX idx_audit_new_values_gin ON audit.audit_log USING gin(new_values);
+        </sql>
+        <rollback>
+            DROP INDEX IF EXISTS fhir.idx_fhir_obs_resource_gin;
+            DROP INDEX IF EXISTS quality.idx_quality_details_gin;
+            DROP INDEX IF EXISTS quality.idx_health_components_gin;
+            DROP INDEX IF EXISTS caregap.idx_care_gap_metadata_gin;
+            DROP INDEX IF EXISTS notification.idx_notif_metadata_gin;
+            DROP INDEX IF EXISTS audit.idx_audit_old_values_gin;
+            DROP INDEX IF EXISTS audit.idx_audit_new_values_gin;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="008-004-create-date-range-indexes" author="healthdata">
+        <comment>Create indexes optimized for date range queries</comment>
+        <sql dbms="postgresql">
+            CREATE INDEX idx_observations_date_range ON fhir.observations(effective_date)
+                WHERE effective_date IS NOT NULL;
+            CREATE INDEX idx_measure_results_period ON quality.measure_results(period_start, period_end)
+                WHERE period_start IS NOT NULL AND period_end IS NOT NULL;
+            CREATE INDEX idx_health_scores_calculated ON quality.health_scores(calculated_at DESC)
+                WHERE calculated_at IS NOT NULL;
+            CREATE INDEX idx_care_gap_due_open ON caregap.care_gaps(due_date DESC)
+                WHERE status = 'OPEN' AND due_date IS NOT NULL;
+            CREATE INDEX idx_notification_sent_status ON notification.history(sent_at DESC, status)
+                WHERE sent_at IS NOT NULL;
+        </sql>
+        <rollback>
+            DROP INDEX IF EXISTS fhir.idx_observations_date_range;
+            DROP INDEX IF EXISTS quality.idx_measure_results_period;
+            DROP INDEX IF EXISTS quality.idx_health_scores_calculated;
+            DROP INDEX IF EXISTS caregap.idx_care_gap_due_open;
+            DROP INDEX IF EXISTS notification.idx_notification_sent_status;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="008-005-create-search-indexes" author="healthdata">
+        <comment>Create indexes for full-text search and code lookups</comment>
+        <sql dbms="postgresql">
+            CREATE INDEX idx_obs_code_display ON fhir.observations(code, display);
+            CREATE INDEX idx_cond_code_display ON fhir.conditions(code, display);
+            CREATE INDEX idx_med_code_display ON fhir.medication_requests(medication_code, medication_display);
+            CREATE INDEX idx_measure_names ON quality.measures(name);
+            CREATE INDEX idx_template_channel ON notification.templates(channel, active);
+        </sql>
+        <rollback>
+            DROP INDEX IF EXISTS fhir.idx_obs_code_display;
+            DROP INDEX IF EXISTS fhir.idx_cond_code_display;
+            DROP INDEX IF EXISTS fhir.idx_med_code_display;
+            DROP INDEX IF EXISTS quality.idx_measure_names;
+            DROP INDEX IF EXISTS notification.idx_template_channel;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="008-006-create-audit-search-indexes" author="healthdata">
+        <comment>Create indexes for audit log search and filtering</comment>
+        <sql dbms="postgresql">
+            CREATE INDEX idx_audit_entity_action ON audit.audit_log(entity_type, action);
+            CREATE INDEX idx_audit_user_tenant ON audit.audit_log(user_id, tenant_id, timestamp DESC);
+            CREATE INDEX idx_audit_timestamp_action ON audit.audit_log(timestamp DESC, action);
+            CREATE INDEX idx_access_user_tenant_time ON audit.access_log(user_id, tenant_id, login_time DESC);
+            CREATE INDEX idx_data_change_user_time ON audit.data_change_log(changed_by, change_timestamp DESC);
+        </sql>
+        <rollback>
+            DROP INDEX IF EXISTS audit.idx_audit_entity_action;
+            DROP INDEX IF EXISTS audit.idx_audit_user_tenant;
+            DROP INDEX IF EXISTS audit.idx_audit_timestamp_action;
+            DROP INDEX IF EXISTS audit.idx_access_user_tenant_time;
+            DROP INDEX IF EXISTS audit.idx_data_change_user_time;
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

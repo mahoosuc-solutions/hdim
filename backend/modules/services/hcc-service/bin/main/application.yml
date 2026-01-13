@@ -1,0 +1,144 @@
+server:
+  port: 8105
+  servlet:
+    context-path: /hcc
+
+spring:
+  application:
+    name: hcc-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5435/healthdata_cql
+    username: healthdata
+    password: ${DB_PASSWORD:healthdata_password}
+    driver-class-name: org.postgresql.Driver
+
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: MEDIUM  # HCC risk adjustment: 10-100 req/sec, moderate complexity
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+# FHIR Server (for patient conditions)
+fhir:
+  server:
+    url: http://localhost:8085/fhir
+
+# Patient Service
+patient:
+  service:
+    url: http://localhost:8084/patient
+
+# Care Gap Service (for creating documentation gaps)
+care-gap:
+  service:
+    url: http://localhost:8086/care-gap
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:dev_secret_key_for_local_testing_only_change_in_production}
+  expiration: 3600000
+
+# Feign Client Configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 15000
+        loggerLevel: basic
+      fhir-service:
+        url: http://localhost:8085
+        connectTimeout: 5000
+        readTimeout: 30000
+      patient-service:
+        url: http://localhost:8084
+        connectTimeout: 5000
+        readTimeout: 15000
+      care-gap-service:
+        url: http://localhost:8086
+        connectTimeout: 5000
+        readTimeout: 15000
+
+# Cache Configuration (Redis)
+# NOTE: HCC mappings are static reference data (ICD-10 → HCC code mappings), NOT PHI.
+# Longer cache TTL is acceptable for reference data per HIPAA-CACHE-COMPLIANCE.md
+# PHI (patient-specific HCC scores) is NOT cached - only the static crosswalk tables.
+spring.cache:
+  type: redis
+  redis:
+    time-to-live: 3600000  # 1 hour for HCC mappings (static reference data, not PHI)
+
+# Kafka Configuration
+spring.kafka:
+  bootstrap-servers: localhost:9092
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    properties:
+      # Distributed tracing: Propagate trace context through Kafka messages
+      interceptor.classes: com.healthdata.tracing.KafkaProducerTraceInterceptor
+  consumer:
+    group-id: hcc-service
+    auto-offset-reset: earliest
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    properties:
+      # Distributed tracing: Extract trace context from Kafka messages
+      interceptor.classes: com.healthdata.tracing.KafkaConsumerTraceInterceptor
+
+# HCC Configuration
+hcc:
+  model:
+    # Current model year
+    year: 2024
+    # Blending ratios for transition (2024: 67% V24 / 33% V28)
+    v24-weight: 0.33
+    v28-weight: 0.67
+  crosswalk:
+    # Path to HCC crosswalk data files
+    data-path: classpath:data/hcc-crosswalk/
+
+# HIPAA Audit Configuration
+audit:
+  enabled: true
+  encryption:
+    enabled: true
+
+# Rate Limiting Configuration
+rate-limiting:
+  enabled: true
+  api:
+    per-minute: 100
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.healthdata.hcc: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

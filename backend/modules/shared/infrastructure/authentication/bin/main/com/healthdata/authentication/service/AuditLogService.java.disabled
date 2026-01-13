@@ -1,0 +1,366 @@
+package com.healthdata.authentication.service;
+
+import com.healthdata.authentication.entity.AuditLog;
+import com.healthdata.authentication.repository.AuditLogRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+/**
+ * Service for audit logging operations.
+ * Provides asynchronous logging to ensure audit operations don't block application flow.
+ *
+ * IMPORTANT: All audit logging operations are designed to fail gracefully.
+ * If audit logging fails, it should NOT break the main application flow.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class AuditLogService {
+
+    private final AuditLogRepository auditLogRepository;
+
+    /**
+     * Log successful authentication event.
+     *
+     * @param username  Username that logged in
+     * @param userId    User ID
+     * @param ipAddress IP address of the request
+     * @param userAgent User agent string
+     * @param sessionId Session ID
+     */
+    @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void logAuthenticationSuccess(String username, UUID userId, String ipAddress, String userAgent, String sessionId) {
+        try {
+            AuditLog auditLog = AuditLog.builder()
+                .eventType("LOGIN")
+                .action("AUTHENTICATE")
+                .username(username)
+                .userId(userId)
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .sessionId(sessionId)
+                .success(true)
+                .timestamp(Instant.now())
+                .build();
+
+            auditLogRepository.save(auditLog);
+            log.debug("Logged successful authentication for user: {}", username);
+        } catch (Exception e) {
+            log.error("Failed to log authentication success for user: {}", username, e);
+            // Don't throw - audit logging failure should not break authentication
+        }
+    }
+
+    /**
+     * Log failed authentication attempt.
+     *
+     * @param username      Username that attempted to log in
+     * @param ipAddress     IP address of the request
+     * @param userAgent     User agent string
+     * @param failureReason Reason for authentication failure
+     */
+    @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void logAuthenticationFailure(String username, String ipAddress, String userAgent, String failureReason) {
+        try {
+            AuditLog auditLog = AuditLog.builder()
+                .eventType("LOGIN")
+                .action("AUTHENTICATE")
+                .username(username)
+                .userId(null) // User ID not available for failed login
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .success(false)
+                .failureReason(failureReason)
+                .timestamp(Instant.now())
+                .build();
+
+            auditLogRepository.save(auditLog);
+            log.debug("Logged failed authentication for user: {}", username);
+        } catch (Exception e) {
+            log.error("Failed to log authentication failure for user: {}", username, e);
+            // Don't throw - audit logging failure should not break authentication
+        }
+    }
+
+    /**
+     * Log user registration event.
+     *
+     * @param userId        ID of newly created user
+     * @param username      Username of newly created user
+     * @param tenantIds     Tenant IDs assigned to the user
+     * @param ipAddress     IP address of the request
+     * @param adminUsername Username of the admin who created the user
+     */
+    @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void logRegistration(UUID userId, String username, Set<String> tenantIds, String ipAddress, String adminUsername) {
+        try {
+            Map<String, Object> additionalData = new HashMap<>();
+            additionalData.put("tenantIds", tenantIds);
+            additionalData.put("createdBy", adminUsername);
+
+            AuditLog auditLog = AuditLog.builder()
+                .eventType("REGISTER")
+                .action("CREATE")
+                .username(username)
+                .userId(userId)
+                .ipAddress(ipAddress)
+                .success(true)
+                .timestamp(Instant.now())
+                .additionalData(additionalData)
+                .build();
+
+            auditLogRepository.save(auditLog);
+            log.debug("Logged registration for user: {}", username);
+        } catch (Exception e) {
+            log.error("Failed to log registration for user: {}", username, e);
+            // Don't throw - audit logging failure should not break registration
+        }
+    }
+
+    /**
+     * Log logout event.
+     *
+     * @param userId    User ID
+     * @param username  Username
+     * @param ipAddress IP address of the request
+     * @param sessionId Session ID
+     */
+    @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void logLogout(UUID userId, String username, String ipAddress, String sessionId) {
+        try {
+            AuditLog auditLog = AuditLog.builder()
+                .eventType("LOGOUT")
+                .action("LOGOUT")
+                .username(username)
+                .userId(userId)
+                .ipAddress(ipAddress)
+                .sessionId(sessionId)
+                .success(true)
+                .timestamp(Instant.now())
+                .build();
+
+            auditLogRepository.save(auditLog);
+            log.debug("Logged logout for user: {}", username);
+        } catch (Exception e) {
+            log.error("Failed to log logout for user: {}", username, e);
+            // Don't throw - audit logging failure should not break logout
+        }
+    }
+
+    /**
+     * Log access denied event.
+     *
+     * @param userId       User ID
+     * @param username     Username
+     * @param tenantId     Tenant ID being accessed
+     * @param resource     Resource being accessed
+     * @param action       Action being attempted
+     * @param ipAddress    IP address of the request
+     * @param requestUri   Request URI
+     * @param denialReason Reason for denial
+     */
+    @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void logAccessDenied(UUID userId, String username, String tenantId, String resource,
+                                String action, String ipAddress, String requestUri, String denialReason) {
+        try {
+            AuditLog auditLog = AuditLog.builder()
+                .eventType("ACCESS_DENIED")
+                .action(action)
+                .username(username)
+                .userId(userId)
+                .tenantId(tenantId)
+                .resourceType(resource)
+                .ipAddress(ipAddress)
+                .requestUri(requestUri)
+                .success(false)
+                .failureReason(denialReason)
+                .timestamp(Instant.now())
+                .build();
+
+            auditLogRepository.save(auditLog);
+            log.debug("Logged access denied for user: {} on resource: {}", username, resource);
+        } catch (Exception e) {
+            log.error("Failed to log access denied for user: {}", username, e);
+            // Don't throw - audit logging failure should not break access control
+        }
+    }
+
+    /**
+     * Log resource access event.
+     *
+     * @param userId       User ID
+     * @param username     Username
+     * @param tenantId     Tenant ID
+     * @param resourceType Type of resource
+     * @param resourceId   Resource ID
+     * @param action       Action performed
+     * @param success      Whether the action was successful
+     * @param request      HTTP request for context
+     */
+    @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void logResourceAccess(UUID userId, String username, String tenantId, String resourceType,
+                                  String resourceId, String action, boolean success, HttpServletRequest request) {
+        try {
+            String ipAddress = extractIpAddress(request);
+            String userAgent = request.getHeader("User-Agent");
+            String requestUri = request.getRequestURI();
+            String httpMethod = request.getMethod();
+
+            AuditLog auditLog = AuditLog.builder()
+                .eventType("RESOURCE_ACCESS")
+                .action(action)
+                .username(username)
+                .userId(userId)
+                .tenantId(tenantId)
+                .resourceType(resourceType)
+                .resourceId(resourceId)
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .requestUri(requestUri)
+                .httpMethod(httpMethod)
+                .success(success)
+                .timestamp(Instant.now())
+                .build();
+
+            auditLogRepository.save(auditLog);
+            log.debug("Logged resource access: user={}, resource={}, action={}, success={}",
+                username, resourceType, action, success);
+        } catch (Exception e) {
+            log.error("Failed to log resource access for user: {}", username, e);
+            // Don't throw - audit logging failure should not break resource access
+        }
+    }
+
+    /**
+     * Log a generic audit event with full context.
+     *
+     * @param auditLog Audit log entity to save
+     */
+    @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void logEvent(AuditLog auditLog) {
+        try {
+            if (auditLog.getTimestamp() == null) {
+                auditLog.setTimestamp(Instant.now());
+            }
+            auditLogRepository.save(auditLog);
+            log.debug("Logged audit event: type={}, action={}, success={}",
+                auditLog.getEventType(), auditLog.getAction(), auditLog.getSuccess());
+        } catch (Exception e) {
+            log.error("Failed to log audit event: {}", auditLog.getEventType(), e);
+            // Don't throw - audit logging failure should not break application flow
+        }
+    }
+
+    /**
+     * Query audit logs with filters.
+     *
+     * @param userId    User ID filter (optional)
+     * @param tenantId  Tenant ID filter (optional)
+     * @param eventType Event type filter (optional)
+     * @param startTime Start time filter (optional)
+     * @param endTime   End time filter (optional)
+     * @param pageable  Pagination parameters
+     * @return Page of audit logs
+     */
+    @Transactional(readOnly = true)
+    public Page<AuditLog> queryAuditLogs(UUID userId, String tenantId, String eventType,
+                                         Instant startTime, Instant endTime, Pageable pageable) {
+        return auditLogRepository.findByFilters(userId, tenantId, eventType, startTime, endTime, pageable);
+    }
+
+    /**
+     * Get audit logs by user ID.
+     *
+     * @param userId   User ID
+     * @param pageable Pagination parameters
+     * @return Page of audit logs
+     */
+    @Transactional(readOnly = true)
+    public Page<AuditLog> getAuditLogsByUser(UUID userId, Pageable pageable) {
+        return auditLogRepository.findByUserId(userId, pageable);
+    }
+
+    /**
+     * Get audit logs by tenant ID.
+     *
+     * @param tenantId Tenant ID
+     * @param pageable Pagination parameters
+     * @return Page of audit logs
+     */
+    @Transactional(readOnly = true)
+    public Page<AuditLog> getAuditLogsByTenant(String tenantId, Pageable pageable) {
+        return auditLogRepository.findByTenantId(tenantId, pageable);
+    }
+
+    /**
+     * Get recent failed login attempts.
+     *
+     * @param since    Time to look back from
+     * @param pageable Pagination parameters
+     * @return Page of failed login audit logs
+     */
+    @Transactional(readOnly = true)
+    public Page<AuditLog> getRecentFailedLogins(Instant since, Pageable pageable) {
+        return auditLogRepository.findRecentFailedLogins(since, pageable);
+    }
+
+    /**
+     * Get recent access denied events.
+     *
+     * @param since    Time to look back from
+     * @param pageable Pagination parameters
+     * @return Page of access denied audit logs
+     */
+    @Transactional(readOnly = true)
+    public Page<AuditLog> getAccessDeniedEvents(Instant since, Pageable pageable) {
+        return auditLogRepository.findAccessDeniedEvents(since, pageable);
+    }
+
+    /**
+     * Count failed login attempts for a username.
+     *
+     * @param username Username to check
+     * @param since    Time to look back from
+     * @return Count of failed attempts
+     */
+    @Transactional(readOnly = true)
+    public long countFailedLoginAttempts(String username, Instant since) {
+        return auditLogRepository.countFailedLoginAttempts(username, since);
+    }
+
+    /**
+     * Extract IP address from HTTP request.
+     * Handles X-Forwarded-For header for proxied requests.
+     *
+     * @param request HTTP request
+     * @return IP address
+     */
+    private String extractIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            // X-Forwarded-For can contain multiple IPs, take the first one
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
+    }
+}

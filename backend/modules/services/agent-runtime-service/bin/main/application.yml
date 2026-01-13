@@ -1,0 +1,302 @@
+spring:
+  application:
+    name: agent-runtime-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+server:
+  port: ${SERVER_PORT:8088}
+  servlet:
+    context-path: /
+
+# Database Configuration
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/healthdata_agent_runtime}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: MEDIUM  # AI agent runtime execution: 10-100 req/sec, agent orchestration
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+    open-in-view: false
+
+# Redis for Agent Memory
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 5000
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+
+# Kafka for Events
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        # Distributed tracing: Propagate trace context through Kafka messages
+        interceptor.classes: com.healthdata.tracing.KafkaProducerTraceInterceptor
+    consumer:
+      group-id: agent-runtime-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.healthdata.*
+        # Distributed tracing: Extract trace context from Kafka messages
+        interceptor.classes: com.healthdata.tracing.KafkaConsumerTraceInterceptor
+
+---
+# HDIM Agent Runtime Configuration
+hdim:
+  agent:
+    # Orchestrator settings
+    orchestrator:
+      max-concurrent-tasks: 50
+      task-timeout-seconds: 300
+      default-max-iterations: 10
+
+    # LLM Provider configuration
+    llm:
+      default-provider: claude
+      fallback-chain:
+        - claude
+        - azure-openai
+        - bedrock
+
+      rate-limiting:
+        requests-per-minute: 60
+        tokens-per-minute: 100000
+
+      providers:
+        claude:
+          enabled: ${CLAUDE_ENABLED:true}
+          api-key: ${ANTHROPIC_API_KEY:}
+          api-url: https://api.anthropic.com/v1
+          model: ${CLAUDE_MODEL:claude-3-5-sonnet-20241022}
+          max-tokens: 4096
+          temperature: 0.3
+          timeout-seconds: 60
+          max-retries: 3
+
+        azure-openai:
+          enabled: ${AZURE_OPENAI_ENABLED:false}
+          api-key: ${AZURE_OPENAI_API_KEY:}
+          endpoint: ${AZURE_OPENAI_ENDPOINT:}
+          deployment-id: ${AZURE_OPENAI_DEPLOYMENT:gpt-4-turbo}
+          api-version: "2024-02-01"
+          max-tokens: 4096
+          temperature: 0.3
+          timeout-seconds: 60
+
+        bedrock:
+          enabled: ${BEDROCK_ENABLED:false}
+          region: ${AWS_REGION:us-east-1}
+          model-id: anthropic.claude-3-sonnet-20240229-v1:0
+          max-tokens: 4096
+          temperature: 0.3
+
+    # Memory configuration
+    memory:
+      conversation:
+        max-messages: 50
+        ttl-minutes: 15
+        summarization-threshold: 20
+      task:
+        retention-days: 90
+      encryption:
+        enabled: true
+        key: ${AGENT_MEMORY_ENCRYPTION_KEY:}
+
+    # Tool configuration
+    tools:
+      allowed-event-topics:
+        - care-gap-identified
+        - care-gap-closed
+        - patient-alert
+        - measure-evaluation-completed
+        - agent-recommendation
+      fhir:
+        max-resources-per-query: 100
+        cache-ttl-seconds: 60
+      cql:
+        execution-timeout-seconds: 30
+
+    # Guardrails
+    guardrails:
+      phi-protection:
+        enabled: true
+        cache-ttl-minutes: 5
+        redact-patterns:
+          - "\\b\\d{3}-\\d{2}-\\d{4}\\b"  # SSN
+          - "\\b(MRN|mrn)[:\\s]*\\d{6,}\\b"  # MRN
+      clinical-safety:
+        enabled: true
+        block-definitive-diagnoses: true
+        require-disclaimers: true
+      rate-limiting:
+        requests-per-minute-per-user: 30
+        requests-per-minute-per-tenant: 500
+
+    # Custom agent configuration
+    custom:
+      enabled: ${CUSTOM_AGENTS_ENABLED:true}
+      cache-refresh-minutes: ${CUSTOM_AGENTS_CACHE_REFRESH:30}
+      cache-ttl-minutes: ${CUSTOM_AGENTS_CACHE_TTL:60}
+
+  # Service discovery
+  services:
+    fhir:
+      url: ${FHIR_SERVICE_URL:http://localhost:8085}
+    cql-engine:
+      url: ${CQL_ENGINE_URL:http://localhost:8081}
+    care-gap:
+      url: ${CARE_GAP_SERVICE_URL:http://localhost:8086}
+    quality-measure:
+      url: ${QUALITY_MEASURE_SERVICE_URL:http://localhost:8087}
+    predictive-analytics:
+      url: ${PREDICTIVE_ANALYTICS_URL:http://localhost:8090}
+    agent-builder:
+      url: ${AGENT_BUILDER_URL:http://localhost:8095}
+    approval:
+      url: ${APPROVAL_SERVICE_URL:http://localhost:8096}
+
+---
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      claude-llm:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+      azure-openai-llm:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+      bedrock-llm:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+      fhir-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+      cql-engine:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+      agentBuilderService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 3
+
+  retry:
+    instances:
+      llm-retry:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+      agentBuilderService:
+        maxAttempts: 3
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - feign.FeignException$ServiceUnavailable
+
+  ratelimiter:
+    instances:
+      claude-llm:
+        limitForPeriod: 60
+        limitRefreshPeriod: 60s
+        timeoutDuration: 5s
+      azure-openai-llm:
+        limitForPeriod: 60
+        limitRefreshPeriod: 60s
+        timeoutDuration: 5s
+
+  timelimiter:
+    instances:
+      llm-timeout:
+        timeoutDuration: 60s
+        cancelRunningFuture: true
+
+---
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,circuitbreakers
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
+    redis:
+      enabled: true
+
+---
+# Logging
+logging:
+  level:
+    root: INFO
+    com.healthdata.agent: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+---
+# Security
+security:
+  jwt:
+    secret: ${JWT_SECRET:}
+    expiration: 900000

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+    <changeSet id="0004-create-agent-execution-metrics-table" author="hdim">
+        <comment>Create agent_execution_metrics table for daily aggregated agent performance metrics</comment>
+
+        <createTable tableName="agent_execution_metrics">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="agent_id" type="VARCHAR(64)"/>
+            <column name="agent_type" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metric_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_executions" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="successful_executions" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="failed_executions" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="total_tokens_used" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="total_duration_ms" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="avg_duration_ms" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="p95_duration_ms" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="p99_duration_ms" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="tool_usage" type="JSONB" defaultValue="{}"/>
+            <column name="error_breakdown" type="JSONB" defaultValue="{}"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <addUniqueConstraint tableName="agent_execution_metrics"
+                             columnNames="tenant_id, agent_id, agent_type, metric_date"
+                             constraintName="uk_agent_metrics"/>
+
+        <createIndex tableName="agent_execution_metrics" indexName="idx_agent_metrics_tenant_date">
+            <column name="tenant_id"/>
+            <column name="metric_date" descending="true"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="agent_execution_metrics"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,130 @@
+server:
+  port: 8102
+
+spring:
+  application:
+    name: prior-auth-service
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:healthdata_prior_auth}
+    username: ${DB_USER:healthdata}
+    password: ${DB_PASSWORD:healthdata}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: prior_auth
+    open-in-view: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: prior_auth
+
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: MEDIUM  # Prior authorization: 10-100 req/sec, moderate workflow
+
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # Distributed tracing: Propagate trace context through Kafka messages
+        interceptor.classes: com.healthdata.tracing.KafkaProducerTraceInterceptor
+    consumer:
+      group-id: prior-auth-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        # Distributed tracing: Extract trace context from Kafka messages
+        interceptor.classes: com.healthdata.tracing.KafkaConsumerTraceInterceptor
+
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 30000
+            read-timeout: 60000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Resilience4j configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      payerApi:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+      providerAccess:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+
+  retry:
+    instances:
+      payerApi:
+        maxAttempts: 3
+        waitDuration: 2s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+
+  ratelimiter:
+    instances:
+      payerApi:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1s
+        timeoutDuration: 5s
+
+# Logging
+logging:
+  level:
+    com.healthdata.priorauth: DEBUG
+    org.springframework.web: INFO
+
+# Springdoc OpenAPI
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
+# Prior Auth specific configuration
+prior-auth:
+  sla:
+    stat-hours: 72
+    routine-days: 7
+    alert-threshold-hours: 24
+  retry:
+    max-attempts: 3
+    initial-delay-ms: 1000
+    max-delay-ms: 10000

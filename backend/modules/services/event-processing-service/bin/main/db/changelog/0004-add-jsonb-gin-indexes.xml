@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0004-add-jsonb-gin-indexes" author="data-model-validation">
+        <comment>Add GIN indexes on JSONB columns for better JSON query performance</comment>
+
+        <!-- Add GIN index on dead_letter_queue.event_payload -->
+        <sql dbms="postgresql">
+            CREATE INDEX IF NOT EXISTS idx_dlq_event_payload_gin ON dead_letter_queue USING GIN (event_payload);
+        </sql>
+
+        <rollback>
+            <sql dbms="postgresql">
+                DROP INDEX IF EXISTS idx_dlq_event_payload_gin;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0004-add-additional-event-indexes" author="data-model-validation">
+        <comment>Add additional indexes for event correlation and user tracking</comment>
+
+        <!-- Index for causation tracking -->
+        <sql dbms="postgresql">
+            CREATE INDEX IF NOT EXISTS idx_events_causation ON events (causation_id)
+            WHERE causation_id IS NOT NULL;
+        </sql>
+
+        <!-- Index for user event tracking -->
+        <sql dbms="postgresql">
+            CREATE INDEX IF NOT EXISTS idx_events_user ON events (tenant_id, user_id, timestamp DESC)
+            WHERE user_id IS NOT NULL;
+        </sql>
+
+        <rollback>
+            <sql dbms="postgresql">
+                DROP INDEX IF EXISTS idx_events_causation;
+                DROP INDEX IF EXISTS idx_events_user;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

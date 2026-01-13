@@ -13,6 +13,7 @@
 ## Tech Stack
 
 ### Backend
+
 - **Language**: Java 21 (LTS)
 - **Framework**: Spring Boot 3.x
 - **Build**: Gradle 8.11+ (Kotlin DSL)
@@ -24,11 +25,13 @@
 - **Security**: Spring Security + JWT
 
 ### Frontend
+
 - **Framework**: Angular 17+
 - **State**: RxJS
 - **UI**: Angular Material
 
 ### Infrastructure
+
 - **Containers**: Docker + Docker Compose
 - **Orchestration**: Kubernetes (optional)
 - **Monitoring**: Prometheus + Grafana
@@ -86,9 +89,11 @@ hdim-master/
 **This application handles Protected Health Information (PHI). All code MUST comply with HIPAA regulations.**
 
 ### Mandatory Reading Before Modifying PHI-Related Code
+
 - `backend/HIPAA-CACHE-COMPLIANCE.md`
 
 ### Cache Rules (DO NOT VIOLATE)
+
 ```java
 // PHI cache TTL MUST be <= 5 minutes
 @Cacheable(value = "patientData", key = "#patientId")
@@ -96,6 +101,7 @@ hdim-master/
 ```
 
 ### Required HTTP Headers for PHI Endpoints
+
 ```java
 // All PHI responses MUST include:
 response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
@@ -103,6 +109,7 @@ response.setHeader("Pragma", "no-cache");
 ```
 
 ### Audit Logging Required
+
 ```java
 // Use @Audited annotation on all PHI access methods
 @Audited(eventType = "PHI_ACCESS")
@@ -110,6 +117,7 @@ public Patient getPatient(String patientId) { ... }
 ```
 
 ### Multi-Tenant Isolation
+
 ```java
 // All queries MUST filter by tenant
 @Query("SELECT p FROM Patient p WHERE p.tenantId = :tenantId AND p.id = :id")
@@ -120,26 +128,27 @@ Optional<Patient> findByIdAndTenant(@Param("id") String id, @Param("tenantId") S
 
 ## Service Ports
 
-| Service | Port | Context Path |
-|---------|------|--------------|
-| Quality Measure | 8087 | /quality-measure |
-| CQL Engine | 8081 | /cql-engine |
-| FHIR Service | 8085 | /fhir |
-| Patient Service | 8084 | /patient |
-| Care Gap Service | 8086 | /care-gap |
-| Gateway | 8001 | / |
-| Kong API Gateway | 8000 | / |
-| PostgreSQL | 5435 | - |
-| Redis | 6380 | - |
-| Kafka | 9094 | - |
-| Prometheus | 9090 | - |
-| Grafana | 3001 | - |
+| Service          | Port | Context Path     |
+| ---------------- | ---- | ---------------- |
+| Quality Measure  | 8087 | /quality-measure |
+| CQL Engine       | 8081 | /cql-engine      |
+| FHIR Service     | 8085 | /fhir            |
+| Patient Service  | 8084 | /patient         |
+| Care Gap Service | 8086 | /care-gap        |
+| Gateway          | 8001 | /                |
+| Kong API Gateway | 8000 | /                |
+| PostgreSQL       | 5435 | -                |
+| Redis            | 6380 | -                |
+| Kafka            | 9094 | -                |
+| Prometheus       | 9090 | -                |
+| Grafana          | 3001 | -                |
 
 ---
 
 ## Common Commands
 
 ### Build Commands (run from `backend/` directory)
+
 ```bash
 # Build all modules
 ./gradlew build
@@ -161,6 +170,7 @@ Optional<Patient> findByIdAndTenant(@Param("id") String id, @Param("tenantId") S
 ```
 
 ### Docker Commands (run from project root)
+
 ```bash
 # Start all services
 docker compose up -d
@@ -182,6 +192,7 @@ docker compose up -d --build
 ```
 
 ### Database Commands
+
 ```bash
 # Connect to PostgreSQL
 docker exec -it hdim-postgres psql -U healthdata -d healthdata_qm
@@ -195,6 +206,7 @@ docker exec -it hdim-postgres psql -U healthdata -d healthdata_qm
 ## Coding Patterns & Conventions
 
 ### Package Structure (per service)
+
 ```
 com.healthdata.{service}/
 ├── api/                    # REST controllers
@@ -211,6 +223,7 @@ com.healthdata.{service}/
 ```
 
 ### Controller Pattern
+
 ```java
 @RestController
 @RequestMapping("/api/v1/patients")
@@ -232,6 +245,7 @@ public class PatientController {
 ```
 
 ### Service Pattern
+
 ```java
 @Service
 @RequiredArgsConstructor
@@ -255,6 +269,7 @@ public class PatientService {
 ```
 
 ### Entity Pattern
+
 ```java
 @Entity
 @Table(name = "patients")
@@ -293,6 +308,7 @@ public class Patient {
 ```
 
 ### Exception Handling
+
 ```java
 // Use domain-specific exceptions
 throw new ResourceNotFoundException("Patient", patientId);
@@ -308,6 +324,7 @@ throw new TenantAccessDeniedException(tenantId);
 ## Authentication & Authorization
 
 ### JWT Token Structure
+
 ```json
 {
   "sub": "user@example.com",
@@ -319,15 +336,17 @@ throw new TenantAccessDeniedException(tenantId);
 ```
 
 ### Role Hierarchy
-| Role | Access Level |
-|------|--------------|
-| SUPER_ADMIN | Full system access |
-| ADMIN | Tenant-level admin |
-| EVALUATOR | Run evaluations, view results |
-| ANALYST | View reports, analytics |
-| VIEWER | Read-only access |
+
+| Role        | Access Level                  |
+| ----------- | ----------------------------- |
+| SUPER_ADMIN | Full system access            |
+| ADMIN       | Tenant-level admin            |
+| EVALUATOR   | Run evaluations, view results |
+| ANALYST     | View reports, analytics       |
+| VIEWER      | Read-only access              |
 
 ### Securing Endpoints
+
 ```java
 @PreAuthorize("hasRole('ADMIN')")  // Admin only
 @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")  // Admin or Evaluator
@@ -335,13 +354,14 @@ throw new TenantAccessDeniedException(tenantId);
 ```
 
 ### Test Users (Development Only)
-| Username | Password | Role |
-|----------|----------|------|
+
+| Username        | Password    | Role        |
+| --------------- | ----------- | ----------- |
 | test_superadmin | password123 | SUPER_ADMIN |
-| test_admin | password123 | ADMIN |
-| test_evaluator | password123 | EVALUATOR |
-| test_analyst | password123 | ANALYST |
-| test_viewer | password123 | VIEWER |
+| test_admin      | password123 | ADMIN       |
+| test_evaluator  | password123 | EVALUATOR   |
+| test_analyst    | password123 | ANALYST     |
+| test_viewer     | password123 | VIEWER      |
 
 ---
 
@@ -350,6 +370,7 @@ throw new TenantAccessDeniedException(tenantId);
 **IMPORTANT**: Backend services use gateway-trust authentication, NOT direct JWT validation.
 
 ### Architecture Overview
+
 ```
 Client → Gateway (validates JWT) → Backend Service (trusts headers)
 ```
@@ -358,21 +379,21 @@ The gateway validates JWT tokens and injects trusted `X-Auth-*` headers. Backend
 
 ### Key Components
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| `TrustedHeaderAuthFilter` | shared/authentication | Validates gateway headers, sets SecurityContext |
-| `TrustedTenantAccessFilter` | shared/authentication | Validates tenant access from attributes (no DB) |
-| `GatewayAuthenticationFilter` | gateway-service | Validates JWT, injects trusted headers |
+| Component                     | Location              | Purpose                                         |
+| ----------------------------- | --------------------- | ----------------------------------------------- |
+| `TrustedHeaderAuthFilter`     | shared/authentication | Validates gateway headers, sets SecurityContext |
+| `TrustedTenantAccessFilter`   | shared/authentication | Validates tenant access from attributes (no DB) |
+| `GatewayAuthenticationFilter` | gateway-service       | Validates JWT, injects trusted headers          |
 
 ### Headers Injected by Gateway
 
-| Header | Description |
-|--------|-------------|
-| `X-Auth-User-Id` | User's UUID |
-| `X-Auth-Username` | User's login name |
-| `X-Auth-Tenant-Ids` | Comma-separated authorized tenants |
-| `X-Auth-Roles` | Comma-separated roles |
-| `X-Auth-Validated` | HMAC signature proving gateway origin |
+| Header              | Description                           |
+| ------------------- | ------------------------------------- |
+| `X-Auth-User-Id`    | User's UUID                           |
+| `X-Auth-Username`   | User's login name                     |
+| `X-Auth-Tenant-Ids` | Comma-separated authorized tenants    |
+| `X-Auth-Roles`      | Comma-separated roles                 |
+| `X-Auth-Validated`  | HMAC signature proving gateway origin |
 
 ### When Modifying Service Security
 
@@ -398,11 +419,12 @@ public SecurityFilterChain securityFilterChain(
 ```yaml
 # docker-compose.yml
 environment:
-  GATEWAY_AUTH_DEV_MODE: "true"          # Development: skip HMAC validation
+  GATEWAY_AUTH_DEV_MODE: 'true' # Development: skip HMAC validation
   GATEWAY_AUTH_SIGNING_SECRET: ${SECRET} # Production: HMAC secret
 ```
 
 ### Documentation
+
 - Full details: `backend/docs/GATEWAY_TRUST_ARCHITECTURE.md`
 
 ---
@@ -410,6 +432,7 @@ environment:
 ## FHIR R4 Guidelines
 
 ### Resource Handling
+
 ```java
 // Use HAPI FHIR client
 FhirContext ctx = FhirContext.forR4();
@@ -425,6 +448,7 @@ bundle.addEntry().setResource(patient);
 ```
 
 ### Supported Resource Types
+
 - Patient, Practitioner, Organization
 - Condition, Observation, Procedure
 - MedicationRequest, MedicationStatement
@@ -437,6 +461,7 @@ bundle.addEntry().setResource(patient);
 ## Testing Requirements
 
 ### Unit Tests
+
 ```java
 @ExtendWith(MockitoExtension.class)
 class PatientServiceTest {
@@ -463,6 +488,7 @@ class PatientServiceTest {
 ```
 
 ### Integration Tests
+
 ```java
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -487,6 +513,7 @@ class PatientControllerIntegrationTest {
 ```
 
 ### Required Test Coverage
+
 - Unit tests for all service methods
 - Integration tests for API endpoints
 - Cache behavior verification (TTL compliance)
@@ -512,12 +539,12 @@ Client → Gateway → Service A → Service B → Kafka → Service C
 
 ### Automatic Trace Propagation
 
-| Transport | Interceptor | Status | Configuration |
-|-----------|-------------|--------|---------------|
-| **HTTP (Feign)** | FeignTraceInterceptor | ✅ Auto-enabled | No config needed |
-| **HTTP (RestTemplate)** | RestTemplateTraceInterceptor | ✅ Auto-enabled | No config needed |
-| **Kafka (Producer)** | KafkaProducerTraceInterceptor | ✅ Configured | Add to application.yml |
-| **Kafka (Consumer)** | KafkaConsumerTraceInterceptor | ✅ Configured | Add to application.yml |
+| Transport               | Interceptor                   | Status          | Configuration          |
+| ----------------------- | ----------------------------- | --------------- | ---------------------- |
+| **HTTP (Feign)**        | FeignTraceInterceptor         | ✅ Auto-enabled | No config needed       |
+| **HTTP (RestTemplate)** | RestTemplateTraceInterceptor  | ✅ Auto-enabled | No config needed       |
+| **Kafka (Producer)**    | KafkaProducerTraceInterceptor | ✅ Configured   | Add to application.yml |
+| **Kafka (Consumer)**    | KafkaConsumerTraceInterceptor | ✅ Configured   | Add to application.yml |
 
 ### Kafka Tracing Configuration
 
@@ -549,7 +576,7 @@ spring:
 management:
   tracing:
     sampling:
-      probability: 1.0  # Capture all traces for debugging
+      probability: 1.0 # Capture all traces for debugging
 
 ---
 # Staging Profile - 50% Trace Sampling
@@ -561,7 +588,7 @@ spring:
 management:
   tracing:
     sampling:
-      probability: 0.5  # Balance visibility and performance
+      probability: 0.5 # Balance visibility and performance
 
 ---
 # Production Profile - 10% Trace Sampling
@@ -573,7 +600,7 @@ spring:
 management:
   tracing:
     sampling:
-      probability: 0.1  # Cost-effective monitoring
+      probability: 0.1 # Cost-effective monitoring
 ```
 
 ### Adding Custom Spans
@@ -613,6 +640,7 @@ public class QualityMeasureService {
 **Access Jaeger UI:** `http://localhost:16686`
 
 **Query Examples:**
+
 - Find slow requests: `service=fhir-service duration>5s`
 - Find errors: `service=patient-service error=true`
 - Find patient operations: `patient.id=PATIENT123`
@@ -627,12 +655,14 @@ public class QualityMeasureService {
 ## Configuration Files
 
 ### Key Configuration Locations
+
 - `src/main/resources/application.yml` - Main config
 - `src/main/resources/application-dev.yml` - Development
 - `src/main/resources/application-prod.yml` - Production
 - `src/main/resources/db/changelog/` - Liquibase migrations
 
 ### Environment Variables
+
 ```bash
 # Database
 POSTGRES_HOST=localhost
@@ -659,29 +689,34 @@ KAFKA_BOOTSTRAP_SERVERS=localhost:9094
 ## Important Files Reference
 
 ### Must-Read Before Development
+
 1. `backend/HIPAA-CACHE-COMPLIANCE.md` - PHI handling requirements
 2. `AUTHENTICATION_GUIDE.md` - Auth flow and test users
 3. `DISTRIBUTION_ARCHITECTURE.md` - System architecture
 4. `BACKEND_API_SPECIFICATION.md` - API design patterns
 
 ### Key Implementation Files
+
 - `backend/modules/shared/domain/` - Shared domain models
 - `backend/modules/shared/infrastructure/` - Common infrastructure
 - `docker-compose.yml` - Local development setup
 - `docker-compose.production.yml` - Production deployment
 
 ### Documentation
+
 - `docs/PRODUCTION_SECURITY_GUIDE.md` - Security hardening
 - `docs/DEPLOYMENT_RUNBOOK.md` - Deployment procedures
 - `00_IMPLEMENTATION_OVERVIEW.md` - Documentation portal status
 
 ### Architecture Documentation
+
 - `docs/architecture/SYSTEM_ARCHITECTURE.md` - Complete system architecture with 28 services
 - `docs/architecture/decisions/` - Technology ADRs (HAPI FHIR, Kafka, PostgreSQL, Redis, Kong)
 - `docs/TERMINOLOGY_GLOSSARY.md` - Single source of truth for terminology
 - `backend/docs/GATEWAY_TRUST_ARCHITECTURE.md` - Authentication architecture (gold standard)
 
 ### Build & Dependencies
+
 - `backend/gradle/libs.versions.toml` - Centralized version catalog
 - `backend/DEPENDENCY_MANAGEMENT.md` - Dependency standards
 - `backend/scripts/validate-dependency-versions.sh` - Validation script
@@ -691,11 +726,13 @@ KAFKA_BOOTSTRAP_SERVERS=localhost:9094
 ## Build Notes
 
 ### Build Status
+
 - ✅ All 28 services compile successfully (verified December 2025)
 - ✅ agent-runtime-service: 84 tests passing
 - ✅ agent-builder-service: Build successful
 
 ### Build Prerequisites
+
 ```bash
 # Verify Java 21
 java -version  # Should show 21.x
@@ -734,6 +771,7 @@ Before submitting code, verify:
 ### Quick Checklist
 
 When **creating** a new entity:
+
 - [ ] Create JPA entity with `@Entity`, `@Table`, `@Column` annotations
 - [ ] Create Liquibase migration file (`NNNN-create-table.xml`)
 - [ ] Add migration include to `db.changelog-master.xml`
@@ -741,6 +779,7 @@ When **creating** a new entity:
 - [ ] Run validation test: `./gradlew test --tests "*EntityMigrationValidationTest"`
 
 When **modifying** an entity:
+
 - [ ] Update `@Column` annotations
 - [ ] Create NEW migration (never modify existing ones)
 - [ ] Use descriptive migration ID: `NNNN-add-field-to-table.xml`
@@ -749,6 +788,7 @@ When **modifying** an entity:
 ### Validation Tests
 
 Every critical service has automated validation:
+
 - ✅ authentication module
 - ✅ patient-service
 - ✅ quality-measure-service
@@ -766,7 +806,7 @@ Run locally: `./gradlew test --tests "*EntityMigrationValidationTest"`
 spring:
   jpa:
     hibernate:
-      ddl-auto: validate  # Use ONLY 'validate' in prod/docker/dev
+      ddl-auto: validate # Use ONLY 'validate' in prod/docker/dev
 
   liquibase:
     enabled: true
@@ -777,19 +817,20 @@ spring:
 
 ### Column Type Mapping
 
-| Java | PostgreSQL | Liquibase |
-|------|------------|-----------|
-| String (255) | VARCHAR(255) | VARCHAR(255) |
-| String (large) | TEXT | TEXT |
-| UUID | uuid | UUID |
-| Instant | timestamp with time zone | TIMESTAMP WITH TIME ZONE |
-| Boolean | boolean | BOOLEAN |
-| Integer | integer | INT |
-| Long | bigint | BIGINT |
+| Java           | PostgreSQL               | Liquibase                |
+| -------------- | ------------------------ | ------------------------ |
+| String (255)   | VARCHAR(255)             | VARCHAR(255)             |
+| String (large) | TEXT                     | TEXT                     |
+| UUID           | uuid                     | UUID                     |
+| Instant        | timestamp with time zone | TIMESTAMP WITH TIME ZONE |
+| Boolean        | boolean                  | BOOLEAN                  |
+| Integer        | integer                  | INT                      |
+| Long           | bigint                   | BIGINT                   |
 
 ### Full Guide
 
 See `backend/docs/ENTITY_MIGRATION_GUIDE.md` for comprehensive documentation including:
+
 - Complete type mapping reference
 - Entity annotation best practices
 - Migration file templates
@@ -805,6 +846,7 @@ See `backend/docs/ENTITY_MIGRATION_GUIDE.md` for comprehensive documentation inc
 HDIM uses the **Database-per-Service** pattern with **Liquibase** for all schema migrations. Each of the 29 microservices has its own logical database on a shared PostgreSQL instance, ensuring service isolation and independent schema evolution.
 
 **Key Principles:**
+
 - ✅ One database per service (29 databases total)
 - ✅ Liquibase for ALL services (standard tool)
 - ✅ `ddl-auto: validate` in all environments
@@ -817,12 +859,13 @@ HDIM uses the **Database-per-Service** pattern with **Liquibase** for all schema
 **Total Databases:** 29 (see `DATABASE_ARCHITECTURE_MIGRATION_PLAN.md` for complete list)
 
 **Core Databases:**
+
 - `fhir_db` - FHIR R4 resources (fhir-service:8085)
 - `patient_db` - Patient demographics (patient-service:8084)
 - `quality_db` - HEDIS measures (quality-measure-service:8087)
 - `cql_db` - CQL evaluation (cql-engine-service:8081)
 - `caregap_db` - Care gap detection (care-gap-service:8086)
-- `gateway_db` - Authentication (gateway-*-service:8080)
+- `gateway_db` - Authentication (gateway-\*-service:8080)
 - ... (23 more, see migration plan)
 
 ### Migration Standards
@@ -843,11 +886,11 @@ dependencies {
 # docker-compose.yml or application.yml
 spring:
   liquibase:
-    enabled: true  # MUST be true
+    enabled: true # MUST be true
     change-log: classpath:db/changelog/db.changelog-master.xml
   jpa:
     hibernate:
-      ddl-auto: validate  # MUST be validate (never create/update)
+      ddl-auto: validate # MUST be validate (never create/update)
 ```
 
 #### **Migration File Structure**
@@ -863,6 +906,7 @@ src/main/resources/db/changelog/
 ```
 
 **Naming Convention:**
+
 - Use 4-digit sequential numbers: `0001`, `0002`, `0003`
 - Use descriptive names: `create-TABLE-table`, `add-FIELD-to-TABLE`
 - Never reuse numbers or modify existing migrations
@@ -944,23 +988,25 @@ src/main/resources/db/changelog/
 Every Liquibase changeset in the HDIM platform includes explicit rollback SQL, ensuring safe reversion of database changes in production.
 
 **Validation:**
+
 - Automated via `backend/scripts/test-liquibase-rollback.sh`
 - Enforced in CI/CD workflow on every PR
 - Comprehensive patterns documented in `backend/docs/DATABASE_MIGRATION_RUNBOOK.md`
 
 **Common Rollback Patterns:**
 
-| Operation | Rollback |
-|-----------|----------|
-| Create table | `<dropTable tableName="..."/>` |
-| Add column | `<dropColumn tableName="..." columnName="..."/>` |
-| Insert data | `<delete tableName="..."><where>...</where></delete>` |
-| Update data | Reverse update with original values |
-| Create index | `<dropIndex tableName="..." indexName="..."/>` |
-| Add comments | `COMMENT ON ... IS NULL` |
-| ANALYZE | Empty rollback (statistics only) |
+| Operation    | Rollback                                              |
+| ------------ | ----------------------------------------------------- |
+| Create table | `<dropTable tableName="..."/>`                        |
+| Add column   | `<dropColumn tableName="..." columnName="..."/>`      |
+| Insert data  | `<delete tableName="..."><where>...</where></delete>` |
+| Update data  | Reverse update with original values                   |
+| Create index | `<dropIndex tableName="..." indexName="..."/>`        |
+| Add comments | `COMMENT ON ... IS NULL`                              |
+| ANALYZE      | Empty rollback (statistics only)                      |
 
 **Why 100% Coverage Matters:**
+
 - Enables safe production rollbacks without data loss
 - Validates migration reversibility during development
 - Reduces deployment risk for database changes
@@ -980,6 +1026,7 @@ Extensions should be managed in Liquibase migrations, not initialization scripts
 ```
 
 **Common Extensions:**
+
 - `pg_trgm` - Trigram matching for fuzzy text search (used by fhir, cql, quality, patient services)
 - `uuid-ossp` - UUID generation (optional, prefer `gen_random_uuid()`)
 
@@ -998,6 +1045,7 @@ GRANT ALL PRIVILEGES ON DATABASE fhir_db TO healthdata;
 ```
 
 **What init script does:**
+
 - ✅ Creates empty databases
 - ✅ Grants privileges to database user
 - ❌ Does NOT create tables (Liquibase does this)
@@ -1008,6 +1056,7 @@ GRANT ALL PRIVILEGES ON DATABASE fhir_db TO healthdata;
 #### **When Creating a New Entity**
 
 1. Create JPA entity with proper annotations:
+
 ```java
 @Entity
 @Table(name = "appointments")
@@ -1027,6 +1076,7 @@ public class Appointment {
 ```
 
 2. Create Liquibase migration file:
+
 ```xml
 <!-- 0005-create-appointments-table.xml -->
 <changeSet id="0005-create-appointments-table" author="your-name">
@@ -1048,17 +1098,20 @@ public class Appointment {
 ```
 
 3. Add migration to master changelog:
+
 ```xml
 <!-- db.changelog-master.xml -->
 <include file="db/changelog/0005-create-appointments-table.xml"/>
 ```
 
 4. Run validation test:
+
 ```bash
 ./gradlew :modules:services:YOUR-SERVICE:test --tests "*EntityMigrationValidationTest"
 ```
 
 5. Verify migration runs successfully:
+
 ```bash
 docker compose up YOUR-SERVICE
 # Check logs for: "Liquibase update successful"
@@ -1098,6 +1151,7 @@ public class Appointment {
 ### Common Liquibase Operations
 
 **Create Table:**
+
 ```xml
 <createTable tableName="table_name">
     <column name="id" type="UUID"/>
@@ -1106,6 +1160,7 @@ public class Appointment {
 ```
 
 **Add Column:**
+
 ```xml
 <addColumn tableName="table_name">
     <column name="new_column" type="VARCHAR(255)"/>
@@ -1113,6 +1168,7 @@ public class Appointment {
 ```
 
 **Create Index:**
+
 ```xml
 <createIndex indexName="idx_table_column" tableName="table_name">
     <column name="column_name"/>
@@ -1120,6 +1176,7 @@ public class Appointment {
 ```
 
 **Add Foreign Key:**
+
 ```xml
 <addForeignKeyConstraint
     constraintName="fk_appointments_patient"
@@ -1130,11 +1187,13 @@ public class Appointment {
 ```
 
 **Modify Column:**
+
 ```xml
 <modifyDataType tableName="table_name" columnName="column_name" newDataType="TEXT"/>
 ```
 
 **Run Custom SQL:**
+
 ```xml
 <sql>
     UPDATE patients SET status = 'ACTIVE' WHERE created_at > NOW() - INTERVAL '30 days';
@@ -1146,6 +1205,7 @@ public class Appointment {
 #### **Service Won't Start - Validation Failure**
 
 **Error:**
+
 ```
 Schema-validation: missing table [appointments]
 ```
@@ -1155,12 +1215,14 @@ Schema-validation: missing table [appointments]
 #### **Service Won't Start - Wrong Column Type**
 
 **Error:**
+
 ```
 Schema-validation: wrong column type encountered in column [appointment_date]
 Expected: date, Actual: timestamp with time zone
 ```
 
 **Fix:** Create migration to alter column type:
+
 ```xml
 <modifyDataType tableName="appointments" columnName="appointment_date" newDataType="DATE"/>
 ```
@@ -1168,12 +1230,15 @@ Expected: date, Actual: timestamp with time zone
 #### **Migration Failed - Already Exists**
 
 **Error:**
+
 ```
 Liquibase: relation "patients" already exists
 ```
 
 **Fix:**
+
 1. Check `databasechangelog` table to see what ran:
+
 ```bash
 docker exec healthdata-postgres psql -U healthdata -d SERVICE_db \
   -c "SELECT id, filename FROM databasechangelog ORDER BY orderexecuted;"
@@ -1201,6 +1266,7 @@ For complete details on the database architecture standardization effort:
 **See:** `DATABASE_ARCHITECTURE_MIGRATION_PLAN.md`
 
 **Current Status:** Phase 1-4 Complete (as of 2026-01-10)
+
 - ✅ Phase 1: Fixed critical ddl-auto issues
 - ✅ Phase 2: Migrated Flyway services to Liquibase
 - ✅ Phase 3: Moved gateway auth tables to Liquibase
@@ -1208,6 +1274,7 @@ For complete details on the database architecture standardization effort:
 - 🔄 Phase 5: CI/CD enforcement (in progress)
 
 **Key Achievements:**
+
 - PostgreSQL 16 running with 29 databases
 - Init script simplified to database creation only
 - All schema management moved to service Liquibase migrations
@@ -1219,12 +1286,14 @@ For complete details on the database architecture standardization effort:
 **Entity-migration validation is enforced in CI/CD:**
 
 **GitHub Actions:** Automated validation on PRs
+
 ```yaml
 # .github/workflows/database-validation.yml
 # Runs entity-migration tests when JPA entities or migrations change
 ```
 
 **Pre-commit Hook:** Local validation before committing
+
 ```bash
 # Install hook
 ln -s ../../backend/scripts/pre-commit-db-validation.sh .git/hooks/pre-commit
@@ -1234,6 +1303,7 @@ ln -s ../../backend/scripts/pre-commit-db-validation.sh .git/hooks/pre-commit
 ```
 
 **Manual Validation:**
+
 ```bash
 cd backend
 ./gradlew test --tests "*EntityMigrationValidationTest"
@@ -1261,5 +1331,19 @@ cd backend
 
 ---
 
-*Last Updated: January 12, 2026*
-*Version: 1.6* - Database-config module implemented with 3 pilot service migrations (11% complete)
+_Last Updated: January 12, 2026_
+_Version: 1.6_ - Database-config module implemented with 3 pilot service migrations (11% complete)
+
+<!-- nx configuration start-->
+<!-- Leave the start & end comments to automatically receive updates. -->
+
+# General Guidelines for working with Nx
+
+- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
+- You have access to the Nx MCP server and its tools, use them to help the user
+- When answering questions about the repository, use the `nx_workspace` tool first to gain an understanding of the workspace architecture where applicable.
+- When working in individual projects, use the `nx_project_details` mcp tool to analyze and understand the specific project structure and dependencies
+- For questions around nx configuration, best practices or if you're unsure, use the `nx_docs` tool to get relevant, up-to-date docs. Always use this instead of assuming things about nx configuration
+- If the user needs help with an Nx configuration or project graph error, use the `nx_workspace` tool to get any errors
+
+<!-- nx configuration end-->

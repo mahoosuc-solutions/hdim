@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd">
+
+    <changeSet id="005-001-create-care-gaps-table" author="healthdata">
+        <comment>Create care gaps table for identified care gaps</comment>
+        <createTable tableName="care_gaps" schemaName="caregap">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_care_gaps"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="measure_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="gap_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)" defaultValue="OPEN">
+                <constraints nullable="false" checkConstraint="status IN ('OPEN', 'IN_PROGRESS', 'CLOSED', 'DEFERRED')"/>
+            </column>
+            <column name="priority" type="VARCHAR(20)"/>
+            <column name="identified_date" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="due_date" type="DATE"/>
+            <column name="closed_date" type="TIMESTAMP"/>
+            <column name="closure_reason" type="VARCHAR(255)"/>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metadata" type="JSONB"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="005-002-add-care-gaps-foreign-keys" author="healthdata">
+        <comment>Add foreign key constraints for care gaps</comment>
+        <addForeignKeyConstraint
+            baseTableSchemaName="caregap"
+            baseTableName="care_gaps"
+            baseColumnNames="patient_id"
+            referencedTableSchemaName="patient"
+            referencedTableName="patients"
+            referencedColumnNames="id"
+            constraintName="fk_care_gaps_patient"
+            onDelete="CASCADE"/>
+        <addForeignKeyConstraint
+            baseTableSchemaName="caregap"
+            baseTableName="care_gaps"
+            baseColumnNames="measure_id"
+            referencedTableSchemaName="quality"
+            referencedTableName="measures"
+            referencedColumnNames="measure_id"
+            constraintName="fk_care_gaps_measure"/>
+    </changeSet>
+
+    <changeSet id="005-003-create-interventions-table" author="healthdata">
+        <comment>Create interventions table for care gap actions</comment>
+        <createTable tableName="interventions" schemaName="caregap">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_interventions"/>
+            </column>
+            <column name="care_gap_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="intervention_type" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="performed_by" type="VARCHAR(255)"/>
+            <column name="performed_date" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="outcome" type="VARCHAR(100)"/>
+            <column name="notes" type="TEXT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="005-004-add-interventions-foreign-key" author="healthdata">
+        <comment>Add foreign key constraint for interventions</comment>
+        <addForeignKeyConstraint
+            baseTableSchemaName="caregap"
+            baseTableName="interventions"
+            baseColumnNames="care_gap_id"
+            referencedTableSchemaName="caregap"
+            referencedTableName="care_gaps"
+            referencedColumnNames="id"
+            constraintName="fk_interventions_care_gap"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="005-005-create-care-gaps-indexes" author="healthdata">
+        <comment>Create indexes on care gaps table</comment>
+        <createIndex tableName="care_gaps" schemaName="caregap" indexName="idx_gaps_patient_status">
+            <column name="patient_id"/>
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="care_gaps" schemaName="caregap" indexName="idx_gaps_measure">
+            <column name="measure_id"/>
+        </createIndex>
+        <createIndex tableName="care_gaps" schemaName="caregap" indexName="idx_gaps_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="005-006-create-care-gaps-due-date-index" author="healthdata">
+        <comment>Create filtered index on due date for open gaps</comment>
+        <sql dbms="postgresql">
+            CREATE INDEX idx_gaps_due_date
+            ON caregap.care_gaps(due_date)
+            WHERE status = 'OPEN';
+        </sql>
+        <rollback>
+            DROP INDEX IF EXISTS caregap.idx_gaps_due_date;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="005-007-create-interventions-indexes" author="healthdata">
+        <comment>Create indexes on interventions table</comment>
+        <createIndex tableName="interventions" schemaName="caregap" indexName="idx_interventions_care_gap">
+            <column name="care_gap_id"/>
+        </createIndex>
+        <createIndex tableName="interventions" schemaName="caregap" indexName="idx_interventions_performed_date">
+            <column name="performed_date" descending="true"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

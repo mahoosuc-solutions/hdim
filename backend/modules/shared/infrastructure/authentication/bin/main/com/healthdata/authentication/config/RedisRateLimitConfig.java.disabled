@@ -1,0 +1,276 @@
+package com.healthdata.authentication.config;
+
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
+import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.codec.ByteArrayCodec;
+import io.lettuce.core.codec.RedisCodec;
+import io.lettuce.core.codec.StringCodec;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.time.Duration;
+
+/**
+ * Redis-based rate limiting configuration.
+ * Configures Redisson client for distributed rate limiting with Bucket4j.
+ *
+ * ARCHITECTURE:
+ * - Uses Redisson for Redis connectivity (better performance than Lettuce for Bucket4j)
+ * - Bucket4j ProxyManager provides distributed token buckets stored in Redis
+ * - Rate limits are shared across all service instances
+ * - Automatic key expiration prevents memory leaks
+ *
+ * BENEFITS OF REDIS-BACKED RATE LIMITING:
+ * 1. Horizontal Scaling: Rate limits work across multiple service instances
+ * 2. Persistence: Rate limits survive application restarts
+ * 3. Centralized Management: Single source of truth for rate limiting
+ * 4. Monitoring: Can query Redis to see active rate limits
+ *
+ * CONFIGURATION:
+ * Required properties (application.yml):
+ * <pre>
+ * spring:
+ *   redis:
+ *     host: ${REDIS_HOST:localhost}
+ *     port: ${REDIS_PORT:6379}
+ *     password: ${REDIS_PASSWORD:}
+ *     database: 0
+ *
+ * rate-limiting:
+ *   redis:
+ *     enabled: true
+ *     database: 1
+ *     key-prefix: "rate-limit:"
+ * </pre>
+ */
+@Configuration
+@Slf4j
+@ConditionalOnProperty(prefix = "rate-limiting.redis", name = "enabled", havingValue = "true", matchIfMissing = true)
+public class RedisRateLimitConfig {
+
+    /**
+     * Creates Lettuce Redis client for Bucket4j.
+     *
+     * @param factory Spring's Redis connection factory
+     * @param properties Redis rate limiting properties
+     * @return Configured Lettuce Redis client
+     */
+    @Bean(destroyMethod = "shutdown")
+    public RedisClient lettuceRedisClient(
+            RedisConnectionFactory factory,
+            RedisRateLimitProperties properties) {
+
+        String host = "localhost";
+        int port = 6379;
+        String password = null;
+
+        // Try to get actual connection details from the factory
+        try {
+            var connectionFactory = (org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory) factory;
+            host = connectionFactory.getHostName();
+            port = connectionFactory.getPort();
+            password = connectionFactory.getPassword();
+        } catch (Exception e) {
+            log.warn("Could not extract Redis connection details, using defaults");
+        }
+
+        // Build Redis URI
+        RedisURI.Builder uriBuilder = RedisURI.Builder.redis(host, port)
+                .withDatabase(properties.getDatabase());
+
+        if (password != null && !password.isEmpty()) {
+            uriBuilder.withPassword(password.toCharArray());
+        }
+
+        RedisURI redisURI = uriBuilder.build();
+
+        log.info("Creating Lettuce Redis client for rate limiting: {}:{} (database: {})",
+                host, port, properties.getDatabase());
+
+        return RedisClient.create(redisURI);
+    }
+
+    /**
+     * Creates Bucket4j ProxyManager for Redis-backed rate limiting.
+     * This manager stores token buckets in Redis, enabling distributed rate limiting.
+     *
+     * @param redisClient Lettuce Redis client
+     * @param properties Redis rate limiting properties
+     * @return ProxyManager for distributed buckets
+     */
+    @Bean
+    public ProxyManager<String> bucketProxyManager(
+            RedisClient redisClient,
+            RedisRateLimitProperties properties) {
+
+        log.info("Creating Bucket4j ProxyManager with Redis backend (key prefix: {})", properties.getKeyPrefix());
+
+        // Create Lettuce connection
+        StatefulRedisConnection<String, byte[]> connection = redisClient.connect(
+                RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)
+        );
+
+        // Create ProxyManager using Lettuce
+        // ExpirationAfterWriteStrategy automatically removes expired buckets from Redis
+        // This prevents memory leaks and ensures Redis doesn't fill up with old rate limit data
+        ProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(connection)
+                .withExpirationStrategy(
+                        ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofHours(2))
+                )
+                .build();
+
+        log.info("Bucket4j ProxyManager created successfully with Redis backend");
+
+        return proxyManager;
+    }
+
+    /**
+     * Redis template for rate limit statistics and management.
+     * Used by RateLimitStatsService for querying and managing rate limits.
+     *
+     * NOTE: Uses StringRedisSerializer for both keys and values to work with Bucket4j's string keys.
+     * Bucket4j stores values as binary data, but keys are strings.
+     *
+     * @param connectionFactory Redis connection factory
+     * @return Configured RedisTemplate
+     */
+    @Bean
+    public RedisTemplate<String, Object> rateLimitRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+
+        // Use String serializer for keys (Bucket4j uses string keys)
+        template.setKeySerializer(new StringRedisSerializer());
+        // Use String serializer for values (though we mostly just query keys)
+        template.setValueSerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new StringRedisSerializer());
+
+        // Enable transaction support
+        template.setEnableTransactionSupport(false);
+
+        template.afterPropertiesSet();
+
+        log.info("RedisTemplate created for rate limit statistics");
+
+        return template;
+    }
+
+    /**
+     * Configuration properties for Redis rate limiting.
+     */
+    @Configuration
+    @ConfigurationProperties(prefix = "rate-limiting.redis")
+    public static class RedisRateLimitProperties {
+
+        /**
+         * Enable/disable Redis-backed rate limiting.
+         * If disabled, falls back to in-memory rate limiting.
+         */
+        private boolean enabled = true;
+
+        /**
+         * Redis database number for rate limiting data.
+         * Default: 1 (separate from application data in DB 0)
+         */
+        private int database = 1;
+
+        /**
+         * Key prefix for rate limit buckets in Redis.
+         * Default: "rate-limit:"
+         */
+        private String keyPrefix = "rate-limit:";
+
+        /**
+         * Connection pool size for Redisson.
+         * Default: 64
+         */
+        private int connectionPoolSize = 64;
+
+        /**
+         * Minimum idle connections in pool.
+         * Default: 10
+         */
+        private int connectionMinimumIdleSize = 10;
+
+        /**
+         * Connection timeout in milliseconds.
+         * Default: 10000 (10 seconds)
+         */
+        private int connectTimeout = 10000;
+
+        /**
+         * Command timeout in milliseconds.
+         * Default: 3000 (3 seconds)
+         */
+        private int timeout = 3000;
+
+        // Getters and setters
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public int getDatabase() {
+            return database;
+        }
+
+        public void setDatabase(int database) {
+            this.database = database;
+        }
+
+        public String getKeyPrefix() {
+            return keyPrefix;
+        }
+
+        public void setKeyPrefix(String keyPrefix) {
+            this.keyPrefix = keyPrefix;
+        }
+
+        public int getConnectionPoolSize() {
+            return connectionPoolSize;
+        }
+
+        public void setConnectionPoolSize(int connectionPoolSize) {
+            this.connectionPoolSize = connectionPoolSize;
+        }
+
+        public int getConnectionMinimumIdleSize() {
+            return connectionMinimumIdleSize;
+        }
+
+        public void setConnectionMinimumIdleSize(int connectionMinimumIdleSize) {
+            this.connectionMinimumIdleSize = connectionMinimumIdleSize;
+        }
+
+        public int getConnectTimeout() {
+            return connectTimeout;
+        }
+
+        public void setConnectTimeout(int connectTimeout) {
+            this.connectTimeout = connectTimeout;
+        }
+
+        public int getTimeout() {
+            return timeout;
+        }
+
+        public void setTimeout(int timeout) {
+            this.timeout = timeout;
+        }
+    }
+}

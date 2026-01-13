@@ -1,0 +1,117 @@
+# Docker-specific configuration for FHIR Service
+server:
+  port: 8083
+
+spring:
+  flyway:
+    enabled: false  # Explicitly disable Flyway (using Liquibase for migrations)
+
+  # Jackson configuration for HAPI FHIR objects with deeply nested structures
+  jackson:
+    # Use ISO-8601 date format
+    date-format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+    serialization:
+      # Don't fail on empty beans (FHIR lazy loading)
+      FAIL_ON_EMPTY_BEANS: false
+      # Don't indent output for performance
+      INDENT_OUTPUT: false
+  datasource:
+    url: jdbc:postgresql://postgres:5432/healthdata_fhir
+    username: healthdata
+    password: ${SPRING_DATASOURCE_PASSWORD:dev_password}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 8
+          min-idle: 2
+
+# Custom cache configuration (used by CacheAutoConfiguration)
+healthdata:
+  cache:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 5s
+      default-ttl: 2m  # HIPAA compliant
+      cache-nulls: false
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: fhir-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: com.healthdata.*
+
+# Health Check Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+    # Configure individual health indicators
+    db:
+      enabled: true
+    redis:
+      enabled: true
+    diskspace:
+      enabled: true
+    ping:
+      enabled: true
+    # Disable Elasticsearch health check if not using it
+    elasticsearch:
+      enabled: false
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# OpenTelemetry Tracing Configuration
+# Uses environment variables from docker-compose.yml:
+# - OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+# - OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+# - OTEL_SERVICE_NAME: fhir-service
+tracing:
+  url: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://jaeger:4318/v1/traces}
+
+# Logging for Docker
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+    org.springframework.data.redis: INFO
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

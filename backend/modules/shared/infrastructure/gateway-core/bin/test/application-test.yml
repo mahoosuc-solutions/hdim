@@ -1,0 +1,31 @@
+spring:
+  # Redis configuration (overridden by RedisTestConfig)
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    database: 15
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+
+  # Disable JPA for gateway tests (no database needed)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+
+# Rate limiting configuration
+rate-limiting:
+  enabled: true
+  default-tier: STANDARD
+
+# Logging
+logging:
+  level:
+    com.healthdata.gateway: DEBUG
+    org.testcontainers: INFO
+    com.github.dockerjava: WARN

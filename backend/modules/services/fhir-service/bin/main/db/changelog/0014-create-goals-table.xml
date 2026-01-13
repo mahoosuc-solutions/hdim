@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0014-create-goals-table" author="hdim">
+        <comment>Create goals table for FHIR Goal resources</comment>
+
+        <createTable tableName="goals">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_json" type="JSONB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lifecycle_status" type="VARCHAR(32)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="achievement_status" type="VARCHAR(32)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="priority_code" type="VARCHAR(32)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="description_text" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="category_code" type="VARCHAR(64)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="category_display" type="VARCHAR(256)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="start_date" type="DATE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="target_date" type="DATE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="status_date" type="DATE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="addresses_condition_id" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="expressed_by_reference" type="VARCHAR(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="last_modified_by" type="VARCHAR(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="version" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="true"/>
+            </column>
+            <column name="deleted_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes for common queries -->
+        <createIndex indexName="idx_goals_tenant_patient" tableName="goals">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_goals_tenant_lifecycle" tableName="goals">
+            <column name="tenant_id"/>
+            <column name="lifecycle_status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_goals_tenant_achievement" tableName="goals">
+            <column name="tenant_id"/>
+            <column name="achievement_status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_goals_tenant_category" tableName="goals">
+            <column name="tenant_id"/>
+            <column name="category_code"/>
+        </createIndex>
+
+        <createIndex indexName="idx_goals_target_date" tableName="goals">
+            <column name="tenant_id"/>
+            <column name="target_date"/>
+        </createIndex>
+
+        <createIndex indexName="idx_goals_condition" tableName="goals">
+            <column name="addresses_condition_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_goals_deleted" tableName="goals">
+            <column name="deleted_at"/>
+        </createIndex>
+
+        <!-- GIN index for JSONB full-text search -->
+        <sql>
+            CREATE INDEX idx_goals_resource_gin ON goals USING GIN (resource_json jsonb_path_ops);
+        </sql>
+
+        <rollback>
+            <dropTable tableName="goals"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

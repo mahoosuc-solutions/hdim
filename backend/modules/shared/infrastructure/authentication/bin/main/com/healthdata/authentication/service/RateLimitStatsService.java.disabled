@@ -1,0 +1,398 @@
+package com.healthdata.authentication.service;
+
+import com.healthdata.authentication.config.RedisRateLimitConfig;
+import com.healthdata.authentication.dto.RateLimitInfo;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.codec.ByteArrayCodec;
+import io.lettuce.core.codec.RedisCodec;
+import io.lettuce.core.codec.StringCodec;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+/**
+ * Service for managing rate limit statistics and administrative operations.
+ * Provides methods to query, monitor, and manage rate limits across the system.
+ *
+ * FEATURES:
+ * - Query rate limit status for specific IPs/endpoints
+ * - List currently blocked IPs
+ * - Reset rate limits (admin operation)
+ * - Track top rate-limited IPs for security monitoring
+ * - Store statistics in Redis with TTL for performance
+ *
+ * SECURITY:
+ * - All admin operations should be restricted to SUPER_ADMIN role
+ * - Statistics are anonymized (no PII beyond IP addresses)
+ * - Old statistics automatically expire from Redis
+ */
+@Service
+@Slf4j
+@RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "rate-limiting.redis", name = "enabled", havingValue = "true", matchIfMissing = true)
+public class RateLimitStatsService {
+
+    private final RedisBucketProviderService bucketProvider;
+    private final RedisTemplate<String, Object> rateLimitRedisTemplate;
+    private final RedisRateLimitConfig.RedisRateLimitProperties properties;
+    private final RedisClient redisClient;
+
+    private static final String STATS_KEY_PREFIX = "rate-limit:stats:";
+    private static final String BLOCKED_IPS_KEY = "rate-limit:blocked-ips";
+    private static final Duration STATS_TTL = Duration.ofHours(24);
+
+    /**
+     * Gets rate limit information for a specific IP and endpoint.
+     * Returns current bucket state including available tokens and reset time.
+     *
+     * @param ip Client IP address
+     * @param endpoint API endpoint
+     * @return RateLimitInfo containing bucket state, or empty if bucket doesn't exist
+     */
+    public Optional<RateLimitInfo> getRateLimitInfo(String ip, String endpoint) {
+        String key = ip + ":" + endpoint;
+        String fullKey = properties.getKeyPrefix() + key;
+
+        log.debug("Getting rate limit info for IP: {}, endpoint: {}", ip, endpoint);
+
+        try {
+            // Check if bucket exists in Redis using Lettuce with same codec as Bucket4j
+            var connection = redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE));
+            try {
+                var commands = connection.sync();
+                Boolean exists = commands.exists(fullKey) > 0;
+
+                if (exists) {
+                    // Bucket exists
+                    RateLimitInfo info = RateLimitInfo.builder()
+                            .ip(ip)
+                            .endpoint(endpoint)
+                            .exists(true)
+                            .lastAccessed(Instant.now())
+                            .build();
+
+                    return Optional.of(info);
+                }
+
+                return Optional.empty();
+            } finally {
+                connection.close();
+            }
+
+        } catch (Exception e) {
+            log.error("Error getting rate limit info for IP: {}, endpoint: {}. Error: {}",
+                    ip, endpoint, e.getMessage(), e);
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Gets all rate limit information for a specific IP across all endpoints.
+     * Useful for viewing all rate limits affecting a particular client.
+     *
+     * @param ip Client IP address
+     * @return List of rate limit info for all endpoints this IP has accessed
+     */
+    public List<RateLimitInfo> getRateLimitsByIp(String ip) {
+        log.debug("Getting all rate limits for IP: {}", ip);
+
+        try {
+            String pattern = properties.getKeyPrefix() + ip + ":*";
+
+            // Use Lettuce client directly with same codec as Bucket4j
+            var connection = redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE));
+            try {
+                var commands = connection.sync();
+                var keys = commands.keys(pattern);
+
+                List<RateLimitInfo> results = new ArrayList<>();
+
+                if (keys != null) {
+                    for (String fullKey : keys) {
+                        // Extract endpoint from key
+                        // Key format: "test-rate-limit:192.168.1.1:/api/v1/auth/login"
+                        String keyWithoutPrefix = fullKey.substring(properties.getKeyPrefix().length());
+                        String[] parts = keyWithoutPrefix.split(":", 2);
+
+                        if (parts.length == 2) {
+                            String endpoint = parts[1];
+
+                            RateLimitInfo info = RateLimitInfo.builder()
+                                    .ip(ip)
+                                    .endpoint(endpoint)
+                                    .exists(true)
+                                    .lastAccessed(Instant.now())
+                                    .build();
+
+                            results.add(info);
+                        }
+                    }
+                }
+
+                log.debug("Found {} rate limits for IP: {}", results.size(), ip);
+
+                return results;
+            } finally {
+                connection.close();
+            }
+
+        } catch (Exception e) {
+            log.error("Error getting rate limits for IP: {}. Error: {}", ip, e.getMessage(), e);
+            return List.of();
+        }
+    }
+
+    /**
+     * Gets list of currently blocked IPs (IPs that have exhausted their rate limit).
+     * This is tracked separately in Redis for efficient querying.
+     *
+     * @return List of blocked IP addresses
+     */
+    public List<String> getBlockedIPs() {
+        log.debug("Getting list of blocked IPs");
+
+        try {
+            // Blocked IPs are stored in a Redis set for efficient access
+            Set<Object> blockedIPs = rateLimitRedisTemplate.opsForSet().members(BLOCKED_IPS_KEY);
+
+            if (blockedIPs == null) {
+                return List.of();
+            }
+
+            List<String> result = blockedIPs.stream()
+                    .map(Object::toString)
+                    .collect(Collectors.toList());
+
+            log.debug("Found {} blocked IPs", result.size());
+
+            return result;
+
+        } catch (Exception e) {
+            log.error("Error getting blocked IPs. Error: {}", e.getMessage(), e);
+            return List.of();
+        }
+    }
+
+    /**
+     * Records that an IP has been rate limited (blocked).
+     * Used by the rate limiting filter to track blocked IPs.
+     *
+     * @param ip Client IP address that was blocked
+     */
+    public void recordBlockedIP(String ip) {
+        log.debug("Recording blocked IP: {}", ip);
+
+        try {
+            // Add IP to the blocked set with TTL
+            rateLimitRedisTemplate.opsForSet().add(BLOCKED_IPS_KEY, ip);
+            rateLimitRedisTemplate.expire(BLOCKED_IPS_KEY, STATS_TTL.toMinutes(), TimeUnit.MINUTES);
+
+            // Also record in stats
+            String statsKey = STATS_KEY_PREFIX + "blocked:" + ip;
+            rateLimitRedisTemplate.opsForValue().set(
+                    statsKey,
+                    Instant.now().toString(),
+                    STATS_TTL.toMinutes(),
+                    TimeUnit.MINUTES
+            );
+
+            log.debug("Recorded blocked IP: {}", ip);
+
+        } catch (Exception e) {
+            log.error("Error recording blocked IP: {}. Error: {}", ip, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Removes an IP from the blocked list.
+     * Called when rate limits are reset for an IP.
+     *
+     * @param ip Client IP address to unblock
+     */
+    public void removeBlockedIP(String ip) {
+        log.debug("Removing IP from blocked list: {}", ip);
+
+        try {
+            rateLimitRedisTemplate.opsForSet().remove(BLOCKED_IPS_KEY, ip);
+            log.debug("Removed IP from blocked list: {}", ip);
+
+        } catch (Exception e) {
+            log.error("Error removing blocked IP: {}. Error: {}", ip, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Resets rate limit for a specific IP and endpoint.
+     * Removes the bucket from Redis, allowing the IP to start fresh.
+     *
+     * SECURITY: Should only be called by SUPER_ADMIN.
+     *
+     * @param ip Client IP address
+     * @param endpoint API endpoint
+     * @return true if rate limit was reset, false otherwise
+     */
+    public boolean resetRateLimit(String ip, String endpoint) {
+        String key = ip + ":" + endpoint;
+
+        log.info("Resetting rate limit for IP: {}, endpoint: {}", ip, endpoint);
+
+        boolean removed = bucketProvider.removeBucket(key);
+
+        if (removed) {
+            removeBlockedIP(ip);
+            log.info("Successfully reset rate limit for IP: {}, endpoint: {}", ip, endpoint);
+        }
+
+        return removed;
+    }
+
+    /**
+     * Resets all rate limits for a specific IP across all endpoints.
+     *
+     * SECURITY: Should only be called by SUPER_ADMIN.
+     *
+     * @param ip Client IP address
+     * @return Number of rate limits reset
+     */
+    public int resetRateLimitsForIp(String ip) {
+        log.info("Resetting all rate limits for IP: {}", ip);
+
+        try {
+            String pattern = properties.getKeyPrefix() + ip + ":*";
+            Set<String> keys = rateLimitRedisTemplate.keys(pattern);
+
+            int count = 0;
+            if (keys != null && !keys.isEmpty()) {
+                Long deleted = rateLimitRedisTemplate.delete(keys);
+                count = deleted != null ? deleted.intValue() : 0;
+            }
+
+            removeBlockedIP(ip);
+
+            log.info("Reset {} rate limits for IP: {}", count, ip);
+
+            return count;
+
+        } catch (Exception e) {
+            log.error("Error resetting rate limits for IP: {}. Error: {}", ip, e.getMessage(), e);
+            return 0;
+        }
+    }
+
+    /**
+     * Resets ALL rate limits in the system.
+     * DANGER: Use with extreme caution!
+     *
+     * SECURITY: Should only be called by SUPER_ADMIN and requires explicit confirmation.
+     *
+     * @return Number of rate limits reset
+     */
+    public int resetAllRateLimits() {
+        log.warn("Resetting ALL rate limits - this affects all IPs and endpoints!");
+
+        int count = bucketProvider.removeAllBuckets();
+
+        // Clear blocked IPs list
+        try {
+            rateLimitRedisTemplate.delete(BLOCKED_IPS_KEY);
+        } catch (Exception e) {
+            log.error("Error clearing blocked IPs list. Error: {}", e.getMessage(), e);
+        }
+
+        log.warn("Reset {} rate limits total", count);
+
+        return count;
+    }
+
+    /**
+     * Gets top N most rate-limited IPs.
+     * Useful for security monitoring to identify potential attackers.
+     *
+     * @param limit Number of top IPs to return
+     * @return Map of IP addresses to number of times they've been blocked
+     */
+    public Map<String, Long> getTopRateLimitedIPs(int limit) {
+        log.debug("Getting top {} rate-limited IPs", limit);
+
+        try {
+            // Query Redis for blocked IP statistics
+            String pattern = STATS_KEY_PREFIX + "blocked:*";
+            Set<String> keys = rateLimitRedisTemplate.keys(pattern);
+
+            // Count occurrences of each IP
+            Map<String, Long> ipCounts = new HashMap<>();
+
+            if (keys != null) {
+                for (String key : keys) {
+                    // Extract IP from key: "rate-limit:stats:blocked:192.168.1.1"
+                    String ip = key.substring((STATS_KEY_PREFIX + "blocked:").length());
+                    ipCounts.put(ip, ipCounts.getOrDefault(ip, 0L) + 1);
+                }
+            }
+
+            // Sort by count and return top N
+            return ipCounts.entrySet().stream()
+                    .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                    .limit(limit)
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            Map.Entry::getValue,
+                            (e1, e2) -> e1,
+                            LinkedHashMap::new
+                    ));
+
+        } catch (Exception e) {
+            log.error("Error getting top rate-limited IPs. Error: {}", e.getMessage(), e);
+            return Map.of();
+        }
+    }
+
+    /**
+     * Gets aggregated statistics about rate limiting.
+     * Includes total buckets, blocked IPs, etc.
+     *
+     * @return Map of statistics
+     */
+    public Map<String, Object> getAggregatedStats() {
+        log.debug("Getting aggregated rate limit statistics");
+
+        Map<String, Object> stats = new HashMap<>();
+
+        try {
+            // Count total buckets
+            Set<String> allKeys = bucketProvider.getAllBucketKeys();
+            stats.put("totalBuckets", allKeys.size());
+
+            // Count blocked IPs
+            List<String> blockedIPs = getBlockedIPs();
+            stats.put("blockedIPCount", blockedIPs.size());
+            stats.put("blockedIPs", blockedIPs);
+
+            // Redis availability
+            stats.put("redisAvailable", bucketProvider.isRedisAvailable());
+
+            // Configuration
+            stats.put("keyPrefix", properties.getKeyPrefix());
+            stats.put("redisDatabase", properties.getDatabase());
+
+            log.debug("Aggregated stats: {} total buckets, {} blocked IPs",
+                    stats.get("totalBuckets"), stats.get("blockedIPCount"));
+
+            return stats;
+
+        } catch (Exception e) {
+            log.error("Error getting aggregated stats. Error: {}", e.getMessage(), e);
+            stats.put("error", e.getMessage());
+            return stats;
+        }
+    }
+}

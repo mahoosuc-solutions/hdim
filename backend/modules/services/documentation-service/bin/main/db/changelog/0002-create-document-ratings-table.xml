@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0002-create-document-ratings-table" author="agent-5">
+        <comment>Create table for tracking individual document ratings and feedback</comment>
+
+        <createTable tableName="document_ratings">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="document_id" type="VARCHAR(100)">
+                <constraints nullable="false" foreignKeyName="fk_rating_document"
+                            references="document_metadata(id)" deleteCascade="true"/>
+            </column>
+            <column name="user_id" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="rating" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="comment" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)" defaultValue="default">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Unique constraint: one rating per user per document -->
+        <addUniqueConstraint
+            tableName="document_ratings"
+            columnNames="document_id, user_id, tenant_id"
+            constraintName="uq_document_user_rating"/>
+
+        <!-- Check constraint for rating range -->
+        <sql>
+            ALTER TABLE document_ratings
+            ADD CONSTRAINT check_rating_range CHECK (rating &gt;= 1 AND rating &lt;= 5);
+        </sql>
+
+        <!-- Index for lookups -->
+        <createIndex indexName="idx_rating_document" tableName="document_ratings">
+            <column name="document_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_rating_tenant" tableName="document_ratings">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="document_ratings"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0002-create-rating-trigger" author="agent-5">
+        <comment>Create trigger to update avg_rating in document_metadata when ratings change</comment>
+
+        <sql>
+            CREATE OR REPLACE FUNCTION update_document_avg_rating()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                UPDATE document_metadata
+                SET avg_rating = (
+                    SELECT AVG(rating)::DECIMAL(2,1)
+                    FROM document_ratings
+                    WHERE document_id = COALESCE(NEW.document_id, OLD.document_id)
+                    AND tenant_id = COALESCE(NEW.tenant_id, OLD.tenant_id)
+                ),
+                feedback_count = (
+                    SELECT COUNT(*)
+                    FROM document_ratings
+                    WHERE document_id = COALESCE(NEW.document_id, OLD.document_id)
+                    AND tenant_id = COALESCE(NEW.tenant_id, OLD.tenant_id)
+                ),
+                updated_at = CURRENT_TIMESTAMP
+                WHERE id = COALESCE(NEW.document_id, OLD.document_id)
+                AND tenant_id = COALESCE(NEW.tenant_id, OLD.tenant_id);
+
+                RETURN COALESCE(NEW, OLD);
+            END;
+            $$ LANGUAGE plpgsql;
+
+            CREATE TRIGGER trigger_update_avg_rating
+            AFTER INSERT OR UPDATE OR DELETE ON document_ratings
+            FOR EACH ROW
+            EXECUTE FUNCTION update_document_avg_rating();
+        </sql>
+
+        <rollback>
+            <sql>
+                DROP TRIGGER IF EXISTS trigger_update_avg_rating ON document_ratings;
+                DROP FUNCTION IF EXISTS update_document_avg_rating();
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

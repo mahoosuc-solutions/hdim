@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.agent.approval.ApprovalIntegration;
 import com.healthdata.agent.approval.ApprovalIntegration.ApprovalResult;
+import com.healthdata.agent.audit.AgentRuntimeAuditIntegration;
 import com.healthdata.agent.llm.LLMProvider;
 import com.healthdata.agent.llm.LLMProviderFactory;
 import com.healthdata.agent.llm.model.LLMRequest;
@@ -44,6 +45,7 @@ public class AgentOrchestrator {
     private final ObjectMapper objectMapper;
     private final GuardrailService guardrailService;
     private final ApprovalIntegration approvalIntegration;
+    private final AgentRuntimeAuditIntegration auditIntegration;
 
     // Metrics
     private final Counter taskCounter;
@@ -67,6 +69,7 @@ public class AgentOrchestrator {
             ObjectMapper objectMapper,
             GuardrailService guardrailService,
             ApprovalIntegration approvalIntegration,
+            AgentRuntimeAuditIntegration auditIntegration,
             MeterRegistry meterRegistry) {
         this.llmProviderFactory = llmProviderFactory;
         this.toolRegistry = toolRegistry;
@@ -74,6 +77,7 @@ public class AgentOrchestrator {
         this.objectMapper = objectMapper;
         this.guardrailService = guardrailService;
         this.approvalIntegration = approvalIntegration;
+        this.auditIntegration = auditIntegration;
 
         this.taskCounter = Counter.builder("agent.tasks")
             .description("Number of agent tasks executed")
@@ -374,6 +378,22 @@ public class AgentOrchestrator {
                 v -> log.debug("Recorded task execution: {}", task.taskId()),
                 e -> log.error("Failed to record task execution: {}", e.getMessage())
             );
+
+        // Publish audit event for agent execution
+        if (response != null && "COMPLETED".equals(status)) {
+            try {
+                auditIntegration.publishAgentExecutionEvent(
+                    task.context(),
+                    task.request().userMessage(),
+                    response,
+                    task.context().getUserId(),
+                    durationMs
+                );
+            } catch (Exception e) {
+                log.error("Failed to publish agent execution audit event: {}", e.getMessage());
+                // Don't let audit failures break the main flow
+            }
+        }
     }
 
     /**

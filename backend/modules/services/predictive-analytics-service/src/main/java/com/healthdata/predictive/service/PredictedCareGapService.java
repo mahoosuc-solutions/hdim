@@ -1,5 +1,6 @@
 package com.healthdata.predictive.service;
 
+import com.healthdata.predictive.audit.PredictiveAnalyticsAuditIntegration;
 import com.healthdata.predictive.model.PredictedCareGap;
 import com.healthdata.predictive.model.PredictionFactor;
 import com.healthdata.predictive.model.RiskTier;
@@ -33,6 +34,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class PredictedCareGapService {
+
+    private final PredictiveAnalyticsAuditIntegration auditIntegration;
 
     private static final String MODEL_VERSION = "1.0.0";
     private static final int PREDICTION_WINDOW_DAYS = 30;
@@ -75,6 +78,15 @@ public class PredictedCareGapService {
         allPredictions.sort((a, b) -> Double.compare(b.getRiskScore(), a.getRiskScore()));
 
         log.info("Generated {} predicted care gaps for provider {}", allPredictions.size(), providerId);
+        
+        // TODO: Add specific care gap prediction audit method to PredictiveAnalyticsAuditIntegration
+        // For now, log key metrics
+        if (!allPredictions.isEmpty()) {
+            log.info("Predicted care gaps audit: tenant={}, provider={}, predictions={}, avgRisk={}",
+                    tenantId, providerId, allPredictions.size(),
+                    allPredictions.stream().mapToDouble(PredictedCareGap::getRiskScore).average().orElse(0.0));
+        }
+        
         return allPredictions;
     }
 

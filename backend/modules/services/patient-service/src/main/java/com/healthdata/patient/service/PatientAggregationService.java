@@ -2,6 +2,7 @@ package com.healthdata.patient.service;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
+import com.healthdata.patient.audit.PatientAuditIntegration;
 import com.healthdata.patient.client.ConsentServiceClient;
 import com.healthdata.patient.client.FhirServiceClient;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class PatientAggregationService {
 
     private final FhirServiceClient fhirServiceClient;
     private final ConsentServiceClient consentServiceClient;
+    private final PatientAuditIntegration auditIntegration;
     private final FhirContext fhirContext = FhirContext.forR4();
     private final IParser jsonParser = fhirContext.newJsonParser();
 
@@ -105,6 +107,17 @@ public class PatientAggregationService {
                 restrictedResourceTypes, () -> fhirServiceClient.getGoals(tenantId, patientId));
 
         log.info("Aggregated {} resources for patient: {}", bundle.getEntry().size(), patientId);
+        
+        // Publish audit event
+        List<String> resourceTypes = bundle.getEntry().stream()
+                .map(e -> e.getResource().getResourceType().name())
+                .distinct()
+                .collect(Collectors.toList());
+        auditIntegration.publishHealthRecordAccessEvent(
+                tenantId, patientId, resourceTypes, bundle.getEntry().size(),
+                consentStatus.hasRestrictions(), "aggregation", 0, "system"
+        );
+        
         return bundle;
     }
 

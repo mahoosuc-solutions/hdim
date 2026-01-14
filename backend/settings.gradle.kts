@@ -29,7 +29,8 @@ include(
     "modules:shared:infrastructure:gateway-core",
     "modules:shared:infrastructure:api-docs",
     "modules:shared:infrastructure:tracing",
-    "modules:shared:infrastructure:metrics"
+    "modules:shared:infrastructure:metrics",
+    "modules:shared:test-infrastructure"
 )
 
 // Shared API Contracts

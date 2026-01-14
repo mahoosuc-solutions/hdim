@@ -95,3 +95,8 @@ include(
     "platform:test-fixtures",
     "platform:auth"
 )
+
+// Testing Modules
+include(
+    "testing:cross-service-audit"
+)

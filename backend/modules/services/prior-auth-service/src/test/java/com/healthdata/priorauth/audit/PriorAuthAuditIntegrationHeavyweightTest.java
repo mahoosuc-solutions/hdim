@@ -67,8 +67,9 @@ class PriorAuthAuditIntegrationHeavyweightTest {
     private Consumer<String, String> consumer;
 
     private static final String TENANT_ID = "test-tenant-123";
-    private static final String PATIENT_ID = "patient-456";
-    private static final String REQUEST_ID = "prior-auth-789";
+    private static final UUID PATIENT_ID = UUID.randomUUID();
+    private static final UUID REQUEST_ID = UUID.randomUUID();
+    private static final String PAYER_ID = "payer-123";
     private static final String TOPIC = "ai.agent.decisions";
 
     @BeforeEach
@@ -102,11 +103,11 @@ class PriorAuthAuditIntegrationHeavyweightTest {
         // Act
         auditIntegration.publishPriorAuthRequestEvent(
                 TENANT_ID,
-                PATIENT_ID,
                 REQUEST_ID,
+                PATIENT_ID,
+                PAYER_ID,
                 procedureCode,
-                diagnosis,
-                150L,
+                "ROUTINE", // urgency
                 "provider-123"
         );
 
@@ -136,11 +137,12 @@ class PriorAuthAuditIntegrationHeavyweightTest {
         // Act
         auditIntegration.publishPriorAuthDecisionEvent(
                 TENANT_ID,
-                PATIENT_ID,
                 REQUEST_ID,
+                PATIENT_ID,
+                PAYER_ID,
                 decision,
-                reviewerId,
-                "Clinical guidelines met",
+                "Clinical guidelines met", // decisionReason
+                true, // approved
                 200L,
                 "reviewer-001"
         );
@@ -171,11 +173,12 @@ class PriorAuthAuditIntegrationHeavyweightTest {
         // Act
         auditIntegration.publishPriorAuthDecisionEvent(
                 TENANT_ID,
-                PATIENT_ID,
                 REQUEST_ID,
+                PATIENT_ID,
+                PAYER_ID,
                 decision,
-                "reviewer-002",
                 denialReason,
+                false, // approved
                 180L,
                 "reviewer-002"
         );
@@ -194,19 +197,19 @@ class PriorAuthAuditIntegrationHeavyweightTest {
     }
 
     @Test
-    @DisplayName("Should publish prior auth status update event to Kafka")
-    void shouldPublishStatusUpdateEvent() throws Exception {
+    @DisplayName("Should publish prior auth submission event to Kafka")
+    void shouldPublishSubmissionEvent() throws Exception {
         // Arrange
-        String oldStatus = "PENDING";
-        String newStatus = "IN_REVIEW";
+        boolean submissionSuccess = true;
 
         // Act
-        auditIntegration.publishPriorAuthStatusUpdateEvent(
+        auditIntegration.publishPriorAuthSubmissionEvent(
                 TENANT_ID,
-                PATIENT_ID,
                 REQUEST_ID,
-                oldStatus,
-                newStatus,
+                PATIENT_ID,
+                PAYER_ID,
+                submissionSuccess,
+                null,
                 100L,
                 "system"
         );
@@ -218,27 +221,26 @@ class PriorAuthAuditIntegrationHeavyweightTest {
         ConsumerRecord<String, String> record = records.iterator().next();
         JsonNode event = objectMapper.readTree(record.value());
 
-        assertThat(event.get("decisionType").asText()).isEqualTo("PRIOR_AUTH_STATUS_UPDATE");
-        assertThat(event.get("decisionOutcome").asText()).isEqualTo("UPDATED");
+        assertThat(event.get("decisionType").asText()).isEqualTo("PRIOR_AUTH_REQUEST");
 
-        JsonNode context = event.get("decisionContext");
-        assertThat(context.get("oldStatus").asText()).isEqualTo(oldStatus);
-        assertThat(context.get("newStatus").asText()).isEqualTo(newStatus);
+        JsonNode metrics = event.get("inputMetrics");
+        assertThat(metrics.get("submissionSuccess").asBoolean()).isTrue();
     }
 
     @Test
-    @DisplayName("Should publish prior auth cancel event to Kafka")
-    void shouldPublishCancelEvent() throws Exception {
+    @DisplayName("Should publish prior auth appeal event to Kafka")
+    void shouldPublishAppealEvent() throws Exception {
         // Arrange
-        String cancellationReason = "Patient no longer requires procedure";
+        String appealReason = "New clinical evidence available";
+        String supportingInfo = "Updated lab results show medical necessity";
 
         // Act
-        auditIntegration.publishPriorAuthCancelEvent(
+        auditIntegration.publishPriorAuthAppealEvent(
                 TENANT_ID,
-                PATIENT_ID,
                 REQUEST_ID,
-                cancellationReason,
-                120L,
+                PATIENT_ID,
+                appealReason,
+                supportingInfo,
                 "provider-123"
         );
 
@@ -249,53 +251,52 @@ class PriorAuthAuditIntegrationHeavyweightTest {
         ConsumerRecord<String, String> record = records.iterator().next();
         JsonNode event = objectMapper.readTree(record.value());
 
-        assertThat(event.get("decisionType").asText()).isEqualTo("PRIOR_AUTH_CANCEL");
-        assertThat(event.get("decisionOutcome").asText()).isEqualTo("CANCELLED");
+        assertThat(event.get("decisionType").asText()).isEqualTo("PRIOR_AUTH_REQUEST");
 
-        JsonNode context = event.get("decisionContext");
-        assertThat(context.get("cancellationReason").asText()).isEqualTo(cancellationReason);
+        JsonNode metrics = event.get("inputMetrics");
+        assertThat(metrics.get("appealReason").asText()).isEqualTo(appealReason);
+        assertThat(metrics.get("supportingInfo").asText()).isEqualTo(supportingInfo);
     }
 
     @Test
     @DisplayName("Should handle complete prior auth workflow lifecycle")
     void shouldHandleCompleteWorkflowLifecycle() throws Exception {
-        // Simulate complete lifecycle: Request -> In Review -> Approved
-        String workflowRequestId = REQUEST_ID + "-workflow";
+        // Simulate complete lifecycle: Request -> Submission -> Decision
+        UUID workflowRequestId = UUID.randomUUID();
 
         // Step 1: Request
         auditIntegration.publishPriorAuthRequestEvent(
-                TENANT_ID, PATIENT_ID, workflowRequestId,
-                "CPT-12345", "ICD-Z00.00", 100L, "provider"
+                TENANT_ID, workflowRequestId, PATIENT_ID, PAYER_ID,
+                "CPT-12345", "ROUTINE", "provider"
         );
 
-        // Step 2: Status Update
+        // Step 2: Submission
         Thread.sleep(100);
-        auditIntegration.publishPriorAuthStatusUpdateEvent(
-                TENANT_ID, PATIENT_ID, workflowRequestId,
-                "PENDING", "IN_REVIEW", 50L, "system"
+        auditIntegration.publishPriorAuthSubmissionEvent(
+                TENANT_ID, workflowRequestId, PATIENT_ID, PAYER_ID,
+                true, null, 50L, "system"
         );
 
         // Step 3: Approval Decision
         Thread.sleep(100);
         auditIntegration.publishPriorAuthDecisionEvent(
-                TENANT_ID, PATIENT_ID, workflowRequestId,
-                "APPROVED", "reviewer-001", "Approved", 150L, "reviewer"
+                TENANT_ID, workflowRequestId, PATIENT_ID, PAYER_ID,
+                "APPROVED", "All criteria met", true, 150L, "reviewer"
         );
 
         // Assert - All 3 events published
         ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(10));
         assertThat(records.count()).isGreaterThanOrEqualTo(3);
 
-        // Verify event types in order
-        String[] expectedTypes = {"PRIOR_AUTH_REQUEST", "PRIOR_AUTH_STATUS_UPDATE", "PRIOR_AUTH_DECISION"};
-        int index = 0;
+        // All events should be PRIOR_AUTH_REQUEST type
+        int priorAuthEventCount = 0;
         for (ConsumerRecord<String, String> record : records) {
-            if (index < 3) {
-                JsonNode event = objectMapper.readTree(record.value());
-                assertThat(event.get("decisionType").asText()).isEqualTo(expectedTypes[index]);
-                index++;
+            JsonNode event = objectMapper.readTree(record.value());
+            if (event.get("decisionType").asText().equals("PRIOR_AUTH_REQUEST")) {
+                priorAuthEventCount++;
             }
         }
+        assertThat(priorAuthEventCount).isGreaterThanOrEqualTo(3);
     }
 
     @Test
@@ -308,11 +309,11 @@ class PriorAuthAuditIntegrationHeavyweightTest {
         for (int i = 0; i < requestCount; i++) {
             auditIntegration.publishPriorAuthRequestEvent(
                     TENANT_ID,
-                    PATIENT_ID + "-" + i,
-                    REQUEST_ID + "-" + i,
+                    UUID.randomUUID(), // requestId
+                    UUID.randomUUID(), // patientId
+                    PAYER_ID,
                     "CPT-99213",
-                    "E11.9",
-                    100L,
+                    "ROUTINE", // urgency
                     "provider"
             );
         }

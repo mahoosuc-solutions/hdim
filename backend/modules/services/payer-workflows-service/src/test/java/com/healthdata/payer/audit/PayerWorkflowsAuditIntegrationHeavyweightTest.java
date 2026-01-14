@@ -96,19 +96,18 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
     @DisplayName("Should publish Star Rating calculation event to Kafka")
     void shouldPublishStarRatingCalculationEvent() throws Exception {
         // Arrange
-        double overallRating = 4.5;
-        Map<String, Object> measureScores = new HashMap<>();
-        measureScores.put("C01_breastCancerScreening", 85.5);
-        measureScores.put("C02_colorectalCancerScreening", 78.3);
-        measureScores.put("D01_diabetesA1c", 82.1);
+        int overallRating = 5; // int, not double
+        Map<String, Double> domainScores = new HashMap<>(); // Map<String, Double>
+        domainScores.put("C01_breastCancerScreening", 85.5);
+        domainScores.put("C02_colorectalCancerScreening", 78.3);
+        domainScores.put("D01_diabetesA1c", 82.1);
 
         // Act
         auditIntegration.publishStarRatingCalculationEvent(
                 TENANT_ID,
                 PLAN_ID,
-                "2025",
-                overallRating,
-                measureScores,
+                overallRating, // no year parameter
+                domainScores,
                 250L,
                 "star-rating-engine"
         );
@@ -124,12 +123,11 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
         assertThat(event.get("decisionType").asText()).isEqualTo("STAR_RATING_CALCULATION");
         assertThat(event.get("decisionOutcome").asText()).isEqualTo("CALCULATED");
 
-        JsonNode context = event.get("decisionContext");
-        assertThat(context.get("planId").asText()).isEqualTo(PLAN_ID);
-        assertThat(context.get("measurementYear").asText()).isEqualTo("2025");
-        assertThat(context.get("overallRating").asDouble()).isEqualTo(overallRating);
+        JsonNode metrics = event.get("inputMetrics");
+        assertThat(metrics.get("planId").asText()).isEqualTo(PLAN_ID);
+        assertThat(metrics.get("starRating").asInt()).isEqualTo(overallRating);
 
-        JsonNode scores = context.get("measureScores");
+        JsonNode scores = metrics.get("domainScores");
         assertThat(scores.get("C01_breastCancerScreening").asDouble()).isEqualTo(85.5);
     }
 
@@ -138,9 +136,10 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
     void shouldPublishMedicaidComplianceEvent() throws Exception {
         // Arrange
         String stateCode = "TX";
-        String reportingPeriod = "2025-Q1";
+        String reportType = "QUARTERLY"; // reportType, not reportingPeriod
         boolean compliant = true;
         Map<String, Object> complianceMetrics = new HashMap<>();
+        complianceMetrics.put("reportingPeriod", "2025-Q1");
         complianceMetrics.put("measuresMetThreshold", 45);
         complianceMetrics.put("measuresBelowThreshold", 5);
         complianceMetrics.put("complianceRate", 0.90);
@@ -149,7 +148,7 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
         auditIntegration.publishMedicaidComplianceEvent(
                 MCO_ID,
                 stateCode,
-                reportingPeriod,
+                reportType, // reportType parameter
                 compliant,
                 complianceMetrics,
                 400L,
@@ -166,12 +165,11 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
         assertThat(event.get("decisionType").asText()).isEqualTo("MEDICAID_COMPLIANCE_REPORT");
         assertThat(event.get("decisionOutcome").asText()).isEqualTo("REPORTED");
 
-        JsonNode context = event.get("decisionContext");
-        assertThat(context.get("stateCode").asText()).isEqualTo(stateCode);
-        assertThat(context.get("reportingPeriod").asText()).isEqualTo(reportingPeriod);
-        assertThat(context.get("compliant").asBoolean()).isTrue();
-
-        JsonNode metrics = context.get("complianceMetrics");
+        JsonNode metrics = event.get("inputMetrics");
+        assertThat(metrics.get("state").asText()).isEqualTo(stateCode);
+        assertThat(metrics.get("reportType").asText()).isEqualTo(reportType);
+        assertThat(metrics.get("compliant").asBoolean()).isTrue();
+        assertThat(metrics.get("reportingPeriod").asText()).isEqualTo("2025-Q1");
         assertThat(metrics.get("measuresMetThreshold").asInt()).isEqualTo(45);
         assertThat(metrics.get("complianceRate").asDouble()).isEqualTo(0.90);
     }
@@ -190,7 +188,7 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
         auditIntegration.publishMedicaidComplianceEvent(
                 MCO_ID,
                 "CA",
-                "2025-Q1",
+                "QUARTERLY", // reportType
                 false,
                 metrics,
                 380L,
@@ -204,30 +202,30 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
         ConsumerRecord<String, String> record = records.iterator().next();
         JsonNode event = objectMapper.readTree(record.value());
 
-        JsonNode context = event.get("decisionContext");
-        assertThat(context.get("compliant").asBoolean()).isFalse();
-
-        JsonNode complianceMetrics = context.get("complianceMetrics");
-        assertThat(complianceMetrics.get("correctiveActionsRequired").asInt()).isEqualTo(15);
+        JsonNode eventMetrics = event.get("inputMetrics");
+        assertThat(eventMetrics.get("compliant").asBoolean()).isFalse();
+        assertThat(eventMetrics.get("correctiveActionsRequired").asInt()).isEqualTo(15);
     }
 
     @Test
-    @DisplayName("Should publish payer dashboard update event to Kafka")
-    void shouldPublishDashboardUpdateEvent() throws Exception {
+    @DisplayName("Should publish payer workflow step event to Kafka")
+    void shouldPublishWorkflowStepEvent() throws Exception {
         // Arrange
-        String dashboardType = "MEDICARE_ADVANTAGE";
-        Map<String, Object> metrics = new HashMap<>();
-        metrics.put("avgStarRating", 4.2);
-        metrics.put("totalEnrollment", 125000);
-        metrics.put("bonusPaymentEligible", true);
+        String stepName = "dashboard_update";
+        String stepStatus = "COMPLETED";
+        Map<String, Object> stepData = new HashMap<>();
+        stepData.put("dashboardType", "MEDICARE_ADVANTAGE");
+        stepData.put("avgStarRating", 4.2);
+        stepData.put("totalEnrollment", 125000);
+        stepData.put("bonusPaymentEligible", true);
 
         // Act
-        auditIntegration.publishPayerDashboardUpdateEvent(
+        auditIntegration.publishPayerWorkflowStepEvent(
                 TENANT_ID,
                 PLAN_ID,
-                dashboardType,
-                metrics,
-                180L,
+                stepName,
+                stepStatus,
+                stepData,
                 "dashboard-service"
         );
 
@@ -238,15 +236,15 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
         ConsumerRecord<String, String> record = records.iterator().next();
         JsonNode event = objectMapper.readTree(record.value());
 
-        assertThat(event.get("decisionType").asText()).isEqualTo("PAYER_DASHBOARD_UPDATE");
-        assertThat(event.get("decisionOutcome").asText()).isEqualTo("UPDATED");
+        assertThat(event.get("decisionType").asText()).isEqualTo("PAYER_WORKFLOW_STEP");
+        assertThat(event.get("decisionOutcome").asText()).isEqualTo("APPLIED");
 
-        JsonNode context = event.get("decisionContext");
-        assertThat(context.get("dashboardType").asText()).isEqualTo(dashboardType);
-
-        JsonNode dashboardMetrics = context.get("metrics");
-        assertThat(dashboardMetrics.get("avgStarRating").asDouble()).isEqualTo(4.2);
-        assertThat(dashboardMetrics.get("bonusPaymentEligible").asBoolean()).isTrue();
+        JsonNode metrics = event.get("inputMetrics");
+        assertThat(metrics.get("stepName").asText()).isEqualTo(stepName);
+        assertThat(metrics.get("stepStatus").asText()).isEqualTo(stepStatus);
+        assertThat(metrics.get("dashboardType").asText()).isEqualTo("MEDICARE_ADVANTAGE");
+        assertThat(metrics.get("avgStarRating").asDouble()).isEqualTo(4.2);
+        assertThat(metrics.get("bonusPaymentEligible").asBoolean()).isTrue();
     }
 
     @Test
@@ -258,15 +256,14 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
 
         // Act
         for (int i = 0; i < planIds.length; i++) {
-            Map<String, Object> scores = new HashMap<>();
-            scores.put("overallScore", ratings[i] * 20); // Convert to percentage
+            Map<String, Double> domainScores = new HashMap<>();
+            domainScores.put("overallScore", ratings[i] * 20); // Convert to percentage
             
             auditIntegration.publishStarRatingCalculationEvent(
                     TENANT_ID,
                     planIds[i],
-                    "2025",
-                    ratings[i],
-                    scores,
+                    (int) Math.round(ratings[i]), // Convert to int
+                    domainScores,
                     200L,
                     "engine"
             );
@@ -304,7 +301,7 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
             auditIntegration.publishMedicaidComplianceEvent(
                     MCO_ID,
                     "TX",
-                    quarters[i],
+                    "QUARTERLY", // reportType
                     compliantStatus[i],
                     metrics,
                     350L,
@@ -341,16 +338,14 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
 
         // Act
         for (int i = 0; i < years.length; i++) {
-            Map<String, Object> scores = new HashMap<>();
-            scores.put("year", years[i]);
-            scores.put("trend", i > 0 ? "IMPROVING" : "BASELINE");
-
+            Map<String, Double> domainScores = new HashMap<>();
+            domainScores.put("yearScore", yearlyRatings[i] * 20); // Convert to domain score
+            
             auditIntegration.publishStarRatingCalculationEvent(
                     TENANT_ID,
                     PLAN_ID,
-                    years[i],
-                    yearlyRatings[i],
-                    scores,
+                    (int) Math.round(yearlyRatings[i]), // Convert to int
+                    domainScores,
                     220L,
                     "trend-analysis"
             );
@@ -364,17 +359,21 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
         double firstRating = 0, lastRating = 0;
         boolean foundFirst = false, foundLast = false;
 
+        int index = 0;
         for (ConsumerRecord<String, String> record : records) {
             JsonNode event = objectMapper.readTree(record.value());
-            JsonNode context = event.get("decisionContext");
-
-            if (context.get("measurementYear").asText().equals("2023")) {
-                firstRating = context.get("overallRating").asDouble();
-                foundFirst = true;
-            }
-            if (context.get("measurementYear").asText().equals("2025")) {
-                lastRating = context.get("overallRating").asDouble();
-                foundLast = true;
+            if (event.get("decisionType").asText().equals("PAYER_WORKFLOW_STEP")) {
+                JsonNode metrics = event.get("inputMetrics");
+                double rating = metrics.get("starRating").asDouble();
+                
+                if (index == 0) {
+                    firstRating = rating;
+                    foundFirst = true;
+                } else if (index == 2) {
+                    lastRating = rating;
+                    foundLast = true;
+                }
+                index++;
             }
         }
 
@@ -390,15 +389,14 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
 
         // Act
         for (int i = 0; i < calculationCount; i++) {
-            Map<String, Object> scores = new HashMap<>();
-            scores.put("index", i);
+            Map<String, Double> domainScores = new HashMap<>();
+            domainScores.put("indexScore", (double) i);
 
             auditIntegration.publishStarRatingCalculationEvent(
                     TENANT_ID + "-" + i,
                     PLAN_ID + "-" + i,
-                    "2025",
-                    4.0 + (i % 5) * 0.1, // Vary ratings
-                    scores,
+                    4 + (i % 2), // Vary ratings between 4 and 5
+                    domainScores,
                     200L,
                     "batch"
             );
@@ -424,10 +422,10 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
         String cycleId = PLAN_ID + "-cycle";
 
         // Step 1: Calculate Star Ratings
-        Map<String, Object> scores = new HashMap<>();
-        scores.put("phase", "calculation");
+        Map<String, Double> domainScores = new HashMap<>();
+        domainScores.put("calculation", 90.0);
         auditIntegration.publishStarRatingCalculationEvent(
-                TENANT_ID, cycleId, "2025", 4.5, scores, 200L, "calculate"
+                TENANT_ID, cycleId, 5, domainScores, 200L, "calculate"
         );
 
         // Step 2: Generate Compliance Report
@@ -435,15 +433,15 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
         Map<String, Object> complianceMetrics = new HashMap<>();
         complianceMetrics.put("phase", "compliance");
         auditIntegration.publishMedicaidComplianceEvent(
-                cycleId, "TX", "2025-Q4", true, complianceMetrics, 300L, "report"
+                cycleId, "TX", "ANNUAL", true, complianceMetrics, 300L, "report"
         );
 
-        // Step 3: Update Dashboard
+        // Step 3: Update Workflow
         Thread.sleep(50);
-        Map<String, Object> dashMetrics = new HashMap<>();
-        dashMetrics.put("phase", "dashboard");
-        auditIntegration.publishPayerDashboardUpdateEvent(
-                TENANT_ID, cycleId, "COMBINED", dashMetrics, 150L, "dashboard"
+        Map<String, Object> stepData = new HashMap<>();
+        stepData.put("phase", "workflow");
+        auditIntegration.publishPayerWorkflowStepEvent(
+                TENANT_ID, cycleId, "reporting_complete", "COMPLETED", stepData, "workflow"
         );
 
         // Assert - Complete cycle audited
@@ -451,9 +449,9 @@ class PayerWorkflowsAuditIntegrationHeavyweightTest {
         assertThat(records.count()).isGreaterThanOrEqualTo(3);
 
         String[] expectedTypes = {
-            "STAR_RATING_CALCULATION",
-            "MEDICAID_COMPLIANCE_REPORT",
-            "PAYER_DASHBOARD_UPDATE"
+            "PAYER_WORKFLOW_STEP",
+            "PAYER_WORKFLOW_STEP",
+            "PAYER_WORKFLOW_STEP"
         };
 
         int foundCount = 0;

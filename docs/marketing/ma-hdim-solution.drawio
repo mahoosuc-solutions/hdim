@@ -1,0 +1,167 @@
+<mxfile host="app.diagrams.net" modified="2026-01-14T12:30:00.000Z" agent="5.0" version="21.0.0" etag="drawio-diagram-2" type="device">
+  <diagram name="HDIM M&A Solution" id="hdim-ma-solution">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Title -->
+        <mxCell id="title" value="HDIM: The M&amp;A Integration Solution" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=32;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="1000" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="One Platform. All Systems. Zero Custom Code." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontColor=#00A9A5;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="300" y="70" width="1000" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Hospital Systems (Same as before but cleaner) -->
+        <mxCell id="hospital-a-title" value="Hospital A" style="text;html=1;strokeColor=none;fillColor=#E3F2FD;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="50" y="130" width="200" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="epic-a" value="Epic EHR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="50" y="170" width="90" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="lab-a" value="Lab System" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="160" y="170" width="90" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="hospital-b-title" value="Hospital B" style="text;html=1;strokeColor=none;fillColor=#FFF3E0;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="300" y="130" width="200" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="cerner-b" value="Cerner EHR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="300" y="170" width="90" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="lab-b" value="Lab System" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="410" y="170" width="90" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="hospital-c-title" value="Hospital C" style="text;html=1;strokeColor=none;fillColor=#F3E5F5;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="550" y="130" width="200" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="allscripts-c" value="AllScripts EHR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1BEE7;strokeColor=#7B1FA2;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="550" y="170" width="90" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="lab-c" value="Lab System" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1BEE7;strokeColor=#7B1FA2;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="660" y="170" width="90" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- HDIM Platform (Central Hub) -->
+        <mxCell id="hdim-platform" value="&lt;b&gt;HDIM Platform&lt;/b&gt;&lt;br&gt;&lt;br&gt;FHIR R4 Native&lt;br&gt;AI-Powered&lt;br&gt;Zero Tech Debt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#00A9A5;strokeColor=#00695C;strokeWidth=4;fontSize=14;fontColor=#FFFFFF;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="600" y="300" width="300" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- HDIM Services -->
+        <mxCell id="ehr-connector" value="EHR Connector&lt;br&gt;Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00695C;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="50" y="500" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="fhir-service" value="FHIR Service&lt;br&gt;R4 Resources" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00695C;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="190" y="500" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="cql-engine" value="CQL Engine&lt;br&gt;Quality Measures" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00695C;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="330" y="500" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="care-gap" value="Care Gap&lt;br&gt;Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00695C;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="470" y="500" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ai-assistant" value="AI Assistant&lt;br&gt;Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00695C;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="610" y="500" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="analytics" value="Analytics&lt;br&gt;Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00695C;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="750" y="500" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="event-processing" value="Event Processing&lt;br&gt;Kafka Streams" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00695C;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="890" y="500" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="gateway" value="API Gateway&lt;br&gt;Kong" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00695C;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="1030" y="500" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Connections from Hospitals to HDIM -->
+        <mxCell id="epic-to-hdim" value="FHIR R4" style="endArrow=classic;html=1;strokeColor=#00A9A5;strokeWidth=3;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;fontSize=10;fontColor=#00A9A5;fontStyle=1" edge="1" parent="1" source="epic-a" target="hdim-platform">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="cerner-to-hdim" value="FHIR R4" style="endArrow=classic;html=1;strokeColor=#00A9A5;strokeWidth=3;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=10;fontColor=#00A9A5;fontStyle=1" edge="1" parent="1" source="cerner-b" target="hdim-platform">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="allscripts-to-hdim" value="FHIR R4" style="endArrow=classic;html=1;strokeColor=#00A9A5;strokeWidth=3;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;fontSize=10;fontColor=#00A9A5;fontStyle=1" edge="1" parent="1" source="allscripts-c" target="hdim-platform">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Connections from HDIM Platform to Services -->
+        <mxCell id="hdim-to-services" value="" style="endArrow=classic;html=1;strokeColor=#00695C;strokeWidth=2;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="hdim-platform" target="ehr-connector">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Unified Outputs -->
+        <mxCell id="unified-title" value="Unified Outputs" style="text;html=1;strokeColor=none;fillColor=#E8F5E9;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="50" y="650" width="1100" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="unified-view" value="360° Patient View" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="50" y="700" width="150" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="quality-reporting" value="Quality Reporting" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="220" y="700" width="150" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="care-gaps" value="Care Gap Analysis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="390" y="700" width="150" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="analytics-dash" value="Analytics Dashboard" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="560" y="700" width="150" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="real-time" value="Real-Time Alerts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="730" y="700" width="150" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="compliance" value="Compliance Reports" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="900" y="700" width="150" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="api-access" value="API Access" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1070" y="700" width="150" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Benefits Box -->
+        <mxCell id="benefits-box" value="&lt;b&gt;HDIM M&amp;A Solution Benefits&lt;/b&gt;&lt;br&gt;&lt;br&gt;✓ &lt;b&gt;Zero Custom Code:&lt;/b&gt; FHIR R4 standard eliminates point-to-point interfaces&lt;br&gt;✓ &lt;b&gt;60-90 Day Deployment:&lt;/b&gt; Not 12-18 months like legacy solutions&lt;br&gt;✓ &lt;b&gt;$0 Maintenance:&lt;/b&gt; No interface maintenance burden&lt;br&gt;✓ &lt;b&gt;Unified View:&lt;/b&gt; All patient data in one platform&lt;br&gt;✓ &lt;b&gt;Real-Time:&lt;/b&gt; Kafka event streaming for instant updates&lt;br&gt;✓ &lt;b&gt;Vendor Agnostic:&lt;/b&gt; Works with any FHIR R4 system&lt;br&gt;✓ &lt;b&gt;AI-Powered:&lt;/b&gt; Automated care gap detection and quality measures&lt;br&gt;✓ &lt;b&gt;Scalable:&lt;/b&gt; Handles millions of patients across all hospitals" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F2F1;strokeColor=#00695C;strokeWidth=3;fontSize=14;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10" vertex="1" parent="1">
+          <mxGeometry x="50" y="800" width="700" height="250" as="geometry" />
+        </mxCell>
+
+        <!-- ROI Box -->
+        <mxCell id="roi-box" value="&lt;b&gt;ROI Comparison&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Traditional M&amp;A Integration:&lt;/b&gt;&lt;br&gt;• $500K/year maintenance&lt;br&gt;• 12-18 month timeline&lt;br&gt;• 24 custom interfaces&lt;br&gt;• 6-month backlog&lt;br&gt;&lt;br&gt;&lt;b&gt;HDIM Solution:&lt;/b&gt;&lt;br&gt;• $0 maintenance (platform-based)&lt;br&gt;• 60-90 day deployment&lt;br&gt;• 0 custom interfaces&lt;br&gt;• Real-time integration&lt;br&gt;&lt;br&gt;&lt;b&gt;Savings: $500K/year + Innovation Time&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F2F1;strokeColor=#00695C;strokeWidth=3;fontSize=14;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10" vertex="1" parent="1">
+          <mxGeometry x="800" y="800" width="350" height="250" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

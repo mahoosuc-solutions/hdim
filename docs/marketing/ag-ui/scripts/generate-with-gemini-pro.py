@@ -220,14 +220,28 @@ LAYOUT:
   - Map visualization on right side showing geographic distribution (dark theme)
 
 STYLE:
-- Clean, modern dark mode SaaS aesthetic
+- Clean, modern dark mode SaaS aesthetic (similar to modern dark mode dashboards like GitHub Dark, Linear Dark, or Vercel Dark)
 - Primary color: Light Blue #2C5282 (for highlights)
 - Accent color: Teal #00A9A5
 - Background: Dark #1A1A1A with dark gray cards #2C2C2C
 - Text: Light gray #E0E0E0 for readability
 - Typography: Clean sans-serif, clear hierarchy
 - Generous whitespace, subtle borders
-- Professional, modern, easy on the eyes""",
+- Professional, modern, easy on the eyes
+
+TECHNICAL:
+- Resolution: 1920x1080 pixels
+- Format: High-quality PNG
+- No text artifacts
+- Realistic dark mode UI, not wireframe
+- Professional healthcare software appearance
+
+AVOID:
+- Too dark (unreadable)
+- Harsh contrasts
+- Generic dark themes
+- Text rendering issues
+- Unrealistic dark mode interfaces""",
             "width": 1920,
             "height": 1080
         },
@@ -239,19 +253,34 @@ LAYOUT:
 - Top navigation bar with HDIM logo, notifications icon, user menu
 - Left sidebar with admin navigation: Dashboard, Users, Roles, Audit Logs, Integrations, System Health, Settings
 - Main content area showing:
-  - System health overview: 6 service status cards (all green/healthy) showing service names and uptime percentages
+  - System health overview: 6 service status cards (all green/healthy) showing service names and uptime percentages (e.g., "99.9% uptime", "2.3ms avg response time")
   - Recent activity feed showing audit events, user actions, system events with timestamps
   - Integration status panel showing connected systems (Epic, Cerner, AllScripts) with connection status indicators (green/yellow/red)
-  - Performance metrics panel: API response times, event throughput, database performance with charts
+  - Performance metrics panel: API response times, event throughput (10,000 events/sec), database performance with line charts and bar charts
 
 STYLE:
-- Clean, modern admin interface
+- Clean, modern admin interface (similar to modern SaaS admin panels like Stripe Dashboard, AWS Console, or Datadog)
 - Primary color: Deep Blue #1E3A5F
 - Accent color: Teal #00A9A5
-- Status colors: Green for healthy, Yellow for warning, Red for error
-- White background with subtle gray cards
+- Status colors: Green (#2E7D32) for healthy, Yellow (#E65100) for warning, Red (#C62828) for error
+- White background (#FFFFFF) with subtle gray cards (#F5F7FA)
 - Clear typography, data-focused design
-- Professional, technical, trustworthy""",
+- Professional, technical, trustworthy
+- Realistic admin interface, not wireframe
+
+TECHNICAL:
+- Resolution: 1920x1080 pixels
+- Format: High-quality PNG
+- Realistic admin dashboard appearance
+- Clear status indicators
+- Professional healthcare software
+
+AVOID:
+- Cluttered interface
+- Unclear status indicators
+- Generic admin panels
+- Wireframe appearance
+- Unrealistic data displays""",
             "width": 1920,
             "height": 1080
         }

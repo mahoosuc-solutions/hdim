@@ -187,6 +187,26 @@ python scripts/ag-ui-generator.py generate \
   --ai-tool dalle-3
 ```
 
+### Google Gemini API
+
+**Best for:** High-quality UI mockups, prompt enhancement, multimodal capabilities
+
+**Setup:**
+```bash
+export GEMINI_API_KEY="your-api-key"
+# OR
+export GOOGLE_API_KEY="your-api-key"
+```
+
+**Usage:**
+```bash
+python scripts/ag-ui-generator.py generate \
+  --template dashboard-clinical \
+  --ai-tool gemini
+```
+
+**Note:** Gemini API supports image generation through certain models. The generator will use the best available method for image generation.
+
 ### Stability AI Stable Diffusion
 
 **Best for:** Batch generation, custom models

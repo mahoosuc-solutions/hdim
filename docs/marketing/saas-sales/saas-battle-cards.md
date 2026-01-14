@@ -25,6 +25,7 @@
 | **Integration** | Standard APIs (FHIR R4) | Custom interfaces |
 | **Real-Time** | Yes (Kafka event streaming) | No (batch processing) |
 | **Cost** | Pay-as-scale | Fixed enterprise ($600K-$1.8M/year) |
+| **Implementation Impact** | **Zero impact** - runs on top | Requires downtime & changes |
 
 ### Talking Points
 
@@ -45,6 +46,12 @@
 - 60-90 day deployment (Epic/Cerner: 12-18 months)
 - Pay-as-scale pricing (Epic/Cerner: fixed enterprise)
 
+**"HDIM deploys with zero impact on your existing systems."**
+- Zero downtime during deployment (Epic/Cerner: requires downtime windows)
+- No changes to existing workflows (Epic/Cerner: workflow changes required)
+- Read-only integration via standard APIs (Epic/Cerner: custom interfaces)
+- Parallel deployment - runs alongside your EHR (Epic/Cerner: replaces systems)
+
 ### Objection Handling
 
 **"We already have Epic/Cerner."**
@@ -55,6 +62,9 @@
 
 **"We don't want another vendor."**
 - "HDIM integrates seamlessly with Epic/Cerner via standard APIs. You get the quality measurement capabilities you need without adding complexity—just standard FHIR R4 integration."
+
+**"We can't afford downtime."**
+- "HDIM deploys with zero downtime. We connect to your existing FHIR server via read-only APIs. Your EHR continues running exactly as it does today. No service interruptions, no workflow changes, no risk."
 
 ### Win Strategy
 

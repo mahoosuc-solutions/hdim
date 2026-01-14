@@ -1,0 +1,578 @@
+Title,Body,Labels,Milestone,Story Points,Assignee
+"[Feature] Patient Search - Basic Implementation","## Feature Description
+
+**User Story**: As a clinician, I want to search for patients by name, MRN, or DOB so that I can quickly find patient records.
+
+**Business Value**: Core functionality for Clinical Portal. Enables clinicians to access patient information efficiently.
+
+**Acceptance Criteria**:
+- [ ] Search bar with autocomplete
+- [ ] Search by name (fuzzy matching)
+- [ ] Search by MRN (exact match)
+- [ ] Search by DOB
+- [ ] Display search results in list
+- [ ] Click result to view patient details
+
+## Technical Specification
+
+**Frontend**:
+- Create `PatientSearch.tsx` component
+- Use React Query for API calls
+- Implement debounced search (300ms)
+- Material-UI Autocomplete component
+
+**API Endpoint**:
+- `GET /api/v1/patients/search?query={query}&limit=20`
+
+**Testing**:
+- [ ] Unit tests for search component
+- [ ] Integration test for API
+- [ ] E2E test for search flow
+
+**Estimation**: 3 days","feature,frontend,P0-Critical",Q1-2026-Clinical-Portal,5,""
+"[Feature] Patient 360° View - Demographics Card","## Feature Description
+
+**User Story**: As a clinician, I want to see comprehensive patient demographics so that I have complete context for care decisions.
+
+**Acceptance Criteria**:
+- [ ] Display name, age, gender, DOB
+- [ ] Show MRN, SSN (masked), phone, email
+- [ ] Display address
+- [ ] Show insurance information
+- [ ] Display primary care provider
+- [ ] Show preferred language
+
+**Design**: See Figma mockup [link]
+
+**Estimation**: 2 days","feature,frontend,P0-Critical",Q1-2026-Clinical-Portal,3,""
+"[Feature] Patient Timeline View","## Feature Description
+
+**User Story**: As a clinician, I want to see a chronological timeline of clinical events so that I can understand the patient's health history.
+
+**Acceptance Criteria**:
+- [ ] Timeline view with date markers
+- [ ] Show encounters, procedures, observations
+- [ ] Filter by event type
+- [ ] Click event to see details
+- [ ] Export timeline to PDF
+
+**Technical**: Use Recharts for timeline visualization
+
+**Estimation**: 5 days","feature,frontend,P1-High",Q1-2026-Clinical-Portal,8,""
+"[Feature] Care Gap Dashboard - List View","## Feature Description
+
+**User Story**: As a care manager, I want to see all open care gaps in a list so that I can prioritize closure activities.
+
+**Acceptance Criteria**:
+- [ ] Display care gaps in sortable table
+- [ ] Show patient name, gap type, priority, due date
+- [ ] Color-code by priority (High=Red, Medium=Yellow, Low=Green)
+- [ ] Filter by priority, measure, patient
+- [ ] Click row to see gap details
+
+**API**: `GET /api/v1/care-gaps?status=OPEN&sort=priority`
+
+**Estimation**: 3 days","feature,frontend,P0-Critical",Q1-2026-Clinical-Portal,5,""
+"[Feature] Care Gap Dashboard - Statistics Cards","## Feature Description
+
+**User Story**: As a quality director, I want to see summary statistics for care gaps so that I can track overall performance.
+
+**Acceptance Criteria**:
+- [ ] Total open care gaps count
+- [ ] Gaps closed this month
+- [ ] Average closure time
+- [ ] Closure rate percentage
+- [ ] Trend chart (last 6 months)
+
+**Estimation**: 2 days","feature,frontend,P1-High",Q1-2026-Clinical-Portal,3,""
+"[Feature] Care Gap - Bulk Actions","## Feature Description
+
+**User Story**: As a care manager, I want to perform bulk actions on care gaps so that I can manage my workload efficiently.
+
+**Acceptance Criteria**:
+- [ ] Select multiple gaps (checkboxes)
+- [ ] Bulk assign to care manager
+- [ ] Bulk close with reason
+- [ ] Bulk export to Excel
+- [ ] Confirmation dialog before action
+
+**Estimation**: 3 days","feature,frontend,P2-Medium",Q1-2026-Clinical-Portal,5,""
+"[Feature] Quality Measure Viewer","## Feature Description
+
+**User Story**: As a clinician, I want to view HEDIS/CMS quality measure compliance for a patient so that I know which measures they meet.
+
+**Acceptance Criteria**:
+- [ ] Display measures by category (Diabetes, Cardiovascular, Preventive)
+- [ ] Show measure status (Met, Not Met, Excluded)
+- [ ] Display numerator/denominator logic
+- [ ] Show supporting evidence (observations, procedures)
+- [ ] Calculate measures in real-time (<5 sec)
+
+**API**: `POST /api/v1/quality-measures/evaluate`
+
+**Estimation**: 5 days","feature,frontend,P0-Critical",Q1-2026-Clinical-Portal,8,""
+"[Feature] AI Clinical Assistant - Chat Interface","## Feature Description
+
+**User Story**: As a clinician, I want to ask natural language questions about patients so that I can get quick insights.
+
+**Acceptance Criteria**:
+- [ ] Chat interface (message input + history)
+- [ ] Send message to AI assistant
+- [ ] Display AI response with markdown formatting
+- [ ] Show typing indicator while waiting
+- [ ] Conversation history (last 50 messages)
+- [ ] Clear conversation button
+
+**API**: `POST /api/v1/ai/chat`
+
+**Estimation**: 3 days","feature,frontend,ai,P1-High",Q1-2026-Clinical-Portal,5,""
+"[Feature] Document Upload - Drag and Drop","## Feature Description
+
+**User Story**: As a clinician, I want to upload clinical documents for patients so that all records are centralized.
+
+**Acceptance Criteria**:
+- [ ] Drag-and-drop file upload
+- [ ] Support PDF, JPG, PNG, TIFF (max 10MB)
+- [ ] Show upload progress bar
+- [ ] Display thumbnail after upload
+- [ ] Link document to patient
+- [ ] Add document type (Lab Result, Imaging, etc.)
+
+**Technical**: Use AWS S3 for storage
+
+**Estimation**: 4 days","feature,frontend,P1-High",Q1-2026-Clinical-Portal,8,""
+"[Feature] Document OCR Processing","## Feature Description
+
+**User Story**: As a clinician, I want uploaded documents to be OCR'd so that I can search within document text.
+
+**Acceptance Criteria**:
+- [ ] Extract text from PDF/images
+- [ ] Store extracted text in database
+- [ ] Full-text search across documents
+- [ ] Highlight search terms in document viewer
+
+**Technical**: Use AWS Textract or Tesseract
+
+**Estimation**: 5 days","feature,backend,ai,P1-High",Q1-2026-Clinical-Portal,8,""
+"[Feature] Admin Portal - Service Dashboard","## Feature Description
+
+**User Story**: As a system admin, I want to see all service health statuses on one page so that I can quickly identify issues.
+
+**Acceptance Criteria**:
+- [ ] Single-page dashboard
+- [ ] List all 30+ services
+- [ ] Show status (UP, DOWN, DEGRADED)
+- [ ] Display version number
+- [ ] Show last deployment time
+- [ ] Quick links to logs/metrics
+
+**API**: `GET /api/v1/admin/services/health`
+
+**Estimation**: 2 days","feature,frontend,P0-Critical",Q1-2026-Admin-Portal,3,""
+"[Feature] Admin Portal - Real-Time Monitoring","## Feature Description
+
+**User Story**: As a DevOps engineer, I want to see real-time metrics for each service so that I can monitor system performance.
+
+**Acceptance Criteria**:
+- [ ] Display CPU usage per service
+- [ ] Display memory usage (heap for Java)
+- [ ] Display request rate (req/sec)
+- [ ] Display error rate
+- [ ] Display p95/p99 latency
+- [ ] Auto-refresh every 5 seconds
+
+**Technical**: Integrate with Prometheus
+
+**Estimation**: 4 days","feature,frontend,infrastructure,P0-Critical",Q1-2026-Admin-Portal,8,""
+"[Feature] Admin Portal - Audit Log Viewer","## Feature Description
+
+**User Story**: As a compliance officer, I want to search audit logs so that I can investigate access to PHI.
+
+**Acceptance Criteria**:
+- [ ] Search by user, resource, action, date range
+- [ ] Filter by event type, outcome
+- [ ] Display results in table
+- [ ] Click row to see event details
+- [ ] Export to CSV/JSON
+- [ ] Real-time log streaming
+
+**API**: `GET /api/v1/audit/events?filters={...}`
+
+**Estimation**: 4 days","feature,frontend,security,P0-Critical",Q1-2026-Admin-Portal,8,""
+"[Feature] Admin Portal - User Management CRUD","## Feature Description
+
+**User Story**: As a tenant admin, I want to manage users so that I can control who has access to the system.
+
+**Acceptance Criteria**:
+- [ ] List all users (paginated)
+- [ ] Create new user
+- [ ] Edit user details
+- [ ] Assign roles
+- [ ] Enable/disable user
+- [ ] Reset password
+- [ ] View user activity log
+
+**API**: Full CRUD on `/api/v1/admin/users`
+
+**Estimation**: 3 days","feature,frontend,P1-High",Q1-2026-Admin-Portal,5,""
+"[Feature] Admin Portal - Tenant Management","## Feature Description
+
+**User Story**: As a super admin, I want to manage tenants so that I can onboard new customers.
+
+**Acceptance Criteria**:
+- [ ] List all tenants
+- [ ] Create new tenant
+- [ ] Edit tenant settings
+- [ ] View tenant usage statistics
+- [ ] Deactivate tenant
+- [ ] Configure feature flags per tenant
+
+**API**: `/api/v1/admin/tenants`
+
+**Estimation**: 4 days","feature,frontend,backend,P1-High",Q1-2026-Admin-Portal,8,""
+"[Feature] Agent Studio - Visual Agent Designer","## Feature Description
+
+**User Story**: As a clinical informaticist, I want to design AI agents using a visual interface so that I don't need to write code.
+
+**Acceptance Criteria**:
+- [ ] Form-based agent configuration
+- [ ] Configure agent identity (name, avatar, role)
+- [ ] Select tools (checkboxes)
+- [ ] Configure guardrails
+- [ ] Set LLM parameters (model, temperature, max tokens)
+- [ ] Preview system prompt
+- [ ] Save as draft
+
+**Estimation**: 8 days","feature,frontend,ai,P0-Critical",Q1-2026-Agent-Studio,13,""
+"[Feature] Agent Studio - Prompt Template Library","## Feature Description
+
+**User Story**: As a quality manager, I want to browse and use prompt templates so that I can build agents faster.
+
+**Acceptance Criteria**:
+- [ ] List all templates (system + tenant)
+- [ ] Search templates by keyword
+- [ ] Filter by category
+- [ ] Preview template
+- [ ] Use template in agent
+- [ ] Create custom template
+- [ ] Variable substitution ({{var}})
+
+**API**: `/api/v1/agent-builder/templates`
+
+**Estimation**: 3 days","feature,frontend,ai,P0-Critical",Q1-2026-Agent-Studio,5,""
+"[Feature] Agent Studio - Interactive Testing Sandbox","## Feature Description
+
+**User Story**: As a clinical informaticist, I want to test my agent before publishing so that I can verify it works correctly.
+
+**Acceptance Criteria**:
+- [ ] Start test session
+- [ ] Chat interface for testing
+- [ ] View tool invocations
+- [ ] See guardrail triggers
+- [ ] Display performance metrics
+- [ ] Save test session
+- [ ] Export conversation
+
+**API**: `/api/v1/agent-builder/test/sessions`
+
+**Estimation**: 4 days","feature,frontend,ai,P0-Critical",Q1-2026-Agent-Studio,8,""
+"[Feature] Agent Studio - Version Control UI","## Feature Description
+
+**User Story**: As a clinical informaticist, I want to see agent version history so that I can rollback if needed.
+
+**Acceptance Criteria**:
+- [ ] List all versions
+- [ ] Display version number, date, author
+- [ ] View version details
+- [ ] Compare two versions (diff view)
+- [ ] Rollback to previous version
+- [ ] Add version notes
+
+**API**: `/api/v1/agent-builder/agents/{id}/versions`
+
+**Estimation**: 3 days","feature,frontend,ai,P1-High",Q1-2026-Agent-Studio,5,""
+"[Feature] Developer Portal - OpenAPI Docs","## Feature Description
+
+**User Story**: As a developer, I want to see interactive API documentation so that I can integrate with HDIM APIs.
+
+**Acceptance Criteria**:
+- [ ] Embed Swagger UI
+- [ ] Display all 30+ service APIs
+- [ ] Try it out functionality
+- [ ] Request/response examples
+- [ ] Authentication guide
+- [ ] Rate limit information
+
+**Technical**: Generate OpenAPI specs from Spring Boot
+
+**Estimation**: 3 days","feature,frontend,documentation,P0-Critical",Q1-2026-Developer-Portal,5,""
+"[Feature] Developer Portal - Postman Collections","## Feature Description
+
+**User Story**: As a developer, I want Postman collections so that I can quickly test APIs.
+
+**Acceptance Criteria**:
+- [ ] Generate Postman collections for all APIs
+- [ ] Collections for: Patient Management, Care Gaps, Quality Measures, Prior Auth, AI Agents
+- [ ] Include authentication examples
+- [ ] Add environment variables
+- [ ] Publish to Postman workspace
+
+**Estimation**: 2 days","feature,documentation,P0-Critical",Q1-2026-Developer-Portal,3,""
+"[Feature] Developer Portal - Code Examples","## Feature Description
+
+**User Story**: As a developer, I want code examples so that I can see how to use the APIs.
+
+**Acceptance Criteria**:
+- [ ] Code examples in Python, Java, JavaScript
+- [ ] Examples for: Authentication, Patient Search, Create Prior Auth, Evaluate Measures, Webhooks
+- [ ] Copy-paste ready code
+- [ ] Include comments explaining each step
+
+**Estimation**: 3 days","feature,documentation,P1-High",Q1-2026-Developer-Portal,5,""
+"[Feature] Developer Portal - Sandbox Environment","## Feature Description
+
+**User Story**: As a developer, I want a sandbox environment so that I can test integrations without affecting production.
+
+**Acceptance Criteria**:
+- [ ] Generate sandbox API keys
+- [ ] Synthetic patient data (no PHI)
+- [ ] Reset data button
+- [ ] Webhook testing endpoint
+- [ ] Rate limits (100 req/min)
+
+**Technical**: Separate database for sandbox
+
+**Estimation**: 5 days","feature,backend,infrastructure,P1-High",Q1-2026-Developer-Portal,8,""
+"[Feature] SSO Integration - OAuth 2.0","## Feature Description
+
+**User Story**: As an organization, I want to use our existing identity provider so that users don't need separate credentials.
+
+**Acceptance Criteria**:
+- [ ] Support OAuth 2.0 (Okta, Azure AD, Google)
+- [ ] Authorization code flow
+- [ ] Token refresh
+- [ ] Map user attributes (email, name, roles)
+- [ ] Admin UI to configure SSO
+
+**Estimation**: 5 days","feature,backend,security,P0-Critical",Q1-2026-Auth,8,""
+"[Feature] SSO Integration - SAML 2.0","## Feature Description
+
+**User Story**: As an enterprise customer, I want SAML SSO so that I can use our corporate identity provider.
+
+**Acceptance Criteria**:
+- [ ] Support SAML 2.0
+- [ ] Upload IDP metadata XML
+- [ ] Configure SSO endpoint URLs
+- [ ] Map SAML attributes
+- [ ] Test SSO flow in admin UI
+
+**Technical**: Use Spring Security SAML
+
+**Estimation**: 5 days","feature,backend,security,P0-Critical",Q1-2026-Auth,8,""
+"[Feature] MFA - TOTP Support","## Feature Description
+
+**User Story**: As a user, I want to use an authenticator app for MFA so that my account is more secure.
+
+**Acceptance Criteria**:
+- [ ] Generate QR code for TOTP enrollment
+- [ ] Verify TOTP code during login
+- [ ] Support Google Authenticator, Authy
+- [ ] Generate backup codes (10 codes)
+- [ ] Allow users to disable MFA
+
+**Technical**: Use TOTP library (RFC 6238)
+
+**Estimation**: 3 days","feature,backend,security,P0-Critical",Q1-2026-Auth,5,""
+"[Feature] MFA - SMS Support","## Feature Description
+
+**User Story**: As a user, I want to receive MFA codes via SMS so that I can log in without an app.
+
+**Acceptance Criteria**:
+- [ ] Send 6-digit code via SMS (Twilio)
+- [ ] Verify SMS code during login
+- [ ] Code expires after 5 minutes
+- [ ] Rate limit (max 5 codes per hour)
+
+**Technical**: Integrate Twilio API
+
+**Estimation**: 2 days","feature,backend,security,P1-High",Q1-2026-Auth,3,""
+"[Feature] RBAC - 13 Roles Implementation","## Feature Description
+
+**User Story**: As a system, I want to enforce role-based access control so that users only see what they're authorized for.
+
+**Acceptance Criteria**:
+- [ ] Define 13 roles (SUPER_ADMIN, TENANT_ADMIN, CLINICIAN, etc.)
+- [ ] Define 31 permissions
+- [ ] Role-Permission mapping table
+- [ ] Enforce permissions at API level (@PreAuthorize)
+- [ ] Enforce permissions at UI level (hide buttons)
+
+**Technical**: Use Spring Security + custom RBAC
+
+**Estimation**: 4 days","feature,backend,security,P0-Critical",Q1-2026-Auth,8,""
+"[Feature] Session Management - Redis Storage","## Feature Description
+
+**User Story**: As a system, I want to store sessions in Redis so that they're available across service instances.
+
+**Acceptance Criteria**:
+- [ ] Store JWT sessions in Redis
+- [ ] 4-hour idle timeout
+- [ ] Extend session on activity
+- [ ] Limit to 5 concurrent sessions per user
+- [ ] Revoke session endpoint
+
+**Estimation**: 2 days","feature,backend,infrastructure,P0-Critical",Q1-2026-Auth,3,""
+"[Infrastructure] CI/CD Pipeline - Frontend","## Infrastructure Task
+
+**Objective**: Set up CI/CD pipeline for all frontend applications
+
+**Configuration**:
+- [ ] GitHub Actions workflow
+- [ ] Build all frontend apps (Clinical, Admin, Agent Studio, Patient, Developer)
+- [ ] Run unit tests (Vitest)
+- [ ] Run E2E tests (Playwright)
+- [ ] Build Docker images
+- [ ] Push to ECR
+- [ ] Deploy to staging (auto)
+- [ ] Deploy to production (manual approval)
+
+**Estimation**: 3 days","infrastructure,devops,P0-Critical",Q1-2026-Infrastructure,5,""
+"[Infrastructure] CI/CD Pipeline - Backend","## Infrastructure Task
+
+**Objective**: Set up CI/CD pipeline for all backend services
+
+**Configuration**:
+- [ ] GitHub Actions workflow
+- [ ] Build all services (Gradle multi-project)
+- [ ] Run unit tests (JUnit)
+- [ ] Run integration tests (Testcontainers)
+- [ ] Security scanning (Snyk, Trivy)
+- [ ] Build Docker images
+- [ ] Push to ECR
+- [ ] Deploy to staging (auto)
+- [ ] Deploy to production (manual approval)
+
+**Estimation**: 4 days","infrastructure,devops,P0-Critical",Q1-2026-Infrastructure,8,""
+"[Infrastructure] Monitoring Setup - Prometheus","## Infrastructure Task
+
+**Objective**: Deploy Prometheus for metrics collection
+
+**Configuration**:
+- [ ] Deploy Prometheus on Kubernetes
+- [ ] Configure service discovery
+- [ ] Add all 30+ services as targets
+- [ ] Configure retention (30 days)
+- [ ] Set up alerts (CPU, memory, errors)
+
+**Estimation**: 2 days","infrastructure,devops,P0-Critical",Q1-2026-Infrastructure,3,""
+"[Infrastructure] Monitoring Setup - Grafana","## Infrastructure Task
+
+**Objective**: Deploy Grafana and create dashboards
+
+**Configuration**:
+- [ ] Deploy Grafana on Kubernetes
+- [ ] Connect to Prometheus
+- [ ] Create 7 dashboards (System, Services, API, Database, Cache, Kafka, Users)
+- [ ] Configure alerts
+- [ ] Set up dashboard snapshots
+
+**Estimation**: 3 days","infrastructure,devops,P0-Critical",Q1-2026-Infrastructure,5,""
+"[Documentation] Clinical Portal User Guide","## Documentation Need
+
+**Document Type**: User Guide  
+**Target Audience**: Clinicians, Nurses, Care Managers
+
+**Content Outline**:
+1. Getting Started
+   - Login with SSO
+   - Dashboard overview
+2. Patient Search
+   - Search by name, MRN, DOB
+   - Viewing patient details
+3. Care Gap Management
+   - Finding open gaps
+   - Closing gaps
+   - Assigning gaps
+4. Quality Measures
+   - Viewing patient measures
+   - Understanding measure logic
+5. AI Assistant
+   - Asking questions
+   - Understanding responses
+
+**Assets Needed**:
+- [ ] Screenshots of all features
+- [ ] Video tutorials (optional)
+
+**Estimation**: 2 days","documentation,P1-High",Q1-2026-Documentation,3,""
+"[Documentation] API Documentation - Getting Started","## Documentation Need
+
+**Document Type**: Developer Guide  
+**Target Audience**: Developers, Integration Partners
+
+**Content Outline**:
+1. Authentication
+   - JWT tokens
+   - SSO integration
+2. API Basics
+   - Base URLs
+   - Request/response format
+   - Error handling
+   - Rate limits
+3. Common Workflows
+   - Search patients
+   - Evaluate quality measures
+   - Create prior auth
+4. Webhooks
+   - Registering webhooks
+   - Signature validation
+   - Event types
+
+**Estimation**: 3 days","documentation,api,P0-Critical",Q1-2026-Documentation,5,""
+"[Testing] E2E Test - Patient Search Flow","## Testing Task
+
+**Test Scenario**: Complete patient search workflow
+
+**Steps**:
+1. Login to Clinical Portal
+2. Enter patient name in search
+3. Verify autocomplete suggestions appear
+4. Click patient from results
+5. Verify patient 360° view loads
+6. Verify demographics card shows correct data
+
+**Tools**: Playwright
+
+**Estimation**: 1 day","testing,P1-High",Q1-2026-Testing,2,""
+"[Testing] E2E Test - Care Gap Closure","## Testing Task
+
+**Test Scenario**: Complete care gap closure workflow
+
+**Steps**:
+1. Login to Clinical Portal
+2. Navigate to Care Gap Dashboard
+3. Filter for open gaps
+4. Select a gap
+5. Click ""Close Gap""
+6. Enter closure reason
+7. Verify gap status changes to CLOSED
+
+**Tools**: Playwright
+
+**Estimation**: 1 day","testing,P1-High",Q1-2026-Testing,2,""
+"[Testing] Load Test - Patient Search API","## Testing Task
+
+**Test Scenario**: Verify patient search API can handle load
+
+**Performance Targets**:
+- 100 requests/second
+- p95 latency < 200ms
+- 0% error rate
+
+**Test Configuration**:
+- Duration: 10 minutes
+- Ramp-up: 2 minutes
+
+**Tools**: K6
+
+**Estimation**: 1 day","testing,performance,P1-High",Q1-2026-Testing,2,""

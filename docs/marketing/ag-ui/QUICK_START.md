@@ -31,7 +31,18 @@ export STABILITY_API_KEY="your-stability-api-key"
 
 ## Generate Your First UI
 
-### Single Dashboard
+### Single Dashboard (Using Gemini)
+
+```bash
+python scripts/ag-ui-generator.py generate \
+  --template dashboard-clinical \
+  --variation light \
+  --ai-tool gemini
+```
+
+**Output:** `assets/dashboards/dashboard-clinical-light.png`
+
+### Using DALL-E 3
 
 ```bash
 python scripts/ag-ui-generator.py generate \
@@ -39,8 +50,6 @@ python scripts/ag-ui-generator.py generate \
   --variation light \
   --ai-tool dalle-3
 ```
-
-**Output:** `assets/dashboards/dashboard-clinical-light.png`
 
 ### With Custom Metrics
 

@@ -91,7 +91,7 @@ DOCUMENTS = {
 }
 
 # Base URL for social sharing (update when deployed)
-BASE_URL = "https://your-domain.com/ai-solutioning"  # Update this when deployed
+BASE_URL = "https://web-gamma-snowy-38.vercel.app"  # Vercel production URL
 
 def generate_social_meta_tags(doc_info, filename):
     """Generate Open Graph and Twitter Card meta tags."""

@@ -165,4 +165,61 @@ public interface AIAgentDecisionEventRepository extends JpaRepository<AIAgentDec
     List<AIAgentDecisionEventEntity> findByDecisionIdIn(
         @Param("decisionIds") List<String> decisionIds
     );
+    
+    // ========== Replay Service Methods ==========
+    
+    /**
+     * Find events by tenant and time range (for replay).
+     */
+    List<AIAgentDecisionEventEntity> findByTenantIdAndTimestampBetweenOrderByTimestampAsc(
+        String tenantId,
+        Instant startTime,
+        Instant endTime
+    );
+    
+    /**
+     * Find events by tenant, decision type, and time range.
+     */
+    List<AIAgentDecisionEventEntity> findByTenantIdAndDecisionTypeAndTimestampBetweenOrderByTimestampAsc(
+        String tenantId,
+        AIAgentDecisionEvent.DecisionType decisionType,
+        Instant startTime,
+        Instant endTime
+    );
+    
+    /**
+     * Find events by tenant, resource ID (patient), and time range.
+     */
+    List<AIAgentDecisionEventEntity> findByTenantIdAndResourceIdAndTimestampBetweenOrderByTimestampAsc(
+        String tenantId,
+        String resourceId,
+        Instant startTime,
+        Instant endTime
+    );
+    
+    /**
+     * Find events by tenant, agent type, and time range.
+     */
+    List<AIAgentDecisionEventEntity> findByTenantIdAndAgentTypeAndTimestampBetweenOrderByTimestampAsc(
+        String tenantId,
+        AIAgentDecisionEvent.AgentType agentType,
+        Instant startTime,
+        Instant endTime
+    );
+    
+    /**
+     * Find events by tenant and correlation ID.
+     */
+    List<AIAgentDecisionEventEntity> findByTenantIdAndCorrelationIdOrderByTimestampAsc(
+        String tenantId,
+        String correlationId
+    );
+    
+    /**
+     * Find event by tenant and event ID.
+     */
+    java.util.Optional<AIAgentDecisionEventEntity> findByTenantIdAndEventId(
+        String tenantId,
+        UUID eventId
+    );
 }

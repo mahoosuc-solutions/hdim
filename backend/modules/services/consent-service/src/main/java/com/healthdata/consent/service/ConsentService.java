@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.consent.audit.ConsentAuditIntegration;
 import com.healthdata.consent.persistence.ConsentEntity;
 import com.healthdata.consent.persistence.ConsentRepository;
 
@@ -32,6 +33,7 @@ public class ConsentService {
     private final ConsentRepository consentRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final ConsentAuditIntegration consentAuditIntegration;
 
     /**
      * Create a new consent record
@@ -61,6 +63,11 @@ public class ConsentService {
 
         // Publish event
         publishConsentEvent("consent.created", tenantId, saved);
+
+        // Publish audit event
+        consentAuditIntegration.publishConsentGrantEvent(
+            tenantId, saved, createdBy
+        );
 
         return saved;
     }
@@ -116,6 +123,11 @@ public class ConsentService {
         // Publish event
         publishConsentEvent("consent.updated", tenantId, updated);
 
+        // Publish audit event
+        consentAuditIntegration.publishConsentUpdateEvent(
+            tenantId, existing, updated, modifiedBy
+        );
+
         return updated;
     }
 
@@ -158,6 +170,11 @@ public class ConsentService {
 
         // Publish event
         publishConsentEvent("consent.revoked", tenantId, revoked);
+
+        // Publish audit event
+        consentAuditIntegration.publishConsentRevokeEvent(
+            tenantId, revoked, reason, revokedBy
+        );
 
         return revoked;
     }

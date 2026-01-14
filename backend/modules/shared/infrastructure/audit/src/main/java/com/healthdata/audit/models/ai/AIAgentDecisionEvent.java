@@ -141,7 +141,15 @@ public class AIAgentDecisionEvent {
         COST_OPTIMIZER,         // Cost vs performance optimization
         ANOMALY_DETECTOR,       // Detect configuration anomalies
         CQL_ENGINE,             // CQL clinical quality language engine
-        CARE_GAP_IDENTIFIER     // Care gap identification agent
+        CARE_GAP_IDENTIFIER,    // Care gap identification agent
+        AI_AGENT,               // Generic AI agent (LLM-powered)
+        TOOL_EXECUTION,         // AI agent tool execution
+        GUARDRAIL_BLOCK,        // AI guardrail blocking response
+        PHI_ACCESS,             // PHI data access by AI
+        AGENT_EXECUTION,        // Full AI agent execution
+        PREDICTIVE_ANALYTICS,   // Predictive analytics/ML models
+        CONSENT_VALIDATOR,      // Consent validation and filtering
+        CLINICAL_WORKFLOW       // Clinical workflow orchestration
     }
 
     /**
@@ -162,7 +170,35 @@ public class AIAgentDecisionEvent {
         MEASURE_MET,              // CQL evaluation result - measure met
         MEASURE_NOT_MET,          // CQL evaluation result - measure not met
         BATCH_EVALUATION,         // Batch CQL evaluation
-        CARE_GAP_IDENTIFICATION   // Care gap identification
+        CARE_GAP_IDENTIFICATION,  // Care gap identification
+        AI_RECOMMENDATION,        // AI agent recommendation/decision
+        TOOL_EXECUTION,           // AI agent tool execution
+        GUARDRAIL_BLOCK,          // AI response blocked by guardrails
+        PHI_ACCESS,               // PHI accessed by AI agent
+        FHIR_QUERY,               // FHIR resource query
+        AI_DECISION_FAILED,       // AI decision failed/errored
+        AGENT_EXECUTION,          // AI agent execution event
+        HOSPITALIZATION_PREDICTION,  // Readmission/hospitalization risk prediction
+        RISK_STRATIFICATION,      // Patient population risk stratification
+        CLINICAL_DECISION,        // Clinical decision support
+        HCC_CODING,               // HCC code assignment
+        RAF_CALCULATION,          // RAF score calculation
+        CARE_GAP_CLOSURE,         // Care gap closure
+        CDS_RECOMMENDATION,       // Clinical decision support recommendation
+        QUALITY_MEASURE_RESULT,   // Quality measure evaluation result
+        PATIENT_RISK_SCORE,       // Patient health risk score
+        CONSENT_GRANT,            // Patient consent granted
+        CONSENT_REVOKE,           // Patient consent revoked
+        CONSENT_UPDATE,           // Patient consent updated
+        EHR_DATA_FETCH,           // EHR data fetch from external system
+        EHR_DATA_PUSH,            // EHR data push to local system
+        CDR_INGEST,               // CDR data ingestion (HL7/CDA)
+        CDR_TRANSFORM,            // CDR data transformation
+        PRIOR_AUTH_REQUEST,       // Prior authorization request
+        PRIOR_AUTH_DECISION,      // Prior authorization decision
+        APPROVAL_REQUEST,         // General approval workflow request
+        APPROVAL_DECISION,        // General approval workflow decision
+        PAYER_WORKFLOW_STEP       // Payer-specific workflow step
     }
 
     /**
@@ -261,7 +297,9 @@ public class AIAgentDecisionEvent {
         REJECTED_BY_USER, // User rejected the recommendation
         AUTO_APPLIED,     // System auto-applied (low risk)
         VALIDATION_FAILED, // Applied but validation failed
-        ROLLED_BACK       // Applied then rolled back
+        ROLLED_BACK,      // Applied then rolled back
+        APPROVED,         // Decision approved/completed successfully
+        BLOCKED           // Decision blocked (e.g., by guardrails)
     }
 
     /**

@@ -1,0 +1,247 @@
+================================================================================
+PROMPT REVIEW REPORT
+================================================================================
+Generated: 2026-01-14 14:23:03
+
+
+================================================================================
+FILE: /home/webemo-aaron/projects/hdim-master/docs/marketing/ag-ui/scripts/generate-with-gemini-pro.py
+Prompts Found: 3
+Average Score: 88.33/100
+================================================================================
+
+
+Prompt: clinical-dashboard-light
+Score: 100.00/100
+Grade: A
+Length: 1433 characters, 213 words
+
+  Specificity:
+    Score: 5/5 (100.0%)
+    Weighted: 25.00 points
+    ✅ Dimensions specified
+    ✅ Color codes specified
+    ✅ Layout described
+    ... and 2 more
+
+  Completeness:
+    Score: 4/4 (100.0%)
+    Weighted: 20.00 points
+    ✅ Layout section present
+    ✅ Style section present
+    ✅ Technical requirements present
+    ... and 1 more
+
+  Clarity:
+    Score: 3/3 (100.0%)
+    Weighted: 20.00 points
+    ✅ Clear section headers
+    ✅ Contains specific numbers/dimensions
+    ✅ Contains examples/references
+
+  Brand Consistency:
+    Score: 3/3 (100.0%)
+    Weighted: 15.00 points
+    ✅ Primary brand color specified
+    ✅ Accent color specified
+    ✅ Brand elements mentioned
+
+  Ui Focus:
+    Score: 3/3 (100.0%)
+    Weighted: 20.00 points
+    ✅ UI-specific terms used
+    ✅ Clarifies UI not photo
+    ✅ Emphasizes realistic UI
+
+
+Prompt: clinical-dashboard-dark
+Score: 83.33/100
+Grade: B
+Length: 1326 characters, 202 words
+
+  Specificity:
+    Score: 4/5 (80.0%)
+    Weighted: 20.00 points
+    ❌ Missing: Dimensions specified
+    ✅ Color codes specified
+    ✅ Layout described
+    ... and 2 more
+
+  Completeness:
+    Score: 3/4 (75.0%)
+    Weighted: 15.00 points
+    ✅ Layout section present
+    ✅ Style section present
+    ✅ Technical requirements present
+    ... and 1 more
+
+  Clarity:
+    Score: 2/3 (66.7%)
+    Weighted: 13.33 points
+    ✅ Clear section headers
+    ✅ Contains specific numbers/dimensions
+    ❌ Missing: Contains examples/references
+
+  Brand Consistency:
+    Score: 3/3 (100.0%)
+    Weighted: 15.00 points
+    ✅ Primary brand color specified
+    ✅ Accent color specified
+    ✅ Brand elements mentioned
+
+  Ui Focus:
+    Score: 3/3 (100.0%)
+    Weighted: 20.00 points
+    ✅ UI-specific terms used
+    ✅ Clarifies UI not photo
+    ✅ Emphasizes realistic UI
+
+
+Prompt: admin-dashboard
+Score: 81.67/100
+Grade: B
+Length: 1026 characters, 143 words
+
+  Specificity:
+    Score: 4/5 (80.0%)
+    Weighted: 20.00 points
+    ❌ Missing: Dimensions specified
+    ✅ Color codes specified
+    ✅ Layout described
+    ... and 2 more
+
+  Completeness:
+    Score: 4/4 (100.0%)
+    Weighted: 20.00 points
+    ✅ Layout section present
+    ✅ Style section present
+    ✅ Technical requirements present
+    ... and 1 more
+
+  Clarity:
+    Score: 2/3 (66.7%)
+    Weighted: 13.33 points
+    ✅ Clear section headers
+    ✅ Contains specific numbers/dimensions
+    ❌ Missing: Contains examples/references
+
+  Brand Consistency:
+    Score: 3/3 (100.0%)
+    Weighted: 15.00 points
+    ✅ Primary brand color specified
+    ✅ Accent color specified
+    ✅ Brand elements mentioned
+
+  Ui Focus:
+    Score: 2/3 (66.7%)
+    Weighted: 13.33 points
+    ✅ UI-specific terms used
+    ✅ Clarifies UI not photo
+    ❌ Missing: Emphasizes realistic UI
+
+
+================================================================================
+TEMPLATE: Clinical Dashboard
+File: /home/webemo-aaron/projects/hdim-master/docs/marketing/ag-ui/templates/dashboard-clinical.yaml
+================================================================================
+
+
+Prompt: Clinical Dashboard
+Score: 100.00/100
+Grade: A
+Length: 1655 characters, 232 words
+
+  Specificity:
+    Score: 5/5 (100.0%)
+    Weighted: 25.00 points
+    ✅ Dimensions specified
+    ✅ Color codes specified
+    ✅ Layout described
+    ... and 2 more
+
+  Completeness:
+    Score: 4/4 (100.0%)
+    Weighted: 20.00 points
+    ✅ Layout section present
+    ✅ Style section present
+    ✅ Technical requirements present
+    ... and 1 more
+
+  Clarity:
+    Score: 3/3 (100.0%)
+    Weighted: 20.00 points
+    ✅ Clear section headers
+    ✅ Contains specific numbers/dimensions
+    ✅ Contains examples/references
+
+  Brand Consistency:
+    Score: 3/3 (100.0%)
+    Weighted: 15.00 points
+    ✅ Primary brand color specified
+    ✅ Accent color specified
+    ✅ Brand elements mentioned
+
+  Ui Focus:
+    Score: 3/3 (100.0%)
+    Weighted: 20.00 points
+    ✅ UI-specific terms used
+    ✅ Clarifies UI not photo
+    ✅ Emphasizes realistic UI
+
+
+================================================================================
+TEMPLATE: Admin Dashboard
+File: /home/webemo-aaron/projects/hdim-master/docs/marketing/ag-ui/templates/dashboard-admin.yaml
+================================================================================
+
+
+Prompt: Admin Dashboard
+Score: 86.67/100
+Grade: B
+Length: 1363 characters, 182 words
+
+  Specificity:
+    Score: 5/5 (100.0%)
+    Weighted: 25.00 points
+    ✅ Dimensions specified
+    ✅ Color codes specified
+    ✅ Layout described
+    ... and 2 more
+
+  Completeness:
+    Score: 4/4 (100.0%)
+    Weighted: 20.00 points
+    ✅ Layout section present
+    ✅ Style section present
+    ✅ Technical requirements present
+    ... and 1 more
+
+  Clarity:
+    Score: 1/3 (33.3%)
+    Weighted: 6.67 points
+    ✅ Clear section headers
+    ❌ Missing: Contains specific numbers/dimensions
+    ❌ Missing: Contains examples/references
+
+  Brand Consistency:
+    Score: 3/3 (100.0%)
+    Weighted: 15.00 points
+    ✅ Primary brand color specified
+    ✅ Accent color specified
+    ✅ Brand elements mentioned
+
+  Ui Focus:
+    Score: 3/3 (100.0%)
+    Weighted: 20.00 points
+    ✅ UI-specific terms used
+    ✅ Clarifies UI not photo
+    ✅ Emphasizes realistic UI
+
+
+================================================================================
+OVERALL SUMMARY
+================================================================================
+Total Prompts Reviewed: 5
+Average Score: 90.33/100
+Average Grade: A
+================================================================================

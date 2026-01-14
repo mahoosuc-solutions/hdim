@@ -34,6 +34,9 @@ import java.lang.annotation.Target;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-@Import({TestCacheConfiguration.class})
+@Import({
+    TestCacheConfiguration.class,
+    TestAuditConfiguration.class
+})
 public @interface BaseIntegrationTest {
 }

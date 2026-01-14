@@ -1,5 +1,6 @@
 package com.healthdata.ehr.service;
 
+import com.healthdata.ehr.audit.EhrConnectorAuditIntegration;
 import com.healthdata.ehr.connector.EhrConnector;
 import com.healthdata.ehr.model.EhrEncounter;
 import com.healthdata.ehr.model.EhrObservation;
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 public class EhrSyncService {
 
     private final EhrConnectionManager connectionManager;
+    private final EhrConnectorAuditIntegration ehrConnectorAuditIntegration;
 
     /**
      * Sync all patient data within a date range.
@@ -40,10 +42,29 @@ public class EhrSyncService {
         log.info("Starting patient data sync for patient {} using connection {}",
                 ehrPatientId, connectionId);
 
+        long startTime = System.currentTimeMillis();
         return Mono.fromCallable(() -> getConnectorOrThrow(connectionId, tenantId))
                 .flatMap(connector -> connector.syncPatientData(ehrPatientId, startDate, endDate, tenantId))
-                .doOnSuccess(result -> log.info("Patient sync completed: encounters={}, observations={}",
-                        result.encountersRetrieved(), result.observationsRetrieved()))
+                .doOnSuccess(result -> {
+                    log.info("Patient sync completed: encounters={}, observations={}",
+                            result.encountersRetrieved(), result.observationsRetrieved());
+                    
+                    // Publish audit event
+                    ehrConnectorAuditIntegration.publishEhrDataSyncEvent(
+                        tenantId,
+                        connectionId,
+                        "EHR", // Generic vendor name
+                        ehrPatientId,
+                        startDate,
+                        endDate,
+                        result.encountersRetrieved(),
+                        result.observationsRetrieved(),
+                        result.success(),
+                        result.errorMessage(),
+                        System.currentTimeMillis() - startTime,
+                        "system" // User context not available in this method
+                    );
+                })
                 .doOnError(error -> log.error("Patient sync failed for patient {}", ehrPatientId, error));
     }
 
@@ -58,8 +79,21 @@ public class EhrSyncService {
     public Mono<EhrPatient> getPatient(String connectionId, String tenantId, String ehrPatientId) {
         log.debug("Fetching patient {} from connection {}", ehrPatientId, connectionId);
 
+        long startTime = System.currentTimeMillis();
         return Mono.fromCallable(() -> getConnectorOrThrow(connectionId, tenantId))
-                .flatMap(connector -> connector.getPatient(ehrPatientId, tenantId));
+                .flatMap(connector -> connector.getPatient(ehrPatientId, tenantId))
+                .doOnSuccess(patient -> {
+                    ehrConnectorAuditIntegration.publishEhrPatientFetchEvent(
+                        tenantId, connectionId, "EHR", ehrPatientId,
+                        patient != null, null, System.currentTimeMillis() - startTime, "system"
+                    );
+                })
+                .doOnError(error -> {
+                    ehrConnectorAuditIntegration.publishEhrPatientFetchEvent(
+                        tenantId, connectionId, "EHR", ehrPatientId,
+                        false, error.getMessage(), System.currentTimeMillis() - startTime, "system"
+                    );
+                });
     }
 
     /**

@@ -4,6 +4,7 @@ import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v25.segment.MSH;
 import ca.uhn.hl7v2.parser.Parser;
+import com.healthdata.cdr.audit.CdrProcessorAuditIntegration;
 import com.healthdata.cdr.dto.Hl7v2Message;
 import com.healthdata.cdr.handler.AdtMessageHandler;
 import com.healthdata.cdr.handler.BarMessageHandler;
@@ -58,6 +59,7 @@ public class Hl7v2ParserService {
     private final BarMessageHandler barMessageHandler;
     private final DftMessageHandler dftMessageHandler;
     private final PprMessageHandler pprMessageHandler;
+    private final CdrProcessorAuditIntegration cdrProcessorAuditIntegration;
 
     private static final DateTimeFormatter HL7_DATE_FORMAT =
         DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -72,6 +74,7 @@ public class Hl7v2ParserService {
     public Hl7v2Message parseMessage(String rawMessage, String tenantId) {
         log.debug("Parsing HL7 v2 message for tenant: {}", tenantId);
 
+        long startTime = System.currentTimeMillis();
         try {
             // Parse the message
             Message message = hl7v2Parser.parse(rawMessage);
@@ -105,10 +108,37 @@ public class Hl7v2ParserService {
             log.info("Successfully parsed HL7 message: type={}, controlId={}",
                 hl7Message.getMessageCode(), hl7Message.getMessageControlId());
 
+            // Publish audit event
+            cdrProcessorAuditIntegration.publishHl7MessageIngestEvent(
+                tenantId,
+                hl7Message.getMessageCode(),
+                hl7Message.getMessageControlId(),
+                null, // Patient ID not easily extracted here
+                rawMessage.split("\r").length, // Segment count
+                true,
+                null,
+                System.currentTimeMillis() - startTime,
+                "system"
+            );
+
             return hl7Message;
 
         } catch (HL7Exception e) {
             log.error("Failed to parse HL7 message: {}", e.getMessage(), e);
+            
+            // Publish audit event for failure
+            cdrProcessorAuditIntegration.publishHl7MessageIngestEvent(
+                tenantId,
+                "UNKNOWN",
+                "UNKNOWN",
+                null,
+                rawMessage.split("\r").length,
+                false,
+                e.getMessage(),
+                System.currentTimeMillis() - startTime,
+                "system"
+            );
+            
             return Hl7v2Message.builder()
                 .tenantId(tenantId)
                 .rawMessage(rawMessage)

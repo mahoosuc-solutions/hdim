@@ -227,7 +227,7 @@ services:
       OTEL_SERVICE_NAME: gateway-service
       _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
     ports:
-      - "8080:8080"
+      - "8087:8080"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
       interval: 30s

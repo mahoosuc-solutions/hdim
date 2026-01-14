@@ -1,7 +1,9 @@
 package com.healthdata.payer.service;
 
+import com.healthdata.payer.audit.PayerWorkflowsAuditIntegration;
 import com.healthdata.payer.domain.MedicaidComplianceReport;
 import com.healthdata.payer.domain.MedicaidStateConfig;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +24,10 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class MedicaidComplianceService {
+
+    private final PayerWorkflowsAuditIntegration auditIntegration;
 
     /**
      * Calculate comprehensive compliance report for a Medicaid MCO.
@@ -150,7 +155,7 @@ public class MedicaidComplianceService {
         Double estimatedBonus = qualityBonusEligible ? calculateEstimatedBonus(measureResults) : null;
 
         // Build report
-        return MedicaidComplianceReport.builder()
+        MedicaidComplianceReport report = MedicaidComplianceReport.builder()
             .mcoId(mcoId)
             .mcoName(mcoName)
             .stateConfig(stateConfig)
@@ -168,6 +173,25 @@ public class MedicaidComplianceService {
             .ncqaAccreditation(stateConfig.isNcqaAccreditationRequired() ? "Required" : "Not Required")
             .generatedAt(LocalDateTime.now())
             .build();
+
+        // Publish audit event
+        Map<String, Object> metrics = new java.util.HashMap<>();
+        metrics.put("measuresMetThreshold", measuresMetThreshold);
+        metrics.put("measuresBelowThreshold", measuresBelowThreshold);
+        metrics.put("complianceRate", overallComplianceRate);
+        
+        auditIntegration.publishMedicaidComplianceEvent(
+            mcoId, // Using mcoId as tenantId
+            stateConfig.getStateCode(),
+            reportingPeriod,
+            overallStatus == MedicaidComplianceReport.ComplianceStatus.COMPLIANT ||
+                overallStatus == MedicaidComplianceReport.ComplianceStatus.SUBSTANTIALLY_COMPLIANT,
+            metrics,
+            0, // Processing time not tracked
+            "system"
+        );
+
+        return report;
     }
 
     /**

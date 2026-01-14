@@ -1,0 +1,228 @@
+<mxfile host="app.diagrams.net" modified="2026-01-14T12:30:00.000Z" agent="5.0" version="21.0.0" etag="drawio-diagram-1" type="device">
+  <diagram name="M&A Integration Nightmare" id="ma-integration-nightmare">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Title -->
+        <mxCell id="title" value="Healthcare M&amp;A Integration Nightmare" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=32;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="800" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="The $500K/Year Integration Debt Problem" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontColor=#666666" vertex="1" parent="1">
+          <mxGeometry x="400" y="70" width="800" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Hospital A Systems -->
+        <mxCell id="hospital-a-title" value="Hospital A (Acquired)" style="text;html=1;strokeColor=none;fillColor=#E3F2FD;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="50" y="150" width="300" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="epic-a" value="Epic EHR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="50" y="210" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="lab-a" value="Lab System" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="210" y="210" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="radiology-a" value="Radiology PACS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="50" y="290" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="pharmacy-a" value="Pharmacy System" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="210" y="290" width="140" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Hospital B Systems -->
+        <mxCell id="hospital-b-title" value="Hospital B (Acquired)" style="text;html=1;strokeColor=none;fillColor=#FFF3E0;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="650" y="150" width="300" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="cerner-b" value="Cerner EHR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="650" y="210" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="lab-b" value="Lab System" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="810" y="210" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="billing-b" value="Billing System" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="650" y="290" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="scheduling-b" value="Scheduling" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="810" y="290" width="140" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Hospital C Systems -->
+        <mxCell id="hospital-c-title" value="Hospital C (Acquired)" style="text;html=1;strokeColor=none;fillColor=#F3E5F5;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1250" y="150" width="300" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="allscripts-c" value="AllScripts EHR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1BEE7;strokeColor=#7B1FA2;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1250" y="210" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="lab-c" value="Lab System" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1BEE7;strokeColor=#7B1FA2;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1410" y="210" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="emr-c" value="Legacy EMR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1BEE7;strokeColor=#7B1FA2;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1250" y="290" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="registry-c" value="Cancer Registry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1BEE7;strokeColor=#7B1FA2;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1410" y="290" width="140" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Central Systems -->
+        <mxCell id="central-title" value="Central Health System (Parent)" style="text;html=1;strokeColor=none;fillColor=#E8F5E9;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="350" y="450" width="900" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="data-warehouse" value="Data Warehouse" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="350" y="510" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="quality-system" value="Quality System" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="510" y="510" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="analytics" value="Analytics Platform" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="670" y="510" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="reporting" value="Reporting System" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="830" y="510" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="payer-system" value="Payer System" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="990" y="510" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="hie" value="HIE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1150" y="510" width="140" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Point-to-Point Connections (showing chaos) -->
+        <!-- Epic A connections -->
+        <mxCell id="epic-a-to-dw" value="" style="endArrow=classic;html=1;strokeColor=#FF0000;strokeWidth=2;dashed=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="epic-a" target="data-warehouse">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="epic-a-to-quality" value="" style="endArrow=classic;html=1;strokeColor=#FF0000;strokeWidth=2;dashed=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="epic-a" target="quality-system">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="epic-a-to-analytics" value="" style="endArrow=classic;html=1;strokeColor=#FF0000;strokeWidth=2;dashed=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="epic-a" target="analytics">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Lab A connections -->
+        <mxCell id="lab-a-to-dw" value="" style="endArrow=classic;html=1;strokeColor=#FF0000;strokeWidth=2;dashed=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="lab-a" target="data-warehouse">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Cerner B connections -->
+        <mxCell id="cerner-b-to-dw" value="" style="endArrow=classic;html=1;strokeColor=#FF0000;strokeWidth=2;dashed=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="cerner-b" target="data-warehouse">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="cerner-b-to-quality" value="" style="endArrow=classic;html=1;strokeColor=#FF0000;strokeWidth=2;dashed=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="cerner-b" target="quality-system">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="cerner-b-to-reporting" value="" style="endArrow=classic;html=1;strokeColor=#FF0000;strokeWidth=2;dashed=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="cerner-b" target="reporting">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- AllScripts C connections -->
+        <mxCell id="allscripts-c-to-dw" value="" style="endArrow=classic;html=1;strokeColor=#FF0000;strokeWidth=2;dashed=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="allscripts-c" target="data-warehouse">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="allscripts-c-to-hie" value="" style="endArrow=classic;html=1;strokeColor=#FF0000;strokeWidth=2;dashed=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="allscripts-c" target="hie">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Cross-connections between hospitals -->
+        <mxCell id="epic-to-cerner" value="Custom Interface" style="endArrow=classic;html=1;strokeColor=#FF6B00;strokeWidth=3;dashed=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=10;fontColor=#FF6B00" edge="1" parent="1" source="epic-a" target="cerner-b">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="400" y="240" />
+              <mxPoint x="400" y="180" />
+              <mxPoint x="650" y="180" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Pain Point Callouts -->
+        <mxCell id="pain-1" value="24 Custom Interfaces" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontSize=12;fontStyle=1;fontColor=#000000" vertex="1" parent="1">
+          <mxGeometry x="50" y="400" width="140" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="pain-2" value="$500K/Year Maintenance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontSize=12;fontStyle=1;fontColor=#000000" vertex="1" parent="1">
+          <mxGeometry x="210" y="400" width="140" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="pain-3" value="6-Month Backlog" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontSize=12;fontStyle=1;fontColor=#000000" vertex="1" parent="1">
+          <mxGeometry x="650" y="400" width="140" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="pain-4" value="Data Silos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontSize=12;fontStyle=1;fontColor=#000000" vertex="1" parent="1">
+          <mxGeometry x="810" y="400" width="140" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="pain-5" value="No Unified View" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontSize=12;fontStyle=1;fontColor=#000000" vertex="1" parent="1">
+          <mxGeometry x="1250" y="400" width="140" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Statistics Box -->
+        <mxCell id="stats-box" value="&lt;b&gt;The M&amp;A Integration Problem&lt;/b&gt;&lt;br&gt;&lt;br&gt;• 3 Different EHR Systems (Epic, Cerner, AllScripts)&lt;br&gt;• 24 Point-to-Point Custom Interfaces&lt;br&gt;• $500K/Year Maintenance Cost&lt;br&gt;• 6-Month Integration Backlog&lt;br&gt;• 40% IT Budget Consumed&lt;br&gt;• No Unified Patient View&lt;br&gt;• Data Silos Everywhere&lt;br&gt;• 12-18 Month New Integration Timeline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#C62828;strokeWidth=3;fontSize=14;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10" vertex="1" parent="1">
+          <mxGeometry x="50" y="650" width="500" height="200" as="geometry" />
+        </mxCell>
+
+        <!-- Cost Breakdown -->
+        <mxCell id="cost-box" value="&lt;b&gt;Annual Integration Costs&lt;/b&gt;&lt;br&gt;&lt;br&gt;• Interface Maintenance: $300K&lt;br&gt;• Custom Development: $150K&lt;br&gt;• Support &amp; Troubleshooting: $50K&lt;br&gt;&lt;br&gt;&lt;b&gt;Total: $500K/Year&lt;/b&gt;&lt;br&gt;&lt;br&gt;Plus opportunity cost of&lt;br&gt;delayed innovation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#C62828;strokeWidth=3;fontSize=14;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10" vertex="1" parent="1">
+          <mxGeometry x="600" y="650" width="400" height="200" as="geometry" />
+        </mxCell>
+
+        <!-- Time Impact -->
+        <mxCell id="time-box" value="&lt;b&gt;Time to Value&lt;/b&gt;&lt;br&gt;&lt;br&gt;• New Integration Request: 6 months&lt;br&gt;• Full M&amp;A Integration: 12-18 months&lt;br&gt;• Quality Measure Reporting: 3 months&lt;br&gt;• Care Gap Analysis: Manual (weeks)&lt;br&gt;&lt;br&gt;&lt;b&gt;Result: IT Can't Keep Up&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#C62828;strokeWidth=3;fontSize=14;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10" vertex="1" parent="1">
+          <mxGeometry x="1050" y="650" width="500" height="200" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

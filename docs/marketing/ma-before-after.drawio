@@ -1,0 +1,218 @@
+<mxfile host="app.diagrams.net" modified="2026-01-14T12:30:00.000Z" agent="5.0" version="21.0.0" etag="drawio-diagram-3" type="device">
+  <diagram name="Before After Comparison" id="before-after">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Title -->
+        <mxCell id="title" value="Healthcare M&amp;A Integration: Before vs. After HDIM" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=36;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="200" y="20" width="1600" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- BEFORE Section -->
+        <mxCell id="before-title" value="BEFORE: Traditional Point-to-Point Integration" style="text;html=1;strokeColor=#C62828;fillColor=#FFEBEE;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1;strokeWidth=3" vertex="1" parent="1">
+          <mxGeometry x="50" y="100" width="900" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Before Systems -->
+        <mxCell id="before-epic" value="Epic EHR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="100" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="before-cerner" value="Cerner EHR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="250" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="before-allscripts" value="AllScripts EHR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1BEE7;strokeColor=#7B1FA2;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="400" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="before-lab" value="Lab Systems" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="550" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="before-billing" value="Billing Systems" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="700" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Before Central Systems -->
+        <mxCell id="before-dw" value="Data Warehouse" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="200" y="300" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="before-quality" value="Quality System" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="350" y="300" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="before-analytics" value="Analytics" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="500" y="300" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Before Connections (Chaotic) -->
+        <mxCell id="before-conn1" value="Custom Interface #1" style="endArrow=classic;html=1;strokeColor=#FF0000;strokeWidth=2;dashed=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=9;fontColor=#FF0000" edge="1" parent="1" source="before-epic" target="before-dw">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="before-conn2" value="Custom Interface #2" style="endArrow=classic;html=1;strokeColor=#FF0000;strokeWidth=2;dashed=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=9;fontColor=#FF0000" edge="1" parent="1" source="before-epic" target="before-quality">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="before-conn3" value="Custom Interface #3" style="endArrow=classic;html=1;strokeColor=#FF0000;strokeWidth=2;dashed=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=9;fontColor=#FF0000" edge="1" parent="1" source="before-cerner" target="before-dw">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="before-conn4" value="Custom Interface #4" style="endArrow=classic;html=1;strokeColor=#FF0000;strokeWidth=2;dashed=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=9;fontColor=#FF0000" edge="1" parent="1" source="before-allscripts" target="before-quality">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="before-conn5" value="Custom Interface #5" style="endArrow=classic;html=1;strokeColor=#FF0000;strokeWidth=2;dashed=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=9;fontColor=#FF0000" edge="1" parent="1" source="before-lab" target="before-analytics">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Before Metrics -->
+        <mxCell id="before-metrics" value="&lt;b&gt;BEFORE Metrics&lt;/b&gt;&lt;br&gt;&lt;br&gt;• 24 Custom Interfaces&lt;br&gt;• $500K/Year Maintenance&lt;br&gt;• 12-18 Month Integration&lt;br&gt;• 6-Month Backlog&lt;br&gt;• 40% IT Budget Consumed&lt;br&gt;• No Unified View&lt;br&gt;• Data Silos&lt;br&gt;• Manual Quality Reporting" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#C62828;strokeWidth=3;fontSize=14;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10" vertex="1" parent="1">
+          <mxGeometry x="100" y="420" width="300" height="280" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="before-pain" value="&lt;b&gt;Pain Points&lt;/b&gt;&lt;br&gt;&lt;br&gt;❌ Each integration is custom code&lt;br&gt;❌ Point-to-point connections&lt;br&gt;❌ Vendor lock-in&lt;br&gt;❌ Fragmented data&lt;br&gt;❌ Slow time to value&lt;br&gt;❌ High maintenance costs&lt;br&gt;❌ IT can't keep up&lt;br&gt;❌ Innovation blocked" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#C62828;strokeWidth=3;fontSize=14;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10" vertex="1" parent="1">
+          <mxGeometry x="450" y="420" width="300" height="280" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="before-timeline" value="&lt;b&gt;Timeline&lt;/b&gt;&lt;br&gt;&lt;br&gt;Month 1-3: Planning&lt;br&gt;Month 4-9: Development&lt;br&gt;Month 10-12: Testing&lt;br&gt;Month 13-15: Deployment&lt;br&gt;Month 16-18: Stabilization&lt;br&gt;&lt;br&gt;&lt;b&gt;Total: 18 Months&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#C62828;strokeWidth=3;fontSize=14;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10" vertex="1" parent="1">
+          <mxGeometry x="800" y="420" width="300" height="280" as="geometry" />
+        </mxCell>
+
+        <!-- AFTER Section -->
+        <mxCell id="after-title" value="AFTER: HDIM Unified Platform" style="text;html=1;strokeColor=#00695C;fillColor=#E0F2F1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1;strokeWidth=3" vertex="1" parent="1">
+          <mxGeometry x="1050" y="100" width="900" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- After Systems (Same) -->
+        <mxCell id="after-epic" value="Epic EHR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1100" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="after-cerner" value="Cerner EHR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1250" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="after-allscripts" value="AllScripts EHR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1BEE7;strokeColor=#7B1FA2;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1400" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="after-lab" value="Lab Systems" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00695C;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1550" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="after-billing" value="Billing Systems" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00695C;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1700" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- HDIM Platform -->
+        <mxCell id="hdim-platform" value="&lt;b&gt;HDIM Platform&lt;/b&gt;&lt;br&gt;&lt;br&gt;FHIR R4 Native&lt;br&gt;AI-Powered&lt;br&gt;Zero Tech Debt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#00A9A5;strokeColor=#00695C;strokeWidth=4;fontSize=16;fontColor=#FFFFFF;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1400" y="300" width="200" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- After Connections (Clean) -->
+        <mxCell id="after-conn1" value="FHIR R4" style="endArrow=classic;html=1;strokeColor=#00A9A5;strokeWidth=3;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;fontSize=10;fontColor=#00A9A5;fontStyle=1" edge="1" parent="1" source="after-epic" target="hdim-platform">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="after-conn2" value="FHIR R4" style="endArrow=classic;html=1;strokeColor=#00A9A5;strokeWidth=3;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=10;fontColor=#00A9A5;fontStyle=1" edge="1" parent="1" source="after-cerner" target="hdim-platform">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="after-conn3" value="FHIR R4" style="endArrow=classic;html=1;strokeColor=#00A9A5;strokeWidth=3;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;fontSize=10;fontColor=#00A9A5;fontStyle=1" edge="1" parent="1" source="after-allscripts" target="hdim-platform">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="after-conn4" value="FHIR R4" style="endArrow=classic;html=1;strokeColor=#00A9A5;strokeWidth=3;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.1;entryY=0.5;entryDx=0;entryDy=0;fontSize=10;fontColor=#00A9A5;fontStyle=1" edge="1" parent="1" source="after-lab" target="hdim-platform">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="after-conn5" value="FHIR R4" style="endArrow=classic;html=1;strokeColor=#00A9A5;strokeWidth=3;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.9;entryY=0.5;entryDx=0;entryDy=0;fontSize=10;fontColor=#00A9A5;fontStyle=1" edge="1" parent="1" source="after-billing" target="hdim-platform">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="500" as="sourcePoint" />
+            <mxPoint x="550" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Unified Outputs -->
+        <mxCell id="unified-outputs" value="Unified Outputs" style="text;html=1;strokeColor=none;fillColor=#E8F5E9;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1100" y="450" width="800" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="output1" value="360° Patient View" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="1100" y="500" width="150" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="output2" value="Quality Reporting" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="1270" y="500" width="150" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="output3" value="Care Gaps" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="1440" y="500" width="150" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="output4" value="Real-Time Analytics" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="1610" y="500" width="150" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="output5" value="API Access" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="1780" y="500" width="150" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- After Metrics -->
+        <mxCell id="after-metrics" value="&lt;b&gt;AFTER Metrics&lt;/b&gt;&lt;br&gt;&lt;br&gt;• 0 Custom Interfaces&lt;br&gt;• $0 Maintenance&lt;br&gt;• 60-90 Day Integration&lt;br&gt;• Real-Time Integration&lt;br&gt;• IT Budget Freed&lt;br&gt;• Unified 360° View&lt;br&gt;• Single Source of Truth&lt;br&gt;• Automated Quality Reporting" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F2F1;strokeColor=#00695C;strokeWidth=3;fontSize=14;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10" vertex="1" parent="1">
+          <mxGeometry x="1100" y="600" width="300" height="280" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="after-benefits" value="&lt;b&gt;Benefits&lt;/b&gt;&lt;br&gt;&lt;br&gt;✅ Standard FHIR R4 integration&lt;br&gt;✅ Hub-and-spoke architecture&lt;br&gt;✅ Vendor agnostic&lt;br&gt;✅ Unified data platform&lt;br&gt;✅ Fast time to value&lt;br&gt;✅ Zero maintenance costs&lt;br&gt;✅ IT can innovate&lt;br&gt;✅ AI-powered insights" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F2F1;strokeColor=#00695C;strokeWidth=3;fontSize=14;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10" vertex="1" parent="1">
+          <mxGeometry x="1450" y="600" width="300" height="280" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="after-timeline" value="&lt;b&gt;Timeline&lt;/b&gt;&lt;br&gt;&lt;br&gt;Week 1-2: Configuration&lt;br&gt;Week 3-4: FHIR Connections&lt;br&gt;Week 5-6: Testing&lt;br&gt;Week 7-8: Go-Live&lt;br&gt;Week 9-12: Optimization&lt;br&gt;&lt;br&gt;&lt;b&gt;Total: 60-90 Days&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F2F1;strokeColor=#00695C;strokeWidth=3;fontSize=14;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10" vertex="1" parent="1">
+          <mxGeometry x="1800" y="600" width="300" height="280" as="geometry" />
+        </mxCell>
+
+        <!-- Comparison Summary -->
+        <mxCell id="comparison-title" value="Key Comparison" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="200" y="950" width="1600" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="comparison-table" value="&lt;table border=&quot;1&quot; cellpadding=&quot;5&quot; style=&quot;width:100%;border-collapse:collapse;&quot;&gt;&lt;tr style=&quot;background:#00695C;color:white;font-weight:bold;&quot;&gt;&lt;td&gt;Metric&lt;/td&gt;&lt;td&gt;BEFORE (Traditional)&lt;/td&gt;&lt;td&gt;AFTER (HDIM)&lt;/td&gt;&lt;td&gt;Improvement&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Custom Interfaces&lt;/td&gt;&lt;td&gt;24&lt;/td&gt;&lt;td&gt;0&lt;/td&gt;&lt;td&gt;&lt;b style=&quot;color:#2E7D32;&quot;&gt;100% Reduction&lt;/b&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Annual Maintenance&lt;/td&gt;&lt;td&gt;$500K&lt;/td&gt;&lt;td&gt;$0&lt;/td&gt;&lt;td&gt;&lt;b style=&quot;color:#2E7D32;&quot;&gt;$500K Savings&lt;/b&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Integration Timeline&lt;/td&gt;&lt;td&gt;12-18 Months&lt;/td&gt;&lt;td&gt;60-90 Days&lt;/td&gt;&lt;td&gt;&lt;b style=&quot;color:#2E7D32;&quot;&gt;80% Faster&lt;/b&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;IT Budget Consumed&lt;/td&gt;&lt;td&gt;40%&lt;/td&gt;&lt;td&gt;5%&lt;/td&gt;&lt;td&gt;&lt;b style=&quot;color:#2E7D32;&quot;&gt;87.5% Reduction&lt;/b&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Data Unification&lt;/td&gt;&lt;td&gt;No (Silos)&lt;/td&gt;&lt;td&gt;Yes (Unified)&lt;/td&gt;&lt;td&gt;&lt;b style=&quot;color:#2E7D32;&quot;&gt;Complete&lt;/b&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Quality Reporting&lt;/td&gt;&lt;td&gt;Manual (Weeks)&lt;/td&gt;&lt;td&gt;Automated (Real-Time)&lt;/td&gt;&lt;td&gt;&lt;b style=&quot;color:#2E7D32;&quot;&gt;Instant&lt;/b&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Vendor Lock-in&lt;/td&gt;&lt;td&gt;Yes&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;&lt;b style=&quot;color:#2E7D32;&quot;&gt;Eliminated&lt;/b&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Innovation Capacity&lt;/td&gt;&lt;td&gt;Blocked&lt;/td&gt;&lt;td&gt;Unlocked&lt;/td&gt;&lt;td&gt;&lt;b style=&quot;color:#2E7D32;&quot;&gt;Full Capacity&lt;/b&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#00695C;strokeWidth=2;fontSize=13;align=center;verticalAlign=top;spacingLeft=10;spacingTop=10" vertex="1" parent="1">
+          <mxGeometry x="200" y="1010" width="1600" height="300" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

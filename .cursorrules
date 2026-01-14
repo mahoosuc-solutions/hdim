@@ -1,0 +1,153 @@
+# HDIM Project Rules
+
+## Web Content Creation Process
+
+### Overview
+When creating web-ready HTML versions of markdown documentation, follow this standardized process to ensure consistency and maintainability.
+
+### Location
+- **Markdown Source:** `docs/marketing/*.md`
+- **HTML Output:** `docs/marketing/web/*.html`
+- **Conversion Script:** `docs/marketing/web/convert-to-html.py`
+- **Index Page:** `docs/marketing/web/ai-solutioning-index.html`
+
+### Process Steps
+
+#### 1. Create/Update Markdown Documentation
+- Write or update markdown files in `docs/marketing/`
+- Follow standard markdown formatting
+- Include frontmatter if needed (will be stripped during conversion)
+
+#### 2. Update Document Metadata
+If adding new documents, update `convert-to-html.py`:
+```python
+DOCUMENTS = {
+    'filename.md': {
+        'title': 'Document Title',
+        'subtitle': 'Document Subtitle',
+        'icon': '📖'  # Emoji icon
+    },
+    # ... existing documents
+}
+```
+
+#### 3. Generate HTML Files
+Run the conversion script:
+```bash
+cd docs/marketing/web
+python3 convert-to-html.py
+```
+
+The script will:
+- Read markdown files from parent directory (`../`)
+- Convert markdown to HTML with basic formatting
+- Apply consistent template with navigation and styling
+- Write HTML files to `docs/marketing/web/`
+
+#### 4. Update Index Page (if needed)
+If adding new documents, update `ai-solutioning-index.html`:
+- Add new document card in the documents grid
+- Update navigation if needed
+- Ensure links point to correct HTML files
+
+#### 5. Test Locally
+- Open `ai-solutioning-index.html` in a web browser
+- Verify all links work
+- Check responsive design (desktop, tablet, mobile)
+- Validate HTML structure
+
+#### 6. Commit and Push
+```bash
+git add docs/marketing/web/
+git commit -m "feat: update web content for [document name]"
+git push origin master
+```
+
+### HTML Template Features
+
+The template includes:
+- **Responsive Design:** Works on desktop, tablet, mobile
+- **Consistent Navigation:** Fixed nav bar with links
+- **Hero Sections:** Gradient backgrounds with titles
+- **Content Styling:** Typography, spacing, colors
+- **Print-Friendly:** Can be saved as PDF
+- **SEO-Friendly:** Meta tags included
+
+### Design System
+
+**Colors:**
+- Primary: `#1E3A5F` (Dark Blue)
+- Secondary: `#00A9A5` (Teal)
+- Accent: `#2E7D32` (Green)
+- Text: `#2C3E50` (Dark Gray)
+- Light: `#F5F7FA` (Light Gray)
+
+**Typography:**
+- Font: Inter (Google Fonts)
+- Headings: 700-800 weight
+- Body: 400 weight, 1.8 line height
+
+**Layout:**
+- Max width: 900px (content), 1200px (index)
+- Responsive breakpoint: 768px
+- Fixed navigation bar
+- Hero sections with gradients
+
+### Markdown to HTML Conversion
+
+The conversion script handles:
+- Headers (H1-H4)
+- Bold and italic text
+- Code blocks and inline code
+- Links
+- Horizontal rules
+- Basic lists
+- Paragraphs
+
+**Limitations:**
+- Complex markdown features may need manual adjustment
+- Tables require proper markdown formatting
+- Nested lists may need review
+- Code block syntax highlighting not included
+
+### Deployment Options
+
+HTML files can be deployed to:
+- **Vercel:** Static site hosting
+- **GitHub Pages:** Free hosting
+- **Netlify:** Static site hosting
+- **Any web server:** Standard HTML files
+
+### Maintenance
+
+**When to Regenerate:**
+- After updating markdown source files
+- When adding new documents
+- When changing template design
+- Before deployment
+
+**Best Practices:**
+- Keep markdown as source of truth
+- Regenerate HTML after markdown changes
+- Test locally before committing
+- Document any manual HTML adjustments needed
+
+### File Structure
+
+```
+docs/marketing/
+├── *.md                          # Markdown source files
+└── web/
+    ├── README.md                 # Usage instructions
+    ├── convert-to-html.py        # Conversion script
+    ├── ai-solutioning-index.html # Main index page
+    └── *.html                    # Generated HTML pages
+```
+
+### Notes
+
+- The markdown to HTML conversion is basic - complex markdown features may need manual adjustment
+- Tables, code blocks, and lists are supported
+- Links to external resources work as-is
+- Internal links between documents work via relative paths
+- All styling is in `<style>` tags within each HTML file for portability

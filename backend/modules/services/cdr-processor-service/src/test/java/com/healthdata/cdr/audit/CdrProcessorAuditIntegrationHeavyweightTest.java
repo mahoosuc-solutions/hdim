@@ -162,23 +162,23 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
     }
 
     @Test
-    @DisplayName("Should publish HL7v2 parse event to Kafka")
-    void shouldPublishHl7v2ParseEvent() throws Exception {
+    @DisplayName("Should publish HL7 message ingest event to Kafka")
+    void shouldPublishHl7MessageIngestEvent() throws Exception {
         // Arrange
         String messageType = "ORU^R01"; // Lab results
-        List<String> extractedResources = List.of("Patient", "Observation", "DiagnosticReport");
+        int segmentCount = 10;
 
         // Act
-        auditIntegration.publishHl7v2ParseEvent(
+        auditIntegration.publishHl7MessageIngestEvent(
                 TENANT_ID,
                 messageType,
                 MESSAGE_ID,
                 PATIENT_ID,
-                extractedResources,
+                segmentCount,
                 true,
                 null,
                 250L,
-                "parser-service"
+                "ingest-service"
         );
 
         // Assert
@@ -188,28 +188,28 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
         ConsumerRecord<String, String> record = records.iterator().next();
         JsonNode event = objectMapper.readTree(record.value());
 
-        assertThat(event.get("decisionType").asText()).isEqualTo("HL7V2_PARSE");
+        assertThat(event.get("decisionType").asText()).isEqualTo("HL7_MESSAGE_INGEST");
 
-        JsonNode context = event.get("decisionContext");
-        assertThat(context.get("messageType").asText()).isEqualTo(messageType);
-        assertThat(context.get("extractedResourcesCount").asInt()).isEqualTo(extractedResources.size());
+        JsonNode metrics = event.get("inputMetrics");
+        assertThat(metrics.get("messageType").asText()).isEqualTo(messageType);
+        assertThat(metrics.get("segmentCount").asInt()).isEqualTo(segmentCount);
     }
 
     @Test
-    @DisplayName("Should publish CDA document parse event to Kafka")
-    void shouldPublishCdaParseEvent() throws Exception {
+    @DisplayName("Should publish CDA document ingest event to Kafka")
+    void shouldPublishCdaDocumentIngestEvent() throws Exception {
         // Arrange
         String documentId = "CDA-DOC-789";
         String documentType = "Continuity of Care Document";
-        List<String> sections = List.of("Medications", "Allergies", "Problems", "Procedures");
+        int resourceCount = 25;
 
         // Act
-        auditIntegration.publishCdaParseEvent(
+        auditIntegration.publishCdaDocumentIngestEvent(
                 TENANT_ID,
-                documentId,
                 documentType,
+                documentId,
                 PATIENT_ID,
-                sections,
+                resourceCount,
                 true,
                 null,
                 400L,
@@ -223,34 +223,33 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
         ConsumerRecord<String, String> record = records.iterator().next();
         JsonNode event = objectMapper.readTree(record.value());
 
-        assertThat(event.get("decisionType").asText()).isEqualTo("CDA_PARSE");
+        assertThat(event.get("decisionType").asText()).isEqualTo("CDA_DOCUMENT_INGEST");
 
-        JsonNode context = event.get("decisionContext");
-        assertThat(context.get("documentId").asText()).isEqualTo(documentId);
-        assertThat(context.get("documentType").asText()).isEqualTo(documentType);
-        assertThat(context.get("sectionsCount").asInt()).isEqualTo(sections.size());
+        JsonNode metrics = event.get("inputMetrics");
+        assertThat(metrics.get("documentId").asText()).isEqualTo(documentId);
+        assertThat(metrics.get("documentType").asText()).isEqualTo(documentType);
+        assertThat(metrics.get("resourceCount").asInt()).isEqualTo(resourceCount);
     }
 
     @Test
-    @DisplayName("Should publish FHIR conversion event to Kafka")
-    void shouldPublishFhirConversionEvent() throws Exception {
+    @DisplayName("Should publish data transformation event to Kafka")
+    void shouldPublishDataTransformationEvent() throws Exception {
         // Arrange
         String sourceFormat = "HL7v2";
-        String targetFormat = "FHIR R4";
+        String targetFormat = "FHIR_R4";
         int resourcesConverted = 15;
 
         // Act
-        auditIntegration.publishFhirConversionEvent(
+        auditIntegration.publishDataTransformationEvent(
                 TENANT_ID,
                 sourceFormat,
                 targetFormat,
                 MESSAGE_ID,
-                PATIENT_ID,
                 resourcesConverted,
                 true,
                 null,
                 500L,
-                "fhir-converter"
+                "transformer"
         );
 
         // Assert
@@ -356,37 +355,29 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
                 8, true, null, 100L, "ingest"
         );
 
-        // Step 2: Parse
+        // Step 2: Ingest CDA Document
         Thread.sleep(50);
-        auditIntegration.publishHl7v2ParseEvent(
-                TENANT_ID, "ADT^A01", workflowMessageId, PATIENT_ID,
-                List.of("Patient", "Encounter"), true, null, 150L, "parse"
+        auditIntegration.publishCdaDocumentIngestEvent(
+                TENANT_ID, "CCD", workflowMessageId, PATIENT_ID,
+                5, true, null, 150L, "ingest"
         );
 
-        // Step 3: Convert to FHIR
+        // Step 3: Transform Data
         Thread.sleep(50);
-        auditIntegration.publishFhirConversionEvent(
-                TENANT_ID, "HL7v2", "FHIR R4", workflowMessageId, PATIENT_ID,
-                5, true, null, 200L, "convert"
+        auditIntegration.publishDataTransformationEvent(
+                TENANT_ID, "HL7v2", "FHIR_R4", workflowMessageId,
+                5, true, null, 200L, "transform"
         );
 
-        // Step 4: Transform
-        Thread.sleep(50);
-        auditIntegration.publishCdrTransformEvent(
-                TENANT_ID, "ADT^A01", workflowMessageId, PATIENT_ID,
-                5, true, null, 180L, "transform"
-        );
-
-        // Assert - All 4 events published
+        // Assert - All 3 events published
         ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(10));
-        assertThat(records.count()).isGreaterThanOrEqualTo(4);
+        assertThat(records.count()).isGreaterThanOrEqualTo(3);
 
         // Verify workflow stages
         String[] expectedTypes = {
             "HL7_MESSAGE_INGEST",
-            "HL7V2_PARSE",
-            "FHIR_CONVERSION",
-            "CDR_TRANSFORM"
+            "CDA_DOCUMENT_INGEST",
+            "DATA_TRANSFORMATION"
         };
 
         int foundCount = 0;
@@ -401,18 +392,18 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
             }
         }
 
-        assertThat(foundCount).isGreaterThanOrEqualTo(4);
+        assertThat(foundCount).isGreaterThanOrEqualTo(3);
     }
 
     @Test
     @DisplayName("Should track data quality metrics in audit events")
     void shouldTrackDataQualityMetrics() throws Exception {
-        // Arrange - Message with validation warnings
-        auditIntegration.publishCdrTransformEvent(
+        // Arrange - Transformation with quality metrics
+        auditIntegration.publishDataTransformationEvent(
                 TENANT_ID,
-                "ORU^R01",
+                "HL7v2",
+                "FHIR_R4",
                 MESSAGE_ID + "-quality",
-                PATIENT_ID,
                 10,
                 true,
                 null,

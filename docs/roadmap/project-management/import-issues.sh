@@ -6,7 +6,7 @@
 # 2. Authenticate: gh auth login
 # 3. Set your repository owner and name below
 
-REPO_OWNER="your-org"
+REPO_OWNER="webemo-aaron"
 REPO_NAME="hdim"
 
 # Colors for output

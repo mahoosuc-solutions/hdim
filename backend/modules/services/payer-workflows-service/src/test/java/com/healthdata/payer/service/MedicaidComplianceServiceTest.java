@@ -1,5 +1,6 @@
 package com.healthdata.payer.service;
 
+import com.healthdata.payer.audit.PayerWorkflowsAuditIntegration;
 import com.healthdata.payer.domain.MedicaidComplianceReport;
 import com.healthdata.payer.domain.MedicaidComplianceReport.ComplianceStatus;
 import com.healthdata.payer.domain.MedicaidComplianceReport.MedicaidMeasureResult;
@@ -9,11 +10,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.doNothing;
 
 /**
  * Tests for MedicaidComplianceService - State-specific Medicaid compliance reporting.
@@ -25,9 +34,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * - Penalty and bonus calculations
  * - Multiple state configurations (NY, CA, TX, FL)
  */
+@ExtendWith(MockitoExtension.class)
 @DisplayName("Medicaid Compliance Service Tests")
 class MedicaidComplianceServiceTest {
 
+    @Mock
+    private PayerWorkflowsAuditIntegration auditIntegration;
+    
     private MedicaidComplianceService complianceService;
 
     private static final String MCO_ID = "mco-001";
@@ -37,7 +50,11 @@ class MedicaidComplianceServiceTest {
 
     @BeforeEach
     void setUp() {
-        complianceService = new MedicaidComplianceService();
+        // Mock audit calls to do nothing
+        doNothing().when(auditIntegration).publishMedicaidComplianceEvent(
+                anyString(), anyString(), anyString(), anyBoolean(), any(), anyLong(), anyString());
+        
+        complianceService = new MedicaidComplianceService(auditIntegration);
     }
 
     @Nested

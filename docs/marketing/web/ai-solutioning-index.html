@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Solutioning Journey - HDIM Platform</title>
+    <meta name="description" content="How one architect built an enterprise healthcare platform in 1.5 months using spec-driven development with AI coding assistants">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1E3A5F;
+            --secondary: #00A9A5;
+            --accent: #2E7D32;
+            --text: #2C3E50;
+            --text-light: #6C757D;
+            --light: #F5F7FA;
+            --white: #FFFFFF;
+            --border: #E0E0E0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.7;
+            background: var(--light);
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--secondary);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 180px 40px 100px;
+            background: linear-gradient(135deg, var(--primary) 0%, #2C5282 100%);
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 80%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0,169,165,0.1) 0%, transparent 70%);
+            animation: pulse 20s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 800;
+            margin-bottom: 24px;
+            line-height: 1.2;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero .subtitle {
+            font-size: 24px;
+            font-weight: 400;
+            margin-bottom: 40px;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero .tagline {
+            font-size: 18px;
+            font-weight: 300;
+            max-width: 800px;
+            margin: 0 auto 50px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin-top: 60px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+
+        /* Content Section */
+        .content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 80px 40px;
+        }
+
+        .section {
+            margin-bottom: 80px;
+        }
+
+        .section-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .section-subtitle {
+            font-size: 20px;
+            color: var(--text-light);
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 60px;
+        }
+
+        /* Document Cards */
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .doc-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid var(--border);
+        }
+
+        .doc-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .doc-card .icon {
+            font-size: 32px;
+            margin-bottom: 16px;
+        }
+
+        .doc-card h3 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .doc-card .description {
+            font-size: 15px;
+            color: var(--text-light);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .doc-card .meta {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .meta-tag {
+            font-size: 12px;
+            padding: 6px 12px;
+            background: var(--light);
+            border-radius: 20px;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .doc-card .link {
+            display: inline-block;
+            padding: 12px 24px;
+            background: var(--secondary);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .doc-card .link:hover {
+            background: #00897B;
+        }
+
+        /* Timeline Section */
+        .timeline {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 40px;
+            margin-top: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 40px;
+            padding-bottom: 40px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .timeline-date {
+            min-width: 120px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .timeline-content h4 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .timeline-content p {
+            font-size: 15px;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 40px;
+            margin-top: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: var(--light);
+        }
+
+        .highlight {
+            background: #E8F5E9;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, var(--primary) 0%, #2C5282 100%);
+            color: white;
+            padding: 80px 40px;
+            text-align: center;
+            margin-top: 80px;
+        }
+
+        .cta-section h2 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .cta-section p {
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.95;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #00897B;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,169,165,0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        footer p {
+            opacity: 0.8;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero .subtitle {
+                font-size: 18px;
+            }
+
+            .hero-stats {
+                gap: 30px;
+            }
+
+            .stat-value {
+                font-size: 36px;
+            }
+
+            .documents-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .timeline-item {
+                flex-direction: column;
+            }
+
+            .timeline-date {
+                min-width: auto;
+            }
+
+            nav {
+                padding: 15px 20px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="#" class="logo">HDIM</a>
+        <div class="nav-links">
+            <a href="#journey">Journey</a>
+            <a href="#documents">Documents</a>
+            <a href="#metrics">Metrics</a>
+            <a href="#comparison">Comparison</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>The AI Solutioning Journey</h1>
+        <p class="subtitle">How One Architect Built an Enterprise Platform in 1.5 Months</p>
+        <p class="tagline">Using spec-driven development with AI coding assistants, HDIM proves that domain experts + AI can solve problems that were traditionally considered "too hard"</p>
+        
+        <div class="hero-stats">
+            <div class="stat">
+                <div class="stat-value">1.5</div>
+                <div class="stat-label">Months</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">1</div>
+                <div class="stat-label">Architect</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">37</div>
+                <div class="stat-label">Services</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">98%</div>
+                <div class="stat-label">Cost Savings</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="content">
+        <!-- Timeline Section -->
+        <section id="journey" class="section">
+            <h2 class="section-title">The Journey</h2>
+            <p class="section-subtitle">From Node.js prototype to production-ready Java platform in 1.5 months</p>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-date">Oct 2024</div>
+                    <div class="timeline-content">
+                        <h4>Node.js Prototype Begins</h4>
+                        <p>Started building HDIM in Node.js/TypeScript. Rapid prototyping with AI assistance worked well initially, but complexity grew unmanageable.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-date">Nov 2024</div>
+                    <div class="timeline-content">
+                        <h4>Nearly Complete, But...</h4>
+                        <p>Node.js version nearly complete by Thanksgiving, but type system complexity, dependency management, and healthcare library ecosystem issues became unmanageable.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-date">Nov 24, 2024</div>
+                    <div class="timeline-content">
+                        <h4>The Decision</h4>
+                        <p>Decision to rebuild in Java. Healthcare ecosystem alignment (HAPI FHIR, CQL Engine), developer skills, and AI assistant effectiveness made Java the right choice.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-date">Nov 24 - Jan 2025</div>
+                    <div class="timeline-content">
+                        <h4>Java Rebuild (1.5 Months)</h4>
+                        <p>Spec-driven development methodology refined. AI assistants directed with comprehensive specifications. 37 microservices built, tested, and documented.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-date">Jan 2025 - Present</div>
+                    <div class="timeline-content">
+                        <h4>Architecture Evolution</h4>
+                        <p>7 phases of architecture evolution: database standardization, gateway trust architecture, distributed tracing, and more. Each evolution accelerated by AI assistance.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Documents Section -->
+        <section id="documents" class="section">
+            <h2 class="section-title">Complete Documentation</h2>
+            <p class="section-subtitle">Seven comprehensive documents tell the complete story</p>
+            
+            <div class="documents-grid">
+                <div class="doc-card">
+                    <div class="icon">📖</div>
+                    <h3>The Development Journey</h3>
+                    <p class="description">Complete narrative of the Node.js prototype, the decision to rebuild in Java, and the 1.5-month rebuild using spec-driven development.</p>
+                    <div class="meta">
+                        <span class="meta-tag">Narrative</span>
+                        <span class="meta-tag">Story</span>
+                        <span class="meta-tag">Timeline</span>
+                    </div>
+                    <a href="ai-solutioning-journey.html" class="link">Read Document →</a>
+                </div>
+
+                <div class="doc-card">
+                    <div class="icon">📋</div>
+                    <h3>Spec-Driven Development Analysis</h3>
+                    <p class="description">Deep dive into the spec-driven methodology that enabled AI solutioning. How specifications directed AI assistants to generate production-ready code.</p>
+                    <div class="meta">
+                        <span class="meta-tag">Methodology</span>
+                        <span class="meta-tag">Process</span>
+                        <span class="meta-tag">Technical</span>
+                    </div>
+                    <a href="spec-driven-development-analysis.html" class="link">Read Document →</a>
+                </div>
+
+                <div class="doc-card">
+                    <div class="icon">🏗️</div>
+                    <h3>Architecture Evolution Timeline</h3>
+                    <p class="description">Seven phases of architecture evolution, from Node.js prototype to production-ready Java platform. What triggered each evolution and how AI assisted.</p>
+                    <div class="meta">
+                        <span class="meta-tag">Architecture</span>
+                        <span class="meta-tag">Evolution</span>
+                        <span class="meta-tag">Technical</span>
+                    </div>
+                    <a href="architecture-evolution-timeline.html" class="link">Read Document →</a>
+                </div>
+
+                <div class="doc-card">
+                    <div class="icon">⚖️</div>
+                    <h3>Traditional vs AI Solutioning</h3>
+                    <p class="description">Comprehensive comparison: 18 months vs 1.5 months, 10 engineers vs 1 architect, $3M vs $50K. Metrics, quality, and outcomes compared.</p>
+                    <div class="meta">
+                        <span class="meta-tag">Comparison</span>
+                        <span class="meta-tag">Metrics</span>
+                        <span class="meta-tag">Business</span>
+                    </div>
+                    <a href="traditional-vs-ai-solutioning-comparison.html" class="link">Read Document →</a>
+                </div>
+
+                <div class="doc-card">
+                    <div class="icon">👥</div>
+                    <h3>AI-Native vs Non-AI-Native</h3>
+                    <p class="description">How AI-native architects use AI tools differently. Spec-driven vs prompt-driven, architecture-first vs code-first, domain expertise amplification.</p>
+                    <div class="meta">
+                        <span class="meta-tag">Comparison</span>
+                        <span class="meta-tag">Methodology</span>
+                        <span class="meta-tag">Insights</span>
+                    </div>
+                    <a href="ai-native-vs-non-ai-native-comparison.html" class="link">Read Document →</a>
+                </div>
+
+                <div class="doc-card">
+                    <div class="icon">☕</div>
+                    <h3>Java Rebuild Deep-Dive</h3>
+                    <p class="description">Technical analysis of the Java rebuild. Why Java was chosen, what was preserved, what was redesigned, and performance improvements.</p>
+                    <div class="meta">
+                        <span class="meta-tag">Technical</span>
+                        <span class="meta-tag">Java</span>
+                        <span class="meta-tag">Architecture</span>
+                    </div>
+                    <a href="java-rebuild-deep-dive.html" class="link">Read Document →</a>
+                </div>
+
+                <div class="doc-card">
+                    <div class="icon">📊</div>
+                    <h3>Metrics & Statistics</h3>
+                    <p class="description">Quantified achievements: 411K lines of code, 37 services, 515 tests, 386 documentation files. Comparison to industry benchmarks.</p>
+                    <div class="meta">
+                        <span class="meta-tag">Metrics</span>
+                        <span class="meta-tag">Data</span>
+                        <span class="meta-tag">Statistics</span>
+                    </div>
+                    <a href="ai-solutioning-metrics.html" class="link">Read Document →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Metrics Section -->
+        <section id="metrics" class="section">
+            <h2 class="section-title">Key Metrics</h2>
+            <p class="section-subtitle">Quantified achievements that prove AI solutioning works</p>
+            
+            <div class="comparison-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Traditional</th>
+                            <th>AI Solutioning</th>
+                            <th>Improvement</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Timeline</strong></td>
+                            <td>18 months</td>
+                            <td class="highlight">1.5 months</td>
+                            <td class="highlight">92% faster</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Team Size</strong></td>
+                            <td>10-14 engineers</td>
+                            <td class="highlight">1 architect</td>
+                            <td class="highlight">93% reduction</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cost</strong></td>
+                            <td>$3.0M</td>
+                            <td class="highlight">$50K</td>
+                            <td class="highlight">98% savings</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Services</strong></td>
+                            <td>9-12</td>
+                            <td class="highlight">37</td>
+                            <td class="highlight">3x more</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Code Volume</strong></td>
+                            <td>100K-200K lines</td>
+                            <td class="highlight">411,731 lines</td>
+                            <td class="highlight">2-4x more</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Test Coverage</strong></td>
+                            <td>60-70%</td>
+                            <td class="highlight">80-90%</td>
+                            <td class="highlight">20-30% higher</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Documentation</strong></td>
+                            <td>50% coverage</td>
+                            <td class="highlight">100% coverage</td>
+                            <td class="highlight">100% improvement</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Test Files</strong></td>
+                            <td>100-200</td>
+                            <td class="highlight">515</td>
+                            <td class="highlight">2.5-5x more</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Comparison Section -->
+        <section id="comparison" class="section">
+            <h2 class="section-title">The Difference</h2>
+            <p class="section-subtitle">AI-native architects use AI tools fundamentally differently</p>
+            
+            <div class="documents-grid">
+                <div class="doc-card">
+                    <div class="icon">🎯</div>
+                    <h3>Spec-Driven vs Prompt-Driven</h3>
+                    <p class="description">AI-native architects write comprehensive specifications first, then direct AI to implement. Non-AI-native developers prompt AI and fix output.</p>
+                </div>
+
+                <div class="doc-card">
+                    <div class="icon">🏛️</div>
+                    <h3>Architecture-First vs Code-First</h3>
+                    <p class="description">AI-native architects design architecture before coding. Non-AI-native developers code first and discover problems later.</p>
+                </div>
+
+                <div class="doc-card">
+                    <div class="icon">🧠</div>
+                    <h3>Domain Expertise Amplification</h3>
+                    <p class="description">AI-native architects use domain expertise to write specs. AI implements specs. Zero translation loss. Non-AI-native: AI makes decisions, expert corrects.</p>
+                </div>
+
+                <div class="doc-card">
+                    <div class="icon">✅</div>
+                    <h3>Quality Through Specifications</h3>
+                    <p class="description">AI-native architects include test requirements, documentation requirements, and security requirements in specs. Quality built-in from the start.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <section class="cta-section">
+        <h2>Ready to Learn More?</h2>
+        <p>Explore the complete AI solutioning journey documentation to understand how spec-driven development with AI assistants can transform software development.</p>
+        <div class="cta-buttons">
+            <a href="ai-solutioning-journey.html" class="btn btn-primary">Start Reading</a>
+            <a href="#documents" class="btn btn-secondary">Browse Documents</a>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 HDIM Platform. The AI Solutioning Journey.</p>
+    </footer>
+</body>
+</html>

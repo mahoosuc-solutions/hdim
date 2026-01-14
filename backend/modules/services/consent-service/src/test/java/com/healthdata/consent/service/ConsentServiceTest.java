@@ -43,6 +43,9 @@ class ConsentServiceTest {
 
     @Mock
     private KafkaTemplate<String, String> kafkaTemplate;
+    
+    @Mock
+    private com.healthdata.consent.audit.ConsentAuditIntegration auditIntegration;
 
     @Captor
     private ArgumentCaptor<ConsentEntity> consentCaptor;
@@ -58,7 +61,7 @@ class ConsentServiceTest {
     void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
-        consentService = new ConsentService(consentRepository, kafkaTemplate, objectMapper);
+        consentService = new ConsentService(consentRepository, kafkaTemplate, objectMapper, auditIntegration);
     }
 
     @Nested
@@ -190,7 +193,7 @@ class ConsentServiceTest {
         @DisplayName("Should swallow serialization errors when publishing events")
         void shouldSwallowSerializationErrors() throws Exception {
             ObjectMapper failingMapper = mock(ObjectMapper.class);
-            ConsentService serviceWithFailingMapper = new ConsentService(consentRepository, kafkaTemplate, failingMapper);
+            ConsentService serviceWithFailingMapper = new ConsentService(consentRepository, kafkaTemplate, failingMapper, auditIntegration);
             ConsentEntity consent = createValidConsent();
             consent.setId(UUID.randomUUID());
 

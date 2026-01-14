@@ -16,6 +16,14 @@ from openai import OpenAI
 import requests
 from PIL import Image
 import io
+import base64
+
+# Try to import Google Generative AI
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
 
 # Configuration
 CONFIG_DIR = Path(__file__).parent.parent
@@ -33,16 +41,24 @@ class AGUIGenerator:
     
     def __init__(self, ai_tool: str = "dalle-3", api_key: Optional[str] = None):
         self.ai_tool = ai_tool
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.api_key = api_key
         
         if ai_tool == "dalle-3":
+            self.api_key = api_key or os.getenv("OPENAI_API_KEY")
             if not self.api_key:
                 raise ValueError("OPENAI_API_KEY environment variable required")
             self.client = OpenAI(api_key=self.api_key)
         elif ai_tool == "stable-diffusion":
-            self.stability_api_key = os.getenv("STABILITY_API_KEY")
+            self.stability_api_key = api_key or os.getenv("STABILITY_API_KEY")
             if not self.stability_api_key:
                 raise ValueError("STABILITY_API_KEY environment variable required")
+        elif ai_tool == "gemini":
+            if not GEMINI_AVAILABLE:
+                raise ImportError("google-generativeai package required. Install with: pip install google-generativeai")
+            self.api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+            if not self.api_key:
+                raise ValueError("GEMINI_API_KEY or GOOGLE_API_KEY environment variable required")
+            genai.configure(api_key=self.api_key)
     
     def load_template(self, template_name: str) -> Dict:
         """Load a prompt template from YAML file"""
@@ -125,12 +141,128 @@ class AGUIGenerator:
             
             result = response.json()
             image_base64 = result["artifacts"][0]["base64"]
-            image_bytes = io.BytesIO(image_base64.decode('base64'))
+            image_bytes = io.BytesIO(base64.b64decode(image_base64))
             
             return image_bytes.getvalue()
         
         except Exception as e:
             raise Exception(f"Stable Diffusion generation failed: {str(e)}")
+    
+    def generate_with_gemini(
+        self,
+        prompt: str,
+        model: str = "gemini-2.0-flash-exp",
+        width: int = 1024,
+        height: int = 1024
+    ) -> bytes:
+        """Generate image using Google Gemini API
+        
+        Note: Gemini's image generation capabilities vary by model.
+        Some models support direct image generation, while others may
+        require using the multimodal API with image generation requests.
+        """
+        try:
+            # Use Gemini's generateContent API for image generation
+            # Note: Image generation capabilities depend on the model
+            model_instance = genai.GenerativeModel(model)
+            
+            # Enhanced prompt for better image generation
+            enhanced_prompt = f"""Generate a high-quality UI mockup image based on this description:
+
+{prompt}
+
+Requirements:
+- Resolution: {width}x{height} pixels
+- High quality, professional appearance
+- Realistic UI elements, not wireframes
+- Clear, readable text and elements
+- Modern, clean design aesthetic
+
+Generate this as a detailed image."""
+            
+            # Try to generate with image generation capability
+            # Some Gemini models support image generation directly
+            try:
+                response = model_instance.generate_content(
+                    enhanced_prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        response_mime_type="image/png",
+                        temperature=0.7,
+                    )
+                )
+                
+                # Extract image data from response
+                if hasattr(response, 'parts') and response.parts:
+                    for part in response.parts:
+                        if hasattr(part, 'inline_data') and part.inline_data:
+                            image_data = part.inline_data.data
+                            return base64.b64decode(image_data)
+                
+                # Alternative: Check if response contains image data
+                if hasattr(response, 'candidates') and response.candidates:
+                    for candidate in response.candidates:
+                        if hasattr(candidate, 'content') and candidate.content:
+                            for part in candidate.content.parts:
+                                if hasattr(part, 'inline_data') and part.inline_data:
+                                    image_data = part.inline_data.data
+                                    return base64.b64decode(image_data)
+                
+                raise Exception("No image data found in Gemini response")
+            
+            except Exception as e:
+                # Fallback: Use Gemini to enhance prompt, then use alternative method
+                # For now, we'll use the REST API approach
+                return self._generate_with_gemini_rest_api(prompt, width, height)
+        
+        except Exception as e:
+            raise Exception(f"Gemini generation failed: {str(e)}")
+    
+    def _generate_with_gemini_rest_api(
+        self,
+        prompt: str,
+        width: int = 1024,
+        height: int = 1024
+    ) -> bytes:
+        """Generate image using Gemini REST API as fallback"""
+        try:
+            # Use Gemini REST API for image generation
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={self.api_key}"
+            
+            payload = {
+                "contents": [{
+                    "parts": [{
+                        "text": f"Generate a high-quality UI mockup: {prompt}"
+                    }]
+                }],
+                "generationConfig": {
+                    "responseMimeType": "image/png",
+                    "temperature": 0.7
+                }
+            }
+            
+            response = requests.post(url, json=payload)
+            
+            if response.status_code != 200:
+                error_msg = response.text
+                raise Exception(f"Gemini API error ({response.status_code}): {error_msg}")
+            
+            result = response.json()
+            
+            # Extract image data from response
+            if "candidates" in result and result["candidates"]:
+                candidate = result["candidates"][0]
+                if "content" in candidate and "parts" in candidate["content"]:
+                    for part in candidate["content"]["parts"]:
+                        if "inlineData" in part:
+                            image_data = part["inlineData"]["data"]
+                            return base64.b64decode(image_data)
+            
+            # If no image in response, try to use Gemini to create a prompt for another service
+            # or return an error
+            raise Exception("Gemini API did not return image data. The model may not support direct image generation.")
+        
+        except Exception as e:
+            raise Exception(f"Gemini REST API generation failed: {str(e)}")
     
     def download_image(self, url: str, output_path: Path) -> None:
         """Download image from URL"""
@@ -193,6 +325,7 @@ class AGUIGenerator:
         # Generate image
         print(f"🎨 Generating UI mockup: {template_name} ({variation or 'default'})")
         print(f"📝 Prompt: {prompt[:100]}...")
+        print(f"🤖 Using AI tool: {self.ai_tool}")
         
         if self.ai_tool == "dalle-3":
             size = final_params.get('size', '1024x1024')
@@ -217,6 +350,28 @@ class AGUIGenerator:
             image_data = self.generate_with_stable_diffusion(
                 prompt,
                 negative_prompt=negative_prompt,
+                width=width,
+                height=height
+            )
+            
+            # Determine output path
+            if not output_path:
+                category = template.get('category', 'general')
+                filename = f"{template_name}-{variation or 'default'}.png"
+                output_path = ASSETS_DIR / category / filename
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Save image
+            self.save_image(image_data, output_path)
+            print(f"✅ Generated: {output_path}")
+        
+        elif self.ai_tool == "gemini":
+            width = final_params.get('width', 1024)
+            height = final_params.get('height', 1024)
+            model = final_params.get('gemini_model', 'gemini-2.0-flash-exp')
+            image_data = self.generate_with_gemini(
+                prompt,
+                model=model,
                 width=width,
                 height=height
             )
@@ -317,9 +472,9 @@ def main():
     )
     parser.add_argument(
         '--ai-tool',
-        choices=['dalle-3', 'stable-diffusion'],
+        choices=['dalle-3', 'stable-diffusion', 'gemini'],
         default='dalle-3',
-        help='AI tool to use'
+        help='AI tool to use (dalle-3, stable-diffusion, or gemini)'
     )
     parser.add_argument(
         '--parameters',

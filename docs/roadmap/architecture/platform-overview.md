@@ -94,7 +94,7 @@ graph TB
     
     subgraph Supporting[Supporting Services]
         Documentation[Documentation<br/>Doc Management]
-        DemoS seeding[Demo Seeding<br/>Test Data]
+        DemoSeeding[Demo Seeding<br/>Test Data]
     end
     
     Frontend --> APIGateway

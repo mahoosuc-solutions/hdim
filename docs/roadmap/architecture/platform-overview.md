@@ -20,7 +20,10 @@ graph TB
     
     subgraph APIGateway[API Gateway Layer]
         Kong[Kong Gateway<br/>Rate Limiting, Auth]
-        GatewayService[Gateway Service<br/>Spring Boot]
+        GatewayService[Gateway Service<br/>Main API Gateway]
+        GatewayAdmin[Gateway Admin<br/>Admin Routes]
+        GatewayClinical[Gateway Clinical<br/>Clinical Routes]
+        GatewayFHIR[Gateway FHIR<br/>FHIR Routes]
         GraphQL[GraphQL Gateway<br/>Schema Stitching]
     end
     
@@ -39,6 +42,7 @@ graph TB
         AgentRuntime[Agent Runtime<br/>Multi-LLM]
         AgentBuilder[Agent Builder<br/>No-Code Platform]
         Predictive[Predictive Analytics<br/>Risk Models]
+        DataEnrichment[Data Enrichment<br/>AI-Powered NLP]
         Guardrails[Clinical Guardrails<br/>PHI Protection]
     end
     
@@ -48,6 +52,8 @@ graph TB
         PayerWorkflows[Payer Workflows<br/>STAR Ratings]
         Notification[Notifications<br/>Email/SMS/Push]
         EventProcessing[Event Processing<br/>Kafka Streams]
+        EventRouter[Event Router<br/>Event Routing]
+        MigrationWorkflow[Migration Workflow<br/>Data Migration]
     end
     
     subgraph IntegrationServices[Integration Services]
@@ -55,7 +61,13 @@ graph TB
         CDRProcessor[CDR Processor<br/>HL7 v2, FHIR]
         CMSConnector[CMS Connector<br/>BCDA, DPC]
         QRDAExport[QRDA Export<br/>Quality Reporting]
-        X12Processing[X12 Processing<br/>837/835]
+        ECR[ECR Service<br/>Electronic Case Reporting]
+    end
+    
+    subgraph AnalyticsData[Analytics & Data Services]
+        Analytics[Analytics Service<br/>Real-time Dashboards]
+        SDOH[SDOH Service<br/>Social Determinants]
+        CostAnalysis[Cost Analysis<br/>Cost Analytics]
     end
     
     subgraph DataLayer[Data & Infrastructure]
@@ -73,18 +85,45 @@ graph TB
         ELK[ELK Stack<br/>Log Aggregation]
     end
     
+    subgraph AuditInfra[Audit Infrastructure]
+        AuditPublisher[Audit Publisher<br/>Event Publishing]
+        AuditConsumer[Audit Consumer<br/>Event Processing]
+        AuditStore[(Audit Store<br/>7-Year Retention)]
+        AuditAPI[Audit Query API<br/>Compliance Queries]
+    end
+    
+    subgraph Supporting[Supporting Services]
+        Documentation[Documentation<br/>Doc Management]
+        DemoS seeding[Demo Seeding<br/>Test Data]
+    end
+    
     Frontend --> APIGateway
     APIGateway --> CoreServices
     APIGateway --> AIServices
     APIGateway --> WorkflowServices
     APIGateway --> IntegrationServices
+    APIGateway --> AnalyticsData
     
     CoreServices --> DataLayer
     AIServices --> DataLayer
     WorkflowServices --> DataLayer
     IntegrationServices --> DataLayer
+    AnalyticsData --> DataLayer
     
-    DataLayer --> Observability
+    CoreServices -.->|Audit Events| AuditPublisher
+    AIServices -.->|Audit Events| AuditPublisher
+    WorkflowServices -.->|Audit Events| AuditPublisher
+    IntegrationServices -.->|Audit Events| AuditPublisher
+    
+    AuditPublisher --> Kafka
+    Kafka --> AuditConsumer
+    AuditConsumer --> AuditStore
+    AuditStore --> AuditAPI
+    
+    CoreServices --> Observability
+    AIServices --> Observability
+    WorkflowServices --> Observability
+    IntegrationServices --> Observability
 ```
 
 ---

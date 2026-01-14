@@ -20,9 +20,12 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or "
 OUTPUT_DIR = Path(__file__).parent.parent / "assets" / "generated"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Gemini 3 PRO model for image generation
-GEMINI_MODEL = "gemini-2.0-flash-exp-image-generation"  # Latest image generation model
-# Alternative: "gemini-1.5-pro" for text-to-image via multimodal
+# Gemini image generation model
+# Note: Use image-generation specific models
+GEMINI_MODEL = "gemini-2.0-flash-exp-image-generation"  # Image generation model
+# Alternative models that may support image generation:
+# - "gemini-2.5-flash-image"
+# - "gemini-1.5-pro" (multimodal, may not generate images directly)
 
 
 def generate_image_with_gemini_pro(
@@ -74,11 +77,11 @@ Generate this as a detailed, high-quality image."""
     # API endpoint
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
     
-    # Request payload
+    # Request payload - Use responseModalities for image generation
     payload = {
         "contents": [{
             "parts": [{
-                "text": enhanced_prompt
+                "text": f"Generate this image: {enhanced_prompt}"
             }]
         }],
         "generationConfig": {
@@ -86,7 +89,8 @@ Generate this as a detailed, high-quality image."""
             "topK": 40,
             "topP": 0.95,
             "maxOutputTokens": 8192,
-            "responseMimeType": "image/png"
+            "responseModalities": ["image", "text"],
+            "responseMimeType": "text/plain"
         }
     }
     

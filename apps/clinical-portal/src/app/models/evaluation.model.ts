@@ -55,3 +55,10 @@ export interface EvaluationResponse {
  * This is a direct array of evaluations, not a wrapped object
  */
 export type BatchEvaluationResponse = CqlEvaluation[];
+
+export interface EvaluationDefaultPreset {
+  measureId: string;
+  patientId: string;
+  useCqlEngine?: boolean;
+  savedAt: string;
+}

@@ -124,6 +124,91 @@
         </app-error-banner>
       }
 
+      @if (defaultPreset) {
+        <div class="default-preset-bar" aria-label="Default evaluation preset">
+          <div class="preset-info">
+            <mat-icon>flash_on</mat-icon>
+            <div>
+              <div class="preset-title">Default Evaluation Ready</div>
+              <div class="preset-summary">{{ getDefaultPresetSummary() }}</div>
+            </div>
+          </div>
+          <div class="preset-actions">
+            <span class="preset-status-chip" [class]="getDefaultPresetStatusClass()">
+              {{ getDefaultPresetStatus() }}
+            </span>
+            <button
+              mat-raised-button
+              color="primary"
+              type="button"
+              (click)="runDefaultPreset()"
+              [disabled]="loadingMeasures || loadingPatients || submitting">
+              <mat-icon>play_arrow</mat-icon>
+              Run Default
+            </button>
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="reloadDefaultPreset()"
+              [disabled]="submitting">
+              <mat-icon>refresh</mat-icon>
+              Reload
+            </button>
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="clearDefaultPreset()"
+              [disabled]="submitting">
+              <mat-icon>delete</mat-icon>
+              Clear Default
+            </button>
+          </div>
+        </div>
+      } @else {
+        <div class="default-preset-bar empty" aria-label="No default evaluation preset">
+          <div class="preset-info">
+            <mat-icon>flash_off</mat-icon>
+            <div>
+              <div class="preset-title">No Default Preset</div>
+              <div class="preset-summary">Select a measure and patient, then save as default for one-click runs.</div>
+            </div>
+          </div>
+          <div class="preset-actions">
+            <span class="preset-status-chip status-missing">
+              {{ getDefaultPresetStatus() }}
+            </span>
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="reloadDefaultPreset()"
+              [disabled]="submitting">
+              <mat-icon>refresh</mat-icon>
+              Reload
+            </button>
+          </div>
+        </div>
+      }
+
+      <div class="preset-health-card" aria-label="Default evaluation preset status">
+        <div class="health-header">
+          <mat-icon>health_and_safety</mat-icon>
+          <div>
+            <div class="health-title">Default Preset Status</div>
+            <div class="health-status">{{ getDefaultPresetStatus() }}</div>
+          </div>
+          <span class="preset-status-chip" [class]="getDefaultPresetStatusClass()">
+            {{ getDefaultPresetStatus() }}
+          </span>
+        </div>
+        <div class="health-details">{{ getDefaultPresetStatusDetail() }}</div>
+        @if (defaultPreset?.savedAt) {
+          <div class="health-meta">Saved {{ defaultPreset?.savedAt | date:'short' }}</div>
+        }
+        @if (lastPresetRefreshAt) {
+          <div class="health-meta">Last refreshed {{ lastPresetRefreshAt | date:'short' }}</div>
+        }
+      </div>
+
       <!-- Evaluation Form -->
       <form [formGroup]="evaluationForm" (ngSubmit)="submitEvaluation()" aria-label="Quality measure evaluation form">
         <div class="form-row form-step" [class.step-active]="!evaluationForm.get('measureId')?.value">
@@ -349,15 +434,40 @@
 
         <!-- Action Buttons -->
         <div class="form-actions">
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="saveDefaultPreset()"
+            [disabled]="evaluationForm.invalid || !selectedPatient || submitting"
+            [attr.aria-disabled]="evaluationForm.invalid || !selectedPatient || submitting"
+            aria-label="Save current selection as default">
+            <mat-icon aria-hidden="true">save</mat-icon>
+            Save Default
+          </button>
+
           <app-loading-button
             [loading]="submitting"
             [disabled]="evaluationForm.invalid || !selectedPatient"
             [color]="'primary'"
             [type]="'submit'"
-            (buttonClick)="submitEvaluation()">
+            (buttonClick)="submitEvaluation(false)">
             <mat-icon>play_arrow</mat-icon>
             Submit Evaluation
           </app-loading-button>
+
+          <button
+            mat-stroked-button
+            color="accent"
+            type="button"
+            (click)="submitEvaluation(true)"
+            [disabled]="evaluationForm.invalid || !selectedPatient || submitting"
+            [attr.aria-disabled]="evaluationForm.invalid || !selectedPatient || submitting"
+            matTooltip="Run evaluation with data flow visualization (FHIR, Kafka, CQL)"
+            aria-label="Submit evaluation with data flow tracking"
+          >
+            <mat-icon>timeline</mat-icon>
+            Run with Data Flow
+          </button>
 
           <button
             mat-stroked-button
@@ -374,6 +484,28 @@
       </form>
     </mat-card-content>
   </mat-card>
+
+  <!-- Data Flow Visualization -->
+  @if (showDataFlow) {
+    <mat-card class="data-flow-card mt-3">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>timeline</mat-icon>
+          Data Processing Flow
+        </mat-card-title>
+        <mat-card-subtitle>
+          Real-time visualization of FHIR, Kafka, and CQL processing
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <app-evaluation-data-flow
+          [evaluationId]="currentEvaluationId"
+          [patientId]="selectedPatient?.id"
+          [measureId]="evaluationForm.value.measureId">
+        </app-evaluation-data-flow>
+      </mat-card-content>
+    </mat-card>
+  }
 
   <!-- Evaluation Result Card -->
   @if (evaluationResult) {

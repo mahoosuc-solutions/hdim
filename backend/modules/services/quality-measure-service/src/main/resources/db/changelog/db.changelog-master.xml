@@ -75,5 +75,6 @@
     <include file="db/changelog/0038-create-measure-execution-history.xml"/>
     <include file="db/changelog/0039-create-measure-modification-audit.xml"/>
     <include file="db/changelog/0040-create-patient-measure-eligibility-cache.xml"/>
+    <include file="db/changelog/0041-create-evaluation-default-presets.xml"/>
 
 </databaseChangeLog>

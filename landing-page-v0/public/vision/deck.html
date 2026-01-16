@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDIM: The Age of AI Solutioning</title>
+    <style>
+        /* 4K Optimized - 3840x2160 */
+        :root {
+            --slide-width: 3840px;
+            --slide-height: 2160px;
+            --primary: #0a1628;
+            --secondary: #1a365d;
+            --accent: #3b82f6;
+            --accent-glow: #60a5fa;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gradient-1: linear-gradient(135deg, #0a1628 0%, #1e3a5f 50%, #0a1628 100%);
+            --gradient-2: linear-gradient(135deg, #1a365d 0%, #3b82f6 100%);
+            --gradient-3: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            src: local('Inter'), local('Inter-Regular');
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .presentation {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 5%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
+            background: var(--gradient-1);
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .slide-content {
+            max-width: 90%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: clamp(3rem, 6vw, 8rem);
+            font-weight: 800;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 60px rgba(59, 130, 246, 0.5);
+            line-height: 1.1;
+        }
+
+        h2 {
+            font-size: clamp(2rem, 4vw, 5rem);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--accent-glow);
+        }
+
+        h3 {
+            font-size: clamp(1.5rem, 3vw, 3.5rem);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        p {
+            font-size: clamp(1.2rem, 2vw, 2.5rem);
+            line-height: 1.6;
+            color: var(--text-secondary);
+            max-width: 80%;
+            margin: 0 auto;
+        }
+
+        .highlight {
+            color: var(--accent-glow);
+            font-weight: 700;
+        }
+
+        .stat-container {
+            display: flex;
+            justify-content: center;
+            gap: 5vw;
+            margin-top: 4rem;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .stat-number {
+            font-size: clamp(4rem, 10vw, 12rem);
+            font-weight: 900;
+            background: var(--gradient-3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+        }
+
+        .stat-label {
+            font-size: clamp(1rem, 2vw, 2rem);
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Comparison Grid */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            margin-top: 3rem;
+            width: 100%;
+            max-width: 90%;
+        }
+
+        .comparison-column {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2rem;
+            padding: 3rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comparison-column.bad {
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .comparison-column.good {
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+
+        .comparison-column h3 {
+            font-size: clamp(1.5rem, 2.5vw, 3rem);
+            margin-bottom: 2rem;
+        }
+
+        .comparison-column.bad h3 {
+            color: var(--danger);
+        }
+
+        .comparison-column.good h3 {
+            color: var(--success);
+        }
+
+        .comparison-item {
+            font-size: clamp(1rem, 1.5vw, 2rem);
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .comparison-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Tech Stack Visual */
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+            width: 100%;
+            max-width: 90%;
+        }
+
+        .tech-item {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .tech-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.3);
+        }
+
+        .tech-icon {
+            font-size: clamp(3rem, 5vw, 6rem);
+            margin-bottom: 1rem;
+        }
+
+        .tech-name {
+            font-size: clamp(1rem, 1.5vw, 1.8rem);
+            font-weight: 600;
+        }
+
+        .tech-detail {
+            font-size: clamp(0.8rem, 1vw, 1.2rem);
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Architecture Visual */
+        .architecture-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            width: 100%;
+        }
+
+        .arch-layer {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .arch-box {
+            background: rgba(59, 130, 246, 0.2);
+            border: 2px solid var(--accent);
+            border-radius: 1rem;
+            padding: 1rem 2rem;
+            font-size: clamp(0.8rem, 1.2vw, 1.5rem);
+            font-weight: 600;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
+        }
+
+        .arch-connector {
+            width: 4px;
+            height: 3rem;
+            background: var(--accent);
+            opacity: 0.5;
+        }
+
+        /* Quote Slide */
+        .quote {
+            font-size: clamp(2rem, 4vw, 5rem);
+            font-style: italic;
+            font-weight: 300;
+            line-height: 1.4;
+            max-width: 80%;
+            position: relative;
+        }
+
+        .quote::before {
+            content: '"';
+            font-size: clamp(6rem, 12vw, 15rem);
+            color: rgba(59, 130, 246, 0.3);
+            position: absolute;
+            top: -4rem;
+            left: -4rem;
+            font-family: Georgia, serif;
+        }
+
+        /* Timeline Visual */
+        .timeline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            margin-top: 3rem;
+            width: 100%;
+            max-width: 90%;
+        }
+
+        .timeline-item {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            top: 2rem;
+            right: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .timeline-dot {
+            width: 4rem;
+            height: 4rem;
+            background: var(--accent);
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .timeline-label {
+            font-size: clamp(1rem, 1.5vw, 1.8rem);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .timeline-detail {
+            font-size: clamp(0.8rem, 1vw, 1.2rem);
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 8px;
+            background: var(--gradient-3);
+            transition: width 0.3s ease;
+            z-index: 1000;
+        }
+
+        /* Slide Counter */
+        .slide-counter {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            font-size: clamp(1rem, 1.5vw, 1.5rem);
+            color: var(--text-secondary);
+            z-index: 1000;
+        }
+
+        /* Control Buttons */
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 1000;
+        }
+
+        .control-btn {
+            background: rgba(59, 130, 246, 0.2);
+            border: 2px solid var(--accent);
+            color: var(--text-primary);
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: var(--accent);
+        }
+
+        .control-btn.active {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        /* Animation Classes */
+        .fade-in {
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        .slide-up {
+            animation: slideUp 0.8s ease-out forwards;
+        }
+
+        .scale-in {
+            animation: scaleIn 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Particle Background */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.3; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Screenshot Styling */
+        .screenshot-container {
+            position: relative;
+            width: 80%;
+            max-width: 1600px;
+            margin: 2rem auto;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+            border: 4px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .screenshot-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Typing Effect */
+        .typing-text {
+            overflow: hidden;
+            border-right: 4px solid var(--accent);
+            white-space: nowrap;
+            animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: var(--accent); }
+        }
+
+        /* Glow Effect */
+        .glow-text {
+            text-shadow:
+                0 0 10px var(--accent-glow),
+                0 0 20px var(--accent-glow),
+                0 0 40px var(--accent-glow),
+                0 0 80px var(--accent);
+        }
+
+        /* Persona Grid */
+        .persona-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+            width: 100%;
+            max-width: 90%;
+        }
+
+        .persona-card {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        .persona-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.3);
+            border-color: var(--accent-glow);
+        }
+
+        .persona-icon {
+            font-size: clamp(3rem, 5vw, 5rem);
+            margin-bottom: 1rem;
+        }
+
+        .persona-role {
+            font-size: clamp(1.2rem, 2vw, 2rem);
+            font-weight: 700;
+            color: var(--accent-glow);
+            margin-bottom: 0.8rem;
+        }
+
+        .persona-quote {
+            font-size: clamp(1rem, 1.5vw, 1.5rem);
+            font-style: italic;
+            color: var(--text-primary);
+            margin-bottom: 0.8rem;
+            line-height: 1.3;
+        }
+
+        .persona-benefit {
+            font-size: clamp(0.9rem, 1.2vw, 1.2rem);
+            color: var(--text-secondary);
+        }
+
+        /* Final CTA */
+        .cta-container {
+            margin-top: 3rem;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--gradient-3);
+            color: white;
+            font-size: clamp(1.5rem, 2.5vw, 3rem);
+            font-weight: 700;
+            padding: 1.5rem 4rem;
+            border-radius: 4rem;
+            text-decoration: none;
+            box-shadow: 0 20px 60px rgba(16, 185, 129, 0.4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+<!--
+  HDIM Shared Navigation Component
+  Include this at the top of <body> in each page
+  Last updated: January 16, 2026
+-->
+
+<style>
+/* ===== HDIM Global Navigation ===== */
+.hdim-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    z-index: 9999;
+    height: 70px;
+}
+
+.hdim-nav.dark {
+    background: rgba(10, 15, 26, 0.98);
+}
+
+.hdim-nav .logo {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1E3A5F;
+    text-decoration: none;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hdim-nav.dark .logo {
+    color: #60a5fa;
+}
+
+.hdim-nav .logo-icon {
+    font-size: 1.8rem;
+}
+
+.hdim-nav-menu {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    height: 100%;
+}
+
+.hdim-nav-item {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.hdim-nav-link {
+    text-decoration: none;
+    color: #2C3E50;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.hdim-nav.dark .hdim-nav-link {
+    color: #e5e7eb;
+}
+
+.hdim-nav-link:hover {
+    background: rgba(0, 169, 165, 0.1);
+    color: #00A9A5;
+}
+
+.hdim-nav.dark .hdim-nav-link:hover {
+    background: rgba(96, 165, 250, 0.1);
+    color: #60a5fa;
+}
+
+.hdim-nav-link.active {
+    background: rgba(0, 169, 165, 0.15);
+    color: #00A9A5;
+}
+
+.hdim-nav.dark .hdim-nav-link.active {
+    background: rgba(96, 165, 250, 0.15);
+    color: #60a5fa;
+}
+
+/* Dropdown */
+.hdim-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    padding: 1rem;
+    min-width: 280px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    border: 1px solid #e5e7eb;
+}
+
+.hdim-nav.dark .hdim-dropdown {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.hdim-nav-item:hover .hdim-dropdown {
+    opacity: 1;
+    visibility: visible;
+}
+
+.hdim-dropdown-header {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #9ca3af;
+    padding: 0.5rem 0.75rem 0.25rem;
+    margin-top: 0.5rem;
+}
+
+.hdim-dropdown-header:first-child {
+    margin-top: 0;
+}
+
+.hdim-dropdown-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #2C3E50;
+    transition: all 0.15s ease;
+}
+
+.hdim-nav.dark .hdim-dropdown-link {
+    color: #e5e7eb;
+}
+
+.hdim-dropdown-link:hover {
+    background: rgba(0, 169, 165, 0.1);
+}
+
+.hdim-nav.dark .hdim-dropdown-link:hover {
+    background: rgba(96, 165, 250, 0.1);
+}
+
+.hdim-dropdown-icon {
+    font-size: 1.2rem;
+    width: 28px;
+    text-align: center;
+}
+
+.hdim-dropdown-text {
+    flex: 1;
+}
+
+.hdim-dropdown-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+    line-height: 1.3;
+}
+
+.hdim-dropdown-desc {
+    font-size: 0.7rem;
+    color: #6b7280;
+    line-height: 1.3;
+}
+
+.hdim-nav.dark .hdim-dropdown-desc {
+    color: #9ca3af;
+}
+
+/* CTA Button */
+.hdim-nav-cta {
+    background: linear-gradient(135deg, #00A9A5 0%, #00897B 100%);
+    color: white !important;
+    padding: 0.6rem 1.2rem !important;
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 169, 165, 0.3);
+    transition: all 0.2s ease;
+}
+
+.hdim-nav-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 169, 165, 0.4);
+    background: linear-gradient(135deg, #00897B 0%, #00695C 100%) !important;
+}
+
+/* Mobile Menu Toggle */
+.hdim-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: #2C3E50;
+}
+
+.hdim-nav.dark .hdim-menu-toggle {
+    color: #e5e7eb;
+}
+
+/* Mobile Styles */
+@media (max-width: 1024px) {
+    .hdim-nav-menu {
+        position: fixed;
+        top: 70px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1rem;
+        gap: 0;
+        height: auto;
+        overflow-y: auto;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .hdim-nav.dark .hdim-nav-menu {
+        background: #111827;
+    }
+
+    .hdim-nav-menu.open {
+        transform: translateX(0);
+    }
+
+    .hdim-nav-item {
+        height: auto;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .hdim-nav-link {
+        padding: 1rem;
+        justify-content: space-between;
+    }
+
+    .hdim-dropdown {
+        position: static;
+        transform: none;
+        box-shadow: none;
+        border: none;
+        padding: 0 0 0 1rem;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 1;
+        visibility: visible;
+        background: transparent;
+    }
+
+    .hdim-nav-item.open .hdim-dropdown {
+        max-height: 1000px;
+        padding: 0.5rem 0 0.5rem 1rem;
+    }
+
+    .hdim-menu-toggle {
+        display: block;
+    }
+}
+
+/* Spacer for fixed nav */
+.hdim-nav-spacer {
+    height: 70px;
+}
+</style>
+
+<nav class="hdim-nav" id="hdim-nav">
+    <a href="/ai-solutioning/ai-solutioning-index.html" class="logo">
+        <span class="logo-icon">⚡</span>
+        <span>HDIM</span>
+    </a>
+
+    <button class="hdim-menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+        <span id="menu-icon">☰</span>
+    </button>
+
+    <div class="hdim-nav-menu" id="hdim-nav-menu">
+        <!-- Vision & Presentations -->
+        <div class="hdim-nav-item">
+            <a href="#" class="hdim-nav-link" onclick="toggleDropdown(event, this)">
+                Vision <span style="font-size: 0.7rem;">▼</span>
+            </a>
+            <div class="hdim-dropdown">
+                <a href="/vision/deck.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">🎬</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Vision Slide Deck</div>
+                        <div class="hdim-dropdown-desc">13-slide AI Solutioning presentation</div>
+                    </div>
+                </a>
+                <a href="/vision/cms.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">🏛️</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">CMS Vision</div>
+                        <div class="hdim-dropdown-desc">Healthcare quality & CMS integration</div>
+                    </div>
+                </a>
+                <a href="/vision/architecture.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">🏗️</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Platform Architecture</div>
+                        <div class="hdim-dropdown-desc">36 microservices data flow diagram</div>
+                    </div>
+                </a>
+                <a href="/ai-solutioning/executive-summary.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">📋</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Executive Summary</div>
+                        <div class="hdim-dropdown-desc">High-level platform overview</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- AI Solutioning -->
+        <div class="hdim-nav-item">
+            <a href="#" class="hdim-nav-link" onclick="toggleDropdown(event, this)">
+                AI Solutioning <span style="font-size: 0.7rem;">▼</span>
+            </a>
+            <div class="hdim-dropdown">
+                <a href="/ai-solutioning/ai-solutioning-index.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">🏠</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Overview</div>
+                        <div class="hdim-dropdown-desc">AI Solutioning methodology home</div>
+                    </div>
+                </a>
+                <a href="/ai-solutioning/ai-solutioning-journey.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">🚀</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">The Journey</div>
+                        <div class="hdim-dropdown-desc">From concept to production</div>
+                    </div>
+                </a>
+                <a href="/ai-solutioning/ai-solutioning-metrics.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">📊</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Metrics & Results</div>
+                        <div class="hdim-dropdown-desc">Quantified development outcomes</div>
+                    </div>
+                </a>
+                <a href="/ai-solutioning/spec-driven-development-analysis.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">📝</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Spec-Driven Development</div>
+                        <div class="hdim-dropdown-desc">The methodology deep dive</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Technical -->
+        <div class="hdim-nav-item">
+            <a href="#" class="hdim-nav-link" onclick="toggleDropdown(event, this)">
+                Technical <span style="font-size: 0.7rem;">▼</span>
+            </a>
+            <div class="hdim-dropdown">
+                <a href="/ai-solutioning/java-rebuild-deep-dive.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">☕</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Java Rebuild Deep Dive</div>
+                        <div class="hdim-dropdown-desc">Why Java won over Node.js</div>
+                    </div>
+                </a>
+                <a href="/ai-solutioning/architecture-evolution-timeline.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">📅</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Architecture Evolution</div>
+                        <div class="hdim-dropdown-desc">7 phases of platform growth</div>
+                    </div>
+                </a>
+                <a href="/ai-solutioning/performance-benchmarking.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">⚡</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Performance Benchmarking</div>
+                        <div class="hdim-dropdown-desc">Speed, scale, and efficiency metrics</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Comparisons -->
+        <div class="hdim-nav-item">
+            <a href="#" class="hdim-nav-link" onclick="toggleDropdown(event, this)">
+                Comparisons <span style="font-size: 0.7rem;">▼</span>
+            </a>
+            <div class="hdim-dropdown">
+                <a href="/ai-solutioning/traditional-vs-ai-solutioning-comparison.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">⚖️</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Traditional vs AI Solutioning</div>
+                        <div class="hdim-dropdown-desc">Development approach comparison</div>
+                    </div>
+                </a>
+                <a href="/ai-solutioning/ai-native-vs-non-ai-native-comparison.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">🤖</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">AI-Native vs Non-AI-Native</div>
+                        <div class="hdim-dropdown-desc">Code quality and patterns</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Direct Link: Slide Deck CTA -->
+        <a href="/vision/deck.html" class="hdim-nav-link hdim-nav-cta">
+            🎬 Watch Deck
+        </a>
+    </div>
+</nav>
+
+<div class="hdim-nav-spacer"></div>
+
+<script>
+// Mobile menu toggle
+function toggleMobileMenu() {
+    const menu = document.getElementById('hdim-nav-menu');
+    const icon = document.getElementById('menu-icon');
+    menu.classList.toggle('open');
+    icon.textContent = menu.classList.contains('open') ? '✕' : '☰';
+}
+
+// Dropdown toggle for mobile
+function toggleDropdown(event, element) {
+    if (window.innerWidth <= 1024) {
+        event.preventDefault();
+        const navItem = element.closest('.hdim-nav-item');
+        navItem.classList.toggle('open');
+    }
+}
+
+// Auto-detect dark mode based on page
+document.addEventListener('DOMContentLoaded', function() {
+    const nav = document.getElementById('hdim-nav');
+    const body = document.body;
+    const bgColor = window.getComputedStyle(body).backgroundColor;
+
+    // Check if background is dark
+    const rgb = bgColor.match(/\d+/g);
+    if (rgb) {
+        const brightness = (parseInt(rgb[0]) * 299 + parseInt(rgb[1]) * 587 + parseInt(rgb[2]) * 114) / 1000;
+        if (brightness < 128) {
+            nav.classList.add('dark');
+        }
+    }
+
+    // Highlight current page
+    const currentPage = window.location.pathname.split('/').pop() || 'ai-solutioning-index.html';
+    const links = document.querySelectorAll('.hdim-dropdown-link');
+    links.forEach(link => {
+        if (link.getAttribute('href') === currentPage) {
+            link.style.background = 'rgba(0, 169, 165, 0.15)';
+            link.style.fontWeight = '600';
+        }
+    });
+});
+
+// Close mobile menu on resize
+window.addEventListener('resize', function() {
+    if (window.innerWidth > 1024) {
+        document.getElementById('hdim-nav-menu').classList.remove('open');
+        document.getElementById('menu-icon').textContent = '☰';
+        document.querySelectorAll('.hdim-nav-item').forEach(item => item.classList.remove('open'));
+    }
+});
+</script>
+
+
+    <div class="presentation">
+        <!-- Particle Background -->
+        <div class="particles" id="particles"></div>
+
+        <!-- Slide 1: Opening Hook (0-5 seconds) -->
+        <div class="slide active" id="slide-1">
+            <div class="slide-content">
+                <h3 class="fade-in">For 30 years, we've been building software</h3>
+                <h1 class="slide-up" style="animation-delay: 0.3s;">BACKWARDS</h1>
+                <p class="fade-in" style="animation-delay: 0.6s;">Line by line. Bottom up. Hope it connects at the end.</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: The Problem (5-10 seconds) -->
+        <div class="slide" id="slide-2">
+            <div class="slide-content">
+                <h2>The Vibe Coding Disaster</h2>
+                <div class="stat-container">
+                    <div class="stat scale-in">
+                        <div class="stat-number">8,000</div>
+                        <div class="stat-label">Startups Need Rebuilds</div>
+                    </div>
+                    <div class="stat scale-in" style="animation-delay: 0.2s;">
+                        <div class="stat-number">95%</div>
+                        <div class="stat-label">AI Pilots Failed</div>
+                    </div>
+                    <div class="stat scale-in" style="animation-delay: 0.4s;">
+                        <div class="stat-number">19%</div>
+                        <div class="stat-label">Actually Slower</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: The Realization (10-15 seconds) -->
+        <div class="slide" id="slide-3">
+            <div class="slide-content">
+                <h3>But here's what I realized:</h3>
+                <h1 class="glow-text">AI thinks in SYSTEMS</h1>
+                <p style="margin-top: 2rem;">Not lines of code. In architectures. In <span class="highlight">solutions</span>.</p>
+            </div>
+        </div>
+
+        <!-- Slide 4: The Flip (15-20 seconds) -->
+        <div class="slide" id="slide-4">
+            <div class="slide-content">
+                <h2>So I Flipped It</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot">1</div>
+                        <div class="timeline-label">Define the Problem</div>
+                        <div class="timeline-detail">What are we solving?</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot">2</div>
+                        <div class="timeline-label">Specify the Solution</div>
+                        <div class="timeline-detail">Architecture first</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot">3</div>
+                        <div class="timeline-label">Map the System</div>
+                        <div class="timeline-detail">Human wisdom guides</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot">4</div>
+                        <div class="timeline-label">AI Implements</div>
+                        <div class="timeline-detail">Intelligence builds</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot">5</div>
+                        <div class="timeline-label">AI Validates & Tests</div>
+                        <div class="timeline-detail">Continuous verification</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot">6</div>
+                        <div class="timeline-label">Architect Validates</div>
+                        <div class="timeline-detail">360° coverage review</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot">7</div>
+                        <div class="timeline-label">Customers Validate</div>
+                        <div class="timeline-detail">Feedback & improvements</div>
+                    </div>
+                </div>
+                <h1 style="margin-top: 3rem;">TOP DOWN</h1>
+            </div>
+        </div>
+
+        <!-- Slide 5: What I Built (20-28 seconds) -->
+        <div class="slide" id="slide-5">
+            <div class="slide-content">
+                <h2>I Didn't Prompt My Way Here</h2>
+                <h3>I <span class="highlight">DESIGNED</span> It</h3>
+                <div class="stat-container">
+                    <div class="stat">
+                        <div class="stat-number">36</div>
+                        <div class="stat-label">Microservices</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">29</div>
+                        <div class="stat-label">Databases</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">552</div>
+                        <div class="stat-label">Migrations</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">411K</div>
+                        <div class="stat-label">Lines of Code</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Tech Stack (28-33 seconds) -->
+        <div class="slide" id="slide-6">
+            <div class="slide-content">
+                <h2>Enterprise-Grade Architecture</h2>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <div class="tech-icon">&#9881;</div>
+                        <div class="tech-name">Java 21 + Spring Boot 3</div>
+                        <div class="tech-detail">36 Services</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">&#128202;</div>
+                        <div class="tech-name">HAPI FHIR 7.x</div>
+                        <div class="tech-detail">R4 Compliant</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">&#128736;</div>
+                        <div class="tech-name">CQL Engine</div>
+                        <div class="tech-detail">HEDIS Measures</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">&#128274;</div>
+                        <div class="tech-name">HIPAA Compliant</div>
+                        <div class="tech-detail">Full Audit Trail</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">&#128450;</div>
+                        <div class="tech-name">PostgreSQL 16</div>
+                        <div class="tech-detail">29 Databases</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">&#9889;</div>
+                        <div class="tech-name">Apache Kafka</div>
+                        <div class="tech-detail">Event Streaming</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">&#128640;</div>
+                        <div class="tech-name">Redis 7</div>
+                        <div class="tech-detail">Distributed Cache</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">&#127760;</div>
+                        <div class="tech-name">Angular 17+</div>
+                        <div class="tech-detail">Clinical Portal</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: The Difference (33-38 seconds) -->
+        <div class="slide" id="slide-7">
+            <div class="slide-content">
+                <h2>What Replit & Lovable <span style="color: var(--danger);">Can't</span> Build</h2>
+                <div class="comparison-grid">
+                    <div class="comparison-column bad">
+                        <h3>Vibe Coding Tools</h3>
+                        <div class="comparison-item">&#10060; 1 Container Max</div>
+                        <div class="comparison-item">&#10060; No Database Migrations</div>
+                        <div class="comparison-item">&#10060; Not HIPAA Compliant</div>
+                        <div class="comparison-item">&#10060; No Distributed Tracing</div>
+                        <div class="comparison-item">&#10060; "60-70% Solution"</div>
+                        <div class="comparison-item">&#10060; Deleted Production DB</div>
+                    </div>
+                    <div class="comparison-column good">
+                        <h3>HDIM Platform</h3>
+                        <div class="comparison-item">&#10004; 36 Microservices</div>
+                        <div class="comparison-item">&#10004; 552 Versioned Migrations</div>
+                        <div class="comparison-item">&#10004; 371 Audited Methods</div>
+                        <div class="comparison-item">&#10004; 468 Test Classes</div>
+                        <div class="comparison-item">&#10004; 411K Lines of Code</div>
+                        <div class="comparison-item">&#10004; HIPAA + RBAC + Encryption</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: The Secret (38-43 seconds) -->
+        <div class="slide" id="slide-8">
+            <div class="slide-content">
+                <h3>The AI didn't know:</h3>
+                <div class="architecture-visual">
+                    <div class="arch-layer">
+                        <div class="arch-box">HEDIS Measures</div>
+                        <div class="arch-box">FHIR R4 Compliance</div>
+                        <div class="arch-box">CQL Evaluation</div>
+                    </div>
+                    <div class="arch-connector"></div>
+                    <div class="arch-layer">
+                        <div class="arch-box">Cache TTL &lt; 5 min = HIPAA</div>
+                        <div class="arch-box">Tenant Isolation</div>
+                        <div class="arch-box">Audit Logging</div>
+                    </div>
+                    <div class="arch-connector"></div>
+                    <div class="arch-layer">
+                        <div class="arch-box">Care Gap Detection</div>
+                        <div class="arch-box">Quality Reporting</div>
+                        <div class="arch-box">Risk Stratification</div>
+                    </div>
+                </div>
+                <h1 style="margin-top: 3rem;">I DID.</h1>
+                <p>30 years of knowing where healthcare software breaks.</p>
+            </div>
+        </div>
+
+        <!-- Slide 9: The Vision (43-48 seconds) -->
+        <div class="slide" id="slide-9">
+            <div class="slide-content">
+                <div class="quote">
+                    This isn't AI replacing expertise.<br/>
+                    This is expertise finally having<br/>
+                    an engine that can keep up.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: The Paradigm (48-53 seconds) -->
+        <div class="slide" id="slide-10">
+            <div class="slide-content">
+                <h3>A New Era of Human-AI Collaboration</h3>
+                <h1>SPEC-DRIVEN DEVELOPMENT</h1>
+                <div class="comparison-grid" style="margin-top: 3rem;">
+                    <div class="comparison-column bad">
+                        <h3>OLD WAY (Bottom Up)</h3>
+                        <div class="comparison-item">Start with code</div>
+                        <div class="comparison-item">Hope it connects</div>
+                        <div class="comparison-item">Fix as you go</div>
+                        <div class="comparison-item">Prompt and pray</div>
+                    </div>
+                    <div class="comparison-column good">
+                        <h3>NEW WAY (Top Down)</h3>
+                        <div class="comparison-item">Start with the problem</div>
+                        <div class="comparison-item">Design the architecture</div>
+                        <div class="comparison-item">Human wisdom guides</div>
+                        <div class="comparison-item">AI implements at speed</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: The Superpower (53-57 seconds) -->
+        <div class="slide" id="slide-11">
+            <div class="slide-content">
+                <h3>Every complex problem needs software</h3>
+                <h2>Healthcare. Climate. Poverty.</h2>
+                <h1 class="glow-text" style="margin-top: 2rem;">ONE PERSON</h1>
+                <p style="font-size: clamp(1.5rem, 2.5vw, 3rem); margin-top: 1rem;">
+                    with deep expertise can build what used to take armies
+                </p>
+                <div style="margin-top: 3rem;">
+                    <span style="font-size: clamp(2rem, 3vw, 4rem);">That's not a tool.</span>
+                    <br/>
+                    <span style="font-size: clamp(3rem, 5vw, 6rem); font-weight: 900; color: var(--accent-glow);">That's a SUPERPOWER.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Vision Personas - See Yourself -->
+        <div class="slide" id="slide-12">
+            <div class="slide-content">
+                <h2>Imagine Yourself Here</h2>
+                <h3 style="margin-bottom: 2rem;">Who Benefits from AI Solutioning?</h3>
+                <div class="persona-grid">
+                    <div class="persona-card">
+                        <div class="persona-icon">🏗️</div>
+                        <div class="persona-role">Healthcare Architect</div>
+                        <div class="persona-quote">"I designed 36 services in weeks, not years"</div>
+                        <div class="persona-benefit">Turn decades of knowledge into production systems</div>
+                    </div>
+                    <div class="persona-card">
+                        <div class="persona-icon">📊</div>
+                        <div class="persona-role">Quality Director</div>
+                        <div class="persona-quote">"56 HEDIS measures. Out of the box."</div>
+                        <div class="persona-benefit">Focus on outcomes, not infrastructure</div>
+                    </div>
+                    <div class="persona-card">
+                        <div class="persona-icon">🏥</div>
+                        <div class="persona-role">Provider CMO</div>
+                        <div class="persona-quote">"Real-time care gaps. No more surprises."</div>
+                        <div class="persona-benefit">Proactive patient care at scale</div>
+                    </div>
+                    <div class="persona-card">
+                        <div class="persona-icon">⭐</div>
+                        <div class="persona-role">Health Plan CEO</div>
+                        <div class="persona-quote">"Star ratings aren't a mystery anymore"</div>
+                        <div class="persona-benefit">Medicare Advantage excellence, automated</div>
+                    </div>
+                    <div class="persona-card">
+                        <div class="persona-icon">💡</div>
+                        <div class="persona-role">Domain Expert</div>
+                        <div class="persona-quote">"My expertise finally has an engine"</div>
+                        <div class="persona-benefit">Build what you've always envisioned</div>
+                    </div>
+                    <div class="persona-card">
+                        <div class="persona-icon">🚀</div>
+                        <div class="persona-role">Founder</div>
+                        <div class="persona-quote">"One person. Enterprise-grade platform."</div>
+                        <div class="persona-benefit">Compete with giants from day one</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: The Call to Action (57-60 seconds) -->
+        <div class="slide" id="slide-13">
+            <div class="slide-content">
+                <h1 class="glow-text">WELCOME TO THE AGE OF<br/>AI SOLUTIONING</h1>
+                <p style="font-size: clamp(2rem, 3vw, 4rem); margin-top: 2rem;">
+                    Human-led. AI-built. Top-down.
+                </p>
+                <div style="margin-top: 4rem;">
+                    <h2>I'm just the first one through the door.</h2>
+                </div>
+                <div class="cta-container">
+                    <div class="cta-button">HDIM: HealthData-in-Motion</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar" id="progress-bar"></div>
+
+        <!-- Slide Counter -->
+        <div class="slide-counter" id="slide-counter">1 / 13</div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="control-btn" id="prev-btn">&#9664; Prev</button>
+            <button class="control-btn" id="play-btn">&#9654; Auto Play</button>
+            <button class="control-btn" id="next-btn">Next &#9654;</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const TOTAL_SLIDES = 13;
+        const SPEECH_DURATION = 65; // seconds (added time for personas slide)
+        const SLIDE_TIMINGS = [5, 5, 5, 5, 8, 5, 5, 5, 5, 5, 4, 5, 3]; // seconds per slide (added 5s for personas)
+
+        let currentSlide = 1;
+        let isAutoPlaying = false;
+        let autoPlayInterval = null;
+        let slideTimer = null;
+
+        // DOM Elements
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progress-bar');
+        const slideCounter = document.getElementById('slide-counter');
+        const playBtn = document.getElementById('play-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        // Create particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Show slide
+        function showSlide(slideNum) {
+            if (slideNum < 1) slideNum = 1;
+            if (slideNum > TOTAL_SLIDES) slideNum = TOTAL_SLIDES;
+
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index + 1 === slideNum) {
+                    slide.classList.add('active');
+                }
+            });
+
+            currentSlide = slideNum;
+            updateProgress();
+            updateCounter();
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const progress = (currentSlide / TOTAL_SLIDES) * 100;
+            progressBar.style.width = progress + '%';
+        }
+
+        // Update counter
+        function updateCounter() {
+            slideCounter.textContent = `${currentSlide} / ${TOTAL_SLIDES}`;
+        }
+
+        // Next slide
+        function nextSlide() {
+            if (currentSlide < TOTAL_SLIDES) {
+                showSlide(currentSlide + 1);
+            } else if (isAutoPlaying) {
+                stopAutoPlay();
+            }
+        }
+
+        // Previous slide
+        function prevSlide() {
+            if (currentSlide > 1) {
+                showSlide(currentSlide - 1);
+            }
+        }
+
+        // Auto play with custom timing per slide
+        function startAutoPlay() {
+            isAutoPlaying = true;
+            playBtn.textContent = '⏸ Pause';
+            playBtn.classList.add('active');
+            scheduleNextSlide();
+        }
+
+        function scheduleNextSlide() {
+            if (!isAutoPlaying) return;
+
+            const duration = SLIDE_TIMINGS[currentSlide - 1] * 1000;
+            slideTimer = setTimeout(() => {
+                if (currentSlide < TOTAL_SLIDES) {
+                    nextSlide();
+                    scheduleNextSlide();
+                } else {
+                    stopAutoPlay();
+                }
+            }, duration);
+        }
+
+        function stopAutoPlay() {
+            isAutoPlaying = false;
+            playBtn.textContent = '▶ Auto Play';
+            playBtn.classList.remove('active');
+            if (slideTimer) {
+                clearTimeout(slideTimer);
+                slideTimer = null;
+            }
+        }
+
+        function toggleAutoPlay() {
+            if (isAutoPlaying) {
+                stopAutoPlay();
+            } else {
+                startAutoPlay();
+            }
+        }
+
+        // Event listeners
+        playBtn.addEventListener('click', toggleAutoPlay);
+        prevBtn.addEventListener('click', prevSlide);
+        nextBtn.addEventListener('click', nextSlide);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            } else if (e.key === 'p' || e.key === 'P') {
+                toggleAutoPlay();
+            } else if (e.key === 'Escape') {
+                stopAutoPlay();
+            }
+        });
+
+        // Touch/Swipe support
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            }
+        }
+
+        // Initialize
+        createParticles();
+        showSlide(1);
+        updateProgress();
+
+        // Fullscreen on double-click
+        document.addEventListener('dblclick', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        console.log(`
+╔════════════════════════════════════════════════════════════╗
+║         HDIM: The Age of AI Solutioning                    ║
+║                                                            ║
+║  Controls:                                                 ║
+║  → Arrow keys: Navigate slides                             ║
+║  → Space: Next slide                                       ║
+║  → P: Toggle auto-play                                     ║
+║  → Escape: Stop auto-play                                  ║
+║  → Double-click: Toggle fullscreen                         ║
+║                                                            ║
+║  Total Duration: 65 seconds                                ║
+║  Slides: 13 (including Vision Personas)                    ║
+╚════════════════════════════════════════════════════════════╝
+        `);
+    </script>
+</body>
+</html>

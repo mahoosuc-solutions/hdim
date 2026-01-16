@@ -1,6 +1,6 @@
 import { Injectable, Renderer2, RendererFactory2, signal } from '@angular/core';
 
-export type ThemeMode = 'light' | 'dark' | 'auto';
+export type ThemeMode = 'light';
 
 @Injectable({
   providedIn: 'root',
@@ -10,86 +10,51 @@ export class ThemeService {
   private readonly THEME_KEY = 'healthdata-theme-preference';
 
   // Signal for reactive theme state
-  public readonly currentTheme = signal<'light' | 'dark'>('light');
-  public readonly themeMode = signal<ThemeMode>('auto');
-
-  private mediaQuery: MediaQueryList;
+  public readonly currentTheme = signal<'light'>('light');
+  public readonly themeMode = signal<ThemeMode>('light');
 
   constructor(rendererFactory: RendererFactory2) {
     this.renderer = rendererFactory.createRenderer(null, null);
-    this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
   }
 
   /**
    * Initialize theme system - call this in app component
    */
   public initialize(): void {
-    // Load saved preference or default to system preference
-    const saved = localStorage.getItem(this.THEME_KEY) as ThemeMode | null;
-    const mode = saved || 'auto';
-    this.themeMode.set(mode);
-
-    // Apply theme based on preference
-    this.applyTheme(mode);
-
-    // Listen for system theme changes (for 'auto' mode)
-    this.mediaQuery.addEventListener('change', (e) => {
-      if (this.themeMode() === 'auto') {
-        this.setThemeClass(e.matches ? 'dark' : 'light');
-      }
-    });
+    // Force light theme regardless of system preference.
+    this.setThemeMode('light');
   }
 
   /**
-   * Set theme mode: 'light', 'dark', or 'auto'
+   * Set theme mode: light only
    */
   public setThemeMode(mode: ThemeMode): void {
     this.themeMode.set(mode);
     localStorage.setItem(this.THEME_KEY, mode);
-    this.applyTheme(mode);
+    this.setThemeClass('light');
   }
 
   /**
-   * Toggle between light and dark (switches to manual mode)
+   * Toggle theme (no-op, light only)
    */
   public toggleTheme(): void {
-    const newTheme = this.currentTheme() === 'light' ? 'dark' : 'light';
-    this.setThemeMode(newTheme);
+    this.setThemeMode('light');
   }
 
   /**
    * Get the effective theme (resolves 'auto' to actual theme)
    */
-  public getEffectiveTheme(): 'light' | 'dark' {
+  public getEffectiveTheme(): 'light' {
     return this.currentTheme();
   }
 
   /**
    * Check if system prefers dark mode
    */
-  public systemPrefersDark(): boolean {
-    return this.mediaQuery.matches;
-  }
-
-  /**
-   * Apply theme based on mode
-   */
-  private applyTheme(mode: ThemeMode): void {
-    let effectiveTheme: 'light' | 'dark';
-
-    if (mode === 'auto') {
-      effectiveTheme = this.systemPrefersDark() ? 'dark' : 'light';
-    } else {
-      effectiveTheme = mode;
-    }
-
-    this.setThemeClass(effectiveTheme);
-  }
-
   /**
    * Apply theme class to document
    */
-  private setThemeClass(theme: 'light' | 'dark'): void {
+  private setThemeClass(theme: 'light'): void {
     this.currentTheme.set(theme);
 
     // Remove both theme classes

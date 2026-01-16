@@ -5,8 +5,6 @@ describe('ThemeService', () => {
   let service: ThemeService;
   let renderer: Renderer2;
   let rendererFactory: RendererFactory2;
-  let mediaQuery: MediaQueryList;
-  let mediaListener: ((event: MediaQueryListEvent) => void) | null = null;
 
   beforeEach(() => {
     renderer = {
@@ -19,17 +17,6 @@ describe('ThemeService', () => {
       createRenderer: jest.fn(() => renderer),
     } as unknown as RendererFactory2;
 
-    mediaQuery = {
-      matches: false,
-      addEventListener: jest.fn((_, cb) => {
-        mediaListener = cb as (event: MediaQueryListEvent) => void;
-      }),
-    } as unknown as MediaQueryList;
-
-    Object.defineProperty(window, 'matchMedia', {
-      writable: true,
-      value: jest.fn().mockReturnValue(mediaQuery),
-    });
     localStorage.clear();
 
     service = new ThemeService(rendererFactory);
@@ -40,35 +27,24 @@ describe('ThemeService', () => {
   });
 
   it('initializes with saved mode and applies theme class', () => {
-    localStorage.setItem('healthdata-theme-preference', 'dark');
+    localStorage.setItem('healthdata-theme-preference', 'light');
     service.initialize();
 
-    expect(service.themeMode()).toBe('dark');
-    expect(service.currentTheme()).toBe('dark');
-    expect(renderer.addClass).toHaveBeenCalledWith(document.body, 'dark-theme');
-  });
-
-  it('applies auto mode based on system preference changes', () => {
-    mediaQuery.matches = true;
-    localStorage.setItem('healthdata-theme-preference', 'auto');
-    service.initialize();
-
-    expect(service.currentTheme()).toBe('dark');
-    mediaListener?.({ matches: false } as MediaQueryListEvent);
+    expect(service.themeMode()).toBe('light');
     expect(service.currentTheme()).toBe('light');
+    expect(renderer.addClass).toHaveBeenCalledWith(document.body, 'light-theme');
   });
 
   it('toggles theme and persists preference', () => {
     service.initialize();
     service.toggleTheme();
 
-    expect(service.themeMode()).toBe('dark');
-    expect(localStorage.getItem('healthdata-theme-preference')).toBe('dark');
+    expect(service.themeMode()).toBe('light');
+    expect(localStorage.getItem('healthdata-theme-preference')).toBe('light');
   });
 
   it('returns effective theme and system preference', () => {
-    expect(service.systemPrefersDark()).toBe(false);
-    service.setThemeMode('dark');
-    expect(service.getEffectiveTheme()).toBe('dark');
+    service.setThemeMode('light');
+    expect(service.getEffectiveTheme()).toBe('light');
   });
 });

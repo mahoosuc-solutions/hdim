@@ -18,6 +18,7 @@ chmod +x *.sh
 
 # Open browser to http://localhost:4200
 # Login: demo_admin / demo123
+# Quality Measure Dev: demo.developer / demo123
 ```
 
 ### Option 2: Direct Deploy

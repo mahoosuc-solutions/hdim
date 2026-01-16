@@ -1,0 +1,147 @@
+-------------------------------------------------------------------------------
+Test set: com.healthdata.cms.auth.OAuth2ManagerTest
+-------------------------------------------------------------------------------
+Tests run: 11, Failures: 4, Errors: 7, Skipped: 0, Time elapsed: 1.073 s <<< FAILURE! -- in com.healthdata.cms.auth.OAuth2ManagerTest
+com.healthdata.cms.auth.OAuth2ManagerTest.testClearSpecificToken -- Time elapsed: 0.957 s <<< ERROR!
+com.healthdata.cms.exception.CmsApiException: Token refresh failed for Beneficiary Claims Data API
+	at com.healthdata.cms.auth.OAuth2Manager.refreshToken(OAuth2Manager.java:151)
+	at com.healthdata.cms.auth.OAuth2Manager.getAccessToken(OAuth2Manager.java:116)
+	at com.healthdata.cms.auth.OAuth2ManagerTest.testClearSpecificToken(OAuth2ManagerTest.java:219)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: java.lang.NullPointerException: Cannot invoke "org.springframework.http.ResponseEntity.getStatusCode()" because "response" is null
+	at com.healthdata.cms.auth.OAuth2Manager.performTokenExchange(OAuth2Manager.java:247)
+	at com.healthdata.cms.auth.OAuth2Manager.refreshToken(OAuth2Manager.java:132)
+	... 5 more
+
+com.healthdata.cms.auth.OAuth2ManagerTest.testGetAccessTokenInvalidResponse -- Time elapsed: 0.019 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <Invalid OAuth2 token response from CMS endpoint> but was: <Token refresh failed for Data at Point of Care>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:177)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1145)
+	at com.healthdata.cms.auth.OAuth2ManagerTest.testGetAccessTokenInvalidResponse(OAuth2ManagerTest.java:125)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+com.healthdata.cms.auth.OAuth2ManagerTest.testGetAccessTokenNullResponse -- Time elapsed: 0.007 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <Invalid OAuth2 token response from CMS endpoint> but was: <Token refresh failed for Beneficiary Claims Data API>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:177)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1145)
+	at com.healthdata.cms.auth.OAuth2ManagerTest.testGetAccessTokenNullResponse(OAuth2ManagerTest.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+com.healthdata.cms.auth.OAuth2ManagerTest.testCmsApiExceptionDetails -- Time elapsed: 0.012 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <DPC> but was: <null>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:177)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1145)
+	at com.healthdata.cms.auth.OAuth2ManagerTest.testCmsApiExceptionDetails(OAuth2ManagerTest.java:294)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+com.healthdata.cms.auth.OAuth2ManagerTest.testTokenRefreshOnExpiry -- Time elapsed: 0.010 s <<< ERROR!
+com.healthdata.cms.exception.CmsApiException: Token refresh failed for Data at Point of Care
+	at com.healthdata.cms.auth.OAuth2Manager.refreshToken(OAuth2Manager.java:151)
+	at com.healthdata.cms.auth.OAuth2Manager.getAccessToken(OAuth2Manager.java:116)
+	at com.healthdata.cms.auth.OAuth2ManagerTest.testTokenRefreshOnExpiry(OAuth2ManagerTest.java:169)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: java.lang.NullPointerException: Cannot invoke "org.springframework.http.ResponseEntity.getStatusCode()" because "response" is null
+	at com.healthdata.cms.auth.OAuth2Manager.performTokenExchange(OAuth2Manager.java:247)
+	at com.healthdata.cms.auth.OAuth2Manager.refreshToken(OAuth2Manager.java:132)
+	... 5 more
+
+com.healthdata.cms.auth.OAuth2ManagerTest.testMultipleProvidersSupport -- Time elapsed: 0.006 s <<< ERROR!
+com.healthdata.cms.exception.CmsApiException: Token refresh failed for Beneficiary Claims Data API
+	at com.healthdata.cms.auth.OAuth2Manager.refreshToken(OAuth2Manager.java:151)
+	at com.healthdata.cms.auth.OAuth2Manager.getAccessToken(OAuth2Manager.java:116)
+	at com.healthdata.cms.auth.OAuth2ManagerTest.testMultipleProvidersSupport(OAuth2ManagerTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: java.lang.NullPointerException: Cannot invoke "org.springframework.http.ResponseEntity.getStatusCode()" because "response" is null
+	at com.healthdata.cms.auth.OAuth2Manager.performTokenExchange(OAuth2Manager.java:247)
+	at com.healthdata.cms.auth.OAuth2Manager.refreshToken(OAuth2Manager.java:132)
+	... 5 more
+
+com.healthdata.cms.auth.OAuth2ManagerTest.testGetAccessTokenRestTemplateError -- Time elapsed: 0.009 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:31)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:183)
+	at com.healthdata.cms.auth.OAuth2ManagerTest.testGetAccessTokenRestTemplateError(OAuth2ManagerTest.java:142)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+com.healthdata.cms.auth.OAuth2ManagerTest.testClearAllTokens -- Time elapsed: 0.007 s <<< ERROR!
+com.healthdata.cms.exception.CmsApiException: Token refresh failed for Beneficiary Claims Data API
+	at com.healthdata.cms.auth.OAuth2Manager.refreshToken(OAuth2Manager.java:151)
+	at com.healthdata.cms.auth.OAuth2Manager.getAccessToken(OAuth2Manager.java:116)
+	at com.healthdata.cms.auth.OAuth2ManagerTest.testClearAllTokens(OAuth2ManagerTest.java:194)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: java.lang.NullPointerException: Cannot invoke "org.springframework.http.ResponseEntity.getStatusCode()" because "response" is null
+	at com.healthdata.cms.auth.OAuth2Manager.performTokenExchange(OAuth2Manager.java:247)
+	at com.healthdata.cms.auth.OAuth2Manager.refreshToken(OAuth2Manager.java:132)
+	... 5 more
+
+com.healthdata.cms.auth.OAuth2ManagerTest.testGetAccessTokenSuccess -- Time elapsed: 0.006 s <<< ERROR!
+com.healthdata.cms.exception.CmsApiException: Token refresh failed for Beneficiary Claims Data API
+	at com.healthdata.cms.auth.OAuth2Manager.refreshToken(OAuth2Manager.java:151)
+	at com.healthdata.cms.auth.OAuth2Manager.getAccessToken(OAuth2Manager.java:116)
+	at com.healthdata.cms.auth.OAuth2ManagerTest.testGetAccessTokenSuccess(OAuth2ManagerTest.java:54)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: java.lang.NullPointerException: Cannot invoke "org.springframework.http.ResponseEntity.getStatusCode()" because "response" is null
+	at com.healthdata.cms.auth.OAuth2Manager.performTokenExchange(OAuth2Manager.java:247)
+	at com.healthdata.cms.auth.OAuth2Manager.refreshToken(OAuth2Manager.java:132)
+	... 5 more
+
+com.healthdata.cms.auth.OAuth2ManagerTest.testGetAccessTokenFromCache -- Time elapsed: 0.005 s <<< ERROR!
+com.healthdata.cms.exception.CmsApiException: Token refresh failed for Data at Point of Care
+	at com.healthdata.cms.auth.OAuth2Manager.refreshToken(OAuth2Manager.java:151)
+	at com.healthdata.cms.auth.OAuth2Manager.getAccessToken(OAuth2Manager.java:116)
+	at com.healthdata.cms.auth.OAuth2ManagerTest.testGetAccessTokenFromCache(OAuth2ManagerTest.java:77)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: java.lang.NullPointerException: Cannot invoke "org.springframework.http.ResponseEntity.getStatusCode()" because "response" is null
+	at com.healthdata.cms.auth.OAuth2Manager.performTokenExchange(OAuth2Manager.java:247)
+	at com.healthdata.cms.auth.OAuth2Manager.refreshToken(OAuth2Manager.java:132)
+	... 5 more
+
+com.healthdata.cms.auth.OAuth2ManagerTest.testTokenExpirationBuffer -- Time elapsed: 0.007 s <<< ERROR!
+com.healthdata.cms.exception.CmsApiException: Token refresh failed for Beneficiary Claims Data API
+	at com.healthdata.cms.auth.OAuth2Manager.refreshToken(OAuth2Manager.java:151)
+	at com.healthdata.cms.auth.OAuth2Manager.getAccessToken(OAuth2Manager.java:116)
+	at com.healthdata.cms.auth.OAuth2ManagerTest.testTokenExpirationBuffer(OAuth2ManagerTest.java:272)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: java.lang.NullPointerException: Cannot invoke "org.springframework.http.ResponseEntity.getStatusCode()" because "response" is null
+	at com.healthdata.cms.auth.OAuth2Manager.performTokenExchange(OAuth2Manager.java:247)
+	at com.healthdata.cms.auth.OAuth2Manager.refreshToken(OAuth2Manager.java:132)
+	... 5 more
+

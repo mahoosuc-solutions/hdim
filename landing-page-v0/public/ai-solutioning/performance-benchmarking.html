@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Benchmarking - AI Solutioning Journey</title>
+    <meta name="description" content="CQL/FHIR vs Traditional SQL - 2-4x Faster">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1E3A5F;
+            --secondary: #00A9A5;
+            --accent: #2E7D32;
+            --text: #2C3E50;
+            --text-light: #6C757D;
+            --light: #F5F7FA;
+            --white: #FFFFFF;
+            --border: #E0E0E0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.8;
+            background: var(--light);
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--secondary);
+        }
+
+        .hero {
+            padding: 180px 40px 80px;
+            background: linear-gradient(135deg, var(--primary) 0%, #2C5282 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .hero .subtitle {
+            font-size: 20px;
+            font-weight: 400;
+            opacity: 0.95;
+        }
+
+        .content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 40px;
+            background: var(--white);
+        }
+
+        .content h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 40px 0 20px;
+            padding-top: 20px;
+            border-top: 3px solid var(--secondary);
+        }
+
+        .content h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 35px 0 15px;
+            padding-top: 15px;
+        }
+
+        .content h3 {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--primary);
+            margin: 30px 0 12px;
+        }
+
+        .content h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            margin: 25px 0 10px;
+        }
+
+        .content p {
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        .content ul, .content ol {
+            margin: 20px 0 20px 30px;
+        }
+
+        .content li {
+            margin-bottom: 10px;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .content strong {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .content em {
+            font-style: italic;
+            color: var(--text-light);
+        }
+
+        .content code {
+            background: var(--light);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: var(--accent);
+        }
+
+        .content pre {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .content pre code {
+            background: none;
+            padding: 0;
+            color: var(--text);
+        }
+
+        .content blockquote {
+            border-left: 4px solid var(--secondary);
+            padding-left: 20px;
+            margin: 20px 0;
+            font-style: italic;
+            color: var(--text-light);
+        }
+
+        .content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+
+        .content th {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .content td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .content tr:hover {
+            background: var(--light);
+        }
+
+        .content hr {
+            border: none;
+            border-top: 2px solid var(--border);
+            margin: 40px 0;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 40px;
+            padding: 12px 24px;
+            background: var(--secondary);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .back-link:hover {
+            background: #00897B;
+        }
+
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        footer p {
+            opacity: 0.8;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .hero .subtitle {
+                font-size: 18px;
+            }
+
+            .content {
+                padding: 40px 20px;
+            }
+
+            .content h1 {
+                font-size: 28px;
+            }
+
+            .content h2 {
+                font-size: 24px;
+            }
+
+            nav {
+                padding: 15px 20px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<!--
+  HDIM Shared Navigation Component
+  Include this at the top of <body> in each page
+  Last updated: January 16, 2026
+-->
+
+<style>
+/* ===== HDIM Global Navigation ===== */
+.hdim-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    z-index: 9999;
+    height: 70px;
+}
+
+.hdim-nav.dark {
+    background: rgba(10, 15, 26, 0.98);
+}
+
+.hdim-nav .logo {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1E3A5F;
+    text-decoration: none;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hdim-nav.dark .logo {
+    color: #60a5fa;
+}
+
+.hdim-nav .logo-icon {
+    font-size: 1.8rem;
+}
+
+.hdim-nav-menu {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    height: 100%;
+}
+
+.hdim-nav-item {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.hdim-nav-link {
+    text-decoration: none;
+    color: #2C3E50;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.hdim-nav.dark .hdim-nav-link {
+    color: #e5e7eb;
+}
+
+.hdim-nav-link:hover {
+    background: rgba(0, 169, 165, 0.1);
+    color: #00A9A5;
+}
+
+.hdim-nav.dark .hdim-nav-link:hover {
+    background: rgba(96, 165, 250, 0.1);
+    color: #60a5fa;
+}
+
+.hdim-nav-link.active {
+    background: rgba(0, 169, 165, 0.15);
+    color: #00A9A5;
+}
+
+.hdim-nav.dark .hdim-nav-link.active {
+    background: rgba(96, 165, 250, 0.15);
+    color: #60a5fa;
+}
+
+/* Dropdown */
+.hdim-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    padding: 1rem;
+    min-width: 280px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    border: 1px solid #e5e7eb;
+}
+
+.hdim-nav.dark .hdim-dropdown {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.hdim-nav-item:hover .hdim-dropdown {
+    opacity: 1;
+    visibility: visible;
+}
+
+.hdim-dropdown-header {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #9ca3af;
+    padding: 0.5rem 0.75rem 0.25rem;
+    margin-top: 0.5rem;
+}
+
+.hdim-dropdown-header:first-child {
+    margin-top: 0;
+}
+
+.hdim-dropdown-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #2C3E50;
+    transition: all 0.15s ease;
+}
+
+.hdim-nav.dark .hdim-dropdown-link {
+    color: #e5e7eb;
+}
+
+.hdim-dropdown-link:hover {
+    background: rgba(0, 169, 165, 0.1);
+}
+
+.hdim-nav.dark .hdim-dropdown-link:hover {
+    background: rgba(96, 165, 250, 0.1);
+}
+
+.hdim-dropdown-icon {
+    font-size: 1.2rem;
+    width: 28px;
+    text-align: center;
+}
+
+.hdim-dropdown-text {
+    flex: 1;
+}
+
+.hdim-dropdown-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+    line-height: 1.3;
+}
+
+.hdim-dropdown-desc {
+    font-size: 0.7rem;
+    color: #6b7280;
+    line-height: 1.3;
+}
+
+.hdim-nav.dark .hdim-dropdown-desc {
+    color: #9ca3af;
+}
+
+/* CTA Button */
+.hdim-nav-cta {
+    background: linear-gradient(135deg, #00A9A5 0%, #00897B 100%);
+    color: white !important;
+    padding: 0.6rem 1.2rem !important;
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 169, 165, 0.3);
+    transition: all 0.2s ease;
+}
+
+.hdim-nav-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 169, 165, 0.4);
+    background: linear-gradient(135deg, #00897B 0%, #00695C 100%) !important;
+}
+
+/* Mobile Menu Toggle */
+.hdim-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: #2C3E50;
+}
+
+.hdim-nav.dark .hdim-menu-toggle {
+    color: #e5e7eb;
+}
+
+/* Mobile Styles */
+@media (max-width: 1024px) {
+    .hdim-nav-menu {
+        position: fixed;
+        top: 70px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1rem;
+        gap: 0;
+        height: auto;
+        overflow-y: auto;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .hdim-nav.dark .hdim-nav-menu {
+        background: #111827;
+    }
+
+    .hdim-nav-menu.open {
+        transform: translateX(0);
+    }
+
+    .hdim-nav-item {
+        height: auto;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .hdim-nav-link {
+        padding: 1rem;
+        justify-content: space-between;
+    }
+
+    .hdim-dropdown {
+        position: static;
+        transform: none;
+        box-shadow: none;
+        border: none;
+        padding: 0 0 0 1rem;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 1;
+        visibility: visible;
+        background: transparent;
+    }
+
+    .hdim-nav-item.open .hdim-dropdown {
+        max-height: 1000px;
+        padding: 0.5rem 0 0.5rem 1rem;
+    }
+
+    .hdim-menu-toggle {
+        display: block;
+    }
+}
+
+/* Spacer for fixed nav */
+.hdim-nav-spacer {
+    height: 70px;
+}
+</style>
+
+<nav class="hdim-nav" id="hdim-nav">
+    <a href="/ai-solutioning/ai-solutioning-index.html" class="logo">
+        <span class="logo-icon">⚡</span>
+        <span>HDIM</span>
+    </a>
+
+    <button class="hdim-menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+        <span id="menu-icon">☰</span>
+    </button>
+
+    <div class="hdim-nav-menu" id="hdim-nav-menu">
+        <!-- Vision & Presentations -->
+        <div class="hdim-nav-item">
+            <a href="#" class="hdim-nav-link" onclick="toggleDropdown(event, this)">
+                Vision <span style="font-size: 0.7rem;">▼</span>
+            </a>
+            <div class="hdim-dropdown">
+                <a href="/vision/deck.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">🎬</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Vision Slide Deck</div>
+                        <div class="hdim-dropdown-desc">13-slide AI Solutioning presentation</div>
+                    </div>
+                </a>
+                <a href="/vision/cms.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">🏛️</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">CMS Vision</div>
+                        <div class="hdim-dropdown-desc">Healthcare quality & CMS integration</div>
+                    </div>
+                </a>
+                <a href="/vision/architecture.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">🏗️</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Platform Architecture</div>
+                        <div class="hdim-dropdown-desc">36 microservices data flow diagram</div>
+                    </div>
+                </a>
+                <a href="/ai-solutioning/executive-summary.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">📋</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Executive Summary</div>
+                        <div class="hdim-dropdown-desc">High-level platform overview</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- AI Solutioning -->
+        <div class="hdim-nav-item">
+            <a href="#" class="hdim-nav-link" onclick="toggleDropdown(event, this)">
+                AI Solutioning <span style="font-size: 0.7rem;">▼</span>
+            </a>
+            <div class="hdim-dropdown">
+                <a href="/ai-solutioning/ai-solutioning-index.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">🏠</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Overview</div>
+                        <div class="hdim-dropdown-desc">AI Solutioning methodology home</div>
+                    </div>
+                </a>
+                <a href="/ai-solutioning/ai-solutioning-journey.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">🚀</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">The Journey</div>
+                        <div class="hdim-dropdown-desc">From concept to production</div>
+                    </div>
+                </a>
+                <a href="/ai-solutioning/ai-solutioning-metrics.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">📊</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Metrics & Results</div>
+                        <div class="hdim-dropdown-desc">Quantified development outcomes</div>
+                    </div>
+                </a>
+                <a href="/ai-solutioning/spec-driven-development-analysis.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">📝</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Spec-Driven Development</div>
+                        <div class="hdim-dropdown-desc">The methodology deep dive</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Technical -->
+        <div class="hdim-nav-item">
+            <a href="#" class="hdim-nav-link" onclick="toggleDropdown(event, this)">
+                Technical <span style="font-size: 0.7rem;">▼</span>
+            </a>
+            <div class="hdim-dropdown">
+                <a href="/ai-solutioning/java-rebuild-deep-dive.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">☕</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Java Rebuild Deep Dive</div>
+                        <div class="hdim-dropdown-desc">Why Java won over Node.js</div>
+                    </div>
+                </a>
+                <a href="/ai-solutioning/architecture-evolution-timeline.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">📅</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Architecture Evolution</div>
+                        <div class="hdim-dropdown-desc">7 phases of platform growth</div>
+                    </div>
+                </a>
+                <a href="/ai-solutioning/performance-benchmarking.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">⚡</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Performance Benchmarking</div>
+                        <div class="hdim-dropdown-desc">Speed, scale, and efficiency metrics</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Comparisons -->
+        <div class="hdim-nav-item">
+            <a href="#" class="hdim-nav-link" onclick="toggleDropdown(event, this)">
+                Comparisons <span style="font-size: 0.7rem;">▼</span>
+            </a>
+            <div class="hdim-dropdown">
+                <a href="/ai-solutioning/traditional-vs-ai-solutioning-comparison.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">⚖️</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">Traditional vs AI Solutioning</div>
+                        <div class="hdim-dropdown-desc">Development approach comparison</div>
+                    </div>
+                </a>
+                <a href="/ai-solutioning/ai-native-vs-non-ai-native-comparison.html" class="hdim-dropdown-link">
+                    <span class="hdim-dropdown-icon">🤖</span>
+                    <div class="hdim-dropdown-text">
+                        <div class="hdim-dropdown-title">AI-Native vs Non-AI-Native</div>
+                        <div class="hdim-dropdown-desc">Code quality and patterns</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Direct Link: Slide Deck CTA -->
+        <a href="/vision/deck.html" class="hdim-nav-link hdim-nav-cta">
+            🎬 Watch Deck
+        </a>
+    </div>
+</nav>
+
+<div class="hdim-nav-spacer"></div>
+
+<script>
+// Mobile menu toggle
+function toggleMobileMenu() {
+    const menu = document.getElementById('hdim-nav-menu');
+    const icon = document.getElementById('menu-icon');
+    menu.classList.toggle('open');
+    icon.textContent = menu.classList.contains('open') ? '✕' : '☰';
+}
+
+// Dropdown toggle for mobile
+function toggleDropdown(event, element) {
+    if (window.innerWidth <= 1024) {
+        event.preventDefault();
+        const navItem = element.closest('.hdim-nav-item');
+        navItem.classList.toggle('open');
+    }
+}
+
+// Auto-detect dark mode based on page
+document.addEventListener('DOMContentLoaded', function() {
+    const nav = document.getElementById('hdim-nav');
+    const body = document.body;
+    const bgColor = window.getComputedStyle(body).backgroundColor;
+
+    // Check if background is dark
+    const rgb = bgColor.match(/\d+/g);
+    if (rgb) {
+        const brightness = (parseInt(rgb[0]) * 299 + parseInt(rgb[1]) * 587 + parseInt(rgb[2]) * 114) / 1000;
+        if (brightness < 128) {
+            nav.classList.add('dark');
+        }
+    }
+
+    // Highlight current page
+    const currentPage = window.location.pathname.split('/').pop() || 'ai-solutioning-index.html';
+    const links = document.querySelectorAll('.hdim-dropdown-link');
+    links.forEach(link => {
+        if (link.getAttribute('href') === currentPage) {
+            link.style.background = 'rgba(0, 169, 165, 0.15)';
+            link.style.fontWeight = '600';
+        }
+    });
+});
+
+// Close mobile menu on resize
+window.addEventListener('resize', function() {
+    if (window.innerWidth > 1024) {
+        document.getElementById('hdim-nav-menu').classList.remove('open');
+        document.getElementById('menu-icon').textContent = '☰';
+        document.querySelectorAll('.hdim-nav-item').forEach(item => item.classList.remove('open'));
+    }
+});
+</script>
+
+
+    
+
+    <section class="hero">
+        <h1>⚡ Performance Benchmarking</h1>
+        <p class="subtitle">CQL/FHIR vs Traditional SQL - 2-4x Faster</p>
+    </section>
+
+    <div class="content">
+<h1>Performance Benchmarking: CQL/FHIR vs Traditional SQL</h1>
+<strong>Demonstrating 2-4x Performance Improvement Through Modern Architecture</strong>
+<hr>
+<h2>Executive Summary</h2>
+<p>Our FHIR/CQL-based quality measure evaluation system delivers <strong>2-4x faster performance</strong> compared to traditional SQL-based approaches. This document presents comprehensive benchmarking results demonstrating measurable performance improvements across multiple scenarios.</p>
+<h3>Key Findings</h3>
+<p>| Metric | CQL/FHIR | SQL Traditional | Improvement | |--------|----------|-----------------|-------------| | <strong>Average Latency</strong> | 85ms | 280ms | <strong>3.3x faster</strong> | | <strong>P95 Latency</strong> | 180ms | 520ms | <strong>2.9x faster</strong> | | <strong>P99 Latency</strong> | 320ms | 780ms | <strong>2.4x faster</strong> | | <strong>Overall Improvement</strong> | - | - | <strong>69.6% faster</strong> |</p>
+<strong>Result:</strong> CQL/FHIR architecture delivers <strong>2-4x performance improvement</strong> over traditional SQL approaches.
+<hr>
+<h2>Why Performance Matters</h2>
+<p>In healthcare quality measurement, performance directly impacts:</p>
+<ul><li><strong>Patient Care</strong>: Faster evaluation means quicker care gap identification</li>
+<li><strong>Provider Efficiency</strong>: Reduced wait times for quality measure results</li>
+<li><strong>Cost Savings</strong>: Lower compute requirements reduce infrastructure costs</li>
+<li><strong>Scalability</strong>: Better performance enables larger patient populations</li>
+<li><strong>User Experience</strong>: Sub-second response times improve clinical workflows</li>
+<hr>
+<h2>Benchmarking Methodology</h2>
+<h3>Test Scenarios</h3>
+<p>We benchmarked four key scenarios:</p>
+1. <strong>Single Patient, Single Measure</strong>
+<li>Baseline performance comparison</li>
+<li>100 iterations per test</li>
+<li>Measures: HEDIS-CDC, HEDIS-CBP, HEDIS-BCS</li>
+<p>2. <strong>Single Patient, Multiple Measures</strong></p>
+<li>Parallel processing advantage</li>
+<li>Tests: 5, 10, 56 measures</li>
+<li>CQL: Parallel execution</li>
+<li>SQL: Sequential execution</li>
+<p>3. <strong>Batch Evaluation</strong></p>
+<li>Scalability with multiple patients</li>
+<li>Tests: 10, 100, 1000 patients</li>
+<li>Single measure per batch</li>
+<p>4. <strong>Concurrent Load</strong></p>
+<li>System performance under load</li>
+<li>Tests: 10, 50, 100, 500 concurrent users</li>
+<li>Real-world usage patterns</li>
+<h3>Measurement Standards</h3>
+<li><strong>Statistical Validity</strong>: Minimum 100 iterations per test</li>
+<li><strong>Warmup Period</strong>: 10 iterations to account for JIT and cache warming</li>
+<li><strong>Percentiles</strong>: Reported P50, P95, P99 (not just averages)</li>
+<li><strong>Fair Comparison</strong>: Same data, same environment, same indexes</li>
+<hr>
+<h2>Detailed Results</h2>
+<h3>Single Patient Evaluation</h3>
+<strong>Scenario:</strong> One patient, one measure (HEDIS-CDC - Diabetes HbA1c Control)
+<p>| Approach | Average | P50 | P95 | P99 | |----------|---------|-----|-----|-----| | <strong>CQL/FHIR (Cached)</strong> | 85ms | 75ms | 180ms | 320ms | | <strong>CQL/FHIR (Uncached)</strong> | 220ms | 180ms | 400ms | 600ms | | <strong>SQL Traditional</strong> | 280ms | 250ms | 520ms | 780ms |</p>
+<strong>Key Insight:</strong> CQL/FHIR with caching is <strong>3.3x faster</strong> than SQL. Even without caching, it's <strong>1.3x faster</strong> due to optimized architecture.
+<h3>Multi-Measure Evaluation</h3>
+<strong>Scenario:</strong> One patient, 56 HEDIS measures
+<p>| Approach | Total Time | Avg per Measure | Speedup | |----------|------------|-----------------|---------| | <strong>CQL/FHIR (Parallel + Cache)</strong> | 1.8s | 35ms | - | | <strong>CQL/FHIR (Parallel, No Cache)</strong> | 4.5s | 87ms | - | | <strong>SQL Traditional (Sequential)</strong> | 8.0s | 154ms | <strong>4.4x faster</strong> |</p>
+<strong>Key Insight:</strong> Parallel processing provides significant advantage. CQL/FHIR evaluates 56 measures in <strong>1.8 seconds</strong> vs SQL's <strong>8 seconds</strong>.
+<h3>Batch Evaluation</h3>
+<strong>Scenario:</strong> 100 patients, single measure
+<p>| Approach | Total Time | Avg per Patient | Throughput | |----------|------------|-----------------|------------| | <strong>CQL/FHIR (Parallel)</strong> | 2-5s | 20-50ms | 20-50 patients/s | | <strong>SQL Traditional</strong> | 8-15s | 80-150ms | 7-12 patients/s |</p>
+<strong>Key Insight:</strong> CQL/FHIR processes <strong>3-5x more patients per second</strong> than SQL.
+<h3>Concurrent Load Performance</h3>
+<strong>Scenario:</strong> Multiple concurrent users
+<p>| Concurrent Users | CQL/FHIR P95 | SQL P95 | CQL Advantage | |------------------|--------------|---------|---------------| | 10 | 95ms | 180ms | 1.9x | | 50 | 140ms | 420ms | 3.0x | | 100 | 220ms | 650ms | 3.0x | | 500 | 450ms | 1,200ms | 2.7x |</p>
+<strong>Key Insight:</strong> CQL/FHIR maintains better performance under load, with <strong>2-3x advantage</strong> even at high concurrency.
+<hr>
+<h2>Why CQL/FHIR is Faster</h2>
+<h3>1. Intelligent Caching (87% Hit Rate)</h3>
+<strong>Impact:</strong> Reduces database load by 7x
+<li>FHIR resources cached in Redis</li>
+<li>Measure definitions cached</li>
+<li>Query results cached</li>
+<li><strong>Result:</strong> 87% of requests served from cache</li>
+<h3>2. Parallel Processing</h3>
+<strong>Impact:</strong> 4-6x faster for multi-measure evaluation
+<li>Multiple measures evaluated concurrently</li>
+<li>Thread pool optimization</li>
+<li>Better CPU utilization</li>
+<li><strong>Result:</strong> 56 measures in 1.8s vs 8s sequential</li>
+<h3>3. Optimized Data Access</h3>
+<strong>Impact:</strong> 2-3x faster data retrieval
+<li>FHIR service optimized for common queries</li>
+<li>Indexed resource lookups</li>
+<li>Reduced data transfer</li>
+<li><strong>Result:</strong> Faster patient data access</li>
+<h3>4. Code Reuse</h3>
+<strong>Impact:</strong> Reduced redundant queries
+<li>Shared FHIR resources across measures</li>
+<li>Template-based evaluation</li>
+<li>Less redundant querying</li>
+<li><strong>Result:</strong> More efficient resource utilization</li>
+<h3>5. Modern Architecture</h3>
+<strong>Impact:</strong> Better scalability and performance
+<li>Microservices with dedicated caching</li>
+<li>Connection pooling</li>
+<li>Async processing where possible</li>
+<li><strong>Result:</strong> Better resource management</li>
+<hr>
+<h2>Real-World Impact</h2>
+<h3>Cost Savings</h3>
+<strong>Compute Requirements:</strong>
+<li>SQL approach: ~18 instances for 100K patients/month</li>
+<li>CQL/FHIR approach: ~3 instances for 100K patients/month</li>
+<li><strong>Savings: 83% reduction in compute resources</strong></li>
+<h3>Scalability</h3>
+<strong>Patient Capacity:</strong>
+<li>SQL approach: Limited by sequential processing</li>
+<li>CQL/FHIR approach: Scales horizontally with parallel processing</li>
+<li><strong>Result: 3-5x better throughput</strong></li>
+<h3>User Experience</h3>
+<strong>Response Times:</strong>
+<li>SQL approach: 200-800ms average</li>
+<li>CQL/FHIR approach: 50-200ms average</li>
+<li><strong>Result: 3-4x faster user experience</strong></li>
+<hr>
+<h2>Technical Comparison</h2>
+<h3>Architecture Differences</h3>
+<strong>Traditional SQL Approach:</strong>
+<pre><code>User Request → Application → SQL Query → Database
+<p>↓ Complex JOINs ↓ Result Processing ↓ Response</p>
+</code></pre>
+<strong>CQL/FHIR Approach:</strong>
+<pre><code>User Request → API Gateway → CQL Engine
+<p>↓ FHIR Service (Cached) ↓ Parallel Evaluation ↓ Response</p>
+</code></pre>
+<h3>Query Complexity</h3>
+<strong>SQL Example (HEDIS-CDC):</strong>
+<li>Multiple table joins</li>
+<li>Complex WHERE clauses</li>
+<li>Manual code system mapping</li>
+<li>~200-400ms execution time</li>
+<strong>CQL Example (HEDIS-CDC):</strong>
+<li>FHIR resource queries</li>
+<li>Value set lookups</li>
+<li>Cached resources</li>
+<li>~50-150ms execution time (cached)</li>
+<hr>
+<h2>Benchmarking Tools</h2>
+<p>We provide comprehensive benchmarking tools:</p>
+<h3>Automated Benchmark Script</h3>
+<pre><code><h1>Run comprehensive benchmark</h1>
+<p>./scripts/benchmark-cql-vs-sql.sh</p>
+<h1>Custom configuration</h1>
+<p>ITERATIONS=500 \ CONCURRENT_USERS=50 \ ./scripts/benchmark-cql-vs-sql.sh</p>
+</code></pre>
+<h3>Report Generation</h3>
+<pre><code><h1>Generate markdown report</h1>
+<p>./scripts/generate-benchmark-report.sh \ benchmark-results/benchmark_*.json \ benchmark-report.md</p>
+</code></pre>
+<h3>SQL Equivalents</h3>
+<p>We provide SQL equivalent queries for fair comparison:</p>
+<li><code>scripts/sql-equivalents/hedis-cdc-sql.sql</code></li>
+<li>Optimized with proper indexes</li>
+<li>Same logic as CQL measures</li>
+<hr>
+<h2>Validation</h2>
+<h3>Reproducibility</h3>
+<p>All benchmarks are:</p>
+<li>✅ Reproducible with provided scripts</li>
+<li>✅ Documented with full methodology</li>
+<li>✅ Validated with statistical analysis</li>
+<li>✅ Tested on production-like data</li>
+<h3>Statistical Validity</h3>
+<li>Minimum 100 iterations per test</li>
+<li>Warmup period included</li>
+<li>Percentiles reported (P50, P95, P99)</li>
+<li>Multiple test runs averaged</li>
+<hr>
+<h2>Conclusion</h2>
+<h3>Performance Summary</h3>
+<strong>CQL/FHIR architecture delivers:</strong>
+<li>✅ <strong>2-4x faster</strong> average response times</li>
+<li>✅ <strong>3-5x better</strong> throughput</li>
+<li>✅ <strong>83% reduction</strong> in compute requirements</li>
+<li>✅ <strong>Better scalability</strong> under concurrent load</li>
+<li>✅ <strong>Improved user experience</strong> with sub-second responses</li>
+<h3>Business Value</h3>
+<strong>Quantifiable Benefits:</strong>
+<li>Lower infrastructure costs (83% reduction)</li>
+<li>Faster time-to-insight (3-4x improvement)</li>
+<li>Better scalability (3-5x throughput)</li>
+<li>Improved user satisfaction (sub-second responses)</li>
+<h3>Recommendation</h3>
+<strong>Use CQL/FHIR approach for:</strong>
+<li>Production deployments</li>
+<li>Large patient populations</li>
+<li>Real-time quality measurement</li>
+<li>Cost-sensitive environments</li>
+<li>High-concurrency scenarios</li>
+<hr>
+<h2>Additional Resources</h2>
+<li><strong>Benchmarking Guide:</strong> <code>docs/performance/CQL_VS_SQL_BENCHMARKING.md</code></li>
+<li><strong>Methodology:</strong> <code>docs/performance/BENCHMARKING_METHODOLOGY.md</code></li>
+<li><strong>Quick Start:</strong> <code>docs/performance/BENCHMARKING_QUICK_START.md</code></li>
+<li><strong>Performance Guide:</strong> <code>docs/PERFORMANCE_GUIDE.md</code></li></ul>
+<hr>
+<strong>Last Updated:</strong> January 2025
+<strong>Version:</strong> 1.0
+<strong>Status:</strong> Production Validated
+        <a href="/ai-solutioning/ai-solutioning-index.html" class="back-link">← Back to Index</a>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 HDIM Platform. The AI Solutioning Journey.</p>
+    </footer>
+</body>
+</html>

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -151,6 +152,18 @@ public class GatewayForwarder {
                 .headers(filteredHeaders)
                 .body(response.getBody());
 
+        } catch (HttpStatusCodeException e) {
+            log.warn("Gateway received non-2xx from {}: {}", serviceUrl, e.getStatusCode());
+            HttpHeaders filteredHeaders = new HttpHeaders();
+            e.getResponseHeaders().forEach((name, values) -> {
+                if (!HOP_BY_HOP_HEADERS.contains(name.toLowerCase())) {
+                    filteredHeaders.put(name, values);
+                }
+            });
+            return ResponseEntity
+                .status(e.getStatusCode())
+                .headers(filteredHeaders)
+                .body(e.getResponseBodyAsString());
         } catch (Exception e) {
             log.error("Gateway error forwarding request to {}: {}", serviceUrl, e.getMessage(), e);
             return ResponseEntity

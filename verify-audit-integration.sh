@@ -18,8 +18,10 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-KAFKA_CONTAINER="healthdata-kafka"
-KAFKA_BOOTSTRAP="localhost:29092"
+KAFKA_CONTAINER="${KAFKA_CONTAINER:-hdim-demo-kafka}"
+CARE_GAP_CONTAINER="${CARE_GAP_CONTAINER:-hdim-demo-care-gap}"
+CQL_ENGINE_CONTAINER="${CQL_ENGINE_CONTAINER:-hdim-demo-cql-engine}"
+KAFKA_BOOTSTRAP="${KAFKA_BOOTSTRAP:-localhost:29092}"
 TOPIC="ai.agent.decisions"
 TENANT_ID="test-tenant-123"
 PATIENT_ID="patient-456"
@@ -61,18 +63,20 @@ fi
 echo ""
 
 echo -e "${YELLOW}Step 4: Checking service logs for audit integration...${NC}"
-CARE_GAP_AUDIT=$(docker logs $KAFKA_CONTAINER 2>&1 | grep -i "audit\|AIAuditEventPublisher" | wc -l)
-echo "Found audit-related log entries: $CARE_GAP_AUDIT"
+CARE_GAP_AUDIT=$(docker logs "$CARE_GAP_CONTAINER" 2>&1 | grep -i "audit\|AIAuditEventPublisher" | wc -l)
+CQL_ENGINE_AUDIT=$(docker logs "$CQL_ENGINE_CONTAINER" 2>&1 | grep -i "audit\|AIAuditEventPublisher" | wc -l)
+echo "Care Gap audit log entries: $CARE_GAP_AUDIT"
+echo "CQL Engine audit log entries: $CQL_ENGINE_AUDIT"
 echo ""
 
 echo -e "${YELLOW}Step 5: Verifying audit integration code is loaded...${NC}"
-if docker exec healthdata-care-gap-service sh -c "test -f /app/app.jar" 2>/dev/null; then
+if docker exec "$CARE_GAP_CONTAINER" sh -c "test -f /app/app.jar" 2>/dev/null; then
     echo -e "${GREEN}✅ Care Gap Service JAR is present${NC}"
 else
     echo -e "${RED}❌ Care Gap Service JAR not found${NC}"
 fi
 
-if docker exec healthdata-cql-engine-service sh -c "test -f /app/app.jar" 2>/dev/null; then
+if docker exec "$CQL_ENGINE_CONTAINER" sh -c "test -f /app/app.jar" 2>/dev/null; then
     echo -e "${GREEN}✅ CQL Engine Service JAR is present${NC}"
 else
     echo -e "${RED}❌ CQL Engine Service JAR not found${NC}"
@@ -165,4 +169,3 @@ echo ""
 echo "  2. Or trigger an API call with authentication to publish an audit event"
 echo ""
 echo "=========================================="
-

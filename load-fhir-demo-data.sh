@@ -5,8 +5,8 @@
 
 set -e
 
-FHIR_URL="${FHIR_URL:-http://localhost:8083/fhir}"
-TENANT_ID="${TENANT_ID:-demo-clinic}"
+FHIR_URL="${FHIR_URL:-http://localhost:8085/fhir}"
+TENANT_ID="${TENANT_ID:-acme-health}"
 
 # Colors
 GREEN='\033[0;32m'

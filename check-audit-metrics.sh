@@ -16,10 +16,16 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+# Configuration
+KAFKA_CONTAINER="${KAFKA_CONTAINER:-hdim-demo-kafka}"
+CARE_GAP_CONTAINER="${CARE_GAP_CONTAINER:-hdim-demo-care-gap}"
+CQL_ENGINE_CONTAINER="${CQL_ENGINE_CONTAINER:-hdim-demo-cql-engine}"
+KAFKA_BOOTSTRAP="${KAFKA_BOOTSTRAP:-localhost:29092}"
+
 # Check Kafka topic message count
 echo -e "${YELLOW}Kafka Topic Statistics:${NC}"
-docker exec healthdata-kafka kafka-run-class kafka.tools.GetOffsetShell \
-    --broker-list localhost:29092 \
+docker exec "$KAFKA_CONTAINER" kafka-run-class kafka.tools.GetOffsetShell \
+    --broker-list "$KAFKA_BOOTSTRAP" \
     --topic ai.agent.decisions 2>/dev/null | \
     awk -F: '{sum += $3} END {print "  Total messages: " sum}' || \
     echo "  Topic may not have messages yet"
@@ -47,7 +53,7 @@ echo ""
 
 # Check Kafka connectivity from services
 echo -e "${YELLOW}Kafka Connectivity:${NC}"
-KAFKA_HEALTH=$(docker exec healthdata-kafka kafka-topics --bootstrap-server localhost:29092 --list > /dev/null 2>&1 && echo "OK" || echo "FAILED")
+KAFKA_HEALTH=$(docker exec "$KAFKA_CONTAINER" kafka-topics --bootstrap-server "$KAFKA_BOOTSTRAP" --list > /dev/null 2>&1 && echo "OK" || echo "FAILED")
 if [ "$KAFKA_HEALTH" = "OK" ]; then
     echo -e "  Kafka: ${GREEN}✓ Accessible${NC}"
 else
@@ -58,8 +64,8 @@ echo ""
 
 # Check recent audit-related logs
 echo -e "${YELLOW}Recent Audit Activity:${NC}"
-CARE_GAP_LOGS=$(docker logs healthdata-care-gap-service 2>&1 | grep -i "audit\|agentId" | wc -l)
-CQL_ENGINE_LOGS=$(docker logs healthdata-cql-engine-service 2>&1 | grep -i "audit\|agentId" | wc -l)
+CARE_GAP_LOGS=$(docker logs "$CARE_GAP_CONTAINER" 2>&1 | grep -i "audit\|agentId" | wc -l)
+CQL_ENGINE_LOGS=$(docker logs "$CQL_ENGINE_CONTAINER" 2>&1 | grep -i "audit\|agentId" | wc -l)
 
 echo "  Care Gap Service audit log entries: $CARE_GAP_LOGS"
 echo "  CQL Engine Service audit log entries: $CQL_ENGINE_LOGS"
@@ -68,11 +74,10 @@ echo ""
 
 # Check topic partitions
 echo -e "${YELLOW}Topic Configuration:${NC}"
-docker exec healthdata-kafka kafka-topics --bootstrap-server localhost:29092 \
+docker exec "$KAFKA_CONTAINER" kafka-topics --bootstrap-server "$KAFKA_BOOTSTRAP" \
     --describe --topic ai.agent.decisions 2>/dev/null | \
     grep -E "PartitionCount|ReplicationFactor" | \
     sed 's/^/  /' || echo "  Topic details not available"
 
 echo ""
 echo "=========================================="
-

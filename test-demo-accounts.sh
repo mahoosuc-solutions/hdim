@@ -15,8 +15,8 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-GATEWAY_URL="http://localhost:9000"
-PASSWORD="demo123"
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
+PASSWORD="${PASSWORD:-demo123}"
 
 echo -e "${CYAN}╔════════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${CYAN}║              Testing Demo Mode Accounts                       ║${NC}"

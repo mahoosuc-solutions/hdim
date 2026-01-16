@@ -6,7 +6,7 @@
 
 set -e
 
-COMPOSE_FILE="docker-compose.demo.yml"
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.demo.yml}"
 if [ ! -f "$COMPOSE_FILE" ]; then
     COMPOSE_FILE="docker-compose.yml"
 fi
@@ -14,7 +14,9 @@ fi
 DB_SERVICE="postgres"
 DB_NAME="gateway_db"
 DB_USER="healthdata"
-AUTH_URL="http://localhost:18080/api/v1/auth/login"
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
+TENANT_ID="${TENANT_ID:-acme-health}"
+AUTH_URL="${GATEWAY_URL}/api/v1/auth/login"
 
 echo "Generating BCrypt hash for demo123..."
 HASH=$(python3 << 'PYEOF'
@@ -49,7 +51,7 @@ SELECT id, 'EVALUATOR' FROM new_user;
 
 WITH user_id AS (SELECT id FROM users WHERE username = 'demo.doctor')
 INSERT INTO user_tenants (user_id, tenant_id) 
-SELECT id, 'demo-clinic' FROM user_id;
+SELECT id, '${TENANT_ID}' FROM user_id;
 
 -- 2. Quality Analyst (Analyst role - can analyze data and create reports)
 WITH new_user AS (
@@ -63,7 +65,7 @@ SELECT id, 'ANALYST' FROM new_user;
 
 WITH user_id AS (SELECT id FROM users WHERE username = 'demo.analyst')
 INSERT INTO user_tenants (user_id, tenant_id) 
-SELECT id, 'demo-clinic' FROM user_id;
+SELECT id, '${TENANT_ID}' FROM user_id;
 
 -- 2a. Measure Developer (Measure Developer role - can create and edit CQL measures)
 WITH new_user AS (
@@ -77,7 +79,7 @@ SELECT id, 'MEASURE_DEVELOPER' FROM new_user;
 
 WITH user_id AS (SELECT id FROM users WHERE username = 'demo.developer')
 INSERT INTO user_tenants (user_id, tenant_id) 
-SELECT id, 'demo-clinic' FROM user_id;
+SELECT id, '${TENANT_ID}' FROM user_id;
 
 -- 3. Care Evaluator (Evaluator role - can assess care gaps)
 WITH new_user AS (
@@ -91,7 +93,7 @@ SELECT id, 'EVALUATOR' FROM new_user;
 
 WITH user_id AS (SELECT id FROM users WHERE username = 'demo.care')
 INSERT INTO user_tenants (user_id, tenant_id) 
-SELECT id, 'demo-clinic' FROM user_id;
+SELECT id, '${TENANT_ID}' FROM user_id;
 
 -- 4. Admin User (Full system access)
 WITH new_user AS (
@@ -105,7 +107,7 @@ SELECT id, 'ADMIN' FROM new_user;
 
 WITH user_id AS (SELECT id FROM users WHERE username = 'demo.admin')
 INSERT INTO user_tenants (user_id, tenant_id) 
-SELECT id, 'demo-clinic' FROM user_id;
+SELECT id, '${TENANT_ID}' FROM user_id;
 
 -- 5. Viewer User (Read-only access)
 WITH new_user AS (
@@ -119,7 +121,7 @@ SELECT id, 'VIEWER' FROM new_user;
 
 WITH user_id AS (SELECT id FROM users WHERE username = 'demo.viewer')
 INSERT INTO user_tenants (user_id, tenant_id) 
-SELECT id, 'demo-clinic' FROM user_id;
+SELECT id, '${TENANT_ID}' FROM user_id;
 
 -- Verify
 SELECT username, first_name, last_name, email, active, email_verified FROM users WHERE username LIKE 'demo.%' ORDER BY username;

@@ -16,7 +16,12 @@ CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 NC='\033[0m'
 
-GATEWAY_URL="http://localhost:9000"
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
+TENANT_ID="${TENANT_ID:-acme-health}"
+AUTH_USERNAME="${AUTH_USERNAME:-demo.doctor}"
+AUTH_PASSWORD="${AUTH_PASSWORD:-demo123}"
+POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-hdim-demo-postgres}"
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.demo.yml}"
 
 clear
 
@@ -53,7 +58,7 @@ api_demo() {
     if [ -n "$token" ]; then
         result=$(curl -s "$curl_cmd" \
             -H "Authorization: Bearer $token" \
-            -H "X-Tenant-ID: demo-clinic" | jq '.' 2>/dev/null || echo "Error or no data")
+            -H "X-Tenant-ID: $TENANT_ID" | jq '.' 2>/dev/null || echo "Error or no data")
     else
         result=$(curl -s "$curl_cmd" | jq '.' 2>/dev/null || echo "Error or no data")
     fi
@@ -75,7 +80,7 @@ echo -e "${GREEN}Checking system health...${NC}"
 echo ""
 
 # Check services
-docker compose ps --format "table {{.Service}}\t{{.State}}\t{{.Status}}" | grep -E "(Service|gateway|cql|quality|postgres)" || true
+docker compose -f "$COMPOSE_FILE" ps --format "table {{.Service}}\t{{.State}}\t{{.Status}}" | grep -E "(Service|gateway|cql|quality|postgres)" || true
 
 echo ""
 echo -e "${GREEN}✓ All services running${NC}"
@@ -93,8 +98,8 @@ echo -e "${MAGENTA}════════════════════�
 echo ""
 
 echo -e "${CYAN}Demo Account: Dr. Sarah Chen (Clinical Evaluator)${NC}"
-echo -e "${CYAN}Username:     demo.doctor${NC}"
-echo -e "${CYAN}Password:     demo123${NC}"
+echo -e "${CYAN}Username:     ${AUTH_USERNAME}${NC}"
+echo -e "${CYAN}Password:     ${AUTH_PASSWORD}${NC}"
 echo ""
 
 echo -e "${BLUE}Authenticating with JWT...${NC}"
@@ -103,7 +108,7 @@ echo ""
 # Login
 AUTH_RESPONSE=$(curl -s -X POST "${GATEWAY_URL}/api/v1/auth/login" \
     -H "Content-Type: application/json" \
-    -d '{"username":"demo.doctor","password":"demo123"}')
+    -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}")
 
 # Extract token
 TOKEN=$(echo "$AUTH_RESPONSE" | jq -r '.accessToken')
@@ -163,7 +168,7 @@ echo -e "${MAGENTA}════════════════════�
 echo ""
 
 api_demo "📈 Overall Quality Score for Clinic" \
-    "${GATEWAY_URL}/api/quality/quality-measure/score" \
+    "${GATEWAY_URL}/api/quality/quality-measure/report/population" \
     "$TOKEN"
 
 echo -e "${CYAN}Performance Metrics:${NC}"
@@ -191,7 +196,7 @@ echo ""
 # But it demonstrates the routing capability
 CARE_GAPS=$(curl -s "${GATEWAY_URL}/api/care-gaps/" \
     -H "Authorization: Bearer $TOKEN" \
-    -H "X-Tenant-ID: demo-clinic" 2>/dev/null || echo "{}")
+    -H "X-Tenant-ID: $TENANT_ID" 2>/dev/null || echo "{}")
 
 if echo "$CARE_GAPS" | jq -e . >/dev/null 2>&1; then
     echo "$CARE_GAPS" | jq '.' | head -30
@@ -199,7 +204,7 @@ else
     echo -e "${YELLOW}Care gap service routing in progress...${NC}"
     echo ""
     echo -e "${CYAN}Known care gaps from database:${NC}"
-    docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c \
+    docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d healthdata_cql -c \
         "SELECT 
             patient_id,
             title,
@@ -207,7 +212,7 @@ else
             status,
             category
         FROM care_gaps 
-        WHERE tenant_id = 'demo-clinic' 
+        WHERE tenant_id = '${TENANT_ID}' 
         ORDER BY 
             CASE priority 
                 WHEN 'high' THEN 1 
@@ -263,7 +268,7 @@ echo -e "${CYAN}User Roles in the System:${NC}"
 echo ""
 
 # Show all demo users
-docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c \
+docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d healthdata_cql -c \
     "SELECT 
         u.username,
         u.first_name || ' ' || u.last_name as full_name,
@@ -297,7 +302,7 @@ echo ""
 echo -e "${CYAN}Microservices Architecture:${NC}"
 echo ""
 echo -e "┌─────────────────────────────────────────────────────────────┐"
-echo -e "│  ${GREEN}Gateway Service${NC} (Port 9000)                             │"
+echo -e "│  ${GREEN}Gateway Service${NC} (Port 18080)                            │"
 echo -e "│  • JWT Authentication                                       │"
 echo -e "│  • API Routing                                              │"
 echo -e "│  • Security Layer                                           │"
@@ -309,7 +314,7 @@ echo -e "              ▼             ▼             ▼             ▼"
 echo -e "   ┌──────────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐"
 echo -e "   │ ${BLUE}CQL Engine${NC}  │  │ ${BLUE}Quality${NC}  │  │  ${BLUE}FHIR${NC}    │  │ ${BLUE}Patient${NC}  │"
 echo -e "   │   (8081)     │  │ Measure  │  │ Service  │  │ Service  │"
-echo -e "   │              │  │  (8087)  │  │  (8083)  │  │  (8084)  │"
+echo -e "   │              │  │  (8087)  │  │  (8085)  │  │  (8084)  │"
 echo -e "   └──────────────┘  └──────────┘  └──────────┘  └──────────┘"
 echo -e "              │             │             │             │"
 echo -e "              └─────────────┴─────────────┴─────────────┘"
@@ -341,7 +346,7 @@ echo -e "${MAGENTA}════════════════════�
 echo ""
 
 echo -e "${CYAN}Database Statistics:${NC}"
-docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c \
+docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d healthdata_cql -c \
     "SELECT 
         (SELECT COUNT(*) FROM quality_measure_results) as quality_results,
         (SELECT COUNT(*) FROM care_gaps) as care_gaps,

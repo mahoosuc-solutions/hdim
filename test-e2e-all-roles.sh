@@ -16,8 +16,10 @@ CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 NC='\033[0m'
 
-GATEWAY_URL="http://localhost:9000"
-PASSWORD="demo123"
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
+TENANT_ID="${TENANT_ID:-acme-health}"
+PASSWORD="${PASSWORD:-demo123}"
+POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-hdim-demo-postgres}"
 
 # Test counters
 TOTAL_TESTS=0
@@ -46,7 +48,7 @@ run_test() {
     
     # Execute test
     if [ -n "$user_token" ]; then
-        response=$(eval "$test_command -H 'Authorization: Bearer $user_token' -H 'X-Tenant-ID: demo-clinic'" 2>/dev/null || echo "ERROR")
+        response=$(eval "$test_command -H 'Authorization: Bearer $user_token' -H 'X-Tenant-ID: ${TENANT_ID}'" 2>/dev/null || echo "ERROR")
     else
         response=$(eval "$test_command" 2>/dev/null || echo "ERROR")
     fi
@@ -109,59 +111,59 @@ echo ""
 
 echo -e "${CYAN}1.1 User Management Schema${NC}"
 run_test "Users table exists" \
-    "docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c '\d users' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d users' -t" \
     "any" ""
 
 run_test "User roles table exists" \
-    "docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c '\d user_roles' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d user_roles' -t" \
     "any" ""
 
 run_test "User tenants table exists" \
-    "docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c '\d user_tenants' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d user_tenants' -t" \
     "any" ""
 
 run_test "Demo users exist (5 expected)" \
-    "docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c 'SELECT COUNT(*) FROM users WHERE username LIKE '\"'\"'demo.%'\"'\"';' -t | xargs" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c 'SELECT COUNT(*) FROM users WHERE username LIKE '\"'\"'demo.%'\"'\"';' -t | xargs" \
     "any" ""
 
 echo ""
 echo -e "${CYAN}1.2 Quality Measure Schema${NC}"
 run_test "Quality measure results table" \
-    "docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c '\d quality_measure_results' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d quality_measure_results' -t" \
     "any" ""
 
 run_test "Custom measures table" \
-    "docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c '\d custom_measures' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d custom_measures' -t" \
     "any" ""
 
 echo ""
 echo -e "${CYAN}1.3 Care Gap Schema${NC}"
 run_test "Care gaps table" \
-    "docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c '\d care_gaps' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d care_gaps' -t" \
     "any" ""
 
 echo ""
 echo -e "${CYAN}1.4 CQL Engine Schema${NC}"
 run_test "CQL libraries table" \
-    "docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c '\d cql_libraries' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d cql_libraries' -t" \
     "any" ""
 
 run_test "CQL evaluations table" \
-    "docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c '\d cql_evaluations' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d cql_evaluations' -t" \
     "any" ""
 
 run_test "Value sets table" \
-    "docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c '\d value_sets' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d value_sets' -t" \
     "any" ""
 
 echo ""
 echo -e "${CYAN}1.5 Referential Integrity${NC}"
 run_test "User -> User Roles FK" \
-    "docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c 'SELECT conname FROM pg_constraint WHERE conname = '\"'\"'fkhfh9dx7w3ubf1co1vdev94g3f'\"'\"';' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c 'SELECT conname FROM pg_constraint WHERE conname = '\"'\"'fkhfh9dx7w3ubf1co1vdev94g3f'\"'\"';' -t" \
     "any" ""
 
 run_test "User -> User Tenants FK" \
-    "docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c 'SELECT conname FROM pg_constraint WHERE conname = '\"'\"'fk9al929m2h3hecov7100p06cll'\"'\"';' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c 'SELECT conname FROM pg_constraint WHERE conname = '\"'\"'fk9al929m2h3hecov7100p06cll'\"'\"';' -t" \
     "any" ""
 
 ################################################################################
@@ -212,8 +214,8 @@ if [ $? -eq 0 ]; then
         "curl -s ${GATEWAY_URL}/api/quality/quality-measure/results" \
         "any" "$EVALUATOR_TOKEN"
     
-    run_test "Access quality score endpoint" \
-        "curl -s ${GATEWAY_URL}/api/quality/quality-measure/score" \
+    run_test "Access quality report (population)" \
+        "curl -s ${GATEWAY_URL}/api/quality/quality-measure/report/population" \
         "any" "$EVALUATOR_TOKEN"
     
     echo ""
@@ -257,8 +259,8 @@ if [ $? -eq 0 ]; then
         "curl -s ${GATEWAY_URL}/api/quality/quality-measure/results" \
         "any" "$ANALYST_TOKEN"
     
-    run_test "Access aggregate quality score" \
-        "curl -s ${GATEWAY_URL}/api/quality/quality-measure/score" \
+    run_test "Access quality report (population)" \
+        "curl -s ${GATEWAY_URL}/api/quality/quality-measure/report/population" \
         "any" "$ANALYST_TOKEN"
     
     echo ""
@@ -298,8 +300,8 @@ if [ $? -eq 0 ]; then
         "curl -s ${GATEWAY_URL}/api/quality/quality-measure/results" \
         "any" "$ADMIN_TOKEN"
     
-    run_test "Access quality scores" \
-        "curl -s ${GATEWAY_URL}/api/quality/quality-measure/score" \
+    run_test "Access quality report (population)" \
+        "curl -s ${GATEWAY_URL}/api/quality/quality-measure/report/population" \
         "any" "$ADMIN_TOKEN"
     
     echo ""
@@ -380,7 +382,7 @@ run_test "Quality Measure service (direct)" \
     "any" ""
 
 run_test "PostgreSQL database" \
-    "docker exec healthdata-postgres pg_isready -U healthdata" \
+    "docker exec ${POSTGRES_CONTAINER} pg_isready -U healthdata" \
     "any" ""
 
 ################################################################################

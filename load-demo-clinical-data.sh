@@ -7,9 +7,10 @@
 
 set -e
 
-DB_CONTAINER="healthdata-postgres"
+DB_CONTAINER="${DB_CONTAINER:-hdim-demo-postgres}"
 DB_NAME="healthdata_cql"
 DB_USER="healthdata"
+TENANT_ID="${TENANT_ID:-acme-health}"
 
 echo "╔════════════════════════════════════════════════════════════════╗"
 echo "║           Loading Demo Clinical Data                          ║"
@@ -19,7 +20,7 @@ echo ""
 # Create SQL with demo data
 cat > /tmp/demo-clinical-data.sql << 'EOF'
 -- Demo Clinical Data for Health Data in Motion Platform
--- Tenant: demo-clinic
+-- Tenant: __TENANT_ID__
 
 -- Sample Quality Measure Results (Depression Screening - CMS2)
 INSERT INTO quality_measure_results (
@@ -29,7 +30,7 @@ INSERT INTO quality_measure_results (
 ) VALUES
 -- Patient 1: High performer - compliant
 (
-    gen_random_uuid(), 'demo-clinic', 
+    gen_random_uuid(), '__TENANT_ID__', 
     '550e8400-e29b-41d4-a716-446655440001'::uuid,
     'CMS2', 'Preventive Care and Screening: Screening for Depression and Follow-Up Plan',
     'Behavioral Health', 2025, true, true, 1.0, 100.0,
@@ -37,7 +38,7 @@ INSERT INTO quality_measure_results (
 ),
 -- Patient 2: Non-compliant
 (
-    gen_random_uuid(), 'demo-clinic',
+    gen_random_uuid(), '__TENANT_ID__',
     '550e8400-e29b-41d4-a716-446655440002'::uuid,
     'CMS2', 'Preventive Care and Screening: Screening for Depression and Follow-Up Plan',
     'Behavioral Health', 2025, false, true, 0.0, 0.0,
@@ -45,7 +46,7 @@ INSERT INTO quality_measure_results (
 ),
 -- Patient 3: Compliant
 (
-    gen_random_uuid(), 'demo-clinic',
+    gen_random_uuid(), '__TENANT_ID__',
     '550e8400-e29b-41d4-a716-446655440003'::uuid,
     'CMS2', 'Preventive Care and Screening: Screening for Depression and Follow-Up Plan',
     'Behavioral Health', 2025, true, true, 1.0, 100.0,
@@ -53,14 +54,14 @@ INSERT INTO quality_measure_results (
 ),
 -- CMS134: Diabetes Care - HbA1c Testing
 (
-    gen_random_uuid(), 'demo-clinic',
+    gen_random_uuid(), '__TENANT_ID__',
     '550e8400-e29b-41d4-a716-446655440001'::uuid,
     'CMS134', 'Diabetes: Medical Attention for Nephropathy',
     'Chronic Disease Management', 2025, true, true, 1.0, 100.0,
     '2025-11-20', 'CMS134v12', CURRENT_TIMESTAMP, 'system'
 ),
 (
-    gen_random_uuid(), 'demo-clinic',
+    gen_random_uuid(), '__TENANT_ID__',
     '550e8400-e29b-41d4-a716-446655440004'::uuid,
     'CMS134', 'Diabetes: Medical Attention for Nephropathy',
     'Chronic Disease Management', 2025, false, true, 0.0, 0.0,
@@ -68,7 +69,7 @@ INSERT INTO quality_measure_results (
 ),
 -- CMS122: Diabetes: Hemoglobin A1c (HbA1c) Poor Control
 (
-    gen_random_uuid(), 'demo-clinic',
+    gen_random_uuid(), '__TENANT_ID__',
     '550e8400-e29b-41d4-a716-446655440001'::uuid,
     'CMS122', 'Diabetes: Hemoglobin A1c (HbA1c) Poor Control (>9%)',
     'Chronic Disease Management', 2025, false, true, 0.0, 0.0,
@@ -76,14 +77,14 @@ INSERT INTO quality_measure_results (
 ),
 -- CMS165: Controlling High Blood Pressure
 (
-    gen_random_uuid(), 'demo-clinic',
+    gen_random_uuid(), '__TENANT_ID__',
     '550e8400-e29b-41d4-a716-446655440005'::uuid,
     'CMS165', 'Controlling High Blood Pressure',
     'Chronic Disease Management', 2025, true, true, 1.0, 100.0,
     '2025-11-20', 'CMS165v12', CURRENT_TIMESTAMP, 'system'
 ),
 (
-    gen_random_uuid(), 'demo-clinic',
+    gen_random_uuid(), '__TENANT_ID__',
     '550e8400-e29b-41d4-a716-446655440002'::uuid,
     'CMS165', 'Controlling High Blood Pressure',
     'Chronic Disease Management', 2025, false, true, 0.0, 0.0,
@@ -98,7 +99,7 @@ INSERT INTO care_gaps (
 ) VALUES
 -- Depression screening gap
 (
-    gen_random_uuid(), 'demo-clinic', '550e8400-e29b-41d4-a716-446655440002',
+    gen_random_uuid(), '__TENANT_ID__', '550e8400-e29b-41d4-a716-446655440002',
     'behavioral_health', 'screening_overdue', 
     'Depression Screening Overdue',
     'Patient has not completed depression screening in past 12 months. Annual screening required per CMS2.',
@@ -111,7 +112,7 @@ INSERT INTO care_gaps (
 ),
 -- Diabetes nephropathy gap
 (
-    gen_random_uuid(), 'demo-clinic', '550e8400-e29b-41d4-a716-446655440004',
+    gen_random_uuid(), '__TENANT_ID__', '550e8400-e29b-41d4-a716-446655440004',
     'chronic_disease', 'test_overdue',
     'Diabetes Nephropathy Screening Due',
     'Patient with diabetes has not had nephropathy screening (urine microalbumin or ACR) in past 12 months.',
@@ -124,7 +125,7 @@ INSERT INTO care_gaps (
 ),
 -- Blood pressure control gap
 (
-    gen_random_uuid(), 'demo-clinic', '550e8400-e29b-41d4-a716-446655440002',
+    gen_random_uuid(), '__TENANT_ID__', '550e8400-e29b-41d4-a716-446655440002',
     'chronic_disease', 'control_inadequate',
     'Blood Pressure Not at Goal',
     'Patient with hypertension has blood pressure readings above goal (<140/90 mmHg).',
@@ -137,7 +138,7 @@ INSERT INTO care_gaps (
 ),
 -- Preventive care gap
 (
-    gen_random_uuid(), 'demo-clinic', '550e8400-e29b-41d4-a716-446655440003',
+    gen_random_uuid(), '__TENANT_ID__', '550e8400-e29b-41d4-a716-446655440003',
     'prevention', 'vaccination_due',
     'Influenza Vaccination Recommended',
     'Patient is eligible for seasonal influenza vaccination and has not received current season dose.',
@@ -150,7 +151,7 @@ INSERT INTO care_gaps (
 ),
 -- HbA1c control gap
 (
-    gen_random_uuid(), 'demo-clinic', '550e8400-e29b-41d4-a716-446655440001',
+    gen_random_uuid(), '__TENANT_ID__', '550e8400-e29b-41d4-a716-446655440001',
     'chronic_disease', 'control_poor',
     'HbA1c Above Goal',
     'Patient with diabetes has HbA1c >9%, indicating poor glycemic control.',
@@ -171,12 +172,12 @@ DECLARE
     total_gaps INTEGER;
     high_priority_gaps INTEGER;
 BEGIN
-    SELECT COUNT(*) INTO total_results FROM quality_measure_results WHERE tenant_id = 'demo-clinic';
+    SELECT COUNT(*) INTO total_results FROM quality_measure_results WHERE tenant_id = '__TENANT_ID__';
     SELECT COUNT(*) INTO compliant_results FROM quality_measure_results 
-        WHERE tenant_id = 'demo-clinic' AND numerator_compliant = true;
-    SELECT COUNT(*) INTO total_gaps FROM care_gaps WHERE tenant_id = 'demo-clinic';
+        WHERE tenant_id = '__TENANT_ID__' AND numerator_compliant = true;
+    SELECT COUNT(*) INTO total_gaps FROM care_gaps WHERE tenant_id = '__TENANT_ID__';
     SELECT COUNT(*) INTO high_priority_gaps FROM care_gaps 
-        WHERE tenant_id = 'demo-clinic' AND priority = 'high';
+        WHERE tenant_id = '__TENANT_ID__' AND priority = 'high';
     
     compliance_pct := (compliant_results::NUMERIC / NULLIF(total_results, 0)) * 100;
     
@@ -198,7 +199,7 @@ SELECT
     SUM(CASE WHEN numerator_compliant THEN 1 ELSE 0 END) as compliant,
     ROUND(AVG(compliance_rate) * 100, 1) as compliance_pct
 FROM quality_measure_results
-WHERE tenant_id = 'demo-clinic'
+WHERE tenant_id = '__TENANT_ID__'
 GROUP BY measure_id, measure_name
 ORDER BY measure_id;
 
@@ -207,7 +208,7 @@ SELECT
     priority,
     COUNT(*) as gap_count
 FROM care_gaps
-WHERE tenant_id = 'demo-clinic'
+WHERE tenant_id = '__TENANT_ID__'
 GROUP BY category, priority
 ORDER BY 
     CASE priority 
@@ -217,6 +218,7 @@ ORDER BY
     END,
     category;
 EOF
+sed -i "s/__TENANT_ID__/${TENANT_ID}/g" /tmp/demo-clinical-data.sql
 
 echo "Loading demo data into database..."
 docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" < /tmp/demo-clinical-data.sql

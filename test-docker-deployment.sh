@@ -19,7 +19,10 @@ COMPOSE_FILE="docker-compose.demo.yml"
 if [ ! -f "$COMPOSE_FILE" ]; then
     COMPOSE_FILE="docker-compose.yml"
 fi
-GATEWAY_URL="http://localhost:18080"
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
+TENANT_ID="${TENANT_ID:-acme-health}"
+AUTH_USERNAME="${AUTH_USERNAME:-demo.admin}"
+AUTH_PASSWORD="${AUTH_PASSWORD:-demo123}"
 
 echo -e "${BLUE}📋 System Status Check${NC}"
 echo "-------------------"
@@ -67,7 +70,7 @@ echo ""
 echo "Test 2: Login with admin credentials..."
 LOGIN_RESPONSE=$(curl -s -X POST $GATEWAY_URL/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"demo.admin","password":"demo123"}')
+  -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}")
 
 # Check if login was successful
 if echo "$LOGIN_RESPONSE" | grep -q "accessToken"; then
@@ -118,7 +121,7 @@ echo ""
 echo "Test 4: Accessing protected endpoint with JWT..."
 PROTECTED_RESPONSE=$(curl -s $GATEWAY_URL/actuator/health \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "X-Tenant-ID: demo-clinic")
+  -H "X-Tenant-ID: ${TENANT_ID}")
 
 if echo "$PROTECTED_RESPONSE" | grep -q "UP"; then
     echo -e "${GREEN}✅ Protected endpoint access successful${NC}"
@@ -135,7 +138,7 @@ echo "------------------------------"
 echo "Test 5a: CQL Engine routing..."
 CQL_RESPONSE=$(curl -s $GATEWAY_URL/api/cql/actuator/health \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "X-Tenant-ID: demo-clinic" 2>&1)
+  -H "X-Tenant-ID: ${TENANT_ID}" 2>&1)
 
 if echo "$CQL_RESPONSE" | grep -q '"status":"UP"'; then
     echo -e "${GREEN}✅ CQL Engine accessible through Gateway${NC}"
@@ -151,7 +154,7 @@ echo ""
 echo "Test 5b: Quality Measure routing..."
 QUALITY_RESPONSE=$(curl -s $GATEWAY_URL/api/quality/actuator/health \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "X-Tenant-ID: demo-clinic" 2>&1)
+  -H "X-Tenant-ID: ${TENANT_ID}" 2>&1)
 
 if echo "$QUALITY_RESPONSE" | grep -q '"status":"UP"'; then
     echo -e "${GREEN}✅ Quality Measure Service accessible through Gateway${NC}"
@@ -193,9 +196,9 @@ echo "  URL: $GATEWAY_URL"
 echo "  Health: $GATEWAY_URL/actuator/health"
 echo ""
 echo "Demo Credentials:"
-echo "  Username: demo.admin"
-echo "  Password: demo123"
-echo "  Tenant: demo-clinic"
+echo "  Username: ${AUTH_USERNAME}"
+echo "  Password: ${AUTH_PASSWORD}"
+echo "  Tenant: ${TENANT_ID}"
 echo ""
 echo "Next Steps:"
 echo "  1. Start backend services:"

@@ -16,10 +16,14 @@ BOLD='\033[1m'
 NC='\033[0m'
 
 # Demo configuration
-GATEWAY_URL="http://localhost:9000"
-FHIR_URL="http://localhost:8083/fhir"
-CQL_URL="http://localhost:8081"
-QUALITY_URL="http://localhost:8087"
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
+FHIR_URL="${FHIR_URL:-http://localhost:8085/fhir}"
+CQL_URL="${CQL_URL:-http://localhost:8081}"
+QUALITY_URL="${QUALITY_URL:-http://localhost:8087}"
+TENANT_ID="${TENANT_ID:-acme-health}"
+AUTH_USERNAME="${AUTH_USERNAME:-demo.doctor}"
+AUTH_PASSWORD="${AUTH_PASSWORD:-demo123}"
+POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-hdim-demo-postgres}"
 
 clear
 echo -e "${BOLD}${BLUE}=========================================${NC}"
@@ -50,7 +54,7 @@ echo -e "${CYAN}Checking all system services...${NC}"
 echo ""
 
 services=("Gateway" "CQL Engine" "Quality Measure" "FHIR Server" "PostgreSQL")
-ports=(9000 8081 8087 8083 5432)
+ports=(18080 8081 8087 8085 5432)
 
 for i in "${!services[@]}"; do
     service="${services[$i]}"
@@ -84,15 +88,15 @@ echo -e "${BOLD}${MAGENTA}SECTION 2: Authentication & Security${NC}"
 echo -e "${BOLD}${MAGENTA}═══════════════════════════════════${NC}"
 echo ""
 
-echo -e "${CYAN}Demo User: demo.doctor${NC}"
+echo -e "${CYAN}Demo User: ${AUTH_USERNAME}${NC}"
 echo "  Role: EVALUATOR"
-echo "  Tenant: demo-clinic"
+echo "  Tenant: ${TENANT_ID}"
 echo ""
 
 echo -e "${BLUE}Authenticating...${NC}"
 TOKEN=$(curl -s -X POST "$GATEWAY_URL/api/v1/auth/login" \
     -H "Content-Type: application/json" \
-    -d '{"username":"demo.doctor","password":"demo123"}' | jq -r '.accessToken')
+    -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}" | jq -r '.accessToken')
 
 if [ "$TOKEN" != "null" ] && [ -n "$TOKEN" ]; then
     echo -e "${GREEN}✓ Authentication successful${NC}"
@@ -206,7 +210,7 @@ echo ""
 
 echo -e "${BLUE}Checking Quality Measure Results (via database):${NC}"
 echo ""
-docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c "
+docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d healthdata_cql -c "
 SELECT 
     measure_id,
     measure_name,
@@ -214,7 +218,7 @@ SELECT
     total_patients,
     ROUND((numerator_compliant::numeric / NULLIF(total_patients, 0) * 100), 1) as compliance_rate
 FROM quality_measure_results 
-WHERE tenant_id = 'demo-clinic' 
+WHERE tenant_id = '${TENANT_ID}' 
 LIMIT 4;" 2>/dev/null | grep -A 6 "measure_id" || echo "  Note: Quality measures populated from demo data"
 
 echo ""
@@ -248,7 +252,7 @@ echo ""
 
 echo -e "${BLUE}Current Care Gaps (from database):${NC}"
 echo ""
-docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c "
+docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d healthdata_cql -c "
 SELECT 
     patient_id,
     gap_type,
@@ -256,7 +260,7 @@ SELECT
     LEFT(description, 60) as description,
     status
 FROM care_gaps 
-WHERE tenant_id = 'demo-clinic' 
+WHERE tenant_id = '${TENANT_ID}' 
 ORDER BY priority DESC
 LIMIT 5;" 2>/dev/null | grep -A 7 "patient_id" || echo "  Care gaps available in system"
 
@@ -293,7 +297,7 @@ echo "  • Quality measures in healthdata_cql database"
 echo ""
 
 echo -e "${BLUE}Key Tables:${NC}"
-docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c "
+docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d healthdata_cql -c "
 SELECT 
     schemaname,
     tablename,
@@ -324,7 +328,7 @@ echo ""
 
 echo -e "${CYAN}Available User Roles:${NC}"
 echo ""
-docker exec healthdata-postgres psql -U healthdata -d healthdata_users -c "
+docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d healthdata_users -c "
 SELECT 
     username,
     role,
@@ -445,8 +449,8 @@ echo -e "${BOLD}${GREEN}   Demo Complete - Questions?${NC}"
 echo -e "${BOLD}${GREEN}=========================================${NC}"
 echo ""
 echo "Useful URLs for exploration:"
-echo "  • Gateway:         http://localhost:9000"
-echo "  • FHIR Server:     http://localhost:8083/fhir"
+echo "  • Gateway:         ${GATEWAY_URL}"
+echo "  • FHIR Server:     ${FHIR_URL}"
 echo "  • Clinical Portal: http://localhost:4200"
 echo ""
 echo "Demo users (all password: demo123):"

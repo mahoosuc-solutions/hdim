@@ -4,11 +4,14 @@
 
 set -e
 
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.demo.yml}"
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:9000}"
+
 echo "🚀 Starting HealthData In Motion Demo..."
 
 # Start infrastructure services (PostgreSQL, Redis, Kafka)
 echo "📦 Starting infrastructure services..."
-docker-compose up -d postgres redis kafka zookeeper
+docker compose -f "$COMPOSE_FILE" up -d postgres redis kafka zookeeper
 
 # Wait for database
 echo "⏳ Waiting for PostgreSQL..."
@@ -49,13 +52,13 @@ echo ""
 echo "✅ All services started!"
 echo ""
 echo "📝 Service URLs:"
-echo "  Gateway (Auth):          http://localhost:9000"
+echo "  Gateway (Auth):          ${GATEWAY_URL}"
 echo "  CQL Engine:              http://localhost:8081"
 echo "  Quality Measure:         http://localhost:8087"
 echo "  Clinical Portal:         http://localhost:4202"
 echo ""
 echo "🔐 Test Login:"
-echo "  POST http://localhost:9000/api/v1/auth/login"
+echo "  POST ${GATEWAY_URL}/api/v1/auth/login"
 echo '  Body: {"username":"admin","password":"admin123"}'
 echo ""
 echo "📊 Service Logs:"
@@ -66,7 +69,7 @@ echo "  Clinical Portal:         tail -f logs/clinical-portal.log"
 echo ""
 echo "🛑 To stop all services:"
 echo "  kill $GATEWAY_PID $CQL_PID $QUALITY_PID $PORTAL_PID"
-echo "  docker-compose down"
+echo "  docker compose -f \"$COMPOSE_FILE\" down"
 echo ""
 
 # Save PIDs

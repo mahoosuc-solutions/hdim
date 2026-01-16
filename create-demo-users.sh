@@ -6,9 +6,11 @@
 
 set -e
 
-DB_CONTAINER="healthdata-postgres"
+DB_CONTAINER="${DB_CONTAINER:-hdim-demo-postgres}"
 DB_NAME="healthdata_cql"
 DB_USER="healthdata"
+TENANT_ID="${TENANT_ID:-acme-health}"
+GATEWAY_CONTAINER="${GATEWAY_CONTAINER:-hdim-demo-gateway-admin}"
 
 # Using the same password hashing approach as admin user
 # We'll use the Java BCrypt from the existing admin's hash as reference
@@ -30,7 +32,7 @@ public class HashGenerator {
 EOF
 
 # Try to compile and run using Gateway container
-HASH=$(docker exec healthdata-gateway /bin/sh -c "
+HASH=$(docker exec "$GATEWAY_CONTAINER" /bin/sh -c "
 cd /tmp
 cat > HashGen.java << 'JAVAEOF'
 public class HashGen {
@@ -44,7 +46,7 @@ public class HashGen {
 JAVAEOF
 
 java -cp '/app/app.jar:/app/lib/*' HashGen 2>/dev/null || echo 'FAILED'
-" 2>/dev/null | grep '^\$2' | head -1)
+" 2>/dev/null | grep '^\$2' | head -1 || true)
 
 if [ -z "$HASH" ] || [ "$HASH" = "FAILED" ]; then
     echo "Could not generate hash via Java, using Python htpasswd alternative..."
@@ -82,7 +84,7 @@ VALUES (gen_random_uuid(), 'demo.doctor', 'demo.doctor@healthdata.com',
 RETURNING id \gset doctor_
 INSERT INTO user_roles (user_id, role) VALUES (:'doctor_id', 'CLINICAL_USER');
 INSERT INTO user_roles (user_id, role) VALUES (:'doctor_id', 'USER');
-INSERT INTO user_tenants (user_id, tenant_id) VALUES (:'doctor_id', 'demo-clinic');
+INSERT INTO user_tenants (user_id, tenant_id) VALUES (:'doctor_id', '${TENANT_ID}');
 
 -- 2. Quality Manager
 INSERT INTO users (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at)
@@ -91,7 +93,7 @@ VALUES (gen_random_uuid(), 'demo.quality', 'demo.quality@healthdata.com',
 RETURNING id \gset quality_
 INSERT INTO user_roles (user_id, role) VALUES (:'quality_id', 'QUALITY_MANAGER');
 INSERT INTO user_roles (user_id, role) VALUES (:'quality_id', 'USER');
-INSERT INTO user_tenants (user_id, tenant_id) VALUES (:'quality_id', 'demo-clinic');
+INSERT INTO user_tenants (user_id, tenant_id) VALUES (:'quality_id', '${TENANT_ID}');
 
 -- 3. Care Coordinator
 INSERT INTO users (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at)
@@ -100,7 +102,7 @@ VALUES (gen_random_uuid(), 'demo.care', 'demo.care@healthdata.com',
 RETURNING id \gset care_
 INSERT INTO user_roles (user_id, role) VALUES (:'care_id', 'CARE_COORDINATOR');
 INSERT INTO user_roles (user_id, role) VALUES (:'care_id', 'USER');
-INSERT INTO user_tenants (user_id, tenant_id) VALUES (:'care_id', 'demo-clinic');
+INSERT INTO user_tenants (user_id, tenant_id) VALUES (:'care_id', '${TENANT_ID}');
 
 -- 4. Admin User
 INSERT INTO users (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at)
@@ -109,7 +111,7 @@ VALUES (gen_random_uuid(), 'demo.admin', 'demo.admin@healthdata.com',
 RETURNING id \gset admin_
 INSERT INTO user_roles (user_id, role) VALUES (:'admin_id', 'ADMIN');
 INSERT INTO user_roles (user_id, role) VALUES (:'admin_id', 'USER');
-INSERT INTO user_tenants (user_id, tenant_id) VALUES (:'admin_id', 'demo-clinic');
+INSERT INTO user_tenants (user_id, tenant_id) VALUES (:'admin_id', '${TENANT_ID}');
 
 -- 5. Viewer User
 INSERT INTO users (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at)
@@ -118,7 +120,7 @@ VALUES (gen_random_uuid(), 'demo.viewer', 'demo.viewer@healthdata.com',
 RETURNING id \gset viewer_
 INSERT INTO user_roles (user_id, role) VALUES (:'viewer_id', 'VIEWER');
 INSERT INTO user_roles (user_id, role) VALUES (:'viewer_id', 'USER');
-INSERT INTO user_tenants (user_id, tenant_id) VALUES (:'viewer_id', 'demo-clinic');
+INSERT INTO user_tenants (user_id, tenant_id) VALUES (:'viewer_id', '${TENANT_ID}');
 
 -- Verify
 SELECT username, first_name, last_name FROM users WHERE username LIKE 'demo.%' ORDER BY username;

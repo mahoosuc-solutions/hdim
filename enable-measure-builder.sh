@@ -2,9 +2,10 @@
 set -e
 
 # Container Name
-DB_CONTAINER="hdim-demo-postgres"
+DB_CONTAINER="${DB_CONTAINER:-hdim-demo-postgres}"
 DB_USER="healthdata"
 DB_NAME="gateway_db"
+TENANT_ID="${TENANT_ID:-acme-health}"
 
 echo "Checking if database container is running..."
 if ! docker ps | grep -q "$DB_CONTAINER"; then
@@ -52,7 +53,7 @@ ON CONFLICT DO NOTHING;
 
 WITH user_id AS (SELECT id FROM users WHERE username = 'demo.developer')
 INSERT INTO user_tenants (user_id, tenant_id) 
-SELECT id, 'demo-clinic' FROM user_id
+SELECT id, '${TENANT_ID}' FROM user_id
 ON CONFLICT DO NOTHING;
 SQLEOF
 

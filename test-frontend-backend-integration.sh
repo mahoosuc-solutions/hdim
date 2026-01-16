@@ -18,9 +18,11 @@ echo "Frontend-Backend Integration Test"
 echo "========================================"
 echo ""
 
-GATEWAY_URL="http://localhost:18080"
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
 API_BASE="$GATEWAY_URL/api/quality/patient-health"
-TENANT_ID="demo-clinic"
+TENANT_ID="${TENANT_ID:-acme-health}"
+AUTH_USERNAME="${AUTH_USERNAME:-demo.admin}"
+AUTH_PASSWORD="${AUTH_PASSWORD:-demo123}"
 PATIENT_ID=$(python3 - <<'PYEOF'
 import uuid
 print(uuid.uuid4())
@@ -34,7 +36,7 @@ echo ""
 # Authenticate through gateway
 LOGIN_RESPONSE=$(curl -s -X POST "$GATEWAY_URL/api/v1/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"username":"demo.admin","password":"demo123"}')
+  -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}")
 
 ACCESS_TOKEN=$(LOGIN_RESPONSE="$LOGIN_RESPONSE" python3 -c 'import json,os; data=json.loads(os.environ["LOGIN_RESPONSE"]); print(data.get("accessToken",""))' 2>/dev/null || echo "")
 if [ -z "$ACCESS_TOKEN" ]; then

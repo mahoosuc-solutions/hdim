@@ -8,7 +8,7 @@ set -e
 POSTGRES_HOST="${POSTGRES_HOST:-postgres}"
 POSTGRES_PORT="${POSTGRES_PORT:-5432}"
 POSTGRES_USER="${POSTGRES_USER:-healthdata}"
-POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-demo_password_123}"
+POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-demo_password_2024}"
 DB_NAME="gateway_db"
 
 # Use local psql if available, otherwise fall back to docker exec.

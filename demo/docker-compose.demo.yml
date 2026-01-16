@@ -38,7 +38,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: healthdata
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_2024}
       POSTGRES_DB: healthdata_demo
     ports:
       - "5435:5432"
@@ -195,7 +195,7 @@ services:
       JWT_SECRET: DemoSecretKeyForJWTMustBeAtLeast256BitsLongForHS256Algorithm123456789
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_2024}
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SPRING_LIQUIBASE_ENABLED: "false"
@@ -240,7 +240,7 @@ services:
       JWT_SECRET: DemoSecretKeyForJWTMustBeAtLeast256BitsLongForHS256Algorithm123456789
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_2024}
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SPRING_LIQUIBASE_ENABLED: "false"
@@ -280,7 +280,7 @@ services:
       SERVER_PORT: 8098
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_demo
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_2024}
       SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
@@ -291,7 +291,7 @@ services:
       GATEWAY_SERVICE_URL: http://gateway-service:8080
       GATEWAY_DB_URL: jdbc:postgresql://postgres:5432/gateway_db
       GATEWAY_DB_USER: healthdata
-      GATEWAY_DB_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      GATEWAY_DB_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_2024}
       DEMO_SNAPSHOTS_DIR: /app/snapshots
       DEMO_PERSISTENCE_ENABLED: "true"
     ports:
@@ -325,7 +325,7 @@ services:
       SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cql_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_2024}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
@@ -364,7 +364,7 @@ services:
       SERVER_PORT: 8084
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patient_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_2024}
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SPRING_DATA_REDIS_HOST: redis
@@ -402,7 +402,7 @@ services:
       SERVER_PORT: 8085
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fhir_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_2024}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       JWT_SECRET: DemoSecretKeyForJWTMustBeAtLeast256BitsLongForHS256Algorithm123456789
       SPRING_LIQUIBASE_ENABLED: "false"
@@ -454,7 +454,7 @@ services:
       SERVER_PORT: 8086
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/caregap_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_2024}
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
@@ -502,7 +502,7 @@ services:
       SERVER_PORT: 8087
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/quality_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_2024}
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SPRING_DATA_REDIS_HOST: redis
@@ -567,7 +567,7 @@ services:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: healthdata
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_2024}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       KAFKA_HOST: kafka

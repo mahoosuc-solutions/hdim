@@ -65,6 +65,20 @@ WITH user_id AS (SELECT id FROM users WHERE username = 'demo.analyst')
 INSERT INTO user_tenants (user_id, tenant_id) 
 SELECT id, 'demo-clinic' FROM user_id;
 
+-- 2a. Measure Developer (Measure Developer role - can create and edit CQL measures)
+WITH new_user AS (
+  INSERT INTO users (id, username, email, password_hash, first_name, last_name, active, email_verified, created_at, updated_at)
+  VALUES (gen_random_uuid(), 'demo.developer', 'demo.developer@healthdata.com',
+          '$HASH', 'Sarah', 'Dev', true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+  RETURNING id
+)
+INSERT INTO user_roles (user_id, role)
+SELECT id, 'MEASURE_DEVELOPER' FROM new_user;
+
+WITH user_id AS (SELECT id FROM users WHERE username = 'demo.developer')
+INSERT INTO user_tenants (user_id, tenant_id) 
+SELECT id, 'demo-clinic' FROM user_id;
+
 -- 3. Care Evaluator (Evaluator role - can assess care gaps)
 WITH new_user AS (
   INSERT INTO users (id, username, email, password_hash, first_name, last_name, active, email_verified, created_at, updated_at)

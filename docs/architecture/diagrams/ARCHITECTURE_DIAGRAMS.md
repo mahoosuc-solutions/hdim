@@ -19,6 +19,11 @@
 7. [Security Architecture](#7-security-architecture)
 8. [Data Flow Diagrams](#8-data-flow-diagrams)
 
+## Related Flow Documentation
+
+- **[Platform Flow Overview](../PLATFORM_FLOW_OVERVIEW.md)**: High-level flow architecture and patterns
+- **[Round-Trip Flows](../ROUND_TRIP_FLOWS.md)**: Complete sequence diagrams from button press to response
+
 ---
 
 ## 1. C4 Level 1: System Context Diagram

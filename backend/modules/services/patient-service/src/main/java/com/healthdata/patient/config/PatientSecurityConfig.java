@@ -4,6 +4,7 @@ import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -128,6 +129,22 @@ public class PatientSecurityConfig {
     }
 
     /**
+     * Actuator security chain for non-test profiles.
+     * Keeps observability endpoints available for Prometheus/Grafana scraping.
+     */
+    @Bean
+    @Profile("!test")
+    @Order(1)
+    public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .securityMatcher(EndpointRequest.toAnyEndpoint())
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+
+        return http.build();
+    }
+
+    /**
      * Production security filter chain for docker/dev/prod profiles.
      * Uses gateway-trust authentication with stateless sessions.
      *
@@ -152,6 +169,8 @@ public class PatientSecurityConfig {
                     "/_health",  // Patient service health endpoint
                     "/actuator/health",
                     "/actuator/health/**",
+                    "/actuator/prometheus",
+                    "/patient/actuator/prometheus",
                     "/actuator/info",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",

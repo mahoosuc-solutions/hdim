@@ -150,7 +150,9 @@ services:
       SPRING_LIQUIBASE_ENABLED: "false"  # DEMO: Use Hibernate DDL instead
       SPRING_FLYWAY_ENABLED: "false"  # DEMO: Disable Flyway migrations
       CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8086
+      CQL_ENGINE_URL: http://cql-engine-service:8086
       FHIR_SERVICE_URL: http://fhir-service:8081
+      FHIR_SERVER_URL: http://fhir-service:8081
     ports:
       - "8087:8087"
     healthcheck:
@@ -188,6 +190,7 @@ services:
       SPRING_LIQUIBASE_ENABLED: "false"  # DEMO: Use Hibernate DDL instead
       SPRING_FLYWAY_ENABLED: "false"  # DEMO: Disable Flyway migrations
       FHIR_SERVICE_URL: http://fhir-service:8081
+      FHIR_SERVER_URL: http://fhir-service:8081
     ports:
       - "8086:8086"
     healthcheck:
@@ -223,10 +226,15 @@ services:
       SPRING_FLYWAY_ENABLED: "false"
       # Service URLs for routing
       FHIR_SERVICE_URL: http://fhir-service:8081
+      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8081
       CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8086
+      BACKEND_SERVICES_CQL_ENGINE_URL: http://cql-engine-service:8086
       QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087
+      BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087
       PATIENT_SERVICE_URL: http://patient-service:8084
+      BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084
       CARE_GAP_SERVICE_URL: http://care-gap-service:8085
+      BACKEND_SERVICES_CARE_GAP_URL: http://care-gap-service:8085
       # CORS for demo
       GATEWAY_CORS_ALLOWED_ORIGINS: http://localhost:4202,http://localhost:4200
     ports:
@@ -266,6 +274,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       SPRING_FLYWAY_ENABLED: "false"
       FHIR_SERVICE_URL: http://fhir-service:8081
+      FHIR_SERVER_URL: http://fhir-service:8081
     ports:
       - "8084:8084"
     healthcheck:
@@ -303,6 +312,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       SPRING_FLYWAY_ENABLED: "false"
       CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8086
+      CQL_ENGINE_URL: http://cql-engine-service:8086
       QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087
     ports:
       - "8085:8085"

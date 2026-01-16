@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +11,10 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTableModule } from '@angular/material/table';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
+import { CareGapService, CareGapApiItem, GapPriority } from '../../services/care-gap.service';
+import { PatientService } from '../../services/patient.service';
+import { forkJoin } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 
 interface CareGap {
   patientId: string;
@@ -684,98 +689,195 @@ export class ProviderDashboardComponent implements OnInit {
   loading = false;
 
   // Quick stats
-  highRiskCount = 3;
-  totalCareGaps = 12;
-  dueThisWeek = 5;
-  averageQualityScore = 78;
+  highRiskCount = 0;
+  totalCareGaps = 0;
+  dueThisWeek = 0;
+  averageQualityScore = 0;
 
-  // Sample data - in production, this would come from API
-  priorityCareGaps: CareGap[] = [
-    {
-      patientId: 'patient-002',
-      patientName: 'Jane Smith',
-      mrn: 'MRN-0002',
-      age: 58,
-      gap: 'Blood Pressure Reading Overdue',
-      measure: 'CBP - Controlling High Blood Pressure',
-      priority: 'high',
-      dueDate: new Date(2025, 10, 20), // Nov 20, 2025
-      recommendation: 'Schedule BP check within next 7 days. Last reading 8 months ago was 145/95.',
-      category: 'Hypertension'
-    },
-    {
-      patientId: 'patient-003',
-      patientName: 'Robert Johnson',
-      mrn: 'MRN-0003',
-      age: 72,
-      gap: 'Diabetic Eye Exam Overdue',
-      measure: 'CDC-EYE - Eye Exam for Diabetes',
-      priority: 'high',
-      dueDate: new Date(2025, 10, 15),
-      recommendation: 'Refer to ophthalmology for dilated retinal exam. Last exam was 18 months ago.',
-      category: 'Diabetes'
-    },
-    {
-      patientId: 'patient-005',
-      patientName: 'Michael Brown',
-      mrn: 'MRN-0005',
-      age: 62,
-      gap: 'Cholesterol Screening Due',
-      measure: 'COL - Cholesterol Management',
-      priority: 'medium',
-      dueDate: new Date(2025, 11, 1),
-      recommendation: 'Order lipid panel. Patient has history of CAD.',
-      category: 'Cardiovascular'
-    }
-  ];
+  priorityCareGaps: CareGap[] = [];
+  highRiskPatients: PatientRiskProfile[] = [];
 
-  highRiskPatients: PatientRiskProfile[] = [
-    {
-      patientId: 'patient-003',
-      patientName: 'Robert Johnson',
-      mrn: 'MRN-0003',
-      age: 72,
-      riskLevel: 'high',
-      activeConditions: ['Diabetes Type 2', 'Hypertension', 'CKD Stage 3', 'CAD'],
-      openCareGaps: 4,
-      lastVisit: new Date(2025, 9, 15),
-      qualityScore: 65
-    },
-    {
-      patientId: 'patient-002',
-      patientName: 'Jane Smith',
-      mrn: 'MRN-0002',
-      age: 58,
-      riskLevel: 'high',
-      activeConditions: ['Hypertension', 'Hyperlipidemia', 'Obesity'],
-      openCareGaps: 3,
-      lastVisit: new Date(2025, 10, 1),
-      qualityScore: 72
-    },
-    {
-      patientId: 'patient-005',
-      patientName: 'Michael Brown',
-      mrn: 'MRN-0005',
-      age: 62,
-      riskLevel: 'high',
-      activeConditions: ['CAD', 'Heart Failure', 'AFib'],
-      openCareGaps: 5,
-      lastVisit: new Date(2025, 9, 28),
-      qualityScore: 58
-    }
-  ];
+  constructor(
+    private careGapService: CareGapService,
+    private patientService: PatientService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    // In production, load data from API
     this.refreshData();
   }
 
   refreshData(): void {
     this.loading = true;
-    // Simulate API call
-    setTimeout(() => {
-      this.loading = false;
-    }, 1000);
+    forkJoin({
+      careGapPage: this.careGapService.getCareGapsPage({ size: 200 }),
+      patients: this.patientService.getPatientsSummaryCached(),
+    })
+      .pipe(finalize(() => (this.loading = false)))
+      .subscribe(({ careGapPage, patients }) => {
+        this.applyCareGapData(careGapPage.content, patients);
+      });
+  }
+
+  private applyCareGapData(gaps: CareGapApiItem[], patients: Array<{ id: string; fullName: string; mrn?: string; age?: number }>): void {
+    const patientById = new Map(patients.map((p) => [p.id, p]));
+    const gapByPatient = new Map<string, CareGapApiItem[]>();
+
+    gaps.forEach((gap) => {
+      const list = gapByPatient.get(gap.patientId) || [];
+      list.push(gap);
+      gapByPatient.set(gap.patientId, list);
+    });
+
+    const now = new Date();
+    const sortedGaps = [...gaps].sort((a, b) => {
+      const priorityRank = this.getPriorityRank(b.priority) - this.getPriorityRank(a.priority);
+      if (priorityRank !== 0) return priorityRank;
+      const dueA = this.parseGapDate(a.dueDate)?.getTime() ?? 0;
+      const dueB = this.parseGapDate(b.dueDate)?.getTime() ?? 0;
+      return dueA - dueB;
+    });
+
+    this.priorityCareGaps = sortedGaps.slice(0, 6).map((gap) => {
+      const patient = patientById.get(gap.patientId);
+      return {
+        patientId: gap.patientId,
+        patientName: patient?.fullName || gap.patientId,
+        mrn: patient?.mrn || 'N/A',
+        age: patient?.age ?? 0,
+        gap: gap.gapDescription || gap.measureName || gap.measureId,
+        measure: `${gap.measureId} - ${gap.measureName}`,
+        priority: this.mapPriority(gap.priority),
+        dueDate: this.parseGapDate(gap.dueDate) || now,
+        recommendation: 'Review patient chart and schedule recommended service.',
+        category: this.mapCategoryLabel(gap),
+      };
+    });
+
+    const openGaps = gaps.filter((gap) => (gap.gapStatus || 'OPEN') === 'OPEN');
+    this.totalCareGaps = openGaps.length;
+
+    this.dueThisWeek = openGaps.filter((gap) => {
+      const dueDate = this.parseGapDate(gap.dueDate);
+      if (!dueDate) return false;
+      const daysUntil = Math.ceil((dueDate.getTime() - now.getTime()) / 86400000);
+      return daysUntil <= 7;
+    }).length;
+
+    const patientGapCounts = patients.map((patient) => {
+      const count = gapByPatient.get(patient.id)?.length || 0;
+      return { patient, count };
+    });
+
+    this.highRiskCount = patientGapCounts.filter((entry) => entry.count >= 2).length;
+    this.highRiskPatients = patientGapCounts
+      .filter((entry) => entry.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3)
+      .map((entry) => {
+        const patientGaps = gapByPatient.get(entry.patient.id) || [];
+        return {
+          patientId: entry.patient.id,
+          patientName: entry.patient.fullName,
+          mrn: entry.patient.mrn || 'N/A',
+          age: entry.patient.age ?? 0,
+          riskLevel: 'high',
+          activeConditions: this.deriveConditions(patientGaps),
+          openCareGaps: entry.count,
+          lastVisit: this.latestIdentifiedDate(patientGaps) || now,
+          qualityScore: this.calculateQualityScore(entry.count),
+        };
+      });
+
+    const scores = patientGapCounts.map((entry) => this.calculateQualityScore(entry.count));
+    this.averageQualityScore = scores.length
+      ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+      : 0;
+  }
+
+  private calculateQualityScore(openGaps: number): number {
+    return Math.max(0, 100 - openGaps * 5);
+  }
+
+  private latestIdentifiedDate(gaps: CareGapApiItem[]): Date | null {
+    const timestamps = gaps
+      .map((gap) => this.parseEpochSeconds(gap.identifiedDate))
+      .filter((value): value is Date => Boolean(value));
+    if (!timestamps.length) return null;
+    return new Date(Math.max(...timestamps.map((date) => date.getTime())));
+  }
+
+  private parseEpochSeconds(value?: number): Date | null {
+    if (!value) return null;
+    return new Date(value * 1000);
+  }
+
+  private parseGapDate(value?: number[] | string): Date | null {
+    if (Array.isArray(value) && value.length >= 3) {
+      return new Date(value[0], value[1] - 1, value[2]);
+    }
+    if (typeof value === 'string') {
+      const parsed = new Date(value);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+    return null;
+  }
+
+  private getPriorityRank(priority?: string): number {
+    switch (priority) {
+      case 'HIGH':
+      case GapPriority.HIGH:
+        return 3;
+      case 'MEDIUM':
+      case GapPriority.MEDIUM:
+        return 2;
+      case 'LOW':
+      case GapPriority.LOW:
+        return 1;
+      default:
+        return 0;
+    }
+  }
+
+  private mapPriority(priority?: string): 'high' | 'medium' | 'low' {
+    switch (priority) {
+      case 'HIGH':
+      case GapPriority.HIGH:
+        return 'high';
+      case 'MEDIUM':
+      case GapPriority.MEDIUM:
+        return 'medium';
+      default:
+        return 'low';
+    }
+  }
+
+  private mapCategoryLabel(gap: CareGapApiItem): string {
+    if (gap.measureName) return gap.measureName;
+    return gap.gapCategory || 'Preventive';
+  }
+
+  private deriveConditions(gaps: CareGapApiItem[]): string[] {
+    const conditions = new Set<string>();
+    gaps.forEach((gap) => {
+      switch (gap.measureId) {
+        case 'CDC':
+        case 'EED':
+        case 'KED':
+          conditions.add('Diabetes');
+          break;
+        case 'SPC':
+        case 'BPD':
+          conditions.add('Cardiovascular');
+          break;
+        case 'DSF':
+          conditions.add('Behavioral Health');
+          break;
+        default:
+          conditions.add('Preventive Care');
+      }
+    });
+    return Array.from(conditions);
   }
 
   isOverdue(dueDate: Date): boolean {
@@ -789,17 +891,18 @@ export class ProviderDashboardComponent implements OnInit {
   }
 
   scheduleAppointment(gap: CareGap): void {
-    console.log('Schedule appointment for:', gap.patientName);
-    // Implement scheduling logic
+    this.router.navigate(['/appointments'], {
+      queryParams: { patientId: gap.patientId, source: 'provider-dashboard' }
+    });
   }
 
   orderTest(gap: CareGap): void {
-    console.log('Order test for:', gap.patientName);
-    // Implement test ordering logic
+    this.router.navigate(['/orders'], {
+      queryParams: { patientId: gap.patientId, source: 'provider-dashboard' }
+    });
   }
 
   viewPatient(patientId: string): void {
-    console.log('View patient:', patientId);
-    // Navigate to patient details
+    this.router.navigate(['/patients', patientId]);
   }
 }

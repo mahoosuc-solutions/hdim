@@ -1,11 +1,13 @@
 package com.healthdata.caregap.service;
 
 import com.healthdata.audit.models.ai.AIAgentDecisionEvent;
+import com.healthdata.audit.models.ai.ConfigurationEngineEvent;
 import com.healthdata.audit.service.ai.AIAuditEventPublisher;
 import com.healthdata.caregap.persistence.CareGapEntity;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -160,13 +162,72 @@ public class CareGapAuditIntegration {
             long analysisTimeMs
     ) {
         try {
-            // TODO: Publish configuration engine event
-            // This would capture the batch analysis configuration and results
+            // Build trigger metrics
+            Map<String, Object> triggerMetrics = new HashMap<>();
+            triggerMetrics.put("gapsIdentified", gapsIdentified);
+            triggerMetrics.put("gapsClosed", gapsClosed);
+            triggerMetrics.put("analysisTimeMs", analysisTimeMs);
+            triggerMetrics.put("patientId", patientId.toString());
+
+            // Build validation metrics
+            Map<String, Object> validationMetrics = new HashMap<>();
+            validationMetrics.put("totalGapsProcessed", gapsIdentified);
+            validationMetrics.put("gapsClosedCount", gapsClosed);
+            validationMetrics.put("closureRate", gapsIdentified > 0 
+                ? (double) gapsClosed / gapsIdentified : 0.0);
+
+            ConfigurationEngineEvent event = ConfigurationEngineEvent.builder()
+                .eventId(UUID.randomUUID())
+                .timestamp(Instant.now())
+                .tenantId(tenantId)
+                .changeId(UUID.randomUUID())
+                .changeType(ConfigurationEngineEvent.ChangeType.AUTO_SCALING_POLICY_CHANGE)
+                .changeSource(ConfigurationEngineEvent.ChangeSource.SYSTEM_AUTO_SCALING)
+                .triggeredBy("care-gap-batch-processor")
+                .serviceName("care-gap-service")
+                .configurationScope(ConfigurationEngineEvent.ConfigurationScope.TENANT_SPECIFIC)
+                .resourceType("CareGapAnalysis")
+                .resourceId(patientId.toString())
+                .configKey("care-gap.batch-analysis")
+                .previousValue(0)
+                .newValue(gapsIdentified)
+                .effectiveValue(gapsIdentified)
+                .reason(String.format("Batch care gap analysis completed: %d gaps identified, %d closed in %d ms",
+                    gapsIdentified, gapsClosed, analysisTimeMs))
+                .triggerMetrics(triggerMetrics)
+                .expectedImpact("Improved care gap detection and closure rates")
+                .executionStatus(ConfigurationEngineEvent.ExecutionStatus.APPLIED)
+                .appliedAt(Instant.now())
+                .validationStatus(ConfigurationEngineEvent.ValidationStatus.VALIDATION_PASSED)
+                .validationMetrics(validationMetrics)
+                .correlationId(patientId.toString())
+                .environment(getEnvironment())
+                .build();
+
+            auditPublisher.publishConfigurationChange(event);
             
-            log.debug("Published batch care gap analysis event for patient: {}", patientId);
+            log.debug("Published batch care gap analysis event for patient: {} - {} gaps identified, {} closed",
+                patientId, gapsIdentified, gapsClosed);
             
         } catch (Exception e) {
             log.error("Failed to publish batch analysis event for patient: {}", patientId, e);
+            // Don't fail the main operation if audit fails
+        }
+    }
+
+    /**
+     * Get current environment (DEV, STAGING, PROD).
+     */
+    @Value("${spring.profiles.active:dev}")
+    private String activeProfile;
+
+    private String getEnvironment() {
+        if (activeProfile.contains("prod")) {
+            return "PROD";
+        } else if (activeProfile.contains("staging")) {
+            return "STAGING";
+        } else {
+            return "DEV";
         }
     }
 

@@ -89,7 +89,7 @@ public class AiMeasureController {
      * @param request CQL explanation request with code and options
      * @return Detailed explanation of the CQL
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'ANALYST')")
+    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'MEASURE_DEVELOPER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/explain-cql", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CqlExplainResponse> explainCql(
@@ -119,7 +119,7 @@ public class AiMeasureController {
      * @param request CQL code to validate (wrapped in request body)
      * @return Validation results with errors and warnings
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'ANALYST')")
+    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'MEASURE_DEVELOPER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/validate-cql", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CqlGenerationResponse> validateCql(
@@ -167,7 +167,7 @@ public class AiMeasureController {
      * @param category Optional category filter (e.g., "diabetes", "preventive")
      * @return List of available templates
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'ANALYST')")
+    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'MEASURE_DEVELOPER')")
     @GetMapping(value = "/templates", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<java.util.List<CqlTemplate>> getTemplates(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -193,7 +193,7 @@ public class AiMeasureController {
      * @param templateId Template identifier
      * @return Template details with full CQL
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'ANALYST')")
+    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'MEASURE_DEVELOPER')")
     @GetMapping(value = "/templates/{templateId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CqlTemplateDetail> getTemplate(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,

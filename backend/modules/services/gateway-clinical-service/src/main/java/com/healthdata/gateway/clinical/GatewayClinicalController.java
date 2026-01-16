@@ -40,6 +40,9 @@ public class GatewayClinicalController {
     @Value("${backend.services.prior-auth.url}")
     private String priorAuthUrl;
 
+    @Value("${backend.services.demo-seeding.url}")
+    private String demoSeedingUrl;
+
     @RequestMapping(value = "/api/care-gaps/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
     public ResponseEntity<?> routeToCareGap(
         HttpServletRequest request,
@@ -126,5 +129,13 @@ public class GatewayClinicalController {
         @RequestBody(required = false) String body
     ) {
         return forwarder.forwardRequest(request, body, priorAuthUrl, "/api/v1/provider-access");
+    }
+
+    @RequestMapping(value = "/demo/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToDemoSeeding(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwarder.forwardRequest(request, body, demoSeedingUrl, "/demo");
     }
 }

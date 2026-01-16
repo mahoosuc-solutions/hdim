@@ -1,7 +1,7 @@
 plugins {
-    id("java")
-    id("org.springframework.boot") version "3.2.0"
-    id("io.spring.dependency-management") version "1.1.4"
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.spring.dependency.management)
+    java
 }
 
 group = "com.healthdata.testing"
@@ -12,31 +12,36 @@ repositories {
 }
 
 dependencies {
-    // Spring Boot Test
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.boot:spring-boot-starter-web")
+    // Spring Boot Test - use version catalog
+    testImplementation(libs.spring.boot.starter.test)
+    testImplementation(libs.spring.boot.starter.web)
+    // spring-kafka-test is not in catalog, use direct reference (version managed by Spring Boot BOM)
     testImplementation("org.springframework.kafka:spring-kafka-test")
     
-    // Testcontainers
-    testImplementation("org.testcontainers:testcontainers:1.19.3")
-    testImplementation("org.testcontainers:junit-jupiter:1.19.3")
-    testImplementation("org.testcontainers:kafka:1.19.3")
-    testImplementation("org.testcontainers:postgresql:1.19.3")
+    // Testcontainers - use version catalog
+    testImplementation(libs.testcontainers)
+    testImplementation(libs.testcontainers.junit.jupiter)
+    testImplementation(libs.testcontainers.kafka)
+    testImplementation(libs.testcontainers.postgresql)
     
-    // Kafka
-    testImplementation("org.springframework.kafka:spring-kafka")
-    testImplementation("org.apache.kafka:kafka-clients")
+    // Kafka - use version catalog
+    testImplementation(libs.spring.kafka)
+    testImplementation(libs.kafka.clients)
     
-    // Jackson
-    testImplementation("com.fasterxml.jackson.core:jackson-databind")
-    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    // Jackson - use version catalog
+    testImplementation(libs.jackson.databind)
+    testImplementation(libs.jackson.datatype.jsr310)
     
-    // JUnit & AssertJ
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.assertj:assertj-core")
+    // JUnit - use version catalog
+    testImplementation(libs.junit.jupiter)
     
     // Project dependencies
     testImplementation(project(":modules:shared:infrastructure:audit"))
+}
+
+// Disable bootJar task - this is a test-only module, not an application
+tasks.named("bootJar") {
+    enabled = false
 }
 
 tasks.test {

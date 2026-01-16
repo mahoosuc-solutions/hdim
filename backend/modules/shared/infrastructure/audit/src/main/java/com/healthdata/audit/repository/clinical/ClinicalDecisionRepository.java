@@ -74,6 +74,9 @@ public interface ClinicalDecisionRepository extends JpaRepository<ClinicalDecisi
     @Query("SELECT COUNT(d) FROM ClinicalDecisionEntity d WHERE d.tenantId = :tenantId AND d.hasOverride = true")
     Long countOverridesForTenant(@Param("tenantId") String tenantId);
 
+    @Query("SELECT COUNT(d) FROM ClinicalDecisionEntity d WHERE d.tenantId = :tenantId")
+    Long countByTenantId(@Param("tenantId") String tenantId);
+
     @Query("SELECT AVG(EXTRACT(EPOCH FROM (d.reviewedAt - d.decisionTimestamp))/3600) " +
            "FROM ClinicalDecisionEntity d WHERE d.tenantId = :tenantId AND d.reviewedAt IS NOT NULL")
     Double getAverageReviewTimeHours(@Param("tenantId") String tenantId);

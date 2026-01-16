@@ -27,13 +27,12 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}
     password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
+
+# HealthData Database Configuration (uses database-config module)
+healthdata:
+  database:
     hikari:
-      maximum-pool-size: 50      # Increased for high-throughput evaluations (was 10)
-      minimum-idle: 10           # Keep more idle connections ready (was 5)
-      connection-timeout: 20000  # Fail faster to prevent queuing (was 30000)
-      idle-timeout: 300000       # 5 minutes
-      max-lifetime: 1800000      # 30 minutes (connection refresh)
-      leak-detection-threshold: 60000  # Detect connection leaks
+      traffic-tier: HIGH  # HEDIS quality measure evaluation: >100 req/sec, core business logic, primary revenue service
 
   jpa:
     hibernate:
@@ -49,6 +48,7 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
     default-schema: public
 
+
   data:
     redis:
       host: redis
@@ -60,6 +60,9 @@ spring:
   cache:
     type: redis
     redis:
+      host: redis
+      port: 6379
+      timeout: 2s
       time-to-live: 300000  # 5 minutes (HIPAA compliant for PHI)
 
   kafka:
@@ -199,11 +202,4 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
-# Shared cache module configuration (uses healthdata.cache prefix)
-healthdata:
-  cache:
-    redis:
-      host: redis
-      port: 6379
-      timeout: 2s
-      default-ttl: 5m
+

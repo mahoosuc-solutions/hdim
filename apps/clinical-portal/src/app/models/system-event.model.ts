@@ -167,6 +167,9 @@ export interface PipelineNode {
  * Pipeline Connection - represents data flow between nodes
  */
 export interface PipelineConnection {
+  /** Unique connection ID */
+  id?: string;
+
   /** Source node ID */
   from: string;
 

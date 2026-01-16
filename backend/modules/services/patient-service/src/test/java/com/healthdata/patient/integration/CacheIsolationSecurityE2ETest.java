@@ -1,7 +1,7 @@
 package com.healthdata.patient.integration;
 
 import com.healthdata.patient.domain.model.Patient;
-import com.healthdata.patient.domain.repository.PatientRepository;
+import com.healthdata.patient.repository.PatientDemographicsRepository;
 import com.healthdata.testfixtures.security.GatewayTrustTestHeaders;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -74,7 +74,7 @@ class CacheIsolationSecurityE2ETest {
     private MockMvc mockMvc;
 
     @Autowired
-    private PatientRepository patientRepository;
+    private PatientDemographicsRepository patientRepository;
 
     @Autowired
     private CacheManager cacheManager;

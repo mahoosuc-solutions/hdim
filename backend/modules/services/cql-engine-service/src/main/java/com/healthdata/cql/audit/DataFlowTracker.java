@@ -1,8 +1,10 @@
 package com.healthdata.cql.audit;
 
 import com.healthdata.cql.event.audit.CqlEvaluationAuditEvent.DataFlowStep;
+import com.healthdata.cql.websocket.DataFlowStepPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -43,6 +45,12 @@ public class DataFlowTracker {
 
     @Value("${audit.data-flow-tracking.max-steps:50}")
     private int maxSteps;
+
+    @Value("${audit.data-flow-tracking.realtime-publish:true}")
+    private boolean realtimePublish;
+
+    @Autowired(required = false)
+    private DataFlowStepPublisher stepPublisher;
 
     /**
      * Start tracking data flow for an evaluation
@@ -105,6 +113,15 @@ public class DataFlowTracker {
         context.currentStepStart = stepStart;
 
         logger.debug("Recorded step {}: {} (type: {})", stepNumber, stepName, stepType);
+
+        // Publish step in real-time if enabled
+        if (realtimePublish && stepPublisher != null) {
+            try {
+                stepPublisher.publishStep(step, context.evaluationId, null);
+            } catch (Exception e) {
+                logger.warn("Failed to publish data flow step in real-time: {}", e.getMessage());
+            }
+        }
     }
 
     /**

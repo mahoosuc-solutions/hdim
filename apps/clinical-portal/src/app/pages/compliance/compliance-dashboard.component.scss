@@ -1,0 +1,223 @@
+.compliance-dashboard {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  .config-card {
+    margin-bottom: 24px;
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+
+      .config-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .config-label {
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  .alerts-card {
+    margin-bottom: 24px;
+    border-left: 4px solid #f44336;
+
+    .alerts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      .alert-item {
+        padding: 12px;
+        border-radius: 4px;
+        border-left: 3px solid;
+
+        &.alert-critical {
+          background-color: #ffebee;
+          border-left-color: #f44336;
+        }
+
+        &.alert-warning {
+          background-color: #fff3e0;
+          border-left-color: #ff9800;
+        }
+
+        .alert-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
+
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+
+          .alert-type {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+          }
+
+          .alert-time {
+            margin-left: auto;
+            font-size: 12px;
+            color: rgba(0, 0, 0, 0.6);
+          }
+        }
+
+        .alert-message {
+          font-weight: 500;
+          margin-bottom: 4px;
+        }
+
+        .alert-details {
+          font-size: 12px;
+          color: rgba(0, 0, 0, 0.6);
+        }
+      }
+    }
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+
+    .score-card {
+      .score-display {
+        text-align: center;
+
+        .score-value {
+          font-size: 48px;
+          font-weight: 700;
+          line-height: 1;
+          margin-bottom: 8px;
+        }
+
+        .score-label {
+          font-size: 14px;
+          color: rgba(0, 0, 0, 0.6);
+          margin-bottom: 16px;
+        }
+
+        mat-progress-bar {
+          height: 8px;
+          border-radius: 4px;
+        }
+      }
+    }
+
+    .stat-card {
+      .stat-value {
+        font-size: 36px;
+        font-weight: 600;
+        text-align: center;
+        color: #1976d2;
+      }
+    }
+  }
+
+  .section-card {
+    margin-bottom: 24px;
+
+    .service-list,
+    .severity-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+
+      .service-item,
+      .severity-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .service-name {
+        font-weight: 500;
+      }
+    }
+
+    .recommendations-list {
+      margin: 0;
+      padding-left: 20px;
+
+      li {
+        margin-bottom: 8px;
+        line-height: 1.6;
+      }
+    }
+
+    .errors-table {
+      width: 100%;
+
+      .endpoint-text {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+      }
+
+      .message-text {
+        max-width: 400px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+      }
+    }
+  }
+
+  .empty-card {
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+
+      mat-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        color: #4caf50;
+        margin-bottom: 16px;
+      }
+
+      h2 {
+        margin: 0 0 8px;
+        font-size: 24px;
+        font-weight: 500;
+      }
+
+      p {
+        margin: 0;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+  }
+}

@@ -142,7 +142,8 @@ public class ClinicalDecisionService {
     }
     
     public ClinicalMetrics getMetrics(String tenantId, LocalDate startDate, LocalDate endDate) {
-        Long totalDecisions = clinicalDecisionRepository.count();
+        // Count total decisions for this tenant (not all tenants)
+        Long totalDecisions = clinicalDecisionRepository.countByTenantId(tenantId);
         Long approvedDecisions = clinicalDecisionRepository.countByTenantIdAndStatus(tenantId, "APPROVED");
         Long rejectedDecisions = clinicalDecisionRepository.countByTenantIdAndStatus(tenantId, "REJECTED");
         Long pendingReview = clinicalDecisionRepository.countByTenantIdAndStatus(tenantId, "PENDING");
@@ -150,11 +151,11 @@ public class ClinicalDecisionService {
         Double approvalRate = totalDecisions > 0 ? (approvedDecisions.doubleValue() / totalDecisions) * 100 : 0.0;
         Double averageConfidenceScore = clinicalDecisionRepository.getAverageConfidenceScore(tenantId);
 
-        // Calculate override rate
+        // Calculate override rate from database
         Long overrideCount = clinicalDecisionRepository.countOverridesForTenant(tenantId);
         Double overrideRate = totalDecisions > 0 ? (overrideCount.doubleValue() / totalDecisions) * 100 : 0.0;
 
-        // Calculate average review time
+        // Calculate average review time from database timestamps
         Double averageReviewTime = clinicalDecisionRepository.getAverageReviewTimeHours(tenantId);
         if (averageReviewTime == null) {
             averageReviewTime = 0.0;

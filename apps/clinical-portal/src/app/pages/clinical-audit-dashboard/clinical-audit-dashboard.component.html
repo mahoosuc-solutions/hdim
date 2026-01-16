@@ -1,0 +1,26 @@
+<div class="clinical-audit-dashboard">
+  <div class="dashboard-header">
+    <h1>Clinical Audit Dashboard</h1>
+    <div class="header-actions">
+      <button (click)="refreshData()">Refresh</button>
+      <button (click)="exportClinicalReport()">Export Report</button>
+    </div>
+  </div>
+  <div class="metrics-summary">
+    <div class="metric-card">
+      <div class="metric-label">Total Decisions</div>
+      <div class="metric-value">{{ clinicalMetrics.totalClinicalDecisions }}</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button [class.active]="activeTab === 'decisions'" (click)="activeTab = 'decisions'">Decisions</button>
+    <button [class.active]="activeTab === 'medications'" (click)="activeTab = 'medications'">Medications</button>
+  </div>
+  <div class="tab-content">
+    <div *ngIf="activeTab === 'decisions'">
+      <div *ngFor="let decision of clinicalDecisions" class="decision-card">
+        <div>{{ decision.patientName }} - {{ decision.recommendation }}</div>
+      </div>
+    </div>
+  </div>
+</div>

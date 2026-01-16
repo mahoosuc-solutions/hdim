@@ -48,7 +48,10 @@
       "Bash(npx nx build:*)",
       "Bash(npx ng build:*)",
       "Bash(npm run build:*)",
-      "Bash(NX_ISOLATE_PLUGINS=false NX_DAEMON=false npx nx build:*)"
+      "Bash(NX_ISOLATE_PLUGINS=false NX_DAEMON=false npx nx build:*)",
+      "Bash(ls:*)",
+      "Bash(git rev-list:*)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []

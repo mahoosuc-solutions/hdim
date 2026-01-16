@@ -1,6 +1,7 @@
 import { Route } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard';
 import { RoleGuard } from './guards/role.guard';
+import { DevGuard } from './guards/dev.guard';
 
 /**
  * Application Routes Configuration
@@ -26,6 +27,22 @@ export const appRoutes: Route[] = [
       import('./pages/unauthorized/unauthorized.component').then(
         (m) => m.UnauthorizedComponent
       ),
+  },
+  {
+    path: 'compliance',
+    loadComponent: () =>
+      import('./pages/compliance/compliance-dashboard.component').then(
+        (m) => m.ComplianceDashboardComponent
+      ),
+    // Public route - accessible without authentication for testing
+  },
+  {
+    path: 'testing',
+    loadComponent: () =>
+      import('./pages/testing-dashboard/testing-dashboard.component').then(
+        (m) => m.TestingDashboardComponent
+      ),
+    // Public route - accessible without authentication for testing
   },
 
   // ==================== Protected Routes ====================

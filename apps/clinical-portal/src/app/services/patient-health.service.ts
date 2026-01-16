@@ -82,6 +82,10 @@ import { MedicationAdherenceService } from './medication-adherence.service';
 import { ProcedureHistoryService } from './procedure-history.service';
 import { LoggerService, ContextualLogger } from './logger.service';
 
+import { ErrorValidationService } from './error-validation.service';
+import { COMPLIANCE_CONFIG } from '../config/compliance.config';
+import { ErrorCode, ErrorSeverity } from '../models/error.model';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -169,7 +173,8 @@ export class PatientHealthService {
     private http: HttpClient,
     private medicationAdherenceService: MedicationAdherenceService,
     private procedureHistoryService: ProcedureHistoryService,
-    private logger: LoggerService
+    private logger: LoggerService,
+    private errorValidationService: ErrorValidationService
   ) {
     this.log = this.logger.withContext('PatientHealthService');
   }
@@ -240,7 +245,24 @@ export class PatientHealthService {
       }),
       catchError((error) => {
         this.log.error('Error fetching patient health overview:', error);
-        // Fallback to mock data if backend fails
+        
+        // Check if fallbacks are disabled
+        if (COMPLIANCE_CONFIG.disableFallbacks && 
+            !this.errorValidationService.isFallbackAllowed('PatientHealthService')) {
+          // Track error for compliance
+          this.errorValidationService.trackError(error, {
+            service: 'PatientHealthService',
+            endpoint: url,
+            operation: 'getPatientHealthOverview',
+            errorCode: ErrorCode.QUALITY_MEASURE_ERROR,
+            severity: ErrorSeverity.ERROR,
+            additionalData: { patientId },
+          });
+          // Throw error instead of fallback
+          return throwError(() => error);
+        }
+        
+        // Fallback to mock data if backend fails (only if allowed)
         return this.getPatientHealthOverviewMock(patientId);
       })
     );

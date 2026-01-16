@@ -45,4 +45,20 @@ export const environment = {
     dsn: '',
     environment: 'development',
   },
+
+  // Compliance Configuration
+  compliance: {
+    disableFallbacks: false, // Set to true for compliance validation
+    strictErrorHandling: false,
+    enableErrorTracking: true,
+    allowedFallbackServices: [],
+    // Error retention policy (in days)
+    errorRetentionDays: 7, // Keep errors for 7 days in development
+    // Critical error thresholds
+    criticalErrorThreshold: 5, // Alert if more than 5 critical errors
+    errorRateThreshold: 50, // Alert if more than 50 errors per hour
+    // Backend sync
+    syncToBackend: true, // Send errors to backend service
+    syncIntervalMs: 30000, // Sync every 30 seconds in dev
+  },
 };

@@ -298,8 +298,7 @@ public class DemoSeedingService {
         SyntheticPatientTemplate template = templateRepository.findByPersonaName(templateName)
             .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateName));
 
-        return patientGenerator.generateFromTemplate(
-            convertToGeneratorTemplate(template), tenantId);
+        return patientGenerator.generateFromTemplate(template, tenantId);
     }
 
     /**
@@ -479,12 +478,6 @@ public class DemoSeedingService {
             .count();
     }
 
-    private SyntheticPatientGenerator.PatientTemplate convertToGeneratorTemplate(SyntheticPatientTemplate template) {
-        SyntheticPatientGenerator.PatientTemplate genTemplate = new SyntheticPatientGenerator.PatientTemplate();
-        genTemplate.setPersonaName(template.getPersonaName());
-        // Set additional attributes as needed
-        return genTemplate;
-    }
 
     private void checkCancellation(UUID sessionId, String message) {
         if (sessionId != null && progressService.isCancelRequested(sessionId)) {

@@ -43,6 +43,11 @@ DOCUMENTS = {
         'title': 'AI Solutioning Metrics',
         'subtitle': 'Quantifying the Achievement',
         'icon': '📊'
+    },
+    'performance-benchmarking.md': {
+        'title': 'Performance Benchmarking',
+        'subtitle': 'CQL/FHIR vs Traditional SQL - 2-4x Faster',
+        'icon': '⚡'
     }
 }
 

@@ -49,8 +49,10 @@ export default defineConfig({
   // Output directory for test artifacts
   outputDir: 'test-results',
 
-  // Global setup and teardown
-  globalSetup: path.resolve(__dirname, 'global.setup.ts'),
+  // Global setup and teardown (can be skipped with SKIP_GLOBAL_SETUP=true)
+  globalSetup: process.env.SKIP_GLOBAL_SETUP === 'true' 
+    ? undefined 
+    : path.resolve(__dirname, 'global.setup.ts'),
   globalTeardown: path.resolve(__dirname, 'global.teardown.ts'),
 
   // Shared settings for all projects

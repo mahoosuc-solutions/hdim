@@ -46,6 +46,12 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(libs.postgresql)
+    
+    // Testcontainers for integration tests
+    testImplementation(libs.testcontainers)
+    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.testcontainers.junit.jupiter)
+    testImplementation("org.springframework.boot:spring-boot-starter-web")
 }
 
 dependencyManagement {

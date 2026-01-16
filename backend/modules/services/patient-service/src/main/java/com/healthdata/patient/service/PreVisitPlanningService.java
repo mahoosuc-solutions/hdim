@@ -665,4 +665,109 @@ public class PreVisitPlanningService {
 
         return name.length() > 0 ? name.toString() : "Unknown Patient";
     }
+
+    /**
+     * Generate batch pre-visit summaries for all patients with appointments on a given date.
+     *
+     * Note: This implementation queries all patients and checks for encounters on the target date.
+     * In production, this would be optimized with a dedicated scheduling service that can
+     * directly query appointments by date and provider.
+     *
+     * @param tenantId   Tenant ID for multi-tenant filtering
+     * @param providerId Provider ID requesting the summaries
+     * @param targetDate Date to get summaries for
+     * @return List of pre-visit summaries for patients with appointments on the target date
+     */
+    public List<PreVisitSummaryResponse> getBatchPreVisitSummaries(
+            String tenantId, String providerId, LocalDate targetDate) {
+        log.info("Generating batch pre-visit summaries for provider: {} on date: {} in tenant: {}",
+                providerId, targetDate, tenantId);
+
+        List<PreVisitSummaryResponse> summaries = new ArrayList<>();
+
+        try {
+            // Get all active patients for the tenant (limit to first 100 for performance)
+            // In production, this would query a scheduling service for appointments on the date
+            List<PatientDemographicsEntity> patients = 
+                patientDemographicsRepository.findActiveByTenantId(tenantId)
+                    .stream()
+                    .limit(100) // Limit for performance - in production, use scheduling service
+                    .collect(Collectors.toList());
+
+            log.debug("Checking {} patients for appointments on {}", patients.size(), targetDate);
+
+            // For each patient, check if they have an encounter on the target date
+            for (PatientDemographicsEntity patient : patients) {
+                try {
+                    String patientId = patient.getId().toString();
+                    
+                    // Check if patient has encounter on target date
+                    if (hasEncounterOnDate(tenantId, patientId, targetDate)) {
+                        // Generate pre-visit summary
+                        PreVisitSummaryResponse summary = getPreVisitSummary(tenantId, providerId, patientId);
+                        summaries.add(summary);
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to generate summary for patient {}: {}", 
+                        patient.getId(), e.getMessage());
+                    // Continue with next patient
+                }
+            }
+
+            log.info("Generated {} pre-visit summaries for date: {}", summaries.size(), targetDate);
+            return summaries;
+
+        } catch (Exception e) {
+            log.error("Error generating batch pre-visit summaries: {}", e.getMessage(), e);
+            return summaries; // Return partial results if available
+        }
+    }
+
+    /**
+     * Check if a patient has an encounter on a specific date.
+     */
+    private boolean hasEncounterOnDate(String tenantId, String patientId, LocalDate targetDate) {
+        try {
+            // Query encounters for the patient
+            String encountersJson = fhirServiceClient.getEncounters(tenantId, patientId);
+            if (encountersJson == null || encountersJson.isEmpty()) {
+                return false;
+            }
+
+            // Parse FHIR Bundle
+            JsonNode bundle = objectMapper.readTree(encountersJson);
+            JsonNode entries = bundle.get("entry");
+            if (entries == null || !entries.isArray()) {
+                return false;
+            }
+
+            // Check if any encounter is on the target date
+            String targetDateStr = targetDate.toString();
+            for (JsonNode entry : entries) {
+                JsonNode resource = entry.get("resource");
+                if (resource != null && resource.has("period")) {
+                    JsonNode period = resource.get("period");
+                    if (period.has("start")) {
+                        String startDate = period.get("start").asText();
+                        // Extract date part (YYYY-MM-DD)
+                        if (startDate.length() >= 10 && startDate.substring(0, 10).equals(targetDateStr)) {
+                            // Check if encounter status is appropriate for scheduled visit
+                            String status = resource.path("status").asText("");
+                            if ("planned".equals(status) || "arrived".equals(status) || 
+                                "in-progress".equals(status) || "finished".equals(status)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
+
+        } catch (Exception e) {
+            log.debug("Error checking encounter for patient {} on {}: {}", 
+                patientId, targetDate, e.getMessage());
+            return false;
+        }
+    }
 }

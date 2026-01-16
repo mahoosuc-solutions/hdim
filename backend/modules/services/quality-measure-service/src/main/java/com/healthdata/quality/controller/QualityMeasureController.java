@@ -45,7 +45,7 @@ public class QualityMeasureController {
     private final QualityReportService reportService;
     private final ReportExportService exportService;
 
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/calculate", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<QualityMeasureResultDTO> calculateMeasure(
@@ -60,7 +60,7 @@ public class QualityMeasureController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/results", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<QualityMeasureResultDTO>> getPatientResults(
@@ -82,7 +82,7 @@ public class QualityMeasureController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/score", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MeasureCalculationService.QualityScore> getQualityScore(
@@ -93,7 +93,7 @@ public class QualityMeasureController {
         return ResponseEntity.ok(calculationService.getQualityScore(tenantId, patientId));
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/report/patient", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<QualityReportService.QualityReport> getPatientQualityReport(
@@ -104,7 +104,7 @@ public class QualityMeasureController {
         return ResponseEntity.ok(reportService.getPatientQualityReport(tenantId, patientId));
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/report/population", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<QualityReportService.PopulationQualityReport> getPopulationQualityReport(
@@ -120,7 +120,7 @@ public class QualityMeasureController {
         return ResponseEntity.ok(reportService.getPopulationQualityReport(tenantId, reportYear));
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/_health", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> healthCheck() {
@@ -189,7 +189,7 @@ public class QualityMeasureController {
      * @param jobId Job ID
      * @return Job status details including progress, counts, and errors
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/population/jobs/{jobId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getJobStatus(
@@ -260,7 +260,7 @@ public class QualityMeasureController {
      * @param tenantId Tenant ID
      * @return List of all jobs (active and completed) for the tenant
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/population/jobs", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Map<String, Object>>> getAllJobs(
@@ -348,7 +348,7 @@ public class QualityMeasureController {
     /**
      * Export batch calculation results to CSV
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/population/jobs/{jobId}/export/csv", produces = "text/csv")
     public ResponseEntity<String> exportJobResultsToCsv(
@@ -444,7 +444,7 @@ public class QualityMeasureController {
     /**
      * Get all saved reports for a tenant (optionally filtered by type)
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<SavedReportEntity>> getSavedReports(
@@ -464,7 +464,7 @@ public class QualityMeasureController {
     /**
      * Get a saved report by ID
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports/{reportId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SavedReportEntity> getSavedReport(
@@ -516,7 +516,7 @@ public class QualityMeasureController {
     /**
      * Export report to CSV
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports/{reportId}/export/csv", produces = "text/csv")
     public ResponseEntity<byte[]> exportReportToCsv(
@@ -554,7 +554,7 @@ public class QualityMeasureController {
     /**
      * Export report to Excel
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports/{reportId}/export/excel")
     public ResponseEntity<byte[]> exportReportToExcel(

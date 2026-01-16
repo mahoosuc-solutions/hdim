@@ -12,6 +12,7 @@
 # Usage:
 #   cd demo
 #   docker compose -f docker-compose.demo.yml up -d
+#   ./init-demo-users.sh  # After services start
 #   ./seed-demo-data.sh
 #   Open http://localhost:4200 in browser
 #
@@ -37,13 +38,13 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: healthdata
-      POSTGRES_PASSWORD: demo_password_123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
       POSTGRES_DB: healthdata_demo
     ports:
       - "5435:5432"
     volumes:
       - demo_postgres_data:/var/lib/postgresql/data
-      - ./init-demo-db.sh:/docker-entrypoint-initdb.d/init-demo-db.sh
+      - ./init-demo-db.sh:/docker-entrypoint-initdb.d/init-demo-db.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U healthdata"]
       interval: 5s
@@ -194,21 +195,111 @@ services:
       JWT_SECRET: DemoSecretKeyForJWTMustBeAtLeast256BitsLongForHS256Algorithm123456789
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: demo_password_123
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
+      SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      MANAGEMENT_TRACING_ENABLED: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_SERVICE_NAME: gateway-service
       # Service URLs
-      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir/fhir
+      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir
       BACKEND_SERVICES_CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
       BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087/quality-measure
       BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084/patient
       BACKEND_SERVICES_CARE_GAP_URL: http://care-gap-service:8086/care-gap
+      BACKEND_SERVICES_DEMO_SEEDING_URL: http://demo-seeding-service:8098/demo
+      BACKEND_SERVICES_GATEWAY_CLINICAL_URL: http://gateway-clinical-service:8080/api/v1/compliance
     ports:
       - "8080:8080"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    networks:
+      - hdim-demo-network
+
+  gateway-clinical-service:
+    container_name: hdim-demo-gateway-clinical
+    build:
+      context: ../backend/modules/services/gateway-clinical-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: demo
+      SERVER_PORT: 8080
+      JWT_SECRET: DemoSecretKeyForJWTMustBeAtLeast256BitsLongForHS256Algorithm123456789
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      GATEWAY_AUTH_ENFORCED: "false"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_SERVICE_NAME: gateway-clinical-service
+    ports:
+      - "8088:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    networks:
+      - hdim-demo-network
+
+  demo-seeding-service:
+    container_name: hdim-demo-seeding
+    build:
+      context: ../backend
+      dockerfile: modules/services/demo-seeding-service/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      fhir-service:
+        condition: service_healthy
+      care-gap-service:
+        condition: service_healthy
+      gateway-service:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: demo
+      SERVER_PORT: 8098
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_demo
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_SERVICE_NAME: demo-seeding-service
+      FHIR_SERVICE_URL: http://fhir-service:8085/fhir
+      CARE_GAP_SERVICE_URL: http://care-gap-service:8086/care-gap
+      GATEWAY_SERVICE_URL: http://gateway-service:8080
+      GATEWAY_DB_URL: jdbc:postgresql://postgres:5432/gateway_db
+      GATEWAY_DB_USER: healthdata
+      GATEWAY_DB_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      DEMO_SNAPSHOTS_DIR: /app/snapshots
+      DEMO_PERSISTENCE_ENABLED: "true"
+    ports:
+      - "8098:8098"
+    volumes:
+      - demo_snapshots:/app/snapshots
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8098/demo/actuator/health"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -234,15 +325,17 @@ services:
       SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cql_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: demo_password_123
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       JWT_SECRET: DemoSecretKeyForJWTMustBeAtLeast256BitsLongForHS256Algorithm123456789
+      SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      AUDIT_ENABLED: "false"
       GATEWAY_AUTH_DEV_MODE: "true"
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
       OTEL_SERVICE_NAME: cql-engine-service
@@ -271,10 +364,16 @@ services:
       SERVER_PORT: 8084
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patient_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: demo_password_123
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       JWT_SECRET: DemoSecretKeyForJWTMustBeAtLeast256BitsLongForHS256Algorithm123456789
+      SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      AUDIT_ENABLED: "false"
       GATEWAY_AUTH_DEV_MODE: "true"
     ports:
       - "8084:8084"
@@ -303,11 +402,18 @@ services:
       SERVER_PORT: 8085
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fhir_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: demo_password_123
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       JWT_SECRET: DemoSecretKeyForJWTMustBeAtLeast256BitsLongForHS256Algorithm123456789
+      SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      AUDIT_ENABLED: "false"
       GATEWAY_AUTH_DEV_MODE: "true"
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       # Elasticsearch configuration
       HAPI_FHIR_ELASTICSEARCH_ENABLED: "true"
       SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
@@ -348,15 +454,17 @@ services:
       SERVER_PORT: 8086
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/caregap_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: demo_password_123
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       HEALTHDATA_CACHE_REDIS_HOST: redis
       HEALTHDATA_CACHE_REDIS_PORT: 6379
       JWT_SECRET: DemoSecretKeyForJWTMustBeAtLeast256BitsLongForHS256Algorithm123456789
+      SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      AUDIT_ENABLED: "false"
       GATEWAY_AUTH_DEV_MODE: "true"
       # Performance tuning for demo
       SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_BATCH_SIZE: 25
@@ -394,7 +502,7 @@ services:
       SERVER_PORT: 8087
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/quality_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: demo_password_123
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SPRING_DATA_REDIS_HOST: redis
@@ -405,8 +513,11 @@ services:
       SPRING_KAFKA_CONSUMER_GROUP_ID: quality-measure-demo
       SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: earliest
       JWT_SECRET: DemoSecretKeyForJWTMustBeAtLeast256BitsLongForHS256Algorithm123456789
+      SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      AUDIT_ENABLED: "false"
+      SERVER_SERVLET_CONTEXT_PATH: ""
       CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8081/cql-engine
       FHIR_SERVICE_URL: http://fhir-service:8085
       GATEWAY_AUTH_DEV_MODE: "true"
@@ -415,11 +526,68 @@ services:
     ports:
       - "8087:8087"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8087/quality-measure/actuator/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8087/actuator/health"]
       interval: 15s
       timeout: 5s
       retries: 5
       start_period: 45s
+    networks:
+      - hdim-demo-network
+
+  # ============================================
+  # INFRASTRUCTURE INITIALIZATION SERVICE
+  # ============================================
+
+  init-infrastructure:
+    container_name: hdim-demo-init-infrastructure
+    image: postgres:16-alpine
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      gateway-service:
+        condition: service_healthy
+      fhir-service:
+        condition: service_healthy
+      patient-service:
+        condition: service_healthy
+      care-gap-service:
+        condition: service_healthy
+      quality-measure-service:
+        condition: service_healthy
+      cql-engine-service:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: healthdata
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      KAFKA_HOST: kafka
+      KAFKA_PORT: 9092
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      GATEWAY_URL: http://gateway-service:8080
+      FHIR_URL: http://fhir-service:8085
+      PATIENT_URL: http://patient-service:8084
+      CARE_GAP_URL: http://care-gap-service:8086
+      QUALITY_MEASURE_URL: http://quality-measure-service:8087
+      CQL_ENGINE_URL: http://cql-engine-service:8081
+    volumes:
+      - ./init-infrastructure.sh:/init-infrastructure.sh:ro
+    command: >
+      sh -c "
+        apk add --no-cache postgresql-client redis curl netcat-openbsd &&
+        chmod +x /init-infrastructure.sh &&
+        /init-infrastructure.sh
+      "
     networks:
       - hdim-demo-network
 
@@ -435,6 +603,8 @@ services:
     restart: unless-stopped
     depends_on:
       - gateway-service
+      - init-infrastructure
+      - demo-seeding-service
     environment:
       API_URL: http://gateway-service:8080
     ports:
@@ -451,3 +621,4 @@ volumes:
   demo_elasticsearch_data:
   demo_prometheus_data:
   demo_grafana_data:
+  demo_snapshots:

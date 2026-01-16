@@ -65,6 +65,9 @@ This demo includes:
 | `DEMO_WALKTHROUGH.md` | Customer presentation guide (15-20 min) |
 | `DEPLOYMENT_GUIDE.md` | Multi-platform deployment guide |
 | `TEST_DEPLOYMENT_SUMMARY.md` | Test suite documentation |
+| `../scripts/record-demo-startup.sh` | Live startup recording + storyboard walkthrough |
+| `../scripts/run-demo-storyboard.js` | Automated UI walkthrough with storyboard overlays |
+| `run-showcase.sh` | One-command demo showcase (startup, seed, Playwright, optional recording) |
 
 ## Commands
 
@@ -110,6 +113,37 @@ This demo includes:
 # Validate seeded data
 ./validate-demo-data.sh
 ```
+
+### Live Demo Recording + Storyboard
+
+```bash
+# Record startup logs/stats and run the automated storyboard walkthrough
+../scripts/record-demo-startup.sh --clean
+
+# Skip storyboard if you only want startup logs
+../scripts/record-demo-startup.sh --clean --skip-storyboard
+```
+
+### One-Command Showcase
+
+```bash
+# Full demo: start, seed, validate, walkthrough (headed)
+./run-showcase.sh --clean
+
+# Record the screen with ffmpeg
+./run-showcase.sh --clean --record
+```
+
+### AI Narration (Optional)
+
+```bash
+# Generate narration lines from the storyboard using AG-UI tooling
+../scripts/generate-demo-narration.sh
+```
+
+### Demo Startup Monitor
+
+Open `http://localhost:4200/demo-startup?demo=true&storyboard=1` to view real-time service health.
 
 ## Ports
 

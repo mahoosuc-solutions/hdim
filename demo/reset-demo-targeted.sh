@@ -2,7 +2,8 @@
 # Targeted reset for demo: clear care gap tables and Redis cache.
 set -euo pipefail
 
-COMPOSE_FILE="${COMPOSE_FILE:-demo/docker-compose.demo.yml}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMPOSE_FILE="${COMPOSE_FILE:-${SCRIPT_DIR}/docker-compose.demo.yml}"
 POSTGRES_SERVICE="${POSTGRES_SERVICE:-postgres}"
 REDIS_SERVICE="${REDIS_SERVICE:-redis}"
 DB_NAME="${DB_NAME:-caregap_db}"

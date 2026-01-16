@@ -55,6 +55,21 @@ export interface DemoTooltip {
   position: 'top' | 'bottom' | 'left' | 'right';
 }
 
+export interface DemoStoryboardStep {
+  id: string;
+  title: string;
+  route?: string;
+  narration?: string;
+  popups?: DemoTooltip[];
+  highlightSelectors?: string[];
+}
+
+export interface DemoStoryboard {
+  version?: string;
+  title?: string;
+  steps: DemoStoryboardStep[];
+}
+
 /**
  * Demo Mode Service
  *
@@ -74,6 +89,7 @@ export interface DemoTooltip {
 export class DemoModeService {
   private readonly DEMO_API_URL = this.resolveApiBaseUrl() + '/demo';
   private readonly DEMO_MODE_KEY = 'healthdata-demo-mode';
+  private readonly STORYBOARD_URL = '/demo/storyboard.json';
 
   // Signals for reactive state
   public readonly isDemoMode = signal<boolean>(false);
@@ -84,11 +100,17 @@ export class DemoModeService {
   public readonly progress = signal<DemoProgress | null>(null);
   public readonly isLoading = signal<boolean>(false);
   public readonly error = signal<string | null>(null);
+  public readonly storyboardSteps = signal<DemoStoryboardStep[]>([]);
+  public readonly activeStoryboardStep = signal<DemoStoryboardStep | null>(null);
+  public readonly storyboardEnabled = signal<boolean>(false);
+  public readonly storyboardConnected = signal<boolean>(false);
+  public readonly storyboardError = signal<string | null>(null);
 
   // Backend availability tracking - prevents repeated failed API calls
   private demoBackendAvailable: boolean | null = null;
   private backendCheckInProgress = false;
   private progressInterval: ReturnType<typeof setInterval> | null = null;
+  private storyboardSocket: WebSocket | null = null;
 
   // Recording state
   public readonly isRecording = signal<boolean>(false);
@@ -116,6 +138,7 @@ export class DemoModeService {
   ) {
     // Check URL for demo parameter on init
     this.checkUrlForDemoMode();
+    this.checkUrlForStoryboard();
   }
 
   private resolveApiBaseUrl(): string {
@@ -147,6 +170,19 @@ export class DemoModeService {
     }
   }
 
+  private checkUrlForStoryboard(): void {
+    const urlParams = new URLSearchParams(window.location.search);
+    const storyboardParam = urlParams.get('storyboard');
+    if (storyboardParam === 'true' || storyboardParam === '1') {
+      this.storyboardEnabled.set(true);
+      this.loadStoryboard();
+      const wsUrl = urlParams.get('storyboardWs');
+      if (wsUrl) {
+        this.connectStoryboardSocket(wsUrl);
+      }
+    }
+  }
+
   /**
    * Enable demo mode
    */
@@ -155,6 +191,9 @@ export class DemoModeService {
     localStorage.setItem(this.DEMO_MODE_KEY, 'true');
     this.loadStatus();
     this.loadTooltips();
+    if (this.storyboardEnabled()) {
+      this.loadStoryboard();
+    }
     console.log('[Demo Mode] Enabled');
   }
 
@@ -166,6 +205,10 @@ export class DemoModeService {
     localStorage.removeItem(this.DEMO_MODE_KEY);
     this.stopRecording();
     this.tooltips.set([]);
+    this.activeStoryboardStep.set(null);
+    this.storyboardConnected.set(false);
+    this.storyboardError.set(null);
+    this.disconnectStoryboardSocket();
     console.log('[Demo Mode] Disabled');
 
     // Remove demo parameter from URL
@@ -182,6 +225,91 @@ export class DemoModeService {
       this.disableDemoMode();
     } else {
       this.enableDemoMode();
+    }
+  }
+
+  public async loadStoryboard(): Promise<void> {
+    try {
+      const storyboard = await this.http.get<DemoStoryboard>(this.STORYBOARD_URL).toPromise();
+      const steps = storyboard?.steps ?? [];
+      this.storyboardSteps.set(steps);
+      if (steps.length && !this.activeStoryboardStep()) {
+        this.applyStoryboardStep(steps[0]);
+      }
+      this.storyboardError.set(null);
+    } catch (err) {
+      this.storyboardError.set('Storyboard unavailable');
+      this.storyboardSteps.set([]);
+    }
+  }
+
+  public setStoryboardStep(stepId: string): void {
+    const step = this.storyboardSteps().find((item) => item.id === stepId) ?? null;
+    this.applyStoryboardStep(step);
+  }
+
+  public setStoryboardStepIndex(stepIndex: number): void {
+    const steps = this.storyboardSteps();
+    if (!steps.length) {
+      return;
+    }
+    const step = steps[Math.max(0, Math.min(stepIndex, steps.length - 1))] ?? null;
+    this.applyStoryboardStep(step);
+  }
+
+  private applyStoryboardStep(step: DemoStoryboardStep | null): void {
+    this.activeStoryboardStep.set(step);
+    if (step?.popups?.length) {
+      this.tooltips.set(step.popups);
+      this.showTooltips.set(true);
+    } else {
+      this.tooltips.set([]);
+    }
+  }
+
+  private connectStoryboardSocket(wsUrl: string): void {
+    if (this.storyboardSocket) {
+      return;
+    }
+    try {
+      this.storyboardSocket = new WebSocket(wsUrl);
+      this.storyboardSocket.onopen = () => {
+        this.storyboardConnected.set(true);
+        this.storyboardError.set(null);
+        const payload = {
+          type: 'storyboard.ready',
+          steps: this.storyboardSteps().map((step) => step.id),
+        };
+        this.storyboardSocket?.send(JSON.stringify(payload));
+      };
+      this.storyboardSocket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === 'storyboard.step' && message.stepId) {
+            this.setStoryboardStep(message.stepId);
+          } else if (message.type === 'storyboard.step' && typeof message.stepIndex === 'number') {
+            this.setStoryboardStepIndex(message.stepIndex);
+          }
+        } catch (err) {
+          console.warn('[Demo Mode] Failed to parse storyboard message', err);
+        }
+      };
+      this.storyboardSocket.onerror = () => {
+        this.storyboardConnected.set(false);
+        this.storyboardError.set('Storyboard socket error');
+      };
+      this.storyboardSocket.onclose = () => {
+        this.storyboardConnected.set(false);
+      };
+    } catch (err) {
+      this.storyboardError.set('Storyboard socket unavailable');
+    }
+  }
+
+  private disconnectStoryboardSocket(): void {
+    if (this.storyboardSocket) {
+      this.storyboardSocket.close();
+      this.storyboardSocket = null;
     }
   }
 

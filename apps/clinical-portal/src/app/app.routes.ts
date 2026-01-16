@@ -44,6 +44,14 @@ export const appRoutes: Route[] = [
       ),
     // Public route - accessible without authentication for testing
   },
+  {
+    path: 'demo-startup',
+    loadComponent: () =>
+      import('@clinical-portal/feature-dashboard').then(
+        (m) => m.DemoStartupMonitorComponent
+      ),
+    // Public route - demo startup monitoring
+  },
 
   // ==================== Protected Routes ====================
   {

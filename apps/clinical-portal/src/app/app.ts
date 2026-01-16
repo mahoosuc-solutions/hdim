@@ -15,6 +15,7 @@ import { ThemeService } from './services/theme.service';
 import { AuthService } from './services/auth.service';
 import { DemoControlBarComponent } from './demo-mode/components/demo-control-bar/demo-control-bar.component';
 import { DemoModeService } from './demo-mode/services/demo-mode.service';
+import { DemoStoryboardOverlayComponent } from './demo-mode/components/demo-storyboard-overlay/demo-storyboard-overlay.component';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -32,6 +33,7 @@ import { Subscription } from 'rxjs';
     MatTooltipModule,
     BreadcrumbComponent,
     DemoControlBarComponent,
+    DemoStoryboardOverlayComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
@@ -76,6 +78,7 @@ export class App implements OnInit, OnDestroy {
     if (this.demoModeService.isDemoMode()) {
       return [
         ...baseItems,
+        { path: '/demo-startup', icon: 'power', label: 'Demo Startup' },
         { path: '/testing', icon: 'bug_report', label: 'Testing' },
         { path: '/compliance', icon: 'verified_user', label: 'Compliance' },
       ];

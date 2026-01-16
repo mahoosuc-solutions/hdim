@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { map, tap, shareReplay, catchError, finalize } from 'rxjs/operators';
 import {
   CqlEvaluation,
@@ -8,6 +8,7 @@ import {
   BatchEvaluationRequest,
   EvaluationResponse,
   BatchEvaluationResponse,
+  EvaluationDefaultPreset,
 } from '../models/evaluation.model';
 import {
   CalculateMeasureRequest,
@@ -278,6 +279,44 @@ export class EvaluationService {
   }
 
   // ===== Quality Measure Service Endpoints =====
+
+  /**
+   * Get the default evaluation preset for the current tenant/user scope
+   * Endpoint: GET /quality-measure/evaluation-presets/default
+   */
+  getDefaultEvaluationPreset(): Observable<EvaluationDefaultPreset | null> {
+    const url = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.EVALUATION_PRESET_DEFAULT);
+    return this.http.get<EvaluationDefaultPreset>(url).pipe(
+      catchError((error) => {
+        if (error?.status === 404) {
+          return of(null);
+        }
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Save the default evaluation preset for the current tenant/user scope
+   * Endpoint: PUT /quality-measure/evaluation-presets/default
+   */
+  saveDefaultEvaluationPreset(preset: {
+    measureId: string;
+    patientId: string;
+    useCqlEngine?: boolean;
+  }): Observable<EvaluationDefaultPreset> {
+    const url = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.EVALUATION_PRESET_DEFAULT);
+    return this.http.put<EvaluationDefaultPreset>(url, preset);
+  }
+
+  /**
+   * Clear the default evaluation preset for the current tenant/user scope
+   * Endpoint: DELETE /quality-measure/evaluation-presets/default
+   */
+  clearDefaultEvaluationPreset(): Observable<void> {
+    const url = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.EVALUATION_PRESET_DEFAULT);
+    return this.http.delete<void>(url);
+  }
 
   /**
    * Calculate quality measure for a patient

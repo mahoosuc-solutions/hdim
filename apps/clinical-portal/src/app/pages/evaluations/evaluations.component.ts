@@ -30,12 +30,16 @@ import { MeasureFavoritesService } from '../../services/measure-favorites.servic
 import { MeasureInfo, MeasureCategory } from '../../models/cql-library.model';
 import { PatientSummary } from '../../models/patient.model';
 import { QualityMeasureResult, LocalMeasureResult } from '../../models/quality-result.model';
+import { EvaluationDefaultPreset } from '../../models/evaluation.model';
+import { ToastService } from '../../services/toast.service';
 import { AppError, ErrorFactory } from '../../models/error.model';
 import { ErrorBannerComponent } from '../../shared/components/error-banner/error-banner.component';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { CSVHelper } from '../../utils/csv-helper';
 import { TrackInteraction } from '../../utils/ai-tracking.decorator';
+import { EvaluationDataFlowComponent, DataFlowStep } from '../../components/evaluation-data-flow/evaluation-data-flow.component';
+import { EvaluationDataFlowService } from '../../services/evaluation-data-flow.service';
 
 @Component({
   selector: 'app-evaluations',
@@ -60,12 +64,15 @@ import { TrackInteraction } from '../../utils/ai-tracking.decorator';
     ErrorBannerComponent,
     LoadingButtonComponent,
     LoadingOverlayComponent,
+    EvaluationDataFlowComponent,
   ],
   templateUrl: './evaluations.component.html',
   styleUrl: './evaluations.component.scss',
 })
 export class EvaluationsComponent implements OnInit, AfterViewInit {
   private destroy$ = injectDestroy();
+
+  private defaultPresetApplied = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -133,6 +140,14 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     'actions',
   ];
 
+  // Data flow visualization
+  showDataFlow = false;
+  currentEvaluationId?: string;
+  dataFlowSteps: DataFlowStep[] = [];
+
+  defaultPreset: EvaluationDefaultPreset | null = null;
+  lastPresetRefreshAt: Date | null = null;
+
   constructor(
     private fb: FormBuilder,
     private measureService: MeasureService,
@@ -141,7 +156,9 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     private dialogService: DialogService,
     private filterPersistence: FilterPersistenceService,
     public aiAssistant: AIAssistantService,
-    public measureFavorites: MeasureFavoritesService
+    public measureFavorites: MeasureFavoritesService,
+    private dataFlowService: EvaluationDataFlowService,
+    private toastService: ToastService
   ) {
     this.evaluationForm = this.fb.group({
       measureId: ['', Validators.required],
@@ -150,6 +167,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.loadDefaultPreset();
     this.loadActiveMeasures();
     this.loadPatients();
     this.setupPatientAutocomplete();
@@ -192,6 +210,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
       this.measures = measures;
       this.loadingMeasures = false;
       console.log(`[INFO] Loaded ${measures.length} measures:`, measures.map(m => m.name).join(', '));
+      this.applyDefaultPresetIfReady();
     });
   }
 
@@ -303,6 +322,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     ).subscribe((patients) => {
       this.patients = patients;
       this.loadingPatients = false;
+      this.applyDefaultPresetIfReady();
     });
   }
 
@@ -349,12 +369,177 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     this.selectedPatient = patient;
   }
 
+  private loadDefaultPreset(): void {
+    this.fetchDefaultPreset(false);
+  }
+
+  private applyDefaultPresetIfReady(): void {
+    if (this.defaultPresetApplied || !this.defaultPreset) {
+      return;
+    }
+    if (this.loadingMeasures || this.loadingPatients) {
+      return;
+    }
+    const presetMeasure = this.allMeasures.find(m => m.name === this.defaultPreset?.measureId);
+    const presetPatient = this.patients.find(p => p.id === this.defaultPreset?.patientId);
+    if (presetMeasure) {
+      this.evaluationForm.patchValue({ measureId: presetMeasure.name });
+    }
+    if (presetPatient) {
+      this.selectedPatient = presetPatient;
+      this.evaluationForm.patchValue({ patientSearch: presetPatient });
+    }
+    this.defaultPresetApplied = true;
+  }
+
+  saveDefaultPreset(): void {
+    if (this.evaluationForm.invalid || !this.selectedPatient) {
+      return;
+    }
+    const measureId = this.evaluationForm.value.measureId as string;
+    const patientId = this.selectedPatient.id;
+    this.evaluationService.saveDefaultEvaluationPreset({
+      measureId,
+      patientId,
+      useCqlEngine: false,
+    }).pipe(
+      takeUntil(this.destroy$),
+      catchError((error) => {
+        console.warn('[WARN] Unable to save default evaluation preset:', error);
+        return of(null);
+      })
+    ).subscribe((preset) => {
+      if (!preset) {
+        return;
+      }
+      this.defaultPreset = preset;
+      this.defaultPresetApplied = true;
+    });
+  }
+
+  clearDefaultPreset(): void {
+    this.evaluationService.clearDefaultEvaluationPreset().pipe(
+      takeUntil(this.destroy$),
+      catchError((error) => {
+        console.warn('[WARN] Unable to clear default evaluation preset:', error);
+        return of(null);
+      })
+    ).subscribe(() => {
+      this.defaultPreset = null;
+      this.defaultPresetApplied = false;
+      this.toastService.info('Default preset cleared');
+    });
+  }
+
+  reloadDefaultPreset(): void {
+    this.fetchDefaultPreset(true);
+  }
+
+  runDefaultPreset(): void {
+    const defaultPreset = this.defaultPreset;
+    if (!defaultPreset) {
+      return;
+    }
+    const presetMeasure = this.allMeasures.find(m => m.name === defaultPreset.measureId);
+    const presetPatient = this.patients.find(p => p.id === defaultPreset.patientId);
+    if (!presetMeasure || !presetPatient) {
+      this.evaluationError = 'Default preset could not be matched to current data. Please save it again.';
+      this.evaluationErrorDetails = null;
+      return;
+    }
+    this.evaluationForm.patchValue({ measureId: presetMeasure.name, patientSearch: presetPatient });
+    this.selectedPatient = presetPatient;
+    this.submitEvaluation(Boolean(defaultPreset.useCqlEngine));
+  }
+
+  getDefaultPresetSummary(): string {
+    const defaultPreset = this.defaultPreset;
+    if (!defaultPreset) return '';
+    const presetMeasure = this.allMeasures.find(m => m.name === defaultPreset.measureId);
+    const presetPatient = this.patients.find(p => p.id === defaultPreset.patientId);
+    const measureLabel = presetMeasure?.displayName || defaultPreset.measureId;
+    const patientLabel = presetPatient?.fullName || defaultPreset.patientId;
+    return `${measureLabel} · ${patientLabel}`;
+  }
+
+  getDefaultPresetStatus(): string {
+    if (this.loadingMeasures || this.loadingPatients) {
+      return 'Checking...';
+    }
+    const defaultPreset = this.defaultPreset;
+    if (!defaultPreset) {
+      return 'Not configured';
+    }
+    const presetMeasure = this.allMeasures.find(m => m.name === defaultPreset.measureId);
+    const presetPatient = this.patients.find(p => p.id === defaultPreset.patientId);
+    if (!presetMeasure || !presetPatient) {
+      return 'Needs attention';
+    }
+    return 'Ready';
+  }
+
+  getDefaultPresetStatusClass(): string {
+    const status = this.getDefaultPresetStatus();
+    if (status === 'Ready') {
+      return 'status-ready';
+    }
+    if (status === 'Needs attention') {
+      return 'status-warning';
+    }
+    if (status === 'Checking...') {
+      return 'status-loading';
+    }
+    return 'status-missing';
+  }
+
+  getDefaultPresetStatusDetail(): string {
+    if (this.loadingMeasures || this.loadingPatients) {
+      return 'Loading measures and patients to verify the default preset.';
+    }
+    const defaultPreset = this.defaultPreset;
+    if (!defaultPreset) {
+      return 'Save a default preset to enable one-click evaluations.';
+    }
+    const presetMeasure = this.allMeasures.find(m => m.name === defaultPreset.measureId);
+    const presetPatient = this.patients.find(p => p.id === defaultPreset.patientId);
+    if (!presetMeasure || !presetPatient) {
+      return 'The saved preset no longer matches current measures or patients. Save a new preset.';
+    }
+    return 'Preset measure and patient are available.';
+  }
+
+  private fetchDefaultPreset(showToast: boolean): void {
+    this.defaultPresetApplied = false;
+    this.evaluationService.getDefaultEvaluationPreset().pipe(
+      takeUntil(this.destroy$),
+      catchError((error) => {
+        console.warn('[WARN] Unable to load default evaluation preset:', error);
+        if (showToast) {
+          this.toastService.error('Failed to reload default preset');
+        }
+        return of(null);
+      })
+    ).subscribe((preset) => {
+      this.defaultPreset = preset;
+      this.lastPresetRefreshAt = new Date();
+      this.applyDefaultPresetIfReady();
+      if (showToast) {
+        if (preset) {
+          this.toastService.success('Default preset refreshed');
+        } else {
+          this.toastService.warning('No default preset found');
+        }
+      }
+    });
+  }
+
   /**
-   * Submit evaluation
-   * Uses local calculation endpoint (/calculate-local) for MeasureRegistry measures
+   * Submit evaluation with data flow visualization
+   * Option 1: Use CQL evaluation endpoint (shows data flow)
+   * Option 2: Use local calculation endpoint (faster, no data flow)
    */
   @TrackInteraction('evaluations', 'submit-evaluation')
-  submitEvaluation(): void {
+  submitEvaluation(useCqlEngine: boolean = false): void {
     if (this.evaluationForm.invalid || !this.selectedPatient) {
       return;
     }
@@ -373,7 +558,68 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
       this.measureFavorites.recordUsage(selectedMeasure);
     }
 
-    // Use local calculation endpoint (bypasses CQL Engine, uses Java MeasureRegistry)
+    if (useCqlEngine) {
+      // Use CQL Engine endpoint (enables data flow tracking)
+      this.submitCqlEvaluation(measureId, patientId);
+    } else {
+      // Use local calculation endpoint (bypasses CQL Engine, uses Java MeasureRegistry)
+      this.submitLocalEvaluation(measureId, patientId);
+    }
+  }
+
+  /**
+   * Submit evaluation using CQL Engine (with data flow tracking)
+   */
+  private submitCqlEvaluation(measureId: string, patientId: string): void {
+    // Find library ID for the measure
+    const selectedMeasure = this.allMeasures.find(m => m.name === measureId);
+    if (!selectedMeasure || !selectedMeasure.id) {
+      this.evaluationError = 'Measure library not found';
+      this.submitting = false;
+      return;
+    }
+
+    // Show data flow visualization
+    this.showDataFlow = true;
+    this.dataFlowSteps = [];
+    this.currentEvaluationId = undefined;
+
+    // Connect to WebSocket for real-time updates
+    // Note: We'll get the evaluation ID after creation
+    this.evaluationService.submitEvaluation(selectedMeasure.id, patientId).pipe(
+      takeUntil(this.destroy$),
+      catchError((error: any) => {
+        this.evaluationErrorDetails = ErrorFactory.createEvaluationError(patientId, measureId, error);
+        this.evaluationError = this.evaluationErrorDetails.userMessage;
+        console.error(`[${this.evaluationErrorDetails.code}] CQL evaluation error:`, error);
+        this.submitting = false;
+        this.showDataFlow = false;
+        return of(null);
+      })
+    ).subscribe((evaluation) => {
+      if (evaluation) {
+        this.currentEvaluationId = evaluation.id;
+        this.evaluationResult = this.mapEvaluationToResult(evaluation);
+        
+        // Connect WebSocket for this evaluation
+        this.dataFlowService.connect(evaluation.id).pipe(
+          takeUntil(this.destroy$)
+        ).subscribe((step) => {
+          this.dataFlowSteps.push(step);
+        });
+        
+        console.log(`[INFO] CQL evaluation result:`, evaluation);
+      }
+      this.submitting = false;
+    });
+  }
+
+  /**
+   * Submit evaluation using local calculation (no data flow tracking)
+   */
+  private submitLocalEvaluation(measureId: string, patientId: string): void {
+    this.showDataFlow = false;
+    
     this.evaluationService.calculateLocalMeasure(patientId, measureId).pipe(
       takeUntil(this.destroy$),
       catchError((error: any) => {
@@ -390,6 +636,47 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
       }
       this.submitting = false;
     });
+  }
+
+  /**
+   * Map CQL evaluation to quality measure result format
+   */
+  private mapEvaluationToResult(evaluation: any): QualityMeasureResult {
+    // Parse evaluation result JSON
+    let resultData: any = {};
+    try {
+      if (evaluation.evaluationResult) {
+        // evaluationResult might be a string or already an object
+        if (typeof evaluation.evaluationResult === 'string') {
+          resultData = JSON.parse(evaluation.evaluationResult);
+        } else {
+          resultData = evaluation.evaluationResult;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to parse evaluation result:', e);
+    }
+
+    const libraryName = evaluation.library?.name || evaluation.library?.libraryName || '';
+
+    const now = new Date().toISOString();
+    return {
+      id: evaluation.id,
+      tenantId: evaluation.tenantId || '',
+      patientId: evaluation.patientId,
+      measureId: libraryName,
+      measureName: libraryName,
+      measureCategory: 'CUSTOM' as const,
+      measureYear: new Date().getFullYear(),
+      calculationDate: evaluation.evaluationDate || now,
+      numeratorCompliant: resultData.inNumerator || false,
+      denominatorEligible: resultData.inDenominator || false,
+      complianceRate: resultData.complianceRate || 0,
+      score: resultData.complianceRate || 0,
+      createdAt: evaluation.evaluationDate || now,
+      createdBy: evaluation.createdBy || '',
+      version: 1,
+    } as QualityMeasureResult;
   }
 
   /**

@@ -17,7 +17,7 @@ chmod +x *.sh
 ./start-demo.sh
 
 # Open browser to http://localhost:4200
-# Login: demo_user / demo_password
+# Login: demo_admin / demo123
 ```
 
 ### Option 2: Direct Deploy
@@ -30,13 +30,15 @@ chmod +x *.sh
 # Open browser to http://localhost:4200
 ```
 
+Optional: copy `demo/.env.example` to `demo/.env` and set `POSTGRES_PASSWORD` to keep database credentials consistent across services.
+
 ## What's Included
 
 This demo includes:
 
 - **6 Core Microservices**: Gateway, FHIR Server, Patient Service, Care Gap Service, Quality Measure Service, CQL Engine
 - **Clinical Portal Frontend**: Angular-based care manager interface
-- **Demo Data**: 10 patients with 18 realistic care gaps across 11 HEDIS measures
+- **Demo Data**: 10 patients with 16 realistic care gaps across 11 HEDIS measures
 - **Full Walkthrough Guide**: Step-by-step demo script for customer presentations
 
 ## System Requirements
@@ -55,8 +57,10 @@ This demo includes:
 | `test-demo-deployment.sh` | **Comprehensive E2E testing** (37 tests) |
 | `start-demo.sh` | One-command startup script |
 | `docker-compose.demo.yml` | Minimal service configuration |
+| `.env.example` | Demo environment variable template (database password) |
 | `init-demo-db.sh` | Database initialization |
 | `seed-demo-data.sh` | Demo patient and care gap data |
+| `validate-demo-data.sh` | Validate seeded data against expected results |
 | `DEMO_WALKTHROUGH.md` | Customer presentation guide (15-20 min) |
 | `DEPLOYMENT_GUIDE.md` | Multi-platform deployment guide |
 | `TEST_DEPLOYMENT_SUMMARY.md` | Test suite documentation |
@@ -101,6 +105,9 @@ This demo includes:
 
 # Stop demo
 ./start-demo.sh --stop
+
+# Validate seeded data
+./validate-demo-data.sh
 ```
 
 ## Ports

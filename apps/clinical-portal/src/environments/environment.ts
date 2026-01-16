@@ -61,4 +61,11 @@ export const environment = {
     syncToBackend: true, // Send errors to backend service
     syncIntervalMs: 30000, // Sync every 30 seconds in dev
   },
+
+  // Demo monitoring configuration (Prometheus/Grafana)
+  monitoring: {
+    prometheusUrl: '/monitoring/prometheus',
+    grafanaUrl: '/monitoring/grafana',
+    refreshMs: 5000,
+  },
 };

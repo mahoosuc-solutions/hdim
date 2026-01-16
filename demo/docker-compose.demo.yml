@@ -575,18 +575,17 @@ services:
       ELASTICSEARCH_HOST: elasticsearch
       ELASTICSEARCH_PORT: 9200
       GATEWAY_URL: http://gateway-service:8080
-      FHIR_URL: http://fhir-service:8085
-      PATIENT_URL: http://patient-service:8084
-      CARE_GAP_URL: http://care-gap-service:8086
+      FHIR_URL: http://fhir-service:8085/fhir
+      PATIENT_URL: http://patient-service:8084/patient
+      CARE_GAP_URL: http://care-gap-service:8086/care-gap
       QUALITY_MEASURE_URL: http://quality-measure-service:8087
-      CQL_ENGINE_URL: http://cql-engine-service:8081
+      CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
     volumes:
       - ./init-infrastructure.sh:/init-infrastructure.sh:ro
     command: >
       sh -c "
         apk add --no-cache postgresql-client redis curl netcat-openbsd &&
-        chmod +x /init-infrastructure.sh &&
-        /init-infrastructure.sh
+        sh /init-infrastructure.sh
       "
     networks:
       - hdim-demo-network

@@ -50,6 +50,21 @@ echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}   HDIM Care Gap Demo - Data Seeder${NC}"
 echo -e "${BLUE}========================================${NC}"
 
+RESET_DEMO=false
+for arg in "$@"; do
+    case "$arg" in
+        --reset)
+            RESET_DEMO=true
+            ;;
+    esac
+done
+
+if [ "$RESET_DEMO" = true ]; then
+    echo -e "\n${YELLOW}Resetting care gap data before seeding...${NC}"
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    "$SCRIPT_DIR/reset-demo-targeted.sh"
+fi
+
 # Check if services are running
 check_services() {
     echo -e "\n${YELLOW}Checking service availability...${NC}"

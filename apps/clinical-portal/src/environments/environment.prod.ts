@@ -49,4 +49,20 @@ export const environment = {
     dsn: process.env['SENTRY_DSN'] || '',
     environment: 'production',
   },
+
+  // Compliance Configuration
+  compliance: {
+    disableFallbacks: true, // Disable fallbacks in production for compliance validation
+    strictErrorHandling: true,
+    enableErrorTracking: true,
+    allowedFallbackServices: [],
+    // Error retention policy (in days)
+    errorRetentionDays: 90, // Keep errors for 90 days in production
+    // Critical error thresholds
+    criticalErrorThreshold: 10, // Alert if more than 10 critical errors
+    errorRateThreshold: 100, // Alert if more than 100 errors per hour
+    // Backend sync
+    syncToBackend: true, // Send errors to backend service
+    syncIntervalMs: 60000, // Sync every 60 seconds
+  },
 };

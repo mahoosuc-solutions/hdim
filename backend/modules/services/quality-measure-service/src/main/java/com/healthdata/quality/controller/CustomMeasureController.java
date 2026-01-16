@@ -31,7 +31,7 @@ public class CustomMeasureController {
 
     private final CustomMeasureService customMeasureService;
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @PostMapping
     public ResponseEntity<CustomMeasureEntity> createDraft(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -49,7 +49,7 @@ public class CustomMeasureController {
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @GetMapping
     public ResponseEntity<List<CustomMeasureEntity>> list(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -58,7 +58,7 @@ public class CustomMeasureController {
         return ResponseEntity.ok(customMeasureService.list(tenantId, status));
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<CustomMeasureEntity> getById(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -67,7 +67,7 @@ public class CustomMeasureController {
         return ResponseEntity.ok(customMeasureService.getById(tenantId, id));
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<CustomMeasureEntity> updateDraft(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -84,7 +84,7 @@ public class CustomMeasureController {
         ));
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'ADMIN', 'SUPER_ADMIN')")
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a custom measure (soft delete)")
     @Audited(
@@ -101,7 +101,7 @@ public class CustomMeasureController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'ADMIN', 'SUPER_ADMIN')")
     @PostMapping("/batch-publish")
     @Operation(summary = "Batch publish draft measures", description = "Publish multiple draft measures at once. Only DRAFT measures will be published, others will be skipped.")
     @Audited(

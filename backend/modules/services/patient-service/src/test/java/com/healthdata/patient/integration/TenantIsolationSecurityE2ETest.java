@@ -2,7 +2,7 @@ package com.healthdata.patient.integration;
 
 import com.healthdata.patient.api.dto.PatientRequest;
 import com.healthdata.patient.domain.model.Patient;
-import com.healthdata.patient.domain.repository.PatientRepository;
+import com.healthdata.patient.repository.PatientDemographicsRepository;
 import com.healthdata.testfixtures.security.GatewayTrustTestHeaders;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,7 +57,7 @@ class TenantIsolationSecurityE2ETest {
     private MockMvc mockMvc;
 
     @Autowired
-    private PatientRepository patientRepository;
+    private PatientDemographicsRepository patientRepository;
 
     @Autowired
     private ObjectMapper objectMapper;

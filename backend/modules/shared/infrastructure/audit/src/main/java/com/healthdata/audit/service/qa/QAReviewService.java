@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -270,9 +271,9 @@ public class QAReviewService {
                 .lowConfidence(lowConf)
                 .build();
 
-        // Agent performance (simplified - would need more complex query in production)
-        Map<String, AgentStats> agentPerformance = new HashMap<>();
-        // TODO: Implement per-agent statistics
+        // Calculate per-agent statistics
+        Map<String, AgentStats> agentPerformance = calculatePerAgentStatistics(
+            events, reviews, agentType);
 
         return QAMetrics.builder()
                 .totalDecisions(totalDecisions)
@@ -339,10 +340,185 @@ public class QAReviewService {
                 .sorted(Comparator.comparing(DailyTrendPoint::getDate))
                 .collect(Collectors.toList());
 
+        // Calculate per-agent trends
+        // Get events for all reviews to calculate trends
+        List<String> allDecisionIds = reviews.stream()
+                .map(QAReviewEntity::getDecisionId)
+                .collect(Collectors.toList());
+        List<AIAgentDecisionEventEntity> allEvents = auditEventRepository.findByDecisionIdIn(allDecisionIds);
+        
+        Map<String, List<DailyTrendPoint>> perAgentTrends = calculatePerAgentTrends(
+            reviews, allEvents, agentType, days);
+
         return QATrendData.builder()
                 .dailyTrends(dailyTrends)
-                .byAgentType(new HashMap<>()) // TODO: Implement per-agent trends
+                .byAgentType(perAgentTrends)
                 .build();
+    }
+
+    /**
+     * Calculate per-agent statistics.
+     * Groups events and reviews by agent type and calculates metrics for each.
+     */
+    private Map<String, AgentStats> calculatePerAgentStatistics(
+            List<AIAgentDecisionEventEntity> events,
+            List<QAReviewEntity> reviews,
+            String filterAgentType) {
+        
+        Map<String, AgentStats> agentStats = new HashMap<>();
+        
+        // Group events by agent type
+        Map<String, List<AIAgentDecisionEventEntity>> eventsByAgent = events.stream()
+                .filter(e -> filterAgentType == null || 
+                    (e.getAgentType() != null && e.getAgentType().name().equals(filterAgentType)))
+                .filter(e -> e.getAgentType() != null)
+                .collect(Collectors.groupingBy(e -> e.getAgentType().name()));
+        
+        // Group reviews by decision ID for quick lookup
+        Map<String, QAReviewEntity> reviewsByDecisionId = reviews.stream()
+                .collect(Collectors.toMap(QAReviewEntity::getDecisionId, r -> r, (r1, r2) -> r1));
+        
+        // Calculate stats for each agent type
+        for (Map.Entry<String, List<AIAgentDecisionEventEntity>> entry : eventsByAgent.entrySet()) {
+            String agentTypeName = entry.getKey();
+            List<AIAgentDecisionEventEntity> agentEvents = entry.getValue();
+            
+            // Get reviews for these events
+            List<QAReviewEntity> agentReviews = agentEvents.stream()
+                    .map(e -> reviewsByDecisionId.get(e.getEventId().toString()))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+            
+            // Calculate metrics
+            long totalDecisions = agentEvents.size();
+            long approved = agentReviews.stream()
+                    .filter(r -> "APPROVED".equals(r.getReviewStatus()))
+                    .count();
+            long rejected = agentReviews.stream()
+                    .filter(r -> "REJECTED".equals(r.getReviewStatus()))
+                    .count();
+            
+            double approvalRate = totalDecisions > 0 
+                ? (double) approved / totalDecisions : 0.0;
+            
+            double averageConfidence = agentEvents.stream()
+                    .mapToDouble(e -> e.getConfidenceScore() != null ? e.getConfidenceScore() : 0.0)
+                    .average()
+                    .orElse(0.0);
+            
+            // Calculate accuracy (1 - false positive rate - false negative rate)
+            long falsePositives = agentReviews.stream()
+                    .filter(QAReviewEntity::getIsFalsePositive)
+                    .count();
+            long falseNegatives = agentReviews.stream()
+                    .filter(QAReviewEntity::getIsFalseNegative)
+                    .count();
+            double accuracy = totalDecisions > 0 
+                ? (double) (totalDecisions - falsePositives - falseNegatives) / totalDecisions 
+                : 1.0;
+            
+            AgentStats stats = AgentStats.builder()
+                    .totalDecisions(totalDecisions)
+                    .approved(approved)
+                    .rejected(rejected)
+                    .approvalRate(approvalRate)
+                    .averageConfidence(averageConfidence)
+                    .accuracy(accuracy)
+                    .build();
+            
+            agentStats.put(agentTypeName, stats);
+        }
+        
+        return agentStats;
+    }
+
+    /**
+     * Calculate per-agent trends over time.
+     */
+    private Map<String, List<DailyTrendPoint>> calculatePerAgentTrends(
+            List<QAReviewEntity> reviews,
+            List<AIAgentDecisionEventEntity> events,
+            String filterAgentType,
+            int days) {
+        
+        Map<String, List<DailyTrendPoint>> perAgentTrends = new HashMap<>();
+        
+        // Group events by agent type
+        Map<String, List<AIAgentDecisionEventEntity>> eventsByAgent = events.stream()
+                .filter(e -> filterAgentType == null || 
+                    (e.getAgentType() != null && e.getAgentType().name().equals(filterAgentType)))
+                .filter(e -> e.getAgentType() != null)
+                .collect(Collectors.groupingBy(e -> e.getAgentType().name()));
+        
+        // Group reviews by decision ID
+        Map<String, QAReviewEntity> reviewsByDecisionId = reviews.stream()
+                .collect(Collectors.toMap(QAReviewEntity::getDecisionId, r -> r, (r1, r2) -> r1));
+        
+        // Calculate trends for each agent type
+        for (Map.Entry<String, List<AIAgentDecisionEventEntity>> entry : eventsByAgent.entrySet()) {
+            String agentTypeName = entry.getKey();
+            List<AIAgentDecisionEventEntity> agentEvents = entry.getValue();
+            
+            // Group events by review date
+            Map<LocalDate, List<AIAgentDecisionEventEntity>> eventsByDate = agentEvents.stream()
+                    .filter(e -> {
+                        QAReviewEntity review = reviewsByDecisionId.get(e.getEventId().toString());
+                        return review != null && review.getReviewedAt() != null;
+                    })
+                    .collect(Collectors.groupingBy(e -> {
+                        QAReviewEntity review = reviewsByDecisionId.get(e.getEventId().toString());
+                        return review.getReviewedAt().atZone(ZoneId.systemDefault()).toLocalDate();
+                    }));
+            
+            // Build daily trend points for this agent
+            List<DailyTrendPoint> agentTrends = eventsByDate.entrySet().stream()
+                    .map(dateEntry -> {
+                        LocalDate date = dateEntry.getKey();
+                        List<AIAgentDecisionEventEntity> dayEvents = dateEntry.getValue();
+                        
+                        List<QAReviewEntity> dayReviews = dayEvents.stream()
+                                .map(e -> reviewsByDecisionId.get(e.getEventId().toString()))
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toList());
+                        
+                        long total = dayEvents.size();
+                        long approved = dayReviews.stream()
+                                .filter(r -> "APPROVED".equals(r.getReviewStatus()))
+                                .count();
+                        long rejected = dayReviews.stream()
+                                .filter(r -> "REJECTED".equals(r.getReviewStatus()))
+                                .count();
+                        long falsePos = dayReviews.stream()
+                                .filter(QAReviewEntity::getIsFalsePositive)
+                                .count();
+                        long falseNeg = dayReviews.stream()
+                                .filter(QAReviewEntity::getIsFalseNegative)
+                                .count();
+                        
+                        double accuracy = total > 0 
+                            ? (double) (total - falsePos - falseNeg) / total : 1.0;
+                        
+                        double avgConfidence = dayEvents.stream()
+                                .mapToDouble(e -> e.getConfidenceScore() != null ? e.getConfidenceScore() : 0.0)
+                                .average()
+                                .orElse(0.0);
+                        
+                        return DailyTrendPoint.builder()
+                                .date(date)
+                                .totalDecisions(total)
+                                .approved(approved)
+                                .rejected(rejected)
+                                .accuracy(accuracy)
+                                .averageConfidence(avgConfidence)
+                                .build();
+                    })
+                    .sorted(Comparator.comparing(DailyTrendPoint::getDate))
+                    .collect(Collectors.toList());
+            
+            perAgentTrends.put(agentTypeName, agentTrends);
+        }
+        
+        return perAgentTrends;
     }
 
     /**

@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDividerModule } from '@angular/material/divider';
 import { DemoModeService } from '../../services/demo-mode.service';
+import { DemoSeedingDataFlowComponent } from '../demo-seeding-data-flow/demo-seeding-data-flow.component';
 
 /**
  * Demo Control Bar Component
@@ -371,6 +372,19 @@ import { DemoModeService } from '../../services/demo-mode.service';
         font-size: 12px;
       }
 
+      .data-flow-container {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        z-index: 9998;
+        overflow-y: auto;
+        padding: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
       ::ng-deep .mat-mdc-chip.mat-mdc-standard-chip {
         background-color: rgba(255, 255, 255, 0.2) !important;
         color: white !important;
@@ -380,6 +394,7 @@ import { DemoModeService } from '../../services/demo-mode.service';
 })
 export class DemoControlBarComponent implements OnInit {
   scenarioOptions: Array<{ name: string; label: string; icon: string }> = [];
+  showDataFlow = false;
 
   constructor(public demoService: DemoModeService) {}
 
@@ -401,6 +416,8 @@ export class DemoControlBarComponent implements OnInit {
 
   async loadScenario(scenarioId: string): Promise<void> {
     try {
+      // Auto-show data flow when loading starts
+      this.showDataFlow = true;
       await this.demoService.loadScenario(scenarioId);
     } catch (err) {
       console.error('Failed to load scenario:', err);
@@ -501,5 +518,13 @@ export class DemoControlBarComponent implements OnInit {
     if (name.includes('journey')) return 'person';
     if (name.includes('tenant')) return 'business';
     return 'movie';
+  }
+
+  toggleDataFlow(): void {
+    this.showDataFlow = !this.showDataFlow;
+    // Auto-show data flow when loading starts
+    if (this.showDataFlow && this.demoService.isLoading()) {
+      // Data flow will be shown
+    }
   }
 }

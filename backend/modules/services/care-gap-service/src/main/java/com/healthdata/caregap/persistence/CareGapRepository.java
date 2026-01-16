@@ -32,6 +32,47 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
     org.springframework.data.domain.Page<CareGapEntity> findByTenantId(String tenantId, org.springframework.data.domain.Pageable pageable);
 
     /**
+     * Find care gaps by tenant and priority with pagination
+     */
+    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.priority = :priority ORDER BY c.dueDate ASC")
+    org.springframework.data.domain.Page<CareGapEntity> findByTenantIdAndPriority(
+        @Param("tenantId") String tenantId,
+        @Param("priority") String priority,
+        org.springframework.data.domain.Pageable pageable
+    );
+
+    /**
+     * Find care gaps by tenant, patient, and priority with pagination
+     */
+    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId AND c.priority = :priority ORDER BY c.dueDate ASC")
+    org.springframework.data.domain.Page<CareGapEntity> findByTenantIdAndPatientIdAndPriority(
+        @Param("tenantId") String tenantId,
+        @Param("patientId") UUID patientId,
+        @Param("priority") String priority,
+        org.springframework.data.domain.Pageable pageable
+    );
+
+    /**
+     * Find care gaps by tenant and status with pagination
+     */
+    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.gapStatus = :status ORDER BY c.priority DESC, c.dueDate ASC")
+    org.springframework.data.domain.Page<CareGapEntity> findByTenantIdAndStatus(
+        @Param("tenantId") String tenantId,
+        @Param("status") String status,
+        org.springframework.data.domain.Pageable pageable
+    );
+
+    /**
+     * Find care gaps by tenant and patient with pagination
+     */
+    @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId ORDER BY c.identifiedDate DESC")
+    org.springframework.data.domain.Page<CareGapEntity> findByTenantIdAndPatientId(
+        @Param("tenantId") String tenantId,
+        @Param("patientId") UUID patientId,
+        org.springframework.data.domain.Pageable pageable
+    );
+
+    /**
      * Find all care gaps for a patient
      */
     @Query("SELECT c FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.patientId = :patientId ORDER BY c.identifiedDate DESC")

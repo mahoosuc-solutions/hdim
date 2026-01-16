@@ -46,6 +46,12 @@ public class ApiGatewayController {
     @Value("${backend.services.events.url}")
     private String eventsUrl;
 
+    @Value("${backend.services.gateway-clinical.url}")
+    private String gatewayClinicalUrl;
+
+    @Value("${backend.services.demo-seeding.url}")
+    private String demoSeedingUrl;
+
     @Value("${backend.services.agent-runtime.url}")
     private String agentRuntimeUrl;
 
@@ -216,6 +222,28 @@ public class ApiGatewayController {
         @RequestBody(required = false) String body
     ) {
         return forwardRequest(request, body, eventsUrl, "/events");
+    }
+
+    /**
+     * Route to Clinical Gateway Service (compliance error tracking)
+     */
+    @RequestMapping(value = "/api/v1/compliance/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToCompliance(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, gatewayClinicalUrl, "/api/v1/compliance");
+    }
+
+    /**
+     * Route to Demo Seeding Service
+     */
+    @RequestMapping(value = "/demo/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToDemoSeeding(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwardRequest(request, body, demoSeedingUrl, "/demo");
     }
 
     /**

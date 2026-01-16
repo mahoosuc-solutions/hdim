@@ -120,7 +120,7 @@ public class QualityMeasureSecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .anyRequest().permitAll()
             )
-            .anonymous(anonymous -> anonymous.authorities("ROLE_ANALYST", "ROLE_EVALUATOR", "ROLE_ADMIN", "ROLE_SUPER_ADMIN"));
+            .anonymous(anonymous -> anonymous.authorities("ROLE_MEASURE_DEVELOPER", "ROLE_EVALUATOR", "ROLE_ADMIN", "ROLE_SUPER_ADMIN"));
 
         return http.build();
     }

@@ -15,7 +15,7 @@ RUN addgroup -g 1001 -S healthdata && \
     adduser -u 1001 -S healthdata -G healthdata -h /app
 
 # Copy the pre-built JAR
-COPY modules/services/cql-engine-service/build/libs/cql-engine-service.jar app.jar
+COPY modules/services/cql-engine-service/build-user/libs/cql-engine-service.jar app.jar
 
 # Set ownership
 RUN chown -R healthdata:healthdata /app

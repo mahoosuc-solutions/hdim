@@ -10,7 +10,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { NgChartsModule } from 'ng2-charts';
+import { BaseChartDirective } from 'ng2-charts';
 import { ChartData, ChartOptions } from 'chart.js';
 import { forkJoin, catchError, of, finalize, takeUntil } from 'rxjs';
 import { injectDestroy } from '../../shared/utils';
@@ -110,7 +110,7 @@ export interface ComplianceTrendPoint {
     MatChipsModule,
     MatTooltipModule,
     MatButtonToggleModule,
-    NgChartsModule,
+    BaseChartDirective,
     LoadingButtonComponent,
     LoadingOverlayComponent,
     StatCardComponent,

@@ -9,7 +9,8 @@ spring:
     allow-circular-references: true
   
   liquibase:
-    enabled: false  # gateway-service manages schema
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
   cache:
     type: none  # Disable Redis cache to avoid circular dependencies

@@ -9,7 +9,7 @@ spring:
   datasource:
     url: jdbc:postgresql://postgres:5432/quality_db
     username: healthdata
-    password: demo_password_123
+    password: ${SPRING_DATASOURCE_PASSWORD:demo_password_2024}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 5

@@ -65,27 +65,155 @@ public class AIAuditEventStore {
 
     /**
      * Update real-time metrics for AI decisions.
-     * Could publish to metrics collector, update dashboard, etc.
+     * Tracks decision counts, confidence scores, costs, and alerts on anomalies.
      */
     public void updateAIDecisionMetrics(AIAgentDecisionEvent event) {
-        // TODO: Implement metrics updates
-        // - Increment decision count by agent type
-        // - Track average confidence score
-        // - Monitor AI costs
-        // - Alert on low confidence decisions
-        log.debug("Updated AI decision metrics for event: {}", event.getEventId());
+        try {
+            Instant now = Instant.now();
+            Instant oneHourAgo = now.minusSeconds(3600);
+            Instant oneDayAgo = now.minusSeconds(86400);
+
+            // Calculate metrics for the last hour
+            List<Object[]> avgConfidenceByAgent = aiDecisionRepository
+                .calculateAverageConfidenceByAgentType(oneHourAgo, now);
+            
+            // Calculate total cost for tenant in last 24 hours
+            Double totalCost24h = event.getTenantId() != null 
+                ? aiDecisionRepository.calculateTotalCostForTenant(event.getTenantId(), oneDayAgo, now)
+                : null;
+
+            // Count decisions by outcome in last hour
+            List<Object[]> outcomeCounts = aiDecisionRepository.countDecisionsByOutcome(oneHourAgo, now);
+
+            // Log metrics summary
+            log.info("AI Decision Metrics Update - Event: {}, Agent: {}, Confidence: {}, Cost (24h): {}",
+                event.getEventId(),
+                event.getAgentType(),
+                event.getConfidenceScore(),
+                totalCost24h != null ? String.format("%.4f", totalCost24h) : "N/A");
+
+            // Alert on low confidence decisions (< 0.7)
+            if (event.getConfidenceScore() != null && event.getConfidenceScore() < 0.7) {
+                log.warn("LOW CONFIDENCE AI DECISION - Event: {}, Agent: {}, Confidence: {}, Decision Type: {}",
+                    event.getEventId(),
+                    event.getAgentType(),
+                    event.getConfidenceScore(),
+                    event.getDecisionType());
+            }
+
+            // Alert on high cost decisions (> $1.00)
+            if (event.getCostEstimate() != null && event.getCostEstimate() > 1.0) {
+                log.warn("HIGH COST AI DECISION - Event: {}, Agent: {}, Cost: ${}, Decision Type: {}",
+                    event.getEventId(),
+                    event.getAgentType(),
+                    event.getCostEstimate(),
+                    event.getDecisionType());
+            }
+
+            log.debug("Updated AI decision metrics for event: {}", event.getEventId());
+        } catch (Exception e) {
+            log.error("Failed to update AI decision metrics for event: {}", event.getEventId(), e);
+            // Don't throw - metrics update failure shouldn't break event storage
+        }
     }
 
     /**
      * Analyze decision patterns for anomaly detection.
+     * Detects sudden drops in confidence, unusual patterns, and compares with historical baselines.
      */
     public void analyzeDecisionPattern(AIAgentDecisionEvent event) {
-        // TODO: Implement pattern analysis
-        // - Detect sudden drops in confidence
-        // - Identify unusual recommendation patterns
-        // - Compare with historical baselines
-        // - Alert on anomalies
-        log.debug("Analyzed decision pattern for event: {}", event.getEventId());
+        try {
+            Instant now = Instant.now();
+            Instant oneDayAgo = now.minusSeconds(86400);
+            Instant oneWeekAgo = now.minusSeconds(604800);
+
+            // Get recent decisions from same agent type for comparison
+            List<AIAgentDecisionEventEntity> recentDecisions = aiDecisionRepository
+                .findByAgentTypeAndTimestampBetween(
+                    event.getAgentType(),
+                    oneDayAgo,
+                    now,
+                    org.springframework.data.domain.Pageable.ofSize(100)
+                ).getContent();
+
+            if (recentDecisions.isEmpty()) {
+                log.debug("No recent decisions found for pattern analysis: {}", event.getEventId());
+                return;
+            }
+
+            // Calculate baseline confidence from recent decisions
+            double baselineConfidence = recentDecisions.stream()
+                .filter(d -> d.getConfidenceScore() != null)
+                .mapToDouble(AIAgentDecisionEventEntity::getConfidenceScore)
+                .average()
+                .orElse(0.0);
+
+            // Detect sudden drop in confidence (> 20% below baseline)
+            if (event.getConfidenceScore() != null && baselineConfidence > 0) {
+                double confidenceDrop = baselineConfidence - event.getConfidenceScore();
+                double dropPercentage = (confidenceDrop / baselineConfidence) * 100;
+
+                if (dropPercentage > 20.0) {
+                    log.warn("CONFIDENCE DROP DETECTED - Event: {}, Agent: {}, Current: {}, Baseline: {}, Drop: {:.1f}%",
+                        event.getEventId(),
+                        event.getAgentType(),
+                        event.getConfidenceScore(),
+                        baselineConfidence,
+                        dropPercentage);
+                }
+            }
+
+            // Detect unusual decision type patterns
+            long sameDecisionTypeCount = recentDecisions.stream()
+                .filter(d -> d.getDecisionType() == event.getDecisionType())
+                .count();
+            
+            double decisionTypeFrequency = (double) sameDecisionTypeCount / recentDecisions.size();
+            
+            // Alert if this decision type is rare (< 5% of recent decisions)
+            if (decisionTypeFrequency < 0.05 && recentDecisions.size() >= 20) {
+                log.warn("UNUSUAL DECISION TYPE PATTERN - Event: {}, Agent: {}, Decision Type: {}, Frequency: {:.1f}%",
+                    event.getEventId(),
+                    event.getAgentType(),
+                    event.getDecisionType(),
+                    decisionTypeFrequency * 100);
+            }
+
+            // Compare with weekly baseline for trend analysis
+            List<AIAgentDecisionEventEntity> weeklyDecisions = aiDecisionRepository
+                .findByAgentTypeAndTimestampBetween(
+                    event.getAgentType(),
+                    oneWeekAgo,
+                    now,
+                    org.springframework.data.domain.Pageable.ofSize(1000)
+                ).getContent();
+
+            if (weeklyDecisions.size() >= 50) {
+                double weeklyAvgConfidence = weeklyDecisions.stream()
+                    .filter(d -> d.getConfidenceScore() != null)
+                    .mapToDouble(AIAgentDecisionEventEntity::getConfidenceScore)
+                    .average()
+                    .orElse(0.0);
+
+                // Detect if current decision is significantly below weekly average
+                if (event.getConfidenceScore() != null && weeklyAvgConfidence > 0) {
+                    double deviation = weeklyAvgConfidence - event.getConfidenceScore();
+                    if (deviation > 0.15) { // More than 15% below weekly average
+                        log.warn("BELOW WEEKLY BASELINE - Event: {}, Agent: {}, Current: {}, Weekly Avg: {}, Deviation: {:.1f}%",
+                            event.getEventId(),
+                            event.getAgentType(),
+                            event.getConfidenceScore(),
+                            weeklyAvgConfidence,
+                            (deviation / weeklyAvgConfidence) * 100);
+                    }
+                }
+            }
+
+            log.debug("Analyzed decision pattern for event: {}", event.getEventId());
+        } catch (Exception e) {
+            log.error("Failed to analyze decision pattern for event: {}", event.getEventId(), e);
+            // Don't throw - pattern analysis failure shouldn't break event storage
+        }
     }
 
     /**

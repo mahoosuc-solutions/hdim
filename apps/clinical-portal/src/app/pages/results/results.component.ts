@@ -18,7 +18,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { SelectionModel } from '@angular/cdk/collections';
-import { NgChartsModule } from 'ng2-charts';
+import { BaseChartDirective } from 'ng2-charts';
 import { ChartData, ChartOptions } from 'chart.js';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -76,7 +76,7 @@ import { TrackInteraction } from '../../utils/ai-tracking.decorator';
     MatCheckboxModule,
     MatMenuModule,
     MatDividerModule,
-    NgChartsModule,
+    BaseChartDirective,
     LoadingButtonComponent,
     LoadingOverlayComponent,
     StatCardComponent,

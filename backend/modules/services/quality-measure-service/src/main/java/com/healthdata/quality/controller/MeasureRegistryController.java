@@ -21,7 +21,7 @@ import java.util.List;
  * Exposes locally registered measures for the demo portal.
  */
 @RestController
-@RequestMapping("/measures")
+@RequestMapping({"/measures", "/quality-measure/measures"})
 @RequiredArgsConstructor
 @Slf4j
 public class MeasureRegistryController {

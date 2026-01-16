@@ -119,7 +119,7 @@ export class DemoModeService {
   }
 
   private resolveApiBaseUrl(): string {
-    if (API_CONFIG.API_GATEWAY_URL) {
+    if (API_CONFIG.USE_API_GATEWAY && API_CONFIG.API_GATEWAY_URL) {
       return API_CONFIG.API_GATEWAY_URL;
     }
     const browserOrigin = typeof window !== 'undefined' ? window.location.origin : '';

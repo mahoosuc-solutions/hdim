@@ -56,8 +56,8 @@ This demo includes:
 | File | Purpose |
 |------|---------|
 | `test-demo-deployment.sh` | **Comprehensive E2E testing** (37 tests) |
-| `start-demo.sh` | One-command startup script |
-| `docker-compose.demo.yml` | Minimal service configuration |
+| `start-demo.sh` | One-command full-stack startup (users + seeding) |
+| `docker-compose.demo.yml` | Full demo stack configuration |
 | `.env.example` | Demo environment variable template (database password) |
 | `init-demo-db.sh` | Database initialization |
 | `seed-demo-data.sh` | Demo patient and care gap data |

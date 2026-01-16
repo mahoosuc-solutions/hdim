@@ -4,6 +4,9 @@ import { Router } from '@angular/router';
 import { catchError, throwError, timer, retry, delayWhen } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { API_CONFIG } from '../config/api.config';
+import { ErrorValidationService } from '../services/error-validation.service';
+import { ErrorCode, ErrorSeverity } from '../models/error.model';
+import { COMPLIANCE_CONFIG } from '../config/compliance.config';
 
 /**
  * Retry configuration
@@ -69,9 +72,10 @@ function calculateBackoffDelay(attempt: number): number {
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
+  const errorValidationService = inject(ErrorValidationService);
 
   // Get tenant ID from current user or use default
-  const tenantId = authService.getTenantId() || 'default-tenant';
+  const tenantId = authService.getTenantId() || API_CONFIG.DEFAULT_TENANT_ID;
 
   // Add X-Tenant-ID header for multi-tenancy support
   const modifiedReq = req.clone({
@@ -180,6 +184,29 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         error: error.error,
       });
 
+      // Track error for compliance validation if enabled
+      if (COMPLIANCE_CONFIG.enableErrorTracking) {
+        const errorCode = mapHttpStatusToErrorCode(error.status);
+        const severity = mapHttpStatusToSeverity(error.status);
+        const currentUser = authService.currentUserValue;
+        const tenantId = authService.getTenantId();
+        
+        errorValidationService.trackError(error, {
+          service: extractServiceName(req.url),
+          endpoint: req.url,
+          operation: `${req.method} ${req.url}`,
+          errorCode,
+          severity,
+          userId: currentUser?.id,
+          tenantId: tenantId ?? undefined,
+          additionalData: {
+            retryAttempts: retryAttempt,
+            status: error.status,
+            statusText: error.statusText,
+          },
+        });
+      }
+
       // Re-throw the error with user-friendly message
       return throwError(() => ({
         ...error,
@@ -189,3 +216,49 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     })
   );
 };
+
+/**
+ * Map HTTP status code to ErrorCode
+ */
+function mapHttpStatusToErrorCode(status: number): ErrorCode {
+  if (status === 0) return ErrorCode.NETWORK_ERROR;
+  if (status === 401) return ErrorCode.UNAUTHORIZED;
+  if (status === 403) return ErrorCode.FORBIDDEN;
+  if (status === 404) return ErrorCode.RESOURCE_NOT_FOUND;
+  if (status >= 400 && status < 500) return ErrorCode.VALIDATION_ERROR;
+  if (status >= 500) return ErrorCode.INTERNAL_ERROR;
+  return ErrorCode.UNKNOWN_ERROR;
+}
+
+/**
+ * Map HTTP status code to ErrorSeverity
+ */
+function mapHttpStatusToSeverity(status: number): ErrorSeverity {
+  if (status === 0) return ErrorSeverity.ERROR; // Network errors are high severity
+  if (status >= 500) return ErrorSeverity.CRITICAL; // Server errors are critical
+  if (status === 401 || status === 403) return ErrorSeverity.ERROR; // Auth errors are high
+  if (status === 404) return ErrorSeverity.WARNING; // Not found is medium
+  if (status >= 400) return ErrorSeverity.WARNING; // Client errors are medium
+  return ErrorSeverity.INFO;
+}
+
+/**
+ * Extract service name from URL
+ */
+function extractServiceName(url: string): string {
+  // Extract service name from URL patterns
+  if (url.includes('/fhir/')) return 'FHIR Service';
+  if (url.includes('/care-gap/')) return 'Care Gap Service';
+  if (url.includes('/quality-measure/')) return 'Quality Measure Service';
+  if (url.includes('/patient/')) return 'Patient Service';
+  if (url.includes('/cql-engine/')) return 'CQL Engine Service';
+  if (url.includes('/demo/')) return 'Demo Seeding Service';
+  
+  // Try to extract from path segments
+  const segments = url.split('/').filter(s => s);
+  if (segments.length > 0) {
+    return segments[0].charAt(0).toUpperCase() + segments[0].slice(1) + ' Service';
+  }
+  
+  return 'Unknown Service';
+}

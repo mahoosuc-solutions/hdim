@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Gateway now passes through non-2xx responses from upstream services instead of converting them to 500s.
+
 ### Fixed - Phase 21: Complete Test Stabilization (100% Pass Rate)
 - **Quality Measure Service Test Suite**
   - Fixed 24 test failures achieving 100% pass rate on non-skipped tests (1,577/1,577 passing)

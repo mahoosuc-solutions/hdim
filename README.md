@@ -48,6 +48,11 @@ docker compose --profile core up -d
 - **Health Dashboard:** http://localhost:4200/dashboard
 
 **Default credentials:** See [AUTHENTICATION_GUIDE.md](./AUTHENTICATION_GUIDE.md)
+**Deployment validation (on-prem/cloud):** See [docs/deployment/IMPLEMENTATION_VALIDATION_RUNBOOK.md](./docs/deployment/IMPLEMENTATION_VALIDATION_RUNBOOK.md)
+
+## Deployment Validation
+
+For the full documentation index and validation workflow, see [docs/README.md](./docs/README.md).
 
 ---
 

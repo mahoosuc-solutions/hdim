@@ -1728,6 +1728,13 @@ TCO = Infrastructure + Personnel + Licensing + Maintenance + Opportunity Cost
 
 ---
 
+## Implementation Validation Runbook
+
+Use the shared validation runbook for both on-prem and cloud-hosted deployments. It enforces tenant hardblock behavior, UUID-only FHIR data, and core service health checks.
+
+Path: `docs/deployment/IMPLEMENTATION_VALIDATION_RUNBOOK.md`
+Quick run: `bash ./scripts/validate-deployment.sh`
+
 ## Decision Framework
 
 ### Quick Decision Path

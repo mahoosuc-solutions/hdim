@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, timer } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
-import { environment } from '../../../../apps/clinical-portal/src/environments/environment';
+const monitoringConfig = (globalThis as { __HDIM_MONITORING__?: { prometheusUrl?: string; grafanaUrl?: string; refreshMs?: number } })
+  .__HDIM_MONITORING__ ?? {};
 
 export interface DemoServiceHealth {
   id: string;
@@ -32,9 +33,9 @@ interface PrometheusTargetsResponse {
   providedIn: 'root',
 })
 export class DemoStartupMonitorService {
-  private readonly prometheusUrl = environment.monitoring?.prometheusUrl ?? 'http://localhost:9090';
-  private readonly grafanaUrl = environment.monitoring?.grafanaUrl ?? 'http://localhost:3001';
-  private readonly refreshMs = environment.monitoring?.refreshMs ?? 5000;
+  private readonly prometheusUrl = monitoringConfig.prometheusUrl ?? 'http://localhost:9090';
+  private readonly grafanaUrl = monitoringConfig.grafanaUrl ?? 'http://localhost:3001';
+  private readonly refreshMs = monitoringConfig.refreshMs ?? 5000;
 
   private readonly demoServices: Array<{ id: string; label: string; job: string }> = [
     { id: 'gateway', label: 'Gateway', job: 'gateway-service' },
@@ -51,13 +52,8 @@ export class DemoStartupMonitorService {
     return timer(0, this.refreshMs).pipe(
       switchMap(() => this.fetchSnapshot()),
       catchError(() =>
-        of({
-          services: this.demoServices.map((service) => ({
-            id: service.id,
-            label: service.label,
-            status: 'unknown',
-            detail: 'Monitoring API unavailable',
-          })),
+        of<DemoStartupSnapshot>({
+          services: this.buildServices('unknown', 'Monitoring API unavailable'),
           prometheusReachable: false,
           grafanaReachable: false,
           updatedAt: new Date(),
@@ -66,13 +62,22 @@ export class DemoStartupMonitorService {
     );
   }
 
+  private buildServices(status: DemoServiceHealth['status'], detail: string): DemoServiceHealth[] {
+    return this.demoServices.map((service) => ({
+      id: service.id,
+      label: service.label,
+      status,
+      detail,
+    }));
+  }
+
   private fetchSnapshot(): Observable<DemoStartupSnapshot> {
     return this.http
       .get<PrometheusTargetsResponse>(`${this.prometheusUrl}/api/v1/targets`)
       .pipe(
         map((response) => {
           const activeTargets = response?.data?.activeTargets ?? [];
-          const services = this.demoServices.map((service) => {
+          const services: DemoServiceHealth[] = this.demoServices.map((service) => {
             const target = activeTargets.find((item) => item.labels?.job === service.job);
             if (!target) {
               return {
@@ -112,13 +117,8 @@ export class DemoStartupMonitorService {
           )
         ),
         catchError(() =>
-          of({
-            services: this.demoServices.map((service) => ({
-              id: service.id,
-              label: service.label,
-              status: 'unknown',
-              detail: 'Prometheus unavailable',
-            })),
+          of<DemoStartupSnapshot>({
+            services: this.buildServices('unknown', 'Prometheus unavailable'),
             prometheusReachable: false,
             grafanaReachable: false,
             updatedAt: new Date(),

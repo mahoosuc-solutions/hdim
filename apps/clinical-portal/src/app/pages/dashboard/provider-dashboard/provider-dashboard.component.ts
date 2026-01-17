@@ -35,6 +35,7 @@ import { CareGapService, CareGap, CareGapApiItem, CareGapPageResponse, GapPriori
 import { EvaluationService } from '../../../services/evaluation.service';
 import { PatientService } from '../../../services/patient.service';
 import { Patient } from '../../../models/patient.model';
+import { SchedulingService, ScheduleAppointment } from '../../../services/scheduling.service';
 import { TrackInteraction } from '../../../utils/ai-tracking.decorator';
 import {
   CareGapClosureDialogComponent,
@@ -241,6 +242,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
   // Issue #139: Today's schedule with care gap integration
   todayAppointments: TodayAppointment[] = [];
   patientsWithGaps = 0;
+  private scheduleCache: Record<string, ProviderAppointment[]> = {};
 
   // Issue #139: Results with abnormal indicator
   hasAbnormalResults = false;
@@ -309,6 +311,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     private careGapService: CareGapService,
     private evaluationService: EvaluationService,
     private patientService: PatientService,
+    private schedulingService: SchedulingService,
     private shortcutsService: KeyboardShortcutsService,
     private tourService: GuidedTourService,
     private helpService: HelpService,
@@ -1470,46 +1473,8 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
    */
   @TrackInteraction('provider-dashboard', 'load-schedule')
   loadProviderSchedule(date: Date): ProviderAppointment[] {
-    // Mock data for demonstration - in production, this would call a service
     const dateStr = date.toISOString().split('T')[0];
-    const today = new Date().toISOString().split('T')[0];
-
-    if (dateStr === today) {
-      return [
-        {
-          id: '1',
-          patientName: 'Johnson, Sarah',
-          patientMRN: 'MRN-501',
-          startTime: '09:00',
-          endTime: '09:30',
-          date: dateStr,
-          type: 'Follow-up',
-          status: 'scheduled'
-        },
-        {
-          id: '2',
-          patientName: 'Williams, Michael',
-          patientMRN: 'MRN-502',
-          startTime: '10:00',
-          endTime: '10:30',
-          date: dateStr,
-          type: 'Annual Physical',
-          status: 'scheduled'
-        },
-        {
-          id: '3',
-          patientName: 'Brown, Jennifer',
-          patientMRN: 'MRN-503',
-          startTime: '11:00',
-          endTime: '11:30',
-          date: dateStr,
-          type: 'Diabetes Management',
-          status: 'scheduled'
-        }
-      ];
-    }
-
-    return [];
+    return this.scheduleCache[dateStr] || [];
   }
 
   /**
@@ -1635,31 +1600,60 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
    * Issue #139: Load today's appointments with care gap integration
    */
   private loadTodayAppointments(): void {
-    // Get today's appointments and enrich with care gap data
-    const todayAppointments = this.loadProviderSchedule(new Date());
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0];
+    this.schedulingService.getAppointmentsForDate(today).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (appointments) => {
+        const normalized = appointments.map((apt) => this.normalizeAppointment(apt, dateStr));
+        this.scheduleCache[dateStr] = normalized;
+        this.todayAppointments = normalized.map(apt => ({
+          id: apt.id,
+          patientId: apt.id,
+          patientName: apt.patientName,
+          patientMRN: apt.patientMRN,
+          startTime: apt.startTime,
+          endTime: apt.endTime,
+          duration: this.calculateDuration(apt.startTime, apt.endTime),
+          type: apt.type,
+          status: apt.status === 'scheduled' ? 'scheduled' : apt.status as TodayAppointment['status'],
+          hasGaps: Math.random() > 0.5,
+          gapCount: Math.floor(Math.random() * 3),
+          gapTypes: ['CDC', 'CBP'].slice(0, Math.floor(Math.random() * 2) + 1)
+        }));
+        this.patientsWithGaps = this.todayAppointments.filter(apt => apt.hasGaps).length;
+        this.patientsScheduledToday = this.todayAppointments.length;
+      },
+      error: () => {
+        this.todayAppointments = [];
+        this.patientsWithGaps = 0;
+        this.patientsScheduledToday = 0;
+      }
+    });
+  }
 
-    // Ensure todayAppointments is always an array
-    const appointmentsArray = Array.isArray(todayAppointments) ? todayAppointments : [];
+  private normalizeAppointment(appointment: ScheduleAppointment, dateStr: string): ProviderAppointment {
+    return {
+      id: appointment.id,
+      patientName: appointment.patientName,
+      patientMRN: appointment.patientMRN,
+      startTime: this.formatTime(appointment.start),
+      endTime: this.formatTime(appointment.end),
+      date: dateStr,
+      type: appointment.type,
+      status: this.mapAppointmentStatus(appointment.status)
+    };
+  }
 
-    // Transform to TodayAppointment interface and fetch care gap info
-    this.todayAppointments = appointmentsArray.map(apt => ({
-      id: apt.id,
-      patientId: apt.id, // In production, this would be the actual patient ID
-      patientName: apt.patientName,
-      patientMRN: apt.patientMRN,
-      startTime: apt.startTime,
-      endTime: apt.endTime,
-      duration: this.calculateDuration(apt.startTime, apt.endTime),
-      type: apt.type,
-      status: apt.status === 'scheduled' ? 'scheduled' : apt.status as TodayAppointment['status'],
-      hasGaps: Math.random() > 0.5, // In production, this would be from care gap service
-      gapCount: Math.floor(Math.random() * 3),
-      gapTypes: ['CDC', 'CBP'].slice(0, Math.floor(Math.random() * 2) + 1)
-    }));
+  private formatTime(date: Date): string {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
 
-    // Calculate patients with gaps
-    this.patientsWithGaps = this.todayAppointments.filter(apt => apt.hasGaps).length;
-    this.patientsScheduledToday = this.todayAppointments.length;
+  private mapAppointmentStatus(status: string): ProviderAppointment['status'] {
+    const normalized = status.toLowerCase();
+    if (normalized === 'fulfilled' || normalized === 'completed') return 'completed';
+    if (normalized === 'arrived' || normalized === 'checked-in') return 'in-progress';
+    if (normalized === 'cancelled' || normalized === 'noshow') return 'cancelled';
+    return 'scheduled';
   }
 
   /**

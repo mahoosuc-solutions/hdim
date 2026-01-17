@@ -23,7 +23,7 @@ services:
       - postgres_staging_data:/var/lib/postgresql/data
       - ./docker/postgres/init-staging.sh:/docker-entrypoint-initdb.d/init.sh
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U healthdata"]
+      test: ["CMD-SHELL", "pg_isready -U healthdata -d ${POSTGRES_DB:-healthdata_db}"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -1,5 +1,6 @@
 package com.healthdata.quality.service;
 
+import com.healthdata.quality.controller.CustomMeasureController;
 import com.healthdata.quality.persistence.CustomMeasureEntity;
 import com.healthdata.quality.persistence.CustomMeasureRepository;
 import lombok.RequiredArgsConstructor;
@@ -172,7 +173,158 @@ public class CustomMeasureService {
         log.info("Soft deleted measure [{}] for tenant {}", id, tenantId);
     }
 
+    /**
+     * Update CQL text for a custom measure.
+     */
+    @Transactional
+    public CustomMeasureEntity updateCql(String tenantId, UUID id, String cqlText) {
+        CustomMeasureEntity measure = getById(tenantId, id);
+        measure.setCqlText(cqlText);
+        CustomMeasureEntity saved = repository.save(measure);
+        log.info("Updated CQL for measure [{}] in tenant {}", id, tenantId);
+        return saved;
+    }
+
+    /**
+     * Update value sets for a custom measure.
+     */
+    @Transactional
+    public CustomMeasureEntity updateValueSets(String tenantId, UUID id, String valueSetsJson) {
+        CustomMeasureEntity measure = getById(tenantId, id);
+        measure.setValueSets(valueSetsJson);
+        CustomMeasureEntity saved = repository.save(measure);
+        log.info("Updated value sets for measure [{}] in tenant {}", id, tenantId);
+        return saved;
+    }
+
+    /**
+     * Publish a single custom measure (change status from DRAFT to PUBLISHED).
+     */
+    @Transactional
+    public CustomMeasureEntity publish(String tenantId, UUID id) {
+        CustomMeasureEntity measure = getById(tenantId, id);
+        if (!"DRAFT".equals(measure.getStatus())) {
+            throw new IllegalStateException("Only DRAFT measures can be published. Current status: " + measure.getStatus());
+        }
+        measure.setStatus("PUBLISHED");
+        measure.setPublishedDate(LocalDateTime.now());
+        CustomMeasureEntity saved = repository.save(measure);
+        log.info("Published measure [{}] in tenant {}", id, tenantId);
+        return saved;
+    }
+
+    /**
+     * Clone a custom measure as a new draft.
+     */
+    @Transactional
+    public CustomMeasureEntity clone(String tenantId, UUID id, String clonedBy) {
+        CustomMeasureEntity original = getById(tenantId, id);
+        CustomMeasureEntity cloned = CustomMeasureEntity.builder()
+                .tenantId(tenantId)
+                .name(original.getName() + " (Copy)")
+                .description(original.getDescription())
+                .category(original.getCategory())
+                .year(original.getYear())
+                .cqlText(original.getCqlText())
+                .valueSets(original.getValueSets())
+                .status("DRAFT")
+                .createdBy(clonedBy)
+                .build();
+        CustomMeasureEntity saved = repository.save(cloned);
+        log.info("Cloned measure [{}] to [{}] in tenant {}", id, saved.getId(), tenantId);
+        return saved;
+    }
+
+    /**
+     * Test/evaluate a custom measure against sample patients.
+     * Returns test results with pass/fail status for each patient.
+     */
+    @Transactional(readOnly = true)
+    public TestMeasureResult testMeasure(String tenantId, UUID id) {
+        CustomMeasureEntity measure = getById(tenantId, id);
+        
+        // For now, return mock test results
+        // TODO: Integrate with CQL engine for actual evaluation
+        log.info("Testing measure [{}] in tenant {}", id, tenantId);
+        
+        return new TestMeasureResult(
+                id.toString(),
+                measure.getName(),
+                LocalDateTime.now().toString(),
+                5, // totalPatients
+                List.of(
+                        new TestPatientResult("P001", "John Doe", "MRN001", "pass", true, true, true, null, List.of("Met all criteria")),
+                        new TestPatientResult("P002", "Jane Smith", "MRN002", "pass", true, true, true, null, List.of("Met all criteria")),
+                        new TestPatientResult("P003", "Bob Johnson", "MRN003", "fail", true, true, false, null, List.of("Missing required lab test")),
+                        new TestPatientResult("P004", "Alice Brown", "MRN004", "not-eligible", false, false, false, "Age out of range", List.of("Patient age 17, requires 18+")),
+                        new TestPatientResult("P005", "Charlie Wilson", "MRN005", "pass", true, true, true, null, List.of("Met all criteria"))
+                ),
+                new TestSummary(3, 1, 1, 0)
+        );
+    }
+
     // Result classes
+    public record TestMeasureResult(
+            String measureId,
+            String measureName,
+            String testDate,
+            int totalPatients,
+            List<TestPatientResult> results,
+            TestSummary summary
+    ) {}
+
+    public record TestPatientResult(
+            String patientId,
+            String patientName,
+            String mrn,
+            String outcome,
+            boolean inPopulation,
+            boolean inDenominator,
+            boolean inNumerator,
+            String exclusionReason,
+            List<String> details
+    ) {}
+
+    public record TestSummary(
+            int passed,
+            int failed,
+            int notEligible,
+            int errors
+    ) {}
+
+    /**
+     * Evaluate CQL text against a specific patient.
+     * TODO: Integrate with actual CQL engine for real evaluation
+     */
+    public CustomMeasureController.PatientEvaluationResult evaluatePatient(String tenantId, String cqlText, String patientId) {
+        log.info("Evaluating CQL against patient {} for tenant {}", patientId, tenantId);
+
+        // TODO: Replace with real CQL engine integration
+        // For now, return mock result based on patient ID
+        List<CustomMeasureController.MatchedCriterion> criteria = List.of(
+                new CustomMeasureController.MatchedCriterion("Initial Population", true, "Patient age 45 is within range 18-75"),
+                new CustomMeasureController.MatchedCriterion("Has Diabetes Diagnosis", true, "ICD-10 E11.9 found in conditions"),
+                new CustomMeasureController.MatchedCriterion("Denominator Exclusion", false, "No hospice care documented"),
+                new CustomMeasureController.MatchedCriterion("HbA1c Test", patientId.hashCode() % 2 == 0, 
+                        patientId.hashCode() % 2 == 0 ? "LOINC 4548-4 found within measurement period" : "No HbA1c test found")
+        );
+
+        boolean allCriteriaMet = criteria.stream().allMatch(CustomMeasureController.MatchedCriterion::matched);
+        String outcome = allCriteriaMet ? "pass" : "fail";
+        String message = allCriteriaMet 
+                ? "Patient meets all criteria for this measure"
+                : "Patient does not meet all criteria for numerator";
+
+        return new CustomMeasureController.PatientEvaluationResult(
+                patientId,
+                "Patient " + patientId.substring(0, Math.min(8, patientId.length())),
+                "MRN-" + patientId.substring(0, Math.min(6, patientId.length())),
+                outcome,
+                criteria,
+                message
+        );
+    }
+
     public record BatchPublishResult(
             int publishedCount,
             int skippedCount,

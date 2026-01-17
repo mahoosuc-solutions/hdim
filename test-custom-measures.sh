@@ -16,7 +16,7 @@ GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
 TENANT_ID="${TENANT_ID:-acme-health}"
 AUTH_USERNAME="${AUTH_USERNAME:-demo.admin}"
 AUTH_PASSWORD="${AUTH_PASSWORD:-demo123}"
-BASE_URL="${BASE_URL:-${GATEWAY_URL}/api/quality/quality-measure}"
+BASE_URL="${BASE_URL:-${GATEWAY_URL}/api/quality}"
 FHIR_API_URL="${FHIR_API_URL:-${GATEWAY_URL}/api/fhir}"
 
 AUTH_TOKEN=$(curl -s -X POST "${GATEWAY_URL}/api/v1/auth/login" \

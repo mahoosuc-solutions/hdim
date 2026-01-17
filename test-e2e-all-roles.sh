@@ -20,6 +20,10 @@ GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
 TENANT_ID="${TENANT_ID:-acme-health}"
 PASSWORD="${PASSWORD:-demo123}"
 POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-hdim-demo-postgres}"
+GATEWAY_DB_NAME="${GATEWAY_DB_NAME:-gateway_db}"
+QUALITY_DB_NAME="${QUALITY_DB_NAME:-quality_db}"
+CAREGAP_DB_NAME="${CAREGAP_DB_NAME:-caregap_db}"
+CQL_DB_NAME="${CQL_DB_NAME:-cql_db}"
 
 # Test counters
 TOTAL_TESTS=0
@@ -111,59 +115,59 @@ echo ""
 
 echo -e "${CYAN}1.1 User Management Schema${NC}"
 run_test "Users table exists" \
-    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d users' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d ${GATEWAY_DB_NAME} -c '\d users' -t" \
     "any" ""
 
 run_test "User roles table exists" \
-    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d user_roles' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d ${GATEWAY_DB_NAME} -c '\d user_roles' -t" \
     "any" ""
 
 run_test "User tenants table exists" \
-    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d user_tenants' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d ${GATEWAY_DB_NAME} -c '\d user_tenants' -t" \
     "any" ""
 
 run_test "Demo users exist (5 expected)" \
-    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c 'SELECT COUNT(*) FROM users WHERE username LIKE '\"'\"'demo.%'\"'\"';' -t | xargs" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d ${GATEWAY_DB_NAME} -c 'SELECT COUNT(*) FROM users WHERE username LIKE '\"'\"'demo.%'\"'\"';' -t | xargs" \
     "any" ""
 
 echo ""
 echo -e "${CYAN}1.2 Quality Measure Schema${NC}"
 run_test "Quality measure results table" \
-    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d quality_measure_results' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d ${QUALITY_DB_NAME} -c '\d quality_measure_results' -t" \
     "any" ""
 
 run_test "Custom measures table" \
-    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d custom_measures' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d ${QUALITY_DB_NAME} -c '\d custom_measures' -t" \
     "any" ""
 
 echo ""
 echo -e "${CYAN}1.3 Care Gap Schema${NC}"
 run_test "Care gaps table" \
-    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d care_gaps' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d ${CAREGAP_DB_NAME} -c '\d care_gaps' -t" \
     "any" ""
 
 echo ""
 echo -e "${CYAN}1.4 CQL Engine Schema${NC}"
 run_test "CQL libraries table" \
-    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d cql_libraries' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d ${CQL_DB_NAME} -c '\d cql_libraries' -t" \
     "any" ""
 
 run_test "CQL evaluations table" \
-    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d cql_evaluations' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d ${CQL_DB_NAME} -c '\d cql_evaluations' -t" \
     "any" ""
 
 run_test "Value sets table" \
-    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c '\d value_sets' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d ${CQL_DB_NAME} -c '\d value_sets' -t" \
     "any" ""
 
 echo ""
 echo -e "${CYAN}1.5 Referential Integrity${NC}"
 run_test "User -> User Roles FK" \
-    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c 'SELECT conname FROM pg_constraint WHERE conname = '\"'\"'fkhfh9dx7w3ubf1co1vdev94g3f'\"'\"';' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d ${GATEWAY_DB_NAME} -t -A -c \"SELECT CASE WHEN COUNT(*) > 0 THEN 'OK' END FROM information_schema.table_constraints WHERE table_name='user_roles' AND constraint_type='FOREIGN KEY';\"" \
     "any" ""
 
 run_test "User -> User Tenants FK" \
-    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d healthdata_cql -c 'SELECT conname FROM pg_constraint WHERE conname = '\"'\"'fk9al929m2h3hecov7100p06cll'\"'\"';' -t" \
+    "docker exec ${POSTGRES_CONTAINER} psql -U healthdata -d ${GATEWAY_DB_NAME} -t -A -c \"SELECT CASE WHEN COUNT(*) > 0 THEN 'OK' END FROM information_schema.table_constraints WHERE table_name='user_tenants' AND constraint_type='FOREIGN KEY';\"" \
     "any" ""
 
 ################################################################################
@@ -211,11 +215,11 @@ if [ $? -eq 0 ]; then
     
     echo -e "${CYAN}3.1 Quality Measure Access${NC}"
     run_test "Access quality measure results" \
-        "curl -s ${GATEWAY_URL}/api/quality/quality-measure/results" \
+        "curl -s ${GATEWAY_URL}/api/quality/results" \
         "any" "$EVALUATOR_TOKEN"
     
     run_test "Access quality report (population)" \
-        "curl -s ${GATEWAY_URL}/api/quality/quality-measure/report/population" \
+        "curl -s ${GATEWAY_URL}/api/quality/report/population" \
         "any" "$EVALUATOR_TOKEN"
     
     echo ""
@@ -256,17 +260,17 @@ if [ $? -eq 0 ]; then
     
     echo -e "${CYAN}4.1 Quality Measure Analytics${NC}"
     run_test "Access quality measure results" \
-        "curl -s ${GATEWAY_URL}/api/quality/quality-measure/results" \
+        "curl -s ${GATEWAY_URL}/api/quality/results" \
         "any" "$ANALYST_TOKEN"
     
     run_test "Access quality report (population)" \
-        "curl -s ${GATEWAY_URL}/api/quality/quality-measure/report/population" \
+        "curl -s ${GATEWAY_URL}/api/quality/report/population" \
         "any" "$ANALYST_TOKEN"
     
     echo ""
     echo -e "${CYAN}4.2 Reporting Access${NC}"
     run_test "Access saved reports" \
-        "curl -s ${GATEWAY_URL}/api/quality/quality-measure/reports" \
+        "curl -s ${GATEWAY_URL}/api/quality/reports" \
         "any" "$ANALYST_TOKEN"
     
     echo ""
@@ -297,11 +301,11 @@ if [ $? -eq 0 ]; then
     
     echo -e "${CYAN}5.1 Full Quality Measure Access${NC}"
     run_test "Access all quality measures" \
-        "curl -s ${GATEWAY_URL}/api/quality/quality-measure/results" \
+        "curl -s ${GATEWAY_URL}/api/quality/results" \
         "any" "$ADMIN_TOKEN"
     
     run_test "Access quality report (population)" \
-        "curl -s ${GATEWAY_URL}/api/quality/quality-measure/report/population" \
+        "curl -s ${GATEWAY_URL}/api/quality/report/population" \
         "any" "$ADMIN_TOKEN"
     
     echo ""
@@ -342,13 +346,13 @@ if [ $? -eq 0 ]; then
     
     echo -e "${CYAN}6.1 Read-Only Quality Measure Access${NC}"
     run_test "View quality measure results (read-only)" \
-        "curl -s ${GATEWAY_URL}/api/quality/quality-measure/results" \
+        "curl -s ${GATEWAY_URL}/api/quality/results" \
         "any" "$VIEWER_TOKEN"
     
     echo ""
     echo -e "${CYAN}6.2 Viewer Restrictions${NC}"
     run_test "Cannot calculate measures (should be denied)" \
-        "curl -s -X POST ${GATEWAY_URL}/api/quality/quality-measure/calculate?patient=test&measure=CMS134" \
+        "curl -s -X POST ${GATEWAY_URL}/api/quality/calculate?patient=test&measure=CMS134" \
         "403" "$VIEWER_TOKEN"
     
     run_test "Cannot modify CQL libraries (should be denied)" \

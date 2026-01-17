@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0025-create-tasks-table" author="codex">
+        <createTable tableName="tasks">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_json" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(32)"/>
+            <column name="priority" type="varchar(32)"/>
+            <column name="task_code" type="varchar(128)"/>
+            <column name="task_display" type="varchar(256)"/>
+            <column name="authored_on" type="timestamp"/>
+            <column name="execution_start" type="timestamp"/>
+            <column name="execution_end" type="timestamp"/>
+            <column name="owner_id" type="varchar(255)"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_tasks_resource_json_gin" tableName="tasks" indexType="gin">
+            <column name="resource_json"/>
+        </createIndex>
+
+        <createIndex indexName="idx_tasks_tenant_authored" tableName="tasks">
+            <column name="tenant_id"/>
+            <column name="authored_on"/>
+        </createIndex>
+
+        <createIndex indexName="idx_tasks_tenant_patient_authored" tableName="tasks">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="authored_on"/>
+        </createIndex>
+
+        <createIndex indexName="idx_tasks_tenant_owner" tableName="tasks">
+            <column name="tenant_id"/>
+            <column name="owner_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_tasks_status" tableName="tasks">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <addForeignKeyConstraint
+            baseTableName="tasks"
+            baseColumnNames="patient_id"
+            constraintName="fk_tasks_patient"
+            referencedTableName="patients"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="tasks"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

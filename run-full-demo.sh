@@ -23,7 +23,20 @@ QUALITY_URL="${QUALITY_URL:-http://localhost:8087}"
 TENANT_ID="${TENANT_ID:-acme-health}"
 AUTH_USERNAME="${AUTH_USERNAME:-demo.doctor}"
 AUTH_PASSWORD="${AUTH_PASSWORD:-demo123}"
+AUTH_USER_ID="${AUTH_USER_ID:-550e8400-e29b-41d4-a716-446655440010}"
+AUTH_ROLES="${AUTH_ROLES:-EVALUATOR}"
 POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-hdim-demo-postgres}"
+
+FHIR_AUTH_HEADER=()
+VALIDATED_TS=$(date +%s)
+FHIR_AUTH_HEADER=(
+    -H "X-Auth-User-Id: $AUTH_USER_ID"
+    -H "X-Auth-Username: $AUTH_USERNAME"
+    -H "X-Auth-Roles: $AUTH_ROLES"
+    -H "X-Auth-Tenant-Ids: $TENANT_ID"
+    -H "X-Auth-Validated: gateway-${VALIDATED_TS}-dev"
+    -H "X-Tenant-ID: $TENANT_ID"
+)
 
 clear
 echo -e "${BOLD}${BLUE}=========================================${NC}"
@@ -127,15 +140,15 @@ echo ""
 
 echo -e "${CYAN}FHIR R4 Server Status:${NC}"
 echo "  URL: $FHIR_URL"
-version=$(curl -s "$FHIR_URL/metadata" | jq -r '.fhirVersion')
+version=$(curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/metadata" | jq -r '.fhirVersion')
 echo "  Version: FHIR $version"
 echo ""
 
 echo -e "${BLUE}Current Data Inventory:${NC}"
-patient_count=$(curl -s "$FHIR_URL/Patient?_summary=count" | jq -r '.total')
-condition_count=$(curl -s "$FHIR_URL/Condition?_summary=count" | jq -r '.total')
-obs_count=$(curl -s "$FHIR_URL/Observation?_summary=count" | jq -r '.total')
-med_count=$(curl -s "$FHIR_URL/MedicationRequest?_summary=count" | jq -r '.total')
+patient_count=$(curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/Patient?_summary=count" | jq -r '.total')
+condition_count=$(curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/Condition?_summary=count" | jq -r '.total')
+obs_count=$(curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/Observation?_summary=count" | jq -r '.total')
+med_count=$(curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/MedicationRequest?_summary=count" | jq -r '.total')
 
 echo "  Patients:          $patient_count"
 echo "  Conditions:        $condition_count"
@@ -161,8 +174,13 @@ echo -e "${BOLD}${MAGENTA}SECTION 4: Patient Clinical Data${NC}"
 echo -e "${BOLD}${MAGENTA}════════════════════════════════${NC}"
 echo ""
 
-echo -e "${CYAN}Demo Patient: John Doe (Patient ID: 1)${NC}"
-patient_data=$(curl -s "$FHIR_URL/Patient/1")
+patient_id=$(curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/Patient?_count=1" | jq -r '.entry[0].resource.id // empty')
+if [ -z "$patient_id" ]; then
+    echo -e "${RED}✗ No patients available in FHIR server${NC}"
+    exit 1
+fi
+echo -e "${CYAN}Demo Patient: John Doe (Patient ID: ${patient_id})${NC}"
+patient_data=$(curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/Patient/${patient_id}")
 name=$(echo "$patient_data" | jq -r '.name[0].given[0] + " " + .name[0].family')
 dob=$(echo "$patient_data" | jq -r '.birthDate')
 gender=$(echo "$patient_data" | jq -r '.gender')
@@ -173,15 +191,15 @@ echo "  Gender: $gender"
 echo ""
 
 echo -e "${BLUE}Active Conditions (SNOMED-CT coded):${NC}"
-curl -s "$FHIR_URL/Condition?patient=1" | jq -r '.entry[]?.resource | "  • " + .code.coding[0].display + " (Code: " + .code.coding[0].code + ")"' | head -3
+curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/Condition?patient=${patient_id}" | jq -r '.entry[]?.resource | "  • " + .code.coding[0].display + " (Code: " + .code.coding[0].code + ")"' | head -3
 
 echo ""
 echo -e "${BLUE}Recent Laboratory Results (LOINC coded):${NC}"
-curl -s "$FHIR_URL/Observation?patient=1&code=4548-4&_count=2" | jq -r '.entry[]?.resource | "  • " + .code.coding[0].display + ": " + (.valueQuantity.value | tostring) + .valueQuantity.unit + " (" + .effectiveDateTime[:10] + ")"' | head -2
+curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/Observation?patient=${patient_id}&code=4548-4&_count=2" | jq -r '.entry[]?.resource | "  • " + .code.coding[0].display + ": " + (.valueQuantity.value | tostring) + .valueQuantity.unit + " (" + .effectiveDateTime[:10] + ")"' | head -2
 
 echo ""
 echo -e "${BLUE}Active Medications (RxNorm coded):${NC}"
-curl -s "$FHIR_URL/MedicationRequest?patient=1&status=active&_count=3" | jq -r '.entry[]?.resource | "  • " + .medicationCodeableConcept.coding[0].display' | head -3
+curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/MedicationRequest?patient=${patient_id}&status=active&_count=3" | jq -r '.entry[]?.resource | "  • " + .medicationCodeableConcept.coding[0].display' | head -3
 
 echo ""
 echo -e "${CYAN}Clinical Insight:${NC}"

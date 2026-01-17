@@ -1,0 +1,29 @@
+spring:
+  profiles:
+    active: test
+
+  datasource:
+    url: jdbc:tc:postgresql:16-alpine:///testdb
+    username: test
+    password: test
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+logging:
+  level:
+    com.healthdata: DEBUG
+    org.springframework.test: DEBUG
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0

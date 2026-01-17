@@ -115,7 +115,6 @@ public class MeasureCalculationService {
     /**
      * Get measure results for a patient
      */
-    @Cacheable(value = "measureResults", key = "#tenantId + ':' + #patientId")
     public List<QualityMeasureResultEntity> getPatientMeasureResults(
             String tenantId,
             UUID patientId
@@ -126,7 +125,6 @@ public class MeasureCalculationService {
     /**
      * Get all measure results for a tenant with pagination
      */
-    @Cacheable(value = "allMeasureResults", key = "#tenantId + ':' + #page + ':' + #size")
     public List<QualityMeasureResultEntity> getAllMeasureResults(
             String tenantId,
             Integer page,

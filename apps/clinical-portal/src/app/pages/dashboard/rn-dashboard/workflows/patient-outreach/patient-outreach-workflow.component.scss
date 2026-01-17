@@ -1,0 +1,391 @@
+/* Patient Outreach Workflow Component Styles */
+
+$primary-color: #3f51b5;
+$accent-color: #ff4081;
+$success-color: #4caf50;
+$warn-color: #ff9800;
+$info-color: #2196f3;
+$error-color: #f44336;
+
+$spacing-unit: 16px;
+$border-radius: 4px;
+
+// Dialog Title
+::ng-deep .mat-mdc-dialog-container {
+  max-width: 600px;
+}
+
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: $spacing-unit;
+  margin-bottom: $spacing-unit;
+
+  mat-icon {
+    color: $info-color;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+}
+
+// Progress Bar
+.workflow-progress {
+  margin-bottom: $spacing-unit * 2;
+
+  mat-progress-bar {
+    height: 6px;
+    border-radius: $border-radius;
+  }
+
+  .progress-text {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+// Dialog Content
+mat-dialog-content {
+  padding: $spacing-unit;
+  min-height: 300px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+// Workflow Step
+.workflow-step {
+  h3 {
+    margin-top: 0;
+    margin-bottom: $spacing-unit;
+    color: #212121;
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  .step-description {
+    color: rgba(0, 0, 0, 0.7);
+    margin-bottom: $spacing-unit * 1.5;
+    font-size: 14px;
+  }
+}
+
+// Form Layout
+.form-row {
+  display: flex;
+  gap: $spacing-unit;
+  align-items: flex-start;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: $spacing-unit;
+}
+
+.half-width {
+  flex: 1;
+  min-width: 200px;
+
+  &.mat-form-field {
+    margin-bottom: $spacing-unit;
+  }
+}
+
+// Info Boxes
+.info-box,
+.retry-info-box,
+.success-info-box {
+  display: flex;
+  align-items: center;
+  gap: $spacing-unit;
+  padding: $spacing-unit;
+  margin: $spacing-unit 0;
+  border-radius: $border-radius;
+  font-size: 14px;
+
+  mat-icon {
+    flex-shrink: 0;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.info-box {
+  background-color: rgba($info-color, 0.1);
+  border-left: 3px solid $info-color;
+  color: $info-color;
+
+  mat-icon {
+    color: $info-color;
+  }
+}
+
+.retry-info-box {
+  background-color: rgba($warn-color, 0.1);
+  border-left: 3px solid $warn-color;
+  color: $warn-color;
+
+  mat-icon {
+    color: $warn-color;
+  }
+}
+
+.success-info-box {
+  background-color: rgba($success-color, 0.1);
+  border-left: 3px solid $success-color;
+  color: $success-color;
+
+  mat-icon {
+    color: $success-color;
+  }
+}
+
+// Method Icon
+.method-icon,
+.outcome-icon {
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+// Method Info
+.method-info {
+  display: flex;
+  align-items: center;
+  gap: $spacing-unit;
+  padding: $spacing-unit;
+  background-color: rgba($info-color, 0.05);
+  border-radius: $border-radius;
+  margin-top: $spacing-unit;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.7);
+
+  mat-icon {
+    color: $info-color;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+// Follow-up Section
+.followup-section {
+  margin-top: $spacing-unit * 1.5;
+  padding: $spacing-unit;
+  background-color: rgba($accent-color, 0.05);
+  border-radius: $border-radius;
+  border-left: 3px solid $accent-color;
+
+  mat-form-field {
+    margin-bottom: $spacing-unit;
+  }
+}
+
+// Summary Section
+.summary-section {
+  margin: $spacing-unit 0;
+}
+
+.summary-card {
+  margin-bottom: $spacing-unit;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+
+  mat-card-header {
+    margin: -16px -16px $spacing-unit -16px;
+    padding: $spacing-unit;
+    background-color: rgba($primary-color, 0.05);
+    border-bottom: 1px solid rgba($primary-color, 0.2);
+
+    mat-card-title {
+      font-size: 16px;
+      font-weight: 500;
+      margin: 0;
+    }
+  }
+
+  mat-card-content {
+    padding: $spacing-unit;
+  }
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 14px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .label {
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.7);
+    min-width: 150px;
+  }
+
+  .value {
+    flex: 1;
+    text-align: right;
+    color: #212121;
+    word-break: break-word;
+  }
+
+  button {
+    margin-left: $spacing-unit;
+  }
+}
+
+// Dialog Actions
+mat-dialog-actions {
+  padding: 0 $spacing-unit $spacing-unit $spacing-unit;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+
+  button {
+    min-width: 100px;
+  }
+}
+
+// Form Fields
+mat-form-field {
+  .mat-mdc-form-field-label {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .mat-mdc-text-field-wrapper {
+    padding-bottom: 1.5em;
+  }
+}
+
+textarea.mat-mdc-input-element {
+  min-height: 80px;
+  resize: vertical;
+}
+
+// Checkbox
+mat-checkbox {
+  margin-bottom: $spacing-unit;
+  display: block;
+
+  &.full-width {
+    width: 100%;
+  }
+}
+
+// Loading State
+mat-spinner {
+  display: inline-block;
+  margin-right: 8px;
+}
+
+button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+// Responsive Design
+@media (max-width: 600px) {
+  ::ng-deep .mat-mdc-dialog-container {
+    max-width: 95%;
+  }
+
+  mat-dialog-content {
+    min-height: 200px;
+    max-height: 70vh;
+  }
+
+  .form-row {
+    flex-direction: column;
+
+    .half-width {
+      width: 100%;
+    }
+  }
+
+  .summary-row {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .label {
+      margin-bottom: 4px;
+    }
+
+    .value {
+      text-align: left;
+    }
+  }
+
+  mat-dialog-actions {
+    flex-wrap: wrap;
+
+    button {
+      flex: 1;
+      min-width: 80px;
+    }
+  }
+}
+
+// Animation
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.workflow-step {
+  animation: slideIn 0.3s ease-out;
+}
+
+// Dark Mode Support
+@media (prefers-color-scheme: dark) {
+  .workflow-step h3 {
+    color: #f5f5f5;
+  }
+
+  .step-description {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .summary-row {
+    border-color: rgba(255, 255, 255, 0.1);
+
+    .label {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .value {
+      color: #f5f5f5;
+    }
+  }
+
+  .info-box,
+  .retry-info-box,
+  .success-info-box {
+    color: inherit;
+  }
+
+  .method-info {
+    background-color: rgba($info-color, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .followup-section {
+    background-color: rgba($accent-color, 0.1);
+  }
+}

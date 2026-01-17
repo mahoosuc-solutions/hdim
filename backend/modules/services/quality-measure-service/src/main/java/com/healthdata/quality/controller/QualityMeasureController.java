@@ -31,10 +31,9 @@ import com.healthdata.audit.models.AuditAction;
 
 /**
  * Quality Measure Controller - REST API for HEDIS quality measures
- * Endpoints: /quality-measure/calculate, /quality-measure/results, /quality-measure/score, etc.
+ * Endpoints (context path /quality-measure): /calculate, /results, /score, etc.
  */
 @RestController
-@RequestMapping("/quality-measure")
 @RequiredArgsConstructor
 @Slf4j
 @Validated

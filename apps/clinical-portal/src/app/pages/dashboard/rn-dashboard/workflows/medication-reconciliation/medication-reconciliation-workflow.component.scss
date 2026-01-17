@@ -1,0 +1,303 @@
+/* Medication Reconciliation Workflow Styles */
+
+$primary: #3f51b5;
+$accent: #ff4081;
+$warn: #ff9800;
+$success: #4caf50;
+$info: #2196f3;
+
+.workflow-step {
+  animation: slideIn 0.3s ease-out;
+
+  h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #212121;
+  }
+
+  .step-description {
+    color: rgba(0, 0, 0, 0.7);
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+}
+
+.workflow-progress {
+  margin-bottom: 32px;
+
+  mat-progress-bar {
+    height: 6px;
+  }
+
+  .progress-text {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
+    margin-top: 8px;
+  }
+}
+
+.med-table {
+  width: 100%;
+  margin: 16px 0;
+  font-size: 13px;
+
+  th {
+    background-color: rgba($primary, 0.1);
+    font-weight: 600;
+  }
+
+  td {
+    padding: 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+}
+
+.patient-med-form {
+  padding: 16px;
+  background-color: rgba($info, 0.05);
+  border-radius: 4px;
+  margin-bottom: 16px;
+  border-left: 3px solid $info;
+
+  .form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+
+    @media (max-width: 600px) {
+      flex-direction: column;
+    }
+  }
+
+  .half-width {
+    flex: 1;
+  }
+
+  button {
+    margin-top: 8px;
+  }
+}
+
+.add-button {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.discrepancy-panel {
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  mat-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    mat-chip {
+      margin-right: 8px;
+      font-size: 12px;
+    }
+
+    span {
+      flex: 1;
+    }
+  }
+}
+
+.discrepancy-content {
+  padding: 16px;
+
+  p {
+    margin: 8px 0;
+    font-size: 13px;
+
+    strong {
+      color: #212121;
+    }
+  }
+
+  .med-details {
+    background-color: rgba($primary, 0.05);
+    padding: 12px;
+    border-radius: 4px;
+    margin-top: 12px;
+    border-left: 2px solid $primary;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: rgba(0, 0, 0, 0.5);
+  font-style: italic;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  gap: 16px;
+
+  p {
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.new-med-form {
+  margin-bottom: 16px;
+
+  mat-form-field {
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 16px;
+
+    mat-form-field {
+      flex: 1;
+    }
+  }
+}
+
+.new-meds-list {
+  margin-top: 24px;
+
+  mat-card-header {
+    background-color: rgba($success, 0.1);
+    margin: -16px -16px 16px -16px;
+    padding: 16px;
+    border-bottom: 1px solid rgba($success, 0.2);
+  }
+
+  mat-card-title {
+    font-size: 14px;
+    color: $success;
+  }
+}
+
+.new-med-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 13px;
+
+  button {
+    margin-left: 16px;
+  }
+}
+
+.summary {
+  .summary-section {
+    padding: 16px;
+    background-color: rgba($info, 0.05);
+    border-radius: 4px;
+    border-left: 3px solid $info;
+    margin-bottom: 16px;
+
+    h4 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      color: #212121;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+.interaction-warning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: rgba($warn, 0.1);
+  border-radius: 4px;
+  border-left: 3px solid $warn;
+  color: $warn;
+  margin: 16px 0;
+
+  mat-icon {
+    flex-shrink: 0;
+  }
+
+  mat-checkbox {
+    margin-left: auto;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
+}
+
+.half-width {
+  flex: 1;
+  min-width: 200px;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+mat-dialog-content {
+  padding: 16px;
+  min-height: 300px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+mat-dialog-actions {
+  padding: 0 16px 16px 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+
+  button {
+    min-width: 100px;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .workflow-step h3 {
+    color: #f5f5f5;
+  }
+
+  .med-table th {
+    background-color: rgba($primary, 0.2);
+  }
+
+  .summary-section {
+    background-color: rgba($info, 0.1);
+
+    h4 {
+      color: #f5f5f5;
+    }
+  }
+}

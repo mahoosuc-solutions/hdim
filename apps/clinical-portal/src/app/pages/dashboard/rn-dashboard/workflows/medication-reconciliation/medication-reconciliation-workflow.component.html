@@ -1,0 +1,273 @@
+<!-- Medication Reconciliation Workflow Dialog -->
+<h2 mat-dialog-title>
+  <mat-icon>medication</mat-icon>
+  Medication Reconciliation - {{ patientName }}
+</h2>
+
+<div class="workflow-progress">
+  <mat-progress-bar mode="determinate" [value]="(currentStep / (totalSteps - 1)) * 100"></mat-progress-bar>
+  <div class="progress-text">
+    <span>Step {{ currentStep + 1 }} of {{ totalSteps }}</span>
+  </div>
+</div>
+
+<mat-dialog-content [formGroup]="form">
+  <!-- Step 0: Load System Medications -->
+  @if (currentStep === 0) {
+    <div class="workflow-step">
+      <h3>Current Medications in System</h3>
+      <p class="step-description">Review medications currently active in the system</p>
+
+      @if (loading) {
+        <div class="loading">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Loading medications...</p>
+        </div>
+      } @else if (systemMedications.length === 0) {
+        <p class="empty-state">No active medications found</p>
+      } @else {
+        <table mat-table [dataSource]="systemMedications" class="med-table">
+          <ng-container matColumnDef="medication">
+            <th mat-header-cell *matHeaderCellDef>Medication</th>
+            <td mat-cell *matCellDef="let med">{{ med.medication?.name }}</td>
+          </ng-container>
+          <ng-container matColumnDef="dosage">
+            <th mat-header-cell *matHeaderCellDef>Dosage</th>
+            <td mat-cell *matCellDef="let med">{{ med.dosage }} {{ med.dosageUnit }}</td>
+          </ng-container>
+          <ng-container matColumnDef="frequency">
+            <th mat-header-cell *matHeaderCellDef>Frequency</th>
+            <td mat-cell *matCellDef="let med">{{ med.frequency }}</td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let med">
+              <mat-chip [color]="med.prescriptionStatus === 'FILLED' ? 'primary' : 'warn'">
+                {{ med.prescriptionStatus }}
+              </mat-chip>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="['medication', 'dosage', 'frequency', 'status']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['medication', 'dosage', 'frequency', 'status']"></tr>
+        </table>
+      }
+    </div>
+  }
+
+  <!-- Step 1: Patient Reported Medications -->
+  @if (currentStep === 1) {
+    <div class="workflow-step">
+      <h3>Patient Reported Medications</h3>
+      <p class="step-description">Enter medications the patient reports taking</p>
+
+      <form [formGroup]="form">
+        @for (med of patientMedicationsArray.controls; let i = $index; track i) {
+          <div class="patient-med-form" [formGroupName]="i">
+            <div class="form-row">
+              <mat-form-field appearance="fill" class="half-width">
+                <mat-label>Medication Name</mat-label>
+                <input matInput formControlName="name" />
+              </mat-form-field>
+              <mat-form-field appearance="fill" class="half-width">
+                <mat-label>Dosage</mat-label>
+                <input matInput formControlName="dosage" placeholder="e.g., 10 mg" />
+              </mat-form-field>
+            </div>
+            <div class="form-row">
+              <mat-form-field appearance="fill" class="half-width">
+                <mat-label>Frequency</mat-label>
+                <input matInput formControlName="frequency" placeholder="e.g., Once daily" />
+              </mat-form-field>
+              <mat-form-field appearance="fill" class="half-width">
+                <mat-label>Reason/Indication</mat-label>
+                <input matInput formControlName="reason" />
+              </mat-form-field>
+            </div>
+            <button mat-icon-button (click)="removePatientMedication(i)" matTooltip="Remove">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        }
+      </form>
+
+      <button mat-stroked-button (click)="addPatientMedication()" class="add-button">
+        <mat-icon>add</mat-icon>
+        Add Medication
+      </button>
+    </div>
+  }
+
+  <!-- Step 2: Identified Discrepancies -->
+  @if (currentStep === 2) {
+    <div class="workflow-step">
+      <h3>Identified Discrepancies</h3>
+      <p class="step-description">Review and address the following discrepancies</p>
+
+      @if (discrepancies.length === 0) {
+        <p class="empty-state">No discrepancies found - medications match</p>
+      } @else {
+        @for (disc of discrepancies; track disc.id) {
+          <mat-expansion-panel class="discrepancy-panel">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-chip [color]="disc.severity === 'HIGH' ? 'warn' : 'accent'">
+                  {{ disc.severity }}
+                </mat-chip>
+                <span>{{ disc.description }}</span>
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div class="discrepancy-content">
+              <p><strong>Type:</strong> {{ disc.type }}</p>
+              <p><strong>Recommendation:</strong> {{ disc.recommendation }}</p>
+
+              @if (disc.medication) {
+                <div class="med-details">
+                  <p><strong>Medication:</strong> {{ disc.medication.medication?.name }}</p>
+                  <p><strong>Dose:</strong> {{ disc.medication.dosage }} {{ disc.medication.dosageUnit }}</p>
+                  <p><strong>Frequency:</strong> {{ disc.medication.frequency }}</p>
+                </div>
+              }
+            </div>
+          </mat-expansion-panel>
+        }
+      }
+    </div>
+  }
+
+  <!-- Step 3: Mark Duplicates/Discontinued -->
+  @if (currentStep === 3) {
+    <div class="workflow-step">
+      <h3>Mark Duplicates & Discontinued Medications</h3>
+      <p class="step-description">Select medications to discontinue or mark as duplicates</p>
+
+      <table mat-table [dataSource]="systemMedications" class="med-table">
+        <ng-container matColumnDef="medication">
+          <th mat-header-cell *matHeaderCellDef>Medication</th>
+          <td mat-cell *matCellDef="let med">{{ med.medication?.name }}</td>
+        </ng-container>
+        <ng-container matColumnDef="action">
+          <th mat-header-cell *matHeaderCellDef>Action</th>
+          <td mat-cell *matCellDef="let med">
+            <button mat-icon-button (click)="markForDiscontinuation(med)" matTooltip="Discontinue">
+              <mat-icon>clear</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="['medication', 'action']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['medication', 'action']"></tr>
+      </table>
+    </div>
+  }
+
+  <!-- Step 4: Add Missing Medications -->
+  @if (currentStep === 4) {
+    <div class="workflow-step">
+      <h3>Add Missing Medications</h3>
+      <p class="step-description">Add medications not found in system</p>
+
+      <form [formGroup]="newMedicationForm" class="new-med-form">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Medication Name</mat-label>
+          <input matInput formControlName="medicationName" />
+        </mat-form-field>
+        <div class="form-row">
+          <mat-form-field appearance="fill" class="half-width">
+            <mat-label>Dosage</mat-label>
+            <input matInput formControlName="dosage" />
+          </mat-form-field>
+          <mat-form-field appearance="fill" class="half-width">
+            <mat-label>Frequency</mat-label>
+            <input matInput formControlName="frequency" />
+          </mat-form-field>
+        </div>
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Indication</mat-label>
+          <input matInput formControlName="indication" />
+        </mat-form-field>
+      </form>
+
+      <button mat-raised-button color="primary" (click)="addNewMedication()" [disabled]="!newMedicationForm.valid">
+        <mat-icon>add</mat-icon>
+        Add Medication
+      </button>
+
+      @if (newMedications.length > 0) {
+        <mat-card class="new-meds-list">
+          <mat-card-header>
+            <mat-card-title>New Medications to Add</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @for (med of newMedications; let i = $index; track i) {
+              <div class="new-med-item">
+                <div>{{ med.medicationName }} - {{ med.dosage }} {{ med.frequency }}</div>
+                <button mat-icon-button (click)="removeNewMedication(i)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+
+  <!-- Step 5: Review & Complete -->
+  @if (currentStep === 5) {
+    <div class="workflow-step">
+      <h3>Review & Complete Reconciliation</h3>
+      <p class="step-description">Verify all information before completing</p>
+
+      <div class="summary">
+        <div class="summary-section">
+          <h4>Medications Reviewed: {{ systemMedications.length }}</h4>
+          <h4>Discrepancies Found: {{ discrepancies.length }}</h4>
+          <h4>New Medications to Add: {{ newMedications.length }}</h4>
+        </div>
+
+        @if (hasSignificantInteractions) {
+          <div class="interaction-warning">
+            <mat-icon>warning</mat-icon>
+            <span>Significant drug interactions detected</span>
+            <mat-checkbox formControlName="acknowledgeInteractions">
+              I acknowledge and have reviewed the interactions
+            </mat-checkbox>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelWorkflow()">
+    <mat-icon>close</mat-icon>
+    Cancel
+  </button>
+
+  @if (currentStep > 0) {
+    <button mat-stroked-button (click)="previousStep()">
+      <mat-icon>arrow_back</mat-icon>
+      Back
+    </button>
+  }
+
+  @if (currentStep < totalSteps - 1) {
+    <button mat-raised-button color="primary" (click)="nextStep()">
+      <mat-icon>arrow_forward</mat-icon>
+      Next
+    </button>
+  } @else {
+    <button
+      mat-raised-button
+      color="accent"
+      (click)="completeReconciliation()"
+      [disabled]="!canCompleteReconciliation() || loading">
+      @if (loading) {
+        <mat-spinner diameter="20"></mat-spinner>
+      }
+      <mat-icon>check_circle</mat-icon>
+      Complete Reconciliation
+    </button>
+  }
+</mat-dialog-actions>

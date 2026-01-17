@@ -216,6 +216,15 @@ export const FHIR_ENDPOINTS = {
   MEDICATION_STATEMENT: '/MedicationStatement',
   QUESTIONNAIRE_RESPONSE: '/QuestionnaireResponse',
   SERVICE_REQUEST: '/ServiceRequest',
+  APPOINTMENT: '/Appointment',
+  SCHEDULE: '/Schedule',
+  SLOT: '/Slot',
+  TASK: '/Task',
+  PRACTITIONER: '/Practitioner',
+  PRACTITIONER_ROLE: '/PractitionerRole',
+  ORGANIZATION: '/Organization',
+  LOCATION: '/Location',
+  ENCOUNTER: '/Encounter',
 };
 
 /**

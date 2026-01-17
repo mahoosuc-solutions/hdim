@@ -24,8 +24,30 @@ log_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # Configuration
-DEMO_TENANT="demo-tenant"
-DEMO_ENVIRONMENT="demo"
+DEMO_TENANT="${DEMO_TENANT:-demo-tenant}"
+DEMO_ENVIRONMENT="${DEMO_ENVIRONMENT:-demo}"
+QUALITY_MEASURE_URL="${QUALITY_MEASURE_URL:-http://localhost:8087/quality-measure}"
+FHIR_SEED_SCRIPT="${FHIR_SEED_SCRIPT:-$PROJECT_ROOT/load-fhir-demo-data.sh}"
+CLINICAL_SEED_SCRIPT="${CLINICAL_SEED_SCRIPT:-$PROJECT_ROOT/load-demo-clinical-data.sh}"
+PATIENT_SEED_SCRIPT="${PATIENT_SEED_SCRIPT:-$PROJECT_ROOT/load-demo-patient-data.sh}"
+POSTGRES_USER="${POSTGRES_USER:-healthdata}"
+POSTGRES_CQL_DB="${POSTGRES_CQL_DB:-cql_db}"
+AUTH_USER_ID="${AUTH_USER_ID:-550e8400-e29b-41d4-a716-446655440010}"
+AUTH_USERNAME="${AUTH_USERNAME:-demo_admin@hdim.ai}"
+AUTH_ROLES="${AUTH_ROLES:-ADMIN,EVALUATOR}"
+USE_TRUSTED_HEADERS="${USE_TRUSTED_HEADERS:-true}"
+
+AUTH_HEADERS=()
+if [ "$USE_TRUSTED_HEADERS" = "true" ]; then
+    VALIDATED_TS=$(date +%s)
+    AUTH_HEADERS=(
+        -H "X-Auth-User-Id: $AUTH_USER_ID"
+        -H "X-Auth-Username: $AUTH_USERNAME"
+        -H "X-Auth-Roles: $AUTH_ROLES"
+        -H "X-Auth-Tenant-Ids: $DEMO_TENANT"
+        -H "X-Auth-Validated: gateway-${VALIDATED_TS}-dev"
+    )
+fi
 
 ################################################################################
 # Phase 1: Environment Cleanup
@@ -109,7 +131,7 @@ start_infrastructure() {
     sleep 30
     
     # Verify PostgreSQL
-    docker-compose exec -T postgres pg_isready -U hdim || log_error "PostgreSQL not ready"
+    docker-compose exec -T postgres pg_isready -U "$POSTGRES_USER" || log_error "PostgreSQL not ready"
     
     # Verify Redis
     docker-compose exec -T redis redis-cli ping || log_error "Redis not ready"
@@ -234,6 +256,8 @@ seed_demo_data() {
             -H "X-Tenant-ID: $DEMO_TENANT" \
             -d "$patient" || log_warning "Patient may already exist"
     done
+
+    seed_quality_measures_and_operational_data
     
     log_success "Demo data seeded"
 }
@@ -297,6 +321,97 @@ run_cql_evaluations() {
         }' || log_warning "CQL evaluation may have failed"
     
     log_success "CQL evaluations complete"
+}
+
+################################################################################
+# Phase 11a: Seed Quality Measures + Operational Data
+################################################################################
+
+seed_quality_measure_definitions() {
+    log_info "Seeding quality measure definitions..."
+
+    response=$(curl -s -X POST "${QUALITY_MEASURE_URL}/api/v1/measures/seed" \
+        -H "X-Tenant-ID: $DEMO_TENANT" \
+        "${AUTH_HEADERS[@]}" 2>/dev/null || true)
+
+    if echo "$response" | grep -q "seeded"; then
+        log_success "Quality measures seeded"
+    else
+        log_warning "Quality measure seeding may have failed or already exists"
+    fi
+}
+
+seed_cql_libraries_for_tenant() {
+    if [ "$DEMO_TENANT" = "demo-tenant" ]; then
+        return 0
+    fi
+
+    log_info "Seeding CQL libraries for tenant $DEMO_TENANT..."
+
+    docker-compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_CQL_DB" -c \
+        "INSERT INTO cql_libraries (
+            id, tenant_id, name, version, status, cql_content, elm_json, description, publisher,
+            created_at, updated_at, created_by, library_name, elm_xml, fhir_library_id, active,
+            measure_class, category
+        )
+        SELECT
+            gen_random_uuid(), '${DEMO_TENANT}', name, version, status, cql_content, elm_json, description, publisher,
+            created_at, updated_at, created_by, library_name, elm_xml, fhir_library_id, active,
+            measure_class, category
+        FROM cql_libraries source
+        WHERE source.tenant_id = 'demo-tenant'
+        AND NOT EXISTS (
+            SELECT 1 FROM cql_libraries target
+            WHERE target.tenant_id = '${DEMO_TENANT}'
+              AND target.name = source.name
+              AND target.version = source.version
+        );" > /dev/null 2>&1 || log_warning "CQL library seeding failed"
+}
+
+seed_operational_measure_data() {
+    if [ -f "$FHIR_SEED_SCRIPT" ]; then
+        log_info "Loading FHIR data for quality measures..."
+        TENANT_ID="$DEMO_TENANT" USE_TRUSTED_HEADERS="$USE_TRUSTED_HEADERS" \
+            AUTH_USER_ID="$AUTH_USER_ID" AUTH_USERNAME="$AUTH_USERNAME" AUTH_ROLES="$AUTH_ROLES" \
+            bash "$FHIR_SEED_SCRIPT"
+    else
+        log_warning "FHIR seed script not found: $FHIR_SEED_SCRIPT"
+    fi
+
+    if [ -f "$PATIENT_SEED_SCRIPT" ]; then
+        log_info "Loading patient demographics for patient service..."
+        DB_CONTAINER_ID=$(docker-compose ps -q postgres || true)
+        if [ -n "$DB_CONTAINER_ID" ]; then
+            DB_CONTAINER="$DB_CONTAINER_ID" TENANT_ID="$DEMO_TENANT" \
+                USE_TRUSTED_HEADERS="$USE_TRUSTED_HEADERS" \
+                AUTH_USER_ID="$AUTH_USER_ID" AUTH_USERNAME="$AUTH_USERNAME" AUTH_ROLES="$AUTH_ROLES" \
+                bash "$PATIENT_SEED_SCRIPT"
+        else
+            TENANT_ID="$DEMO_TENANT" USE_TRUSTED_HEADERS="$USE_TRUSTED_HEADERS" \
+                AUTH_USER_ID="$AUTH_USER_ID" AUTH_USERNAME="$AUTH_USERNAME" AUTH_ROLES="$AUTH_ROLES" \
+                bash "$PATIENT_SEED_SCRIPT"
+        fi
+    else
+        log_warning "Patient seed script not found: $PATIENT_SEED_SCRIPT"
+    fi
+
+    if [ -f "$CLINICAL_SEED_SCRIPT" ]; then
+        log_info "Loading clinical quality measure data..."
+        DB_CONTAINER_ID=$(docker-compose ps -q postgres || true)
+        if [ -n "$DB_CONTAINER_ID" ]; then
+            DB_CONTAINER="$DB_CONTAINER_ID" TENANT_ID="$DEMO_TENANT" bash "$CLINICAL_SEED_SCRIPT"
+        else
+            TENANT_ID="$DEMO_TENANT" bash "$CLINICAL_SEED_SCRIPT"
+        fi
+    else
+        log_warning "Clinical seed script not found: $CLINICAL_SEED_SCRIPT"
+    fi
+}
+
+seed_quality_measures_and_operational_data() {
+    seed_quality_measure_definitions
+    seed_cql_libraries_for_tenant
+    seed_operational_measure_data
 }
 
 ################################################################################

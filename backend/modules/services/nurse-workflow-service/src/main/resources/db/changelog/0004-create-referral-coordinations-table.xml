@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0004-create-referral-coordinations-table" author="hdim-nurse-workflow-team">
+        <comment>Create referral_coordinations table for referral tracking and coordination</comment>
+
+        <createTable tableName="referral_coordinations">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_referral_coordinations"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="coordinator_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referrer_id" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="VARCHAR(20)"/>
+            <column name="specialty_type" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason_for_referral" type="TEXT"/>
+            <column name="specialist_practice_name" type="VARCHAR(255)"/>
+            <column name="specialist_provider_name" type="VARCHAR(255)"/>
+            <column name="specialist_contact_phone" type="VARCHAR(20)"/>
+            <column name="specialist_contact_fax" type="VARCHAR(20)"/>
+            <column name="specialist_contact_email" type="VARCHAR(255)"/>
+            <column name="authorization_required" type="BOOLEAN"/>
+            <column name="authorization_number" type="VARCHAR(128)"/>
+            <column name="authorization_status" type="VARCHAR(50)"/>
+            <column name="appointment_scheduled" type="BOOLEAN"/>
+            <column name="appointment_date" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="appointment_status" type="VARCHAR(50)"/>
+            <column name="records_sent" type="BOOLEAN"/>
+            <column name="records_sent_date" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="results_received" type="BOOLEAN"/>
+            <column name="results_received_date" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="results_summary" type="TEXT"/>
+            <column name="follow_up_completed" type="BOOLEAN"/>
+            <column name="follow_up_date" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="coordination_notes" type="TEXT"/>
+            <column name="service_request_id" type="VARCHAR(128)"/>
+            <column name="appointment_id" type="VARCHAR(128)"/>
+            <column name="requested_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="closed_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Create indexes for query performance -->
+        <createIndex indexName="idx_ref_tenant_patient" tableName="referral_coordinations">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_ref_coordinator" tableName="referral_coordinations">
+            <column name="coordinator_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_ref_status" tableName="referral_coordinations">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_ref_specialty" tableName="referral_coordinations">
+            <column name="specialty_type"/>
+        </createIndex>
+
+        <!-- Rollback -->
+        <rollback>
+            <dropTable tableName="referral_coordinations"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

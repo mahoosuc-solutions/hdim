@@ -9,7 +9,6 @@ import com.healthdata.quality.persistence.SavedReportEntity;
 import com.healthdata.quality.persistence.SavedReportRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +35,6 @@ public class QualityReportService {
     /**
      * Get comprehensive quality report for a patient
      */
-    @Cacheable(value = "qualityReport", key = "#tenantId + ':' + #patientId")
     public QualityReport getPatientQualityReport(String tenantId, UUID patientId) {
         log.info("Generating quality report for patient: {}", patientId);
 
@@ -72,7 +70,6 @@ public class QualityReportService {
     /**
      * Get population-level quality report
      */
-    @Cacheable(value = "populationQualityReport", key = "#tenantId + ':' + #year")
     public PopulationQualityReport getPopulationQualityReport(String tenantId, int year) {
         log.info("Generating population quality report for year: {}", year);
 

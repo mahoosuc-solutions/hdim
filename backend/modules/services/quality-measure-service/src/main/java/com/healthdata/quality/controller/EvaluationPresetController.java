@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/quality-measure/evaluation-presets")
+@RequestMapping("/evaluation-presets")
 @RequiredArgsConstructor
 @Slf4j
 @Validated

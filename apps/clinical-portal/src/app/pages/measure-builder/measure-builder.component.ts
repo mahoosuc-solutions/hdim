@@ -17,6 +17,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { SelectionModel } from '@angular/cdk/collections';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { Store } from '@ngrx/store';
 import { ToastService } from '../../services/toast.service';
 import { DialogService } from '../../services/dialog.service';
 import { AIAssistantService } from '../../services/ai-assistant.service';
@@ -29,6 +30,8 @@ import { LoadingButtonComponent } from '../../shared/components/loading-button/l
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { CSVHelper } from '../../utils/csv-helper';
 import { TrackInteraction } from '../../utils/ai-tracking.decorator';
+import { Patient } from '../../models/patient.model';
+import { selectCurrentPatient } from '../../store/selectors/patient.selectors';
 
 // Import dialog components
 import { NewMeasureDialogComponent } from './dialogs/new-measure-dialog.component';
@@ -102,16 +105,24 @@ export class MeasureBuilderComponent implements OnInit, OnDestroy, AfterViewInit
     ARCHIVED: 'warn',
   };
 
+  // Current patient context from store (for patient-aware measure testing)
+  currentPatient: Patient | null = null;
+
   constructor(
     private dialog: MatDialog,
     private customMeasureService: CustomMeasureService,
     private toast: ToastService,
     private dialogService: DialogService,
-    public aiAssistant: AIAssistantService
+    public aiAssistant: AIAssistantService,
+    private store: Store
   ) {}
 
   ngOnInit(): void {
     this.loadDrafts();
+    // Subscribe to current patient from the store for context-aware testing
+    this.store.select(selectCurrentPatient).pipe(takeUntil(this.destroy$)).subscribe((patient) => {
+      this.currentPatient = patient;
+    });
   }
 
   ngAfterViewInit(): void {
@@ -228,6 +239,8 @@ export class MeasureBuilderComponent implements OnInit, OnDestroy, AfterViewInit
         measureName: measure.name,
         cqlText: measure.cqlText || '',
         readOnly: measure.status === 'PUBLISHED',
+        // Pass current patient context for patient-aware measure testing
+        contextPatient: this.currentPatient ?? undefined,
       },
     });
 

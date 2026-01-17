@@ -20,6 +20,8 @@ const PHASE = getArg('--phase', 'AFTER'); // BEFORE, DURING, AFTER
 const SCENARIO_ID = getArg('--scenario', null);
 const USER_TYPE = getArg('--user-type', null);
 const CUSTOM_OUTPUT_DIR = getArg('--output-dir', null);
+const SKIP_ANALYTICS = process.env.SKIP_ANALYTICS === '1';
+const API_DEFAULT_TENANT = 'acme-health';
 
 // Configuration
 const CONFIG = {
@@ -321,6 +323,7 @@ const SCENARIOS = [
       { path: '/care-gaps/pat-001', name: 'care-gap-detail', wait: 2000 },
       { path: '/patients/pat-001', name: 'patient-detail', wait: 2000 },
       { path: '/quality-measures', name: 'quality-measures', wait: 2000 },
+      { path: '/results', name: 'results', wait: 2000 },
       { path: '/analytics', name: 'analytics-dashboard', wait: 2000 },
       { path: '/reports', name: 'reports', wait: 2000 },
       { path: '/settings', name: 'settings', wait: 1000 },
@@ -431,6 +434,49 @@ const SCENARIOS = [
     ],
   },
 ];
+
+async function fetchPatientIds() {
+  try {
+    const response = await fetch(`${CONFIG.baseUrl}/fhir/Patient?_count=2`, {
+      headers: { 'X-Tenant-ID': API_DEFAULT_TENANT },
+    });
+    if (!response.ok) {
+      throw new Error(`FHIR patient request failed: ${response.status}`);
+    }
+    const data = await response.json();
+    const entries = data.entry || [];
+    const ids = entries.map((entry) => entry.resource?.id).filter(Boolean);
+    if (ids.length === 0) {
+      throw new Error('No patient IDs found');
+    }
+    return ids;
+  } catch (error) {
+    log(`Patient ID lookup failed, using fallback IDs: ${error.message}`, 'warning');
+    return ['pat-001', 'pat-002'];
+  }
+}
+
+function applyPatientIdsToScenarios(scenarios, patientIds) {
+  const primaryId = patientIds[0] || 'pat-001';
+  const secondaryId = patientIds[1] || primaryId;
+
+  for (const scenario of scenarios) {
+    scenario.pages = scenario.pages.map((page) => {
+      let updatedPath = page.path;
+      updatedPath = updatedPath.replace('pat-001', primaryId);
+      updatedPath = updatedPath.replace('pat-002', secondaryId);
+      return { ...page, path: updatedPath };
+    });
+  }
+}
+
+function filterAnalyticsPages(scenarios) {
+  if (!SKIP_ANALYTICS) return;
+  for (const scenario of scenarios) {
+    scenario.pages = scenario.pages.filter((page) => !page.path.startsWith('/analytics'));
+  }
+  log('Skipping analytics pages (SKIP_ANALYTICS=1)', 'info');
+}
 
 // Utility functions
 function ensureDirectoryExists(dir) {
@@ -815,35 +861,6 @@ async function captureRegionScreenshot(page, region, pageInfo, outputDir) {
       return false;
     }
     
-    // Get bounding box of first element (or union of all if multiple)
-    let boundingBox = null;
-    if (elements.length === 1) {
-      boundingBox = await elements[0].boundingBox();
-    } else {
-      // Get union of all element bounding boxes
-      const boxes = await Promise.all(
-        elements.map(el => el.boundingBox())
-      );
-      const validBoxes = boxes.filter(b => b !== null);
-      if (validBoxes.length > 0) {
-        const minX = Math.min(...validBoxes.map(b => b.x));
-        const minY = Math.min(...validBoxes.map(b => b.y));
-        const maxX = Math.max(...validBoxes.map(b => b.x + b.width));
-        const maxY = Math.max(...validBoxes.map(b => b.y + b.height));
-        boundingBox = {
-          x: minX,
-          y: minY,
-          width: maxX - minX,
-          height: maxY - minY
-        };
-      }
-    }
-    
-    if (!boundingBox) {
-      log(`  Region ${region.name}: No bounding box`, 'warning');
-      return false;
-    }
-    
     // Validate region has data
     const hasData = await validateRegionData(page, region);
     if (!hasData && region.priority === 'high') {
@@ -859,16 +876,9 @@ async function captureRegionScreenshot(page, region, pageInfo, outputDir) {
     // Capture region screenshot
     const filename = `${pageInfo.name}-${region.name}.png`;
     const filepath = path.join(regionsDir, filename);
-    
-    await page.screenshot({
-      path: filepath,
-      clip: {
-        x: Math.max(0, boundingBox.x),
-        y: Math.max(0, boundingBox.y),
-        width: Math.min(boundingBox.width, 1920),
-        height: Math.min(boundingBox.height, 2000) // Limit height
-      }
-    });
+    const target = elements[0];
+    await target.scrollIntoViewIfNeeded();
+    await target.screenshot({ path: filepath });
     
     // Verify screenshot size
     const stats = fs.statSync(filepath);
@@ -1218,7 +1228,11 @@ async function main() {
     log(`No scenarios found matching criteria`, 'error');
     process.exit(1);
   }
-  
+
+  const patientIds = await fetchPatientIds();
+  applyPatientIdsToScenarios(scenariosToCapture, patientIds);
+  filterAnalyticsPages(scenariosToCapture);
+
   log(`Capturing ${CONFIG.phase} screenshots for ${scenariosToCapture.length} scenario(s)`, 'info');
   
   // Launch browser

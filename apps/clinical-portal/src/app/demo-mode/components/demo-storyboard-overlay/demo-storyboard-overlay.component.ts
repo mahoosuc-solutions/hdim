@@ -81,8 +81,8 @@ import { DemoNarrationService } from '../../../services/demo-narration.service';
   `],
 })
 export class DemoStoryboardOverlayComponent implements OnInit, OnDestroy {
-  activeStep = this.demoModeService.activeStoryboardStep();
-  connected = this.demoModeService.storyboardConnected();
+  activeStep: ReturnType<DemoModeService['activeStoryboardStep']> | null = null;
+  connected = false;
 
   private highlightedElements: HTMLElement[] = [];
   private popupElements: HTMLElement[] = [];
@@ -94,6 +94,8 @@ export class DemoStoryboardOverlayComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.activeStep = this.demoModeService.activeStoryboardStep();
+    this.connected = this.demoModeService.storyboardConnected();
     effect(() => {
       const step = this.demoModeService.activeStoryboardStep();
       this.activeStep = step;

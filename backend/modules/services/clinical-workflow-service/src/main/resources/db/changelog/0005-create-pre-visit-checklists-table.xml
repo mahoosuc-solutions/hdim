@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0005-create-pre-visit-checklists-table" author="hdim-platform-team">
+        <comment>Create pre_visit_checklists table for configurable pre-visit task management</comment>
+
+        <createTable tableName="pre_visit_checklists">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_pre_visit_checklists"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="appointment_id" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="appointment_type" type="VARCHAR(100)" comment="new-patient, follow-up, procedure-pre, etc.">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Checklist Items -->
+            <column name="review_medical_history" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="verify_insurance" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="update_demographics" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="review_medications" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="review_allergies" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="prepare_vitals_equipment" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="review_care_gaps" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="obtain_consent" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Custom Items (JSON) -->
+            <column name="custom_items" type="JSONB" comment="Array of {task: string, completed: boolean}">
+                <constraints nullable="true"/>
+            </column>
+            <!-- Status -->
+            <column name="completion_percentage" type="NUMERIC(5,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)" comment="pending, in-progress, completed">
+                <constraints nullable="false"/>
+            </column>
+            <column name="completed_by" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="completed_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="notes" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_pre_visit_checklists_tenant_patient" tableName="pre_visit_checklists">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_pre_visit_checklists_status" tableName="pre_visit_checklists">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_pre_visit_checklists_appointment_id" tableName="pre_visit_checklists">
+            <column name="tenant_id"/>
+            <column name="appointment_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="pre_visit_checklists"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

@@ -25,6 +25,8 @@ VALUES (
 INSERT INTO user_roles (user_id, role) VALUES ('demo-clinical-001', 'CLINICAL_USER');
 INSERT INTO user_roles (user_id, role) VALUES ('demo-clinical-001', 'USER');
 INSERT INTO user_tenants (user_id, tenant_id) VALUES ('demo-clinical-001', 'demo-clinic');
+INSERT INTO user_tenants (user_id, tenant_id) VALUES ('demo-clinical-001', 'acme-health');
+INSERT INTO user_tenants (user_id, tenant_id) VALUES ('demo-clinical-001', 'acme-health');
 
 -- 2. QUALITY MANAGER - Oversees quality measures
 INSERT INTO users (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at)
@@ -43,6 +45,8 @@ VALUES (
 INSERT INTO user_roles (user_id, role) VALUES ('demo-quality-001', 'QUALITY_MANAGER');
 INSERT INTO user_roles (user_id, role) VALUES ('demo-quality-001', 'USER');
 INSERT INTO user_tenants (user_id, tenant_id) VALUES ('demo-quality-001', 'demo-clinic');
+INSERT INTO user_tenants (user_id, tenant_id) VALUES ('demo-quality-001', 'acme-health');
+INSERT INTO user_tenants (user_id, tenant_id) VALUES ('demo-quality-001', 'acme-health');
 
 -- 3. CARE COORDINATOR - Manages patient care gaps
 INSERT INTO users (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at)
@@ -61,6 +65,8 @@ VALUES (
 INSERT INTO user_roles (user_id, role) VALUES ('demo-care-001', 'CARE_COORDINATOR');
 INSERT INTO user_roles (user_id, role) VALUES ('demo-care-001', 'USER');
 INSERT INTO user_tenants (user_id, tenant_id) VALUES ('demo-care-001', 'demo-clinic');
+INSERT INTO user_tenants (user_id, tenant_id) VALUES ('demo-care-001', 'acme-health');
+INSERT INTO user_tenants (user_id, tenant_id) VALUES ('demo-care-001', 'acme-health');
 
 -- 4. ADMIN USER - Full system access
 INSERT INTO users (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at)
@@ -79,6 +85,8 @@ VALUES (
 INSERT INTO user_roles (user_id, role) VALUES ('demo-admin-001', 'ADMIN');
 INSERT INTO user_roles (user_id, role) VALUES ('demo-admin-001', 'USER');
 INSERT INTO user_tenants (user_id, tenant_id) VALUES ('demo-admin-001', 'demo-clinic');
+INSERT INTO user_tenants (user_id, tenant_id) VALUES ('demo-admin-001', 'acme-health');
+INSERT INTO user_tenants (user_id, tenant_id) VALUES ('demo-admin-001', 'acme-health');
 
 -- 5. READ ONLY USER - View-only access for stakeholders
 INSERT INTO users (id, username, email, password_hash, first_name, last_name, active, created_at, updated_at)
@@ -97,3 +105,5 @@ VALUES (
 INSERT INTO user_roles (user_id, role) VALUES ('demo-viewer-001', 'VIEWER');
 INSERT INTO user_roles (user_id, role) VALUES ('demo-viewer-001', 'USER');
 INSERT INTO user_tenants (user_id, tenant_id) VALUES ('demo-viewer-001', 'demo-clinic');
+INSERT INTO user_tenants (user_id, tenant_id) VALUES ('demo-viewer-001', 'acme-health');
+INSERT INTO user_tenants (user_id, tenant_id) VALUES ('demo-viewer-001', 'acme-health');

@@ -26,7 +26,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U healthdata"]
+      test: ["CMD-SHELL", "pg_isready -U healthdata -d ${POSTGRES_DB:-healthdata_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -113,10 +113,11 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       SPRING_LIQUIBASE_ENABLED: "false"  # DEMO: Use Hibernate DDL instead
       SPRING_FLYWAY_ENABLED: "false"  # DEMO: Disable Flyway migrations
+      HEALTH_TENANT_ID: service-health-fhir
     ports:
       - "8081:8081"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/fhir/actuator/health"]
+      test: ["CMD-SHELL", "curl -f -H \"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8081/fhir/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -153,10 +154,11 @@ services:
       CQL_ENGINE_URL: http://cql-engine-service:8086
       FHIR_SERVICE_URL: http://fhir-service:8081
       FHIR_SERVER_URL: http://fhir-service:8081
+      HEALTH_TENANT_ID: service-health-quality-measure
     ports:
       - "8087:8087"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
+      test: ["CMD-SHELL", "curl -f -H \"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8087/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -191,10 +193,11 @@ services:
       SPRING_FLYWAY_ENABLED: "false"  # DEMO: Disable Flyway migrations
       FHIR_SERVICE_URL: http://fhir-service:8081
       FHIR_SERVER_URL: http://fhir-service:8081
+      HEALTH_TENANT_ID: service-health-cql-engine
     ports:
       - "8086:8086"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8086/cql-engine/actuator/health"]
+      test: ["CMD-SHELL", "curl -f -H \"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8086/cql-engine/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -237,10 +240,11 @@ services:
       BACKEND_SERVICES_CARE_GAP_URL: http://care-gap-service:8085
       # CORS for demo
       GATEWAY_CORS_ALLOWED_ORIGINS: http://localhost:4202,http://localhost:4200
+      HEALTH_TENANT_ID: service-health-gateway
     ports:
       - "9000:9000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/actuator/health"]
+      test: ["CMD-SHELL", "curl -f -H \"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:9000/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -275,10 +279,11 @@ services:
       SPRING_FLYWAY_ENABLED: "false"
       FHIR_SERVICE_URL: http://fhir-service:8081
       FHIR_SERVER_URL: http://fhir-service:8081
+      HEALTH_TENANT_ID: service-health-patient
     ports:
       - "8084:8084"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      test: ["CMD-SHELL", "curl -f -H \"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8084/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -314,10 +319,11 @@ services:
       CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8086
       CQL_ENGINE_URL: http://cql-engine-service:8086
       QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087
+      HEALTH_TENANT_ID: service-health-care-gap
     ports:
       - "8085:8085"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      test: ["CMD-SHELL", "curl -f -H \"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8085/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5

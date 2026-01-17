@@ -23,6 +23,7 @@ import { PatientService } from '../../../services/patient.service';
 import { EvaluationService } from '../../../services/evaluation.service';
 import { CareGapService, CareGap, CareGapStatus, GapPriority } from '../../../services/care-gap.service';
 import { ToastService } from '../../../services/toast.service';
+import { SchedulingService, ScheduleAppointment, ScheduleTask } from '../../../services/scheduling.service';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
@@ -112,6 +113,7 @@ export class MADashboardComponent implements OnInit, OnDestroy {
     private patientService: PatientService,
     private evaluationService: EvaluationService,
     private careGapService: CareGapService,
+    private schedulingService: SchedulingService,
     private dialogService: DialogService,
     private notificationService: NotificationService,
     private toastService: ToastService
@@ -134,72 +136,113 @@ export class MADashboardComponent implements OnInit, OnDestroy {
 
     // Load today's schedule
     this.loadTodaySchedule();
-
-    // Load metrics
-    this.loadMetrics();
   }
 
   /**
    * Load today's patient schedule
    */
   private loadTodaySchedule(): void {
-    // Mock data for demonstration
-    // In production, this would call an API endpoint for today's appointments
-    setTimeout(() => {
-      this.todaySchedule = [
-        {
-          id: '1',
-          patientName: 'Smith, John',
-          patientMRN: 'MRN-001',
-          appointmentTime: '09:00 AM',
-          taskType: 'check-in',
-          status: 'pending',
-          priority: 'normal',
-          room: 'Room 1'
-        },
-        {
-          id: '2',
-          patientName: 'Johnson, Mary',
-          patientMRN: 'MRN-002',
-          appointmentTime: '09:30 AM',
-          taskType: 'vitals',
-          status: 'in-progress',
-          priority: 'high',
-          room: 'Room 2'
-        },
-        {
-          id: '3',
-          patientName: 'Williams, Robert',
-          patientMRN: 'MRN-003',
-          appointmentTime: '10:00 AM',
-          taskType: 'prep',
-          status: 'pending',
-          priority: 'normal',
-          room: 'Room 3'
-        },
-        {
-          id: '4',
-          patientName: 'Brown, Patricia',
-          patientMRN: 'MRN-004',
-          appointmentTime: '10:30 AM',
-          taskType: 'check-in',
-          status: 'pending',
-          priority: 'high',
-          room: 'Room 1'
-        }
-      ];
+    const today = new Date();
+    forkJoin({
+      appointments: this.schedulingService.getAppointmentsForDate(today),
+      tasks: this.schedulingService.getTasksForDate(today)
+    }).pipe(takeUntil(this.destroy$)).subscribe(({ appointments, tasks }) => {
+      this.todaySchedule = this.buildScheduleItems(appointments, tasks);
+      this.updateMetricsFromSchedule();
       this.loading = false;
-    }, 500);
+    });
   }
 
-  /**
-   * Load dashboard metrics
-   */
-  private loadMetrics(): void {
-    this.patientsScheduledToday = 12;
-    this.patientsCheckedIn = 4;
-    this.vitalsPending = 3;
-    this.roomsReady = 2;
+  private buildScheduleItems(
+    appointments: ScheduleAppointment[],
+    tasks: ScheduleTask[]
+  ): MATaskItem[] {
+    if (appointments.length === 0 && tasks.length === 0) {
+      return [];
+    }
+
+    const appointmentByPatient = new Map<string, ScheduleAppointment>();
+    appointments.forEach((appointment) => {
+      if (appointment.patientId) {
+        appointmentByPatient.set(appointment.patientId, appointment);
+      }
+    });
+
+    const itemsFromTasks = tasks.map((task) => {
+      const appointment = appointmentByPatient.get(task.patientId);
+      const appointmentTime = appointment?.start
+        ? this.formatTime(appointment.start)
+        : task.scheduledStart
+          ? this.formatTime(task.scheduledStart)
+          : 'TBD';
+      return {
+        id: task.id,
+        patientName: task.patientName,
+        patientMRN: task.patientMRN,
+        appointmentTime,
+        taskType: this.mapTaskType(task.type),
+        status: this.mapTaskStatus(task.status),
+        priority: task.priority,
+        room: appointment ? this.assignRoomFromTime(appointment.start) : undefined
+      };
+    });
+
+    if (itemsFromTasks.length > 0) {
+      return itemsFromTasks.sort((a, b) => a.appointmentTime.localeCompare(b.appointmentTime));
+    }
+
+    return appointments.map((appointment, index) => ({
+      id: appointment.id,
+      patientName: appointment.patientName,
+      patientMRN: appointment.patientMRN,
+      appointmentTime: this.formatTime(appointment.start),
+      taskType: 'check-in',
+      status: this.mapAppointmentStatus(appointment.status),
+      priority: index === 0 ? 'high' : 'normal',
+      room: this.assignRoomFromTime(appointment.start)
+    }));
+  }
+
+  private updateMetricsFromSchedule(): void {
+    this.patientsScheduledToday = this.todaySchedule.length;
+    this.patientsCheckedIn = this.todaySchedule.filter((task) => task.status === 'completed').length;
+    this.vitalsPending = this.todaySchedule.filter((task) => task.taskType === 'vitals' && task.status !== 'completed').length;
+    this.roomsReady = Math.max(0, this.todaySchedule.length - this.patientsCheckedIn);
+  }
+
+  private mapTaskType(type: string): MATaskItem['taskType'] {
+    const normalized = type.toLowerCase();
+    if (normalized.includes('vital')) return 'vitals';
+    if (normalized.includes('prep')) return 'prep';
+    if (normalized.includes('complete')) return 'complete';
+    return 'check-in';
+  }
+
+  private mapTaskStatus(status: string): MATaskItem['status'] {
+    const normalized = status.toLowerCase();
+    if (normalized === 'completed') return 'completed';
+    if (normalized === 'in-progress') return 'in-progress';
+    if (normalized === 'accepted') return 'in-progress';
+    return 'pending';
+  }
+
+  private mapAppointmentStatus(status: string): MATaskItem['status'] {
+    const normalized = status.toLowerCase();
+    if (normalized === 'fulfilled' || normalized === 'completed') return 'completed';
+    if (normalized === 'arrived' || normalized === 'checked-in') return 'in-progress';
+    return 'pending';
+  }
+
+  private assignRoomFromTime(date?: Date): string | undefined {
+    if (!date) return undefined;
+    const hour = date.getHours();
+    if (hour < 10) return 'Room 1';
+    if (hour < 12) return 'Room 2';
+    return 'Room 3';
+  }
+
+  private formatTime(date: Date): string {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
   /**
@@ -268,7 +311,7 @@ export class MADashboardComponent implements OnInit, OnDestroy {
     const task = this.todaySchedule.find(t => t.id === taskId);
     if (task) {
       task.status = status;
-      this.loadMetrics(); // Refresh metrics
+      this.updateMetricsFromSchedule(); // Refresh metrics
     }
   }
 

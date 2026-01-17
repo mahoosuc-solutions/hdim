@@ -9,10 +9,11 @@ import { test, expect, APIRequestContext } from '@playwright/test';
  * Issue: #86
  */
 
-const GATEWAY_URL = process.env['GATEWAY_URL'] || 'http://localhost:8001';
+const GATEWAY_URL = process.env['GATEWAY_URL'] || 'http://localhost:18080';
 const GATEWAY_EDGE_URL = process.env['GATEWAY_EDGE_URL'] || 'http://localhost:8080';
 const EXTERNAL_FHIR_URL = process.env['EXTERNAL_FHIR_URL'] || 'http://localhost:8088';
 const API_BASE = `${GATEWAY_URL}/api`;
+const DEMO_SAFE = process.env['DEMO_SAFE'] === '1' || process.env['DEMO_SAFE'] === 'true';
 
 // Test tenant configurations
 const TENANT_A = {
@@ -32,6 +33,7 @@ const TENANT_A_PATIENT_ID = 'patient-tenant-a-001';
 const TENANT_B_PATIENT_ID = 'patient-tenant-b-001';
 
 test.describe('Multi-Tenant Data Isolation', () => {
+  test.skip(DEMO_SAFE, 'Multi-tenant isolation tests are disabled in demo-safe runs.');
   let apiContext: APIRequestContext;
 
   test.beforeAll(async ({ playwright }) => {

@@ -456,6 +456,22 @@ public class PreVisitChecklistService {
     }
 
     /**
+     * Get checklist progress adapter (5f)
+     *
+     * Adapter method with tenantId first parameter order to match controller signature.
+     *
+     * @param tenantId the tenant ID
+     * @param checklistId the checklist ID
+     * @return checklist progress details
+     */
+    public ChecklistProgress getChecklistProgress(String tenantId, UUID checklistId) {
+        log.debug("Retrieving progress for checklist {} in tenant {} (tenantId-first adapter)",
+                checklistId, tenantId);
+
+        return getChecklistProgress(checklistId, tenantId);
+    }
+
+    /**
      * Get checklist by ID
      *
      * @param checklistId the checklist ID
@@ -536,6 +552,73 @@ public class PreVisitChecklistService {
     }
 
     /**
+     * Get incomplete critical items (5g)
+     *
+     * Returns list of required/critical items that are not yet completed.
+     *
+     * @param tenantId the tenant ID
+     * @param checklistId the checklist ID
+     * @return list of incomplete critical checklist items
+     */
+    public List<ChecklistItemResponse> getIncompleteCriticalItems(
+            String tenantId, UUID checklistId) {
+        log.debug("Retrieving incomplete critical items for checklist {} in tenant {}",
+                checklistId, tenantId);
+
+        PreVisitChecklistEntity checklist = getChecklistById(checklistId, tenantId);
+
+        List<ChecklistItemResponse> criticalItems = new ArrayList<>();
+
+        // Add incomplete critical items
+        if (!checklist.getReviewMedicalHistory()) {
+            criticalItems.add(createItemResponse("Review Medical History", false));
+        }
+        if (!checklist.getVerifyInsurance()) {
+            criticalItems.add(createItemResponse("Verify Insurance", false));
+        }
+        if (!checklist.getUpdateDemographics()) {
+            criticalItems.add(createItemResponse("Update Demographics", false));
+        }
+        if (!checklist.getReviewMedications()) {
+            criticalItems.add(createItemResponse("Review Medications", false));
+        }
+        if (!checklist.getReviewAllergies()) {
+            criticalItems.add(createItemResponse("Review Allergies", false));
+        }
+        if (!checklist.getPrepareVitalsEquipment()) {
+            criticalItems.add(createItemResponse("Prepare Vitals Equipment", false));
+        }
+        if (!checklist.getReviewCareGaps()) {
+            criticalItems.add(createItemResponse("Review Care Gaps", false));
+        }
+        if (!checklist.getObtainConsent()) {
+            criticalItems.add(createItemResponse("Obtain Consent", false));
+        }
+
+        log.info("Found {} incomplete critical items for checklist {} in tenant {}",
+                criticalItems.size(), checklistId, tenantId);
+
+        return criticalItems;
+    }
+
+    /**
+     * Create checklist item response
+     *
+     * Helper method to create ChecklistItemResponse for critical items.
+     *
+     * @param name the item display name
+     * @param completed whether the item is completed
+     * @return checklist item response
+     */
+    private ChecklistItemResponse createItemResponse(String name, boolean completed) {
+        return ChecklistItemResponse.builder()
+                .name(name)
+                .completed(completed)
+                .required(true)
+                .build();
+    }
+
+    /**
      * Checklist Completion Status DTO
      */
     @Data
@@ -563,5 +646,18 @@ public class PreVisitChecklistService {
         private Integer completedItems;
         private Instant createdAt;
         private Instant completedAt;
+    }
+
+    /**
+     * Checklist Item Response DTO
+     *
+     * Simplified response for critical checklist items.
+     */
+    @Data
+    @Builder
+    public static class ChecklistItemResponse {
+        private String name;
+        private boolean completed;
+        private boolean required;
     }
 }

@@ -3,6 +3,7 @@ package com.healthdata.clinicalworkflow.api.v1;
 import com.healthdata.audit.annotations.Audited;
 import com.healthdata.audit.models.AuditAction;
 import com.healthdata.clinicalworkflow.api.v1.dto.*;
+import com.healthdata.clinicalworkflow.api.v1.mapper.PreVisitChecklistMapper;
 import com.healthdata.clinicalworkflow.application.PreVisitChecklistService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -52,6 +53,7 @@ import java.util.UUID;
 public class PreVisitController {
 
     private final PreVisitChecklistService checklistService;
+    private final PreVisitChecklistMapper checklistMapper;
 
     /**
      * Get patient's pre-visit checklist
@@ -81,8 +83,9 @@ public class PreVisitController {
             @Parameter(description = "Patient FHIR ID", required = true)
             @PathVariable String patientId) {
 
-        ChecklistResponse response = checklistService.getPatientChecklist(tenantId, patientId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            checklistMapper.toChecklistResponse(
+                checklistService.getPatientChecklist(tenantId, patientId)));
     }
 
     /**
@@ -114,8 +117,9 @@ public class PreVisitController {
                       example = "ANNUAL_PHYSICAL")
             @PathVariable String appointmentType) {
 
-        ChecklistResponse response = checklistService.getChecklistTemplate(tenantId, appointmentType);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            checklistMapper.toChecklistResponse(
+                checklistService.getChecklistTemplate(tenantId, appointmentType)));
     }
 
     /**
@@ -165,8 +169,9 @@ public class PreVisitController {
             @Parameter(description = "Checklist creation details", required = true)
             @Valid @RequestBody CreateChecklistRequest request) {
 
-        ChecklistResponse response = checklistService.createChecklist(tenantId, request, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(checklistMapper.toChecklistResponse(
+                checklistService.createChecklist(tenantId, request, userId)));
     }
 
     /**
@@ -201,8 +206,9 @@ public class PreVisitController {
             @Parameter(description = "Item update details", required = true)
             @Valid @RequestBody ChecklistItemUpdateRequest request) {
 
-        ChecklistResponse response = checklistService.completeChecklistItem(tenantId, id, request, userId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            checklistMapper.toChecklistResponse(
+                checklistService.completeChecklistItem(tenantId, id, request, userId)));
     }
 
     /**
@@ -237,8 +243,9 @@ public class PreVisitController {
             @Parameter(description = "Custom item details", required = true)
             @Valid @RequestBody CustomChecklistItemRequest request) {
 
-        ChecklistResponse response = checklistService.addCustomItem(tenantId, id, request, userId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            checklistMapper.toChecklistResponse(
+                checklistService.addCustomItem(tenantId, id, request, userId)));
     }
 
     /**
@@ -269,8 +276,9 @@ public class PreVisitController {
             @Parameter(description = "Checklist ID", required = true)
             @PathVariable UUID id) {
 
-        ChecklistProgressResponse response = checklistService.getChecklistProgress(tenantId, id);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            checklistMapper.toChecklistProgressResponse(
+                checklistService.getChecklistProgress(tenantId, id)));
     }
 
     /**
@@ -301,7 +309,9 @@ public class PreVisitController {
             @Parameter(description = "Checklist ID", required = true)
             @PathVariable UUID id) {
 
-        List<ChecklistItemResponse> items = checklistService.getIncompleteCriticalItems(tenantId, id);
-        return ResponseEntity.ok(items);
+        return ResponseEntity.ok(
+            checklistService.getIncompleteCriticalItems(tenantId, id).stream()
+                .map(checklistMapper::toChecklistItemResponse)
+                .toList());
     }
 }

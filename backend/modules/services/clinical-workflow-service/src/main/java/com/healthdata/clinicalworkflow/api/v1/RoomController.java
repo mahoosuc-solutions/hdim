@@ -3,6 +3,7 @@ package com.healthdata.clinicalworkflow.api.v1;
 import com.healthdata.audit.annotations.Audited;
 import com.healthdata.audit.models.AuditAction;
 import com.healthdata.clinicalworkflow.api.v1.dto.*;
+import com.healthdata.clinicalworkflow.api.v1.mapper.RoomAssignmentMapper;
 import com.healthdata.clinicalworkflow.application.RoomManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -43,6 +44,7 @@ import java.util.List;
 public class RoomController {
 
     private final RoomManagementService roomService;
+    private final RoomAssignmentMapper roomMapper;
 
     /**
      * Get room status board for all rooms
@@ -65,8 +67,9 @@ public class RoomController {
             @Parameter(description = "Tenant identifier", required = true)
             @RequestHeader("X-Tenant-ID") String tenantId) {
 
-        RoomBoardResponse response = roomService.getRoomBoard(tenantId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            roomMapper.toRoomBoardResponse(
+                roomService.getRoomBoard(tenantId)));
     }
 
     /**
@@ -97,8 +100,9 @@ public class RoomController {
             @Parameter(description = "Room number", required = true, example = "Room 3")
             @PathVariable String roomNumber) {
 
-        RoomStatusResponse response = roomService.getRoomDetails(tenantId, roomNumber);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            roomMapper.toRoomStatusResponse(
+                roomService.getRoomDetails(tenantId, roomNumber)));
     }
 
     /**
@@ -122,8 +126,10 @@ public class RoomController {
             @Parameter(description = "Tenant identifier", required = true)
             @RequestHeader("X-Tenant-ID") String tenantId) {
 
-        List<RoomStatusResponse> rooms = roomService.getAvailableRooms(tenantId);
-        return ResponseEntity.ok(rooms);
+        return ResponseEntity.ok(
+            roomService.getAvailableRooms(tenantId).stream()
+                .map(roomMapper::toRoomStatusResponse)
+                .toList());
     }
 
     /**
@@ -175,8 +181,9 @@ public class RoomController {
             @Parameter(description = "Room assignment details", required = true)
             @Valid @RequestBody RoomAssignmentRequest request) {
 
-        RoomStatusResponse response = roomService.assignPatientToRoom(tenantId, roomNumber, request, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(roomMapper.toRoomStatusResponse(
+                roomService.assignPatientToRoom(tenantId, roomNumber, request, userId)));
     }
 
     /**
@@ -211,8 +218,9 @@ public class RoomController {
             @Parameter(description = "Status update details", required = true)
             @Valid @RequestBody RoomStatusUpdateRequest request) {
 
-        RoomStatusResponse response = roomService.updateRoomStatus(tenantId, roomNumber, request, userId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            roomMapper.toRoomStatusResponse(
+                roomService.updateRoomStatus(tenantId, roomNumber, request, userId)));
     }
 
     /**
@@ -245,8 +253,9 @@ public class RoomController {
             @Parameter(description = "Room number", required = true)
             @PathVariable String roomNumber) {
 
-        RoomStatusResponse response = roomService.markRoomReady(tenantId, roomNumber, userId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            roomMapper.toRoomStatusResponse(
+                roomService.markRoomReady(tenantId, roomNumber, userId)));
     }
 
     /**
@@ -279,8 +288,9 @@ public class RoomController {
             @Parameter(description = "Room number", required = true)
             @PathVariable String roomNumber) {
 
-        RoomStatusResponse response = roomService.dischargePatient(tenantId, roomNumber, userId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            roomMapper.toRoomStatusResponse(
+                roomService.dischargePatient(tenantId, roomNumber, userId)));
     }
 
     /**
@@ -313,7 +323,8 @@ public class RoomController {
             @Parameter(description = "Room number", required = true)
             @PathVariable String roomNumber) {
 
-        RoomStatusResponse response = roomService.scheduleCleaning(tenantId, roomNumber, userId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            roomMapper.toRoomStatusResponse(
+                roomService.scheduleCleaning(tenantId, roomNumber, userId)));
     }
 }

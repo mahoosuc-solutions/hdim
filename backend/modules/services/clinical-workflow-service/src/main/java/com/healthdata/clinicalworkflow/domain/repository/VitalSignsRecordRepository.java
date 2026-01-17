@@ -100,6 +100,19 @@ public interface VitalSignsRecordRepository extends JpaRepository<VitalSignsReco
     );
 
     /**
+     * Find vitals by tenant and alert status (ordered by recorded time descending)
+     * Used for getCriticalAlerts and getVitalAlerts endpoints
+     *
+     * @param tenantId Tenant identifier for multi-tenant isolation
+     * @param alertStatus Alert status (normal, warning, critical)
+     * @return List of vital signs records with the specified alert status
+     */
+    List<VitalSignsRecordEntity> findByTenantIdAndAlertStatusOrderByRecordedAtDesc(
+        String tenantId,
+        String alertStatus
+    );
+
+    /**
      * Find latest vital signs for a patient
      * Returns the most recent vital signs record
      *

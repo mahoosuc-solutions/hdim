@@ -52,9 +52,36 @@
       "Bash(ls:*)",
       "Bash(git rev-list:*)",
       "Bash(xargs:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npx nx:*)",
+      "Bash(nx generate:*)",
+      "mcp__nx-mcp__nx_generator_schema",
+      "Bash(nx build:*)",
+      "Bash(nx test:*)",
+      "Bash(nx run-many:*)",
+      "Bash(git worktree:*)",
+      "mcp__nx-mcp__nx_workspace",
+      "mcp__nx-mcp__nx_generators",
+      "Bash(git checkout:*)",
+      "Bash(if [ ! -d \"node_modules\" ])",
+      "Bash(then npm install --legacy-peer-deps)",
+      "Bash(else echo \"node_modules already exists\")",
+      "Bash(fi)",
+      "Bash(npm run nx:graph:*)",
+      "Bash(nx show:*)",
+      "Bash(npm ls:*)",
+      "mcp__nx-mcp__nx_workspace_path",
+      "Read(//home/webemo-aaron/projects/**)",
+      "Bash(npm run nx:*)",
+      "Bash(npm install:*)",
+      "Bash(git -C /home/webemo-aaron/projects/hdim-master log --oneline)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "nx-mcp"
+  ]
 }

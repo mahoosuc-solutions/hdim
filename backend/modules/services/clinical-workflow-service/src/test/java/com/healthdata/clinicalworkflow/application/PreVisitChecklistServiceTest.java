@@ -144,7 +144,7 @@ class PreVisitChecklistServiceTest {
     }
 
     @Test
-    void getCompletionStatus_ShouldReturnStatus_WhenChecklist Exists() {
+    void getCompletionStatus_ShouldReturnStatus_WhenChecklistExists() {
         // Given
         UUID checklistId = UUID.randomUUID();
         testChecklist.setCompletionPercentage(new BigDecimal("50.00"));

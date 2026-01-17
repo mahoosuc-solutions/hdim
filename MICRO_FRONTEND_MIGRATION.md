@@ -86,9 +86,11 @@ This document tracks the migration of the Health Data Platform from a monolithic
 - [x] Test successful builds for both apps
 
 ### 📋 Phase 3: State Management Federation
-- [ ] Refactor NgRx to federated pattern
-- [ ] Create shared global state library
-- [ ] Implement lazy-loaded feature stores
+- [x] Create shared global state library (`@health-platform/shared/state`)
+- [x] Provide shared NgRx bootstrap in shell-app
+- [x] Connect AuthService to NgRx effects for session sync
+- [ ] Refactor existing NgRx features to federated pattern
+- [ ] Implement lazy-loaded feature stores for MFEs
 - [ ] Establish inter-MFE event bus
 
 ### 📋 Phase 4: Migrate Core MFEs

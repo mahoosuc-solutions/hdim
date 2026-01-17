@@ -1,16 +1,24 @@
 package com.healthdata.clinicalworkflow.application;
 
+import com.healthdata.clinicalworkflow.api.v1.dto.CheckInRequest;
+import com.healthdata.clinicalworkflow.api.v1.dto.ConsentRequest;
+import com.healthdata.clinicalworkflow.api.v1.dto.DemographicsUpdateRequest;
+import com.healthdata.clinicalworkflow.api.v1.dto.InsuranceVerificationRequest;
 import com.healthdata.clinicalworkflow.domain.model.PatientCheckInEntity;
 import com.healthdata.clinicalworkflow.domain.repository.PatientCheckInRepository;
+import com.healthdata.clinicalworkflow.infrastructure.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
@@ -58,11 +66,22 @@ class PatientCheckInServiceTest {
                 .build();
     }
 
-    // ========== checkInPatient Tests ==========
+    // ========== NEW ADAPTER METHOD TESTS (Tier 1 Fixes) ==========
+
+    // ========== 1a. checkInPatient (DTO adapter) Tests ==========
 
     @Test
-    void checkInPatient_ShouldCreateCheckIn_WhenValid() {
+    void checkInPatient_WithRequest_ShouldCreateCheckIn_WhenValid() {
         // Given
+        CheckInRequest request = new CheckInRequest();
+        request.setPatientId(PATIENT_ID.toString());
+        request.setAppointmentId(APPOINTMENT_ID);
+        request.setCheckInTime(LocalDateTime.now());
+        request.setInsuranceVerified(true);
+        request.setConsentSigned(true);
+        request.setDemographicsConfirmed(false);
+        request.setNotes("Test notes");
+
         when(checkInRepository.findByTenantIdAndAppointmentId(TENANT_ID, APPOINTMENT_ID))
                 .thenReturn(Optional.empty());
         when(checkInRepository.save(any(PatientCheckInEntity.class)))
@@ -70,6 +89,307 @@ class PatientCheckInServiceTest {
 
         // When
         PatientCheckInEntity result = checkInService.checkInPatient(
+                TENANT_ID, request, "user-123");
+
+        // Then
+        assertThat(result).isNotNull();
+        verify(checkInRepository).save(argThat(entity ->
+                entity.getTenantId().equals(TENANT_ID) &&
+                entity.getPatientId().equals(PATIENT_ID) &&
+                entity.getAppointmentId().equals(APPOINTMENT_ID) &&
+                entity.getCheckedInBy().equals("user-123") &&
+                entity.getInsuranceVerified() == true &&
+                entity.getConsentObtained() == true &&
+                entity.getDemographicsUpdated() == false
+        ));
+    }
+
+    @Test
+    void checkInPatient_WithRequest_ShouldThrowException_WhenAlreadyCheckedIn() {
+        // Given
+        CheckInRequest request = new CheckInRequest();
+        request.setPatientId(PATIENT_ID.toString());
+        request.setAppointmentId(APPOINTMENT_ID);
+
+        when(checkInRepository.findByTenantIdAndAppointmentId(TENANT_ID, APPOINTMENT_ID))
+                .thenReturn(Optional.of(testCheckIn));
+
+        // When/Then
+        assertThatThrownBy(() -> checkInService.checkInPatient(TENANT_ID, request, "user-123"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("already checked in");
+
+        verify(checkInRepository, never()).save(any());
+    }
+
+    @Test
+    void checkInPatient_WithRequest_ShouldThrowException_WhenInvalidPatientId() {
+        // Given
+        CheckInRequest request = new CheckInRequest();
+        request.setPatientId("invalid-uuid");
+        request.setAppointmentId(APPOINTMENT_ID);
+
+        // When/Then
+        assertThatThrownBy(() -> checkInService.checkInPatient(TENANT_ID, request, "user-123"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Invalid patient ID format");
+
+        verify(checkInRepository, never()).save(any());
+    }
+
+    // ========== 1b. getCheckIn Tests ==========
+
+    @Test
+    void getCheckIn_ShouldReturnCheckIn_WhenExists() {
+        // Given
+        UUID checkInId = UUID.randomUUID();
+        when(checkInRepository.findByIdAndTenantId(checkInId, TENANT_ID))
+                .thenReturn(Optional.of(testCheckIn));
+
+        // When
+        PatientCheckInEntity result = checkInService.getCheckIn(TENANT_ID, checkInId);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result).isEqualTo(testCheckIn);
+    }
+
+    @Test
+    void getCheckIn_ShouldThrowException_WhenNotFound() {
+        // Given
+        UUID checkInId = UUID.randomUUID();
+        when(checkInRepository.findByIdAndTenantId(checkInId, TENANT_ID))
+                .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> checkInService.getCheckIn(TENANT_ID, checkInId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Check-in");
+    }
+
+    // ========== 1c. getTodaysCheckIn Tests ==========
+
+    @Test
+    void getTodaysCheckIn_ShouldReturnCheckIn_WhenExistsToday() {
+        // Given
+        when(checkInRepository.findTodayCheckIns(eq(TENANT_ID), any(Instant.class), any(Instant.class)))
+                .thenReturn(List.of(testCheckIn));
+
+        // When
+        PatientCheckInEntity result = checkInService.getTodaysCheckIn(
+                TENANT_ID, PATIENT_ID.toString());
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result).isEqualTo(testCheckIn);
+    }
+
+    @Test
+    void getTodaysCheckIn_ShouldThrowException_WhenNotFoundToday() {
+        // Given
+        when(checkInRepository.findTodayCheckIns(eq(TENANT_ID), any(Instant.class), any(Instant.class)))
+                .thenReturn(Collections.emptyList());
+
+        // When/Then
+        assertThatThrownBy(() -> checkInService.getTodaysCheckIn(TENANT_ID, PATIENT_ID.toString()))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Check-in for patient");
+    }
+
+    // ========== 1d. getCheckInHistory (with pagination) Tests ==========
+
+    @Test
+    void getCheckInHistory_WithDateRange_ShouldReturnHistory() {
+        // Given
+        LocalDate startDate = LocalDate.now().minusDays(30);
+        LocalDate endDate = LocalDate.now();
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(checkInRepository.findByTenantIdAndPatientIdAndCheckInTimeBetween(
+                eq(TENANT_ID), eq(PATIENT_ID), any(Instant.class), any(Instant.class)))
+                .thenReturn(List.of(testCheckIn, testCheckIn));
+
+        // When
+        List<PatientCheckInEntity> result = checkInService.getCheckInHistory(
+                TENANT_ID, PATIENT_ID.toString(), startDate, endDate, pageable);
+
+        // Then
+        assertThat(result).hasSize(2);
+        verify(checkInRepository).findByTenantIdAndPatientIdAndCheckInTimeBetween(
+                eq(TENANT_ID), eq(PATIENT_ID), any(Instant.class), any(Instant.class));
+    }
+
+    @Test
+    void getCheckInHistory_WithNullDates_ShouldUseDefaults() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(checkInRepository.findByTenantIdAndPatientIdAndCheckInTimeBetween(
+                eq(TENANT_ID), eq(PATIENT_ID), any(Instant.class), any(Instant.class)))
+                .thenReturn(List.of(testCheckIn));
+
+        // When
+        List<PatientCheckInEntity> result = checkInService.getCheckInHistory(
+                TENANT_ID, PATIENT_ID.toString(), null, null, pageable);
+
+        // Then
+        assertThat(result).hasSize(1);
+        verify(checkInRepository).findByTenantIdAndPatientIdAndCheckInTimeBetween(
+                eq(TENANT_ID), eq(PATIENT_ID), any(Instant.class), any(Instant.class));
+    }
+
+    // ========== 1e. verifyInsurance (new signature) Tests ==========
+
+    @Test
+    void verifyInsurance_WithRequest_ShouldMarkVerified() {
+        // Given
+        UUID checkInId = UUID.randomUUID();
+        InsuranceVerificationRequest request = new InsuranceVerificationRequest();
+        request.setInsuranceProvider("Blue Cross");
+        request.setVerified(true);
+
+        testCheckIn.setId(checkInId);
+        when(checkInRepository.findByIdAndTenantId(checkInId, TENANT_ID))
+                .thenReturn(Optional.of(testCheckIn));
+        when(checkInRepository.save(any(PatientCheckInEntity.class)))
+                .thenReturn(testCheckIn);
+
+        // When
+        PatientCheckInEntity result = checkInService.verifyInsurance(
+                TENANT_ID, checkInId, request, "user-123");
+
+        // Then
+        assertThat(result).isNotNull();
+        verify(checkInRepository).save(argThat(entity ->
+                entity.getInsuranceVerified() == true &&
+                entity.getVerifiedBy().equals("user-123") &&
+                entity.getNotes().contains("Blue Cross")
+        ));
+    }
+
+    @Test
+    void verifyInsurance_WithRequest_ShouldThrowException_WhenCheckInNotFound() {
+        // Given
+        UUID checkInId = UUID.randomUUID();
+        InsuranceVerificationRequest request = new InsuranceVerificationRequest();
+
+        when(checkInRepository.findByIdAndTenantId(checkInId, TENANT_ID))
+                .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> checkInService.verifyInsurance(
+                TENANT_ID, checkInId, request, "user-123"))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(checkInRepository, never()).save(any());
+    }
+
+    // ========== 1f. recordConsent (renamed from obtainConsent) Tests ==========
+
+    @Test
+    void recordConsent_ShouldMarkObtained() {
+        // Given
+        UUID checkInId = UUID.randomUUID();
+        ConsentRequest request = new ConsentRequest();
+        request.setConsentType("Treatment Consent");
+        request.setConsented(true);
+
+        testCheckIn.setId(checkInId);
+        when(checkInRepository.findByIdAndTenantId(checkInId, TENANT_ID))
+                .thenReturn(Optional.of(testCheckIn));
+        when(checkInRepository.save(any(PatientCheckInEntity.class)))
+                .thenReturn(testCheckIn);
+
+        // When
+        PatientCheckInEntity result = checkInService.recordConsent(
+                TENANT_ID, checkInId, request, "user-123");
+
+        // Then
+        assertThat(result).isNotNull();
+        verify(checkInRepository).save(argThat(entity ->
+                entity.getConsentObtained() == true &&
+                entity.getConsentObtainedBy().equals("user-123") &&
+                entity.getNotes().contains("Treatment Consent")
+        ));
+    }
+
+    @Test
+    void recordConsent_ShouldThrowException_WhenCheckInNotFound() {
+        // Given
+        UUID checkInId = UUID.randomUUID();
+        ConsentRequest request = new ConsentRequest();
+
+        when(checkInRepository.findByIdAndTenantId(checkInId, TENANT_ID))
+                .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> checkInService.recordConsent(
+                TENANT_ID, checkInId, request, "user-123"))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(checkInRepository, never()).save(any());
+    }
+
+    // ========== 1g. updateDemographics (new signature) Tests ==========
+
+    @Test
+    void updateDemographics_WithRequest_ShouldMarkUpdated() {
+        // Given
+        UUID checkInId = UUID.randomUUID();
+        DemographicsUpdateRequest request = new DemographicsUpdateRequest();
+        request.setAddressChanged(true);
+        request.setPhoneChanged(true);
+
+        testCheckIn.setId(checkInId);
+        when(checkInRepository.findByIdAndTenantId(checkInId, TENANT_ID))
+                .thenReturn(Optional.of(testCheckIn));
+        when(checkInRepository.save(any(PatientCheckInEntity.class)))
+                .thenReturn(testCheckIn);
+
+        // When
+        PatientCheckInEntity result = checkInService.updateDemographics(
+                TENANT_ID, checkInId, request, "user-123");
+
+        // Then
+        assertThat(result).isNotNull();
+        verify(checkInRepository).save(argThat(entity ->
+                entity.getDemographicsUpdated() == true &&
+                entity.getDemographicsUpdatedBy().equals("user-123") &&
+                entity.getNotes().contains("Demographics updated")
+        ));
+    }
+
+    @Test
+    void updateDemographics_WithRequest_ShouldThrowException_WhenCheckInNotFound() {
+        // Given
+        UUID checkInId = UUID.randomUUID();
+        DemographicsUpdateRequest request = new DemographicsUpdateRequest();
+
+        when(checkInRepository.findByIdAndTenantId(checkInId, TENANT_ID))
+                .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> checkInService.updateDemographics(
+                TENANT_ID, checkInId, request, "user-123"))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(checkInRepository, never()).save(any());
+    }
+
+    // ========== LEGACY INTERNAL METHOD TESTS ==========
+
+    // ========== checkInPatient (internal) Tests ==========
+
+    @Test
+    void checkInPatient_Internal_ShouldCreateCheckIn_WhenValid() {
+        // Given
+        when(checkInRepository.findByTenantIdAndAppointmentId(TENANT_ID, APPOINTMENT_ID))
+                .thenReturn(Optional.empty());
+        when(checkInRepository.save(any(PatientCheckInEntity.class)))
+                .thenReturn(testCheckIn);
+
+        // When
+        PatientCheckInEntity result = checkInService.checkInPatientInternal(
                 PATIENT_ID, APPOINTMENT_ID, TENANT_ID);
 
         // Then
@@ -81,13 +401,13 @@ class PatientCheckInServiceTest {
     }
 
     @Test
-    void checkInPatient_ShouldThrowException_WhenAlreadyCheckedIn() {
+    void checkInPatient_Internal_ShouldThrowException_WhenAlreadyCheckedIn() {
         // Given
         when(checkInRepository.findByTenantIdAndAppointmentId(TENANT_ID, APPOINTMENT_ID))
                 .thenReturn(Optional.of(testCheckIn));
 
         // When/Then
-        assertThatThrownBy(() -> checkInService.checkInPatient(
+        assertThatThrownBy(() -> checkInService.checkInPatientInternal(
                 PATIENT_ID, APPOINTMENT_ID, TENANT_ID))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("already checked in");
@@ -96,13 +416,13 @@ class PatientCheckInServiceTest {
     }
 
     @Test
-    void checkInPatient_ShouldAllowCheckIn_WhenNoAppointmentId() {
+    void checkInPatient_Internal_ShouldAllowCheckIn_WhenNoAppointmentId() {
         // Given
         when(checkInRepository.save(any(PatientCheckInEntity.class)))
                 .thenReturn(testCheckIn);
 
         // When
-        PatientCheckInEntity result = checkInService.checkInPatient(
+        PatientCheckInEntity result = checkInService.checkInPatientInternal(
                 PATIENT_ID, null, TENANT_ID);
 
         // Then
@@ -111,10 +431,10 @@ class PatientCheckInServiceTest {
         verify(checkInRepository, never()).findByTenantIdAndAppointmentId(any(), any());
     }
 
-    // ========== verifyInsurance Tests ==========
+    // ========== verifyInsurance (internal) Tests ==========
 
     @Test
-    void verifyInsurance_ShouldMarkVerified_WhenCheckInExists() {
+    void verifyInsurance_Internal_ShouldMarkVerified_WhenCheckInExists() {
         // Given
         when(checkInRepository.findByTenantIdAndPatientIdOrderByCheckInTimeDesc(
                 TENANT_ID, PATIENT_ID))
@@ -123,7 +443,7 @@ class PatientCheckInServiceTest {
                 .thenReturn(testCheckIn);
 
         // When
-        PatientCheckInEntity result = checkInService.verifyInsurance(PATIENT_ID, TENANT_ID);
+        PatientCheckInEntity result = checkInService.verifyInsuranceInternal(PATIENT_ID, TENANT_ID);
 
         // Then
         assertThat(result.getInsuranceVerified()).isTrue();
@@ -132,14 +452,14 @@ class PatientCheckInServiceTest {
     }
 
     @Test
-    void verifyInsurance_ShouldThrowException_WhenNoCheckInFound() {
+    void verifyInsurance_Internal_ShouldThrowException_WhenNoCheckInFound() {
         // Given
         when(checkInRepository.findByTenantIdAndPatientIdOrderByCheckInTimeDesc(
                 TENANT_ID, PATIENT_ID))
                 .thenReturn(Collections.emptyList());
 
         // When/Then
-        assertThatThrownBy(() -> checkInService.verifyInsurance(PATIENT_ID, TENANT_ID))
+        assertThatThrownBy(() -> checkInService.verifyInsuranceInternal(PATIENT_ID, TENANT_ID))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("No check-in record found");
 
@@ -147,7 +467,7 @@ class PatientCheckInServiceTest {
     }
 
     @Test
-    void verifyInsurance_ShouldUseMostRecent_WhenMultipleCheckIns() {
+    void verifyInsurance_Internal_ShouldUseMostRecent_WhenMultipleCheckIns() {
         // Given
         PatientCheckInEntity older = PatientCheckInEntity.builder()
                 .id(UUID.randomUUID())
@@ -162,17 +482,17 @@ class PatientCheckInServiceTest {
         when(checkInRepository.save(any())).thenReturn(testCheckIn);
 
         // When
-        checkInService.verifyInsurance(PATIENT_ID, TENANT_ID);
+        checkInService.verifyInsuranceInternal(PATIENT_ID, TENANT_ID);
 
         // Then
         verify(checkInRepository).save(argThat(checkIn ->
                 checkIn.getId().equals(testCheckIn.getId())));
     }
 
-    // ========== obtainConsent Tests ==========
+    // ========== obtainConsent (internal) Tests ==========
 
     @Test
-    void obtainConsent_ShouldMarkObtained_WhenCheckInExists() {
+    void obtainConsent_Internal_ShouldMarkObtained_WhenCheckInExists() {
         // Given
         when(checkInRepository.findByTenantIdAndPatientIdOrderByCheckInTimeDesc(
                 TENANT_ID, PATIENT_ID))
@@ -181,7 +501,7 @@ class PatientCheckInServiceTest {
                 .thenReturn(testCheckIn);
 
         // When
-        PatientCheckInEntity result = checkInService.obtainConsent(PATIENT_ID, TENANT_ID);
+        PatientCheckInEntity result = checkInService.obtainConsentInternal(PATIENT_ID, TENANT_ID);
 
         // Then
         assertThat(result.getConsentObtained()).isTrue();
@@ -190,22 +510,22 @@ class PatientCheckInServiceTest {
     }
 
     @Test
-    void obtainConsent_ShouldThrowException_WhenNoCheckInFound() {
+    void obtainConsent_Internal_ShouldThrowException_WhenNoCheckInFound() {
         // Given
         when(checkInRepository.findByTenantIdAndPatientIdOrderByCheckInTimeDesc(
                 TENANT_ID, PATIENT_ID))
                 .thenReturn(Collections.emptyList());
 
         // When/Then
-        assertThatThrownBy(() -> checkInService.obtainConsent(PATIENT_ID, TENANT_ID))
+        assertThatThrownBy(() -> checkInService.obtainConsentInternal(PATIENT_ID, TENANT_ID))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("No check-in record found");
     }
 
-    // ========== updateDemographics Tests ==========
+    // ========== updateDemographics (internal) Tests ==========
 
     @Test
-    void updateDemographics_ShouldMarkUpdated_WhenCheckInExists() {
+    void updateDemographics_Internal_ShouldMarkUpdated_WhenCheckInExists() {
         // Given
         Map<String, Object> demographics = Map.of("address", "123 Main St");
         when(checkInRepository.findByTenantIdAndPatientIdOrderByCheckInTimeDesc(
@@ -215,7 +535,7 @@ class PatientCheckInServiceTest {
                 .thenReturn(testCheckIn);
 
         // When
-        PatientCheckInEntity result = checkInService.updateDemographics(
+        PatientCheckInEntity result = checkInService.updateDemographicsInternal(
                 PATIENT_ID, demographics, TENANT_ID);
 
         // Then
@@ -225,7 +545,7 @@ class PatientCheckInServiceTest {
     }
 
     @Test
-    void updateDemographics_ShouldAppendToNotes_WhenDemographicsProvided() {
+    void updateDemographics_Internal_ShouldAppendToNotes_WhenDemographicsProvided() {
         // Given
         Map<String, Object> demographics = Map.of("phone", "555-1234");
         when(checkInRepository.findByTenantIdAndPatientIdOrderByCheckInTimeDesc(
@@ -235,7 +555,7 @@ class PatientCheckInServiceTest {
                 .thenAnswer(inv -> inv.getArgument(0));
 
         // When
-        checkInService.updateDemographics(PATIENT_ID, demographics, TENANT_ID);
+        checkInService.updateDemographicsInternal(PATIENT_ID, demographics, TENANT_ID);
 
         // Then
         verify(checkInRepository).save(argThat(checkIn ->
@@ -244,7 +564,7 @@ class PatientCheckInServiceTest {
     }
 
     @Test
-    void updateDemographics_ShouldWork_WhenNoDemographicsProvided() {
+    void updateDemographics_Internal_ShouldWork_WhenNoDemographicsProvided() {
         // Given
         when(checkInRepository.findByTenantIdAndPatientIdOrderByCheckInTimeDesc(
                 TENANT_ID, PATIENT_ID))
@@ -252,7 +572,7 @@ class PatientCheckInServiceTest {
         when(checkInRepository.save(any())).thenReturn(testCheckIn);
 
         // When
-        checkInService.updateDemographics(PATIENT_ID, null, TENANT_ID);
+        checkInService.updateDemographicsInternal(PATIENT_ID, null, TENANT_ID);
 
         // Then
         verify(checkInRepository).save(any());
@@ -305,10 +625,10 @@ class PatientCheckInServiceTest {
         assertThat(result).isGreaterThanOrEqualTo(9).isLessThanOrEqualTo(11);
     }
 
-    // ========== getCheckInHistory Tests ==========
+    // ========== getCheckInHistory (internal) Tests ==========
 
     @Test
-    void getCheckInHistory_ShouldReturnAllCheckIns_WhenMultipleExist() {
+    void getCheckInHistory_Internal_ShouldReturnAllCheckIns_WhenMultipleExist() {
         // Given
         List<PatientCheckInEntity> checkIns = List.of(testCheckIn, testCheckIn);
         when(checkInRepository.findByTenantIdAndPatientIdOrderByCheckInTimeDesc(
@@ -316,7 +636,7 @@ class PatientCheckInServiceTest {
                 .thenReturn(checkIns);
 
         // When
-        List<PatientCheckInEntity> result = checkInService.getCheckInHistory(
+        List<PatientCheckInEntity> result = checkInService.getCheckInHistoryInternal(
                 PATIENT_ID, TENANT_ID);
 
         // Then
@@ -324,14 +644,14 @@ class PatientCheckInServiceTest {
     }
 
     @Test
-    void getCheckInHistory_ShouldReturnEmpty_WhenNoCheckIns() {
+    void getCheckInHistory_Internal_ShouldReturnEmpty_WhenNoCheckIns() {
         // Given
         when(checkInRepository.findByTenantIdAndPatientIdOrderByCheckInTimeDesc(
                 TENANT_ID, PATIENT_ID))
                 .thenReturn(Collections.emptyList());
 
         // When
-        List<PatientCheckInEntity> result = checkInService.getCheckInHistory(
+        List<PatientCheckInEntity> result = checkInService.getCheckInHistoryInternal(
                 PATIENT_ID, TENANT_ID);
 
         // Then

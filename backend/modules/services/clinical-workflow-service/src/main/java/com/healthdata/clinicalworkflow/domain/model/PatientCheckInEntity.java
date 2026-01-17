@@ -76,6 +76,15 @@ public class PatientCheckInEntity {
     @Builder.Default
     private Boolean consentObtained = false;
 
+    @Column(name = "verified_by", length = 255)
+    private String verifiedBy;
+
+    @Column(name = "consent_obtained_by", length = 255)
+    private String consentObtainedBy;
+
+    @Column(name = "demographics_updated_by", length = 255)
+    private String demographicsUpdatedBy;
+
     @Column(name = "waiting_time_minutes")
     private Integer waitingTimeMinutes;
 

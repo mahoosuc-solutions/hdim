@@ -129,7 +129,7 @@ class BlueGreenDeploymentTest {
                 .as("Load balancer configuration should be captured")
                 .isNotNull();
 
-            log.info("Blue environment snapshot captured: {}", snapshot.getId());
+
         }
     }
 
@@ -351,7 +351,7 @@ class BlueGreenDeploymentTest {
                 .as("All routed requests should succeed")
                 .isEqualTo(metrics.getTotalRequests());
 
-            log.info("Phase 1 (10% traffic) completed successfully");
+
         }
 
         @Order(2)
@@ -368,7 +368,7 @@ class BlueGreenDeploymentTest {
                 .as("Green response time should be competitive")
                 .isLessThan(greenValidator.getP99ResponseTime().plusMillis(100));
 
-            log.info("Phase 2 (50% traffic) completed successfully");
+
         }
 
         @Order(3)
@@ -385,7 +385,7 @@ class BlueGreenDeploymentTest {
                 .as("Blue should have minimal traffic")
                 .isLessThan(5);
 
-            log.info("Gradual switch to 100% green completed successfully");
+
         }
     }
 
@@ -480,7 +480,7 @@ class BlueGreenDeploymentTest {
                 .as("Rollback should complete within 10 minutes")
                 .isLessThan(Duration.ofMinutes(10));
 
-            log.info("Rollback completed in {} seconds", rollbackDuration.getSeconds());
+
         }
 
         @Order(2)
@@ -764,7 +764,7 @@ class DeploymentEnvironmentValidator {
     }
 
     void updateTrafficPercentage(double percentage) {
-        log.info("Updating traffic to {} for {}", percentage * 100, environment);
+
     }
 
     BlueGreenDeploymentTest.SwitchoverMetrics collectSwitchoverMetrics(Duration duration) {

@@ -94,6 +94,12 @@ public class VitalSignsRecordEntity {
     @Column(name = "alert_message", columnDefinition = "TEXT")
     private String alertMessage;
 
+    @Column(name = "acknowledged_by", length = 255)
+    private String acknowledgedBy;
+
+    @Column(name = "acknowledged_at")
+    private Instant acknowledgedAt;
+
     // Workflow
     @Column(name = "recorded_at", nullable = false)
     private Instant recordedAt;

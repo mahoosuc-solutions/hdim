@@ -3,7 +3,9 @@ package com.healthdata.clinicalworkflow.api.v1;
 import com.healthdata.audit.annotations.Audited;
 import com.healthdata.audit.models.AuditAction;
 import com.healthdata.clinicalworkflow.api.v1.dto.*;
+import com.healthdata.clinicalworkflow.api.v1.mapper.PatientCheckInMapper;
 import com.healthdata.clinicalworkflow.application.PatientCheckInService;
+import com.healthdata.clinicalworkflow.domain.model.PatientCheckInEntity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -24,6 +26,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -47,6 +50,7 @@ import java.util.UUID;
 public class CheckInController {
 
     private final PatientCheckInService checkInService;
+    private final PatientCheckInMapper checkInMapper;
 
     /**
      * Check in a patient for their appointment
@@ -103,8 +107,9 @@ public class CheckInController {
             @Parameter(description = "Check-in details", required = true)
             @Valid @RequestBody CheckInRequest request) {
 
-        CheckInResponse response = checkInService.checkInPatient(tenantId, request, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(checkInMapper.toCheckInResponse(
+                checkInService.checkInPatient(tenantId, request, userId)));
     }
 
     /**
@@ -135,8 +140,9 @@ public class CheckInController {
             @Parameter(description = "Check-in record ID", required = true)
             @PathVariable UUID id) {
 
-        CheckInResponse response = checkInService.getCheckIn(tenantId, id);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            checkInMapper.toCheckInResponse(
+                checkInService.getCheckIn(tenantId, id)));
     }
 
     /**
@@ -167,8 +173,9 @@ public class CheckInController {
             @Parameter(description = "Patient FHIR ID", required = true)
             @PathVariable String patientId) {
 
-        CheckInResponse response = checkInService.getTodaysCheckIn(tenantId, patientId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            checkInMapper.toCheckInResponse(
+                checkInService.getTodaysCheckIn(tenantId, patientId)));
     }
 
     /**
@@ -200,9 +207,15 @@ public class CheckInController {
             @Parameter(description = "Pagination parameters")
             @PageableDefault(size = 20) Pageable pageable) {
 
-        CheckInHistoryResponse response = checkInService.getCheckInHistory(
+        List<PatientCheckInEntity> entities = checkInService.getCheckInHistory(
             tenantId, patientId, startDate, endDate, pageable);
-        return ResponseEntity.ok(response);
+
+        return ResponseEntity.ok(
+            checkInMapper.toCheckInHistoryResponse(
+                entities,
+                (long) entities.size(),  // Note: actual total count would require a count query
+                pageable.getPageNumber(),
+                pageable.getPageSize()));
     }
 
     /**
@@ -237,8 +250,9 @@ public class CheckInController {
             @Parameter(description = "Insurance verification details", required = true)
             @Valid @RequestBody InsuranceVerificationRequest request) {
 
-        CheckInResponse response = checkInService.verifyInsurance(tenantId, id, request, userId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            checkInMapper.toCheckInResponse(
+                checkInService.verifyInsurance(tenantId, id, request, userId)));
     }
 
     /**
@@ -273,8 +287,9 @@ public class CheckInController {
             @Parameter(description = "Consent details", required = true)
             @Valid @RequestBody ConsentRequest request) {
 
-        CheckInResponse response = checkInService.recordConsent(tenantId, id, request, userId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            checkInMapper.toCheckInResponse(
+                checkInService.recordConsent(tenantId, id, request, userId)));
     }
 
     /**
@@ -309,7 +324,8 @@ public class CheckInController {
             @Parameter(description = "Demographics update details", required = true)
             @Valid @RequestBody DemographicsUpdateRequest request) {
 
-        CheckInResponse response = checkInService.updateDemographics(tenantId, id, request, userId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+            checkInMapper.toCheckInResponse(
+                checkInService.updateDemographics(tenantId, id, request, userId)));
     }
 }

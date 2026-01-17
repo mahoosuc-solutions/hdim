@@ -329,4 +329,138 @@ class PreVisitChecklistServiceTest {
         assertThat(result.getCompletedBy()).isEqualTo("test-user");
         assertThat(result.getCompletedAt()).isNotNull();
     }
+
+    // ==================== 5f: getChecklistProgress parameter order adapter ====================
+
+    @Test
+    void getChecklistProgress_WithTenantFirst_ShouldReturnProgress() {
+        // Given
+        UUID checklistId = UUID.randomUUID();
+        testChecklist.setId(checklistId);
+        testChecklist.setReviewMedicalHistory(true);
+        testChecklist.setVerifyInsurance(true);
+        testChecklist.setCompletionPercentage(new BigDecimal("25.00"));
+        when(checklistRepository.findByIdAndTenantId(checklistId, TENANT_ID))
+                .thenReturn(Optional.of(testChecklist));
+
+        // When
+        PreVisitChecklistService.ChecklistProgress result =
+                checklistService.getChecklistProgress(TENANT_ID, checklistId);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getChecklistId()).isEqualTo(checklistId);
+        assertThat(result.getPatientId()).isEqualTo(PATIENT_ID);
+        assertThat(result.getAppointmentType()).isEqualTo(APPOINTMENT_TYPE);
+        assertThat(result.getCompletionPercentage()).isEqualByComparingTo("25.00");
+    }
+
+    @Test
+    void getChecklistProgress_WithTenantFirst_ShouldThrowException_WhenNotFound() {
+        // Given
+        UUID checklistId = UUID.randomUUID();
+        when(checklistRepository.findByIdAndTenantId(checklistId, TENANT_ID))
+                .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> checklistService.getChecklistProgress(TENANT_ID, checklistId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Checklist not found");
+    }
+
+    // ==================== 5g: getIncompleteCriticalItems ====================
+
+    @Test
+    void getIncompleteCriticalItems_ShouldReturnAll_WhenNoneCompleted() {
+        // Given
+        UUID checklistId = UUID.randomUUID();
+        testChecklist.setId(checklistId);
+        when(checklistRepository.findByIdAndTenantId(checklistId, TENANT_ID))
+                .thenReturn(Optional.of(testChecklist));
+
+        // When
+        List<PreVisitChecklistService.ChecklistItemResponse> items =
+                checklistService.getIncompleteCriticalItems(TENANT_ID, checklistId);
+
+        // Then
+        assertThat(items).hasSize(8); // All 8 critical items
+        assertThat(items).extracting("name")
+                .containsExactlyInAnyOrder(
+                        "Review Medical History",
+                        "Verify Insurance",
+                        "Update Demographics",
+                        "Review Medications",
+                        "Review Allergies",
+                        "Prepare Vitals Equipment",
+                        "Review Care Gaps",
+                        "Obtain Consent"
+                );
+        assertThat(items).allMatch(item -> !item.isCompleted());
+        assertThat(items).allMatch(PreVisitChecklistService.ChecklistItemResponse::isRequired);
+    }
+
+    @Test
+    void getIncompleteCriticalItems_ShouldReturnSubset_WhenSomeCompleted() {
+        // Given
+        UUID checklistId = UUID.randomUUID();
+        testChecklist.setId(checklistId);
+        testChecklist.setReviewMedicalHistory(true);
+        testChecklist.setVerifyInsurance(true);
+        testChecklist.setObtainConsent(true);
+        when(checklistRepository.findByIdAndTenantId(checklistId, TENANT_ID))
+                .thenReturn(Optional.of(testChecklist));
+
+        // When
+        List<PreVisitChecklistService.ChecklistItemResponse> items =
+                checklistService.getIncompleteCriticalItems(TENANT_ID, checklistId);
+
+        // Then
+        assertThat(items).hasSize(5); // 5 remaining incomplete items
+        assertThat(items).extracting("name")
+                .containsExactlyInAnyOrder(
+                        "Update Demographics",
+                        "Review Medications",
+                        "Review Allergies",
+                        "Prepare Vitals Equipment",
+                        "Review Care Gaps"
+                );
+        assertThat(items).allMatch(item -> !item.isCompleted());
+    }
+
+    @Test
+    void getIncompleteCriticalItems_ShouldReturnEmpty_WhenAllCompleted() {
+        // Given
+        UUID checklistId = UUID.randomUUID();
+        testChecklist.setId(checklistId);
+        testChecklist.setReviewMedicalHistory(true);
+        testChecklist.setVerifyInsurance(true);
+        testChecklist.setUpdateDemographics(true);
+        testChecklist.setReviewMedications(true);
+        testChecklist.setReviewAllergies(true);
+        testChecklist.setPrepareVitalsEquipment(true);
+        testChecklist.setReviewCareGaps(true);
+        testChecklist.setObtainConsent(true);
+        when(checklistRepository.findByIdAndTenantId(checklistId, TENANT_ID))
+                .thenReturn(Optional.of(testChecklist));
+
+        // When
+        List<PreVisitChecklistService.ChecklistItemResponse> items =
+                checklistService.getIncompleteCriticalItems(TENANT_ID, checklistId);
+
+        // Then
+        assertThat(items).isEmpty();
+    }
+
+    @Test
+    void getIncompleteCriticalItems_ShouldThrowException_WhenChecklistNotFound() {
+        // Given
+        UUID checklistId = UUID.randomUUID();
+        when(checklistRepository.findByIdAndTenantId(checklistId, TENANT_ID))
+                .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> checklistService.getIncompleteCriticalItems(TENANT_ID, checklistId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Checklist not found");
+    }
 }

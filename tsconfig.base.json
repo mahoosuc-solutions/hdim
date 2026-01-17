@@ -17,6 +17,21 @@
     "paths": {
       "@clinical-portal/feature-dashboard": [
         "libs/clinical-portal/feature-dashboard/src/index.ts"
+      ],
+      "@health-platform/shared/data-access": [
+        "libs/shared/data-access/src/index.ts"
+      ],
+      "@health-platform/shared/ui-common": [
+        "libs/shared/ui-common/src/index.ts"
+      ],
+      "@health-platform/shared/util-auth": [
+        "libs/shared/util-auth/src/index.ts"
+      ],
+      "@health-platform/shared/feature-shell": [
+        "libs/shared/feature-shell/src/index.ts"
+      ],
+      "mfePatients/Routes": [
+        "apps/mfe-patients/src/app/remote-entry/entry.routes.ts"
       ]
     }
   },

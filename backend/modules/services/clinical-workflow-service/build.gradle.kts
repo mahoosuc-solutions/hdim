@@ -62,6 +62,11 @@ dependencies {
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
 
+    // MapStruct for DTO mapping (Note: Using manual mappers, not annotation-based)
+    // MapStruct dependency available if needed for future enhancements
+    implementation(libs.mapstruct)
+    annotationProcessor(libs.mapstruct.processor)
+
     // Utilities
     implementation(libs.commons.lang3)
     implementation(libs.guava)

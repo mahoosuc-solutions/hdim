@@ -99,5 +99,6 @@ include(
 
 // Testing Modules
 include(
-    "testing:cross-service-audit"
+    "modules:testing:cross-service-audit",
+    "modules:testing:deployment-validation"
 )

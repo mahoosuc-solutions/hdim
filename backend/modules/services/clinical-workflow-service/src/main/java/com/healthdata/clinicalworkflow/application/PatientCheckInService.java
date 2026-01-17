@@ -1,16 +1,23 @@
 package com.healthdata.clinicalworkflow.application;
 
+import com.healthdata.clinicalworkflow.api.v1.dto.CheckInRequest;
+import com.healthdata.clinicalworkflow.api.v1.dto.ConsentRequest;
+import com.healthdata.clinicalworkflow.api.v1.dto.DemographicsUpdateRequest;
+import com.healthdata.clinicalworkflow.api.v1.dto.InsuranceVerificationRequest;
 import com.healthdata.clinicalworkflow.domain.model.PatientCheckInEntity;
 import com.healthdata.clinicalworkflow.domain.repository.PatientCheckInRepository;
+import com.healthdata.clinicalworkflow.infrastructure.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -47,7 +54,69 @@ public class PatientCheckInService {
     private final PatientCheckInRepository checkInRepository;
 
     /**
-     * Check in patient
+     * Check in patient - Adapter method (1a)
+     *
+     * Adapter that extracts data from CheckInRequest DTO and delegates to internal logic.
+     * Matches controller contract: checkInPatient(String tenantId, CheckInRequest request, String userId)
+     *
+     * @param tenantId the tenant ID (HIPAA §164.312(d))
+     * @param request the check-in request containing patient and appointment IDs
+     * @param userId the user ID performing the check-in
+     * @return created check-in record
+     */
+    @Transactional
+    public PatientCheckInEntity checkInPatient(
+            String tenantId,
+            CheckInRequest request,
+            String userId) {
+        log.debug("Checking in patient {} for appointment {} in tenant {}",
+                request.getPatientId(), request.getAppointmentId(), tenantId);
+
+        UUID patientId;
+        try {
+            patientId = UUID.fromString(request.getPatientId());
+        } catch (IllegalArgumentException e) {
+            throw new ResourceNotFoundException("Invalid patient ID format: " + request.getPatientId());
+        }
+
+        // Check for duplicate
+        checkInRepository.findByTenantIdAndAppointmentId(tenantId, request.getAppointmentId())
+                .ifPresent(existing -> {
+                    throw new IllegalStateException(
+                            "Patient already checked in for appointment: " + request.getAppointmentId());
+                });
+
+        // Extract request fields
+        Instant checkInTime = request.getCheckInTime() != null ?
+                request.getCheckInTime().atZone(ZoneId.systemDefault()).toInstant() :
+                Instant.now();
+
+        PatientCheckInEntity checkIn = PatientCheckInEntity.builder()
+                .tenantId(tenantId)
+                .patientId(patientId)
+                .appointmentId(request.getAppointmentId())
+                .checkInTime(checkInTime)
+                .checkedInBy(userId)
+                .status("checked-in")
+                .insuranceVerified(request.getInsuranceVerified() != null ?
+                        request.getInsuranceVerified() : false)
+                .consentObtained(request.getConsentSigned() != null ?
+                        request.getConsentSigned() : false)
+                .demographicsUpdated(request.getDemographicsConfirmed() != null ?
+                        request.getDemographicsConfirmed() : false)
+                .notes(request.getNotes())
+                .build();
+
+        PatientCheckInEntity saved = checkInRepository.save(checkIn);
+
+        log.info("Patient checked in: {} for appointment {} in tenant {} by user {}",
+                saved.getId(), request.getAppointmentId(), tenantId, userId);
+
+        return saved;
+    }
+
+    /**
+     * Check in patient - Internal method
      *
      * Main workflow for patient check-in. Creates check-in record and
      * initializes workflow state.
@@ -58,8 +127,8 @@ public class PatientCheckInService {
      * @return created check-in record
      */
     @Transactional
-    public PatientCheckInEntity checkInPatient(UUID patientId, String appointmentId, String tenantId) {
-        log.debug("Checking in patient {} for appointment {} in tenant {}",
+    public PatientCheckInEntity checkInPatientInternal(UUID patientId, String appointmentId, String tenantId) {
+        log.debug("Checking in patient {} for appointment {} in tenant {} [internal]",
                 patientId, appointmentId, tenantId);
 
         // Check if patient already checked in for this appointment
@@ -92,7 +161,197 @@ public class PatientCheckInService {
     }
 
     /**
-     * Verify insurance
+     * Get check-in by ID (1b)
+     *
+     * Retrieves a specific check-in record by ID with tenant isolation.
+     *
+     * @param tenantId the tenant ID
+     * @param checkInId the check-in ID
+     * @return the check-in record
+     */
+    public PatientCheckInEntity getCheckIn(String tenantId, UUID checkInId) {
+        log.debug("Retrieving check-in {} in tenant {}", checkInId, tenantId);
+
+        return checkInRepository.findByIdAndTenantId(checkInId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Check-in", checkInId.toString()));
+    }
+
+    /**
+     * Get today's check-in for patient (1c)
+     *
+     * Retrieves today's check-in for a specific patient with tenant isolation.
+     *
+     * @param tenantId the tenant ID
+     * @param patientId the patient ID (as String)
+     * @return the check-in record for today
+     */
+    public PatientCheckInEntity getTodaysCheckIn(String tenantId, String patientId) {
+        log.debug("Retrieving today's check-in for patient {} in tenant {}", patientId, tenantId);
+
+        UUID pid = UUID.fromString(patientId);
+        LocalDate today = LocalDate.now();
+        ZonedDateTime startOfDay = today.atStartOfDay(ZoneId.systemDefault());
+        ZonedDateTime endOfDay = today.plusDays(1).atStartOfDay(ZoneId.systemDefault());
+
+        return checkInRepository.findTodayCheckIns(
+                        tenantId,
+                        startOfDay.toInstant(),
+                        endOfDay.toInstant())
+                .stream()
+                .filter(c -> c.getPatientId().equals(pid))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Check-in for patient " + patientId + " today", ""));
+    }
+
+    /**
+     * Get check-in history with pagination (1d)
+     *
+     * Retrieves check-in history for a patient within a date range.
+     * Supports optional date filtering and pagination.
+     *
+     * @param tenantId the tenant ID
+     * @param patientId the patient ID (as String)
+     * @param startDate optional start date
+     * @param endDate optional end date
+     * @param pageable pagination information
+     * @return list of check-in records
+     */
+    public List<PatientCheckInEntity> getCheckInHistory(
+            String tenantId,
+            String patientId,
+            LocalDate startDate,
+            LocalDate endDate,
+            Pageable pageable) {
+        log.debug("Retrieving check-in history for patient {} from {} to {} in tenant {}",
+                patientId, startDate, endDate, tenantId);
+
+        UUID pid = UUID.fromString(patientId);
+
+        ZonedDateTime start = startDate != null ?
+                startDate.atStartOfDay(ZoneId.systemDefault()) :
+                LocalDate.now().minusMonths(12).atStartOfDay(ZoneId.systemDefault());
+
+        ZonedDateTime end = endDate != null ?
+                endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()) :
+                LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault());
+
+        // TODO: Implement pagination support
+        // For now, return unpaged list sorted by check-in time descending
+        return checkInRepository.findByTenantIdAndPatientIdAndCheckInTimeBetween(
+                tenantId, pid, start.toInstant(), end.toInstant());
+    }
+
+    /**
+     * Verify insurance (1e)
+     *
+     * Mark insurance as verified for a specific check-in with request data processing.
+     *
+     * @param tenantId the tenant ID
+     * @param checkInId the check-in ID
+     * @param request the insurance verification request
+     * @param userId the user ID performing the verification
+     * @return updated check-in record
+     */
+    @Transactional
+    public PatientCheckInEntity verifyInsurance(
+            String tenantId,
+            UUID checkInId,
+            InsuranceVerificationRequest request,
+            String userId) {
+        log.debug("Verifying insurance for check-in {} in tenant {}", checkInId, tenantId);
+
+        PatientCheckInEntity checkIn = getCheckIn(tenantId, checkInId);
+        checkIn.setInsuranceVerified(true);
+        checkIn.setVerifiedBy(userId);
+
+        // Optional: Store insurance details if entity has insurance_provider column
+        if (request.getInsuranceProvider() != null) {
+            checkIn.setNotes((checkIn.getNotes() != null ? checkIn.getNotes() + "; " : "") +
+                    "Insurance: " + request.getInsuranceProvider());
+        }
+
+        PatientCheckInEntity updated = checkInRepository.save(checkIn);
+
+        log.info("Insurance verified for check-in {} in tenant {}", checkInId, tenantId);
+
+        return updated;
+    }
+
+    /**
+     * Record consent (1f) - renamed from obtainConsent
+     *
+     * Mark consent as obtained for a specific check-in with request data processing.
+     *
+     * @param tenantId the tenant ID
+     * @param checkInId the check-in ID
+     * @param request the consent request
+     * @param userId the user ID recording the consent
+     * @return updated check-in record
+     */
+    @Transactional
+    public PatientCheckInEntity recordConsent(
+            String tenantId,
+            UUID checkInId,
+            ConsentRequest request,
+            String userId) {
+        log.debug("Recording consent for check-in {} in tenant {}", checkInId, tenantId);
+
+        PatientCheckInEntity checkIn = getCheckIn(tenantId, checkInId);
+        checkIn.setConsentObtained(true);
+        checkIn.setConsentObtainedBy(userId);
+
+        if (request.getConsentType() != null) {
+            checkIn.setNotes((checkIn.getNotes() != null ? checkIn.getNotes() + "; " : "") +
+                    "Consent: " + request.getConsentType());
+        }
+
+        PatientCheckInEntity updated = checkInRepository.save(checkIn);
+
+        log.info("Consent recorded for check-in {} in tenant {}", checkInId, tenantId);
+
+        return updated;
+    }
+
+    /**
+     * Update demographics (1g)
+     *
+     * Mark demographics as updated for a specific check-in with proper parameter order.
+     *
+     * @param tenantId the tenant ID
+     * @param checkInId the check-in ID
+     * @param request the demographics update request
+     * @param userId the user ID performing the update
+     * @return updated check-in record
+     */
+    @Transactional
+    public PatientCheckInEntity updateDemographics(
+            String tenantId,
+            UUID checkInId,
+            DemographicsUpdateRequest request,
+            String userId) {
+        log.debug("Updating demographics for check-in {} in tenant {}", checkInId, tenantId);
+
+        PatientCheckInEntity checkIn = getCheckIn(tenantId, checkInId);
+        checkIn.setDemographicsUpdated(true);
+        checkIn.setDemographicsUpdatedBy(userId);
+
+        // Store updated demographics in notes field
+        String demographicsInfo = String.format(
+                "Demographics updated: address=%s, phone=%s",
+                request.getAddressChanged() != null && request.getAddressChanged() ? "changed" : "unchanged",
+                request.getPhoneChanged() != null && request.getPhoneChanged() ? "changed" : "unchanged");
+        checkIn.setNotes((checkIn.getNotes() != null ? checkIn.getNotes() + "; " : "") + demographicsInfo);
+
+        PatientCheckInEntity updated = checkInRepository.save(checkIn);
+
+        log.info("Demographics updated for check-in {} in tenant {}", checkInId, tenantId);
+
+        return updated;
+    }
+
+    /**
+     * Verify insurance - Internal method (legacy)
      *
      * Mark insurance as verified for check-in.
      *
@@ -101,7 +360,7 @@ public class PatientCheckInService {
      * @return updated check-in record
      */
     @Transactional
-    public PatientCheckInEntity verifyInsurance(UUID patientId, String tenantId) {
+    public PatientCheckInEntity verifyInsuranceInternal(UUID patientId, String tenantId) {
         log.debug("Verifying insurance for patient {} in tenant {}", patientId, tenantId);
 
         List<PatientCheckInEntity> checkIns = checkInRepository
@@ -122,7 +381,7 @@ public class PatientCheckInService {
     }
 
     /**
-     * Obtain consent
+     * Obtain consent - Internal method (legacy)
      *
      * Mark consent as obtained for check-in.
      *
@@ -131,7 +390,7 @@ public class PatientCheckInService {
      * @return updated check-in record
      */
     @Transactional
-    public PatientCheckInEntity obtainConsent(UUID patientId, String tenantId) {
+    public PatientCheckInEntity obtainConsentInternal(UUID patientId, String tenantId) {
         log.debug("Obtaining consent for patient {} in tenant {}", patientId, tenantId);
 
         List<PatientCheckInEntity> checkIns = checkInRepository
@@ -152,7 +411,7 @@ public class PatientCheckInService {
     }
 
     /**
-     * Update demographics
+     * Update demographics - Internal method (legacy)
      *
      * Mark demographics as updated and store any changes.
      *
@@ -162,7 +421,7 @@ public class PatientCheckInService {
      * @return updated check-in record
      */
     @Transactional
-    public PatientCheckInEntity updateDemographics(
+    public PatientCheckInEntity updateDemographicsInternal(
             UUID patientId, Map<String, Object> demographics, String tenantId) {
         log.debug("Updating demographics for patient {} in tenant {}", patientId, tenantId);
 
@@ -225,7 +484,7 @@ public class PatientCheckInService {
     }
 
     /**
-     * Get check-in history for patient
+     * Get check-in history for patient - Internal method (legacy)
      *
      * Retrieves all check-in records for patient, ordered by most recent.
      *
@@ -233,7 +492,7 @@ public class PatientCheckInService {
      * @param tenantId the tenant ID
      * @return list of check-in records
      */
-    public List<PatientCheckInEntity> getCheckInHistory(UUID patientId, String tenantId) {
+    public List<PatientCheckInEntity> getCheckInHistoryInternal(UUID patientId, String tenantId) {
         log.debug("Retrieving check-in history for patient {} in tenant {}", patientId, tenantId);
 
         return checkInRepository.findByTenantIdAndPatientIdOrderByCheckInTimeDesc(

@@ -1,5 +1,8 @@
 package com.healthdata.clinicalworkflow.application;
 
+import com.healthdata.clinicalworkflow.api.v1.dto.VitalAlertResponse;
+import com.healthdata.clinicalworkflow.api.v1.dto.VitalSignsResponse;
+import com.healthdata.clinicalworkflow.api.v1.dto.VitalsHistoryResponse;
 import com.healthdata.clinicalworkflow.domain.model.VitalSignsRecordEntity;
 import com.healthdata.clinicalworkflow.domain.repository.VitalSignsRecordRepository;
 import lombok.Builder;
@@ -7,6 +10,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,9 +20,11 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Vital Signs Service
@@ -118,14 +124,14 @@ public class VitalSignsService {
      * pounds→kg, inches→cm.
      *
      * @param tenantId the tenant ID
-     * @param request vital signs request with potentially different types
+     * @param request vital signs request from controller (DTO)
      * @param userId the user recording vitals (for audit trail)
-     * @return created vital signs record
+     * @return created vital signs record as DTO
      */
     @Transactional
-    public VitalSignsRecordEntity recordVitalSigns(
+    public VitalSignsResponse recordVitalSigns(
             String tenantId,
-            VitalSignsRequest request,
+            com.healthdata.clinicalworkflow.api.v1.dto.VitalSignsRequest request,
             String userId) {
         log.debug("Recording vital signs for patient {} in tenant {}",
                 request.getPatientId(), tenantId);
@@ -133,7 +139,7 @@ public class VitalSignsService {
         // Convert request parameters to internal format
         UUID patientId;
         try {
-            patientId = UUID.fromString(request.getPatientId().toString());
+            patientId = UUID.fromString(request.getPatientId());
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid patient ID format: " + request.getPatientId());
         }
@@ -143,30 +149,30 @@ public class VitalSignsService {
                 .patientId(patientId)
                 .encounterId(request.getEncounterId())
                 .recordedBy(userId)
-                .systolicBp(request.getSystolicBp() != null ?
-                        request.getSystolicBp() : null)
-                .diastolicBp(request.getDiastolicBp() != null ?
-                        request.getDiastolicBp() : null)
+                .systolicBp(request.getSystolicBP() != null ?
+                        BigDecimal.valueOf(request.getSystolicBP()) : null)
+                .diastolicBp(request.getDiastolicBP() != null ?
+                        BigDecimal.valueOf(request.getDiastolicBP()) : null)
                 .heartRate(request.getHeartRate() != null ?
-                        request.getHeartRate() : null)
-                .temperatureF(request.getTemperatureF() != null ?
-                        request.getTemperatureF() : null)
-                .respirationRate(request.getRespirationRate() != null ?
-                        request.getRespirationRate() : null)
+                        BigDecimal.valueOf(request.getHeartRate()) : null)
+                .temperatureF(request.getTemperature())
+                .respirationRate(request.getRespiratoryRate() != null ?
+                        BigDecimal.valueOf(request.getRespiratoryRate()) : null)
                 .oxygenSaturation(request.getOxygenSaturation() != null ?
-                        request.getOxygenSaturation() : null)
-                .weightKg(convertPoundsToKg(request.getWeightKg()))
-                .heightCm(convertInchesToCm(request.getHeightCm()))
+                        BigDecimal.valueOf(request.getOxygenSaturation()) : null)
+                .weightKg(convertPoundsToKg(request.getWeight()))
+                .heightCm(convertInchesToCm(request.getHeight()))
                 .notes(request.getNotes())
                 .build();
 
-        return recordVitals(internalRequest, tenantId);
+        VitalSignsRecordEntity entity = recordVitals(internalRequest, tenantId);
+        return mapToVitalSignsResponse(entity);
     }
 
     /**
      * Convert pounds to kilograms
      *
-     * @param pounds weight in pounds
+     * @param pounds weight in pounds (BigDecimal from DTO)
      * @return weight in kilograms (rounded to 2 decimal places)
      */
     private BigDecimal convertPoundsToKg(BigDecimal pounds) {
@@ -179,7 +185,7 @@ public class VitalSignsService {
     /**
      * Convert inches to centimeters
      *
-     * @param inches height in inches
+     * @param inches height in inches (BigDecimal from DTO)
      * @return height in centimeters (rounded to 2 decimal places)
      */
     private BigDecimal convertInchesToCm(BigDecimal inches) {
@@ -187,6 +193,32 @@ public class VitalSignsService {
             return null;
         }
         return inches.multiply(new BigDecimal("2.54")).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Convert kilograms to pounds
+     *
+     * @param kg weight in kilograms
+     * @return weight in pounds (rounded to 2 decimal places)
+     */
+    private BigDecimal convertKgToPounds(BigDecimal kg) {
+        if (kg == null) {
+            return null;
+        }
+        return kg.divide(new BigDecimal("0.453592"), 2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Convert centimeters to inches
+     *
+     * @param cm height in centimeters
+     * @return height in inches (rounded to 2 decimal places)
+     */
+    private BigDecimal convertCmToInches(BigDecimal cm) {
+        if (cm == null) {
+            return null;
+        }
+        return cm.divide(new BigDecimal("2.54"), 2, RoundingMode.HALF_UP);
     }
 
     /**
@@ -356,15 +388,15 @@ public class VitalSignsService {
     }
 
     /**
-     * 2d. Get vital alerts with acknowledged filter parameter
+     * 2d. Get vital alerts with acknowledged filter parameter (returns DTOs)
      *
      * Retrieves vital alerts with option to include/exclude acknowledged alerts.
      *
      * @param tenantId the tenant ID
      * @param includeAcknowledged whether to include acknowledged alerts
-     * @return list of vital alerts
+     * @return list of vital alerts as DTOs
      */
-    public List<VitalSignsRecordEntity> getVitalAlerts(
+    public List<VitalAlertResponse> getVitalAlerts(
             String tenantId,
             boolean includeAcknowledged) {
         log.debug("Retrieving vital alerts for tenant {} (includeAcknowledged={})",
@@ -372,27 +404,39 @@ public class VitalSignsService {
 
         List<VitalSignsRecordEntity> alerts = getVitalsAlerts(tenantId);
 
-        // TODO: Add acknowledged field to VitalSignsRecordEntity to support filtering
-        // For now, return all alerts regardless of acknowledged status
-        return alerts;
+        // Filter out acknowledged alerts if requested
+        if (!includeAcknowledged) {
+            alerts = alerts.stream()
+                    .filter(v -> v.getAcknowledgedBy() == null)
+                    .collect(Collectors.toList());
+        }
+
+        return alerts.stream()
+                .map(this::mapToVitalAlertResponse)
+                .collect(Collectors.toList());
     }
 
     /**
-     * 2f. Get critical alerts for tenant
+     * 2f. Get critical alerts for tenant (returns DTOs)
      *
      * Retrieves only critical vital sign alerts.
      *
      * @param tenantId the tenant ID
-     * @return list of critical alerts sorted by recorded time descending
+     * @return list of critical alerts as DTOs sorted by recorded time descending
      */
-    public List<VitalSignsRecordEntity> getCriticalAlerts(String tenantId) {
+    public List<VitalAlertResponse> getCriticalAlerts(String tenantId) {
         log.debug("Retrieving critical vital alerts for tenant {}", tenantId);
 
-        return vitalsRepository.findByTenantIdAndAlertStatusOrderByRecordedAtDesc(tenantId, "critical");
+        List<VitalSignsRecordEntity> criticalAlerts = vitalsRepository
+                .findByTenantIdAndAlertStatusOrderByRecordedAtDesc(tenantId, "critical");
+
+        return criticalAlerts.stream()
+                .map(this::mapToVitalAlertResponse)
+                .collect(Collectors.toList());
     }
 
     /**
-     * 2g. Acknowledge alert
+     * 2g. Acknowledge alert (returns DTO)
      *
      * Marks a vital signs alert as acknowledged by a user.
      * Updates audit trail with acknowledgement timestamp.
@@ -400,10 +444,10 @@ public class VitalSignsService {
      * @param tenantId the tenant ID
      * @param vitalsId the vitals ID
      * @param userId the user acknowledging the alert
-     * @return updated vitals record
+     * @return updated vitals record as alert DTO
      */
     @Transactional
-    public VitalSignsRecordEntity acknowledgeAlert(
+    public VitalAlertResponse acknowledgeAlert(
             String tenantId,
             UUID vitalsId,
             String userId) {
@@ -412,16 +456,16 @@ public class VitalSignsService {
 
         VitalSignsRecordEntity vitals = getVitalsById(vitalsId, tenantId);
 
-        // TODO: Add acknowledged_by and acknowledged_at fields to entity
-        // vitals.setAcknowledgedBy(userId);
-        // vitals.setAcknowledgedAt(Instant.now());
+        // Set acknowledgement fields
+        vitals.setAcknowledgedBy(userId);
+        vitals.setAcknowledgedAt(Instant.now());
 
         VitalSignsRecordEntity updated = vitalsRepository.save(vitals);
 
         log.info("Alert acknowledged for vitals {} in tenant {} by user {}",
                 vitalsId, tenantId, userId);
 
-        return updated;
+        return mapToVitalAlertResponse(updated);
     }
 
     /**
@@ -485,19 +529,20 @@ public class VitalSignsService {
     }
 
     /**
-     * Get latest vitals for patient (String patientId version - overload)
+     * 2e. Get latest vitals for patient (returns DTO)
      *
      * @param tenantId the tenant ID
      * @param patientId the patient ID (String)
-     * @return latest vitals record
+     * @return latest vitals record as DTO
      */
-    public VitalSignsRecordEntity getLatestVitals(String tenantId, String patientId) {
+    public VitalSignsResponse getLatestVitals(String tenantId, String patientId) {
         log.debug("Retrieving latest vitals for patient {} in tenant {}", patientId, tenantId);
 
         UUID pid = UUID.fromString(patientId);
-        return getLatestVitalsUUID(pid, tenantId)
+        VitalSignsRecordEntity entity = getLatestVitalsUUID(pid, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Vital signs not found for patient: " + patientId));
+        return mapToVitalSignsResponse(entity);
     }
 
     /**
@@ -516,19 +561,20 @@ public class VitalSignsService {
     }
 
     /**
-     * 2b. Get vital signs (alias to getVitalsById)
+     * 2b. Get vital signs (returns DTO)
      *
      * @param tenantId the tenant ID
      * @param vitalsId the vitals ID
-     * @return vitals record
+     * @return vitals record as DTO
      */
-    public VitalSignsRecordEntity getVitalSigns(String tenantId, UUID vitalsId) {
+    public VitalSignsResponse getVitalSigns(String tenantId, UUID vitalsId) {
         log.debug("Retrieving vital signs {} in tenant {}", vitalsId, tenantId);
-        return getVitalsById(vitalsId, tenantId);
+        VitalSignsRecordEntity entity = getVitalsById(vitalsId, tenantId);
+        return mapToVitalSignsResponse(entity);
     }
 
     /**
-     * 2c. Get vitals history with pagination support
+     * 2c. Get vitals history with pagination support (returns DTO)
      *
      * Retrieves vitals for patient with pagination.
      * Converts String patientId to UUID.
@@ -536,18 +582,29 @@ public class VitalSignsService {
      * @param tenantId the tenant ID
      * @param patientId the patient ID (String)
      * @param pageable pagination info (not yet fully implemented)
-     * @return list of vitals sorted by recorded time descending
+     * @return paginated vitals history as DTO
      */
-    public List<VitalSignsRecordEntity> getVitalsHistory(
+    public VitalsHistoryResponse getVitalsHistory(
             String tenantId,
             String patientId,
-            org.springframework.data.domain.Pageable pageable) {
+            Pageable pageable) {
         log.debug("Retrieving vitals history for patient {} in tenant {}", patientId, tenantId);
 
         UUID pid = UUID.fromString(patientId);
         // TODO: Implement full pagination support
         // For now return all vitals sorted by recorded time descending
-        return getAllPatientVitals(pid, tenantId);
+        List<VitalSignsRecordEntity> entities = getAllPatientVitals(pid, tenantId);
+        List<VitalSignsResponse> vitals = entities.stream()
+                .map(this::mapToVitalSignsResponse)
+                .collect(Collectors.toList());
+
+        return VitalsHistoryResponse.builder()
+                .vitals(vitals)
+                .totalRecords((long) vitals.size())
+                .currentPage(pageable.getPageNumber())
+                .pageSize(pageable.getPageSize())
+                .totalPages((int) Math.ceil((double) vitals.size() / pageable.getPageSize()))
+                .build();
     }
 
     /**
@@ -624,8 +681,166 @@ public class VitalSignsService {
         return updated;
     }
 
+    // ========== MAPPER METHODS ==========
+
     /**
-     * Vital Signs Request DTO
+     * Map VitalSignsRecordEntity to VitalSignsResponse DTO
+     *
+     * Converts internal entity to API response format.
+     * Handles unit conversions: kg→pounds, cm→inches
+     * Converts BigDecimal to Integer where appropriate
+     *
+     * @param entity the vitals entity
+     * @return vitals response DTO
+     */
+    private VitalSignsResponse mapToVitalSignsResponse(VitalSignsRecordEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        List<String> alerts = new ArrayList<>();
+        if (entity.getAlertMessage() != null && !entity.getAlertMessage().isEmpty()) {
+            alerts.add(entity.getAlertMessage());
+        }
+
+        return VitalSignsResponse.builder()
+                .id(entity.getId())
+                .patientId(entity.getPatientId().toString())
+                .patientName(null) // TODO: Fetch from patient service
+                .encounterId(entity.getEncounterId())
+                .measuredAt(entity.getRecordedAt() != null ?
+                        LocalDateTime.ofInstant(entity.getRecordedAt(), ZoneId.systemDefault()) : null)
+                .systolicBP(entity.getSystolicBp() != null ? entity.getSystolicBp().intValue() : null)
+                .diastolicBP(entity.getDiastolicBp() != null ? entity.getDiastolicBp().intValue() : null)
+                .heartRate(entity.getHeartRate() != null ? entity.getHeartRate().intValue() : null)
+                .respiratoryRate(entity.getRespirationRate() != null ? entity.getRespirationRate().intValue() : null)
+                .temperature(entity.getTemperatureF())
+                .oxygenSaturation(entity.getOxygenSaturation() != null ? entity.getOxygenSaturation().intValue() : null)
+                .weight(convertKgToPounds(entity.getWeightKg()))
+                .height(convertCmToInches(entity.getHeightCm()))
+                .bmi(entity.getBmi())
+                .painLevel(null) // Not tracked in entity yet
+                .alerts(alerts)
+                .hasCriticalAlerts("critical".equals(entity.getAlertStatus()))
+                .notes(entity.getNotes())
+                .tenantId(entity.getTenantId())
+                .createdAt(entity.getCreatedAt() != null ?
+                        LocalDateTime.ofInstant(entity.getCreatedAt(), ZoneId.systemDefault()) : null)
+                .recordedBy(entity.getRecordedBy())
+                .build();
+    }
+
+    /**
+     * Map VitalSignsRecordEntity to VitalAlertResponse DTO
+     *
+     * Converts entity with alerts to alert-specific response format.
+     *
+     * @param entity the vitals entity
+     * @return vital alert response DTO
+     */
+    private VitalAlertResponse mapToVitalAlertResponse(VitalSignsRecordEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        return VitalAlertResponse.builder()
+                .alertId(entity.getId()) // Using vitals ID as alert ID
+                .vitalSignsRecordId(entity.getId())
+                .patientId(entity.getPatientId().toString())
+                .patientName(null) // TODO: Fetch from patient service
+                .roomNumber(null) // TODO: Fetch from room assignment service
+                .alertType(determineAlertType(entity))
+                .severity(entity.getAlertStatus().toUpperCase())
+                .message(entity.getAlertMessage())
+                .measuredValue(extractMeasuredValue(entity))
+                .normalRange(determineNormalRange(entity))
+                .alertedAt(entity.getRecordedAt() != null ?
+                        LocalDateTime.ofInstant(entity.getRecordedAt(), ZoneId.systemDefault()) : null)
+                .acknowledged(entity.getAcknowledgedBy() != null)
+                .acknowledgedAt(entity.getAcknowledgedAt() != null ?
+                        LocalDateTime.ofInstant(entity.getAcknowledgedAt(), ZoneId.systemDefault()) : null)
+                .acknowledgedBy(entity.getAcknowledgedBy())
+                .build();
+    }
+
+    /**
+     * Determine alert type from vital signs entity
+     *
+     * @param entity the vitals entity
+     * @return alert type string
+     */
+    private String determineAlertType(VitalSignsRecordEntity entity) {
+        if (entity.getAlertMessage() == null) {
+            return "UNKNOWN";
+        }
+        String message = entity.getAlertMessage().toUpperCase();
+        if (message.contains("SYSTOLIC BP") && (message.contains(">") || message.contains("HIGH"))) {
+            return "HIGH_BLOOD_PRESSURE";
+        } else if (message.contains("SYSTOLIC BP") && (message.contains("<") || message.contains("LOW"))) {
+            return "LOW_BLOOD_PRESSURE";
+        } else if (message.contains("HEART RATE") && (message.contains(">") || message.contains("HIGH"))) {
+            return "HIGH_HEART_RATE";
+        } else if (message.contains("HEART RATE") && (message.contains("<") || message.contains("LOW"))) {
+            return "LOW_HEART_RATE";
+        } else if (message.contains("TEMPERATURE") && message.contains(">")) {
+            return "HIGH_TEMPERATURE";
+        } else if (message.contains("TEMPERATURE") && message.contains("<")) {
+            return "LOW_TEMPERATURE";
+        } else if (message.contains("O2") || message.contains("OXYGEN")) {
+            return "LOW_OXYGEN_SATURATION";
+        }
+        return "ABNORMAL_VITAL_SIGN";
+    }
+
+    /**
+     * Extract measured value from alert message
+     *
+     * @param entity the vitals entity
+     * @return measured value string
+     */
+    private String extractMeasuredValue(VitalSignsRecordEntity entity) {
+        // This is a simplified extraction - in production would parse message more carefully
+        if (entity.getAlertMessage() == null) {
+            return "";
+        }
+        String message = entity.getAlertMessage();
+        if (message.contains("Systolic BP")) {
+            return entity.getSystolicBp() + " mmHg";
+        } else if (message.contains("Heart Rate")) {
+            return entity.getHeartRate() + " bpm";
+        } else if (message.contains("O2")) {
+            return entity.getOxygenSaturation() + "%";
+        } else if (message.contains("Temperature")) {
+            return entity.getTemperatureF() + "°F";
+        }
+        return "";
+    }
+
+    /**
+     * Determine normal range based on alert type
+     *
+     * @param entity the vitals entity
+     * @return normal range string
+     */
+    private String determineNormalRange(VitalSignsRecordEntity entity) {
+        if (entity.getAlertMessage() == null) {
+            return "";
+        }
+        String message = entity.getAlertMessage();
+        if (message.contains("Systolic BP")) {
+            return "90-140 mmHg";
+        } else if (message.contains("Heart Rate")) {
+            return "60-100 bpm";
+        } else if (message.contains("O2")) {
+            return "95-100%";
+        } else if (message.contains("Temperature")) {
+            return "97.0-99.0°F";
+        }
+        return "";
+    }
+
+    /**
+     * Vital Signs Request DTO (Internal)
      */
     @Data
     @Builder

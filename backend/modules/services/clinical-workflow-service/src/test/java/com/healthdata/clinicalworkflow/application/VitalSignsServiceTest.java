@@ -1,5 +1,6 @@
 package com.healthdata.clinicalworkflow.application;
 
+import com.healthdata.clinicalworkflow.api.v1.dto.*;
 import com.healthdata.clinicalworkflow.domain.model.VitalSignsRecordEntity;
 import com.healthdata.clinicalworkflow.domain.repository.VitalSignsRecordRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,9 +9,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
@@ -575,5 +579,244 @@ class VitalSignsServiceTest {
         // Then
         verify(vitalsRepository).save(argThat(vitals ->
                 notes.equals(vitals.getNotes())));
+    }
+
+    // ========== NEW CONTROLLER METHODS TESTS (Tier 1 Fixes) ==========
+
+    // ========== 2a. recordVitalSigns adapter Tests ==========
+
+    @Test
+    void recordVitalSigns_ShouldConvertAndReturnDTO_WhenValidRequest() {
+        // Given
+        com.healthdata.clinicalworkflow.api.v1.dto.VitalSignsRequest dtoRequest =
+                com.healthdata.clinicalworkflow.api.v1.dto.VitalSignsRequest.builder()
+                        .patientId("123e4567-e89b-12d3-a456-426614174000")
+                        .encounterId("ENC001")
+                        .measuredAt(LocalDateTime.now())
+                        .systolicBP(120)
+                        .diastolicBP(80)
+                        .heartRate(72)
+                        .respiratoryRate(16)
+                        .temperature(new BigDecimal("98.6"))
+                        .oxygenSaturation(98)
+                        .weight(new BigDecimal("175.5")) // pounds
+                        .height(new BigDecimal("68")) // inches
+                        .notes("Test vitals")
+                        .build();
+
+        testVitals.setCreatedAt(Instant.now());
+        testVitals.setRecordedAt(Instant.now());
+        when(vitalsRepository.save(any(VitalSignsRecordEntity.class)))
+                .thenReturn(testVitals);
+
+        // When
+        VitalSignsResponse response = vitalsService.recordVitalSigns(
+                TENANT_ID, dtoRequest, "test-user");
+
+        // Then
+        assertThat(response).isNotNull();
+        assertThat(response.getId()).isEqualTo(testVitals.getId());
+        assertThat(response.getPatientId()).isEqualTo(testVitals.getPatientId().toString());
+        verify(vitalsRepository).save(any(VitalSignsRecordEntity.class));
+    }
+
+    @Test
+    void recordVitalSigns_ShouldConvertUnits_WhenPoundsAndInchesProvided() {
+        // Given
+        com.healthdata.clinicalworkflow.api.v1.dto.VitalSignsRequest dtoRequest =
+                com.healthdata.clinicalworkflow.api.v1.dto.VitalSignsRequest.builder()
+                        .patientId(PATIENT_ID.toString())
+                        .encounterId("ENC001")
+                        .measuredAt(LocalDateTime.now())
+                        .systolicBP(120)
+                        .weight(new BigDecimal("154.32")) // 70kg in pounds
+                        .height(new BigDecimal("66.93")) // 170cm in inches
+                        .build();
+
+        when(vitalsRepository.save(any(VitalSignsRecordEntity.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        VitalSignsResponse response = vitalsService.recordVitalSigns(
+                TENANT_ID, dtoRequest, "test-user");
+
+        // Then - Should convert to kg and cm
+        verify(vitalsRepository).save(argThat(vitals ->
+                vitals.getWeightKg() != null &&
+                        vitals.getWeightKg().compareTo(new BigDecimal("69.85")) >= 0 &&
+                        vitals.getWeightKg().compareTo(new BigDecimal("70.15")) <= 0 &&
+                        vitals.getHeightCm() != null &&
+                        vitals.getHeightCm().compareTo(new BigDecimal("169.5")) >= 0 &&
+                        vitals.getHeightCm().compareTo(new BigDecimal("170.5")) <= 0
+        ));
+    }
+
+    // ========== 2b. getVitalSigns Tests ==========
+
+    @Test
+    void getVitalSigns_ShouldReturnDTO_WhenVitalsExist() {
+        // Given
+        UUID vitalsId = UUID.randomUUID();
+        testVitals.setId(vitalsId);
+        testVitals.setRecordedAt(Instant.now());
+        testVitals.setCreatedAt(Instant.now());
+        when(vitalsRepository.findByIdAndTenantId(vitalsId, TENANT_ID))
+                .thenReturn(Optional.of(testVitals));
+
+        // When
+        VitalSignsResponse response = vitalsService.getVitalSigns(TENANT_ID, vitalsId);
+
+        // Then
+        assertThat(response).isNotNull();
+        assertThat(response.getId()).isEqualTo(vitalsId);
+        assertThat(response.getTenantId()).isEqualTo(TENANT_ID);
+    }
+
+    // ========== 2c. getVitalsHistory with pagination Tests ==========
+
+    @Test
+    void getVitalsHistory_ShouldReturnPaginatedDTO_WhenCalled() {
+        // Given
+        String patientIdStr = PATIENT_ID.toString();
+        testVitals.setRecordedAt(Instant.now());
+        testVitals.setCreatedAt(Instant.now());
+        when(vitalsRepository.findByTenantIdAndPatientIdOrderByRecordedAtDesc(
+                TENANT_ID, PATIENT_ID))
+                .thenReturn(List.of(testVitals));
+
+        Pageable pageable = Pageable.ofSize(20);
+
+        // When
+        VitalsHistoryResponse response = vitalsService.getVitalsHistory(
+                TENANT_ID, patientIdStr, pageable);
+
+        // Then
+        assertThat(response).isNotNull();
+        assertThat(response.getVitals()).hasSize(1);
+        assertThat(response.getTotalRecords()).isEqualTo(1L);
+    }
+
+    // ========== 2d. getVitalAlerts with includeAcknowledged Tests ==========
+
+    @Test
+    void getVitalAlerts_ShouldReturnAlertDTOs_WhenAlertsExist() {
+        // Given
+        VitalSignsRecordEntity criticalVital = VitalSignsRecordEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .systolicBp(new BigDecimal("185"))
+                .alertStatus("critical")
+                .alertMessage("CRITICAL: Systolic BP 185 mmHg")
+                .recordedAt(Instant.now())
+                .createdAt(Instant.now())
+                .build();
+
+        when(vitalsRepository.findByTenantIdAndAlertStatusOrderByRecordedAtDesc(
+                TENANT_ID, "warning"))
+                .thenReturn(Collections.emptyList());
+        when(vitalsRepository.findByTenantIdAndAlertStatusOrderByRecordedAtDesc(
+                TENANT_ID, "critical"))
+                .thenReturn(List.of(criticalVital));
+
+        // When
+        List<VitalAlertResponse> alerts = vitalsService.getVitalAlerts(
+                TENANT_ID, false);
+
+        // Then
+        assertThat(alerts).hasSize(1);
+        assertThat(alerts.get(0).getSeverity()).isEqualToIgnoringCase("critical");
+    }
+
+    // ========== 2e. getLatestVitals (String patientId) Tests ==========
+
+    @Test
+    void getLatestVitals_ShouldReturnDTO_WhenLatestVitalsExist() {
+        // Given
+        String patientIdStr = PATIENT_ID.toString();
+        testVitals.setRecordedAt(Instant.now());
+        testVitals.setCreatedAt(Instant.now());
+        when(vitalsRepository.findLatestVitalForPatient(PATIENT_ID, TENANT_ID))
+                .thenReturn(Optional.of(testVitals));
+
+        // When
+        VitalSignsResponse response = vitalsService.getLatestVitals(
+                TENANT_ID, patientIdStr);
+
+        // Then
+        assertThat(response).isNotNull();
+        assertThat(response.getPatientId()).isEqualTo(PATIENT_ID.toString());
+    }
+
+    @Test
+    void getLatestVitals_ShouldThrowException_WhenNoVitalsExist() {
+        // Given
+        String patientIdStr = PATIENT_ID.toString();
+        when(vitalsRepository.findLatestVitalForPatient(PATIENT_ID, TENANT_ID))
+                .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> vitalsService.getLatestVitals(TENANT_ID, patientIdStr))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Vital signs not found");
+    }
+
+    // ========== 2f. getCriticalAlerts Tests ==========
+
+    @Test
+    void getCriticalAlerts_ShouldReturnCriticalAlertDTOs_WhenCriticalAlertsExist() {
+        // Given
+        VitalSignsRecordEntity criticalVital = VitalSignsRecordEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .heartRate(new BigDecimal("135"))
+                .alertStatus("critical")
+                .alertMessage("CRITICAL: Heart Rate 135 bpm")
+                .recordedAt(Instant.now())
+                .createdAt(Instant.now())
+                .build();
+
+        when(vitalsRepository.findByTenantIdAndAlertStatusOrderByRecordedAtDesc(
+                TENANT_ID, "critical"))
+                .thenReturn(List.of(criticalVital));
+
+        // When
+        List<VitalAlertResponse> alerts = vitalsService.getCriticalAlerts(TENANT_ID);
+
+        // Then
+        assertThat(alerts).hasSize(1);
+        assertThat(alerts.get(0).getSeverity()).isEqualToIgnoringCase("critical");
+    }
+
+    // ========== 2g. acknowledgeAlert Tests ==========
+
+    @Test
+    void acknowledgeAlert_ShouldMarkAlertAsAcknowledged_WhenValidRequest() {
+        // Given
+        UUID vitalsId = UUID.randomUUID();
+        testVitals.setId(vitalsId);
+        testVitals.setAlertStatus("critical");
+        testVitals.setAlertMessage("CRITICAL: Systolic BP 185 mmHg");
+        testVitals.setRecordedAt(Instant.now());
+        testVitals.setCreatedAt(Instant.now());
+
+        when(vitalsRepository.findByIdAndTenantId(vitalsId, TENANT_ID))
+                .thenReturn(Optional.of(testVitals));
+        when(vitalsRepository.save(any(VitalSignsRecordEntity.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        VitalAlertResponse response = vitalsService.acknowledgeAlert(
+                TENANT_ID, vitalsId, "test-user");
+
+        // Then
+        assertThat(response).isNotNull();
+        assertThat(response.getAcknowledgedBy()).isEqualTo("test-user");
+        assertThat(response.getAcknowledged()).isTrue();
+        verify(vitalsRepository).save(argThat(vitals ->
+                "test-user".equals(vitals.getAcknowledgedBy()) &&
+                        vitals.getAcknowledgedAt() != null
+        ));
     }
 }

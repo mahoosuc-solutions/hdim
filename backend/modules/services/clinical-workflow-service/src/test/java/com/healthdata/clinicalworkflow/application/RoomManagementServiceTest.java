@@ -1,5 +1,7 @@
 package com.healthdata.clinicalworkflow.application;
 
+import com.healthdata.clinicalworkflow.api.v1.dto.RoomAssignmentRequest;
+import com.healthdata.clinicalworkflow.api.v1.dto.RoomStatusUpdateRequest;
 import com.healthdata.clinicalworkflow.domain.model.RoomAssignmentEntity;
 import com.healthdata.clinicalworkflow.domain.repository.RoomAssignmentRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -185,5 +187,250 @@ class RoomManagementServiceTest {
 
         // Then
         assertThat(result).isEqualTo(5L);
+    }
+
+    // ============ TIER 1 FIXES - NEW TESTS ============
+
+    /**
+     * 3a. Test getRoomBoard - alias for getOccupancyBoard
+     */
+    @Test
+    void getRoomBoard_ShouldReturnOccupancyBoard() {
+        // Given
+        testRoom.setStatus("occupied");
+        when(roomRepository.findOccupancyBoard(TENANT_ID))
+                .thenReturn(List.of(testRoom));
+
+        // When
+        List<RoomAssignmentEntity> result = roomService.getRoomBoard(TENANT_ID);
+
+        // Then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getStatus()).isEqualTo("occupied");
+        verify(roomRepository).findOccupancyBoard(TENANT_ID);
+    }
+
+    /**
+     * 3b. Test getRoomDetails - parameter order swap from getRoomStatus
+     */
+    @Test
+    void getRoomDetails_ShouldReturnRoomStatus_WithSwappedParameters() {
+        // Given
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+
+        // When
+        RoomAssignmentEntity result = roomService.getRoomDetails(TENANT_ID, ROOM_NUMBER);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getRoomNumber()).isEqualTo(ROOM_NUMBER);
+        verify(roomRepository).findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID);
+    }
+
+    @Test
+    void getRoomDetails_ShouldThrowException_WhenRoomNotFound() {
+        // Given
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> roomService.getRoomDetails(TENANT_ID, ROOM_NUMBER))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Room not found");
+    }
+
+    /**
+     * 3c. Test assignPatientToRoom - processes RoomAssignmentRequest DTO
+     */
+    @Test
+    void assignPatientToRoom_ShouldProcessRequestDTO_AndAssignRoom() {
+        // Given
+        RoomAssignmentRequest request = RoomAssignmentRequest.builder()
+                .patientId(PATIENT_ID.toString())
+                .encounterId("ENC001")
+                .priority("ROUTINE")
+                .build();
+
+        when(roomRepository.findActiveRoomForPatient(TENANT_ID, PATIENT_ID))
+                .thenReturn(Optional.empty());
+        when(roomRepository.findAvailableRoomsByTenant(TENANT_ID))
+                .thenReturn(List.of(testRoom));
+        when(roomRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        RoomAssignmentEntity result = roomService.assignPatientToRoom(
+                TENANT_ID, ROOM_NUMBER, request, "user123");
+
+        // Then
+        assertThat(result.getStatus()).isEqualTo("occupied");
+        assertThat(result.getPatientId()).isEqualTo(PATIENT_ID);
+        verify(roomRepository).save(any(RoomAssignmentEntity.class));
+    }
+
+    @Test
+    void assignPatientToRoom_ShouldThrowException_WhenInvalidPatientIdFormat() {
+        // Given
+        RoomAssignmentRequest request = RoomAssignmentRequest.builder()
+                .patientId("INVALID-UUID")
+                .encounterId("ENC001")
+                .build();
+
+        // When/Then
+        assertThatThrownBy(() -> roomService.assignPatientToRoom(
+                TENANT_ID, ROOM_NUMBER, request, "user123"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Invalid patient ID format");
+    }
+
+    /**
+     * 3d. Test updateRoomStatus - status switching logic
+     */
+    @Test
+    void updateRoomStatus_ShouldMarkAvailable_WhenStatusIsAvailable() {
+        // Given
+        testRoom.setStatus("cleaning");
+        RoomStatusUpdateRequest request = RoomStatusUpdateRequest.builder()
+                .status("AVAILABLE")
+                .reason("Cleaning completed")
+                .build();
+
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+        when(roomRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        RoomAssignmentEntity result = roomService.updateRoomStatus(
+                TENANT_ID, ROOM_NUMBER, request, "user123");
+
+        // Then
+        assertThat(result.getStatus()).isEqualTo("available");
+        verify(roomRepository).save(any());
+    }
+
+    @Test
+    void updateRoomStatus_ShouldScheduleCleaning_WhenStatusIsCleaning() {
+        // Given
+        testRoom.setStatus("occupied");
+        RoomStatusUpdateRequest request = RoomStatusUpdateRequest.builder()
+                .status("CLEANING")
+                .reason("Patient discharged")
+                .build();
+
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+        when(roomRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        RoomAssignmentEntity result = roomService.updateRoomStatus(
+                TENANT_ID, ROOM_NUMBER, request, "user123");
+
+        // Then
+        assertThat(result.getStatus()).isEqualTo("cleaning");
+        assertThat(result.getCleaningStartedAt()).isNotNull();
+        verify(roomRepository, atLeastOnce()).save(any());
+    }
+
+    @Test
+    void updateRoomStatus_ShouldSetOutOfService_WhenStatusIsOutOfService() {
+        // Given
+        testRoom.setStatus("available");
+        RoomStatusUpdateRequest request = RoomStatusUpdateRequest.builder()
+                .status("OUT_OF_SERVICE")
+                .reason("Maintenance required")
+                .build();
+
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+        when(roomRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        RoomAssignmentEntity result = roomService.updateRoomStatus(
+                TENANT_ID, ROOM_NUMBER, request, "user123");
+
+        // Then
+        assertThat(result.getStatus()).isEqualTo("out-of-service");
+        verify(roomRepository).save(any());
+    }
+
+    /**
+     * 3e. Test markRoomReady with corrected parameter order (tenantId, roomNumber, userId)
+     */
+    @Test
+    void markRoomReady_WithUserId_ShouldUpdateStatus() {
+        // Given
+        testRoom.setStatus("cleaning");
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+        when(roomRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        RoomAssignmentEntity result = roomService.markRoomReady(
+                TENANT_ID, ROOM_NUMBER, "user123");
+
+        // Then
+        assertThat(result.getStatus()).isEqualTo("available");
+        assertThat(result.getRoomReadyAt()).isNotNull();
+        verify(roomRepository).save(any());
+    }
+
+    /**
+     * 3f. Test dischargePatient - extracts patientId from room
+     */
+    @Test
+    void dischargePatient_WithUserId_ShouldExtractPatientIdAndDischarge() {
+        // Given
+        testRoom.setStatus("occupied");
+        testRoom.setPatientId(PATIENT_ID);
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+        when(roomRepository.findActiveRoomForPatient(TENANT_ID, PATIENT_ID))
+                .thenReturn(Optional.of(testRoom));
+        when(roomRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        RoomAssignmentEntity result = roomService.dischargePatient(
+                TENANT_ID, ROOM_NUMBER, "user123");
+
+        // Then
+        assertThat(result.getStatus()).isEqualTo("cleaning");
+        assertThat(result.getDischargedAt()).isNotNull();
+        verify(roomRepository).save(any());
+    }
+
+    @Test
+    void dischargePatient_WithUserId_ShouldThrowException_WhenRoomNotOccupied() {
+        // Given
+        testRoom.setStatus("available");
+        testRoom.setPatientId(null);
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+
+        // When/Then
+        assertThatThrownBy(() -> roomService.dischargePatient(
+                TENANT_ID, ROOM_NUMBER, "user123"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Room not occupied");
+    }
+
+    /**
+     * 3g. Test scheduleCleaning - uses default 15 minutes
+     */
+    @Test
+    void scheduleCleaning_WithUserId_ShouldUseDefaultCleaningMinutes() {
+        // Given
+        testRoom.setStatus("available");
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+        when(roomRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        RoomAssignmentEntity result = roomService.scheduleCleaning(
+                TENANT_ID, ROOM_NUMBER, "user123");
+
+        // Then
+        assertThat(result.getStatus()).isEqualTo("cleaning");
+        assertThat(result.getCleaningStartedAt()).isNotNull();
+        verify(roomRepository).save(any());
     }
 }

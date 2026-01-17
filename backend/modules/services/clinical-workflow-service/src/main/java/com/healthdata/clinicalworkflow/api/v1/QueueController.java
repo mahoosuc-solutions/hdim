@@ -3,6 +3,7 @@ package com.healthdata.clinicalworkflow.api.v1;
 import com.healthdata.audit.annotations.Audited;
 import com.healthdata.audit.models.AuditAction;
 import com.healthdata.clinicalworkflow.api.v1.dto.*;
+import com.healthdata.clinicalworkflow.api.v1.mapper.WaitingQueueMapper;
 import com.healthdata.clinicalworkflow.application.WaitingQueueService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -47,6 +48,7 @@ import java.util.Map;
 public class QueueController {
 
     private final WaitingQueueService queueService;
+    private final WaitingQueueMapper queueMapper;
 
     /**
      * Get current queue status across all queue types

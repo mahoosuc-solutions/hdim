@@ -259,7 +259,7 @@ public class TestExecutionReport {
 
 @Data
 @Builder
-class TestSuiteResult {
+public static class TestSuiteResult {
     private String suiteName;
     private int totalTests;
     private int passedTests;
@@ -272,7 +272,7 @@ class TestSuiteResult {
 
 @Data
 @Builder
-class DeploymentValidationSummary {
+public static class DeploymentValidationSummary {
     private int totalTests;
     private int totalPassed;
     private int totalFailed;

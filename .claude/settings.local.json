@@ -51,7 +51,8 @@
       "Bash(NX_ISOLATE_PLUGINS=false NX_DAEMON=false npx nx build:*)",
       "Bash(ls:*)",
       "Bash(git rev-list:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

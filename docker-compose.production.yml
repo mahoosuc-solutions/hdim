@@ -54,7 +54,7 @@ services:
       -c log_disconnections=on
       -c log_line_prefix='%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_ADMIN_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_ADMIN_USER} -d ${POSTGRES_DB:-healthdata_db}"]
       interval: 10s
       timeout: 5s
       retries: 5

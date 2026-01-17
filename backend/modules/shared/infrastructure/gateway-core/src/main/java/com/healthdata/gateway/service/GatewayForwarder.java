@@ -1,5 +1,6 @@
 package com.healthdata.gateway.service;
 
+import com.healthdata.authentication.constants.AuthHeaderConstants;
 import com.healthdata.gateway.config.GatewayAuthProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -108,6 +109,15 @@ public class GatewayForwarder {
                 );
             }
 
+            if (isAuthenticatedRequest(headers) &&
+                (headers.getFirst("X-Tenant-ID") == null || headers.getFirst("X-Tenant-ID").isBlank())) {
+                log.warn("Gateway blocked request {} missing X-Tenant-ID after auth processing: path={}",
+                    requestId, request.getRequestURI());
+                return ResponseEntity
+                    .badRequest()
+                    .body("Missing required X-Tenant-ID header");
+            }
+
             // Create request entity
             HttpEntity<String> requestEntity = new HttpEntity<>(body, headers);
 
@@ -170,5 +180,10 @@ public class GatewayForwarder {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Gateway error: " + e.getMessage());
         }
+    }
+
+    private boolean isAuthenticatedRequest(HttpHeaders headers) {
+        String validated = headers.getFirst(AuthHeaderConstants.HEADER_VALIDATED);
+        return validated != null && !validated.isBlank();
     }
 }

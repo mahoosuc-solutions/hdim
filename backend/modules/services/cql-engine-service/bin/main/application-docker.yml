@@ -8,6 +8,9 @@ spring:
   flyway:
     enabled: false  # Explicitly disable Flyway (using Liquibase for migrations)
 
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
   # Note: This service uses JWT authentication via Gateway service
   # No local UserDetailsService needed - removed spring.security.user
 

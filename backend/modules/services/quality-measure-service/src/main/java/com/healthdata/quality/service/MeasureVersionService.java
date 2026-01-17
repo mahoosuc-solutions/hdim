@@ -283,6 +283,30 @@ public class MeasureVersionService {
     }
 
     /**
+     * Retire a version.
+     * Retiring marks the version as no longer in use.
+     */
+    @Transactional
+    public MeasureVersionEntity retireVersion(
+            String tenantId,
+            UUID measureId,
+            String version,
+            UUID retiredBy) {
+
+        MeasureVersionEntity targetVersion = getVersion(tenantId, measureId, version);
+
+        // Mark as retired by clearing published flag and setting a retire indicator
+        targetVersion.setIsPublished(false);
+        targetVersion.setIsCurrent(false);
+
+        MeasureVersionEntity saved = versionRepository.save(targetVersion);
+
+        log.info("Retired version {} for measure {} in tenant {}", version, measureId, tenantId);
+
+        return saved;
+    }
+
+    /**
      * Compare two versions (returns diff information).
      */
     @Transactional(readOnly = true)

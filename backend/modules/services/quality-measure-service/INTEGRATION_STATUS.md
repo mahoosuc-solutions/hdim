@@ -72,12 +72,12 @@
 ---
 
 ### Test 3: Measure Calculation API ❌ FAILED
-**Endpoint**: `POST http://localhost:8087/quality-measure/quality-measure/calculate`
+**Endpoint**: `POST http://localhost:8087/quality-measure/calculate`
 
 **Test Request**:
 ```bash
 curl -u user:fe7739ec-af9d-4b73-9d53-2924c5aef04e -X POST \
-  "http://localhost:8087/quality-measure/quality-measure/calculate?patient=test-patient-001&measure=CDC&createdBy=test-user" \
+  "http://localhost:8087/quality-measure/calculate?patient=test-patient-001&measure=CDC&createdBy=test-user" \
   -H "X-Tenant-ID: test-tenant"
 ```
 

@@ -5,8 +5,15 @@
 
 set -e
 
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
 FHIR_URL="${FHIR_URL:-http://localhost:8085/fhir}"
 TENANT_ID="${TENANT_ID:-acme-health}"
+AUTH_USERNAME="${AUTH_USERNAME:-demo_admin@hdim.ai}"
+AUTH_PASSWORD="${AUTH_PASSWORD:-demo123}"
+AUTH_USER_ID="${AUTH_USER_ID:-550e8400-e29b-41d4-a716-446655440010}"
+AUTH_ROLES="${AUTH_ROLES:-ADMIN,EVALUATOR}"
+USE_TRUSTED_HEADERS="${USE_TRUSTED_HEADERS:-true}"
+API_TOKEN="${API_TOKEN:-}"
 
 # Colors
 GREEN='\033[0;32m'
@@ -22,6 +29,53 @@ echo "FHIR Server: $FHIR_URL"
 echo "Tenant: $TENANT_ID"
 echo ""
 
+TARGET_PATIENT_COUNT="${TARGET_PATIENT_COUNT:-25}"
+
+AUTH_HEADER=()
+if [ "$USE_TRUSTED_HEADERS" = "true" ]; then
+    VALIDATED_TS=$(date +%s)
+    AUTH_HEADER=(
+        -H "X-Auth-User-Id: $AUTH_USER_ID"
+        -H "X-Auth-Username: $AUTH_USERNAME"
+        -H "X-Auth-Roles: $AUTH_ROLES"
+        -H "X-Auth-Tenant-Ids: $TENANT_ID"
+        -H "X-Auth-Validated: gateway-${VALIDATED_TS}-dev"
+    )
+else
+    # Optional auth via gateway login (uses demo credentials by default)
+    if [ -z "$API_TOKEN" ]; then
+        LOGIN_RESPONSE=$(curl -s -X POST "$GATEWAY_URL/api/v1/auth/login" \
+            -H "Content-Type: application/json" \
+            -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}")
+        API_TOKEN=$(echo "$LOGIN_RESPONSE" | python3 -c "import json,sys; print(json.load(sys.stdin).get('accessToken',''))" 2>/dev/null)
+    fi
+
+    if [ -n "$API_TOKEN" ]; then
+        AUTH_HEADER=(-H "Authorization: Bearer $API_TOKEN")
+    fi
+fi
+
+# Function to create a patient and return the ID
+create_patient() {
+    local index=$1
+    local response
+    response=$(curl -s -X POST "$FHIR_URL/Patient" \
+        -H "Content-Type: application/fhir+json" \
+        -H "X-Tenant-ID: $TENANT_ID" \
+        "${AUTH_HEADER[@]}" \
+        -d "{
+  \"resourceType\": \"Patient\",
+  \"name\": [{
+    \"use\": \"official\",
+    \"family\": \"Demo\",
+    \"given\": [\"Patient\", \"$index\"]
+  }],
+  \"gender\": \"unknown\",
+  \"birthDate\": \"1980-01-01\"
+}")
+    echo "$response" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))" 2>/dev/null
+}
+
 # Function to post FHIR resource
 post_fhir() {
     local resource_type=$1
@@ -32,6 +86,7 @@ post_fhir() {
     response=$(curl -s -X POST "$FHIR_URL/$resource_type" \
         -H "Content-Type: application/fhir+json" \
         -H "X-Tenant-ID: $TENANT_ID" \
+        "${AUTH_HEADER[@]}" \
         -d "$data")
 
     if echo "$response" | grep -q '"resourceType"'; then
@@ -45,11 +100,54 @@ post_fhir() {
     fi
 }
 
+echo -e "${BLUE}Step 0: Ensuring Patients Exist${NC}"
+echo "-------------------------------------------"
+mapfile -t patient_ids < <(curl -s -X GET "$FHIR_URL/Patient?_count=50" \
+    -H "X-Tenant-ID: $TENANT_ID" \
+    "${AUTH_HEADER[@]}" | python3 -c "import json,sys; data=json.load(sys.stdin); entries=data.get('entry') or []; \
+print('\\n'.join([e.get('resource',{}).get('id','') for e in entries if e.get('resource',{}).get('id')]))"
+)
+
+UUID_REGEX='^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+valid_patient_ids=()
+for patient_id in "${patient_ids[@]}"; do
+    if [[ "$patient_id" =~ $UUID_REGEX ]]; then
+        valid_patient_ids+=("$patient_id")
+    else
+        echo -e "${YELLOW}Skipping non-UUID patient ID: $patient_id${NC}"
+    fi
+done
+patient_ids=("${valid_patient_ids[@]}")
+
+if [ "${#patient_ids[@]}" -lt "$TARGET_PATIENT_COUNT" ]; then
+    for i in $(seq $(("${#patient_ids[@]}" + 1)) "$TARGET_PATIENT_COUNT"); do
+        new_id=$(create_patient "$i")
+        if [[ -n "$new_id" && "$new_id" =~ $UUID_REGEX ]]; then
+            patient_ids+=("$new_id")
+            echo -e "Created Patient $i... ${GREEN}✓${NC} ID: $new_id"
+        else
+            echo -e "Created Patient $i... ${RED}✗${NC}"
+            exit 1
+        fi
+    done
+else
+    echo -e "${GREEN}✓${NC} Found ${#patient_ids[@]} existing patients"
+fi
+
+diabetes_ids=("${patient_ids[@]:0:13}")
+hypertension_ids=("${patient_ids[@]:13:12}")
+bp_noncompliant_ids=("${hypertension_ids[@]:8}")
+depression_ids=("${patient_ids[@]:15:10}")
+metformin_ids=("${diabetes_ids[@]:0:10}")
+lisinopril_ids=("${hypertension_ids[@]:0:10}")
+encounter_ids=("${patient_ids[@]:0:40}")
+
+echo ""
 echo -e "${BLUE}Step 1: Adding Diabetes Conditions to Existing Patients${NC}"
 echo "-------------------------------------------"
 
 # Add diabetes to patients 1, 3, 4, 6-15 (15 patients total)
-for patient_id in 1 3 4 6 7 8 9 10 11 12 13 14 15; do
+for patient_id in "${diabetes_ids[@]}"; do
     post_fhir "Condition" "{
   \"resourceType\": \"Condition\",
   \"subject\": {\"reference\": \"Patient/$patient_id\"},
@@ -75,7 +173,7 @@ echo -e "${BLUE}Step 2: Adding Hypertension Conditions${NC}"
 echo "-------------------------------------------"
 
 # Add hypertension to patients 2, 3, 16-25 (15 patients total)
-for patient_id in 2 3 16 17 18 19 20 21 22 23 24 25; do
+for patient_id in "${hypertension_ids[@]}"; do
     post_fhir "Condition" "{
   \"resourceType\": \"Condition\",
   \"subject\": {\"reference\": \"Patient/$patient_id\"},
@@ -101,7 +199,7 @@ echo -e "${BLUE}Step 3: Adding HbA1c Observations for Diabetic Patients${NC}"
 echo "-------------------------------------------"
 
 # Compliant patients (HbA1c < 8%)
-for patient_id in 1 3 4 6 7 8 9 10; do
+for patient_id in "${diabetes_ids[@]:0:8}"; do
     hba1c=$(echo "scale=1; 6.5 + ($RANDOM % 15) / 10" | bc)
     post_fhir "Observation" "{
   \"resourceType\": \"Observation\",
@@ -131,7 +229,7 @@ for patient_id in 1 3 4 6 7 8 9 10; do
 done
 
 # Non-compliant patients (HbA1c > 9%)
-for patient_id in 11 12 13 14 15; do
+for patient_id in "${diabetes_ids[@]:8:5}"; do
     hba1c=$(echo "scale=1; 9.0 + ($RANDOM % 20) / 10" | bc)
     post_fhir "Observation" "{
   \"resourceType\": \"Observation\",
@@ -165,7 +263,7 @@ echo -e "${BLUE}Step 4: Adding Blood Pressure Observations${NC}"
 echo "-------------------------------------------"
 
 # Compliant BP readings (< 140/90)
-for patient_id in 2 3 16 17 18 19 20 21; do
+for patient_id in "${hypertension_ids[@]:0:8}"; do
     systolic=$((120 + RANDOM % 15))
     diastolic=$((75 + RANDOM % 10))
     
@@ -223,7 +321,7 @@ for patient_id in 2 3 16 17 18 19 20 21; do
 done
 
 # Non-compliant BP readings (> 150/95)
-for patient_id in 22 23 24 25; do
+for patient_id in "${bp_noncompliant_ids[@]}"; do
     systolic=$((150 + RANDOM % 20))
     diastolic=$((95 + RANDOM % 10))
     
@@ -285,7 +383,7 @@ echo -e "${BLUE}Step 5: Adding Depression Screening Observations${NC}"
 echo "-------------------------------------------"
 
 # PHQ-9 screenings for patients 26-35
-for patient_id in 26 27 28 29 30 31 32 33 34 35; do
+for patient_id in "${depression_ids[@]}"; do
     phq9_score=$((RANDOM % 20))
     
     post_fhir "Observation" "{
@@ -315,7 +413,7 @@ echo -e "${BLUE}Step 6: Adding Medication Requests${NC}"
 echo "-------------------------------------------"
 
 # Metformin for diabetic patients
-for patient_id in 1 3 4 6 7 8 9 10 11 12; do
+for patient_id in "${metformin_ids[@]}"; do
     post_fhir "MedicationRequest" "{
   \"resourceType\": \"MedicationRequest\",
   \"status\": \"active\",
@@ -328,22 +426,12 @@ for patient_id in 1 3 4 6 7 8 9 10 11 12; do
     }]
   },
   \"subject\": {\"reference\": \"Patient/$patient_id\"},
-  \"authoredOn\": \"2024-0$((RANDOM % 9 + 1))-15\",
-  \"dosageInstruction\": [{
-    \"text\": \"Take 500mg by mouth twice daily with meals\",
-    \"timing\": {
-      \"repeat\": {
-        \"frequency\": 2,
-        \"period\": 1,
-        \"periodUnit\": \"d\"
-      }
-    }
-  }]
+  \"authoredOn\": \"2024-0$((RANDOM % 9 + 1))-15\"
 }" "Metformin for Patient $patient_id"
 done
 
 # Lisinopril for hypertensive patients
-for patient_id in 2 3 16 17 18 19 20 21 22 23; do
+for patient_id in "${lisinopril_ids[@]}"; do
     post_fhir "MedicationRequest" "{
   \"resourceType\": \"MedicationRequest\",
   \"status\": \"active\",
@@ -356,17 +444,7 @@ for patient_id in 2 3 16 17 18 19 20 21 22 23; do
     }]
   },
   \"subject\": {\"reference\": \"Patient/$patient_id\"},
-  \"authoredOn\": \"2024-0$((RANDOM % 9 + 1))-15\",
-  \"dosageInstruction\": [{
-    \"text\": \"Take 10mg by mouth once daily\",
-    \"timing\": {
-      \"repeat\": {
-        \"frequency\": 1,
-        \"period\": 1,
-        \"periodUnit\": \"d\"
-      }
-    }
-  }]
+  \"authoredOn\": \"2024-0$((RANDOM % 9 + 1))-15\"
 }" "Lisinopril for Patient $patient_id"
 done
 
@@ -375,7 +453,7 @@ echo -e "${BLUE}Step 7: Adding Encounters${NC}"
 echo "-------------------------------------------"
 
 # Office visits for patients 1-40
-for patient_id in {1..40}; do
+for patient_id in "${encounter_ids[@]}"; do
     post_fhir "Encounter" "{
   \"resourceType\": \"Encounter\",
   \"status\": \"finished\",
@@ -405,13 +483,13 @@ echo -e "${GREEN}FHIR Population Complete!${NC}"
 echo "========================================="
 echo ""
 echo "Summary of data created:"
-echo "- 15 patients with Diabetes mellitus type 2"
-echo "- 12 patients with Essential hypertension"
+echo "- ${#diabetes_ids[@]} patients with Diabetes mellitus type 2"
+echo "- ${#hypertension_ids[@]} patients with Essential hypertension"
 echo "- 13 HbA1c observations (8 compliant, 5 non-compliant)"
-echo "- 12 Blood pressure observations (8 compliant, 4 non-compliant)"
-echo "- 10 Depression screening (PHQ-9) observations"
-echo "- 20 Medication requests (Metformin + Lisinopril)"
-echo "- 40 Office visit encounters"
+echo "- $(( ${#hypertension_ids[@]} )) Blood pressure observations (8 compliant, ${#bp_noncompliant_ids[@]} non-compliant)"
+echo "- ${#depression_ids[@]} Depression screening (PHQ-9) observations"
+echo "- $(( ${#metformin_ids[@]} + ${#lisinopril_ids[@]} )) Medication requests (Metformin + Lisinopril)"
+echo "- ${#encounter_ids[@]} Office visit encounters"
 echo ""
 echo "Next steps:"
 echo "1. Run ./validate-fhir-data.sh to verify data"

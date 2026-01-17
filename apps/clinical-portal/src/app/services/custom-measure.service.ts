@@ -182,9 +182,11 @@ export class CustomMeasureService {
     versionType: 'major' | 'minor' | 'patch',
     tenantId: string = API_CONFIG.DEFAULT_TENANT_ID
   ): Observable<CustomMeasure> {
-    const url = `${API_CONFIG.QUALITY_MEASURE_URL}/custom-measures/${measureId}/versions`;
+    const url = `${API_CONFIG.QUALITY_MEASURE_URL}/api/v1/measures/${measureId}/versions`;
     const headers = new HttpHeaders({
       'X-Tenant-ID': tenantId,
+      'X-Auth-User-Id': 'clinical-portal-user',
+      'X-Auth-Username': 'Clinical Portal',
     });
     return this.http.post<CustomMeasure>(url, { versionType }, { headers });
   }
@@ -196,7 +198,7 @@ export class CustomMeasureService {
    * @returns Array of version history entries
    */
   getVersionHistory(measureId: string, tenantId: string = API_CONFIG.DEFAULT_TENANT_ID): Observable<MeasureVersion[]> {
-    const url = `${API_CONFIG.QUALITY_MEASURE_URL}/custom-measures/${measureId}/versions`;
+    const url = `${API_CONFIG.QUALITY_MEASURE_URL}/api/v1/measures/${measureId}/versions`;
     const headers = new HttpHeaders({
       'X-Tenant-ID': tenantId,
     });
@@ -217,7 +219,7 @@ export class CustomMeasureService {
     v2: string,
     tenantId: string = API_CONFIG.DEFAULT_TENANT_ID
   ): Observable<VersionDiff[]> {
-    const url = `${API_CONFIG.QUALITY_MEASURE_URL}/custom-measures/${measureId}/versions/compare`;
+    const url = `${API_CONFIG.QUALITY_MEASURE_URL}/api/v1/measures/${measureId}/versions/compare`;
     const headers = new HttpHeaders({
       'X-Tenant-ID': tenantId,
     });
@@ -237,9 +239,10 @@ export class CustomMeasureService {
     version: string,
     tenantId: string = API_CONFIG.DEFAULT_TENANT_ID
   ): Observable<CustomMeasure> {
-    const url = `${API_CONFIG.QUALITY_MEASURE_URL}/custom-measures/${measureId}/versions/${version}/publish`;
+    const url = `${API_CONFIG.QUALITY_MEASURE_URL}/api/v1/measures/${measureId}/versions/${version}/publish`;
     const headers = new HttpHeaders({
       'X-Tenant-ID': tenantId,
+      'X-Auth-User-Id': 'clinical-portal-user',
     });
     return this.http.post<CustomMeasure>(url, {}, { headers });
   }
@@ -256,7 +259,7 @@ export class CustomMeasureService {
     version: string,
     tenantId: string = API_CONFIG.DEFAULT_TENANT_ID
   ): Observable<CustomMeasure> {
-    const url = `${API_CONFIG.QUALITY_MEASURE_URL}/custom-measures/${measureId}/versions/${version}/retire`;
+    const url = `${API_CONFIG.QUALITY_MEASURE_URL}/api/v1/measures/${measureId}/versions/${version}/retire`;
     const headers = new HttpHeaders({
       'X-Tenant-ID': tenantId,
     });

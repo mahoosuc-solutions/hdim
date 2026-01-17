@@ -31,5 +31,7 @@
     <include file="db/changelog/0021-add-batch-query-indexes.xml"/>
     <include file="db/changelog/0022-create-audit-events-table.xml"/>
     <include file="db/changelog/0023-create-api-keys-tables.xml"/>
+    <include file="db/changelog/0024-create-appointments-table.xml"/>
+    <include file="db/changelog/0025-create-tasks-table.xml"/>
 
 </databaseChangeLog>

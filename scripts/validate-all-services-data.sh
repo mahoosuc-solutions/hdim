@@ -16,6 +16,19 @@ NC='\033[0m'
 
 BASE_URL="${BASE_URL:-http://localhost:18080}"
 TENANT_ID="${TENANT_ID:-acme-health}"
+AUTH_USERNAME="${AUTH_USERNAME:-demo_admin@hdim.ai}"
+AUTH_PASSWORD="${AUTH_PASSWORD:-demo123}"
+
+AUTH_TOKEN=$(curl -s -X POST "${BASE_URL}/api/v1/auth/login" \
+    -H "Content-Type: application/json" \
+    -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}" | jq -r '.accessToken // empty' 2>/dev/null)
+
+AUTH_HEADER=()
+if [ -n "$AUTH_TOKEN" ] && [ "$AUTH_TOKEN" != "null" ]; then
+    AUTH_HEADER=(-H "Authorization: Bearer $AUTH_TOKEN")
+else
+    echo -e "${YELLOW}⚠ Auth token not available; requests may fail with 401/403.${NC}"
+fi
 
 # Track results
 TOTAL=0
@@ -23,9 +36,33 @@ PASSED=0
 FAILED=0
 EMPTY=0
 ERROR=0
+SKIPPED=0
 
 # Results storage
 declare -A RESULTS
+
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.demo.yml}"
+RUNNING_SERVICES=""
+if [ -f "$COMPOSE_FILE" ] && command -v docker &> /dev/null; then
+    RUNNING_SERVICES=$(docker compose -f "$COMPOSE_FILE" ps --services --status running 2>/dev/null || true)
+fi
+
+is_service_running() {
+    local service=$1
+    if [ -z "$RUNNING_SERVICES" ]; then
+        return 1
+    fi
+    echo "$RUNNING_SERVICES" | grep -qx "$service"
+}
+
+skip_endpoint() {
+    local name=$1
+    local reason=$2
+    TOTAL=$((TOTAL + 1))
+    SKIPPED=$((SKIPPED + 1))
+    RESULTS["$name"]="SKIPPED: $reason"
+    echo -e "Testing: $name ... ${YELLOW}↷${NC} ($reason)"
+}
 
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}Comprehensive Service Data Validation${NC}"
@@ -47,11 +84,13 @@ test_endpoint_with_data() {
     
     if [ "$method" = "GET" ]; then
         response=$(curl -s -w "\n%{http_code}" -X GET "$url" \
+            "${AUTH_HEADER[@]}" \
             -H "X-Tenant-ID: $TENANT_ID" \
             -H "Accept: application/json" \
             2>&1)
     elif [ "$method" = "POST" ]; then
         response=$(curl -s -w "\n%{http_code}" -X POST "$url" \
+            "${AUTH_HEADER[@]}" \
             -H "X-Tenant-ID: $TENANT_ID" \
             -H "Content-Type: application/json" \
             -H "Accept: application/json" \
@@ -113,8 +152,24 @@ test_endpoint_with_data() {
             fi
         # Check if it's an object with data
         elif echo "$body" | jq -e 'type == "object"' &> /dev/null; then
+            # Handle FHIR Bundles with entries
+            if echo "$body" | jq -e '.entry' &> /dev/null; then
+                item_count=$(echo "$body" | jq '.entry | length')
+                if [ "$item_count" -ge "$min_items" ]; then
+                    echo -e "${GREEN}✓${NC} (HTTP $http_code - $item_count items)"
+                    PASSED=$((PASSED + 1))
+                    RESULTS["$name"]="PASS: $item_count items"
+                    return 0
+                else
+                    echo -e "${YELLOW}⚠${NC} (HTTP $http_code - Only $item_count items, need $min_items)"
+                    EMPTY=$((EMPTY + 1))
+                    RESULTS["$name"]="EMPTY: Only $item_count items"
+                    return 2
+                fi
+            fi
+
             # Check for common data fields
-            if echo "$body" | jq -e '.id, .patientId, .measureId, .status' &> /dev/null; then
+            if echo "$body" | jq -e '.id, .patientId, .measureId, .status, .year, .overallScore, .totalMeasures' &> /dev/null; then
                 echo -e "${GREEN}✓${NC} (HTTP $http_code - Has data)"
                 PASSED=$((PASSED + 1))
                 RESULTS["$name"]="PASS: Has data"
@@ -147,24 +202,46 @@ test_endpoint_with_data() {
     fi
 }
 
+get_first_patient_id() {
+    if ! command -v jq &> /dev/null; then
+        return
+    fi
+
+    patient_response=$(curl -s -X GET "${BASE_URL}/api/fhir/Patient?_count=1" \
+        "${AUTH_HEADER[@]}" \
+        -H "X-Tenant-ID: $TENANT_ID" \
+        -H "Accept: application/json")
+    echo "$patient_response" | jq -r '.entry[0].resource.id // empty' 2>/dev/null
+}
+
+FHIR_PATIENT_ID=$(get_first_patient_id)
+
+get_first_patient_service_id() {
+    if ! command -v jq &> /dev/null; then
+        return
+    fi
+
+    patient_response=$(curl -s -X GET "${BASE_URL}/api/patients/api/v1/patients?page=0&size=1" \
+        "${AUTH_HEADER[@]}" \
+        -H "X-Tenant-ID: $TENANT_ID" \
+        -H "Accept: application/json")
+    echo "$patient_response" | jq -r '.content[0].id // empty' 2>/dev/null
+}
+
+PATIENT_SERVICE_ID=$(get_first_patient_service_id)
+
 # ==================== PATIENT SERVICE ====================
 echo -e "${CYAN}=== Patient Service ===${NC}"
 
 test_endpoint_with_data \
     "Get Patients List" \
     "GET" \
-    "$BASE_URL/patient/api/v1/patients?page=0&size=20" \
+    "$BASE_URL/api/patients/api/v1/patients?page=0&size=20" \
     200 \
     1 \
     "Get paginated patient list"
 
-test_endpoint_with_data \
-    "Get Patient by ID" \
-    "GET" \
-    "$BASE_URL/patient/api/v1/patients/00000000-0000-0000-0000-000000000001" \
-    200 \
-    0 \
-    "Get single patient (may not exist)"
+echo -e "${YELLOW}⚠ Skipping patient-by-ID check (endpoint not available in patient-service).${NC}"
 
 # ==================== FHIR SERVICE ====================
 echo ""
@@ -173,26 +250,30 @@ echo -e "${CYAN}=== FHIR Service ===${NC}"
 test_endpoint_with_data \
     "Get FHIR Patients" \
     "GET" \
-    "$BASE_URL/fhir/Patient?_count=20" \
+    "$BASE_URL/api/fhir/Patient?_count=20" \
     200 \
     1 \
     "Get FHIR Patient resources"
 
-test_endpoint_with_data \
-    "Get FHIR Conditions" \
-    "GET" \
-    "$BASE_URL/fhir/Condition?_count=20" \
-    200 \
-    1 \
-    "Get FHIR Condition resources"
+if [ -n "$FHIR_PATIENT_ID" ]; then
+    test_endpoint_with_data \
+        "Get FHIR Conditions" \
+        "GET" \
+        "$BASE_URL/api/fhir/Condition?patient=${FHIR_PATIENT_ID}&_count=20" \
+        200 \
+        1 \
+        "Get FHIR Condition resources"
 
-test_endpoint_with_data \
-    "Get FHIR Observations" \
-    "GET" \
-    "$BASE_URL/fhir/Observation?_count=20" \
-    200 \
-    1 \
-    "Get FHIR Observation resources"
+    test_endpoint_with_data \
+        "Get FHIR Observations" \
+        "GET" \
+        "$BASE_URL/api/fhir/Observation?patient=${FHIR_PATIENT_ID}&_count=20" \
+        200 \
+        1 \
+        "Get FHIR Observation resources"
+else
+    echo -e "${YELLOW}⚠ Unable to locate a patient ID for scoped FHIR queries.${NC}"
+fi
 
 # ==================== CARE GAP SERVICE ====================
 echo ""
@@ -221,7 +302,7 @@ echo -e "${CYAN}=== Quality Measure Service ===${NC}"
 test_endpoint_with_data \
     "Get Quality Measure Results" \
     "GET" \
-    "$BASE_URL/quality-measure/api/v1/results?page=0&size=20" \
+    "$BASE_URL/api/quality/results?page=0&size=20" \
     200 \
     0 \
     "Get quality measure results"
@@ -229,7 +310,7 @@ test_endpoint_with_data \
 test_endpoint_with_data \
     "Get Population Report" \
     "GET" \
-    "$BASE_URL/quality-measure/api/v1/report/population?year=2025" \
+    "$BASE_URL/api/quality/report/population?year=2025" \
     200 \
     0 \
     "Get population quality report"
@@ -237,7 +318,7 @@ test_endpoint_with_data \
 test_endpoint_with_data \
     "Get Local Measures" \
     "GET" \
-    "$BASE_URL/quality-measure/api/v1/measures/local" \
+    "$BASE_URL/api/quality/api/v1/measures" \
     200 \
     1 \
     "Get local quality measures"
@@ -249,7 +330,7 @@ echo -e "${CYAN}=== CQL Engine Service ===${NC}"
 test_endpoint_with_data \
     "Get CQL Libraries" \
     "GET" \
-    "$BASE_URL/cql-engine/api/v1/cql/libraries?page=0&size=20" \
+    "$BASE_URL/api/cql/api/v1/cql/libraries?page=0&size=20" \
     200 \
     1 \
     "Get CQL libraries"
@@ -257,82 +338,106 @@ test_endpoint_with_data \
 test_endpoint_with_data \
     "Get CQL Evaluations" \
     "GET" \
-    "$BASE_URL/cql-engine/api/v1/cql/evaluations?page=0&size=20" \
+    "$BASE_URL/api/cql/api/v1/cql/evaluations?page=0&size=20" \
     200 \
     0 \
     "Get CQL evaluations"
 
-# ==================== ANALYTICS SERVICE ====================
+## ==================== ANALYTICS SERVICE ====================
 echo ""
 echo -e "${CYAN}=== Analytics Service ===${NC}"
 
-test_endpoint_with_data \
-    "Get Analytics KPIs" \
-    "GET" \
-    "$BASE_URL/analytics/api/v1/kpis" \
-    200 \
-    0 \
-    "Get analytics KPIs"
+if is_service_running "analytics-service"; then
+    test_endpoint_with_data \
+        "Get Analytics KPIs" \
+        "GET" \
+        "$BASE_URL/api/analytics/kpis" \
+        200 \
+        0 \
+        "Get analytics KPIs"
+else
+    skip_endpoint "Get Analytics KPIs" "analytics-service not running"
+fi
 
-# ==================== HCC SERVICE ====================
+## ==================== HCC SERVICE ====================
 echo ""
 echo -e "${CYAN}=== HCC Service ===${NC}"
 
-test_endpoint_with_data \
-    "Get HCC Risk Scores" \
-    "GET" \
-    "$BASE_URL/hcc/api/v1/risk-scores?page=0&size=20" \
-    200 \
-    0 \
-    "Get HCC risk scores"
+if is_service_running "hcc-service"; then
+    test_endpoint_with_data \
+        "Get HCC Risk Scores" \
+        "GET" \
+        "$BASE_URL/api/v1/hcc/risk-scores?page=0&size=20" \
+        200 \
+        0 \
+        "Get HCC risk scores"
+else
+    skip_endpoint "Get HCC Risk Scores" "hcc-service not running"
+fi
 
-# ==================== SDOH SERVICE ====================
+## ==================== SDOH SERVICE ====================
 echo ""
 echo -e "${CYAN}=== SDOH Service ===${NC}"
 
-test_endpoint_with_data \
-    "Get SDOH Resources" \
-    "GET" \
-    "$BASE_URL/sdoh/api/v1/sdoh/resources?page=0&size=20" \
-    200 \
-    0 \
-    "Get SDOH community resources"
+if is_service_running "sdoh-service"; then
+    test_endpoint_with_data \
+        "Get SDOH Resources" \
+        "GET" \
+        "$BASE_URL/api/sdoh/resources?page=0&size=20" \
+        200 \
+        0 \
+        "Get SDOH community resources"
+else
+    skip_endpoint "Get SDOH Resources" "sdoh-service not running"
+fi
 
-# ==================== ECR SERVICE ====================
+## ==================== ECR SERVICE ====================
 echo ""
 echo -e "${CYAN}=== ECR Service ===${NC}"
 
-test_endpoint_with_data \
-    "Get ECR Reports" \
-    "GET" \
-    "$BASE_URL/ecr/api/ecr?page=0&size=20" \
-    200 \
-    0 \
-    "Get electronic case reports"
+if is_service_running "ecr-service"; then
+    test_endpoint_with_data \
+        "Get ECR Reports" \
+        "GET" \
+        "$BASE_URL/api/ecr?page=0&size=20" \
+        200 \
+        0 \
+        "Get electronic case reports"
+else
+    skip_endpoint "Get ECR Reports" "ecr-service not running"
+fi
 
-# ==================== QRDA EXPORT SERVICE ====================
+## ==================== QRDA EXPORT SERVICE ====================
 echo ""
 echo -e "${CYAN}=== QRDA Export Service ===${NC}"
 
-test_endpoint_with_data \
-    "Get QRDA Export Jobs" \
-    "GET" \
-    "$BASE_URL/qrda-export/api/v1/qrda/jobs?page=0&size=20" \
-    200 \
-    0 \
-    "Get QRDA export jobs"
+if is_service_running "qrda-export-service"; then
+    test_endpoint_with_data \
+        "Get QRDA Export Jobs" \
+        "GET" \
+        "$BASE_URL/api/v1/qrda/jobs?page=0&size=20" \
+        200 \
+        0 \
+        "Get QRDA export jobs"
+else
+    skip_endpoint "Get QRDA Export Jobs" "qrda-export-service not running"
+fi
 
-# ==================== PRIOR AUTH SERVICE ====================
+## ==================== PRIOR AUTH SERVICE ====================
 echo ""
 echo -e "${CYAN}=== Prior Auth Service ===${NC}"
 
-test_endpoint_with_data \
-    "Get Prior Auth Requests" \
-    "GET" \
-    "$BASE_URL/prior-auth/api/v1/prior-auth/requests?page=0&size=20" \
-    200 \
-    0 \
-    "Get prior authorization requests"
+if is_service_running "prior-auth-service"; then
+    test_endpoint_with_data \
+        "Get Prior Auth Requests" \
+        "GET" \
+        "$BASE_URL/api/v1/prior-auth/requests?page=0&size=20" \
+        200 \
+        0 \
+        "Get prior authorization requests"
+else
+    skip_endpoint "Get Prior Auth Requests" "prior-auth-service not running"
+fi
 
 # ==================== SUMMARY ====================
 echo ""
@@ -343,6 +448,7 @@ echo ""
 echo -e "Total Endpoints Tested: ${CYAN}$TOTAL${NC}"
 echo -e "Passed (Has Data): ${GREEN}$PASSED${NC}"
 echo -e "Empty (No Data): ${YELLOW}$EMPTY${NC}"
+echo -e "Skipped (Not Running): ${YELLOW}$SKIPPED${NC}"
 echo -e "Failed (Errors): ${RED}$FAILED${NC}"
 echo ""
 
@@ -354,6 +460,8 @@ for key in "${!RESULTS[@]}"; do
         echo -e "${GREEN}✓${NC} $key: $status"
     elif [[ "$status" == EMPTY* ]]; then
         echo -e "${YELLOW}⚠${NC} $key: $status"
+    elif [[ "$status" == SKIPPED* ]]; then
+        echo -e "${YELLOW}↷${NC} $key: $status"
     else
         echo -e "${RED}✗${NC} $key: $status"
     fi

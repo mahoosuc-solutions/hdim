@@ -117,7 +117,7 @@ All requests go through Kong at `http://localhost:8000` (or `https://localhost:8
 | Endpoint | Description |
 |----------|-------------|
 | `http://localhost:8081/cql-engine/api/v1/cql/*` | CQL Engine Direct |
-| `http://localhost:8087/quality-measure/quality-measure/*` | Quality Measure Direct |
+| `http://localhost:8087/quality-measure/*` | Quality Measure Direct |
 | `http://localhost:8083/fhir/*` | FHIR Server Direct |
 
 **⚠️ Production**: All traffic should go through Kong. Direct service access should be blocked by firewall rules.

@@ -7,6 +7,9 @@ spring:
   application:
     name: demo-seeding-service
 
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_demo?sslmode=disable}
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}

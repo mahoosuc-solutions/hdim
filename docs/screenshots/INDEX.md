@@ -1,9 +1,9 @@
 # Screenshot Index
 
-Generated: 2026-01-14T23:30:54.520Z
+Generated: 2026-01-17T04:52:17.103Z
 
-Total Screenshots: 51
-Failed: 3
+Total Screenshots: 49
+Failed: 6
 
 ## User Types
 
@@ -17,9 +17,10 @@ Failed: 3
 - [dashboard-overview](care-manager/care-manager-dashboard-overview.png) - /dashboard
 - [patient-list](care-manager/care-manager-patient-list.png) - /patients
 - [care-gaps-overview](care-manager/care-manager-care-gaps-overview.png) - /care-gaps
-- [care-gap-detail](care-manager/care-manager-care-gap-detail.png) - /care-gaps/pat-001
-- [patient-detail](care-manager/care-manager-patient-detail.png) - /patients/pat-001
+- [care-gap-detail](care-manager/care-manager-care-gap-detail.png) - /care-gaps/61d7ea27-1cb3-4504-bcdb-5a31dabb3d83
+- [patient-detail](care-manager/care-manager-patient-detail.png) - /patients/61d7ea27-1cb3-4504-bcdb-5a31dabb3d83
 - [quality-measures](care-manager/care-manager-quality-measures.png) - /quality-measures
+- [results](care-manager/care-manager-results.png) - /results
 - [analytics-dashboard](care-manager/care-manager-analytics-dashboard.png) - /analytics
 - [reports](care-manager/care-manager-reports.png) - /reports
 - [settings](care-manager/care-manager-settings.png) - /settings
@@ -33,9 +34,9 @@ Failed: 3
 - [login](physician/physician-login.png) - /
 - [clinical-dashboard](physician/physician-clinical-dashboard.png) - /dashboard
 - [patient-search](physician/physician-patient-search.png) - /patients
-- [patient-clinical-summary](physician/physician-patient-clinical-summary.png) - /patients/pat-002
-- [patient-vitals](physician/physician-patient-vitals.png) - /patients/pat-002/vitals
-- [patient-medications](physician/physician-patient-medications.png) - /patients/pat-002/medications
+- [patient-clinical-summary](physician/physician-patient-clinical-summary.png) - /patients/c28cc9c1-a660-48da-bedf-5d66b4ece426
+- [patient-vitals](physician/physician-patient-vitals.png) - /patients/c28cc9c1-a660-48da-bedf-5d66b4ece426/vitals
+- [patient-medications](physician/physician-patient-medications.png) - /patients/c28cc9c1-a660-48da-bedf-5d66b4ece426/medications
 - [ai-assistant-panel](physician/physician-ai-assistant-panel.png) - /ai-assistant
 - [cql-evaluation-results](physician/physician-cql-evaluation-results.png) - /cql-results
 

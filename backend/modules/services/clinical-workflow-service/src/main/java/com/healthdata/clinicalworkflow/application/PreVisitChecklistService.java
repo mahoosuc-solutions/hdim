@@ -4,8 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.healthdata.clinicalworkflow.api.v1.dto.CreateChecklistRequest;
+import com.healthdata.clinicalworkflow.api.v1.dto.ChecklistItemUpdateRequest;
+import com.healthdata.clinicalworkflow.api.v1.dto.CustomChecklistItemRequest;
 import com.healthdata.clinicalworkflow.domain.model.PreVisitChecklistEntity;
 import com.healthdata.clinicalworkflow.domain.repository.PreVisitChecklistRepository;
+import com.healthdata.clinicalworkflow.infrastructure.exception.ResourceNotFoundException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -116,6 +120,39 @@ public class PreVisitChecklistService {
     }
 
     /**
+     * Create checklist adapter (5c)
+     *
+     * Adapter method that processes CreateChecklistRequest and extracts required fields.
+     *
+     * @param tenantId the tenant ID
+     * @param request the create checklist request
+     * @param userId the user ID performing the action
+     * @return created checklist entity
+     * @throws IllegalArgumentException if patient ID format is invalid
+     */
+    @Transactional
+    public PreVisitChecklistEntity createChecklist(
+            String tenantId,
+            CreateChecklistRequest request,
+            String userId) {
+        log.debug("Creating checklist for patient {} appointment type {} in tenant {}",
+                request.getPatientId(), request.getAppointmentType(), tenantId);
+
+        UUID patientId;
+        try {
+            patientId = UUID.fromString(request.getPatientId());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid patient ID format: " + request.getPatientId());
+        }
+
+        return createChecklistForAppointment(
+                request.getAppointmentType(),
+                patientId,
+                request.getEncounterId(),
+                tenantId);
+    }
+
+    /**
      * Complete checklist item
      *
      * Marks a checklist item as completed and updates completion percentage.
@@ -186,6 +223,29 @@ public class PreVisitChecklistService {
     }
 
     /**
+     * Complete checklist item adapter (5d)
+     *
+     * Adapter method that extracts itemCode from request and completes the item.
+     *
+     * @param tenantId the tenant ID
+     * @param checklistId the checklist ID
+     * @param request the checklist item update request
+     * @param userId the user ID performing the action
+     * @return updated checklist entity
+     */
+    @Transactional
+    public PreVisitChecklistEntity completeChecklistItem(
+            String tenantId,
+            UUID checklistId,
+            ChecklistItemUpdateRequest request,
+            String userId) {
+        log.debug("Completing checklist item {} for checklist {} in tenant {}",
+                request.getItemCode(), checklistId, tenantId);
+
+        return completeChecklistItem(checklistId, request.getItemCode(), tenantId);
+    }
+
+    /**
      * Get completion status
      *
      * @param checklistId the checklist ID
@@ -227,6 +287,35 @@ public class PreVisitChecklistService {
     }
 
     /**
+     * Get checklist template (5b)
+     *
+     * Returns a template entity with standard items for the appointment type.
+     *
+     * @param tenantId the tenant ID
+     * @param appointmentType the appointment type
+     * @return template checklist entity
+     */
+    @Cacheable(value = "checklistTemplate", key = "#tenantId + ':' + #appointmentType")
+    public PreVisitChecklistEntity getChecklistTemplate(String tenantId, String appointmentType) {
+        log.debug("Retrieving checklist template for appointment type {} in tenant {}",
+                appointmentType, tenantId);
+
+        return PreVisitChecklistEntity.builder()
+                .tenantId(tenantId)
+                .appointmentType(appointmentType)
+                .reviewMedicalHistory(false)
+                .verifyInsurance(false)
+                .updateDemographics(false)
+                .reviewMedications(false)
+                .reviewAllergies(false)
+                .prepareVitalsEquipment(false)
+                .reviewCareGaps(false)
+                .obtainConsent(false)
+                .status("template")
+                .build();
+    }
+
+    /**
      * Get checklist by patient
      *
      * @param patientId the patient ID
@@ -238,6 +327,36 @@ public class PreVisitChecklistService {
 
         return checklistRepository.findByTenantIdAndPatientIdOrderByCreatedAtDesc(
                 tenantId, patientId);
+    }
+
+    /**
+     * Get patient checklist (5a)
+     *
+     * Retrieves the active (pending or in_progress) checklist for a patient.
+     *
+     * @param tenantId the tenant ID
+     * @param patientId the patient ID as String
+     * @return active checklist for patient
+     * @throws ResourceNotFoundException if no active checklist found
+     * @throws IllegalArgumentException if patient ID format is invalid
+     */
+    public PreVisitChecklistEntity getPatientChecklist(String tenantId, String patientId) {
+        log.debug("Retrieving active checklist for patient {} in tenant {}", patientId, tenantId);
+
+        UUID pid;
+        try {
+            pid = UUID.fromString(patientId);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid patient ID format: " + patientId);
+        }
+
+        List<PreVisitChecklistEntity> checklists = getChecklistByPatient(pid, tenantId);
+
+        return checklists.stream()
+                .filter(c -> "pending".equals(c.getStatus()) || "in_progress".equals(c.getStatus()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Active checklist for patient " + patientId, ""));
     }
 
     /**
@@ -283,6 +402,29 @@ public class PreVisitChecklistService {
                 taskName, checklistId, tenantId);
 
         return updated;
+    }
+
+    /**
+     * Add custom item adapter (5e)
+     *
+     * Adapter method that extracts displayName from request and adds custom item.
+     *
+     * @param tenantId the tenant ID
+     * @param checklistId the checklist ID
+     * @param request the custom checklist item request
+     * @param userId the user ID performing the action
+     * @return updated checklist entity
+     */
+    @Transactional
+    public PreVisitChecklistEntity addCustomItem(
+            String tenantId,
+            UUID checklistId,
+            CustomChecklistItemRequest request,
+            String userId) {
+        log.debug("Adding custom item {} to checklist {} in tenant {}",
+                request.getDisplayName(), checklistId, tenantId);
+
+        return addCustomItem(checklistId, request.getDisplayName(), tenantId);
     }
 
     /**

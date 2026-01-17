@@ -1,5 +1,7 @@
 package com.healthdata.clinicalworkflow.application;
 
+import com.healthdata.clinicalworkflow.api.v1.dto.RoomAssignmentRequest;
+import com.healthdata.clinicalworkflow.api.v1.dto.RoomStatusUpdateRequest;
 import com.healthdata.clinicalworkflow.domain.model.RoomAssignmentEntity;
 import com.healthdata.clinicalworkflow.domain.repository.RoomAssignmentRepository;
 import lombok.RequiredArgsConstructor;
@@ -315,5 +317,162 @@ public class RoomManagementService {
         log.debug("Retrieving occupied rooms for tenant {}", tenantId);
 
         return roomRepository.findCurrentOccupantsByTenant(tenantId);
+    }
+
+    // ============ TIER 1 FIXES ============
+
+    /**
+     * 3a. Rename getOccupancyBoard → getRoomBoard (Line 68)
+     * Adapter method that delegates to existing getOccupancyBoard
+     *
+     * @param tenantId the tenant ID
+     * @return list of room assignments
+     */
+    @Cacheable(value = "occupancyBoard", key = "#tenantId")
+    public List<RoomAssignmentEntity> getRoomBoard(String tenantId) {
+        return getOccupancyBoard(tenantId);  // Delegate to existing
+    }
+
+    /**
+     * 3b. Rename/alias getRoomStatus → getRoomDetails (Line 100)
+     * Adapter method that swaps parameter order
+     *
+     * @param tenantId the tenant ID
+     * @param roomNumber the room number
+     * @return room assignment
+     */
+    public RoomAssignmentEntity getRoomDetails(String tenantId, String roomNumber) {
+        return getRoomStatus(roomNumber, tenantId);  // Swap parameter order
+    }
+
+    /**
+     * 3c. Fix assignPatientToRoom - needs request DTO processing (Line 178)
+     * Adapter method that processes RoomAssignmentRequest and extracts patientId
+     *
+     * @param tenantId the tenant ID
+     * @param roomNumber the room number
+     * @param request the room assignment request with patientId and encounterId
+     * @param userId the user ID performing the assignment
+     * @return created room assignment
+     */
+    @Transactional
+    public RoomAssignmentEntity assignPatientToRoom(
+            String tenantId,
+            String roomNumber,
+            RoomAssignmentRequest request,
+            String userId) {
+        log.debug("Assigning patient {} to room {} in tenant {}",
+                request.getPatientId(), roomNumber, tenantId);
+
+        UUID patientId;
+        try {
+            patientId = UUID.fromString(request.getPatientId());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid patient ID format: " + request.getPatientId(), e);
+        }
+
+        // Use existing assignRoom but with extracted parameters
+        return assignRoom(patientId, request.getEncounterId(), tenantId);
+    }
+
+    /**
+     * 3d. Add updateRoomStatus method (Line 214)
+     * Updates room status based on request with switch logic
+     *
+     * @param tenantId the tenant ID
+     * @param roomNumber the room number
+     * @param request the room status update request
+     * @param userId the user ID performing the update
+     * @return updated room assignment
+     */
+    @Transactional
+    public RoomAssignmentEntity updateRoomStatus(
+            String tenantId,
+            String roomNumber,
+            RoomStatusUpdateRequest request,
+            String userId) {
+        log.debug("Updating room {} status to {} in tenant {}",
+                roomNumber, request.getStatus(), tenantId);
+
+        RoomAssignmentEntity room = getRoomStatus(roomNumber, tenantId);
+
+        switch (request.getStatus().toUpperCase()) {
+            case "AVAILABLE":
+                markRoomReady(roomNumber, tenantId);
+                break;
+            case "CLEANING":
+                // Default 15 minutes for cleaning
+                scheduleRoomCleaning(roomNumber, 15, tenantId);
+                break;
+            case "OUT_OF_SERVICE":
+                // TODO: Add out-of-service status handling
+                room.setStatus("out-of-service");
+                break;
+            default:
+                log.warn("Unknown room status: {}", request.getStatus());
+        }
+
+        return roomRepository.save(room);
+    }
+
+    /**
+     * 3e. Fix markRoomReady parameter order (Line 248)
+     * Adapter method that fixes parameter order (tenantId, roomNumber, userId)
+     *
+     * @param tenantId the tenant ID
+     * @param roomNumber the room number
+     * @param userId the user ID performing the action
+     * @return updated room assignment
+     */
+    @Transactional
+    public RoomAssignmentEntity markRoomReady(
+            String tenantId,
+            String roomNumber,
+            String userId) {
+        return markRoomReady(roomNumber, tenantId);  // Call existing, ignore userId
+    }
+
+    /**
+     * 3f. Fix dischargePatient - add patientId extraction from room (Line 282)
+     * Gets patient ID from room entity before discharge
+     *
+     * @param tenantId the tenant ID
+     * @param roomNumber the room number
+     * @param userId the user ID performing the discharge
+     * @return updated room assignment
+     */
+    @Transactional
+    public RoomAssignmentEntity dischargePatient(
+            String tenantId,
+            String roomNumber,
+            String userId) {
+        log.debug("Discharging patient from room {} in tenant {}", roomNumber, tenantId);
+
+        // Get room and discharge the patient in it
+        RoomAssignmentEntity room = getRoomStatus(roomNumber, tenantId);
+        if (room.getPatientId() == null) {
+            throw new IllegalStateException("Room not occupied: " + roomNumber);
+        }
+
+        return dischargePatient(roomNumber, room.getPatientId(), tenantId);
+    }
+
+    /**
+     * 3g. Fix scheduleCleaning - add cleaning minutes (Line 316)
+     * Adapter method that uses default 15 minutes for cleaning
+     *
+     * @param tenantId the tenant ID
+     * @param roomNumber the room number
+     * @param userId the user ID performing the action
+     * @return updated room assignment
+     */
+    @Transactional
+    public RoomAssignmentEntity scheduleCleaning(
+            String tenantId,
+            String roomNumber,
+            String userId) {
+        log.debug("Scheduling cleaning for room {} in tenant {}", roomNumber, tenantId);
+
+        return scheduleRoomCleaning(roomNumber, 15, tenantId);  // Default 15 minutes
     }
 }

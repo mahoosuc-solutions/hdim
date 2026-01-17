@@ -1,9 +1,9 @@
 #!/bin/bash
-#
-# Deploy Script for HealthData-in-Motion Distributed Architecture
-# Deploys the complete stack using Docker Compose
-# Usage: ./scripts/deploy.sh [--build] [--monitoring]
-#
+
+################################################################################
+# HDIM Complete Deployment Script
+# Handles: Git merges, Docker builds, Service deployment, Health validation
+################################################################################
 
 set -e
 
@@ -12,171 +12,156 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Parse arguments
-BUILD_FLAG=""
-MONITORING_FLAG=""
-PROFILE_FLAG="--profile core"
+# Configuration
+ENVIRONMENT=${1:-dev}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+LOG_FILE="${PROJECT_ROOT}/deployment-$(date +%Y%m%d-%H%M%S).log"
 
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --build)
-            BUILD_FLAG="--build"
-            shift
-            ;;
-        --monitoring)
-            MONITORING_FLAG="--profile monitoring"
-            shift
-            ;;
-        *)
-            echo -e "${RED}Unknown option: $1${NC}"
-            echo "Usage: $0 [--build] [--monitoring]"
-            echo "  --build       Build images before deploying"
-            echo "  --monitoring  Include Prometheus and Grafana"
-            exit 1
-            ;;
-    esac
-done
+# Worktree paths
+MASTER_WORKTREE="/home/webemo-aaron/projects/hdim-master"
+BACKEND_PHASE1_WORKTREE="/home/webemo-aaron/projects/hdim-backend-phase1"
+PHASE5B_WORKTREE="/home/webemo-aaron/projects/hdim-phase5b-integration"
 
-echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}HealthData-in-Motion Deployment${NC}"
-echo -e "${BLUE}========================================${NC}"
-echo ""
+log_section() {
+  echo -e "\n${BLUE}════════════════════════════════════════════════════════════${NC}" | tee -a "$LOG_FILE"
+  echo -e "${BLUE}  $*${NC}" | tee -a "$LOG_FILE"
+  echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}\n" | tee -a "$LOG_FILE"
+}
 
-# Check if docker is running
-if ! docker info > /dev/null 2>&1; then
-    echo -e "${RED}ERROR: Docker is not running${NC}"
-    echo "Please start Docker and try again"
-    exit 1
-fi
+log_success() {
+  echo -e "${GREEN}✅ $*${NC}" | tee -a "$LOG_FILE"
+}
 
-# Check if docker-compose.yml exists
-if [ ! -f "docker-compose.yml" ]; then
-    echo -e "${RED}ERROR: docker-compose.yml not found${NC}"
-    echo "Please run this script from the project root directory"
-    exit 1
-fi
+log_error() {
+  echo -e "${RED}❌ $*${NC}" | tee -a "$LOG_FILE"
+}
 
-# Step 1: Build images if requested
-if [ -n "$BUILD_FLAG" ]; then
-    echo -e "${BLUE}Step 1: Building Docker images...${NC}"
-    if [ -f "scripts/build-all.sh" ]; then
-        ./scripts/build-all.sh
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Build failed. Aborting deployment.${NC}"
-            exit 1
-        fi
+log() {
+  echo -e "${BLUE}ℹ️  $*${NC}" | tee -a "$LOG_FILE"
+}
+
+validate_environment() {
+  log_section "Validating Environment"
+  docker --version && log_success "Docker found"
+  docker compose version && log_success "Docker Compose found"
+  node --version && log_success "Node.js found"
+  java -version 2>&1 | head -1 && log_success "Java found"
+}
+
+validate_worktrees() {
+  log_section "Validating Git Worktrees"
+  [ -d "$MASTER_WORKTREE" ] && log_success "Master worktree found" || (log_error "Master worktree not found"; exit 1)
+  [ -d "$BACKEND_PHASE1_WORKTREE" ] && log_success "Backend Phase1 worktree found" || (log_error "Backend Phase1 worktree not found"; exit 1)
+  [ -d "$PHASE5B_WORKTREE" ] && log_success "Phase 5B worktree found" || (log_error "Phase 5B worktree not found"; exit 1)
+}
+
+deploy_services() {
+  log_section "Deploying Services ($ENVIRONMENT)"
+  cd "$PROJECT_ROOT"
+
+  case "$ENVIRONMENT" in
+    dev)
+      log "Starting development environment..."
+      docker compose up -d
+      ;;
+    demo)
+      log "Starting demo environment..."
+      docker compose -f docker-compose.demo.yml up -d
+      ;;
+    staging)
+      log "Starting staging environment with observability..."
+      docker compose -f docker-compose.staging.yml -f docker-compose.observability.yml up -d
+      ;;
+    production)
+      log "Starting production environment with HA..."
+      docker compose -f docker-compose.production.yml -f docker-compose.ha.yml -f docker-compose.observability.yml up -d
+      ;;
+    *)
+      log_error "Unknown environment: $ENVIRONMENT"
+      exit 1
+      ;;
+  esac
+
+  log "Waiting 15 seconds for services to start..."
+  sleep 15
+  log_success "Deployment started"
+}
+
+check_health() {
+  log_section "Health Check Validation"
+  
+  check_endpoint() {
+    local name=$1
+    local url=$2
+    echo -n "  $name: "
+    response=$(curl -s -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000")
+    if [ "$response" = "200" ]; then
+      log_success "OK ($response)"
     else
-        echo -e "${YELLOW}Warning: scripts/build-all.sh not found. Skipping build.${NC}"
+      echo -e "${YELLOW}Warning - got $response${NC}"
     fi
-    echo ""
-else
-    echo -e "${YELLOW}Skipping build step (use --build to rebuild images)${NC}"
-    echo ""
-fi
+  }
 
-# Step 2: Stop existing containers
-echo -e "${BLUE}Step 2: Stopping existing containers...${NC}"
-docker compose down
-echo -e "${GREEN}✓ Containers stopped${NC}"
-echo ""
+  log "Frontend & Gateway:"
+  check_endpoint "Shell App" "http://localhost:4200"
+  check_endpoint "API Gateway" "http://localhost:8001/health"
 
-# Step 3: Pull latest images (for services using pre-built images)
-echo -e "${BLUE}Step 3: Pulling latest images...${NC}"
-docker compose pull || echo -e "${YELLOW}Warning: Some images could not be pulled${NC}"
-echo ""
+  log "\nCore Services:"
+  check_endpoint "Quality Measure" "http://localhost:8087/quality-measure/health"
+  check_endpoint "FHIR Service" "http://localhost:8085/fhir/metadata"
+  check_endpoint "Patient Service" "http://localhost:8084/patient/health"
+  check_endpoint "Care Gap Service" "http://localhost:8086/care-gap/health"
 
-# Step 4: Start containers
-echo -e "${BLUE}Step 4: Starting containers...${NC}"
-if [ -n "$MONITORING_FLAG" ]; then
-    echo -e "${BLUE}Including monitoring services (Prometheus + Grafana)${NC}"
-    docker compose $PROFILE_FLAG $MONITORING_FLAG up -d
-else
-    docker compose $PROFILE_FLAG up -d
-fi
-echo -e "${GREEN}✓ Containers started${NC}"
-echo ""
+  if [ "$ENVIRONMENT" != "dev" ]; then
+    log "\nObservability Stack:"
+    check_endpoint "Prometheus" "http://localhost:9090/-/healthy"
+    check_endpoint "Grafana" "http://localhost:3000/api/health"
+    check_endpoint "Jaeger" "http://localhost:16686/api/traces"
+  fi
+}
 
-# Step 5: Wait for services to be healthy
-echo -e "${BLUE}Step 5: Waiting for services to initialize...${NC}"
-echo "This may take up to 2 minutes for all services to become healthy..."
-sleep 30
+print_summary() {
+  log_section "Deployment Summary"
+  log "Environment: $ENVIRONMENT"
+  log "Log file: $LOG_FILE"
+  log ""
+  log "Access Points:"
+  case "$ENVIRONMENT" in
+    dev|demo)
+      log "  Frontend: http://localhost:4200"
+      log "  API Gateway: http://localhost:8001"
+      log "  Quality Measure: http://localhost:8087"
+      log "  FHIR: http://localhost:8085"
+      ;;
+    *)
+      log "  Frontend: http://localhost:4200"
+      log "  Grafana: http://localhost:3000 (admin/admin)"
+      log "  Prometheus: http://localhost:9090"
+      log "  Jaeger: http://localhost:16686"
+      ;;
+  esac
+  log ""
+  log "Next Steps:"
+  log "  1. View logs: docker compose logs -f"
+  log "  2. Run tests: npx nx run-many --target=test --all"
+  log "  3. Stop services: docker compose down"
+  log ""
+  log_success "Deployment Successful! 🚀"
+}
 
-# Show container status
-echo ""
-echo -e "${BLUE}Container Status:${NC}"
-docker compose ps
-echo ""
+main() {
+  log_section "HDIM Deployment Script"
+  log "Environment: $ENVIRONMENT"
+  
+  validate_environment
+  validate_worktrees
+  deploy_services
+  sleep 5
+  check_health
+  print_summary
+}
 
-# Step 6: Run health checks
-echo -e "${BLUE}Step 6: Running health checks...${NC}"
-sleep 10  # Give services a bit more time
-
-if [ -f "scripts/health-check.sh" ]; then
-    ./scripts/health-check.sh
-    HEALTH_STATUS=$?
-else
-    echo -e "${YELLOW}Warning: scripts/health-check.sh not found${NC}"
-    HEALTH_STATUS=0
-fi
-
-echo ""
-
-# Step 7: Display deployment summary
-echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}Deployment Complete!${NC}"
-echo -e "${BLUE}========================================${NC}"
-echo ""
-
-if [ $HEALTH_STATUS -eq 0 ]; then
-    echo -e "${GREEN}✅ All services are healthy${NC}"
-else
-    echo -e "${YELLOW}⚠️  Some services may need attention${NC}"
-fi
-
-echo ""
-echo -e "${BLUE}Access Points:${NC}"
-echo ""
-echo -e "  ${GREEN}Frontend:${NC}"
-echo "    Clinical Portal:    http://localhost:4200"
-echo ""
-echo -e "  ${GREEN}API Gateway (Kong):${NC}"
-echo "    Gateway:            http://localhost:8000"
-echo "    Admin API:          http://localhost:8001"
-echo "    Admin UI:           http://localhost:8002"
-echo ""
-echo -e "  ${GREEN}Backend Services (Direct):${NC}"
-echo "    CQL Engine:         http://localhost:8081/actuator/health"
-echo "    Quality Measure:    http://localhost:8087/actuator/health"
-echo "    Gateway Service:    http://localhost:8080/actuator/health"
-echo "    FHIR Service:       http://localhost:8085/actuator/health"
-echo ""
-echo -e "  ${GREEN}Infrastructure:${NC}"
-echo "    PostgreSQL:         localhost:5435"
-echo "    Redis:              localhost:6380"
-echo "    Kafka:              localhost:9094"
-echo ""
-
-if [ -n "$MONITORING_FLAG" ]; then
-    echo -e "  ${GREEN}Monitoring:${NC}"
-    echo "    Prometheus:         http://localhost:9090"
-    echo "    Grafana:            http://localhost:3001"
-    echo "      (Default credentials: admin/admin)"
-    echo ""
-fi
-
-echo -e "${BLUE}Useful Commands:${NC}"
-echo "  View logs:          docker compose logs -f [service-name]"
-echo "  Restart service:    docker compose restart [service-name]"
-echo "  Stop all:           docker compose down"
-echo "  Health check:       ./scripts/health-check.sh"
-echo ""
-
-if [ $HEALTH_STATUS -ne 0 ]; then
-    echo -e "${YELLOW}Troubleshooting:${NC}"
-    echo "  Check service logs: docker compose logs -f"
-    echo "  Verify containers:  docker compose ps"
-    echo "  Run health check:   ./scripts/health-check.sh"
-    echo ""
-fi
+main

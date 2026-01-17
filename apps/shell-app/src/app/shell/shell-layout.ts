@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { ConnectionStatusComponent } from '../components/connection-status.component';
 
 @Component({
   selector: 'health-platform-shell-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ConnectionStatusComponent],
   template: `
     <div class="shell-layout">
       <header class="shell-header">
@@ -15,6 +16,7 @@ import { RouterModule } from '@angular/router';
             <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
             <a routerLink="/mfePatients" routerLinkActive="active">Patients</a>
           </nav>
+          <app-connection-status></app-connection-status>
         </div>
       </header>
       <main class="shell-main">
@@ -42,20 +44,29 @@ import { RouterModule } from '@angular/router';
     .shell-header-content {
       max-width: 1200px;
       margin: 0 auto;
+      width: 100%;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 2rem;
     }
 
     .shell-title {
       margin: 0;
       font-size: 1.5rem;
       font-weight: 500;
+      flex-shrink: 0;
     }
 
     .shell-nav {
       display: flex;
       gap: 2rem;
+      flex: 1;
+    }
+
+    app-connection-status {
+      flex-shrink: 0;
+      margin-left: auto;
     }
 
     .shell-nav a {

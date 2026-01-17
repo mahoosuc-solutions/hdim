@@ -94,6 +94,16 @@ public interface PatientCheckInRepository extends JpaRepository<PatientCheckInEn
     );
 
     /**
+     * Find check-in record by tenant ID and appointment ID
+     * (Alternative method signature matching service usage)
+     *
+     * @param tenantId Tenant identifier for multi-tenant isolation
+     * @param appointmentId FHIR Appointment resource ID
+     * @return Optional containing the check-in entity if found
+     */
+    Optional<PatientCheckInEntity> findByTenantIdAndAppointmentId(String tenantId, String appointmentId);
+
+    /**
      * Find recent check-ins for a tenant with limit
      *
      * @param tenantId Tenant identifier for multi-tenant isolation
@@ -175,5 +185,50 @@ public interface PatientCheckInRepository extends JpaRepository<PatientCheckInEn
     """)
     List<PatientCheckInEntity> findPendingInsuranceVerification(
         @Param("tenantId") String tenantId
+    );
+
+    /**
+     * Find today's check-ins by tenant and time range
+     *
+     * @param tenantId Tenant identifier for multi-tenant isolation
+     * @param startOfDay Start of day instant
+     * @param endOfDay End of day instant
+     * @return List of check-ins within the time range
+     */
+    @Query("""
+        SELECT c FROM PatientCheckInEntity c
+        WHERE c.tenantId = :tenantId
+        AND c.checkInTime >= :startOfDay
+        AND c.checkInTime < :endOfDay
+        ORDER BY c.checkInTime DESC
+    """)
+    List<PatientCheckInEntity> findTodayCheckIns(
+        @Param("tenantId") String tenantId,
+        @Param("startOfDay") Instant startOfDay,
+        @Param("endOfDay") Instant endOfDay
+    );
+
+    /**
+     * Find check-ins for a patient within a time range
+     *
+     * @param tenantId Tenant identifier for multi-tenant isolation
+     * @param patientId UUID of the patient
+     * @param start Start of time range
+     * @param end End of time range
+     * @return List of check-ins within the time range, ordered by check-in time descending
+     */
+    @Query("""
+        SELECT c FROM PatientCheckInEntity c
+        WHERE c.tenantId = :tenantId
+        AND c.patientId = :patientId
+        AND c.checkInTime >= :start
+        AND c.checkInTime < :end
+        ORDER BY c.checkInTime DESC
+    """)
+    List<PatientCheckInEntity> findByTenantIdAndPatientIdAndCheckInTimeBetween(
+        @Param("tenantId") String tenantId,
+        @Param("patientId") UUID patientId,
+        @Param("start") Instant start,
+        @Param("end") Instant end
     );
 }

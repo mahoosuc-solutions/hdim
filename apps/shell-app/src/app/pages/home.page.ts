@@ -1,6 +1,18 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
+import {
+  loadCurrentUser,
+  selectIsAuthenticated,
+  selectSharedAuthError,
+  selectSharedAuthLoading,
+  selectSharedAuthTenantId,
+  selectSharedAuthUser,
+} from '@health-platform/shared/state';
+import type { User } from '@health-platform/shared/util-auth';
+import { getUserDisplayName } from '@health-platform/shared/util-auth';
 
 @Component({
   selector: 'health-platform-home',
@@ -11,6 +23,42 @@ import { RouterModule } from '@angular/router';
       <div class="hero">
         <h1>Welcome to Health Data Platform</h1>
         <p class="subtitle">Modular Micro Frontend Architecture</p>
+        <section class="auth-panel">
+          <div class="auth-panel__header">
+            <h3>Authentication Status</h3>
+            <span
+              class="status-pill"
+              [class.is-online]="(isAuthenticated$ | async)"
+            >
+              {{ (isAuthenticated$ | async) ? 'Authenticated' : 'Anonymous' }}
+            </span>
+          </div>
+
+          <div
+            class="auth-panel__body"
+            *ngIf="(user$ | async) as user; else anonymousState"
+          >
+            <p class="auth-panel__name">{{ getUserDisplayName(user) }}</p>
+            <p class="auth-panel__meta">Tenant: {{ (tenantId$ | async) || 'detecting…' }}</p>
+            <div class="auth-panel__roles" *ngIf="user.roles.length">
+              <span class="role-chip" *ngFor="let role of user.roles">{{ role.name }}</span>
+            </div>
+          </div>
+
+          <ng-template #anonymousState>
+            <p class="auth-panel__empty" *ngIf="!(loading$ | async); else loadingState">
+              No active session detected. Secure routes will redirect to the login experience automatically.
+            </p>
+          </ng-template>
+
+          <ng-template #loadingState>
+            <p class="auth-panel__empty">Syncing session…</p>
+          </ng-template>
+
+          <p class="auth-panel__error" *ngIf="(error$ | async) as error">
+            {{ error }}
+          </p>
+        </section>
       </div>
 
       <div class="features">
@@ -54,9 +102,19 @@ import { RouterModule } from '@angular/router';
       text-align: center;
       margin-bottom: 3rem;
       padding: 3rem 2rem;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #222a68 0%, #1d8cf8 100%);
       color: white;
-      border-radius: 8px;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(255,255,255,0.25), transparent 45%);
+      pointer-events: none;
     }
 
     .hero h1 {
@@ -67,7 +125,83 @@ import { RouterModule } from '@angular/router';
     .subtitle {
       font-size: 1.25rem;
       opacity: 0.9;
+      margin: 0 0 2rem;
+    }
+
+    .auth-panel {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(6px);
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .auth-panel__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .auth-panel__header h3 {
       margin: 0;
+      font-size: 1.1rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .status-pill {
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .status-pill.is-online {
+      background: rgba(76, 217, 100, 0.2);
+      border-color: rgba(76, 217, 100, 0.6);
+    }
+
+    .auth-panel__name {
+      font-size: 1.4rem;
+      margin: 0 0 0.25rem;
+      font-weight: 600;
+    }
+
+    .auth-panel__meta {
+      margin: 0.1rem 0;
+      font-size: 0.95rem;
+      opacity: 0.85;
+    }
+
+    .auth-panel__roles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.75rem;
+    }
+
+    .role-chip {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 999px;
+      padding: 0.25rem 0.85rem;
+      font-size: 0.85rem;
+    }
+
+    .auth-panel__empty,
+    .auth-panel__error {
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .auth-panel__error {
+      margin-top: 0.75rem;
+      color: #ffb3b3;
     }
 
     .features {
@@ -127,15 +261,17 @@ import { RouterModule } from '@angular/router';
     }
 
     .architecture-info {
-      background: #f5f5f5;
+      background: #0d1117;
+      color: #f0f3ff;
       padding: 2rem;
-      border-radius: 8px;
-      border-left: 4px solid #1976d2;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
     }
 
     .architecture-info h2 {
       margin-top: 0;
-      color: #1976d2;
+      color: #8ab4ff;
     }
 
     .architecture-info ul {
@@ -150,4 +286,23 @@ import { RouterModule } from '@angular/router';
     }
   `]
 })
-export class HomePage {}
+export class HomePage implements OnInit {
+  readonly user$: Observable<User | null> = this.store.select(selectSharedAuthUser);
+  readonly tenantId$: Observable<string | null> = this.store.select(selectSharedAuthTenantId);
+  readonly loading$: Observable<boolean> = this.store.select(selectSharedAuthLoading);
+  readonly error$: Observable<string | null> = this.store.select(selectSharedAuthError);
+  readonly isAuthenticated$: Observable<boolean> = this.store.select(selectIsAuthenticated);
+
+  constructor(private readonly store: Store) {}
+
+  ngOnInit(): void {
+    this.store.dispatch(loadCurrentUser());
+  }
+
+  /**
+   * Get user display name from User object
+   */
+  getUserDisplayName(user: User): string {
+    return getUserDisplayName(user);
+  }
+}

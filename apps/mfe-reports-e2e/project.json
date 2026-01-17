@@ -1,0 +1,9 @@
+{
+  "name": "mfe-reports-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/mfe-reports-e2e/src",
+  "implicitDependencies": ["mfe-reports"],
+  "// targets": "to see all targets run: nx show project mfe-reports-e2e --web",
+  "targets": {}
+}

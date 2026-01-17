@@ -1,0 +1,24 @@
+{
+  "name": "shared-notifications",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/notifications/src",
+  "projectType": "library",
+  "tags": ["type:ui", "scope:shared"],
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/shared/notifications"],
+      "options": {
+        "jestConfig": "libs/shared/notifications/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/shared/notifications/**/*.ts", "!libs/shared/notifications/**/*.spec.ts"]
+      }
+    }
+  }
+}

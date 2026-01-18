@@ -1,5 +1,8 @@
 package com.healthdata.patientevent;
 
+import com.healthdata.patientevent.event.*;
+import com.healthdata.patientevent.eventhandler.PatientEventHandler;
+import com.healthdata.patientevent.projection.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -362,7 +365,7 @@ class PatientEventHandlerTest {
     @DisplayName("Should handle null event gracefully")
     void testNullEventHandling() {
         // When/Then: Should not throw NPE
-        assertThatThrownBy(() -> patientEventHandler.handle(null))
+        assertThatThrownBy(() -> patientEventHandler.handle((PatientCreatedEvent) null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -394,25 +397,28 @@ class PatientEventHandlerTest {
 
     // ===== Mock Classes =====
 
-    static class MockPatientProjectionStore {
+    static class MockPatientProjectionStore implements PatientEventHandler.PatientProjectionStore {
         private final java.util.Map<String, PatientActiveProjection> store = new java.util.HashMap<>();
 
-        void saveProjection(PatientActiveProjection projection) {
+        @Override
+        public void saveProjection(PatientActiveProjection projection) {
             String key = projection.getTenantId() + ":" + projection.getPatientId();
             store.put(key, projection);
         }
 
-        PatientActiveProjection getPatientProjection(String patientId, String tenantId) {
+        @Override
+        public PatientActiveProjection getPatientProjection(String patientId, String tenantId) {
             String key = tenantId + ":" + patientId;
             return store.get(key);
         }
     }
 
-    static class MockEventStore {
+    static class MockEventStore implements PatientEventHandler.EventStore {
         private int eventCount = 0;
         private String lastEventType = "";
 
-        void storeEvent(Object event) {
+        @Override
+        public void storeEvent(Object event) {
             eventCount++;
             lastEventType = event.getClass().getSimpleName();
         }

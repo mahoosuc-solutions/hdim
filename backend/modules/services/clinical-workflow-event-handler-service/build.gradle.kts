@@ -54,3 +54,9 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+// This module is a library used by other services, not a standalone application
+// Disable bootJar to avoid needing a @SpringBootApplication main class
+tasks.named("bootJar") {
+    enabled = false
+}

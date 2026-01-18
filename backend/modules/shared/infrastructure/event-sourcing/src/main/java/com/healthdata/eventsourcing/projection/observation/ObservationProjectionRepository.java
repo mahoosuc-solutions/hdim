@@ -43,4 +43,24 @@ public interface ObservationProjectionRepository extends JpaRepository<Observati
      * Count observations for a patient
      */
     long countByTenantIdAndPatientId(String tenantId, String patientId);
+
+    /**
+     * Find observations by patient ID and tenant ID (alternative parameter order)
+     */
+    List<ObservationProjection> findByPatientIdAndTenantId(String patientId, String tenantId);
+
+    /**
+     * Find observations by LOINC code and tenant ID
+     */
+    List<ObservationProjection> findByLoincCodeAndTenantId(String loincCode, String tenantId);
+
+    /**
+     * Find observation by patient, LOINC, and tenant
+     */
+    Optional<ObservationProjection> findByPatientIdAndLoincCodeAndTenantId(String patientId, String loincCode, String tenantId);
+
+    /**
+     * Find observations in date range for tenant
+     */
+    List<ObservationProjection> findByTenantIdAndObservationDateBetween(String tenantId, java.time.LocalDate startDate, java.time.LocalDate endDate);
 }

@@ -1,5 +1,6 @@
 package com.healthdata.eventreplay.strategy;
 
+import com.healthdata.eventreplay.engine.EventStore;
 import com.healthdata.eventsourcing.event.DomainEvent;
 import java.util.function.Predicate;
 
@@ -7,9 +8,9 @@ import java.util.function.Predicate;
  * ReplayStrategyFactory - Creates appropriate replay strategies
  */
 public class ReplayStrategyFactory {
-    private final MockEventStore eventStore;
+    private final EventStore eventStore;
 
-    public ReplayStrategyFactory(MockEventStore eventStore) {
+    public ReplayStrategyFactory(EventStore eventStore) {
         this.eventStore = eventStore;
     }
 

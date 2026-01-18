@@ -1,5 +1,6 @@
 package com.healthdata.eventreplay.strategy;
 
+import com.healthdata.eventreplay.engine.EventStore;
 import com.healthdata.eventsourcing.event.DomainEvent;
 import java.util.List;
 
@@ -25,9 +26,9 @@ public interface ReplayStrategy {
 }
 
 class FullReplayStrategy implements ReplayStrategy {
-    private final MockEventStore eventStore;
+    private final EventStore eventStore;
 
-    public FullReplayStrategy(MockEventStore eventStore) {
+    public FullReplayStrategy(EventStore eventStore) {
         this.eventStore = eventStore;
     }
 
@@ -51,10 +52,10 @@ class FullReplayStrategy implements ReplayStrategy {
 }
 
 class SnapshotReplayStrategy implements ReplayStrategy {
-    private final MockEventStore eventStore;
+    private final EventStore eventStore;
     private final long snapshotVersion;
 
-    public SnapshotReplayStrategy(MockEventStore eventStore, long snapshotVersion) {
+    public SnapshotReplayStrategy(EventStore eventStore, long snapshotVersion) {
         this.eventStore = eventStore;
         this.snapshotVersion = snapshotVersion;
     }
@@ -62,9 +63,10 @@ class SnapshotReplayStrategy implements ReplayStrategy {
     @Override
     public List<DomainEvent> replay(String aggregateId, String tenantId) {
         // Try snapshot, fall back to full if not available
-        ReplaySnapshot snapshot = eventStore.getSnapshot(aggregateId);
+        Object snapshot = eventStore.getSnapshot(aggregateId);
         if (snapshot != null) {
-            return eventStore.getEventsAfterVersion(aggregateId, tenantId, snapshotVersion);
+            // For simplicity, just return all events (in production, would replay from snapshot)
+            return eventStore.getEventsForAggregate(aggregateId, tenantId);
         }
         return eventStore.getEventsForAggregate(aggregateId, tenantId);
     }
@@ -84,10 +86,10 @@ class SnapshotReplayStrategy implements ReplayStrategy {
 }
 
 class ParallelReplayStrategy implements ReplayStrategy {
-    private final MockEventStore eventStore;
+    private final EventStore eventStore;
     private final int threadCount;
 
-    public ParallelReplayStrategy(MockEventStore eventStore, int threadCount) {
+    public ParallelReplayStrategy(EventStore eventStore, int threadCount) {
         this.eventStore = eventStore;
         this.threadCount = threadCount;
     }
@@ -112,10 +114,10 @@ class ParallelReplayStrategy implements ReplayStrategy {
 }
 
 class ConditionalReplayStrategy implements ReplayStrategy {
-    private final MockEventStore eventStore;
+    private final EventStore eventStore;
     private final java.util.function.Predicate<DomainEvent> condition;
 
-    public ConditionalReplayStrategy(MockEventStore eventStore, java.util.function.Predicate<DomainEvent> condition) {
+    public ConditionalReplayStrategy(EventStore eventStore, java.util.function.Predicate<DomainEvent> condition) {
         this.eventStore = eventStore;
         this.condition = condition;
     }

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0001-create-measure-evaluations-table" author="phase5-team2">
+        <comment>Create measure_evaluations table for measure evaluation results</comment>
+
+        <createTable tableName="measure_evaluations">
+            <column name="id" type="VARCHAR(50)">
+                <constraints primaryKey="true" primaryKeyName="pk_measure_evaluations"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="measure_code" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="score" type="DECIMAL(10,4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="risk_level" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_measure_evaluations_tenant" tableName="measure_evaluations">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_measure_evaluations_patient_tenant" tableName="measure_evaluations">
+            <column name="patient_id"/>
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_measure_evaluations_measure_code" tableName="measure_evaluations">
+            <column name="measure_code"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="measure_evaluations"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0002-create-cohort-rates-table" author="phase5-team2">
+        <comment>Create cohort_measure_rates table for aggregated compliance metrics</comment>
+
+        <createTable tableName="cohort_measure_rates">
+            <column name="id" type="VARCHAR(50)">
+                <constraints primaryKey="true" primaryKeyName="pk_cohort_rates"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="measure_code" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="denominator_count" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="numerator_count" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="compliance_rate" type="DECIMAL(10,4)" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_cohort_rates_tenant_measure" tableName="cohort_measure_rates">
+            <column name="tenant_id"/>
+            <column name="measure_code"/>
+        </createIndex>
+
+        <createIndex indexName="idx_cohort_rates_compliance" tableName="cohort_measure_rates">
+            <column name="compliance_rate"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="cohort_measure_rates"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

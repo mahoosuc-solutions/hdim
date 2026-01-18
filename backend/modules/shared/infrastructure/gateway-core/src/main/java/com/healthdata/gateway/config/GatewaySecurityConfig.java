@@ -1,8 +1,6 @@
 package com.healthdata.gateway.config;
 
 import com.healthdata.gateway.auth.GatewayAuthenticationFilter;
-import com.healthdata.gateway.filter.AuditLoggingFilter;
-import com.healthdata.gateway.filter.RateLimitingFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -146,8 +144,6 @@ public class GatewaySecurityConfig {
     @Order(2)
     public SecurityFilterChain securityFilterChain(
         HttpSecurity http,
-        AuditLoggingFilter auditLoggingFilter,
-        RateLimitingFilter rateLimitingFilter,
         GatewayAuthenticationFilter gatewayAuthFilter
     ) throws Exception {
         http
@@ -171,9 +167,7 @@ public class GatewaySecurityConfig {
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            // Add filters in order - audit first, then rate limiting, then auth
-            .addFilterBefore(auditLoggingFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+            // Add gateway authentication filter
             .addFilterBefore(gatewayAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

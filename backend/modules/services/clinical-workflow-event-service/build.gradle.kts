@@ -57,6 +57,7 @@ dependencies {
     testImplementation(libs.mockito.junit.jupiter)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.kafka)
+    testImplementation(libs.testcontainers.junit.jupiter)
 }
 
 tasks.test {

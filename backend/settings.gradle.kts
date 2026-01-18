@@ -77,7 +77,8 @@ include(
     "modules:services:notification-service",
     "modules:services:demo-seeding-service",
     "modules:services:cms-connector-service",
-    "modules:services:clinical-workflow-service"
+    "modules:services:clinical-workflow-service",
+    "modules:services:query-api-service"
 )
 
 // Applications

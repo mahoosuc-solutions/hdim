@@ -16,6 +16,7 @@ dependencies {
     // Spring Boot Web Stack
     implementation(libs.spring.boot.starter.web)
     implementation(libs.spring.boot.starter.security)
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-logging")
 
     // Spring OpenAPI / Swagger

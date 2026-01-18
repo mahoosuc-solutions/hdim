@@ -6,6 +6,7 @@ import com.healthdata.queryapi.api.v1.dto.ObservationResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -26,8 +27,11 @@ public class ObservationController {
     /**
      * GET /api/v1/observations/patient/{patientId}
      * List all observations for patient
+     *
+     * Authorization: ADMIN, EVALUATOR, ANALYST, VIEWER can read observations
      */
     @GetMapping("/patient/{patientId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<List<ObservationResponse>> getObservationsByPatient(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -46,8 +50,11 @@ public class ObservationController {
     /**
      * GET /api/v1/observations/loinc/{loincCode}
      * List observations by LOINC code
+     *
+     * Authorization: ADMIN, EVALUATOR, ANALYST, VIEWER can filter by LOINC code
      */
     @GetMapping("/loinc/{loincCode}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<List<ObservationResponse>> getObservationsByLoincCode(
             @PathVariable String loincCode,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -66,8 +73,11 @@ public class ObservationController {
     /**
      * GET /api/v1/observations/patient/{patientId}/latest?loincCode={code}
      * Get latest observation for patient by LOINC code
+     *
+     * Authorization: ADMIN, EVALUATOR, ANALYST, VIEWER can get latest observation
      */
     @GetMapping("/patient/{patientId}/latest")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<ObservationResponse> getLatestObservation(
             @PathVariable String patientId,
             @RequestParam String loincCode,
@@ -85,8 +95,11 @@ public class ObservationController {
     /**
      * GET /api/v1/observations/date-range?start={date}&end={date}
      * List observations by date range
+     *
+     * Authorization: ADMIN, EVALUATOR, ANALYST, VIEWER can query by date range
      */
     @GetMapping("/date-range")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<List<ObservationResponse>> getObservationsByDateRange(
             @RequestParam LocalDate start,
             @RequestParam LocalDate end,
@@ -107,8 +120,11 @@ public class ObservationController {
     /**
      * GET /api/v1/observations
      * List all observations in tenant
+     *
+     * Authorization: ADMIN, EVALUATOR, ANALYST, VIEWER can list all observations
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<List<ObservationResponse>> getAllObservations(
             @RequestHeader("X-Tenant-ID") String tenantId) {
         log.debug("GET /api/v1/observations - tenant: {}", tenantId);

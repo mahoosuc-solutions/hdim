@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0001-create-workflow-tables" author="phase5-team4">
+        <comment>Create workflow projection tables</comment>
+        <createTable tableName="workflow_projections">
+            <column name="id" type="VARCHAR(50)">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="workflow_type" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_step" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="assigned_to" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="last_step_successful" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="approval_status" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="initiated_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="completed_date" type="DATE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex indexName="idx_workflows_tenant" tableName="workflow_projections">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex indexName="idx_workflows_patient" tableName="workflow_projections">
+            <column name="patient_id"/>
+        </createIndex>
+        <createIndex indexName="idx_workflows_status" tableName="workflow_projections">
+            <column name="status"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="workflow_projections"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

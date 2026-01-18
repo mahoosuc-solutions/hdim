@@ -1,5 +1,8 @@
 package com.healthdata.caregap;
 
+import com.healthdata.caregap.event.*;
+import com.healthdata.caregap.eventhandler.CareGapEventHandler;
+import com.healthdata.caregap.projection.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -329,35 +332,40 @@ class CareGapEventHandlerTest {
 
     // ===== Mock Classes =====
 
-    static class MockCareGapProjectionStore {
+    static class MockCareGapProjectionStore implements CareGapEventHandler.CareGapProjectionStore {
         private final java.util.Map<String, CareGapProjection> gapStore = new java.util.HashMap<>();
         private final java.util.Map<String, PopulationHealthProjection> healthStore = new java.util.HashMap<>();
 
-        void saveCareGapProjection(CareGapProjection projection) {
+        @Override
+        public void saveCareGapProjection(CareGapProjection projection) {
             String key = projection.getTenantId() + ":" + projection.getPatientId() + ":" + projection.getGapCode();
             gapStore.put(key, projection);
         }
 
-        CareGapProjection getCareGapProjection(String patientId, String tenantId, String gapCode) {
+        @Override
+        public CareGapProjection getCareGapProjection(String patientId, String tenantId, String gapCode) {
             String key = tenantId + ":" + patientId + ":" + gapCode;
             return gapStore.get(key);
         }
 
-        void savePopulationHealth(PopulationHealthProjection projection) {
+        @Override
+        public void savePopulationHealth(PopulationHealthProjection projection) {
             String key = projection.getTenantId();
             healthStore.put(key, projection);
         }
 
-        PopulationHealthProjection getPopulationHealth(String tenantId) {
+        @Override
+        public PopulationHealthProjection getPopulationHealth(String tenantId) {
             return healthStore.get(tenantId);
         }
     }
 
-    static class MockEventStore {
+    static class MockEventStore implements CareGapEventHandler.EventStore {
         private int eventCount = 0;
         private String lastEventType = "";
 
-        void storeEvent(Object event) {
+        @Override
+        public void storeEvent(Object event) {
             eventCount++;
             lastEventType = event.getClass().getSimpleName();
         }

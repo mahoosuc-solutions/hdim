@@ -1,0 +1,106 @@
+groups:
+  - name: measure-builder
+    interval: 30s
+    rules:
+      - alert: MeasureBuilderHighErrorRate
+        expr: rate(http_requests_total{job="measure-builder",status=~"5.."}[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          team: measure-builder
+        annotations:
+          summary: "High error rate in Measure Builder"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 1%)"
+          runbook_url: "docs/runbooks/MEASURE_BUILDER_INCIDENT_RESPONSE.md"
+
+      - alert: MeasureBuilderSlowAPIResponse
+        expr: histogram_quantile(0.95, http_request_duration_seconds{job="measure-builder"}) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          team: measure-builder
+        annotations:
+          summary: "Slow API responses in Measure Builder"
+          description: "P95 response time is {{ $value }}s (threshold: 500ms)"
+          runbook_url: "docs/runbooks/MEASURE_BUILDER_INCIDENT_RESPONSE.md"
+
+      - alert: MeasureBuilderServiceDown
+        expr: up{job="measure-builder"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: measure-builder
+        annotations:
+          summary: "Measure Builder service is down"
+          description: "Service {{ $labels.instance }} is not responding"
+          runbook_url: "docs/runbooks/MEASURE_BUILDER_INCIDENT_RESPONSE.md"
+
+      - alert: MeasureBuilderHighCPU
+        expr: rate(cpu_usage_seconds_total{job="measure-builder"}[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: measure-builder
+        annotations:
+          summary: "High CPU usage in Measure Builder"
+          description: "CPU usage is {{ $value | humanizePercentage }} (threshold: 80%)"
+
+      - alert: MeasureBuilderHighMemory
+        expr: container_memory_usage_bytes{name="measure-builder"} / container_spec_memory_limit_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: measure-builder
+        annotations:
+          summary: "High memory usage in Measure Builder"
+          description: "Memory usage is {{ $value | humanizePercentage }} of limit"
+
+      - alert: MeasureBuilderDiskSpaceLow
+        expr: node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes < 0.1
+        for: 10m
+        labels:
+          severity: warning
+          team: measure-builder
+        annotations:
+          summary: "Low disk space"
+          description: "Available disk space: {{ $value | humanize }}%"
+
+      - alert: MeasureBuilderDatabaseConnectionPoolExhausted
+        expr: db_hikaricp_connections_active{pool="measure-builder"} > 100
+        for: 2m
+        labels:
+          severity: critical
+          team: measure-builder
+        annotations:
+          summary: "Database connection pool exhausted"
+          description: "Active connections: {{ $value }} (max: 100)"
+
+      - alert: MeasureBuilderCQLGenerationTimeout
+        expr: rate(cql_generation_timeout_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          team: measure-builder
+        annotations:
+          summary: "High CQL generation timeout rate"
+          description: "{{ $value | humanizePercentage }} of CQL generations are timing out"
+
+      - alert: MeasureBuilderValidationFailureRate
+        expr: rate(measure_validation_failures_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: info
+          team: measure-builder
+        annotations:
+          summary: "Increased measure validation failures"
+          description: "{{ $value | humanizePercentage }} of validations are failing"
+
+      - alert: MeasureBuilderPublishFailure
+        expr: rate(measure_publish_failures_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          team: measure-builder
+        annotations:
+          summary: "Measure publish failures detected"
+          description: "{{ $value | humanizePercentage }} of publishes are failing"

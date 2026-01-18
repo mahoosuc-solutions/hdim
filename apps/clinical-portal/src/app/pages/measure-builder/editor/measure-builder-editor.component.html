@@ -1,0 +1,120 @@
+<div class="measure-builder-editor" [class.full-screen]="fullScreenMode">
+  <!-- Top Toolbar -->
+  <div class="editor-toolbar">
+    <div class="toolbar-left">
+      <button mat-icon-button (click)="toggleLeftSidebar()" matTooltip="Toggle sidebar">
+        <mat-icon>{{ sidebarOpen ? 'arrow_back' : 'arrow_forward' }}</mat-icon>
+      </button>
+      <div class="measure-title">
+        <h2>{{ state?.name || 'Untitled Measure' }}</h2>
+        <mat-icon *ngIf="isDirty" color="warn" class="dirty-indicator" matTooltip="Unsaved changes">
+          fiber_manual_record
+        </mat-icon>
+      </div>
+    </div>
+
+    <div class="toolbar-center">
+      <button
+        mat-icon-button
+        [disabled]="!canUndo"
+        (click)="undo()"
+        matTooltip="Undo (Ctrl+Z)">
+        <mat-icon>undo</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        [disabled]="!canRedo"
+        (click)="redo()"
+        matTooltip="Redo (Ctrl+Y)">
+        <mat-icon>redo</mat-icon>
+      </button>
+      <mat-divider [vertical]="true"></mat-divider>
+      <button mat-icon-button (click)="exportMeasure()" matTooltip="Export measure">
+        <mat-icon>download</mat-icon>
+      </button>
+      <button mat-icon-button (click)="toggleCqlPreview()" matTooltip="Toggle CQL preview">
+        <mat-icon>{{ showCqlPreview ? 'visibility_off' : 'visibility' }}</mat-icon>
+      </button>
+    </div>
+
+    <div class="toolbar-right">
+      <button
+        mat-raised-button
+        color="accent"
+        (click)="testMeasure()"
+        matTooltip="Test measure against sample patients">
+        <mat-icon>science</mat-icon>
+        <span>Test</span>
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="saveMeasure()"
+        [disabled]="saving"
+        matTooltip="Save measure (Ctrl+S)">
+        <mat-icon *ngIf="!saving">save</mat-icon>
+        <mat-spinner *ngIf="saving" diameter="20"></mat-spinner>
+        <span>Save</span>
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="publishMeasure()"
+        matTooltip="Publish measure">
+        <mat-icon>cloud_upload</mat-icon>
+        <span>Publish</span>
+      </button>
+      <button
+        mat-icon-button
+        (click)="toggleFullScreen()"
+        matTooltip="Toggle full screen">
+        <mat-icon>{{ fullScreenMode ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content Area (3-panel layout) -->
+  <div class="editor-content">
+    <!-- Left Panel: Metadata and Preview -->
+    <div *ngIf="sidebarOpen" class="left-panel">
+      <app-measure-preview-panel
+        [state]="state"
+        (stateChanged)="algorithmBuilderService.updateState($event)">
+      </app-measure-preview-panel>
+    </div>
+
+    <!-- Center Panel: Visual Algorithm Builder -->
+    <div class="center-panel">
+      <app-visual-algorithm-builder
+        [algorithm]="algorithm"
+        (blockConditionChanged)="onBlockConditionChange($event.blockId, $event.condition)">
+      </app-visual-algorithm-builder>
+
+      <!-- CQL Preview Panel (Bottom) -->
+      <div *ngIf="showCqlPreview" class="cql-preview-panel" [style.height.px]="cqlPreviewHeight">
+        <div class="cql-header">
+          <span class="cql-title">CQL Output</span>
+          <div class="cql-actions">
+            <button mat-icon-button (click)="copyCqlToClipboard()" matTooltip="Copy to clipboard">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+        </div>
+        <div class="cql-content">
+          <pre><code>{{ currentCql }}</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: Configuration Sliders -->
+    <div *ngIf="rightPanelOpen" class="right-panel">
+      <app-measure-config-slider
+        [sliderConfigurations]="sliderConfigurations"
+        (sliderChanged)="onSliderChange($event)">
+      </app-measure-config-slider>
+    </div>
+  </div>
+
+  <!-- Bottom Resizer -->
+  <div class="resize-handle" *ngIf="showCqlPreview"></div>
+</div>

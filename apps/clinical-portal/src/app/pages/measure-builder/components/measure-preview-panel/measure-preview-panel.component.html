@@ -1,0 +1,166 @@
+<div class="measure-preview-panel">
+  <!-- Completion Status -->
+  <mat-card class="status-card">
+    <mat-card-header>
+      <mat-card-title>Progress</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="progress-section">
+        <div class="progress-text">
+          <span class="percentage">{{ getCompletionPercentage() }}%</span>
+          <span class="label">Complete</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="getCompletionPercentage()"></div>
+        </div>
+        <mat-chip *ngIf="canPublish()" color="primary" selected>
+          <mat-icon matChipAvatar>check_circle</mat-icon>
+          Ready to Publish
+        </mat-chip>
+        <mat-chip *ngIf="!canPublish()" color="warn" selected>
+          <mat-icon matChipAvatar>info</mat-icon>
+          Incomplete
+        </mat-chip>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Metadata Form -->
+  <mat-card class="metadata-card">
+    <mat-card-header>
+      <mat-card-title>Measure Metadata</mat-card-title>
+      <mat-card-subtitle>Define basic information about your measure</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="metadataForm" class="metadata-form">
+        <!-- Name -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Measure Name *</mat-label>
+          <input matInput formControlName="name" placeholder="e.g., Diabetes HbA1c Control">
+          <mat-icon matSuffix matTooltip="Required field">
+            {{ metadataForm.get('name')?.value ? 'check_circle' : 'help' }}
+          </mat-icon>
+        </mat-form-field>
+
+        <!-- Description -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description</mat-label>
+          <textarea
+            matInput
+            formControlName="description"
+            placeholder="Measure description and clinical rationale"
+            rows="3">
+          </textarea>
+        </mat-form-field>
+
+        <!-- Category -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Category</mat-label>
+          <mat-select formControlName="category">
+            <mat-option *ngFor="let cat of categoryOptions" [value]="cat.value">
+              {{ cat.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Year -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Specification Year</mat-label>
+          <input matInput type="number" formControlName="year" min="2000" max="2100">
+        </mat-form-field>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Builder Steps -->
+  <mat-card class="steps-card">
+    <mat-card-header>
+      <mat-card-title>Build Steps</mat-card-title>
+      <mat-card-subtitle>Follow these steps to build your measure</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="steps-container">
+        <div *ngFor="let step of steps; let i = index" class="step-item">
+          <!-- Step Number Circle -->
+          <div class="step-circle" [class]="getStepStatus(step.number)">
+            <mat-icon
+              [color]="getStepIconColor(step.number)"
+              class="step-icon">
+              {{ getStepStatus(step.number) === 'completed' ? 'check' : step.icon }}
+            </mat-icon>
+          </div>
+
+          <!-- Vertical Line (except for last) -->
+          <div *ngIf="i < steps.length - 1" class="step-line" [class.active]="currentStep > i">
+          </div>
+
+          <!-- Step Content -->
+          <div
+            class="step-content"
+            [class.active]="currentStep === i"
+            [class.completed]="currentStep > i"
+            (click)="goToStep(step.number)">
+            <div class="step-title">{{ step.number }}. {{ step.title }}</div>
+            <div class="step-description">{{ step.description }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step Navigation -->
+      <div class="step-navigation">
+        <button
+          mat-button
+          (click)="previousStep()"
+          [disabled]="currentStep === 0">
+          <mat-icon>arrow_back</mat-icon>
+          Previous
+        </button>
+        <button
+          mat-button
+          (click)="nextStep()"
+          [disabled]="currentStep === steps.length - 1">
+          Next
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Helpful Tips -->
+  <mat-card class="tips-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>lightbulb</mat-icon>
+        Tips
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="tip" [ngSwitch]="currentStep">
+        <div *ngSwitchCase="0">
+          <strong>Step 1:</strong> Start by giving your measure a clear, descriptive name that reflects its clinical
+          purpose. Include additional context in the description.
+        </div>
+        <div *ngSwitchCase="1">
+          <strong>Step 2:</strong> Define the population criteria. Initial Population is the broadest group, Denominator
+          narrows it down, and Numerator defines those meeting quality criteria.
+        </div>
+        <div *ngSwitchCase="2">
+          <strong>Step 3:</strong> Use the sliders on the right panel to configure clinical parameters. Changes will
+          automatically update the CQL code.
+        </div>
+        <div *ngSwitchCase="3">
+          <strong>Step 4:</strong> Add exclusions for patients who should not be measured, and exceptions for valid
+          medical reasons to not meet criteria.
+        </div>
+        <div *ngSwitchCase="4">
+          <strong>Step 5:</strong> Test your measure with sample patients to verify it works correctly before
+          publishing to production.
+        </div>
+        <div *ngSwitchDefault>
+          <strong>Pro Tip:</strong> Use keyboard shortcuts: Ctrl+S to save, Ctrl+Z to undo, Ctrl+Y to redo. Press ?
+          to see all shortcuts.
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

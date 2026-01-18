@@ -1,13 +1,13 @@
-# Team Worktree: visual
+# Team Worktree: sliders
 
-**Branch:** feature/visual-algorithm-builder
+**Branch:** feature/interactive-sliders
 **Base:** feature/feature/enhanced-measure-builder
 
 ## Quick Start
 
 ```bash
 # Navigate to this directory
-cd measure-builder-visual
+cd measure-builder-sliders
 
 # Install dependencies (first time only)
 npm install
@@ -52,7 +52,7 @@ npm run format
 
 ```bash
 # Push to your feature branch
-git push origin feature/visual-algorithm-builder
+git push origin feature/interactive-sliders
 
 # Create pull request on GitHub
 # Reference the main feature branch
@@ -70,7 +70,7 @@ git checkout feature/feature/enhanced-measure-builder
 git pull origin feature/feature/enhanced-measure-builder
 
 # Merge your work
-git merge --no-ff feature/visual-algorithm-builder
+git merge --no-ff feature/interactive-sliders
 
 # Push to main feature
 git push origin feature/feature/enhanced-measure-builder

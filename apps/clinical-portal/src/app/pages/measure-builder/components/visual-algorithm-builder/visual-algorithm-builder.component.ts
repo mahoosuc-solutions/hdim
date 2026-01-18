@@ -5,7 +5,8 @@ import {
   ViewChild,
   ElementRef,
   AfterViewInit,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  HostListener
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject } from 'rxjs';
@@ -41,6 +42,21 @@ export class VisualAlgorithmBuilderComponent implements OnInit, AfterViewInit, O
   algorithm: MeasureAlgorithm | null = null;
   hoveredBlockId: string | null = null;
   selectedBlockId: string | null = null;
+
+  // Drag & Drop properties
+  isDragging = false;
+  draggedBlockId: string | null = null;
+  dragStartX = 0;
+  dragStartY = 0;
+  dragStartBlockX = 0;
+  dragStartBlockY = 0;
+
+  // Connection mode properties
+  connectionMode = false;
+  sourceBlockId: string | null = null;
+
+  // Context menu properties
+  contextMenu: { x: number; y: number; blockId: string } | null = null;
 
   // Color mapping for population block types
   private readonly blockColors: Map<string, string> = new Map([
@@ -341,6 +357,183 @@ export class VisualAlgorithmBuilderComponent implements OnInit, AfterViewInit, O
    */
   selectBlock(blockId: string): void {
     this.selectedBlockId = blockId;
+  }
+
+  /**
+   * Start dragging a block
+   */
+  startBlockDrag(blockId: string, event: MouseEvent): void {
+    event.preventDefault();
+    this.isDragging = true;
+    this.draggedBlockId = blockId;
+    this.dragStartX = event.clientX;
+    this.dragStartY = event.clientY;
+
+    const block = this.algorithm?.blocks.find(b => b.id === blockId);
+    if (block) {
+      this.dragStartBlockX = block.x;
+      this.dragStartBlockY = block.y;
+    }
+
+    document.addEventListener('mousemove', this.onMouseMove.bind(this));
+    document.addEventListener('mouseup', this.onMouseUp.bind(this));
+  }
+
+  /**
+   * Handle mouse move during drag
+   */
+  private onMouseMove = (event: MouseEvent): void => {
+    if (!this.isDragging || !this.draggedBlockId || !this.algorithm) return;
+
+    const deltaX = event.clientX - this.dragStartX;
+    const deltaY = event.clientY - this.dragStartY;
+
+    let newX = this.dragStartBlockX + deltaX / 1.5;
+    let newY = this.dragStartBlockY + deltaY / 1.5;
+
+    // Snap to 20px grid
+    newX = Math.round(newX / 20) * 20;
+    newY = Math.round(newY / 20) * 20;
+
+    // Prevent dragging outside canvas
+    const block = this.algorithm.blocks.find(b => b.id === this.draggedBlockId);
+    if (block) {
+      newX = Math.max(0, Math.min(newX, 1200 - block.width));
+      newY = Math.max(0, Math.min(newY, 600 - block.height));
+
+      // Update block position
+      block.x = newX;
+      block.y = newY;
+
+      // Notify service
+      this.algorithmService.updateBlockPosition(this.draggedBlockId, newX, newY);
+
+      // Re-render
+      this.renderSVG();
+    }
+  };
+
+  /**
+   * End dragging
+   */
+  private onMouseUp = (): void => {
+    this.isDragging = false;
+    this.draggedBlockId = null;
+
+    document.removeEventListener('mousemove', this.onMouseMove.bind(this));
+    document.removeEventListener('mouseup', this.onMouseUp.bind(this));
+  };
+
+  /**
+   * Show context menu on right-click
+   */
+  showContextMenu(blockId: string, event: MouseEvent): void {
+    event.preventDefault();
+    this.contextMenu = {
+      x: event.clientX,
+      y: event.clientY,
+      blockId
+    };
+    this.selectedBlockId = blockId;
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Hide context menu
+   */
+  hideContextMenu(): void {
+    this.contextMenu = null;
+  }
+
+  /**
+   * Edit block from context menu
+   */
+  editBlock(): void {
+    if (this.contextMenu) {
+      // Emit event or call service
+      console.log('Edit block:', this.contextMenu.blockId);
+    }
+    this.hideContextMenu();
+  }
+
+  /**
+   * Duplicate block from context menu
+   */
+  duplicateBlock(): void {
+    if (this.contextMenu) {
+      this.algorithmService.duplicateBlock(this.contextMenu.blockId);
+    }
+    this.hideContextMenu();
+  }
+
+  /**
+   * Delete block from context menu
+   */
+  deleteBlock(): void {
+    if (this.contextMenu) {
+      this.algorithmService.removeBlock(this.contextMenu.blockId);
+    }
+    this.hideContextMenu();
+  }
+
+  /**
+   * Enter connection creation mode (Shift+Click on block)
+   */
+  startConnectionMode(blockId: string): void {
+    if (!this.connectionMode) {
+      this.connectionMode = true;
+      this.sourceBlockId = blockId;
+    } else if (blockId !== this.sourceBlockId) {
+      // Create connection
+      if (this.sourceBlockId) {
+        this.algorithmService.addConnection(this.sourceBlockId, blockId);
+      }
+      this.connectionMode = false;
+      this.sourceBlockId = null;
+    }
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Cancel connection mode
+   */
+  cancelConnectionMode(): void {
+    this.connectionMode = false;
+    this.sourceBlockId = null;
+  }
+
+  /**
+   * Handle keyboard events
+   */
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      this.cancelConnectionMode();
+      this.hideContextMenu();
+    }
+
+    if (event.key === 'Delete' && this.selectedBlockId) {
+      this.algorithmService.removeBlock(this.selectedBlockId);
+    }
+
+    if (event.ctrlKey && event.key === 'd' && this.selectedBlockId) {
+      event.preventDefault();
+      this.algorithmService.duplicateBlock(this.selectedBlockId);
+    }
+  }
+
+  /**
+   * Undo last action
+   */
+  undo(): void {
+    this.algorithmService.undo();
+  }
+
+  /**
+   * Redo last undone action
+   */
+  redo(): void {
+    this.algorithmService.redo();
   }
 
   /**

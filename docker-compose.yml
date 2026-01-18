@@ -554,6 +554,10 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8081/cql-engine
       FHIR_SERVICE_URL: http://fhir-service:8085
+      # Measure Builder Backend Configuration
+      MEASURE_BUILDER_VALIDATION_ENABLED: ${MEASURE_BUILDER_VALIDATION_ENABLED:-true}
+      MEASURE_BUILDER_DRAFT_TTL_HOURS: ${MEASURE_BUILDER_DRAFT_TTL_HOURS:-72}
+      MEASURE_BUILDER_AUTO_VERSION: ${MEASURE_BUILDER_AUTO_VERSION:-true}
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
@@ -1534,7 +1538,15 @@ services:
     depends_on:
       - gateway-service
     environment:
+      # Clinical Portal Core Configuration
       API_URL: http://gateway-service:8080
+      # Measure Builder Feature Configuration
+      ENABLE_MEASURE_BUILDER: ${ENABLE_MEASURE_BUILDER:-true}
+      MEASURE_BUILDER_MAX_COMPLEXITY: ${MEASURE_BUILDER_MAX_COMPLEXITY:-10}
+      MEASURE_BUILDER_ALLOW_CUSTOM_CQL: ${MEASURE_BUILDER_ALLOW_CUSTOM_CQL:-false}
+      MEASURE_BUILDER_DEBOUNCE_MS: ${MEASURE_BUILDER_DEBOUNCE_MS:-500}
+      MEASURE_BUILDER_ALLOW_IMPORTS: ${MEASURE_BUILDER_ALLOW_IMPORTS:-true}
+      MEASURE_BUILDER_MIN_ROLE: ${MEASURE_BUILDER_MIN_ROLE:-EVALUATOR}
     ports:
       - "4200:80"
     networks:

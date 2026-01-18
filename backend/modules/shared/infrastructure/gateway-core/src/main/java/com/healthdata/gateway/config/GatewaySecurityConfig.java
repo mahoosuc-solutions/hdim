@@ -1,8 +1,6 @@
 package com.healthdata.gateway.config;
 
 import com.healthdata.gateway.auth.GatewayAuthenticationFilter;
-import com.healthdata.gateway.filter.AuditLoggingFilter;
-import com.healthdata.gateway.filter.RateLimitingFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -130,8 +128,8 @@ public class GatewaySecurityConfig {
      * Production security filter chain with centralized gateway authentication.
      *
      * Filter order (from first to last):
-     * 1. AuditLoggingFilter - Captures all requests/responses for HIPAA compliance
-     * 2. RateLimitingFilter - Enforces rate limits per tenant/endpoint/role
+     * 1. AuditLoggingFilter (if present) - Captures all requests/responses for HIPAA compliance
+     * 2. RateLimitingFilter (if present) - Enforces rate limits per tenant/endpoint/role
      * 3. GatewayAuthenticationFilter - Validates JWT and injects trusted headers
      * 4. Spring Security - Authorization checks
      *
@@ -140,14 +138,14 @@ public class GatewaySecurityConfig {
      * - JWT validation
      * - Public path checking via PublicPathRegistry
      * - Injecting trusted headers for downstream services
+     *
+     * Note: Audit and rate limiting filters are added by gateway-service module
      */
     @Bean
     @Profile("!test")
     @Order(2)
     public SecurityFilterChain securityFilterChain(
         HttpSecurity http,
-        AuditLoggingFilter auditLoggingFilter,
-        RateLimitingFilter rateLimitingFilter,
         GatewayAuthenticationFilter gatewayAuthFilter
     ) throws Exception {
         http
@@ -171,9 +169,7 @@ public class GatewaySecurityConfig {
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            // Add filters in order - audit first, then rate limiting, then auth
-            .addFilterBefore(auditLoggingFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+            // Gateway auth filter validates JWT and injects trusted headers
             .addFilterBefore(gatewayAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -106,4 +106,13 @@ public class PatientCreatedEvent extends AbstractDomainEvent {
     public String getEventType() {
         return "PatientCreated";
     }
+
+    /**
+     * Resource type for this event
+     * @return "Patient"
+     */
+    @Override
+    public String getResourceType() {
+        return "Patient";
+    }
 }

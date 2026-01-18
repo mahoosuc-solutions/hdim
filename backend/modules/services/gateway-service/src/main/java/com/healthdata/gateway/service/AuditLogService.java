@@ -200,6 +200,44 @@ public class AuditLogService {
     }
 
     /**
+     * Log token revocation event (Phase 2.0 Team 3.2)
+     *
+     * @param userId User ID performing the revocation
+     * @param tenantId Tenant ID
+     * @param tokenIdentifier Token identifier (JTI or token value)
+     * @param reason Revocation reason
+     */
+    @Async("auditLogExecutor")
+    @Transactional
+    public void logTokenRevocation(String userId, String tenantId, String tokenIdentifier, String reason) {
+        try {
+            AuditLogRequest request = AuditLogRequest.builder()
+                .timestamp(Instant.now())
+                .httpMethod("POST")
+                .requestPath("/api/v1/auth/revoke")
+                .userId(userId)
+                .username(userId)
+                .tenantId(tenantId)
+                .roles("USER")
+                .httpStatusCode(200)
+                .success(true)
+                .authorizationAllowed(true)
+                .build();
+
+            // Add token revocation details to query parameters
+            request.setQueryParameters("token=" + tokenIdentifier + "&reason=" + reason);
+
+            AuditLog auditLog = convertRequestToEntity(request);
+            auditLogRepository.save(auditLog);
+
+            log.info("Token revocation logged: {} for token: {} (reason: {})", userId, tokenIdentifier, reason);
+
+        } catch (Exception e) {
+            log.error("Failed to log token revocation: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
      * Get most recent audit log entry
      *
      * Useful for health checks and monitoring

@@ -1,33 +1,48 @@
 package com.healthdata.gateway.service;
 
-import com.healthdata.gateway.domain.RefreshToken;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.healthdata.authentication.entity.RefreshToken;
 
 /**
- * Token Revocation Service (Phase 2.0 Team 3.2 - Stub)
+ * Token Revocation Service Interface (Phase 2.0 Team 3.2)
  *
- * Handles token revocation and blacklisting
- * This is a stub that will be implemented in Team 3.2
+ * Handles token revocation and Redis blacklist management.
+ * Provides contract for token revocation operations used by authentication
+ * and token validation filters.
  */
-@Service
-@RequiredArgsConstructor
-@Transactional
-@Slf4j
-public class TokenRevocationService {
+public interface TokenRevocationService {
 
     /**
-     * Revoke a refresh token
+     * Revoke a single refresh token
      *
      * @param token RefreshToken to revoke
-     * @param reason Revocation reason (TOKEN_REFRESH, LOGOUT, etc.)
+     * @param reason Revocation reason
      */
-    public void revokeRefreshToken(RefreshToken token, String reason) {
-        // Stub implementation - will be completed in Team 3.2
-        token.setRevokedAt(java.time.Instant.now());
-        token.setRevocationReason(reason);
-        log.info("Revoking refresh token: {} (reason: {})", token.getTokenJti(), reason);
-    }
+    void revokeRefreshToken(RefreshToken token, String reason);
+
+    /**
+     * Revoke all active tokens for a user (logout)
+     *
+     * @param userId User ID
+     * @param tenantId Tenant ID
+     * @param reason Revocation reason
+     * @return Number of tokens revoked
+     */
+    int revokeAllUserTokens(String userId, String tenantId, String reason);
+
+    /**
+     * Revoke a specific access token
+     *
+     * @param accessToken JWT access token
+     * @param tenantId Tenant ID
+     * @param reason Revocation reason
+     */
+    void revokeAccessToken(String accessToken, String tenantId, String reason);
+
+    /**
+     * Check if token is in blacklist
+     *
+     * @param jti JWT ID
+     * @return true if token is blacklisted
+     */
+    boolean isBlacklisted(String jti);
 }

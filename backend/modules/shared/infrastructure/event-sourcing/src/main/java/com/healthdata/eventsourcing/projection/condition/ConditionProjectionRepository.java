@@ -20,4 +20,12 @@ public interface ConditionProjectionRepository extends JpaRepository<ConditionPr
     long countByTenantIdAndPatientId(String tenantId, String patientId);
 
     long countByTenantIdAndPatientIdAndStatus(String tenantId, String patientId, String status);
+
+    List<ConditionProjection> findByPatientIdAndTenantId(String patientId, String tenantId);
+
+    List<ConditionProjection> findByIcdCodeAndTenantId(String icdCode, String tenantId);
+
+    List<ConditionProjection> findByPatientIdAndTenantIdAndStatus(String patientId, String tenantId, String status);
+
+    List<ConditionProjection> findByTenantId(String tenantId);
 }

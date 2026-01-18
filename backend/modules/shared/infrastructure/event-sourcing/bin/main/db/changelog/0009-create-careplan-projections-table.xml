@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0009-create-careplan-projections-table" author="team-4-careplan-projection">
+        <comment>Create care plan projections table for care coordination</comment>
+
+        <createTable tableName="careplan_projections">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_careplan_projections"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="coordinator_id" type="VARCHAR(100)"/>
+            <column name="start_date" type="DATE"/>
+            <column name="end_date" type="DATE"/>
+            <column name="goal_count" type="INT"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE"
+                    defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE"
+                    defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_careplan_projections_tenant_patient" tableName="careplan_projections">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_careplan_projections_coordinator" tableName="careplan_projections">
+            <column name="coordinator_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_careplan_projections_status" tableName="careplan_projections">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_careplan_projections_tenant_coordinator" tableName="careplan_projections">
+            <column name="tenant_id"/>
+            <column name="coordinator_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_careplan_projections_tenant_patient_status" tableName="careplan_projections">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="careplan_projections"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

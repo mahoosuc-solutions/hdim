@@ -163,7 +163,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             RateLimitResult result) throws IOException {
 
         // Set HTTP status 429 Too Many Requests
-        response.setStatus(429);  // HttpServletResponse.SC_TOO_MANY_REQUESTS not available in all versions
+        response.setStatus(429);
 
         // Set retry-after header
         response.setHeader("Retry-After",

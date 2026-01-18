@@ -241,6 +241,11 @@ services:
       CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
       FHIR_SERVER_URL: ${FHIR_SERVICE_URL:-http://fhir-service:8083/fhir}
 
+      # Measure Builder Backend Configuration (Security-hardened for production)
+      MEASURE_BUILDER_VALIDATION_ENABLED: ${MEASURE_BUILDER_VALIDATION_ENABLED:-true}
+      MEASURE_BUILDER_DRAFT_TTL_HOURS: ${MEASURE_BUILDER_DRAFT_TTL_HOURS:-72}
+      MEASURE_BUILDER_AUTO_VERSION: ${MEASURE_BUILDER_AUTO_VERSION:-true}
+
       # JWT
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
@@ -355,7 +360,16 @@ services:
       - "80:80"
       - "443:443"
     environment:
+      # Clinical Portal Core Configuration
       API_BASE_URL: ${API_GATEWAY_URL}
+      # Measure Builder Feature Configuration (Security-hardened for production)
+      # Disabled by default in production - explicitly enable via environment variable
+      ENABLE_MEASURE_BUILDER: ${ENABLE_MEASURE_BUILDER:-false}
+      MEASURE_BUILDER_MAX_COMPLEXITY: ${MEASURE_BUILDER_MAX_COMPLEXITY:-8}
+      MEASURE_BUILDER_ALLOW_CUSTOM_CQL: ${MEASURE_BUILDER_ALLOW_CUSTOM_CQL:-false}
+      MEASURE_BUILDER_DEBOUNCE_MS: ${MEASURE_BUILDER_DEBOUNCE_MS:-500}
+      MEASURE_BUILDER_ALLOW_IMPORTS: ${MEASURE_BUILDER_ALLOW_IMPORTS:-false}
+      MEASURE_BUILDER_MIN_ROLE: ${MEASURE_BUILDER_MIN_ROLE:-ADMIN}
     volumes:
       - ./nginx/nginx-prod.conf:/etc/nginx/nginx.conf:ro
       - ./ssl:/etc/nginx/ssl:ro

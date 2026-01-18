@@ -284,6 +284,10 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
       FHIR_SERVER_URL: http://fhir-service:8080/fhir
+      # Measure Builder Backend Configuration
+      MEASURE_BUILDER_VALIDATION_ENABLED: ${MEASURE_BUILDER_VALIDATION_ENABLED:-true}
+      MEASURE_BUILDER_DRAFT_TTL_HOURS: ${MEASURE_BUILDER_DRAFT_TTL_HOURS:-72}
+      MEASURE_BUILDER_AUTO_VERSION: ${MEASURE_BUILDER_AUTO_VERSION:-true}
       JWT_SECRET: staging_jwt_secret_key_for_docker_environment_minimum_256_bits_required_for_hs512_algorithm_2025
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
       MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
@@ -534,8 +538,16 @@ services:
     ports:
       - "4200:80"
     environment:
+      # Clinical Portal Core Configuration
       - NODE_ENV=production
       - API_GATEWAY_URL=http://gateway-service:9000
+      # Measure Builder Feature Configuration
+      - ENABLE_MEASURE_BUILDER=${ENABLE_MEASURE_BUILDER:-true}
+      - MEASURE_BUILDER_MAX_COMPLEXITY=${MEASURE_BUILDER_MAX_COMPLEXITY:-10}
+      - MEASURE_BUILDER_ALLOW_CUSTOM_CQL=${MEASURE_BUILDER_ALLOW_CUSTOM_CQL:-false}
+      - MEASURE_BUILDER_DEBOUNCE_MS=${MEASURE_BUILDER_DEBOUNCE_MS:-500}
+      - MEASURE_BUILDER_ALLOW_IMPORTS=${MEASURE_BUILDER_ALLOW_IMPORTS:-true}
+      - MEASURE_BUILDER_MIN_ROLE=${MEASURE_BUILDER_MIN_ROLE:-EVALUATOR}
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
       interval: 30s

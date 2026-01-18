@@ -20,4 +20,8 @@ public interface CarePlanProjectionRepository extends JpaRepository<CarePlanProj
     long countByTenantIdAndPatientId(String tenantId, String patientId);
 
     long countByTenantIdAndPatientIdAndStatus(String tenantId, String patientId, String status);
+
+    List<CarePlanProjection> findByTenantIdAndStatus(String tenantId, String status);
+
+    List<CarePlanProjection> findByTenantId(String tenantId);
 }

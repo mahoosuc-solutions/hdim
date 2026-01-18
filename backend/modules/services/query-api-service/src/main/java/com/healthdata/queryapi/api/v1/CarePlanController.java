@@ -6,6 +6,7 @@ import com.healthdata.queryapi.api.v1.dto.CarePlanResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class CarePlanController {
      * List all care plans for patient
      */
     @GetMapping("/patient/{patientId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<List<CarePlanResponse>> getCarePlansByPatient(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -47,6 +49,7 @@ public class CarePlanController {
      * List all care plans assigned to coordinator
      */
     @GetMapping("/coordinator/{coordinatorId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<List<CarePlanResponse>> getCarePlansByCoordinator(
             @PathVariable String coordinatorId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -67,6 +70,7 @@ public class CarePlanController {
      * List active care plans for patient
      */
     @GetMapping("/patient/{patientId}/active")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<List<CarePlanResponse>> getActiveCarePlans(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -87,6 +91,7 @@ public class CarePlanController {
      * List care plans by status (draft, active, completed)
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<List<CarePlanResponse>> getCarePlansByStatus(
             @RequestParam(required = false) String status,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -114,6 +119,7 @@ public class CarePlanController {
      * Find care plan by patient and title
      */
     @GetMapping("/patient/{patientId}/title/{title}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<CarePlanResponse> getCarePlanByTitle(
             @PathVariable String patientId,
             @PathVariable String title,

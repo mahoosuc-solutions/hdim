@@ -238,6 +238,50 @@ gateway:
     requests-per-second: 100
     burst-capacity: 150
 
+# Phase 2.0: Rate Limiting Configuration (Per-endpoint, per-role, per-tenant)
+security:
+  rate-limiting:
+    enabled: true
+    backend: redis
+
+    # Default: 1000 requests per minute
+    default-limit-per-minute: 1000
+
+    # Endpoint-specific limits (high-risk endpoints get lower limits)
+    endpoints:
+      /api/v1/auth/login:
+        limit-per-minute: 10
+        description: "Login endpoint - prevent brute force"
+      /api/v1/auth/refresh:
+        limit-per-minute: 100
+        description: "Token refresh endpoint"
+      /api/v1/auth/mfa/verify:
+        limit-per-minute: 20
+        description: "MFA verification endpoint"
+      /api/v1/**:
+        limit-per-minute: 1000
+        description: "Standard API endpoints"
+      /fhir/**:
+        limit-per-minute: 2000
+        description: "FHIR endpoints (higher due to bulk operations)"
+      /cql-engine/**:
+        limit-per-minute: 500
+        description: "CQL evaluation endpoint (compute-heavy)"
+
+    # Role-based multipliers (higher roles get better limits)
+    role-multipliers:
+      SUPER_ADMIN: 10.0   # 10x the base limit
+      ADMIN: 2.0          # 2x the base limit
+      EVALUATOR: 1.5      # 1.5x the base limit
+      ANALYST: 1.0        # Standard limit
+      VIEWER: 0.5         # 50% of standard limit
+
+    # Tenant-specific overrides (premium tenants get higher limits)
+    tenant-overrides:
+      TENANT_PREMIUM_001: 5000    # Premium tier: 5000/min
+      TENANT_STANDARD_002: 2000   # Standard tier: 2000/min
+      # Default (undefined tenants): 1000/min
+
 # Resilience4j Configuration
 resilience4j:
   circuitbreaker:

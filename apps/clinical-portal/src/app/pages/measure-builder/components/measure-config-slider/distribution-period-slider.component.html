@@ -1,0 +1,137 @@
+<div class="slider-container" [ngClass]="{ 'distribution': isDistributionSlider(), 'period': isPeriodSelector() }">
+  <!-- Slider Label -->
+  <div class="slider-header">
+    <label class="slider-label">{{ config?.name }}</label>
+    <p class="slider-description">{{ config?.description }}</p>
+  </div>
+
+  <!-- Distribution Slider -->
+  <ng-container *ngIf="isDistributionSlider()">
+    <div class="distribution-wrapper">
+      <!-- Distribution Bar -->
+      <div class="distribution-bar">
+        <div class="bar-container">
+          <div
+            *ngFor="let segment of getDistributionSegments()"
+            class="bar-segment"
+            [style.width.%]="segment.width"
+            [style.backgroundColor]="segment.color"
+            [title]="segment.label + ': ' + segment.width + '%">
+          </div>
+        </div>
+      </div>
+
+      <!-- Component Sliders -->
+      <div class="components-list">
+        <div *ngFor="let component of getDistributionConfig().components; let i = index" class="component-item">
+          <!-- Color Indicator -->
+          <div class="color-indicator" [style.backgroundColor]="component.color"></div>
+
+          <!-- Label -->
+          <label class="component-label">{{ component.label }}</label>
+
+          <!-- Weight Input -->
+          <input
+            type="range"
+            class="component-slider"
+            min="0"
+            max="100"
+            [value]="component.weight"
+            (input)="onComponentWeightChange(i, $event)"
+            [attr.aria-label]="'Weight for ' + component.label"
+            [attr.aria-valuemin]="0"
+            [attr.aria-valuemax]="100"
+            [attr.aria-valuenow]="component.weight" />
+
+          <!-- Weight Display -->
+          <span class="component-weight">{{ component.weight }}%</span>
+        </div>
+      </div>
+
+      <!-- Total Weight Display -->
+      <div class="total-weight-display" [ngClass]="{ 'invalid': !isValidDistribution() }">
+        <span class="total-label">Total:</span>
+        <span class="total-weight">{{ getTotalWeight() }}%</span>
+        <span class="validation-message" *ngIf="!isValidDistribution()">
+          ⚠️ Must equal 100%
+        </span>
+      </div>
+
+      <!-- Validation Message -->
+      <div class="validation-info" *ngIf="!isValidDistribution()">
+        {{ getValidationMessage() }}
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Period Selector -->
+  <ng-container *ngIf="isPeriodSelector()">
+    <div class="period-wrapper">
+      <!-- Preset Period Buttons -->
+      <div class="period-presets">
+        <button
+          *ngFor="let preset of getAvailablePresets()"
+          type="button"
+          class="period-button"
+          [class.active]="isPeriodSelected(preset.id)"
+          (click)="selectPeriod(preset.id)"
+          [attr.aria-label]="'Select ' + preset.label"
+          [attr.aria-pressed]="isPeriodSelected(preset.id)">
+          {{ preset.label }}
+        </button>
+      </div>
+
+      <!-- Period Display -->
+      <div class="period-dates">
+        <span class="date-label">From:</span>
+        <span class="start-date">{{ getPeriodConfig().startDate }}</span>
+        <span class="date-label">To:</span>
+        <span class="end-date">{{ getPeriodConfig().endDate }}</span>
+      </div>
+
+      <!-- Custom Period Options (if allowed) -->
+      <ng-container *ngIf="getPeriodConfig().allowCustom">
+        <div class="custom-period-section">
+          <h4>Custom Period</h4>
+
+          <!-- Custom Days Input -->
+          <div class="custom-input-group">
+            <label for="custom-days">Duration (days):</label>
+            <input
+              id="custom-days"
+              type="number"
+              class="custom-days-input"
+              min="1"
+              max="365"
+              [(ngModel)]="getPeriodConfig().customPeriodDays"
+              placeholder="Enter days (1-365)" />
+            <span class="input-hint" *ngIf="getPeriodConfig().customPeriodDays && (getPeriodConfig().customPeriodDays! < 1 || getPeriodConfig().customPeriodDays! > 365)">
+              Must be between 1 and 365 days
+            </span>
+          </div>
+
+          <!-- Custom Months Input -->
+          <div class="custom-input-group">
+            <label for="custom-months">Duration (months):</label>
+            <input
+              id="custom-months"
+              type="number"
+              class="custom-months-input"
+              min="0"
+              max="12"
+              [(ngModel)]="getPeriodConfig().customPeriodMonths"
+              placeholder="Enter months (0-12)" />
+            <span class="input-hint" *ngIf="getPeriodConfig().customPeriodMonths && (getPeriodConfig().customPeriodMonths! < 0 || getPeriodConfig().customPeriodMonths! > 12)">
+              Must be between 0 and 12 months
+            </span>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </ng-container>
+
+  <!-- CQL Preview -->
+  <div class="cql-preview" *ngIf="config">
+    <code>{{ generateCQL() }}</code>
+  </div>
+</div>

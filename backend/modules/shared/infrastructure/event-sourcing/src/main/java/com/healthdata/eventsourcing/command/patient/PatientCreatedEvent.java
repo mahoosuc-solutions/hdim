@@ -39,6 +39,12 @@ public class PatientCreatedEvent extends AbstractDomainEvent {
     private String tenantId;
 
     /**
+     * Patient identifier (unique per tenant)
+     */
+    @JsonProperty("patient_id")
+    private String patientId;
+
+    /**
      * Patient's first name
      */
     @JsonProperty("first_name")

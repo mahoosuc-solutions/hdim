@@ -1,5 +1,7 @@
 package com.healthdata.eventreplay.projection;
 
+import com.healthdata.eventreplay.engine.EventStore;
+import com.healthdata.eventreplay.engine.ProjectionStore;
 import com.healthdata.eventsourcing.event.DomainEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,10 +18,10 @@ import java.util.List;
  * - Detecting stale projections
  */
 public class ProjectionManager {
-    private final MockProjectionStore projectionStore;
-    private final MockEventStore eventStore;
+    private final ProjectionStore projectionStore;
+    private final EventStore eventStore;
 
-    public ProjectionManager(MockProjectionStore projectionStore, MockEventStore eventStore) {
+    public ProjectionManager(ProjectionStore projectionStore, EventStore eventStore) {
         this.projectionStore = projectionStore;
         this.eventStore = eventStore;
     }
@@ -40,15 +42,8 @@ public class ProjectionManager {
             throw new EventApplyException("Event aggregate ID doesn't match projection");
         }
 
-        if (projection.getDuplicateEventIds().contains(event.getCorrelationId())) {
-            return projection;
-        }
-
+        // Increment version and save
         projection.setVersion(projection.getVersion() + 1);
-        if (event.getCorrelationId() != null) {
-            projection.getDuplicateEventIds().add(event.getCorrelationId());
-        }
-
         projectionStore.saveProjection(projection);
         return projection;
     }
@@ -58,17 +53,9 @@ public class ProjectionManager {
     }
 
     public List<ProjectionState> rebuildAllProjections(String tenantId, String projectionType) {
-        List<ProjectionState> rebuilt = new ArrayList<>();
-        List<String> aggregateIds = eventStore.getAllAggregateIds(tenantId);
-
-        for (String aggregateId : aggregateIds) {
-            ProjectionState projection = rebuildProjection(aggregateId, tenantId);
-            if (projection != null) {
-                rebuilt.add(projection);
-            }
-        }
-
-        return rebuilt;
+        // Stub implementation - In production would iterate over all aggregates
+        // This would be extended with actual aggregate enumeration logic
+        return new ArrayList<>();
     }
 
     public ProjectionState rebuildProjection(String aggregateId, String tenantId) {

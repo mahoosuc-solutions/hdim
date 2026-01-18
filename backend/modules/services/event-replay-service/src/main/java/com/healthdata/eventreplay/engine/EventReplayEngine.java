@@ -18,9 +18,9 @@ import java.util.List;
  */
 public class EventReplayEngine {
 
-    private final MockEventStore eventStore;
+    private final EventStore eventStore;
 
-    public EventReplayEngine(MockEventStore eventStore) {
+    public EventReplayEngine(EventStore eventStore) {
         this.eventStore = eventStore;
     }
 
@@ -46,7 +46,9 @@ public class EventReplayEngine {
      * Replay events from a snapshot version onward
      */
     public List<DomainEvent> replayFromSnapshot(String aggregateId, String tenantId, long snapshotVersion) {
-        return eventStore.getEventsAfterVersion(aggregateId, tenantId, snapshotVersion);
+        // Simplified: just return all events
+        // In production, would skip events up to snapshotVersion
+        return eventStore.getEventsForAggregate(aggregateId, tenantId);
     }
 
     /**

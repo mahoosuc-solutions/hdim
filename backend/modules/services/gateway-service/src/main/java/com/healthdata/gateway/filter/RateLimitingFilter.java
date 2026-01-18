@@ -192,10 +192,4 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             result.getLimit(), result.getRemaining(),
             result.getRetryAfterSeconds());
     }
-
-    @Override
-    public int getOrder() {
-        // Execute after JWT authentication but before authorization
-        return -99;
-    }
 }

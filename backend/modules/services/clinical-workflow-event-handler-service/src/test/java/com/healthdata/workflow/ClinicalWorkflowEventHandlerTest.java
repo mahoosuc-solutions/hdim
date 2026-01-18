@@ -1,5 +1,8 @@
 package com.healthdata.workflow;
 
+import com.healthdata.workflow.event.*;
+import com.healthdata.workflow.eventhandler.ClinicalWorkflowEventHandler;
+import com.healthdata.workflow.projection.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -331,25 +334,28 @@ class ClinicalWorkflowEventHandlerTest {
 
     // ===== Mock Classes =====
 
-    static class MockWorkflowProjectionStore {
+    static class MockWorkflowProjectionStore implements ClinicalWorkflowEventHandler.WorkflowProjectionStore {
         private final java.util.Map<String, WorkflowProjection> workflowStore = new java.util.HashMap<>();
 
-        void saveWorkflowProjection(WorkflowProjection projection) {
+        @Override
+        public void saveWorkflowProjection(WorkflowProjection projection) {
             String key = projection.getTenantId() + ":" + projection.getPatientId() + ":" + projection.getWorkflowType();
             workflowStore.put(key, projection);
         }
 
-        WorkflowProjection getWorkflowProjection(String patientId, String tenantId, String workflowType) {
+        @Override
+        public WorkflowProjection getWorkflowProjection(String patientId, String tenantId, String workflowType) {
             String key = tenantId + ":" + patientId + ":" + workflowType;
             return workflowStore.get(key);
         }
     }
 
-    static class MockEventStore {
+    static class MockEventStore implements ClinicalWorkflowEventHandler.EventStore {
         private int eventCount = 0;
         private String lastEventType = "";
 
-        void storeEvent(Object event) {
+        @Override
+        public void storeEvent(Object event) {
             eventCount++;
             lastEventType = event.getClass().getSimpleName();
         }

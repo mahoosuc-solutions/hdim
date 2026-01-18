@@ -6,6 +6,7 @@ import com.healthdata.queryapi.api.v1.dto.PatientResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,8 +26,11 @@ public class PatientController {
     /**
      * GET /api/v1/patients/{patientId}
      * Find patient by ID
+     *
+     * Authorization: ADMIN, EVALUATOR, ANALYST, VIEWER can read patient data
      */
     @GetMapping("/{patientId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<PatientResponse> getPatientById(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -42,8 +46,11 @@ public class PatientController {
     /**
      * GET /api/v1/patients/mrn/{mrn}
      * Find patient by MRN
+     *
+     * Authorization: ADMIN, EVALUATOR, ANALYST, VIEWER can lookup by MRN
      */
     @GetMapping("/mrn/{mrn}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<PatientResponse> getPatientByMrn(
             @PathVariable String mrn,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -59,8 +66,11 @@ public class PatientController {
     /**
      * GET /api/v1/patients/insurance/{memberId}
      * Find patient by insurance member ID
+     *
+     * Authorization: ADMIN, EVALUATOR, ANALYST, VIEWER can lookup by member ID
      */
     @GetMapping("/insurance/{memberId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<PatientResponse> getPatientByInsuranceMemberId(
             @PathVariable String memberId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -76,8 +86,11 @@ public class PatientController {
     /**
      * GET /api/v1/patients
      * List all patients in tenant
+     *
+     * Authorization: ADMIN, EVALUATOR, ANALYST, VIEWER can list patients
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<List<PatientResponse>> getAllPatients(
             @RequestHeader("X-Tenant-ID") String tenantId) {
         log.debug("GET /api/v1/patients - tenant: {}", tenantId);
@@ -94,8 +107,11 @@ public class PatientController {
     /**
      * OPTIONS /api/v1/patients
      * CORS preflight support
+     *
+     * Authorization: Permitted for all authenticated users (needed for CORS)
      */
     @RequestMapping(method = RequestMethod.OPTIONS)
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<?> options() {
         return ResponseEntity.ok().build();
     }
@@ -103,8 +119,11 @@ public class PatientController {
     /**
      * HEAD /api/v1/patients/{patientId}
      * Check if patient exists
+     *
+     * Authorization: ADMIN, EVALUATOR, ANALYST, VIEWER can check existence
      */
     @RequestMapping(value = "/{patientId}", method = RequestMethod.HEAD)
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<?> headPatient(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId) {

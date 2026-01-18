@@ -6,6 +6,7 @@ import com.healthdata.queryapi.api.v1.dto.ConditionResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class ConditionController {
      * List all conditions for patient
      */
     @GetMapping("/patient/{patientId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<List<ConditionResponse>> getConditionsByPatient(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -47,6 +49,7 @@ public class ConditionController {
      * List conditions by ICD-10 code
      */
     @GetMapping("/icd/{icdCode}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<List<ConditionResponse>> getConditionsByIcdCode(
             @PathVariable String icdCode,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -67,6 +70,7 @@ public class ConditionController {
      * List active conditions for patient
      */
     @GetMapping("/patient/{patientId}/active")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<List<ConditionResponse>> getActiveConditions(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -87,6 +91,7 @@ public class ConditionController {
      * List conditions by status (active, inactive, resolved)
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     public ResponseEntity<List<ConditionResponse>> getConditionsByStatus(
             @RequestParam(required = false) String status,
             @RequestHeader("X-Tenant-ID") String tenantId) {

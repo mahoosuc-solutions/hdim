@@ -1,5 +1,7 @@
 package com.healthdata.eventreplay.temporal;
 
+import com.healthdata.eventreplay.engine.EventStore;
+import com.healthdata.eventreplay.engine.ProjectionStore;
 import com.healthdata.eventsourcing.event.DomainEvent;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -15,10 +17,10 @@ import java.util.List;
  * - Compliance verification at specific times
  */
 public class TemporalQueryService {
-    private final MockEventStore eventStore;
-    private final MockProjectionStore projectionStore;
+    private final EventStore eventStore;
+    private final ProjectionStore projectionStore;
 
-    public TemporalQueryService(MockEventStore eventStore, MockProjectionStore projectionStore) {
+    public TemporalQueryService(EventStore eventStore, ProjectionStore projectionStore) {
         this.eventStore = eventStore;
         this.projectionStore = projectionStore;
     }
@@ -50,9 +52,10 @@ public class TemporalQueryService {
         List<TemporalSnapshot> snapshots = new ArrayList<>();
         List<DomainEvent> allEvents = eventStore.getEventsForAggregate(aggregateId, tenantId);
 
-        for (DomainEvent event : allEvents) {
+        for (int i = 0; i < allEvents.size(); i++) {
+            DomainEvent event = allEvents.get(i);
             if (!event.getTimestamp().isBefore(startTime) && !event.getTimestamp().isAfter(endTime)) {
-                snapshots.add(new TemporalSnapshot(aggregateId, tenantId, event.getVersion(), event.getTimestamp()));
+                snapshots.add(new TemporalSnapshot(aggregateId, tenantId, (long) (i + 1), event.getTimestamp()));
             }
         }
 

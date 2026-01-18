@@ -1,6 +1,8 @@
 package com.healthdata.gateway.config;
 
 import com.healthdata.gateway.auth.GatewayAuthenticationFilter;
+import com.healthdata.gateway.filter.AuditLoggingFilter;
+import com.healthdata.gateway.filter.RateLimitingFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -127,10 +129,11 @@ public class GatewaySecurityConfig {
     /**
      * Production security filter chain with centralized gateway authentication.
      *
-     * Authentication flow:
-     * 1. GatewayAuthenticationFilter validates JWT and injects trusted headers
-     * 2. Spring Security permits all (actual auth handled by filter)
-     * 3. Filter chain continues to route request to backend services
+     * Filter order (from first to last):
+     * 1. AuditLoggingFilter - Captures all requests/responses for HIPAA compliance
+     * 2. RateLimitingFilter - Enforces rate limits per tenant/endpoint/role
+     * 3. GatewayAuthenticationFilter - Validates JWT and injects trusted headers
+     * 4. Spring Security - Authorization checks
      *
      * The GatewayAuthenticationFilter handles:
      * - Stripping external X-Auth-* headers (security)
@@ -143,6 +146,8 @@ public class GatewaySecurityConfig {
     @Order(2)
     public SecurityFilterChain securityFilterChain(
         HttpSecurity http,
+        AuditLoggingFilter auditLoggingFilter,
+        RateLimitingFilter rateLimitingFilter,
         GatewayAuthenticationFilter gatewayAuthFilter
     ) throws Exception {
         http
@@ -166,7 +171,9 @@ public class GatewaySecurityConfig {
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            // Add gateway auth filter before UsernamePasswordAuthenticationFilter
+            // Add filters in order - audit first, then rate limiting, then auth
+            .addFilterBefore(auditLoggingFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(gatewayAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

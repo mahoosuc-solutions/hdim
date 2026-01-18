@@ -119,7 +119,7 @@ public class RateLimitService {
                 .getContext().getAuthentication();
 
             if (auth != null && auth.isAuthenticated()) {
-                Collection<GrantedAuthority> authorities =
+                Collection<? extends GrantedAuthority> authorities =
                     auth.getAuthorities();
 
                 for (GrantedAuthority authority : authorities) {

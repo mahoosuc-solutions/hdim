@@ -46,4 +46,15 @@ hdim-master/
 hdim-predictive-analytics/
 phase2-worktree*/
 
+# Temporary phase directories
+PHASE_*/
+phase*/
+hdim-*/
+
+# Temporary scripts and configs
+demo/start-demo-core.sh
+docker-compose.demo-core.yml
+scripts/run-demo-storyboard-core.js
+tools/demo-control/
+
 .angular

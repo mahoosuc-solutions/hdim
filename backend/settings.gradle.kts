@@ -54,6 +54,8 @@ include(
     "modules:services:patient-event-handler-service",
     "modules:services:patient-service",
     "modules:services:quality-measure-event-handler-service",
+    "modules:services:care-gap-event-handler-service",
+    "modules:services:clinical-workflow-event-handler-service",
     "modules:services:quality-measure-service",
     "modules:services:care-gap-service",
     "modules:services:analytics-service",

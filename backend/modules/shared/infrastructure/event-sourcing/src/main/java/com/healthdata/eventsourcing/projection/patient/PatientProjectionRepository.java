@@ -64,4 +64,31 @@ public interface PatientProjectionRepository extends JpaRepository<PatientProjec
      * @return Optional containing patient if found, empty otherwise
      */
     Optional<PatientProjection> findByTenantIdAndPatientId(String tenantId, String patientId);
+
+    /**
+     * Find a patient by patient ID and tenant (alternative parameter order)
+     *
+     * @param patientId Patient aggregate ID
+     * @param tenantId Tenant identifier
+     * @return Optional containing patient if found, empty otherwise
+     */
+    Optional<PatientProjection> findByPatientIdAndTenantId(String patientId, String tenantId);
+
+    /**
+     * Find a patient by MRN and tenant (alternative parameter order)
+     *
+     * @param mrn Medical Record Number
+     * @param tenantId Tenant identifier
+     * @return Optional containing patient if found, empty otherwise
+     */
+    Optional<PatientProjection> findByMrnAndTenantId(String mrn, String tenantId);
+
+    /**
+     * Find a patient by insurance member ID and tenant
+     *
+     * @param insuranceMemberId Insurance member ID
+     * @param tenantId Tenant identifier
+     * @return Optional containing patient if found, empty otherwise
+     */
+    Optional<PatientProjection> findByInsuranceMemberIdAndTenantId(String insuranceMemberId, String tenantId);
 }

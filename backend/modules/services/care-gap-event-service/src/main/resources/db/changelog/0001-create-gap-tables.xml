@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0001-create-care-gap-tables" author="phase5-team3">
+        <comment>Create care gap and population health projection tables</comment>
+        <createTable tableName="care_gap_projections">
+            <column name="id" type="VARCHAR(50)">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="gap_code" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="severity" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="detection_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="closure_date" type="DATE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex indexName="idx_care_gaps_tenant" tableName="care_gap_projections">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createTable tableName="population_health_projections">
+            <column name="id" type="VARCHAR(50)">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_gaps_open" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="critical_gaps" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="high_gaps" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="medium_gaps" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="low_gaps" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="gaps_closed" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="closure_rate" type="DECIMAL(10,4)" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="care_gap_projections"/>
+            <dropTable tableName="population_health_projections"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

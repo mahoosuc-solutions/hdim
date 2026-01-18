@@ -238,6 +238,41 @@ public class AuditLogService {
     }
 
     /**
+     * Log token refresh operation
+     *
+     * @param userId User ID
+     * @param tenantId Tenant ID
+     * @param status Refresh status (SUCCESS, FAILURE)
+     */
+    @Async("auditLogExecutor")
+    @Transactional
+    public void logTokenRefresh(String userId, String tenantId, String status) {
+        try {
+            AuditLogRequest request = AuditLogRequest.builder()
+                .timestamp(Instant.now())
+                .userId(userId)
+                .tenantId(tenantId)
+                .endpoint("/api/v1/auth/refresh")
+                .method("POST")
+                .roles("USER")
+                .httpStatusCode("SUCCESS".equals(status) ? 200 : 400)
+                .success("SUCCESS".equals(status))
+                .authorizationAllowed(true)
+                .build();
+
+            request.setQueryParameters("status=" + status);
+
+            AuditLog auditLog = convertRequestToEntity(request);
+            auditLogRepository.save(auditLog);
+
+            log.info("Token refresh logged: {} - Status: {}", userId, status);
+
+        } catch (Exception e) {
+            log.error("Failed to log token refresh: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
      * Get most recent audit log entry
      *
      * Useful for health checks and monitoring

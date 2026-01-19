@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.context.annotation.Import;
 import com.healthdata.audit.service.ai.AIAuditEventPublisher;
@@ -33,6 +34,7 @@ import com.healthdata.audit.service.ai.AIAuditEventPublisher;
     "com.healthdata.fhir.bulk"  // Include bulk export repository
     // NOTE: authentication.repository excluded - contains ApiKey/RefreshToken repos (Gateway-only)
 })
+@EnableRedisRepositories(basePackages = {})  // Explicitly disable Redis repository scanning (not used for repositories)
 @EntityScan(basePackages = {
     "com.healthdata.fhir.persistence",
     "com.healthdata.fhir.bulk",  // Include BulkExportJob entity

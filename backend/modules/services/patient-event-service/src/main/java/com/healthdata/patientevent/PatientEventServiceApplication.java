@@ -2,6 +2,7 @@ package com.healthdata.patientevent;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
@@ -20,6 +21,10 @@ import org.springframework.kafka.annotation.EnableKafka;
 @EnableKafka
 @EnableFeignClients
 @EnableJpaRepositories(basePackages = "com.healthdata.patientevent.persistence")
+@EntityScan(basePackages = {
+    "com.healthdata.patientevent",
+    "com.healthdata.patientevent.projection"
+})
 @ComponentScan(basePackages = {
     "com.healthdata.patientevent",
     "com.healthdata.patientevent.api",

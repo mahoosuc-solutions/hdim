@@ -2,7 +2,7 @@ package com.healthdata.caregap.config;
 
 import com.healthdata.caregap.eventhandler.CareGapEventHandler;
 import com.healthdata.caregap.eventhandler.CareGapEventHandler.EventStore;
-import com.healthdata.caregap.eventhandler.CareGapEventHandler.GapProjectionStore;
+import com.healthdata.caregap.eventhandler.CareGapEventHandler.CareGapProjectionStore;
 import com.healthdata.caregap.persistence.CareGapProjectionRepository;
 import com.healthdata.caregap.persistence.PopulationHealthRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class EventHandlerConfig {
     @Bean
     public CareGapEventHandler careGapEventHandler() {
         EventStore eventStore = new InMemoryEventStore();
-        GapProjectionStore projectionStore = new RepositoryBackedProjectionStore(gapRepository, populationRepository);
+        CareGapProjectionStore projectionStore = new RepositoryBackedProjectionStore(gapRepository, populationRepository);
         return new CareGapEventHandler(projectionStore, eventStore);
     }
 
@@ -33,7 +33,7 @@ public class EventHandlerConfig {
         }
     }
 
-    private static class RepositoryBackedProjectionStore implements GapProjectionStore {
+    private static class RepositoryBackedProjectionStore implements CareGapProjectionStore {
         private final CareGapProjectionRepository gapRepository;
         private final PopulationHealthRepository populationRepository;
 
@@ -44,22 +44,23 @@ public class EventHandlerConfig {
         }
 
         @Override
-        public void saveGapProjection(Object projection) {
-            gapRepository.save((com.healthdata.caregap.projection.CareGapProjection) projection);
+        public void saveCareGapProjection(com.healthdata.caregap.projection.CareGapProjection projection) {
+            gapRepository.save(projection);
         }
 
         @Override
-        public void savePopulationProjection(Object projection) {
-            populationRepository.save((com.healthdata.caregap.projection.PopulationHealthProjection) projection);
+        public com.healthdata.caregap.projection.CareGapProjection getCareGapProjection(String patientId, String tenantId, String gapCode) {
+            String id = patientId + "_" + tenantId + "_" + gapCode;
+            return gapRepository.findById(id).orElse(null);
         }
 
         @Override
-        public Object getGapProjection(String gapId) {
-            return gapRepository.findById(gapId).orElse(null);
+        public void savePopulationHealth(com.healthdata.caregap.projection.PopulationHealthProjection projection) {
+            populationRepository.save(projection);
         }
 
         @Override
-        public Object getPopulationProjection(String tenantId) {
+        public com.healthdata.caregap.projection.PopulationHealthProjection getPopulationHealth(String tenantId) {
             return populationRepository.findByTenantId(tenantId).orElse(null);
         }
     }

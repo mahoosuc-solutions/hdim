@@ -1,16 +1,23 @@
 # HDIM Healthcare Platform - Complete Docker Compose
-# All 26 Backend Services with Profiles (including migration-workflow-service)
+# All 28+ Backend Services with Profiles (including Phase 5 Event Services)
 #
 # Usage:
 #   docker compose --profile light up -d     # Infrastructure only (Postgres, Redis) - ~1GB RAM
 #   docker compose --profile core up -d      # Infrastructure + 10 core clinical services
 #   docker compose --profile ai up -d        # Infrastructure + 3 AI services
 #   docker compose --profile analytics up -d # Infrastructure + 3 analytics services
-#   docker compose --profile full up -d      # All 22 services
+#   docker compose --profile demo up -d      # Infrastructure + 4 Phase 5 event services (modernized stack)
+#   docker compose --profile full up -d      # All 28+ services (core + ai + analytics + event services)
 #
 # For local CI testing with act runner:
 #   docker compose --profile light up -d     # Start minimal infrastructure
 #   act -j build                             # Run GitHub Actions locally
+#
+# Phase 5 Event Services (Event Sourcing Architecture):
+#   - Patient Event Service (8110)
+#   - Quality Measure Event Service (8191 host / 8091 container)
+#   - Care Gap Event Service (8111)
+#   - Clinical Workflow Event Service (8193 host / 8093 container)
 
 services:
   # ============================================
@@ -260,6 +267,7 @@ services:
       SERVER_PORT: 8081
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_LIQUIBASE_CHANGE_LOG: "classpath:db/changelog/db.changelog-master.xml"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
@@ -304,7 +312,7 @@ services:
       SERVER_PORT: 8082
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
@@ -347,7 +355,7 @@ services:
       SERVER_PORT: 8083
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
@@ -392,6 +400,7 @@ services:
       SERVER_PORT: 8084
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_LIQUIBASE_CHANGE_LOG: "classpath:db/changelog/db.changelog-master.xml"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Disable Redis caching to avoid HAPI FHIR serialization issues with Jackson
@@ -443,6 +452,7 @@ services:
       SERVER_PORT: 8085
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_LIQUIBASE_CHANGE_LOG: "classpath:db/changelog/db.changelog-master.xml"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
@@ -497,7 +507,7 @@ services:
       SERVER_PORT: 8086
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Use simple cache to avoid Redis/Jackson serialization issues with FHIR objects
       SPRING_CACHE_TYPE: simple
       # OpenTelemetry OTLP HTTP Exporter (port 4318)
@@ -550,6 +560,7 @@ services:
       SERVER_PORT: 8087
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_LIQUIBASE_CHANGE_LOG: "classpath:db/changelog/db.changelog-master.xml"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       CQL_ENGINE_SERVICE_URL: http://cql-engine-service:8081/cql-engine
@@ -608,7 +619,7 @@ services:
       SERVER_PORT: 8088
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # LLM Provider Configuration
       HDIM_AGENT_LLM_DEFAULT_PROVIDER: claude
       HDIM_AGENT_LLM_PROVIDERS_CLAUDE_ENABLED: "false"
@@ -657,7 +668,7 @@ services:
       SERVER_PORT: 8090
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
       - "8090:8090"
     healthcheck:
@@ -740,7 +751,7 @@ services:
       SERVER_PORT: 8092
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
       - "8092:8092"
     healthcheck:
@@ -778,7 +789,7 @@ services:
       SERVER_PORT: 8093
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
       - "8093:8093"
     healthcheck:
@@ -816,7 +827,7 @@ services:
       SERVER_PORT: 8094
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
       - "8094:8094"
     healthcheck:
@@ -854,7 +865,7 @@ services:
       SERVER_PORT: 8089
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
       - "8089:8089"
     healthcheck:
@@ -888,7 +899,7 @@ services:
       SERVER_PORT: 8095
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # OpenTelemetry - use Jaeger container hostname (not localhost)
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: event-router-service
@@ -932,7 +943,7 @@ services:
       SERVER_PORT: 8099
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
       - "8099:8099"
     healthcheck:
@@ -974,7 +985,7 @@ services:
       SERVER_PORT: 8097
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
       - "8097:8097"
     healthcheck:
@@ -1012,7 +1023,7 @@ services:
       SERVER_PORT: 8098
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
       - "8098:8098"
     healthcheck:
@@ -1060,7 +1071,7 @@ services:
       SERVER_PORT: 8103
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Service URLs
       FHIR_SERVICE_URL: http://fhir-service:8085
       CDR_PROCESSOR_SERVICE_URL: http://cdr-processor-service:8099
@@ -1105,7 +1116,7 @@ services:
       SERVER_PORT: 8100
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
       - "8100:8100"
     healthcheck:
@@ -1150,7 +1161,7 @@ services:
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_LIQUIBASE_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       ECR_AIMS_ENABLED: "false"
       AUDIT_ENABLED: "false"
       TRACING_URL: http://jaeger:4318/v1/traces
@@ -1203,7 +1214,7 @@ services:
       SERVER_PORT: 8104
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       AUDIT_ENABLED: "false"
       QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087
       FHIR_SERVICE_URL: http://fhir-service:8085
@@ -1258,7 +1269,7 @@ services:
       SERVER_PORT: 8105
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       AUDIT_ENABLED: "false"
       HCC_MODEL_V24_WEIGHT: "0.33"
       HCC_MODEL_V28_WEIGHT: "0.67"
@@ -1321,7 +1332,7 @@ services:
       HEALTHDATA_SECURITY_JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_LIQUIBASE_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       AUDIT_ENABLED: "false"
       # OpenTelemetry OTLP HTTP Exporter (port 4318)
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
@@ -1425,7 +1436,7 @@ services:
       SERVER_PORT: 8091
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
       - "8091:8091"
     healthcheck:
@@ -1482,6 +1493,166 @@ services:
       - "8107:8107"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8107/notification/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================
+  # EVENT SOURCING SERVICES - Phase 5 (8110, 8111, 8191, 8193)
+  # ============================================
+
+  # Port 8110 - Patient Event Service (Event Sourcing)
+  patient-event-service:
+    container_name: healthdata-patient-event-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/patient-event-service/Dockerfile
+    profiles: ["demo", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patient_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8110
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      # OpenTelemetry OTLP HTTP Exporter
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: patient-event-service
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+    ports:
+      - "8110:8110"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8110/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8191 (host) / 8091 (container) - Quality Measure Event Service (Event Sourcing)
+  quality-measure-event-service:
+    container_name: healthdata-quality-measure-event-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/quality-measure-event-service/Dockerfile
+    profiles: ["demo", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/quality_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8091
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      # OpenTelemetry OTLP HTTP Exporter
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: quality-measure-event-service
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+    ports:
+      - "8191:8091"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8091/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8111 - Care Gap Event Service (Event Sourcing)
+  care-gap-event-service:
+    container_name: healthdata-care-gap-event-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/care-gap-event-service/Dockerfile
+    profiles: ["demo", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/caregap_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8111
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      # OpenTelemetry OTLP HTTP Exporter
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: care-gap-event-service
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+    ports:
+      - "8111:8111"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8111/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8193 (host) / 8093 (container) - Clinical Workflow Event Service (Event Sourcing)
+  clinical-workflow-event-service:
+    container_name: healthdata-clinical-workflow-event-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/clinical-workflow-event-service/Dockerfile
+    profiles: ["demo", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/workflow_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8093
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      # OpenTelemetry OTLP HTTP Exporter
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: clinical-workflow-event-service
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+    ports:
+      - "8193:8093"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8093/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -17,13 +18,18 @@ import java.util.UUID;
  * This event:
  * - Represents immutable historical fact
  * - Contains all data needed to recreate patient state
+ * - Supports multiple FHIR-compliant identifiers (MRN, SSN, Enterprise ID, etc.)
+ * - Links to FHIR Patient resource for interoperability
  * - Uses deterministic aggregate ID for idempotency
  * - Includes HIPAA sensitivity and compliance markers
  *
  * ★ Insight ─────────────────────────────────────
  * - Deterministic ID: "patient-{tenantId}-{mrn}" allows safe retries
+ * - Multi-identifier support: identifiers[] contains all patient IDs
+ * - FHIR linkage: fhirResourceId tracks FHIR Patient resource
  * - Immutability ensures event sourcing integrity
  * - HIPAA markers enable compliance tracking
+ * - Supports patient merge chains via identifier history
  * ─────────────────────────────────────────────────
  */
 @Getter
@@ -80,6 +86,27 @@ public class PatientCreatedEvent extends AbstractDomainEvent {
      */
     @JsonProperty("insurance_member_id")
     private String insuranceMemberId;
+
+    /**
+     * Multiple patient identifiers (FHIR-compliant)
+     * Supports MRN, SSN, Enterprise ID, and other identifier types
+     * Each identifier has system, value, type, and use properties
+     */
+    @JsonProperty("identifiers")
+    private List<PatientIdentifier> identifiers;
+
+    /**
+     * FHIR Patient Resource ID (UUID from fhir-service)
+     * Links event-sourced patient to FHIR resource
+     */
+    @JsonProperty("fhir_resource_id")
+    private UUID fhirResourceId;
+
+    /**
+     * Timestamp when FHIR resource was last synchronized
+     */
+    @JsonProperty("fhir_last_updated")
+    private Instant fhirLastUpdated;
 
     /**
      * HIPAA sensitivity level

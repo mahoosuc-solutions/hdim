@@ -39,13 +39,14 @@ public class EventHandlerConfig {
         }
 
         @Override
-        public void saveWorkflowProjection(Object projection) {
-            repository.save((com.healthdata.workflow.projection.WorkflowProjection) projection);
+        public void saveWorkflowProjection(com.healthdata.workflow.projection.WorkflowProjection projection) {
+            repository.save(projection);
         }
 
         @Override
-        public Object getWorkflowProjection(String workflowId) {
-            return repository.findById(workflowId).orElse(null);
+        public com.healthdata.workflow.projection.WorkflowProjection getWorkflowProjection(String patientId, String tenantId, String workflowType) {
+            String id = patientId + "_" + tenantId + "_" + workflowType;
+            return repository.findById(id).orElse(null);
         }
     }
 }

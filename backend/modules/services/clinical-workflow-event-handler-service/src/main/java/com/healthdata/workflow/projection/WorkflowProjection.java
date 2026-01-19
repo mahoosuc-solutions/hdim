@@ -1,5 +1,6 @@
 package com.healthdata.workflow.projection;
 
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -9,18 +10,50 @@ import java.time.LocalDate;
  * Built from workflow events via event sourcing.
  * Optimized for workflow queries (status, duration, assignments).
  */
+@Entity
+@Table(name = "workflow_projections", indexes = {
+    @Index(name = "idx_workflow_tenant_status", columnList = "tenant_id, status"),
+    @Index(name = "idx_workflow_patient_tenant", columnList = "patient_id, tenant_id")
+})
 public class WorkflowProjection {
-    private final String patientId;
-    private final String tenantId;
-    private final String workflowType;
+    @Id
+    @Column(name = "id")
+    private String id; // Composite key: patientId + "_" + tenantId + "_" + workflowType
+
+    @Column(name = "patient_id", nullable = false)
+    private String patientId;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
+
+    @Column(name = "workflow_type", nullable = false)
+    private String workflowType;
+
+    @Column(name = "status")
     private String status;  // INITIATED, IN_PROGRESS, COMPLETED, CANCELLED
+
+    @Column(name = "current_step")
     private String currentStep;
+
+    @Column(name = "assigned_to")
     private String assignedTo;
+
+    @Column(name = "last_step_successful")
     private boolean lastStepSuccessful;
+
+    @Column(name = "approval_status")
     private String approvalStatus;  // APPROVED, DENIED, PENDING_REVIEW
+
+    @Column(name = "initiated_date")
     private LocalDate initiatedDate;
+
+    @Column(name = "completed_date")
     private LocalDate completedDate;
+
+    @Column(name = "version")
     private long version;
+
+    @Column(name = "last_updated")
     private Instant lastUpdated;
 
     public WorkflowProjection(String patientId, String tenantId, String workflowType) {

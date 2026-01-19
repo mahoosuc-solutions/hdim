@@ -1,14 +1,14 @@
 package com.healthdata.qualitymeasure.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.healthdata.qualitymeasure.api.v1.dto.EvaluateMeasureRequest;
-import com.healthdata.qualitymeasure.api.v1.dto.MeasureEventResponse;
-import com.healthdata.qualitymeasure.event.MeasureScoreCalculatedEvent;
-import com.healthdata.qualitymeasure.eventhandler.QualityMeasureEventHandler;
+import com.healthdata.qualityevent.api.v1.dto.EvaluateMeasureRequest;
+import com.healthdata.qualityevent.api.v1.dto.MeasureEventResponse;
+import com.healthdata.qualityevent.event.MeasureScoreCalculatedEvent;
+import com.healthdata.qualityevent.eventhandler.QualityMeasureEventHandler;
 import com.healthdata.qualitymeasure.persistence.MeasureEvaluationRepository;
 import com.healthdata.qualitymeasure.persistence.CohortMeasureRateRepository;
-import com.healthdata.qualitymeasure.projection.MeasureEvaluationProjection;
-import com.healthdata.qualitymeasure.projection.CohortMeasureRateProjection;
+import com.healthdata.qualityevent.projection.MeasureEvaluationProjection;
+import com.healthdata.qualityevent.projection.CohortMeasureRateProjection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -72,10 +72,11 @@ public class QualityMeasureEventApplicationService {
 
         // Create domain event
         MeasureScoreCalculatedEvent event = new MeasureScoreCalculatedEvent(
+            tenantId,
             request.getPatientId(),
             request.getMeasureCode(),
-            tenantId,
-            request.getScore()
+            request.getScore(),
+            "Measure evaluation"
         );
 
         // Delegate to Phase 4 event handler for business logic
@@ -161,9 +162,7 @@ public class QualityMeasureEventApplicationService {
         CohortMeasureRateProjection cohort = cohortRepository
             .findByMeasureCodeAndTenant(measureCode, tenantId)
             .orElseGet(() -> {
-                CohortMeasureRateProjection newCohort = new CohortMeasureRateProjection();
-                newCohort.setMeasureCode(measureCode);
-                newCohort.setTenantId(tenantId);
+                CohortMeasureRateProjection newCohort = new CohortMeasureRateProjection(measureCode, tenantId);
                 newCohort.setDenominatorCount(0);
                 newCohort.setNumeratorCount(0);
                 newCohort.setComplianceRate(0.0f);

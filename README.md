@@ -50,9 +50,32 @@ docker compose --profile core up -d
 **Default credentials:** See [AUTHENTICATION_GUIDE.md](./AUTHENTICATION_GUIDE.md)
 **Deployment validation (on-prem/cloud):** See [docs/deployment/IMPLEMENTATION_VALIDATION_RUNBOOK.md](./docs/deployment/IMPLEMENTATION_VALIDATION_RUNBOOK.md)
 
-## Deployment Validation
+---
 
-For the full documentation index and validation workflow, see [docs/README.md](./docs/README.md).
+## 📚 Documentation Hub
+
+**New integrated documentation system with centralized navigation:**
+
+### Core Documentation Portals
+
+| Portal | Purpose | Audience |
+|--------|---------|----------|
+| **[Documentation Index](./docs/README.md)** ✨ NEW | Central hub for all 1,411 documentation files | Everyone |
+| **[Service Catalog](./docs/services/SERVICE_CATALOG.md)** ✨ NEW | Discover all 50+ microservices with ports, tech stack | Developers, Architects |
+| **[Troubleshooting Guide](./docs/troubleshooting/README.md)** ✨ NEW | Decision trees for common issues | Everyone |
+| **[Developer Quick Reference](./CLAUDE.md)** | Essential guide for developers | Developers |
+
+### Quick Navigation by Role
+
+**👨‍💻 Developers:** [CLAUDE.md](./CLAUDE.md) → [Service Catalog](./docs/services/SERVICE_CATALOG.md) → [Troubleshooting](./docs/troubleshooting/README.md)
+
+**🏗️ Architects:** [System Architecture](./docs/architecture/SYSTEM_ARCHITECTURE.md) → [Service Dependencies](./docs/services/DEPENDENCY_MAP.md) → [Flow Diagrams](./docs/architecture/ROUND_TRIP_FLOWS.md)
+
+**🚀 DevOps/Operations:** [Deployment Guide](./docs/deployment/) → [Operations Guide](./docs/operations/) → [Troubleshooting](./docs/troubleshooting/README.md)
+
+**👥 End Users:** [System Overview](./docs/architecture/SYSTEM_ARCHITECTURE.md) → [FAQ](./docs/troubleshooting/FAQ.md) → [Feature List](./PRODUCT_FEATURES.md)
+
+**💼 Product/Sales:** [Feature List](./PRODUCT_FEATURES.md) → [Use Cases](#-use-cases) → [ROI Calculator](./ROI_CALCULATOR_TEMPLATE.md)
 
 ---
 
@@ -180,32 +203,70 @@ See [DISTRIBUTION_ARCHITECTURE.md](./DISTRIBUTION_ARCHITECTURE.md) for detailed 
 
 ---
 
-## 📚 Documentation
+## 📚 Complete Documentation Index
+
+### ✨ New Documentation Portals (Start Here!)
+
+- **[Documentation Portal](./docs/README.md)** - Centralized navigation for all 1,411 docs
+- **[Service Catalog](./docs/services/SERVICE_CATALOG.md)** - All 50+ services with discovery features
+- **[Troubleshooting Guide](./docs/troubleshooting/README.md)** - Decision trees for problem resolution
+- **[Developer Guide](./CLAUDE.md)** - Essential reference for developers
 
 ### Getting Started
+
 - [Quick Start Guide](./QUICK_START.md) - Deploy in < 10 minutes
 - [Installation Guide](./README_DEPLOYMENT.md) - Detailed setup
-- [Authentication](./AUTHENTICATION_GUIDE.md) - User management
-- [Configuration](./backend/README.md) - Service configuration
-
-### Product & Features
-- [Product Overview](./docs/product/overview.md) - Value propositions
-- [Feature List](./PRODUCT_FEATURES.md) - Complete capabilities
-- [Patient Health](./PATIENT_HEALTH_OVERVIEW_GUIDE.md) - Patient dashboard
-- [Quality Measures](./CUSTOM_MEASURES_EXAMPLES.md) - CQL examples
+- [Authentication Guide](./AUTHENTICATION_GUIDE.md) - User management
+- [Configuration Reference](./backend/README.md) - Service configuration
+- [Deployment Validation](./docs/deployment/IMPLEMENTATION_VALIDATION_RUNBOOK.md) - Verify deployment
 
 ### Architecture & Technical
-- [Architecture Overview](./DISTRIBUTION_ARCHITECTURE.md) - System design
-- [API Documentation](./BACKEND_API_SPECIFICATION.md) - REST APIs
-- [Security Guide](./docs/PRODUCTION_SECURITY_GUIDE.md) - HIPAA compliance
-- [Scaling Guide](./DISTRIBUTION_ARCHITECTURE.md#scaling) - Performance tuning
-- [Compliance](./docs/compliance/THIRD_PARTY_NOTICES.md) - Third-party licensing and notices
+
+- [System Architecture Overview](./docs/architecture/SYSTEM_ARCHITECTURE.md) - Complete platform design
+- [Service Dependencies Map](./docs/services/DEPENDENCY_MAP.md) - How services interact
+- [Request Flow Diagrams](./docs/architecture/ROUND_TRIP_FLOWS.md) - End-to-end request paths
+- [API Documentation](./BACKEND_API_SPECIFICATION.md) - REST API specifications
+- [Technology Decisions](./docs/architecture/decisions/) - Architecture Decision Records (21 ADRs)
+- [Database Architecture](./docs/architecture/database/) - Schema design (29 databases)
+
+### Operations & Deployment
+
+- [Deployment Guide](./docs/deployment/) - Docker, Kubernetes, on-prem
+- [Operations Guide](./docs/operations/) - Monitoring, logging, maintenance
+- [Runbooks](./docs/runbooks/) - 19 operational task guides
+- [Monitoring Setup](./docs/operations/MONITORING.md) - Prometheus & Grafana
+- [Production Security](./docs/PRODUCTION_SECURITY_GUIDE.md) - HIPAA compliance checklist
+
+### Development
+
+- [Developer Quick Reference](./CLAUDE.md) - Essential developer guide
+- [Liquibase Workflow](./backend/docs/LIQUIBASE_DEVELOPMENT_WORKFLOW.md) - Database migrations
+- [Entity-Migration Guide](./backend/docs/ENTITY_MIGRATION_GUIDE.md) - Database best practices
+- [Gateway Authentication](./backend/docs/GATEWAY_TRUST_ARCHITECTURE.md) - Auth architecture
+- [Distributed Tracing](./backend/docs/DISTRIBUTED_TRACING_GUIDE.md) - Request tracing
+- [Testing Guide](./docs/development/TESTING_GUIDE.md) - Unit, integration, E2E tests
+
+### Product & Features
+
+- [Product Overview](./docs/product/overview.md) - Value propositions
+- [Feature List](./PRODUCT_FEATURES.md) - Complete capabilities
+- [Patient Health Dashboard](./PATIENT_HEALTH_OVERVIEW_GUIDE.md) - Patient overview features
+- [Quality Measures Examples](./CUSTOM_MEASURES_EXAMPLES.md) - CQL examples and patterns
+- [Use Cases](#-use-cases) - Industry-specific scenarios
 
 ### Sales & Marketing
-- [Sales Strategy](./CLINICAL_SALES_STRATEGY.md) - Target personas
-- [ROI Calculator](./ROI_CALCULATOR_TEMPLATE.md) - Financial analysis
-- [Case Studies](./CASE_STUDY_CLINICAL_IMPACT.md) - Customer success
+
+- [Sales Strategy](./CLINICAL_SALES_STRATEGY.md) - Target personas and messaging
+- [ROI Calculator](./ROI_CALCULATOR_TEMPLATE.md) - Financial analysis template
+- [Case Studies](./CASE_STUDY_CLINICAL_IMPACT.md) - Customer success stories
 - [Demo Scripts](./SALES_DEMO_SCRIPT.md) - Product demonstrations
+
+### Compliance & Standards
+
+- [HIPAA Compliance Guide](./backend/HIPAA-CACHE-COMPLIANCE.md) - PHI handling requirements
+- [Production Security Checklist](./docs/PRODUCTION_SECURITY_GUIDE.md) - Security hardening
+- [Third-Party Notices](./docs/compliance/THIRD_PARTY_NOTICES.md) - Licensing information
+- [Contributing Guidelines](./CONTRIBUTING.md) - How to contribute
 
 ---
 
@@ -321,10 +382,14 @@ See [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md) for complete security docum
 
 ### Getting Help
 
-- **Documentation:** [docs/](./docs/)
-- **Issues:** [GitHub Issues](https://github.com/your-org/healthdata-in-motion/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/your-org/healthdata-in-motion/discussions)
-- **Email:** support@healthdata-in-motion.com
+| Issue | Resource |
+|-------|----------|
+| **Having problems?** | [Troubleshooting Guide](./docs/troubleshooting/README.md) - Decision trees and solutions |
+| **Looking for documentation** | [Documentation Portal](./docs/README.md) - Central hub for all docs |
+| **Need service information** | [Service Catalog](./docs/services/SERVICE_CATALOG.md) - All 50+ services |
+| **Want to report a bug** | [GitHub Issues](https://github.com/your-org/healthdata-in-motion/issues) |
+| **Have general questions** | [GitHub Discussions](https://github.com/your-org/healthdata-in-motion/discussions) |
+| **Need immediate support** | support@healthdata-in-motion.com |
 
 ### Contributing
 

@@ -1,10 +1,10 @@
 package com.healthdata.qualitymeasure.config;
 
-import com.healthdata.qualitymeasure.eventhandler.QualityMeasureEventHandler;
-import com.healthdata.qualitymeasure.eventhandler.QualityMeasureEventHandler.EventStore;
-import com.healthdata.qualitymeasure.eventhandler.QualityMeasureEventHandler.MeasureProjectionStore;
-import com.healthdata.qualitymeasure.projection.MeasureEvaluationProjection;
-import com.healthdata.qualitymeasure.projection.CohortMeasureRateProjection;
+import com.healthdata.qualityevent.eventhandler.QualityMeasureEventHandler;
+import com.healthdata.qualityevent.eventhandler.QualityMeasureEventHandler.EventStore;
+import com.healthdata.qualityevent.eventhandler.QualityMeasureEventHandler.MeasureProjectionStore;
+import com.healthdata.qualityevent.projection.MeasureEvaluationProjection;
+import com.healthdata.qualityevent.projection.CohortMeasureRateProjection;
 import com.healthdata.qualitymeasure.persistence.MeasureEvaluationRepository;
 import com.healthdata.qualitymeasure.persistence.CohortMeasureRateRepository;
 import lombok.RequiredArgsConstructor;
@@ -70,18 +70,29 @@ public class EventHandlerConfig {
         }
 
         @Override
-        public void saveCohortProjection(CohortMeasureRateProjection projection) {
+        public void saveCohortRate(CohortMeasureRateProjection projection) {
             cohortRepository.save(projection);
         }
 
         @Override
-        public MeasureEvaluationProjection getMeasureProjection(String patientId, String tenantId) {
+        public MeasureEvaluationProjection getMeasureProjection(String patientId, String tenantId, String measureCode) {
             return evaluationRepository.findByPatientIdAndTenant(patientId, tenantId).orElse(null);
         }
 
         @Override
-        public CohortMeasureRateProjection getCohortProjection(String measureCode, String tenantId) {
+        public CohortMeasureRateProjection getCohortRate(String tenantId, String measureCode) {
             return cohortRepository.findByMeasureCodeAndTenant(measureCode, tenantId).orElse(null);
+        }
+
+        @Override
+        public void saveRiskScoreProjection(com.healthdata.qualityevent.projection.RiskScoreProjection projection) {
+            // Placeholder for risk score persistence - would need RiskScoreRepository
+        }
+
+        @Override
+        public com.healthdata.qualityevent.projection.RiskScoreProjection getRiskScoreProjection(String patientId, String tenantId) {
+            // Placeholder for risk score retrieval
+            return null;
         }
     }
 }

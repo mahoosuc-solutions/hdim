@@ -6,6 +6,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <!-- Patient Event Service Migrations -->
+    <include file="db/changelog/0002-create-auth-tables.xml"/>
     <include file="db/changelog/0001-create-patient-projections-table.xml"/>
 
 </databaseChangeLog>

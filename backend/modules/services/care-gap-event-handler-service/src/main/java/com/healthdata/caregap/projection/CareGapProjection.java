@@ -1,5 +1,6 @@
 package com.healthdata.caregap.projection;
 
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -9,18 +10,50 @@ import java.time.LocalDate;
  * Built from care gap events via event sourcing.
  * Optimized for gap queries (status, severity, patient qualification).
  */
+@Entity
+@Table(name = "care_gap_projections", indexes = {
+    @Index(name = "idx_caregap_tenant_status", columnList = "tenant_id, status"),
+    @Index(name = "idx_caregap_patient_tenant", columnList = "patient_id, tenant_id")
+})
 public class CareGapProjection {
-    private final String patientId;
-    private final String tenantId;
-    private final String gapCode;
+    @Id
+    @Column(name = "id")
+    private String id; // Composite key
+
+    @Column(name = "patient_id", nullable = false)
+    private String patientId;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
+
+    @Column(name = "gap_code", nullable = false)
+    private String gapCode;
+
+    @Column(name = "gap_description")
     private String gapDescription;
+
+    @Column(name = "severity")
     private String severity;  // CRITICAL, HIGH, MEDIUM, LOW
+
+    @Column(name = "status")
     private String status;  // OPEN, CLOSED, WAIVED
+
+    @Column(name = "qualified")
     private boolean qualified;
+
+    @Column(name = "recommended_intervention")
     private String recommendedIntervention;
+
+    @Column(name = "detection_date")
     private LocalDate detectionDate;
+
+    @Column(name = "closure_date")
     private LocalDate closureDate;
+
+    @Column(name = "version")
     private long version;
+
+    @Column(name = "last_updated")
     private Instant lastUpdated;
 
     public CareGapProjection(String patientId, String tenantId, String gapCode, String gapDescription, String severity) {

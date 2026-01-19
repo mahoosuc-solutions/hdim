@@ -1,7 +1,7 @@
 package com.healthdata.qualitymeasure.api.v1.controller;
 
-import com.healthdata.qualitymeasure.api.v1.dto.EvaluateMeasureRequest;
-import com.healthdata.qualitymeasure.api.v1.dto.MeasureEventResponse;
+import com.healthdata.qualityevent.api.v1.dto.EvaluateMeasureRequest;
+import com.healthdata.qualityevent.api.v1.dto.MeasureEventResponse;
 import com.healthdata.qualitymeasure.service.QualityMeasureEventApplicationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

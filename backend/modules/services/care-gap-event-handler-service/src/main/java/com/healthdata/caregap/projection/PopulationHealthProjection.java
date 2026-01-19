@@ -1,5 +1,6 @@
 package com.healthdata.caregap.projection;
 
+import jakarta.persistence.*;
 import java.time.Instant;
 
 /**
@@ -7,16 +8,41 @@ import java.time.Instant;
  *
  * Tracks gap statistics across patient cohort for reporting and analytics.
  */
+@Entity
+@Table(name = "population_health_projections")
 public class PopulationHealthProjection {
-    private final String tenantId;
+    @Id
+    @Column(name = "id")
+    private String id; // tenantId
+
+    @Column(name = "tenant_id", nullable = false, unique = true)
+    private String tenantId;
+
+    @Column(name = "total_gaps_open")
     private int totalGapsOpen;
+
+    @Column(name = "critical_gaps")
     private int criticalGaps;
+
+    @Column(name = "high_gaps")
     private int highGaps;
+
+    @Column(name = "medium_gaps")
     private int mediumGaps;
+
+    @Column(name = "low_gaps")
     private int lowGaps;
+
+    @Column(name = "gaps_closed")
     private int gapsClosed;
+
+    @Column(name = "closure_rate")
     private float closureRate;  // closed / (open + closed)
+
+    @Column(name = "version")
     private long version;
+
+    @Column(name = "last_updated")
     private Instant lastUpdated;
 
     public PopulationHealthProjection(String tenantId) {
@@ -61,6 +87,11 @@ public class PopulationHealthProjection {
         } else {
             this.closureRate = 0.0f;
         }
+        this.version++;
+        this.lastUpdated = Instant.now();
+    }
+
+    public void incrementVersion() {
         this.version++;
         this.lastUpdated = Instant.now();
     }

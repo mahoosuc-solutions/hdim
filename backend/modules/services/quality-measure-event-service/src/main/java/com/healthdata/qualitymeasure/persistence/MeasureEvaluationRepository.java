@@ -1,6 +1,6 @@
 package com.healthdata.qualitymeasure.persistence;
 
-import com.healthdata.qualitymeasure.projection.MeasureEvaluationProjection;
+import com.healthdata.qualityevent.projection.MeasureEvaluationProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

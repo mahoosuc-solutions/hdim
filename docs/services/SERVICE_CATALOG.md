@@ -3,8 +3,8 @@
 Central index of all 50+ microservices in the HDIM platform. Use this to find a specific service and access its documentation.
 
 **Last Updated**: January 19, 2026
-**Total Services**: 50+ microservices
-**Coverage**: 100% documented
+**Total Services**: 51+ microservices (including 4 Phase 5 Event Sourcing services)
+**Coverage**: 100% documented with architecture patterns
 
 ---
 
@@ -110,9 +110,9 @@ Machine learning, natural language processing, intelligent agents.
 
 ---
 
-## Event Services (Phase 5 - Event Sourcing)
+## Event Services (Phase 5 - Event Sourcing) ✨ NEW
 
-Modern microservices using Event Sourcing and CQRS patterns.
+Modern microservices using Event Sourcing and CQRS patterns. These services implement the immutable event log architecture with denormalized projections for queries. See [Event Sourcing Architecture Guide](../architecture/EVENT_SOURCING_ARCHITECTURE.md) for detailed explanation.
 
 | Service | Port | Purpose | Tech Stack | Documentation |
 |---------|------|---------|-----------|-----------------|
@@ -311,4 +311,4 @@ Each service README should include:
 
 **Last Updated**: January 19, 2026
 **Maintained by**: HDIM Platform Team
-**Status**: Complete Service Catalog - 100% coverage
+**Status**: Complete Service Catalog - 51+ services (100% coverage including Phase 5 Event Services)

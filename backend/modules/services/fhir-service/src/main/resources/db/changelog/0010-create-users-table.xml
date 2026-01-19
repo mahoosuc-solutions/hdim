@@ -101,6 +101,11 @@
     </changeSet>
 
     <changeSet id="0010-create-user-roles-table" author="fhir-service">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="user_roles"/>
+            </not>
+        </preConditions>
         <createTable tableName="user_roles">
             <column name="user_id" type="uuid">
                 <constraints nullable="false"/>
@@ -126,6 +131,11 @@
     </changeSet>
 
     <changeSet id="0010-create-refresh-tokens-table" author="fhir-service">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="refresh_tokens"/>
+            </not>
+        </preConditions>
         <createTable tableName="refresh_tokens">
             <column name="id" type="uuid">
                 <constraints primaryKey="true" nullable="false"/>

@@ -26,8 +26,11 @@ Welcome to the HealthData-in-Motion (HDIM) documentation! This is your central h
 
 **🏗️ Architects & Leads**
 - [System Architecture](architecture/SYSTEM_ARCHITECTURE.md) - Complete platform overview
+- [Event Sourcing Architecture](architecture/EVENT_SOURCING_ARCHITECTURE.md) ✨ NEW - CQRS pattern & event services
+- [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md) ✨ NEW - 4-gateway modularization
 - [Service Dependencies](services/DEPENDENCY_MAP.md) - How services interact
 - [Flow Diagrams](architecture/ROUND_TRIP_FLOWS.md) - Request flows through the system
+- [Technology Decisions](architecture/decisions/) - Architecture decision records (21 ADRs)
 
 **🚀 DevOps & Operations**
 - [Deployment Guide](deployment/) - Docker, Kubernetes, production setup
@@ -44,6 +47,8 @@ Welcome to the HealthData-in-Motion (HDIM) documentation! This is your central h
 
 ### Architecture & Design
 - **System Overview**: [Complete architecture](architecture/SYSTEM_ARCHITECTURE.md)
+- **Event Sourcing**: [CQRS pattern, event services, projections](architecture/EVENT_SOURCING_ARCHITECTURE.md) ✨ NEW
+- **Gateway Design**: [Modularized 4-gateway architecture](architecture/GATEWAY_ARCHITECTURE.md) ✨ NEW
 - **Flow Diagrams**: [Request flows and interactions](architecture/ROUND_TRIP_FLOWS.md)
 - **Platform Flows**: [High-level business processes](architecture/PLATFORM_FLOW_OVERVIEW.md)
 - **Technology Decisions**: [21 Architecture Decision Records](architecture/decisions/)
@@ -80,7 +85,8 @@ Welcome to the HealthData-in-Motion (HDIM) documentation! This is your central h
 
 ### Deployment & Operations
 - **Build Management**: [Build commands, strategies, troubleshooting](../backend/docs/BUILD_MANAGEMENT_GUIDE.md) ✨ NEW
-- **Docker Compose**: [Local and staging deployments](deployment/DOCKER_COMPOSE.md)
+- **Docker Compose**: [18 configs, profiles, usage guide](../docker/README.md) ✨ NEW
+- **Local Deployments**: [Local and staging setup](deployment/DOCKER_COMPOSE.md)
 - **Kubernetes**: [Production deployment](deployment/KUBERNETES.md)
 - **Production Checklist**: [Pre-production validation](deployment/PRODUCTION_CHECKLIST.md)
 - **Monitoring**: [Prometheus and Grafana setup](operations/MONITORING.md)

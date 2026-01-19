@@ -17,7 +17,7 @@
     <include file="db/changelog/0007-create-allergy-intolerances-table.xml"/>
     <include file="db/changelog/0008-create-immunizations-table.xml"/>
     <include file="db/changelog/0009-add-fhir-resource-gin-indexes.xml"/>
-    <include file="db/changelog/0010-create-users-table.xml"/>
+    <!-- 0010-create-users-table.xml is gateway-service concern; auth tables are shared, not replicated per service -->
     <include file="db/changelog/0011-create-bulk-export-jobs-table.xml"/>
     <include file="db/changelog/0012-create-medication-administrations-table.xml"/>
     <include file="db/changelog/0013-create-coverages-table.xml"/>

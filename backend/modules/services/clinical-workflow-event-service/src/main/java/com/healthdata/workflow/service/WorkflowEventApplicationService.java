@@ -5,7 +5,7 @@ import com.healthdata.workflow.api.v1.dto.InitiateWorkflowRequest;
 import com.healthdata.workflow.api.v1.dto.WorkflowEventResponse;
 import com.healthdata.workflow.event.WorkflowInitiatedEvent;
 import com.healthdata.workflow.event.WorkflowStepCompletedEvent;
-import com.healthdata.workflow.event.ApprovalDecisionMadeEvent;
+import com.healthdata.workflow.event.ApprovalDecisionEvent;
 import com.healthdata.workflow.eventhandler.ClinicalWorkflowEventHandler;
 import com.healthdata.workflow.persistence.WorkflowProjectionRepository;
 import com.healthdata.workflow.projection.WorkflowProjection;
@@ -61,9 +61,8 @@ public class WorkflowEventApplicationService {
 
         // Create domain event
         WorkflowInitiatedEvent event = new WorkflowInitiatedEvent(
-            workflowId,
-            request.getPatientId(),
             tenantId,
+            request.getPatientId(),
             request.getWorkflowType(),
             request.getDescription()
         );
@@ -103,10 +102,11 @@ public class WorkflowEventApplicationService {
 
             // Create domain event
             WorkflowStepCompletedEvent event = new WorkflowStepCompletedEvent(
-                workflowId,
-                proj.getPatientId(),
                 tenantId,
+                proj.getPatientId(),
+                proj.getWorkflowType(),
                 request.stepName,
+                true,  // successful
                 request.outcome
             );
 
@@ -149,12 +149,13 @@ public class WorkflowEventApplicationService {
             ApprovalRequest request = objectMapper.readValue(decisionRequest, ApprovalRequest.class);
 
             // Create domain event
-            ApprovalDecisionMadeEvent event = new ApprovalDecisionMadeEvent(
-                workflowId,
-                proj.getPatientId(),
+            ApprovalDecisionEvent event = new ApprovalDecisionEvent(
                 tenantId,
+                proj.getPatientId(),
+                proj.getWorkflowType(),
                 request.decision,
-                request.rationale
+                request.rationale,
+                request.approvedBy
             );
 
             // Delegate to Phase 4 event handler
@@ -215,5 +216,6 @@ public class WorkflowEventApplicationService {
     static class ApprovalRequest {
         public String decision;  // APPROVED, DENIED, PENDING_REVIEW
         public String rationale;
+        public String approvedBy;
     }
 }

@@ -25,7 +25,9 @@
 
 ### Deep Dive Guides (Comprehensive)
 - **[Liquibase Workflow](./backend/docs/LIQUIBASE_DEVELOPMENT_WORKFLOW.md)** ⭐ CRITICAL - Database migrations
-- **[Gateway Trust Architecture](./backend/docs/GATEWAY_TRUST_ARCHITECTURE.md)** - Authentication & authorization
+- **[Event Sourcing Architecture](./docs/architecture/EVENT_SOURCING_ARCHITECTURE.md)** ✨ NEW - CQRS pattern, event services, projections
+- **[Gateway Architecture](./docs/architecture/GATEWAY_ARCHITECTURE.md)** ✨ NEW - Modularized 4-gateway design, authentication flows
+- **[Gateway Trust Authentication](./backend/docs/GATEWAY_TRUST_ARCHITECTURE.md)** - Gateway-service trust pattern
 - **[Distributed Tracing](./backend/docs/DISTRIBUTED_TRACING_GUIDE.md)** - OpenTelemetry observability
 - **[HIPAA Compliance](./backend/HIPAA-CACHE-COMPLIANCE.md)** - PHI handling requirements
 - **[All Backend Guides](./backend/docs/README.md)** - Complete technical documentation index
@@ -466,6 +468,8 @@ Before submitting code, verify:
 
 - **Database:** [Database Architecture Guide](./backend/docs/DATABASE_ARCHITECTURE_GUIDE.md)
 - **Migrations:** [Liquibase Workflow](./backend/docs/LIQUIBASE_DEVELOPMENT_WORKFLOW.md) ⭐ CRITICAL
+- **Event Sourcing:** [Event Sourcing Architecture](./docs/architecture/EVENT_SOURCING_ARCHITECTURE.md) ✨ NEW
+- **Gateway Design:** [Gateway Architecture](./docs/architecture/GATEWAY_ARCHITECTURE.md) ✨ NEW
 - **Build Issues:** [Build Management Guide](./backend/docs/BUILD_MANAGEMENT_GUIDE.md)
 - **Commands:** [Command Reference](./backend/docs/COMMAND_REFERENCE.md)
 - **Coding:** [Coding Standards](./backend/docs/CODING_STANDARDS.md)
@@ -498,7 +502,9 @@ Before submitting code, verify:
 
 ## Build Notes
 
-- ✅ All 28 services compile successfully
+- ✅ All 51 services compile successfully
+- ✅ Event Sourcing architecture (Phases 4-5) with 4 event services
+- ✅ Gateway modularization (January 2026) with gateway-core shared module
 - ✅ 100% Liquibase rollback coverage (199/199 changesets)
 - ✅ 29 databases with independent schemas
 - ✅ OpenTelemetry distributed tracing across all services
@@ -507,7 +513,7 @@ Before submitting code, verify:
 ---
 
 _Last Updated: January 19, 2026_
-_Version: 2.0_ - Major Refactoring: CLAUDE.md streamlined from 1,503 → ~750 lines with comprehensive links to new backend/docs guides. All content modularized: BUILD_MANAGEMENT_GUIDE.md, DATABASE_ARCHITECTURE_GUIDE.md, CODING_STANDARDS.md, COMMAND_REFERENCE.md, backend/docs/README.md
+_Version: 2.1_ - Architecture Documentation Expansion: Added Event Sourcing Architecture Guide and Gateway Architecture Guide with modularization details. Phase directories archived. Documentation references updated throughout CLAUDE.md.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

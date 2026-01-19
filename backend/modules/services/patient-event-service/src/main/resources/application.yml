@@ -54,7 +54,7 @@ spring:
 
 # Server Configuration
 server:
-  port: 8090
+  port: 8110
   servlet:
     context-path: /
   compression:
@@ -70,7 +70,7 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
-# Management/Actuator Configuration
+# Management/Actuator Configuration & Distributed Tracing (OpenTelemetry)
 management:
   endpoints:
     web:
@@ -83,9 +83,6 @@ management:
     export:
       prometheus:
         enabled: true
-
-# Distributed Tracing (OpenTelemetry)
-management:
   tracing:
     sampling:
       probability: 1.0  # 100% in development, adjust for production
@@ -98,3 +95,34 @@ app:
     topic:
       patient-events: patient.events
       patient-projections: patient.projections
+
+---
+# Docker Profile Configuration
+spring:
+  config:
+    activate:
+      on-profile: docker
+  application:
+    name: patient-event-service
+  datasource:
+    url: jdbc:postgresql://postgres:5432/patient_db
+    username: healthdata
+    password: healthdata_password
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+  kafka:
+    bootstrap-servers: kafka:29092
+
+server:
+  port: 8110

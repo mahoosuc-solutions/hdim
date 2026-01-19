@@ -47,9 +47,7 @@
             </column>
         </createTable>
 
-        <createIndex indexName="idx_tasks_resource_json_gin" tableName="tasks" indexType="gin">
-            <column name="resource_json"/>
-        </createIndex>
+        <sql>CREATE INDEX idx_tasks_resource_json_gin ON tasks USING gin (resource_json);</sql>
 
         <createIndex indexName="idx_tasks_tenant_authored" tableName="tasks">
             <column name="tenant_id"/>

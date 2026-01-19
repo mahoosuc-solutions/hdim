@@ -57,3 +57,31 @@ management:
 app:
   name: clinical-workflow-event-service
   version: 5.0.0
+
+---
+# Docker Profile Configuration
+spring:
+  config:
+    activate:
+      on-profile: docker
+  application:
+    name: clinical-workflow-event-service
+  datasource:
+    url: jdbc:postgresql://postgres:5432/workflow_db
+    username: healthdata
+    password: healthdata_password
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+  kafka:
+    bootstrap-servers: kafka:29092
+
+server:
+  port: 8093

@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <changeSet id="0010-create-users-table" author="fhir-service">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="users"/>
+            </not>
+        </preConditions>
         <createTable tableName="users">
             <column name="id" type="uuid">
                 <constraints primaryKey="true" nullable="false"/>
@@ -62,6 +67,11 @@
     </changeSet>
 
     <changeSet id="0010-create-user-tenants-table" author="fhir-service">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="user_tenants"/>
+            </not>
+        </preConditions>
         <createTable tableName="user_tenants">
             <column name="user_id" type="uuid">
                 <constraints nullable="false"/>

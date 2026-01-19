@@ -103,10 +103,11 @@ public class CareGapEventApplicationService {
 
         // Create domain event
         GapClosedEvent event = new GapClosedEvent(
+            tenantId,
             projection.getPatientId(),
-            gapId,
             projection.getGapCode(),
-            tenantId
+            "Manual closure",  // closureReason
+            "CLOSED"  // closureStatus
         );
 
         // Delegate to Phase 4 event handler
@@ -161,12 +162,7 @@ public class CareGapEventApplicationService {
      */
     private void updatePopulationHealth(String tenantId, String severity, boolean isOpen) {
         PopulationHealthProjection health = populationRepository.findByTenantId(tenantId)
-            .orElseGet(() -> {
-                PopulationHealthProjection newHealth = new PopulationHealthProjection();
-                newHealth.setTenantId(tenantId);
-                newHealth.setVersion(0);
-                return newHealth;
-            });
+            .orElseGet(() -> new PopulationHealthProjection(tenantId));
 
         if (isOpen) {
             // Gap detected - increment open and severity counts
@@ -189,13 +185,8 @@ public class CareGapEventApplicationService {
             health.setGapsClosed(health.getGapsClosed() + 1);
         }
 
-        // Calculate closure rate
-        long totalGaps = health.getTotalGapsOpen() + health.getGapsClosed();
-        if (totalGaps > 0) {
-            health.setClosureRate((float) health.getGapsClosed() / totalGaps);
-        }
-
-        health.incrementVersion();
+        // Calculate closure rate and update
+        health.calculateClosureRate();
         populationRepository.save(health);
     }
 }

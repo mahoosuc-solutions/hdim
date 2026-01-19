@@ -75,7 +75,14 @@
       "Bash(npm run nx:*)",
       "Bash(npm install:*)",
       "Bash(git -C /home/webemo-aaron/projects/hdim-master log --oneline)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(awk:*)",
+      "Bash(pkill -f \"docker compose build\")",
+      "Bash(pkill:*)",
+      "Bash(for:*)",
+      "Bash(if grep -q \"preConditions onFail=\"\"MARK_RAN\"\"\" \"$file\")",
+      "Bash(then echo \"✅ HAS preconditions\")",
+      "Bash(else echo \"⚠️  MISSING preconditions\")"
     ],
     "deny": [],
     "ask": []

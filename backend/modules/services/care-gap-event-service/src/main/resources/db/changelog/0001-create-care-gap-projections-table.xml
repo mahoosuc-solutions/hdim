@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0001-create-care-gap-projections-table" author="system">
+        <!-- FIX: Using preConditions to avoid "relation already exists" error -->
+        <!-- This allows idempotent migrations even if table exists from previous run -->
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="care_gap_projections"/>
+            </not>
+        </preConditions>
+        <comment>
+            Create care_gap_projections read model table for CQRS pattern.
+
+            This denormalized table maintains an optimized view of care gaps
+            for fast queries. It is updated asynchronously via Kafka events.
+
+            FIX for original error: Added preConditions to handle if table
+            already exists from previous incomplete run. onFail="MARK_RAN"
+            skips the changeset instead of failing.
+
+            This allows safe re-runs of migrations without manual intervention.
+        </comment>
+
+        <createTable tableName="care_gap_projections">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Tenant Isolation -->
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Care Gap Identifiers -->
+            <column name="care_gap_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="measure_id" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Details -->
+            <column name="description" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="due_date" type="DATE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="days_overdue" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Closure -->
+            <column name="closed_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="closed_reason" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="closure_method" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Associated Data -->
+            <column name="recommended_action" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="assigned_to" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Audit -->
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_version" type="BIGINT" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes -->
+        <createIndex indexName="idx_cgp_tenant_id" tableName="care_gap_projections">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_cgp_tenant_patient" tableName="care_gap_projections">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_cgp_tenant_status" tableName="care_gap_projections">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_cgp_tenant_priority" tableName="care_gap_projections">
+            <column name="tenant_id"/>
+            <column name="priority"/>
+        </createIndex>
+
+        <createIndex indexName="idx_cgp_updated_at" tableName="care_gap_projections">
+            <column name="last_updated_at"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="care_gap_projections"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

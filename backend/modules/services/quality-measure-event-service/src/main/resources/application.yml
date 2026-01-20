@@ -1,0 +1,82 @@
+server:
+  port: 8112
+  servlet:
+    context-path: /quality-measure-event
+
+spring:
+  application:
+    name: quality-measure-event-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/quality_measure_event_db}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    # ⚠️ SECURITY: Password MUST be provided via environment variable
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+  # Kafka configuration for event consumption
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    consumer:
+      group-id: quality-measure-event-service
+      auto-offset-reset: earliest
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: MEDIUM  # CQRS read model: event-driven projections
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        archive:
+          autodetection: none
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+  flyway:
+    enabled: false
+
+# Cache Configuration (Redis)
+# ⚠️ CRITICAL HIPAA COMPLIANCE - TTL <= 5 minutes ⚠️
+spring:
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000  # 5 minutes (HIPAA compliant for PHI)
+
+# HIPAA Audit Configuration
+audit:
+  enabled: true
+  encryption:
+    enabled: true
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

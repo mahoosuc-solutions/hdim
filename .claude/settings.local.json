@@ -48,7 +48,17 @@
       "Bash(npx nx build:*)",
       "Bash(npx ng build:*)",
       "Bash(npm run build:*)",
-      "Bash(NX_ISOLATE_PLUGINS=false NX_DAEMON=false npx nx build:*)"
+      "Bash(NX_ISOLATE_PLUGINS=false NX_DAEMON=false npx nx build:*)",
+      "Bash(awk:*)",
+      "Bash(docker inspect:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(docker history:*)",
+      "Read(//mnt/wd-black/dev/projects/**)",
+      "Bash(git stash:*)",
+      "Bash(docker commit:*)",
+      "Bash(docker run:*)",
+      "Bash(docker rmi:*)",
+      "Bash(docker image inspect:*)"
     ],
     "deny": [],
     "ask": []

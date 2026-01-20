@@ -53,6 +53,7 @@ include(
     "modules:services:quality-measure-event-service",
     "modules:services:care-gap-service",
     "modules:services:care-gap-event-service",
+    "modules:services:clinical-workflow-event-service",
     "modules:services:analytics-service",
     "modules:services:documentation-service",
     "modules:services:gateway-service",

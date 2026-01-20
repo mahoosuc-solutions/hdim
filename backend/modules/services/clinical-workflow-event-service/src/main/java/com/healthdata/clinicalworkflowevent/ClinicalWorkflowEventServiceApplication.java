@@ -1,0 +1,36 @@
+package com.healthdata.clinicalworkflowevent;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+/**
+ * Clinical Workflow Event Service
+ *
+ * CQRS Read Model Microservice
+ * Consumes domain events from Kafka and maintains denormalized workflow projections
+ * for fast query performance.
+ *
+ * Port: 8113
+ * Database: clinical_workflow_event_db
+ * Kafka Group: clinical-workflow-event-service
+ */
+@SpringBootApplication(
+    scanBasePackages = {
+        "com.healthdata.clinicalworkflowevent",
+        "com.healthdata.shared"
+    }
+)
+@EnableJpaRepositories(
+    basePackages = "com.healthdata.clinicalworkflowevent.repository"
+)
+@EnableTransactionManagement
+@EnableKafka
+public class ClinicalWorkflowEventServiceApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ClinicalWorkflowEventServiceApplication.class, args);
+    }
+}

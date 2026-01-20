@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0001-create-workflow-projections-table" author="hdim-platform-team">
+        <comment>Create workflow projections table for clinical workflow event service</comment>
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="workflow_projections"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="workflow_projections">
+            <!-- Primary Key -->
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_workflow_projections"/>
+            </column>
+
+            <!-- Tenant Isolation (CRITICAL) -->
+            <column name="tenant_id" type="VARCHAR(100)" remarks="Multi-tenant isolation key">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Workflow Identity -->
+            <column name="workflow_id" type="UUID" remarks="Business workflow identifier">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="patient_id" type="UUID" remarks="Patient associated with workflow">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="workflow_type" type="VARCHAR(100)" remarks="Type of workflow (APPOINTMENT_SCHEDULING, MEDICATION_REVIEW, etc.)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Workflow Status and Priority -->
+            <column name="status" type="VARCHAR(50)" remarks="PENDING, IN_PROGRESS, COMPLETED, CANCELLED">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="priority" type="VARCHAR(50)" remarks="LOW, MEDIUM, HIGH, URGENT">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Description and Assignment -->
+            <column name="description" type="TEXT" remarks="Workflow description">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="assigned_to" type="VARCHAR(100)" remarks="User ID assigned to workflow">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="previous_assignee" type="VARCHAR(100)" remarks="Previous assignee before reassignment">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Workflow Timeline -->
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="started_at" type="TIMESTAMP WITH TIME ZONE" remarks="When workflow moved to IN_PROGRESS">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="assigned_at" type="TIMESTAMP WITH TIME ZONE" remarks="When workflow was assigned">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="due_date" type="TIMESTAMP WITH TIME ZONE" remarks="Due date for workflow completion">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="completed_at" type="TIMESTAMP WITH TIME ZONE" remarks="When workflow was completed">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="last_updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Progress Tracking -->
+            <column name="days_pending" type="INT" defaultValue="0" remarks="Number of days workflow has been pending">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="progress_percentage" type="INT" defaultValue="0" remarks="Progress 0-100%">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="steps_completed" type="INT" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="total_steps" type="INT" defaultValue="1">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Status Flags -->
+            <column name="is_overdue" type="BOOLEAN" defaultValue="false" remarks="Whether workflow has exceeded due date">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="requires_review" type="BOOLEAN" defaultValue="false" remarks="Whether workflow requires review">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="has_blocking_issue" type="BOOLEAN" defaultValue="false" remarks="Whether workflow has blocking issues">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Event Versioning for Idempotency -->
+            <column name="event_version" type="BIGINT" defaultValue="0" remarks="Event sequence version for deduplication">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- TENANT ISOLATION INDEX (CRITICAL) -->
+        <!-- All queries must filter by tenant_id first -->
+        <createIndex indexName="idx_workflow_projections_tenant_id" tableName="workflow_projections">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <!-- COMPOSITE INDEXES FOR COMMON QUERIES -->
+        <!-- Find workflows by patient (tenant-scoped) -->
+        <createIndex indexName="idx_workflow_projections_tenant_patient" tableName="workflow_projections">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <!-- Find workflows by assignment (tenant-scoped) -->
+        <createIndex indexName="idx_workflow_projections_tenant_assigned_to" tableName="workflow_projections">
+            <column name="tenant_id"/>
+            <column name="assigned_to"/>
+        </createIndex>
+
+        <!-- Find pending workflows (tenant-scoped) -->
+        <createIndex indexName="idx_workflow_projections_tenant_status" tableName="workflow_projections">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Find overdue workflows (tenant-scoped) -->
+        <createIndex indexName="idx_workflow_projections_tenant_overdue" tableName="workflow_projections">
+            <column name="tenant_id"/>
+            <column name="is_overdue"/>
+        </createIndex>
+
+        <!-- Workflow type filtering (tenant-scoped) -->
+        <createIndex indexName="idx_workflow_projections_tenant_type" tableName="workflow_projections">
+            <column name="tenant_id"/>
+            <column name="workflow_type"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex indexName="idx_workflow_projections_tenant_type" tableName="workflow_projections"/>
+            <dropIndex indexName="idx_workflow_projections_tenant_overdue" tableName="workflow_projections"/>
+            <dropIndex indexName="idx_workflow_projections_tenant_status" tableName="workflow_projections"/>
+            <dropIndex indexName="idx_workflow_projections_tenant_assigned_to" tableName="workflow_projections"/>
+            <dropIndex indexName="idx_workflow_projections_tenant_patient" tableName="workflow_projections"/>
+            <dropIndex indexName="idx_workflow_projections_tenant_id" tableName="workflow_projections"/>
+            <dropTable tableName="workflow_projections"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

@@ -50,6 +50,7 @@ include(
     "modules:services:patient-service",
     "modules:services:patient-event-service",
     "modules:services:quality-measure-service",
+    "modules:services:quality-measure-event-service",
     "modules:services:care-gap-service",
     "modules:services:care-gap-event-service",
     "modules:services:analytics-service",

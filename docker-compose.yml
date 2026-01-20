@@ -575,6 +575,203 @@ services:
       - hdim-clinical-network
 
   # ============================================
+  # CQRS EVENT PROJECTION SERVICES (8110-8113)
+  # Read Models for High-Performance Queries
+  # ============================================
+
+  # Port 8110 - Patient Event Service (CQRS Read Model)
+  patient-event-service:
+    container_name: healthdata-patient-event-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/patient-event-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patient_event_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8110
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_CACHE_TYPE: redis
+      # OpenTelemetry OTLP HTTP Exporter
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: patient-event-service
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      # Gateway Trust Authentication
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+    ports:
+      - "8110:8110"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8110/patient-event/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8111 - Care Gap Event Service (CQRS Read Model)
+  care-gap-event-service:
+    container_name: healthdata-care-gap-event-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/care-gap-event-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/care_gap_event_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8111
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_CACHE_TYPE: redis
+      # OpenTelemetry OTLP HTTP Exporter
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: care-gap-event-service
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      # Gateway Trust Authentication
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+    ports:
+      - "8111:8111"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8111/care-gap-event/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8112 - Quality Measure Event Service (CQRS Read Model)
+  quality-measure-event-service:
+    container_name: healthdata-quality-measure-event-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/quality-measure-event-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/quality_event_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8112
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_CACHE_TYPE: redis
+      # OpenTelemetry OTLP HTTP Exporter
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: quality-measure-event-service
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      # Gateway Trust Authentication
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+    ports:
+      - "8112:8112"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8112/quality-measure-event/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # Port 8113 - Clinical Workflow Event Service (CQRS Read Model)
+  clinical-workflow-event-service:
+    container_name: healthdata-clinical-workflow-event-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/clinical-workflow-event-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/clinical_workflow_event_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SERVER_PORT: 8113
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_CACHE_TYPE: redis
+      # OpenTelemetry OTLP HTTP Exporter
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: clinical-workflow-event-service
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      # Gateway Trust Authentication
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+    ports:
+      - "8113:8113"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8113/clinical-workflow-event/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================
   # AI SERVICES (8088, 8090, 8096)
   # ============================================
 

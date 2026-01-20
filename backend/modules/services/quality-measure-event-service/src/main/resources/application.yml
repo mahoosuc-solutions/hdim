@@ -24,6 +24,13 @@ spring:
       properties:
         spring.json.trusted.packages: "*"
 
+  # Cache Configuration (Redis)
+  # ⚠️ CRITICAL HIPAA COMPLIANCE - TTL <= 5 minutes ⚠️
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000  # 5 minutes (HIPAA compliant for PHI)
+
 # HealthData Database Configuration
 healthdata:
   database:
@@ -48,14 +55,6 @@ healthdata:
 
   flyway:
     enabled: false
-
-# Cache Configuration (Redis)
-# ⚠️ CRITICAL HIPAA COMPLIANCE - TTL <= 5 minutes ⚠️
-spring:
-  cache:
-    type: redis
-    redis:
-      time-to-live: 300000  # 5 minutes (HIPAA compliant for PHI)
 
 # HIPAA Audit Configuration
 audit:

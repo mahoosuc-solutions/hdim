@@ -438,6 +438,88 @@ public class QualityMeasureService {
 
 ---
 
+## Entity-Migration Synchronization (CRITICAL)
+
+**This practice prevents production schema drift issues (like database validation failures at runtime).**
+
+HDIM uses **Liquibase** for all database migrations with **Hibernate validation** to ensure JPA entities match the actual database schema. Mismatches cause runtime failures and production outages.
+
+### Quick Checklist
+
+When **creating** a new entity:
+
+- [ ] Create JPA entity with `@Entity`, `@Table`, `@Column` annotations
+- [ ] Create Liquibase migration file (`NNNN-create-table.xml`)
+- [ ] Add migration include to `db.changelog-master.xml`
+- [ ] Run validation test: `./gradlew test --tests "*EntityMigrationValidationTest"`
+
+When **modifying** an entity:
+
+- [ ] Update `@Column` annotations
+- [ ] Create NEW migration (never modify existing migrations)
+- [ ] Use descriptive migration ID: `NNNN-add-field-to-table.xml`
+- [ ] Run validation test before committing
+
+### How Validation Works
+
+**Entity-migration validation tests run in every service:**
+
+1. Enable Liquibase: Run actual database migrations
+2. Set Hibernate to `validate` mode: Compare entity definitions to actual schema
+3. Detect mismatches: Test fails if entity columns don't match migrated schema
+4. Fail fast: Catch schema drift at test time, not at runtime
+
+```bash
+# Run validation locally
+./gradlew test --tests "*EntityMigrationValidationTest"
+
+# Run specific service
+./gradlew :modules:services:SERVICENAME:test --tests "*EntityMigrationValidationTest"
+```
+
+### Pre-Build Validation
+
+Validate before building to catch issues early:
+
+```bash
+# Comprehensive pre-Docker validation
+./scripts/validate-before-docker-build.sh
+
+# This runs 3 checks:
+# 1. Database configuration validation
+# 2. Entity-migration synchronization
+# 3. Liquibase rollback coverage
+```
+
+### CI/CD Enforcement
+
+GitHub Actions automatically validates on PRs that modify:
+- Entity classes (`domain/**/*.java`)
+- Liquibase migrations (`db/changelog/**/*.xml`)
+- Database configuration
+
+**See:** `.github/workflows/entity-migration-validation.yml`
+
+### Common Issues & Fixes
+
+| Error | Fix |
+|-------|-----|
+| `Schema-validation: missing table` | Create Liquibase migration for new entity |
+| `Schema-validation: wrong column type` | Create migration to alter column type |
+| `Relation already exists` | Check for duplicate table creation across services |
+| Test passes but runtime fails | Entity-migration validation likely disabled |
+
+### Full Documentation
+
+**See:** `backend/docs/ENTITY_MIGRATION_GUIDE.md` for comprehensive guide including:
+- Complete migration file templates
+- Entity annotation best practices
+- Type mapping reference (Java → PostgreSQL)
+- Troubleshooting procedures
+- Phase-by-phase implementation status
+
+---
+
 ## Code Review Checklist
 
 Before submitting code, verify:
@@ -468,6 +550,7 @@ Before submitting code, verify:
 
 - **Database:** [Database Architecture Guide](./backend/docs/DATABASE_ARCHITECTURE_GUIDE.md)
 - **Migrations:** [Liquibase Workflow](./backend/docs/LIQUIBASE_DEVELOPMENT_WORKFLOW.md) ⭐ CRITICAL
+- **Entity-Migration:** [Entity-Migration Guide](./backend/docs/ENTITY_MIGRATION_GUIDE.md) ⭐ CRITICAL
 - **Event Sourcing:** [Event Sourcing Architecture](./docs/architecture/EVENT_SOURCING_ARCHITECTURE.md) ✨ NEW
 - **Gateway Design:** [Gateway Architecture](./docs/architecture/GATEWAY_ARCHITECTURE.md) ✨ NEW
 - **Build Issues:** [Build Management Guide](./backend/docs/BUILD_MANAGEMENT_GUIDE.md)
@@ -483,7 +566,8 @@ Before submitting code, verify:
 | Build fails with TLS error | Run `./gradlew downloadDependencies --no-daemon` first |
 | Service won't start | Check `docker compose logs SERVICE` |
 | Database locked | See [Database Guide Troubleshooting](./backend/docs/DATABASE_ARCHITECTURE_GUIDE.md#troubleshooting) |
-| Schema mismatch | Run entity migration validation test |
+| Schema mismatch at runtime | See [Entity-Migration Guide](./backend/docs/ENTITY_MIGRATION_GUIDE.md) - run validation test before building |
+| Test passes but entity-migration fails | Validation test may be disabled - check Liquibase is enabled |
 
 ---
 
@@ -509,6 +593,9 @@ Before submitting code, verify:
 - ✅ 29 databases with independent schemas
 - ✅ OpenTelemetry distributed tracing across all services
 - ✅ Multi-tenant isolation enforced at database level
+- ✅ Entity-migration validation fixed: All 29+ services now properly validate entities against actual Liquibase migrations (not Hibernate-generated schemas)
+- ✅ Shift-left validation: Pre-build scripts catch schema mismatches before Docker build, preventing runtime failures
+- ✅ CI/CD enforcement: GitHub Actions validates entity-migrations on all PRs modifying entities or migrations
 
 ---
 

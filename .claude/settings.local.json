@@ -82,7 +82,9 @@
       "Bash(for:*)",
       "Bash(if grep -q \"preConditions onFail=\"\"MARK_RAN\"\"\" \"$file\")",
       "Bash(then echo \"✅ HAS preconditions\")",
-      "Bash(else echo \"⚠️  MISSING preconditions\")"
+      "Bash(else echo \"⚠️  MISSING preconditions\")",
+      "Bash(docker inspect:*)",
+      "Bash(do echo \"=== $service ===\")"
     ],
     "deny": [],
     "ask": []

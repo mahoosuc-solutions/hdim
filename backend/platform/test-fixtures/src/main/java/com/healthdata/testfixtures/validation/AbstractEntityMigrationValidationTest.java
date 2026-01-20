@@ -95,9 +95,13 @@ public abstract class AbstractEntityMigrationValidationTest {
      * - spring.datasource.url: JDBC URL from PostgreSQL container
      * - spring.datasource.username/password: Test credentials
      * - spring.datasource.driver-class-name: PostgreSQL JDBC driver
-     * - spring.liquibase.enabled: false (use Hibernate for schema generation)
-     * - spring.jpa.hibernate.ddl-auto: create-drop (fresh schema per test)
+     * - spring.liquibase.enabled: true (run actual Liquibase migrations)
+     * - spring.jpa.hibernate.ddl-auto: validate (validate entities against migrated schema)
      * - spring.jpa.properties.hibernate.dialect: PostgreSQL dialect
+     *
+     * CRITICAL: Liquibase is enabled to run actual migrations. Hibernat uses 'validate'
+     * mode to ensure entities match the migrated database schema, not Hibernate-generated schema.
+     * This catches entity-migration mismatches BEFORE production deployment.
      *
      * @param registry Spring's DynamicPropertyRegistry for setting properties
      */
@@ -107,9 +111,9 @@ public abstract class AbstractEntityMigrationValidationTest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
-        registry.add("spring.liquibase.enabled", () -> "false");
+        registry.add("spring.liquibase.enabled", () -> "true");
         registry.add("spring.flyway.enabled", () -> "false");
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
         registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
 
         // JWT configuration for security modules (JwtConfig and SecurityProperties)

@@ -56,6 +56,12 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     -- Demo Services
     CREATE DATABASE healthdata_demo;
 
+    -- CQRS Event Projection Services (Read Models)
+    CREATE DATABASE patient_event_db;
+    CREATE DATABASE care_gap_event_db;
+    CREATE DATABASE quality_event_db;
+    CREATE DATABASE clinical_workflow_event_db;
+
     -- Grant privileges to postgres user
     GRANT ALL PRIVILEGES ON DATABASE fhir_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE cql_db TO "$POSTGRES_USER";
@@ -86,6 +92,10 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE qrda_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE ecr_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE healthdata_demo TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE patient_event_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE care_gap_event_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE quality_event_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE clinical_workflow_event_db TO "$POSTGRES_USER";
 EOSQL
 
 # Note: PostgreSQL extensions are now managed by service Liquibase migrations

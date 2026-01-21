@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0002-create-event-subscriptions-table" author="healthdata-system">
+        <comment>Create event subscriptions table for managing event listeners</comment>
+
+        <createTable tableName="event_subscriptions">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subscription_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_types" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="filter_expression" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="endpoint_url" type="varchar(512)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="endpoint_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="retry_policy" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_delivery_at" type="timestamp with time zone">
+                <constraints nullable="true"/>
+            </column>
+            <column name="delivery_count" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="failure_count" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint
+            tableName="event_subscriptions"
+            columnNames="tenant_id, subscription_name"
+            constraintName="uk_event_subscription_name"/>
+
+        <createIndex indexName="idx_event_subs_tenant" tableName="event_subscriptions">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_event_subs_active" tableName="event_subscriptions">
+            <column name="active"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="event_subscriptions"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

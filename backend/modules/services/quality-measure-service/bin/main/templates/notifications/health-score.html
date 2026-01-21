@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Health Score Update</title>
+    <style>
+        /* Reset styles for email clients */
+        body, table, td, a {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+        img {
+            -ms-interpolation-mode: bicubic;
+        }
+
+        /* Base styles */
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        /* Container */
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+
+        /* Header - Health Score (Green theme for wellness/success) */
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 24px 32px;
+            text-align: center;
+        }
+
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .header-title {
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+
+        .header-subtitle {
+            color: #d1fae5;
+            font-size: 14px;
+            margin: 8px 0 0 0;
+            font-weight: 500;
+        }
+
+        /* Content */
+        .content {
+            padding: 32px;
+        }
+
+        .patient-info {
+            background-color: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            border-radius: 4px;
+        }
+
+        .patient-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0 0 8px 0;
+        }
+
+        .patient-details {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 4px 0;
+        }
+
+        /* Score Display - Large and Prominent */
+        .score-display {
+            text-align: center;
+            padding: 32px 24px;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .score-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 12px 0;
+        }
+
+        .current-score {
+            font-size: 72px;
+            font-weight: 800;
+            margin: 8px 0;
+            line-height: 1;
+        }
+
+        /* Score colors based on value */
+        .score-excellent {
+            color: #10b981;
+        }
+
+        .score-good {
+            color: #3b82f6;
+        }
+
+        .score-fair {
+            color: #f59e0b;
+        }
+
+        .score-poor {
+            color: #ef4444;
+        }
+
+        .score-interpretation {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        .interpretation-excellent {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .interpretation-good {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .interpretation-fair {
+            background-color: #fed7aa;
+            color: #92400e;
+        }
+
+        .interpretation-poor {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Score Change Indicator */
+        .score-comparison {
+            text-align: center;
+            margin: 20px 0;
+            padding: 16px;
+            background-color: #f9fafb;
+            border-radius: 4px;
+        }
+
+        .score-change {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 8px 0;
+        }
+
+        .change-positive {
+            color: #10b981;
+        }
+
+        .change-negative {
+            color: #ef4444;
+        }
+
+        .change-neutral {
+            color: #6b7280;
+        }
+
+        .previous-score {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 4px 0;
+        }
+
+        /* Score Message */
+        .score-message {
+            text-align: center;
+            font-size: 16px;
+            color: #1f2937;
+            line-height: 1.6;
+            margin: 20px 0;
+            padding: 0 24px;
+        }
+
+        /* Section Styling */
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 12px 0;
+        }
+
+        /* Contributing Factors */
+        .contributing-factors {
+            background-color: #f0fdf4;
+            border-left: 4px solid #10b981;
+            padding: 16px 20px;
+            border-radius: 4px;
+        }
+
+        .contributing-factors ul {
+            margin: 8px 0 0 0;
+            padding-left: 20px;
+            color: #1f2937;
+        }
+
+        .contributing-factors li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        /* Recommendations */
+        .recommendations {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 16px 20px;
+            border-radius: 4px;
+        }
+
+        .recommendations ul {
+            margin: 8px 0 0 0;
+            padding-left: 20px;
+            color: #1f2937;
+        }
+
+        .recommendations li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        /* Visual Score Bar */
+        .score-bar-container {
+            width: 100%;
+            height: 12px;
+            background-color: #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .bar-excellent {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        }
+
+        .bar-good {
+            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .bar-fair {
+            background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .bar-poor {
+            background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        /* Action Button */
+        .action-section {
+            text-align: center;
+            margin: 32px 0;
+        }
+
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+            transition: all 0.2s;
+        }
+
+        .action-button:hover {
+            box-shadow: 0 6px 8px rgba(16, 185, 129, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #f9fafb;
+            padding: 24px 32px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer-text {
+            font-size: 13px;
+            color: #6b7280;
+            margin: 0 0 8px 0;
+            line-height: 1.5;
+        }
+
+        .footer-disclaimer {
+            font-size: 11px;
+            color: #9ca3af;
+            margin: 12px 0 0 0;
+            line-height: 1.4;
+        }
+
+        /* Mobile Responsive */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                width: 100% !important;
+            }
+            .content {
+                padding: 20px !important;
+            }
+            .header {
+                padding: 20px !important;
+            }
+            .patient-name {
+                font-size: 18px !important;
+            }
+            .current-score {
+                font-size: 56px !important;
+            }
+            .score-message {
+                font-size: 15px !important;
+                padding: 0 12px !important;
+            }
+            .action-button {
+                padding: 12px 24px !important;
+                font-size: 15px !important;
+            }
+            .score-display {
+                padding: 24px 16px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                <table class="email-container" role="presentation" cellspacing="0" cellpadding="0" border="0">
+
+                    <!-- Header -->
+                    <tr>
+                        <td class="header">
+                            <div class="header-icon">💚</div>
+                            <h1 class="header-title">HEALTH SCORE UPDATE</h1>
+                            <p class="header-subtitle">Your Wellness Report</p>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td class="content">
+
+                            <!-- Patient Information -->
+                            <div class="patient-info">
+                                <h2 class="patient-name" th:text="${patientName}">John Doe</h2>
+                                <p class="patient-details" th:if="${mrn}">
+                                    <strong>MRN:</strong> <span th:text="${mrn}">123456789</span>
+                                </p>
+                            </div>
+
+                            <!-- Score Display -->
+                            <div class="score-display">
+                                <p class="score-label">Current Health Score</p>
+                                <div class="current-score"
+                                     th:classappend="${currentScore >= 80 ? 'score-excellent' : (currentScore >= 60 ? 'score-good' : (currentScore >= 40 ? 'score-fair' : 'score-poor'))}"
+                                     th:text="${currentScore}">
+                                    75
+                                </div>
+                                <div class="score-bar-container">
+                                    <div class="score-bar-fill"
+                                         th:classappend="${currentScore >= 80 ? 'bar-excellent' : (currentScore >= 60 ? 'bar-good' : (currentScore >= 40 ? 'bar-fair' : 'bar-poor'))}"
+                                         th:style="'width: ' + ${currentScore} + '%'">
+                                    </div>
+                                </div>
+                                <span class="score-interpretation"
+                                      th:if="${interpretation != null}"
+                                      th:classappend="${interpretation == 'Excellent' ? 'interpretation-excellent' : (interpretation == 'Good' ? 'interpretation-good' : (interpretation == 'Fair' ? 'interpretation-fair' : 'interpretation-poor'))}"
+                                      th:text="${interpretation}">
+                                    Good
+                                </span>
+                            </div>
+
+                            <!-- Score Comparison -->
+                            <div class="score-comparison">
+                                <p class="previous-score">
+                                    Previous Score: <strong th:text="${previousScore}">70</strong>
+                                </p>
+                                <div class="score-change"
+                                     th:classappend="${scoreChange != null and scoreChange.startsWith('+') ? 'change-positive' : (scoreChange != null and scoreChange.startsWith('-') ? 'change-negative' : 'change-neutral')}">
+                                    <span th:if="${scoreChange != null and scoreChange.startsWith('+')}">↑</span>
+                                    <span th:if="${scoreChange != null and scoreChange.startsWith('-')}">↓</span>
+                                    <span th:text="${scoreChange}">+5</span>
+                                </div>
+                            </div>
+
+                            <!-- Score Message -->
+                            <div class="score-message" th:text="${scoreMessage}">
+                                Your health score has improved by 5 points this quarter. Keep up the excellent work!
+                            </div>
+
+                            <!-- Contributing Factors (Optional) -->
+                            <div class="section" th:if="${contributingFactors != null and !contributingFactors.isEmpty()}">
+                                <div class="contributing-factors">
+                                    <h3 class="section-title" style="margin-top: 0;">Contributing Factors</h3>
+                                    <ul>
+                                        <li th:each="factor : ${contributingFactors}"
+                                            th:text="${factor}">
+                                            Preventive care compliance: 85%
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Recommendations (Optional) -->
+                            <div class="section" th:if="${recommendations != null and !recommendations.isEmpty()}">
+                                <div class="recommendations">
+                                    <h3 class="section-title" style="margin-top: 0;">Recommendations to Improve</h3>
+                                    <ul>
+                                        <li th:each="recommendation : ${recommendations}"
+                                            th:text="${recommendation}">
+                                            Schedule annual wellness visit
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Action Button -->
+                            <div class="action-section">
+                                <a href="#"
+                                   th:href="${actionUrl}"
+                                   class="action-button">
+                                    View Detailed Report
+                                </a>
+                            </div>
+
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer">
+                            <p class="footer-text">
+                                <strong>HealthData-in-Motion</strong><br>
+                                Clinical Quality Management System
+                            </p>
+                            <p class="footer-text" th:if="${facilityName}">
+                                <span th:text="${facilityName}">Memorial Healthcare System</span>
+                            </p>
+                            <p class="footer-disclaimer">
+                                This is an automated notification from the HealthData-in-Motion system.
+                                This message contains Protected Health Information (PHI) and is intended
+                                only for the authorized recipient. If you received this message in error,
+                                please delete it immediately and notify the system administrator.
+                            </p>
+                            <p class="footer-disclaimer" style="margin-top: 12px;">
+                                For technical support, contact your IT department or email
+                                <a href="mailto:support@healthdata-in-motion.com" style="color: #10b981;">
+                                    support@healthdata-in-motion.com
+                                </a>
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

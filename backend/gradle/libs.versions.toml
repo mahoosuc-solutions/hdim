@@ -11,7 +11,6 @@ spring-dependency-management = "1.1.7"
 # Healthcare Libraries
 hapi-fhir = "7.6.0"
 cql-engine = "3.3.1"
-cql-evaluator = "3.3.1"
 
 # Databases & Persistence
 postgresql = "42.7.7"
@@ -37,7 +36,8 @@ jjwt = "0.12.6"
 bouncycastle = "1.78.1"
 
 # Testing
-junit = "5.14.1"
+junit = "5.10.2"
+junit-platform = "1.10.2"
 mockito = "5.2.0"
 testcontainers = "1.20.4"
 rest-assured = "5.5.0"
@@ -66,7 +66,7 @@ azure-openai = "1.0.0-beta.10"
 azure-identity = "1.12.2"
 
 # Security Patches (override transitive dependencies)
-logback = "1.5.16"
+logback = "1.5.19"
 jetty = "12.0.19"
 reactor-netty = "1.2.4"
 netty = "4.1.118.Final"
@@ -82,6 +82,8 @@ spring-boot-starter-data-redis = { module = "org.springframework.boot:spring-boo
 spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security", version.ref = "spring-boot" }
 spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation", version.ref = "spring-boot" }
 spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator", version.ref = "spring-boot" }
+spring-boot-starter-websocket = { module = "org.springframework.boot:spring-boot-starter-websocket", version.ref = "spring-boot" }
+spring-boot-starter-messaging = { module = "org.springframework.boot:spring-boot-starter-messaging", version.ref = "spring-boot" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot" }
 
 # Spring Cloud
@@ -102,7 +104,6 @@ hapi-fhir-jpaserver-base = { module = "ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base
 # CQL Engine
 cql-engine = { module = "org.opencds.cqf.cql:engine", version.ref = "cql-engine" }
 cql-engine-fhir = { module = "org.opencds.cqf.cql:engine.fhir", version.ref = "cql-engine" }
-cql-evaluator-fhir = { module = "com.alphora:cql-evaluator-fhir", version.ref = "cql-evaluator" }
 
 # Databases
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
@@ -145,6 +146,7 @@ bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref 
 
 # Testing
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito" }
@@ -195,7 +197,7 @@ spring-boot-redis = ["spring-boot-starter-data-redis"]
 spring-boot-security = ["spring-boot-starter-security", "jjwt-api", "jjwt-impl", "jjwt-jackson"]
 hapi-fhir-server = ["hapi-fhir-base", "hapi-fhir-structures-r4", "hapi-fhir-validation", "hapi-fhir-validation-resources-r4", "hapi-fhir-server", "hapi-fhir-jpaserver-base"]
 hapi-fhir-client = ["hapi-fhir-base", "hapi-fhir-structures-r4", "hapi-fhir-client"]
-cql = ["cql-engine", "cql-engine-fhir", "cql-evaluator-fhir"]
+cql = ["cql-engine", "cql-engine-fhir"]
 kafka = ["spring-kafka", "kafka-clients"]
 testing = ["spring-boot-starter-test", "junit-jupiter", "mockito-core", "mockito-junit-jupiter", "rest-assured"]
 testcontainers = ["testcontainers", "testcontainers-postgresql", "testcontainers-kafka", "testcontainers-redis"]

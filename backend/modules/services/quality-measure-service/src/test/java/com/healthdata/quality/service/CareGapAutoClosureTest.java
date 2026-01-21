@@ -79,7 +79,7 @@ class CareGapAutoClosureTest {
 
         // ACT: Process the procedure event
         String eventJson = objectMapper.writeValueAsString(procedureEvent);
-        eventConsumer.handleProcedureCreated(eventJson);
+        eventConsumer.handleProcedureCreated(objectMapper.readValue(eventJson, java.util.Map.class), "topic");
 
         // ASSERT: Care gap should be closed
         CareGapEntity updated = careGapRepository.findById(careGap.getId()).orElseThrow();
@@ -113,7 +113,7 @@ class CareGapAutoClosureTest {
 
         // ACT: Process the observation event
         String eventJson = objectMapper.writeValueAsString(observationEvent);
-        eventConsumer.handleObservationCreated(eventJson);
+        eventConsumer.handleObservationCreated(objectMapper.readValue(eventJson, java.util.Map.class), "topic");
 
         // ASSERT: Care gap should be closed
         CareGapEntity updated = careGapRepository.findById(careGap.getId()).orElseThrow();
@@ -211,7 +211,7 @@ class CareGapAutoClosureTest {
 
         // ACT: Process the event
         String eventJson = objectMapper.writeValueAsString(event);
-        eventConsumer.handleObservationCreated(eventJson);
+        eventConsumer.handleObservationCreated(objectMapper.readValue(eventJson, java.util.Map.class), "topic");
 
         // ASSERT: Evidence should be linked
         CareGapEntity updated = careGapRepository.findById(careGap.getId()).orElseThrow();
@@ -235,7 +235,7 @@ class CareGapAutoClosureTest {
 
         // ACT & ASSERT: Should not throw exception
         String eventJson = objectMapper.writeValueAsString(event);
-        eventConsumer.handleProcedureCreated(eventJson);
+        eventConsumer.handleProcedureCreated(objectMapper.readValue(eventJson, java.util.Map.class), "topic");
 
         // Verify no care gaps were affected
         assertThat(careGapRepository.count()).isZero();
@@ -275,7 +275,7 @@ class CareGapAutoClosureTest {
 
         // ACT: Process the event
         String eventJson = objectMapper.writeValueAsString(event);
-        eventConsumer.handleProcedureCreated(eventJson);
+        eventConsumer.handleProcedureCreated(objectMapper.readValue(eventJson, java.util.Map.class), "topic");
 
         // ASSERT: Only tenant-1 gap should be closed
         CareGapEntity tenant1Updated = careGapRepository.findById(tenant1Gap.getId()).orElseThrow();
@@ -318,7 +318,7 @@ class CareGapAutoClosureTest {
 
         // ACT: Process the event
         String eventJson = objectMapper.writeValueAsString(event);
-        eventConsumer.handleObservationCreated(eventJson);
+        eventConsumer.handleObservationCreated(objectMapper.readValue(eventJson, java.util.Map.class), "topic");
 
         // ASSERT: Both gaps should be closed
         CareGapEntity gap1Updated = careGapRepository.findById(gap1.getId()).orElseThrow();
@@ -356,7 +356,7 @@ class CareGapAutoClosureTest {
 
         // ACT: Process the event
         String eventJson = objectMapper.writeValueAsString(event);
-        eventConsumer.handleProcedureCreated(eventJson);
+        eventConsumer.handleProcedureCreated(objectMapper.readValue(eventJson, java.util.Map.class), "topic");
 
         // ASSERT: Gap should remain as manually closed (not auto-closed)
         CareGapEntity updated = careGapRepository.findById(careGap.getId()).orElseThrow();
@@ -387,7 +387,7 @@ class CareGapAutoClosureTest {
 
         // ACT: Process the event
         String eventJson = objectMapper.writeValueAsString(event);
-        eventConsumer.handleProcedureCreated(eventJson);
+        eventConsumer.handleProcedureCreated(objectMapper.readValue(eventJson, java.util.Map.class), "topic");
 
         // ASSERT: Verify gap was closed (event publishing is tested separately via integration)
         CareGapEntity updated = careGapRepository.findById(careGap.getId()).orElseThrow();

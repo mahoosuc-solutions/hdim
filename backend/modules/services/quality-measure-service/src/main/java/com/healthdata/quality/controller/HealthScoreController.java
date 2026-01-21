@@ -34,7 +34,7 @@ import java.util.UUID;
  * and appropriate role-based authorization.
  */
 @RestController
-@RequestMapping("/quality-measure/patients")
+@RequestMapping("/patients")
 @RequiredArgsConstructor
 @Slf4j
 @Validated

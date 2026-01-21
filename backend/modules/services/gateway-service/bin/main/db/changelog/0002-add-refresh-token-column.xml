@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0002-add-refresh-token-column-v2" author="gateway-migration">
+        <comment>Add missing token column to refresh_tokens table</comment>
+        
+        <addColumn tableName="refresh_tokens">
+            <column name="token" type="VARCHAR(1000)" defaultValue="">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </addColumn>
+
+        <createIndex indexName="idx_refresh_tokens_token" tableName="refresh_tokens">
+            <column name="token"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex indexName="idx_refresh_tokens_token" tableName="refresh_tokens"/>
+            <dropColumn tableName="refresh_tokens" columnName="token"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

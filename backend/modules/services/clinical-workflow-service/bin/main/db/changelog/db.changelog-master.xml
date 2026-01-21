@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Clinical Workflow Service Migrations -->
+    <!-- Sequential numbering with no gaps (0001, 0002, 0003, ...) -->
+    <!-- All changesets include explicit rollback SQL for production safety -->
+
+    <include file="db/changelog/0001-create-patient-check-ins-table.xml"/>
+    <include file="db/changelog/0002-create-vital-signs-records-table.xml"/>
+    <include file="db/changelog/0003-create-room-assignments-table.xml"/>
+    <include file="db/changelog/0004-create-waiting-queue-table.xml"/>
+    <include file="db/changelog/0005-create-pre-visit-checklists-table.xml"/>
+
+</databaseChangeLog>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0001-create-outreach-logs-table" author="hdim-nurse-workflow-team">
+        <comment>Create outreach_logs table for patient outreach tracking</comment>
+
+        <createTable tableName="outreach_logs">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_outreach_logs"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="nurse_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="outcome_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contact_method" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="TEXT"/>
+            <column name="attempted_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scheduled_follow_up" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="task_id" type="VARCHAR(128)"/>
+            <column name="communication_id" type="VARCHAR(128)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Create indexes for query performance -->
+        <createIndex indexName="idx_outreach_tenant_patient" tableName="outreach_logs">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_outreach_nurse" tableName="outreach_logs">
+            <column name="nurse_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_outreach_attempted_at" tableName="outreach_logs">
+            <column name="attempted_at"/>
+        </createIndex>
+
+        <createIndex indexName="idx_outreach_outcome" tableName="outreach_logs">
+            <column name="outcome_type"/>
+        </createIndex>
+
+        <!-- Rollback -->
+        <rollback>
+            <dropTable tableName="outreach_logs"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

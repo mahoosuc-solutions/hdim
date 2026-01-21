@@ -1,0 +1,15 @@
+📅 APPOINTMENT REMINDER
+
+Patient: [(${patientName})]
+MRN: [(${mrn})]
+
+Date: [(${appointmentDate})]
+Time: [(${appointmentTime})]
+Type: [(${appointmentType})]
+
+Provider: [(${providerName})]
+Location: [(${location})]
+
+Confirm or view details: [(${actionUrl})]
+
+- HealthData-in-Motion

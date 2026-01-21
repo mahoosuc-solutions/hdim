@@ -90,7 +90,7 @@ static void configureProperties(DynamicPropertyRegistry registry) {
 **1. Testcontainers PostgreSQL**
 ```java
 @Container
-static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
+static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
         .withDatabaseName("testdb")
         .withUsername("test")
         .withPassword("test")
@@ -284,7 +284,7 @@ test {
 
 ### Docker Requirements
 - Docker daemon must be running
-- Testcontainers pulls `postgres:15` image automatically
+- Testcontainers pulls `postgres:16` image automatically
 - Container reuse speeds up repeated runs
 
 ### Environment Variables

@@ -1,0 +1,246 @@
+package com.healthdata.quality.scheduler;
+
+import com.healthdata.quality.dto.QualityReportDTO;
+import com.healthdata.quality.service.PopulationCalculationService;
+import com.healthdata.quality.service.QualityReportService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+/**
+ * Test-Driven Development for Population Update Scheduler
+ *
+ * Weekly at Sunday 1 AM: Recalculate all measures
+ * Generate weekly reports
+ */
+@ExtendWith(MockitoExtension.class)
+class PopulationUpdateSchedulerTest {
+
+    @Mock
+    private PopulationCalculationService populationCalculationService;
+
+    @Mock
+    private QualityReportService qualityReportService;
+
+    @InjectMocks
+    private PopulationUpdateScheduler scheduler;
+
+    private String tenantId;
+    private Instant now;
+
+    @BeforeEach
+    void setUp() {
+        tenantId = "test-tenant";
+        now = Instant.now();
+    }
+
+    /**
+     * TEST 1: Weekly Population Recalculation
+     * Should recalculate all quality measures for all patients
+     */
+    @Test
+    void testWeeklyPopulationRecalculation() {
+        // Arrange
+        List<String> measureIds = Arrays.asList("COL", "CBP", "CDC-HBA1C", "BCS");
+
+        // Act
+        scheduler.performWeeklyPopulationUpdate(tenantId);
+
+        // Assert
+        verify(populationCalculationService).recalculateAllMeasures(tenantId);
+    }
+
+    /**
+     * TEST 2: Weekly Report Generation
+     * Should generate and save weekly quality report
+     */
+    @Test
+    void testWeeklyReportGeneration() {
+        // Arrange
+        QualityReportDTO report = QualityReportDTO.builder()
+            .reportName("Weekly Quality Report")
+            .reportType("POPULATION")
+            .generatedAt(now)
+            .build();
+
+        when(qualityReportService.generateWeeklyReport(eq(tenantId), any(Instant.class), any(Instant.class)))
+            .thenReturn(report);
+
+        // Act
+        scheduler.generateWeeklyReport(tenantId);
+
+        // Assert
+        verify(qualityReportService).generateWeeklyReport(
+            eq(tenantId),
+            any(Instant.class), // Start of week
+            any(Instant.class)  // End of week
+        );
+        verify(qualityReportService).saveReport(eq(tenantId), eq(report));
+    }
+
+    /**
+     * TEST 3: Report Date Range Calculation
+     * Should calculate correct week boundaries (Sunday to Saturday)
+     */
+    @Test
+    void testReportDateRangeCalculation() {
+        // Act
+        var dateRange = scheduler.calculatePreviousWeekRange();
+
+        // Assert
+        assertNotNull(dateRange);
+        assertNotNull(dateRange.startDate());
+        assertNotNull(dateRange.endDate());
+
+        // Verify week is 7 days
+        long daysBetween = ChronoUnit.DAYS.between(dateRange.startDate(), dateRange.endDate());
+        assertEquals(7, daysBetween);
+
+        // Verify start is Sunday (or configured week start)
+        // This would depend on your implementation
+    }
+
+    /**
+     * TEST 4: Multi-Tenant Batch Processing
+     * Should process all tenants with batch updates
+     */
+    @Test
+    void testMultiTenantBatchProcessing() {
+        // Arrange
+        List<String> tenants = Arrays.asList("tenant-1", "tenant-2", "tenant-3");
+
+        when(populationCalculationService.findAllActiveTenants()).thenReturn(tenants);
+
+        // Act
+        scheduler.performWeeklyPopulationUpdateAllTenants();
+
+        // Assert
+        for (String tenant : tenants) {
+            verify(populationCalculationService).recalculateAllMeasures(tenant);
+            verify(qualityReportService).generateWeeklyReport(eq(tenant), any(Instant.class), any(Instant.class));
+        }
+    }
+
+    /**
+     * TEST 5: Error Recovery for Failed Tenant
+     * Should continue processing other tenants if one fails
+     */
+    @Test
+    void testErrorRecovery_ContinueOnTenantFailure() {
+        // Arrange
+        List<String> tenants = Arrays.asList("tenant-1", "tenant-2", "tenant-3");
+
+        when(populationCalculationService.findAllActiveTenants()).thenReturn(tenants);
+
+        // Tenant 2 will fail
+        doNothing().when(populationCalculationService).recalculateAllMeasures("tenant-1");
+        doThrow(new RuntimeException("Database error")).when(populationCalculationService).recalculateAllMeasures("tenant-2");
+        doNothing().when(populationCalculationService).recalculateAllMeasures("tenant-3");
+
+        // Act
+        scheduler.performWeeklyPopulationUpdateAllTenants();
+
+        // Assert: All tenants attempted
+        verify(populationCalculationService).recalculateAllMeasures("tenant-1");
+        verify(populationCalculationService).recalculateAllMeasures("tenant-2");
+        verify(populationCalculationService).recalculateAllMeasures("tenant-3");
+    }
+
+    /**
+     * TEST 6: Performance Metrics Tracking
+     * Should track duration and patient count
+     */
+    @Test
+    void testPerformanceMetricsTracking() {
+        // Arrange
+        when(populationCalculationService.recalculateAllMeasures(tenantId))
+            .thenReturn(createCalculationResult(150, 4));
+
+        // Act
+        var result = scheduler.performWeeklyPopulationUpdate(tenantId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(150, result.patientsProcessed());
+        assertEquals(4, result.measuresCalculated());
+        assertTrue(result.durationMs() >= 0);
+    }
+
+    /**
+     * TEST 7: Incremental Update Support
+     * Should support incremental updates for performance
+     */
+    @Test
+    void testIncrementalUpdate_OnlyChangedPatients() {
+        // Arrange: Only patients with data changes since last run
+        Instant lastRunTime = now.minus(7, ChronoUnit.DAYS);
+
+        // Act
+        scheduler.performIncrementalUpdate(tenantId, lastRunTime);
+
+        // Assert
+        verify(populationCalculationService).recalculateChangedPatients(
+            eq(tenantId),
+            eq(lastRunTime),
+            any(Instant.class)
+        );
+    }
+
+    /**
+     * TEST 8: Scheduling Configuration
+     * Should be configured to run weekly on Sunday at 1 AM
+     */
+    @Test
+    void testSchedulingConfiguration() {
+        // The actual annotation should be:
+        // @Scheduled(cron = "0 0 1 ? * SUN") // Sunday at 1 AM
+        // or
+        // @Scheduled(cron = "${scheduler.population-update.cron:0 0 1 ? * SUN}")
+
+        assertNotNull(scheduler);
+    }
+
+    /**
+     * TEST 9: Report Email Notification
+     * Should send email notifications for weekly reports
+     */
+    @Test
+    void testReportEmailNotification() {
+        // Arrange
+        QualityReportDTO report = QualityReportDTO.builder()
+            .reportName("Weekly Quality Report")
+            .reportType("POPULATION")
+            .generatedAt(now)
+            .build();
+
+        when(qualityReportService.generateWeeklyReport(eq(tenantId), any(Instant.class), any(Instant.class)))
+            .thenReturn(report);
+
+        // Act
+        scheduler.generateAndNotifyWeeklyReport(tenantId);
+
+        // Assert
+        verify(qualityReportService).generateWeeklyReport(eq(tenantId), any(Instant.class), any(Instant.class));
+        verify(qualityReportService).sendReportNotification(tenantId, report);
+    }
+
+    /**
+     * Helper Methods
+     */
+
+    private PopulationCalculationService.CalculationResult createCalculationResult(int patients, int measures) {
+        return new PopulationCalculationService.CalculationResult(patients, measures, 1500L);
+    }
+}

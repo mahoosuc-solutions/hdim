@@ -36,7 +36,7 @@ Added Testcontainers setup:
 class NotificationEndToEndTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("test")
@@ -264,7 +264,7 @@ Deploy to staging and:
 
 **Requirements:**
 - Docker running locally
-- Internet connection (first run to pull postgres:15-alpine image)
+- Internet connection (first run to pull postgres:16-alpine image)
 
 ---
 

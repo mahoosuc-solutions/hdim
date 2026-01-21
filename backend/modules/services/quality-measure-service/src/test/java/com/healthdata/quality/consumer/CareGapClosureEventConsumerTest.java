@@ -13,7 +13,9 @@ import com.healthdata.quality.dto.FhirResourceEvent;
 import com.healthdata.quality.persistence.CareGapEntity;
 import com.healthdata.quality.service.CareGapMatchingService;
 import com.healthdata.quality.service.CareGapService;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,11 @@ class CareGapClosureEventConsumerTest {
         KafkaTemplate<String, String> kafkaTemplate =
             (KafkaTemplate<String, String>) Mockito.mock(KafkaTemplate.class);
         return kafkaTemplate;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> toMap(String json) throws Exception {
+        return objectMapper.readValue(json, Map.class);
     }
 
     @Test
@@ -55,7 +62,7 @@ class CareGapClosureEventConsumerTest {
 
         String message = objectMapper.writeValueAsString(event);
 
-        consumer.handleProcedureCreated(message);
+        consumer.handleProcedureCreated(toMap(message), "topic");
 
         verify(matchingService, never()).findMatchingCareGaps(any(), any(), any());
         verify(careGapService, never()).autoCloseCareGap(any(), any(), any(), any(), any());
@@ -88,7 +95,7 @@ class CareGapClosureEventConsumerTest {
         when(matchingService.findMatchingCareGaps(eq("tenant-1"), eq(patientId), any(FhirResourceEvent.class)))
             .thenReturn(List.of());
 
-        consumer.handleObservationCreated(message);
+        consumer.handleObservationCreated(toMap(message), "topic");
 
         verify(careGapService, never()).autoCloseCareGap(any(), any(), any(), any(), any());
         verify(kafkaTemplate, never()).send(any(), any(), any());
@@ -131,7 +138,7 @@ class CareGapClosureEventConsumerTest {
         when(matchingService.getMatchingSummary(eq(gap), any(FhirResourceEvent.class)))
             .thenReturn("matched on A1C");
 
-        consumer.handleProcedureCreated(message);
+        consumer.handleProcedureCreated(toMap(message), "topic");
 
         verify(careGapService).autoCloseCareGap(
             eq("tenant-1"),
@@ -178,7 +185,7 @@ class CareGapClosureEventConsumerTest {
         when(matchingService.findMatchingCareGaps(eq("tenant-1"), eq(patientId), any(FhirResourceEvent.class)))
             .thenReturn(List.of(gap));
 
-        consumer.handleObservationCreated(message);
+        consumer.handleObservationCreated(toMap(message), "topic");
 
         verify(careGapService, never()).autoCloseCareGap(any(), any(), any(), any(), any());
         verify(kafkaTemplate, never()).send(any(), any(), any());
@@ -223,12 +230,12 @@ class CareGapClosureEventConsumerTest {
         Mockito.doThrow(new RuntimeException("kafka down"))
             .when(kafkaTemplate).send(eq("care-gap.auto-closed"), any(), any());
 
-        assertThatCode(() -> consumer.handleProcedureCreated(message)).doesNotThrowAnyException();
+        assertThatCode(() -> consumer.handleProcedureCreated(toMap(message), "topic")).doesNotThrowAnyException();
     }
 
     @Test
-    @DisplayName("Should ignore invalid JSON payloads")
-    void shouldIgnoreInvalidJsonPayloads() {
+    @DisplayName("Should ignore invalid payloads")
+    void shouldIgnoreInvalidPayloads() {
         CareGapService careGapService = Mockito.mock(CareGapService.class);
         CareGapMatchingService matchingService = Mockito.mock(CareGapMatchingService.class);
         KafkaTemplate<String, String> kafkaTemplate = mockKafkaTemplate();
@@ -240,7 +247,8 @@ class CareGapClosureEventConsumerTest {
             objectMapper
         );
 
-        assertThatCode(() -> consumer.handleObservationCreated("not-json")).doesNotThrowAnyException();
+        // Pass empty map which makes buildFhirResourceEvent return partial object or fail safely
+        assertThatCode(() -> consumer.handleObservationCreated(Collections.emptyMap(), "topic")).doesNotThrowAnyException();
 
         verify(matchingService, never()).findMatchingCareGaps(any(), any(), any());
         verify(careGapService, never()).autoCloseCareGap(any(), any(), any(), any(), any());
@@ -282,7 +290,7 @@ class CareGapClosureEventConsumerTest {
         when(matchingService.findMatchingCareGaps(eq("tenant-1"), eq(patientId), any(FhirResourceEvent.class)))
             .thenReturn(List.of(gap));
 
-        consumer.handleObservationCreated(message);
+        consumer.handleObservationCreated(toMap(message), "topic");
 
         verify(careGapService, never()).autoCloseCareGap(any(), any(), any(), any(), any());
         verify(kafkaTemplate, never()).send(any(), any(), any());
@@ -328,7 +336,7 @@ class CareGapClosureEventConsumerTest {
             .when(careGapService)
             .autoCloseCareGap(eq("tenant-1"), eq(gap.getId()), eq("Procedure"), eq("proc-4"), eq("summary"));
 
-        assertThatCode(() -> consumer.handleProcedureCreated(message)).doesNotThrowAnyException();
+        assertThatCode(() -> consumer.handleProcedureCreated(toMap(message), "topic")).doesNotThrowAnyException();
 
         verify(kafkaTemplate, never()).send(any(), any(), any());
     }

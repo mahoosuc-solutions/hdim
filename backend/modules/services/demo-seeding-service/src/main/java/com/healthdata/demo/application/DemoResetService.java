@@ -68,6 +68,7 @@ public class DemoResetService {
 
             // Reset any cached data
             clearCaches(tenantId);
+            clearSessionProgress(tenantId);
 
             long elapsed = System.currentTimeMillis() - startTime;
             logger.info("Demo data reset complete for tenant {} in {}ms", tenantId, elapsed);
@@ -122,6 +123,11 @@ public class DemoResetService {
                 jdbcTemplate.update("DELETE FROM demo_sessions");
             } catch (Exception e) {
                 logger.debug("demo_sessions table does not exist or is empty, skipping");
+            }
+            try {
+                jdbcTemplate.update("DELETE FROM demo_session_progress");
+            } catch (Exception e) {
+                logger.debug("demo_session_progress table does not exist or is empty, skipping");
             }
 
             result.setSuccess(true);
@@ -368,6 +374,14 @@ public class DemoResetService {
         // Clear Redis cache entries for tenant
         // This would integrate with Redis cache manager
         logger.debug("Clearing cache for tenant: {}", tenantId);
+    }
+
+    private void clearSessionProgress(String tenantId) {
+        if (!tableExists("demo_session_progress")) {
+            logger.debug("demo_session_progress table does not exist, skipping cleanup");
+            return;
+        }
+        jdbcTemplate.update("DELETE FROM demo_session_progress WHERE tenant_id = ?", tenantId);
     }
 
     private long executePgDump(Path filePath) throws IOException {

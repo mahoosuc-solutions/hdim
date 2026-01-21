@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="0005-seed-demo-scenarios" author="demo-seeding-service">
+        <comment>Seed initial demo scenarios</comment>
+
+        <!-- HEDIS Evaluation Scenario -->
+        <insert tableName="demo_scenarios">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="hedis-evaluation"/>
+            <column name="display_name" value="HEDIS Quality Measure Evaluation"/>
+            <column name="description" value="Demonstrates automated HEDIS measure evaluation and care gap identification. Includes BCS, COL, CBP, CDC, EED, and SPC measures with realistic care gap distribution."/>
+            <column name="scenario_type" value="HEDIS_EVALUATION"/>
+            <column name="patient_count" valueNumeric="5000"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="estimated_load_time_seconds" valueNumeric="30"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="version" valueNumeric="1"/>
+            <column name="created_at" valueDate="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Patient Journey Scenario -->
+        <insert tableName="demo_scenarios">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="patient-journey"/>
+            <column name="display_name" value="Patient Care Journey"/>
+            <column name="description" value="Demonstrates 360-degree patient view with clinical decision support and SDOH factors. Features 4 pre-defined patient personas with different clinical profiles."/>
+            <column name="scenario_type" value="PATIENT_JOURNEY"/>
+            <column name="patient_count" valueNumeric="1000"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="estimated_load_time_seconds" valueNumeric="15"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="version" valueNumeric="1"/>
+            <column name="created_at" valueDate="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Risk Stratification Scenario -->
+        <insert tableName="demo_scenarios">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="risk-stratification"/>
+            <column name="display_name" value="Risk Stratification and Analytics"/>
+            <column name="description" value="Demonstrates population risk stratification and predictive analytics. Includes HCC risk scoring and admission risk prediction."/>
+            <column name="scenario_type" value="RISK_STRATIFICATION"/>
+            <column name="patient_count" valueNumeric="10000"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="estimated_load_time_seconds" valueNumeric="45"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="version" valueNumeric="1"/>
+            <column name="created_at" valueDate="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Multi-Tenant Scenario -->
+        <insert tableName="demo_scenarios">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="multi-tenant"/>
+            <column name="display_name" value="Multi-Tenant Administration"/>
+            <column name="description" value="Demonstrates secure multi-tenant SaaS architecture. Includes 3 demo tenants: Acme Health (5K), Summit Care (12K), Valley Health (8K)."/>
+            <column name="scenario_type" value="MULTI_TENANT"/>
+            <column name="patient_count" valueNumeric="25000"/>
+            <column name="tenant_id" value="demo-admin"/>
+            <column name="estimated_load_time_seconds" valueNumeric="60"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="version" valueNumeric="1"/>
+            <column name="created_at" valueDate="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="demo_scenarios">
+                <where>name IN ('hedis-evaluation', 'patient-journey', 'multi-tenant', 'risk-stratification', 'sdoh-screening', 'cds-alerts', 'qrda-export')</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0006-adjust-multi-tenant-scenario-size" author="healthdata-system">
+        <comment>Reduce multi-tenant scenario size to avoid demo seeding OOM.</comment>
+        <update tableName="demo_scenarios">
+            <column name="patient_count" valueNumeric="8000"/>
+            <column name="description"
+                    value="Demonstrates secure multi-tenant SaaS architecture. Includes 3 demo tenants: Acme Health (2K), Summit Care (3K), Valley Health (3K)."/>
+            <where>name='multi-tenant'</where>
+        </update>
+
+        <rollback>
+            <update tableName="demo_scenarios">
+                <column name="patient_count" valueNumeric="12000"/>
+                <column name="description"
+                        value="Demonstrates secure multi-tenant SaaS architecture. Includes 3 demo tenants with varying patient volumes."/>
+                <where>name='multi-tenant'</where>
+            </update>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0007-adjust-multi-tenant-scenario-size-compact" author="healthdata-system">
+        <comment>Further reduce multi-tenant scenario size for low-memory demo runs.</comment>
+        <update tableName="demo_scenarios">
+            <column name="patient_count" valueNumeric="3000"/>
+            <column name="description"
+                    value="Demonstrates secure multi-tenant SaaS architecture. Includes 3 demo tenants: Acme Health (1K), Summit Care (1K), Valley Health (1K)."/>
+            <where>name='multi-tenant'</where>
+        </update>
+
+        <rollback>
+            <update tableName="demo_scenarios">
+                <column name="patient_count" valueNumeric="8000"/>
+                <column name="description"
+                        value="Demonstrates secure multi-tenant SaaS architecture. Includes 3 demo tenants: Acme Health (2K), Summit Care (3K), Valley Health (3K)."/>
+                <where>name='multi-tenant'</where>
+            </update>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

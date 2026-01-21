@@ -14,6 +14,7 @@ Enforces consent and privacy rules for data access.
 1. Hit `/actuator/health` for readiness.
 2. Inspect consent decision logs for exceptions.
 3. Validate Kafka consumption; look for DLQ messages.
+4. License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md).
 
 ## Common Tasks
 ### Flush Policy Cache

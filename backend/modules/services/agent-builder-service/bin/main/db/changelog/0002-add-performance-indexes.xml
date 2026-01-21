@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0002-add-performance-indexes" author="flyway-migration">
+        <comment>Add GIN and B-tree indexes for performance optimization (migrated from Flyway V2)</comment>
+
+        <sqlFile path="db/changelog/sql/0002-add-performance-indexes.sql"
+                 relativeToChangelogFile="true"/>
+
+        <rollback>
+            <sql>
+                DROP INDEX IF EXISTS idx_agent_config_desc_lower;
+                DROP INDEX IF EXISTS idx_agent_config_name_lower;
+                DROP INDEX IF EXISTS idx_agent_version_published_only;
+                DROP INDEX IF EXISTS idx_agent_config_draft_only;
+                DROP INDEX IF EXISTS idx_agent_config_active_only;
+                DROP INDEX IF EXISTS idx_analytics_tenant_date_range;
+                DROP INDEX IF EXISTS idx_test_session_tenant_time;
+                DROP INDEX IF EXISTS idx_test_session_agent_status;
+                DROP INDEX IF EXISTS idx_prompt_template_system;
+                DROP INDEX IF EXISTS idx_prompt_template_tenant_category;
+                DROP INDEX IF EXISTS idx_agent_version_latest;
+                DROP INDEX IF EXISTS idx_agent_version_status_created;
+                DROP INDEX IF EXISTS idx_agent_config_tenant_name;
+                DROP INDEX IF EXISTS idx_agent_config_tenant_status;
+                DROP INDEX IF EXISTS idx_tool_def_schema_gin;
+                DROP INDEX IF EXISTS idx_test_session_metrics_gin;
+                DROP INDEX IF EXISTS idx_test_session_messages_gin;
+                DROP INDEX IF EXISTS idx_prompt_template_variables_gin;
+                DROP INDEX IF EXISTS idx_agent_version_snapshot_gin;
+                DROP INDEX IF EXISTS idx_agent_config_ui_gin;
+                DROP INDEX IF EXISTS idx_agent_config_guardrails_gin;
+                DROP INDEX IF EXISTS idx_agent_config_tools_gin;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

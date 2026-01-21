@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0001-create-cql-libraries-table" author="healthdata-system">
+        <comment>Create table for storing CQL (Clinical Quality Language) libraries</comment>
+
+        <createTable tableName="cql_libraries">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(20)" defaultValue="DRAFT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cql_content" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="compiled_elm" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="description" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="publisher" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="varchar(128)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint
+            tableName="cql_libraries"
+            columnNames="tenant_id, name, version"
+            constraintName="uk_cql_library_name_version"/>
+
+        <createIndex indexName="idx_cql_libraries_tenant" tableName="cql_libraries">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_cql_libraries_status" tableName="cql_libraries">
+            <column name="status"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="cql_libraries"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

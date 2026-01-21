@@ -1,0 +1,419 @@
+package com.healthdata.cms.client;
+
+import com.healthdata.cms.auth.OAuth2Manager;
+import com.healthdata.cms.exception.CmsApiException;
+import com.healthdata.cms.model.CmsApiProvider;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+
+/**
+ * DPC (Data at Point of Care) Client
+ *
+ * Handles real-time point-of-care queries for Medicare claims during patient encounters.
+ *
+ * Features:
+ * - Real-time claim queries (<500ms latency target)
+ * - Individual patient/beneficiary lookups
+ * - FHIR REST API interface
+ * - OAuth2 + Provider authentication
+ * - Circuit breaker + retry patterns
+ *
+ * API Reference: https://dpc.cms.gov/api/v1
+ */
+@Slf4j
+@Component
+public class DpcClient {
+
+    private final OAuth2Manager oauth2Manager;
+    private final RestTemplate restTemplate;
+    private final String baseUrl;
+    private final boolean isSandbox;
+    private final int timeoutMs;
+
+    public DpcClient(OAuth2Manager oauth2Manager,
+                     @Qualifier("cmsRestTemplate") RestTemplate restTemplate,
+                     @Value("${cms.dpc.base-url:https://sandbox.dpc.cms.gov}") String baseUrl,
+                     @Value("${cms.sandbox-mode:true}") boolean isSandbox,
+                     @Value("${cms.dpc.timeout-ms:5000}") int timeoutMs) {
+        this.oauth2Manager = oauth2Manager;
+        this.restTemplate = restTemplate;
+        this.baseUrl = baseUrl;
+        this.isSandbox = isSandbox;
+        this.timeoutMs = timeoutMs;
+
+        log.info("Initialized DPC client for {} environment. Base URL: {}. Timeout: {}ms",
+            isSandbox ? "SANDBOX" : "PRODUCTION", baseUrl, timeoutMs);
+    }
+
+    /**
+     * Get the authorization header with OAuth2 bearer token
+     */
+    private String getAuthorizationHeader() {
+        String token = oauth2Manager.getAccessToken(CmsApiProvider.DPC);
+        return "Bearer " + token;
+    }
+
+    /**
+     * Get HTTP headers for DPC API requests
+     */
+    private HttpHeaders getHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FHIR_JSON);
+        headers.set("Authorization", getAuthorizationHeader());
+        headers.set("Accept", "application/fhir+json");
+        return headers;
+    }
+
+    /**
+     * Get FHIR Patient resource by ID
+     * GET /api/v1/Patient/{id}
+     *
+     * Returns complete Medicare patient demographics and coverage
+     */
+    @CircuitBreaker(name = "dpc", fallbackMethod = "getPatientFallback")
+    @Retry(name = "dpc-retry")
+    public String getPatient(String patientId) {
+        log.debug("Fetching Patient resource from DPC for patient: {}", patientId);
+
+        try {
+            String url = baseUrl + "/api/v1/Patient/" + patientId;
+            HttpEntity<String> entity = new HttpEntity<>(getHeaders());
+
+            long startTime = System.currentTimeMillis();
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            long duration = System.currentTimeMillis() - startTime;
+
+            log.debug("DPC Patient query completed in {}ms", duration);
+
+            if (duration > timeoutMs) {
+                log.warn("DPC Patient query exceeded timeout: {}ms > {}ms", duration, timeoutMs);
+            }
+
+            String patientData = response.getBody();
+            if (patientData == null || patientData.isEmpty()) {
+                log.warn("Empty Patient resource from DPC for patient: {}", patientId);
+                return "";
+            }
+
+            return patientData;
+
+        } catch (HttpClientErrorException.NotFound e) {
+            log.warn("Patient not found in DPC: {}", patientId);
+            throw new CmsApiException(
+                "Patient not found in DPC: " + patientId,
+                CmsApiProvider.DPC,
+                "patient_not_found",
+                404,
+                e
+            );
+        } catch (HttpClientErrorException e) {
+            log.error("HTTP error fetching patient: {} - {}",
+                e.getStatusCode(), e.getStatusText());
+            throw new CmsApiException(
+                "Failed to fetch patient from DPC",
+                CmsApiProvider.DPC,
+                "patient_error",
+                e.getStatusCode().value(),
+                e
+            );
+        }
+    }
+
+    /**
+     * Fallback method for getPatient
+     */
+    public String getPatientFallback(String patientId, Exception e) {
+        log.warn("Using fallback for getPatient({}) due to: {}", patientId, e.getMessage());
+        return "";
+    }
+
+    /**
+     * Get FHIR ExplanationOfBenefit (EOB) resources for a patient
+     * GET /api/v1/ExplanationOfBenefit?patient={patientId}
+     *
+     * Returns all Medicare claims for the patient
+     */
+    @CircuitBreaker(name = "dpc", fallbackMethod = "getExplanationOfBenefitsFallback")
+    @Retry(name = "dpc-retry")
+    public String getExplanationOfBenefits(String patientId) {
+        log.debug("Fetching ExplanationOfBenefit resources from DPC for patient: {}", patientId);
+
+        try {
+            String url = baseUrl + "/api/v1/ExplanationOfBenefit?patient=" + patientId;
+            HttpEntity<String> entity = new HttpEntity<>(getHeaders());
+
+            long startTime = System.currentTimeMillis();
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            long duration = System.currentTimeMillis() - startTime;
+
+            log.debug("DPC EOB query completed in {}ms", duration);
+
+            String eobData = response.getBody();
+            if (eobData == null || eobData.isEmpty()) {
+                log.debug("No ExplanationOfBenefit records found for patient: {}", patientId);
+                return "";
+            }
+
+            return eobData;
+
+        } catch (HttpClientErrorException e) {
+            log.error("HTTP error fetching EOB: {} - {}",
+                e.getStatusCode(), e.getStatusText());
+            throw new CmsApiException(
+                "Failed to fetch ExplanationOfBenefit from DPC",
+                CmsApiProvider.DPC,
+                "eob_error",
+                e.getStatusCode().value(),
+                e
+            );
+        }
+    }
+
+    /**
+     * Fallback method for getExplanationOfBenefits
+     */
+    public String getExplanationOfBenefitsFallback(String patientId, Exception e) {
+        log.warn("Using fallback for getExplanationOfBenefits({}) due to: {}", patientId, e.getMessage());
+        return "";
+    }
+
+    /**
+     * Get FHIR Condition resources for a patient
+     * GET /api/v1/Condition?patient={patientId}
+     *
+     * Returns all diagnoses from Medicare claims
+     */
+    @CircuitBreaker(name = "dpc", fallbackMethod = "getConditionsFallback")
+    @Retry(name = "dpc-retry")
+    public String getConditions(String patientId) {
+        log.debug("Fetching Condition resources from DPC for patient: {}", patientId);
+
+        try {
+            String url = baseUrl + "/api/v1/Condition?patient=" + patientId;
+            HttpEntity<String> entity = new HttpEntity<>(getHeaders());
+
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            String conditionData = response.getBody();
+
+            if (conditionData == null || conditionData.isEmpty()) {
+                log.debug("No Condition records found for patient: {}", patientId);
+                return "";
+            }
+
+            return conditionData;
+
+        } catch (HttpClientErrorException e) {
+            log.error("HTTP error fetching conditions: {} - {}",
+                e.getStatusCode(), e.getStatusText());
+            throw new CmsApiException(
+                "Failed to fetch Condition from DPC",
+                CmsApiProvider.DPC,
+                "condition_error",
+                e.getStatusCode().value(),
+                e
+            );
+        }
+    }
+
+    /**
+     * Fallback method for getConditions
+     */
+    public String getConditionsFallback(String patientId, Exception e) {
+        log.warn("Using fallback for getConditions({}) due to: {}", patientId, e.getMessage());
+        return "";
+    }
+
+    /**
+     * Get FHIR Procedure resources for a patient
+     * GET /api/v1/Procedure?patient={patientId}
+     *
+     * Returns all procedures from Medicare claims
+     */
+    @CircuitBreaker(name = "dpc", fallbackMethod = "getProceduresFallback")
+    @Retry(name = "dpc-retry")
+    public String getProcedures(String patientId) {
+        log.debug("Fetching Procedure resources from DPC for patient: {}", patientId);
+
+        try {
+            String url = baseUrl + "/api/v1/Procedure?patient=" + patientId;
+            HttpEntity<String> entity = new HttpEntity<>(getHeaders());
+
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            String procedureData = response.getBody();
+
+            if (procedureData == null || procedureData.isEmpty()) {
+                log.debug("No Procedure records found for patient: {}", patientId);
+                return "";
+            }
+
+            return procedureData;
+
+        } catch (HttpClientErrorException e) {
+            log.error("HTTP error fetching procedures: {} - {}",
+                e.getStatusCode(), e.getStatusText());
+            throw new CmsApiException(
+                "Failed to fetch Procedure from DPC",
+                CmsApiProvider.DPC,
+                "procedure_error",
+                e.getStatusCode().value(),
+                e
+            );
+        }
+    }
+
+    /**
+     * Fallback method for getProcedures
+     */
+    public String getProceduresFallback(String patientId, Exception e) {
+        log.warn("Using fallback for getProcedures({}) due to: {}", patientId, e.getMessage());
+        return "";
+    }
+
+    /**
+     * Get FHIR MedicationRequest resources for a patient
+     * GET /api/v1/MedicationRequest?patient={patientId}
+     *
+     * Returns all medications from Medicare Part D claims
+     */
+    @CircuitBreaker(name = "dpc", fallbackMethod = "getMedicationRequestsFallback")
+    @Retry(name = "dpc-retry")
+    public String getMedicationRequests(String patientId) {
+        log.debug("Fetching MedicationRequest resources from DPC for patient: {}", patientId);
+
+        try {
+            String url = baseUrl + "/api/v1/MedicationRequest?patient=" + patientId;
+            HttpEntity<String> entity = new HttpEntity<>(getHeaders());
+
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            String medData = response.getBody();
+
+            if (medData == null || medData.isEmpty()) {
+                log.debug("No MedicationRequest records found for patient: {}", patientId);
+                return "";
+            }
+
+            return medData;
+
+        } catch (HttpClientErrorException e) {
+            log.error("HTTP error fetching medications: {} - {}",
+                e.getStatusCode(), e.getStatusText());
+            throw new CmsApiException(
+                "Failed to fetch MedicationRequest from DPC",
+                CmsApiProvider.DPC,
+                "medication_error",
+                e.getStatusCode().value(),
+                e
+            );
+        }
+    }
+
+    /**
+     * Fallback method for getMedicationRequests
+     */
+    public String getMedicationRequestsFallback(String patientId, Exception e) {
+        log.warn("Using fallback for getMedicationRequests({}) due to: {}", patientId, e.getMessage());
+        return "";
+    }
+
+    /**
+     * Get FHIR Observation resources for a patient
+     * GET /api/v1/Observation?patient={patientId}
+     *
+     * Returns all lab results and observations
+     */
+    @CircuitBreaker(name = "dpc", fallbackMethod = "getObservationsFallback")
+    @Retry(name = "dpc-retry")
+    public String getObservations(String patientId) {
+        log.debug("Fetching Observation resources from DPC for patient: {}", patientId);
+
+        try {
+            String url = baseUrl + "/api/v1/Observation?patient=" + patientId;
+            HttpEntity<String> entity = new HttpEntity<>(getHeaders());
+
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            String obsData = response.getBody();
+
+            if (obsData == null || obsData.isEmpty()) {
+                log.debug("No Observation records found for patient: {}", patientId);
+                return "";
+            }
+
+            return obsData;
+
+        } catch (HttpClientErrorException e) {
+            log.error("HTTP error fetching observations: {} - {}",
+                e.getStatusCode(), e.getStatusText());
+            throw new CmsApiException(
+                "Failed to fetch Observation from DPC",
+                CmsApiProvider.DPC,
+                "observation_error",
+                e.getStatusCode().value(),
+                e
+            );
+        }
+    }
+
+    /**
+     * Fallback method for getObservations
+     */
+    public String getObservationsFallback(String patientId, Exception e) {
+        log.warn("Using fallback for getObservations({}) due to: {}", patientId, e.getMessage());
+        return "";
+    }
+
+    /**
+     * Check health of DPC API
+     * GET /api/v1/health
+     */
+    public DpcHealthStatus getHealthStatus() {
+        log.info("Checking DPC API health status");
+
+        try {
+            String url = baseUrl + "/api/v1/health";
+            HttpEntity<String> entity = new HttpEntity<>(getHeaders());
+
+            ResponseEntity<DpcHealthStatus> response = restTemplate.getForEntity(url, DpcHealthStatus.class);
+            DpcHealthStatus healthStatus = response.getBody();
+
+            if (healthStatus == null) {
+                return new DpcHealthStatus("unknown", "");
+            }
+
+            log.info("DPC API health status: {}", healthStatus.getStatus());
+            return healthStatus;
+
+        } catch (Exception e) {
+            log.error("Error checking DPC health: {}", e.getMessage());
+            return new DpcHealthStatus("unknown", "");
+        }
+    }
+
+    // ============ DTOs ============
+
+    public static class DpcHealthStatus {
+        private String status;
+        private String version;
+
+        public DpcHealthStatus() {}
+
+        public DpcHealthStatus(String status, String version) {
+            this.status = status;
+            this.version = version;
+        }
+
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+        public String getVersion() { return version; }
+        public void setVersion(String version) { this.version = version; }
+    }
+}

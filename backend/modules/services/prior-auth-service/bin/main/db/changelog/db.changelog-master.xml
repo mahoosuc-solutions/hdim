@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- Create schema first -->
+    <include file="db/changelog/0001-create-prior-auth-schema.xml"/>
+
+    <!-- Create tables -->
+    <include file="db/changelog/0002-create-prior-auth-requests-table.xml"/>
+    <include file="db/changelog/0003-create-payer-endpoints-table.xml"/>
+
+</databaseChangeLog>

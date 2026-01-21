@@ -4,7 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import com.healthdata.audit.service.ai.AIAuditEventPublisher;
 
 /**
  * CQL Engine Service - Clinical Quality Language evaluation service
@@ -34,6 +36,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
     // Service code - includes JWT security components
     "com.healthdata.cql"
 })
+@Import(AIAuditEventPublisher.class)
 @EnableFeignClients
 @EnableJpaRepositories(basePackages = {
     "com.healthdata.cql.repository"

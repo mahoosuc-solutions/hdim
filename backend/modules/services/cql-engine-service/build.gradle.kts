@@ -70,6 +70,10 @@ dependencies {
     implementation(libs.jjwt.impl)
     implementation(libs.jjwt.jackson)
 
+    // Jackson for JSON serialization/deserialization
+    implementation(libs.jackson.databind)
+    implementation(libs.jackson.datatype.jsr310)
+
     // Spring Boot
     implementation(libs.bundles.spring.boot.web)
     implementation(libs.bundles.spring.boot.data)

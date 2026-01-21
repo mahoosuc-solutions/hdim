@@ -924,7 +924,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15-alpine
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: healthdata
           POSTGRES_PASSWORD: password

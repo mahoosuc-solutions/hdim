@@ -1,0 +1,122 @@
+spring:
+  application:
+    name: nurse-workflow-service
+    version: 1.0.0
+
+  jpa:
+    hibernate:
+      ddl-auto: validate  # MUST be validate in all environments
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+  datasource:
+    url: jdbc:postgresql://localhost:5435/nurse_workflow_db
+    username: healthdata
+    password: healthdata
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+
+  cache:
+    type: redis
+    redis:
+      host: localhost
+      port: 6380
+      password:
+      timeout: 2000
+
+  kafka:
+    bootstrap-servers: localhost:9094
+    producer:
+      acks: all
+      retries: 3
+      properties:
+        interceptor.classes: com.healthdata.tracing.KafkaProducerTraceInterceptor
+    consumer:
+      group-id: nurse-workflow-service
+      properties:
+        interceptor.classes: com.healthdata.tracing.KafkaConsumerTraceInterceptor
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/auth/realms/hdim
+
+server:
+  port: 8093
+  servlet:
+    context-path: /nurse-workflow
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0  # Development: capture all traces
+
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Gateway Trust Authentication Configuration
+gateway:
+  auth:
+    signing-secret: ${GATEWAY_AUTH_SIGNING_SECRET:dev-key-for-testing-only}
+    dev-mode: ${GATEWAY_AUTH_DEV_MODE:true}
+
+# FHIR Service Integration
+fhir:
+  service:
+    url: ${FHIR_SERVICE_URL:http://localhost:8085/fhir}
+    timeout-ms: 5000
+    retries: 3
+
+# Care Gap Service Integration
+care-gap:
+  service:
+    url: ${CARE_GAP_SERVICE_URL:http://localhost:8086/care-gap}
+    timeout-ms: 5000
+    retries: 3
+
+# Patient Service Integration
+patient:
+  service:
+    url: ${PATIENT_SERVICE_URL:http://localhost:8084/patient}
+    timeout-ms: 5000
+    retries: 3
+
+# Notification Service Integration
+notification:
+  service:
+    url: ${NOTIFICATION_SERVICE_URL:http://localhost:8092}
+    timeout-ms: 5000
+    retries: 3
+
+# HIPAA Compliance
+hipaa:
+  cache:
+    ttl-seconds: 300  # 5 minutes for PHI caching
+  audit:
+    enabled: true
+    log-phi-access: true

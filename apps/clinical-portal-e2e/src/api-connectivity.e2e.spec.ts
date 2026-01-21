@@ -8,8 +8,9 @@ import { test, expect, APIRequestContext } from '@playwright/test';
  * Issue: #85
  */
 
-const GATEWAY_URL = process.env['GATEWAY_URL'] || 'http://localhost:8001';
+const GATEWAY_URL = process.env['GATEWAY_URL'] || 'http://localhost:18080';
 const API_BASE = `${GATEWAY_URL}/api`;
+const DEMO_SAFE = process.env['DEMO_SAFE'] === '1' || process.env['DEMO_SAFE'] === 'true';
 
 // Service configurations with their expected routes
 const CORE_SERVICES = [
@@ -37,7 +38,13 @@ const EXTENDED_SERVICES = [
   { name: 'cms-connector-service', route: '/cms-connector', healthPath: '/actuator/health' },
 ];
 
-const ALL_SERVICES = [...CORE_SERVICES, ...EXTENDED_SERVICES];
+const DEMO_CORE_SERVICES = CORE_SERVICES.filter((service) =>
+  ['quality-measure-service', 'cql-engine-service', 'fhir-service', 'patient-service', 'care-gap-service', 'gateway-service']
+    .includes(service.name)
+);
+
+const ACTIVE_CORE_SERVICES = DEMO_SAFE ? DEMO_CORE_SERVICES : CORE_SERVICES;
+const ACTIVE_EXTENDED_SERVICES = DEMO_SAFE ? [] : EXTENDED_SERVICES;
 
 test.describe('API Connectivity Tests', () => {
   let apiContext: APIRequestContext;
@@ -102,7 +109,7 @@ test.describe('API Connectivity Tests', () => {
   });
 
   test.describe('Service Reachability', () => {
-    for (const service of CORE_SERVICES) {
+    for (const service of ACTIVE_CORE_SERVICES) {
       test(`Core service ${service.name} is reachable via gateway`, async () => {
         // Try health endpoint through gateway routing
         const healthUrl = service.route
@@ -362,7 +369,7 @@ test.describe('API Connectivity Tests', () => {
   });
 });
 
-test.describe('Service-to-Service Communication', () => {
+  test.describe('Service-to-Service Communication', () => {
   let apiContext: APIRequestContext;
   const testTenantId = '11111111-1111-1111-1111-111111111111';
 
@@ -397,6 +404,7 @@ test.describe('Service-to-Service Communication', () => {
   });
 
   test('Analytics service can aggregate data from multiple services', async () => {
+    test.skip(DEMO_SAFE, 'Analytics service not enabled for demo-safe runs.');
     const response = await apiContext.get(`${API_BASE}/v1/analytics/summary`);
 
     // Should get valid response
@@ -404,8 +412,11 @@ test.describe('Service-to-Service Communication', () => {
   });
 });
 
-test.describe('Extended Service Connectivity', () => {
-  let apiContext: APIRequestContext;
+  test.describe('Extended Service Connectivity', () => {
+    if (DEMO_SAFE) {
+      test.skip(true, 'Extended services are not required in demo-safe runs.');
+    }
+    let apiContext: APIRequestContext;
 
   test.beforeAll(async ({ playwright }) => {
     apiContext = await playwright.request.newContext({
@@ -418,7 +429,7 @@ test.describe('Extended Service Connectivity', () => {
     await apiContext.dispose();
   });
 
-  for (const service of EXTENDED_SERVICES) {
+  for (const service of ACTIVE_EXTENDED_SERVICES) {
     test(`Extended service ${service.name} health check`, async () => {
       const healthUrl = `${service.route}${service.healthPath}`;
       const response = await apiContext.get(healthUrl);

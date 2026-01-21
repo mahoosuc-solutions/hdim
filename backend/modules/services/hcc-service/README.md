@@ -590,7 +590,7 @@ Tests for REST API endpoints with TestContainers PostgreSQL.
 class HccApiIntegrationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
         .withDatabaseName("hcctest")
         .withUsername("test")
         .withPassword("test");
@@ -972,7 +972,7 @@ class PerformanceTest {
 public abstract class BaseHccIntegrationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
         .withDatabaseName("hcctest")
         .withUsername("test")
         .withPassword("test");

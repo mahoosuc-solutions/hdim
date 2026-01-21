@@ -6,7 +6,7 @@ import { workspaceRoot } from '@nx/devkit';
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
 
 // Backend service URLs for API testing
-const gatewayUrl = process.env['GATEWAY_URL'] || 'http://localhost:8001';
+const gatewayUrl = process.env['GATEWAY_URL'] || 'http://localhost:18080';
 const gatewayEdgeUrl = process.env['GATEWAY_EDGE_URL'] || 'http://localhost:8080';
 const externalFhirUrl = process.env['EXTERNAL_FHIR_URL'] || 'http://localhost:8088';
 const jaegerUrl = process.env['JAEGER_URL'] || 'http://localhost:16686';

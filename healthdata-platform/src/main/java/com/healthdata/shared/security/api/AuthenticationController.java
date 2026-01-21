@@ -1,7 +1,7 @@
 package com.healthdata.shared.security.api;
 
 import com.healthdata.shared.security.jwt.JwtTokenProvider;
-import com.healthdata.shared.security.model.UserPrincipal;
+import com.healthdata.shared.security.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -65,8 +65,16 @@ public class AuthenticationController {
                     })
                     .toList();
 
+            String tenantId = null;
+            String userId = null;
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof User user) {
+                tenantId = user.getTenantId();
+                userId = user.getId();
+            }
+
             // Generate tokens
-            Map<String, String> tokens = tokenProvider.generateTokenPair(username, roles);
+            Map<String, String> tokens = tokenProvider.generateTokenPair(username, roles, userId, tenantId);
 
             // Build response
             Map<String, Object> response = new HashMap<>();
@@ -76,6 +84,12 @@ public class AuthenticationController {
             response.put("refreshToken", tokens.get("refreshToken"));
             response.put("username", username);
             response.put("roles", roles);
+            if (tenantId != null) {
+                response.put("tenantId", tenantId);
+            }
+            if (userId != null) {
+                response.put("userId", userId);
+            }
             response.put("expiresIn", tokenProvider.getTokenExpirationMs() / 1000); // seconds
 
             log.info("User {} authenticated successfully", username);
@@ -123,15 +137,23 @@ public class AuthenticationController {
             // Extract user info from refresh token
             String username = tokenProvider.getUsernameFromToken(refreshToken);
             List<String> roles = tokenProvider.getRolesFromToken(refreshToken);
+            String tenantId = tokenProvider.getTenantIdFromToken(refreshToken);
+            String userId = tokenProvider.getUserIdFromToken(refreshToken);
 
             // Generate new access token
-            String newAccessToken = tokenProvider.generateToken(username, roles);
+            String newAccessToken = tokenProvider.generateToken(username, roles, userId, tenantId);
 
             // Build response
             Map<String, Object> response = new HashMap<>();
             response.put("status", "success");
             response.put("message", "Token refreshed successfully");
             response.put("accessToken", newAccessToken);
+            if (tenantId != null) {
+                response.put("tenantId", tenantId);
+            }
+            if (userId != null) {
+                response.put("userId", userId);
+            }
             response.put("expiresIn", tokenProvider.getTokenExpirationMs() / 1000); // seconds
 
             log.debug("Token refreshed successfully for user: {}", username);

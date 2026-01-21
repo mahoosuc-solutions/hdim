@@ -69,6 +69,9 @@ class DemoSeedingServiceTest {
     @Mock
     private UserSeedingClient userSeedingClient;
 
+    @Mock
+    private DemoProgressService progressService;
+
     private DemoSeedingService service;
 
     @BeforeEach
@@ -88,6 +91,7 @@ class DemoSeedingServiceTest {
                 careGapServiceClient,
                 qualityMeasureServiceClient,
                 userSeedingClient,
+                progressService,
                 false  // persistToServices = false for unit tests
         );
     }

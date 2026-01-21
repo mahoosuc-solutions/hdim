@@ -261,7 +261,7 @@ void keepContainerAlive() {
 Configure reusable Postgres container:
 ```java
 @Container
-static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres:15-alpine"))
+static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"))
         .withReuse(true)
         .withLabel("reuse.enabled", "true");
 ```

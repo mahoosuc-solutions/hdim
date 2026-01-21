@@ -79,7 +79,7 @@ start_services() {
                 -p 5432:5432 \
                 -v "$HDIM_DATA_DIR/postgres:/var/lib/postgresql/data" \
                 --restart unless-stopped \
-                postgres:15-alpine
+                postgres:16-alpine
         fi
     else
         log_info "PostgreSQL already running"

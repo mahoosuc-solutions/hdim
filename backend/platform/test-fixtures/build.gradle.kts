@@ -21,6 +21,7 @@ dependencies {
     api(libs.junit.jupiter)
     api(libs.mockito.core)
     api(libs.mockito.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
 
     // Note: AssertJ is included transitively via spring-boot-starter-test
 

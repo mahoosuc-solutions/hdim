@@ -63,7 +63,6 @@ import static org.awaitility.Awaitility.await;
 @ActiveProfiles("test")
 @Import({TestMessagingConfiguration.class, TestWebSocketConfiguration.class})
 @DisplayName("End-to-End Integration Tests")
-@Disabled("Requires full platform deployment - run manually with artillery or after docker compose up")
 public class EndToEndIntegrationTest {
 
     @Container
@@ -97,7 +96,10 @@ public class EndToEndIntegrationTest {
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
         registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
         registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
+        registry.add("spring.kafka.consumer.auto-offset-reset", () -> "earliest");
+        registry.add("spring.kafka.consumer.group-id", () -> "test-group");
     }
 
     @BeforeEach

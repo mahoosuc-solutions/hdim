@@ -73,6 +73,7 @@ dependencies {
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
+    testImplementation(libs.testcontainers.kafka)
     testImplementation(libs.bundles.testing)
     testImplementation("org.springframework.security:spring-security-test")
     testCompileOnly(libs.lombok)
@@ -86,7 +87,7 @@ dependencyManagement {
 }
 
 tasks.withType<Test> {
-    systemProperty("spring.datasource.url", "jdbc:tc:postgresql:15-alpine:///testdb")
+    systemProperty("spring.datasource.url", "jdbc:tc:postgresql:16-alpine:///testdb")
     systemProperty("spring.datasource.username", "test")
     systemProperty("spring.datasource.password", "test")
     systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")

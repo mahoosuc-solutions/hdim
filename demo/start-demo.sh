@@ -79,6 +79,42 @@ check_prerequisites() {
 }
 
 # Start the demo
+wait_for_init_infrastructure() {
+    local container="hdim-demo-init-infrastructure"
+    local timeout=300
+    local interval=5
+    local elapsed=0
+
+    echo -e "${YELLOW}Waiting for demo user initialization to complete...${NC}"
+
+    while [ "$elapsed" -lt "$timeout" ]; do
+        local state
+        state=$(docker inspect -f '{{.State.Status}}' "$container" 2>/dev/null || true)
+
+        if [ "$state" = "exited" ]; then
+            local exit_code
+            exit_code=$(docker inspect -f '{{.State.ExitCode}}' "$container")
+            if [ "$exit_code" -ne 0 ]; then
+                echo -e "${RED}Init service failed. Check logs: docker logs ${container}${NC}"
+                exit 1
+            fi
+            echo -e "${GREEN}✓ Demo users initialized${NC}"
+            return 0
+        fi
+
+        if [ "$state" = "running" ] || [ "$state" = "created" ]; then
+            sleep "$interval"
+            elapsed=$((elapsed + interval))
+            continue
+        fi
+
+        sleep "$interval"
+        elapsed=$((elapsed + interval))
+    done
+
+    echo -e "${YELLOW}Init service still running. Proceeding, but logins may not be ready yet.${NC}"
+}
+
 start_demo() {
     local build_flag=""
 
@@ -87,26 +123,12 @@ start_demo() {
         echo -e "${YELLOW}Building images (this may take 5-10 minutes)...${NC}"
     fi
 
-    echo -e "\n${BLUE}Starting infrastructure services...${NC}"
-    docker compose -f docker-compose.demo.yml up -d postgres redis $build_flag
+    echo -e "\n${BLUE}Starting full demo stack (services, demo users, seeding, frontend)...${NC}"
+    docker compose -f docker-compose.demo.yml up -d $build_flag
 
-    echo -e "${YELLOW}Waiting for database initialization (15 seconds)...${NC}"
-    sleep 15
-
-    echo -e "\n${BLUE}Starting backend services...${NC}"
-    docker compose -f docker-compose.demo.yml up -d \
-        gateway-service \
-        cql-engine-service \
-        patient-service \
-        fhir-service \
-        care-gap-service \
-        quality-measure-service \
-        $build_flag
-
-    echo -e "${YELLOW}Waiting for backend services to initialize (60 seconds)...${NC}"
+    echo -e "${YELLOW}Waiting for core services to initialize...${NC}"
     echo -e "  ${CYAN}Tip: Watch logs with: docker compose -f docker-compose.demo.yml logs -f${NC}"
 
-    # Progress indicator
     for i in {1..12}; do
         echo -ne "\r  Progress: [${GREEN}"
         printf '█%.0s' $(seq 1 $i)
@@ -116,18 +138,12 @@ start_demo() {
     done
     echo ""
 
-    echo -e "\n${BLUE}Starting clinical portal frontend...${NC}"
-    docker compose -f docker-compose.demo.yml up -d clinical-portal $build_flag
+    wait_for_init_infrastructure
 
-    echo -e "${YELLOW}Waiting for frontend to start (30 seconds)...${NC}"
-    sleep 30
-
-    # Seed demo data
     echo -e "\n${BLUE}Seeding demo data...${NC}"
     chmod +x ./seed-demo-data.sh
     ./seed-demo-data.sh --wait || true
 
-    # Final status check
     echo -e "\n${BLUE}Verifying services...${NC}"
     show_status
 }
@@ -203,8 +219,8 @@ show_status() {
         echo -e "  ${CYAN}FHIR Server:${NC}      http://localhost:8085/fhir"
         echo ""
         echo -e "  ${YELLOW}Demo Credentials:${NC}"
-        echo -e "    Username: demo_user"
-        echo -e "    Password: demo_password"
+        echo -e "    Username: demo_admin"
+        echo -e "    Password: demo123"
         echo ""
         echo -e "  ${YELLOW}Hero Patient:${NC} Maria Garcia (MRN: MRN-2024-4521)"
         echo -e "    - 57-year-old female"

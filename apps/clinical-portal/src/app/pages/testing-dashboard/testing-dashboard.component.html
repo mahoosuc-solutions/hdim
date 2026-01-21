@@ -1,0 +1,429 @@
+<div class="testing-dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <h1>
+      <mat-icon>science</mat-icon>
+      Testing Dashboard
+    </h1>
+    <p class="subtitle">Comprehensive testing tools for development and automated testing</p>
+  </div>
+
+  <!-- Demo Scenarios Section -->
+  <mat-card class="section-card" [attr.data-testid]="'demo-scenarios-section'">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>movie_filter</mat-icon>
+        Demo Scenarios
+      </mat-card-title>
+      <mat-card-subtitle>Load demo scenarios to populate test data</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      @if (loadingScenarios) {
+        <div class="loading-container">
+          <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+          <span>Loading scenarios...</span>
+        </div>
+      } @else if (scenarios.length === 0) {
+        <p class="empty-message">No scenarios available</p>
+      } @else {
+        <div class="scenarios-grid">
+          @for (scenario of scenarios; track scenario.id) {
+            <mat-card class="scenario-card">
+              <mat-card-header>
+                <mat-card-title>{{ scenario.displayName }}</mat-card-title>
+                <mat-card-subtitle>{{ scenario.description }}</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="scenario-info">
+                  <mat-chip>
+                    <mat-icon>people</mat-icon>
+                    {{ scenario.patientCount }} patients
+                  </mat-chip>
+                  @if (scenario.estimatedLoadTimeSeconds) {
+                    <mat-chip>
+                      <mat-icon>schedule</mat-icon>
+                      ~{{ scenario.estimatedLoadTimeSeconds }}s
+                    </mat-chip>
+                  }
+                </div>
+              </mat-card-content>
+              <mat-card-actions>
+                <button
+                  mat-raised-button
+                  color="primary"
+                  [attr.data-testid]="'test-scenario-' + scenario.name"
+                  [disabled]="isScenarioLoading(scenario.id)"
+                  (click)="loadScenario(scenario)">
+                  @if (isScenarioLoading(scenario.id)) {
+                    <mat-progress-spinner diameter="20" mode="indeterminate" class="button-spinner"></mat-progress-spinner>
+                    <span>Loading...</span>
+                  } @else {
+                    <mat-icon>play_arrow</mat-icon>
+                    <span>Load Scenario</span>
+                  }
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          }
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <!-- API Testing Section -->
+  <mat-card class="section-card" data-testid="api-testing-section">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>api</mat-icon>
+        API Testing
+      </mat-card-title>
+      <mat-card-subtitle>Test API endpoints with sample requests</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-accordion multi="true">
+        <!-- Patient Service -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>person</mat-icon>
+              Patient Service
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="api-endpoints">
+            <button
+              mat-stroked-button
+              [attr.data-testid]="'test-api-patient-service-list'"
+              (click)="testApiEndpoint('patient-service', '/api/v1/patients?page=0&size=10')">
+              <mat-icon>list</mat-icon>
+              List Patients
+            </button>
+            <button
+              mat-stroked-button
+              [attr.data-testid]="'test-api-patient-service-count'"
+              (click)="testApiEndpoint('patient-service', '/api/v1/patients/count')">
+              <mat-icon>numbers</mat-icon>
+              Patient Count
+            </button>
+          </div>
+        </mat-expansion-panel>
+
+        <!-- Care Gap Service -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>warning</mat-icon>
+              Care Gap Service
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="api-endpoints">
+            <button
+              mat-stroked-button
+              [attr.data-testid]="'test-api-care-gap-service-list'"
+              (click)="testApiEndpoint('care-gap-service', '/api/v1/care-gaps?page=0&size=10')">
+              <mat-icon>list</mat-icon>
+              List Care Gaps
+            </button>
+            <button
+              mat-stroked-button
+              [attr.data-testid]="'test-api-care-gap-service-high-priority'"
+              (click)="testApiEndpoint('care-gap-service', '/api/v1/care-gaps?priority=HIGH&page=0&size=10')">
+              <mat-icon>priority_high</mat-icon>
+              High Priority Gaps
+            </button>
+          </div>
+        </mat-expansion-panel>
+
+        <!-- Quality Measure Service -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>assessment</mat-icon>
+              Quality Measure Service
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="api-endpoints">
+            <button
+              mat-stroked-button
+              [attr.data-testid]="'test-api-quality-measure-service-results'"
+              (click)="testApiEndpoint('quality-measure-service', '/api/v1/quality-measures/results?page=0&size=10')">
+              <mat-icon>list</mat-icon>
+              Quality Measure Results
+            </button>
+            <button
+              mat-stroked-button
+              [attr.data-testid]="'test-api-quality-measure-service-population-report'"
+              (click)="testApiEndpoint('quality-measure-service', '/api/v1/quality-measures/report/population?year=2025')">
+              <mat-icon>bar_chart</mat-icon>
+              Population Report
+            </button>
+          </div>
+        </mat-expansion-panel>
+
+        <!-- FHIR Service -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>cloud</mat-icon>
+              FHIR Service
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="api-endpoints">
+            <button
+              mat-stroked-button
+              [attr.data-testid]="'test-api-fhir-service-patients'"
+              (click)="testApiEndpoint('fhir-service', '/Patient?_count=10')">
+              <mat-icon>list</mat-icon>
+              FHIR Patients
+            </button>
+            <button
+              mat-stroked-button
+              [attr.data-testid]="'test-api-fhir-service-observations'"
+              (click)="testApiEndpoint('fhir-service', '/Observation?_count=10')">
+              <mat-icon>science</mat-icon>
+              FHIR Observations
+            </button>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Data Management Section -->
+  <mat-card class="section-card" [attr.data-testid]="'data-management-section'">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>storage</mat-icon>
+        Data Management
+      </mat-card-title>
+      <mat-card-subtitle>Seed, validate, and reset test data</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="data-actions">
+        <button
+          mat-raised-button
+          color="primary"
+          data-testid="test-seed-data"
+          (click)="seedTestData()">
+          <mat-icon>add_circle</mat-icon>
+          Seed Test Data
+        </button>
+        <button
+          mat-raised-button
+          color="accent"
+          [attr.data-testid]="'test-validate-data'"
+          (click)="validateTestData()">
+          <mat-icon>check_circle</mat-icon>
+          Validate Test Data
+        </button>
+        <button
+          mat-raised-button
+          color="warn"
+          [attr.data-testid]="'test-reset-data'"
+          (click)="resetTestData()">
+          <mat-icon>refresh</mat-icon>
+          Reset Test Data
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Service Health Section -->
+  <mat-card class="section-card" data-testid="service-health-section">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>monitor_heart</mat-icon>
+        Service Health
+      </mat-card-title>
+      <mat-card-subtitle>Monitor backend service health status</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="health-actions">
+        <button
+          mat-stroked-button
+          [disabled]="checkingHealth"
+          (click)="checkAllServiceHealth()">
+          @if (checkingHealth) {
+            <mat-progress-spinner diameter="20" mode="indeterminate" class="button-spinner"></mat-progress-spinner>
+            <span>Checking...</span>
+          } @else {
+            <mat-icon>refresh</mat-icon>
+            <span>Check All Services</span>
+          }
+        </button>
+      </div>
+      <div class="services-grid">
+        @for (service of serviceHealth.keys(); track service) {
+          <mat-card class="service-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon [color]="getServiceHealthColor(service)">
+                  {{ getServiceHealthIcon(service) }}
+                </mat-icon>
+                {{ service }}
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="service-status">
+                <mat-chip [color]="getServiceHealthColor(service)">
+                  {{ getServiceHealthStatus(service) }}
+                </mat-chip>
+                @if (serviceHealth.get(service)?.lastChecked) {
+                  <span class="last-checked">
+                    Last checked: {{ serviceHealth.get(service)?.lastChecked | date:'short' }}
+                  </span>
+                }
+              </div>
+            </mat-card-content>
+            <mat-card-actions>
+              <button
+                mat-button
+                [attr.data-testid]="'test-service-health-' + service"
+                (click)="checkServiceHealth(service)">
+                <mat-icon>refresh</mat-icon>
+                Check Health
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Test Results Section -->
+  <!-- Compliance Validation Section -->
+  <mat-card class="section-card" [attr.data-testid]="'compliance-validation-section'">
+    <mat-card-header>
+      <mat-card-title>Compliance Validation</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="compliance-controls">
+        <div class="compliance-status">
+          <div class="status-item">
+            <span class="status-label">Fallbacks:</span>
+            <mat-chip [color]="complianceConfig.disableFallbacks ? 'warn' : 'primary'">
+              {{ complianceConfig.disableFallbacks ? 'Disabled' : 'Enabled' }}
+            </mat-chip>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Error Tracking:</span>
+            <mat-chip [color]="complianceConfig.enableErrorTracking ? 'primary' : ''">
+              {{ complianceConfig.enableErrorTracking ? 'Active' : 'Inactive' }}
+            </mat-chip>
+          </div>
+          @if (errorSummary) {
+            <div class="status-item">
+              <span class="status-label">Compliance Score:</span>
+              <mat-chip [color]="errorSummary.complianceScore >= 90 ? 'primary' : errorSummary.complianceScore >= 70 ? 'accent' : 'warn'">
+                {{ errorSummary.complianceScore }}/100
+              </mat-chip>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Total Errors:</span>
+              <mat-chip>{{ errorSummary.totalErrors }}</mat-chip>
+            </div>
+          }
+        </div>
+        <div class="compliance-actions">
+          <button 
+            mat-raised-button 
+            [color]="complianceConfig.disableFallbacks ? 'warn' : 'primary'"
+            (click)="toggleFallbacks()"
+            [attr.data-testid]="'compliance-toggle-fallbacks'">
+            <mat-icon>{{ complianceConfig.disableFallbacks ? 'block' : 'check_circle' }}</mat-icon>
+            {{ complianceConfig.disableFallbacks ? 'Enable Fallbacks' : 'Disable Fallbacks' }}
+          </button>
+          <button 
+            mat-stroked-button 
+            (click)="navigateToCompliance()"
+            [attr.data-testid]="'compliance-view-dashboard'">
+            <mat-icon>dashboard</mat-icon>
+            View Compliance Dashboard
+          </button>
+          <button 
+            mat-stroked-button 
+            (click)="loadErrorSummary()"
+            [attr.data-testid]="'compliance-refresh-summary'">
+            <mat-icon>refresh</mat-icon>
+            Refresh Summary
+          </button>
+        </div>
+        @if (errorSummary && errorSummary.errorsByService.size > 0) {
+          <div class="error-breakdown">
+            <h4>Errors by Service:</h4>
+            <div class="service-errors">
+              @for (entry of errorSummary.errorsByService | keyvalue; track entry.key) {
+                <div class="service-error-item">
+                  <span class="service-name">{{ entry.key }}</span>
+                  <mat-chip>{{ entry.value }}</mat-chip>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  @if (testResults.size > 0) {
+    <mat-card class="section-card" [attr.data-testid]="'test-results-section'">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>history</mat-icon>
+          Test Results ({{ testResults.size }})
+        </mat-card-title>
+        <mat-card-subtitle>Recent test execution results</mat-card-subtitle>
+        <div class="header-actions">
+          <button
+            mat-icon-button
+            [matMenuTriggerFor]="exportMenu"
+            [attr.data-testid]="'test-export-results-menu'">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #exportMenu="matMenu">
+            <button mat-menu-item (click)="exportTestResults()" data-testid="test-export-results-json">
+              <mat-icon>download</mat-icon>
+              <span>Export as JSON</span>
+            </button>
+            <button mat-menu-item (click)="exportTestResultsAsCsv()" data-testid="test-export-results-csv">
+              <mat-icon>table_chart</mat-icon>
+              <span>Export as CSV</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="clearTestResults()" data-testid="test-clear-results">
+              <mat-icon>delete</mat-icon>
+              <span>Clear Results</span>
+            </button>
+          </mat-menu>
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="test-results">
+          @for (result of getAllTestResults(); track result[0]) {
+            <div class="test-result-item" [class.success]="result[1].success" [class.error]="!result[1].success">
+              <div class="result-header">
+                <mat-icon [color]="result[1].success ? 'primary' : 'warn'">
+                  {{ result[1].success ? 'check_circle' : 'error' }}
+                </mat-icon>
+                <span class="test-id">{{ result[0] }}</span>
+                @if (result[1].serviceName) {
+                  <mat-chip class="service-chip">{{ result[1].serviceName }}</mat-chip>
+                }
+                @if (result[1].responseTime) {
+                  <mat-chip class="time-chip">{{ result[1].responseTime }}ms</mat-chip>
+                }
+                <span class="timestamp">{{ result[1].timestamp | date:'short' }}</span>
+              </div>
+              <div class="result-message">{{ result[1].message }}</div>
+              @if (result[1].endpoint) {
+                <div class="result-details">
+                  <span class="detail-label">Endpoint:</span>
+                  <span class="detail-value">{{ result[1].method }} {{ result[1].endpoint }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

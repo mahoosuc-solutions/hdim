@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0001-create-event-routing-rules-table" author="system">
+        <createTable tableName="event_routing_rules">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rule_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="source_topic" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="target_topic" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="filter_expression" type="TEXT"/>
+            <column name="priority" type="VARCHAR(50)" defaultValue="MEDIUM">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transformation_script" type="TEXT"/>
+            <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_tenant_source_enabled" tableName="event_routing_rules">
+            <column name="tenant_id"/>
+            <column name="source_topic"/>
+            <column name="enabled"/>
+        </createIndex>
+
+        <createIndex indexName="idx_tenant_id" tableName="event_routing_rules">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_source_topic" tableName="event_routing_rules">
+            <column name="source_topic"/>
+        </createIndex>
+
+        <!-- Insert sample routing rules -->
+        <insert tableName="event_routing_rules">
+            <column name="tenant_id" value="default"/>
+            <column name="rule_name" value="Patient Events to Processing"/>
+            <column name="description" value="Route all patient events to processing queue"/>
+            <column name="source_topic" value="fhir.patient.created"/>
+            <column name="target_topic" value="patient.processing"/>
+            <column name="priority" value="HIGH"/>
+            <column name="enabled" value="true"/>
+        </insert>
+
+        <insert tableName="event_routing_rules">
+            <column name="tenant_id" value="default"/>
+            <column name="rule_name" value="Observation Events to Analytics"/>
+            <column name="description" value="Route observation events to analytics pipeline"/>
+            <column name="source_topic" value="fhir.observation.created"/>
+            <column name="target_topic" value="analytics.observations"/>
+            <column name="priority" value="MEDIUM"/>
+            <column name="enabled" value="true"/>
+        </insert>
+
+        <insert tableName="event_routing_rules">
+            <column name="tenant_id" value="default"/>
+            <column name="rule_name" value="Critical Events Fast Track"/>
+            <column name="description" value="Fast track critical patient updates"/>
+            <column name="source_topic" value="fhir.patient.updated"/>
+            <column name="target_topic" value="critical.processing"/>
+            <column name="filter_expression" value='{"urgent": true}'/>
+            <column name="priority" value="CRITICAL"/>
+            <column name="enabled" value="true"/>
+        </insert>
+
+        <rollback>
+            <dropTable tableName="event_routing_rules"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

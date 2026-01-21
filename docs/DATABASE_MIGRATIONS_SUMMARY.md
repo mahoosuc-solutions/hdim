@@ -447,6 +447,7 @@ If you need to rollback changes:
 - [x] Quality Measure Service (3 tables)
 - [x] Audit Module (1 table)
 - [x] FHIR Service (1 table - existing)
+- [x] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 **Total**: 24 tables across 8 services ✅
 

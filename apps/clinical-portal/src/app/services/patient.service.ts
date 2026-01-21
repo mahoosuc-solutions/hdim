@@ -229,10 +229,10 @@ export class PatientService {
     const firstName = name?.given?.[0];
     const lastName = name?.family;
 
-    // Extract MRN from identifiers - look for "Medical Record Number" in type.text
+    // Extract MRN from identifiers - prefer type.text, fallback to first identifier
     const mrnIdentifier = patient.identifier?.find(
       (id) => id.type?.text === 'Medical Record Number'
-    );
+    ) || patient.identifier?.[0];
     const mrn = mrnIdentifier?.value;
     const mrnAssigningAuthority = mrnIdentifier?.system;
 

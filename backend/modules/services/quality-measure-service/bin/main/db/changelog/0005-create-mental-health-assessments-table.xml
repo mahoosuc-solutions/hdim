@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0005-create-mental-health-assessments-table" author="healthdata-team">
+        <comment>Create mental health assessments table for PHQ-9, GAD-7, PHQ-2, and other screening instruments</comment>
+
+        <createTable tableName="mental_health_assessments">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="tenant_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="patient_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="score" type="integer">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="max_score" type="integer">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="severity" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="interpretation" type="text">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="positive_screen" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="threshold_score" type="integer">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="requires_followup" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="assessed_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="assessment_date" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Question responses stored as JSONB -->
+            <column name="responses" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="clinical_notes" type="text"/>
+
+            <column name="created_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Index for patient + date queries -->
+        <createIndex indexName="idx_mha_patient_date" tableName="mental_health_assessments">
+            <column name="patient_id"/>
+            <column name="assessment_date" descending="true"/>
+        </createIndex>
+
+        <!-- Index for patient + type queries -->
+        <createIndex indexName="idx_mha_patient_type" tableName="mental_health_assessments">
+            <column name="patient_id"/>
+            <column name="type"/>
+        </createIndex>
+
+        <!-- Index for positive screen queries -->
+        <createIndex indexName="idx_mha_positive_screen" tableName="mental_health_assessments">
+            <column name="patient_id"/>
+            <column name="positive_screen"/>
+        </createIndex>
+
+        <!-- Index for tenant isolation -->
+        <createIndex indexName="idx_mha_tenant" tableName="mental_health_assessments">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <!-- Composite index for tenant + patient queries -->
+        <createIndex indexName="idx_mha_tenant_patient" tableName="mental_health_assessments">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="mental_health_assessments"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

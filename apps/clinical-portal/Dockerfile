@@ -16,6 +16,7 @@ RUN npm ci --legacy-peer-deps
 
 # Copy source code
 COPY apps/ ./apps/
+COPY libs/ ./libs/
 
 # Build Angular app for production
 RUN npx nx build clinical-portal --configuration=production

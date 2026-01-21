@@ -256,6 +256,7 @@ Use this checklist when evaluating vendor security posture:
 - [ ] SOC 2 Type II report available (request and review)
 - [ ] HITRUST certification (if available)
 - [ ] Security whitepaper or architecture documentation
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 - [ ] Business Associate Agreement template available
 - [ ] Breach notification procedures documented
 - [ ] Incident response plan summary available

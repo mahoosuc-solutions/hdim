@@ -6,6 +6,8 @@ plugins {
 
 dependencies {
     implementation(project(":modules:shared:infrastructure:gateway-core"))
+    // Kafka for distributed tracing (required by TracingAutoConfiguration)
+    implementation(libs.bundles.kafka)
 
     testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.testcontainers)

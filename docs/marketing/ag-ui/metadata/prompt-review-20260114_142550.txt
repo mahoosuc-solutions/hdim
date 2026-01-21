@@ -1,0 +1,149 @@
+================================================================================
+PROMPT REVIEW REPORT
+================================================================================
+Generated: 2026-01-14 14:25:50
+
+
+================================================================================
+FILE: scripts/generate-with-gemini-pro.py
+Prompts Found: 3
+Average Score: 100.00/100
+================================================================================
+
+
+Prompt: clinical-dashboard-light
+Score: 100.00/100
+Grade: A
+Length: 1433 characters, 213 words
+
+  Specificity:
+    Score: 5/5 (100.0%)
+    Weighted: 25.00 points
+    ✅ Dimensions specified
+    ✅ Color codes specified
+    ✅ Layout described
+    ... and 2 more
+
+  Completeness:
+    Score: 4/4 (100.0%)
+    Weighted: 20.00 points
+    ✅ Layout section present
+    ✅ Style section present
+    ✅ Technical requirements present
+    ... and 1 more
+
+  Clarity:
+    Score: 3/3 (100.0%)
+    Weighted: 20.00 points
+    ✅ Clear section headers
+    ✅ Contains specific numbers/dimensions
+    ✅ Contains examples/references
+
+  Brand Consistency:
+    Score: 3/3 (100.0%)
+    Weighted: 15.00 points
+    ✅ Primary brand color specified
+    ✅ Accent color specified
+    ✅ Brand elements mentioned
+
+  Ui Focus:
+    Score: 3/3 (100.0%)
+    Weighted: 20.00 points
+    ✅ UI-specific terms used
+    ✅ Clarifies UI not photo
+    ✅ Emphasizes realistic UI
+
+
+Prompt: clinical-dashboard-dark
+Score: 100.00/100
+Grade: A
+Length: 1720 characters, 262 words
+
+  Specificity:
+    Score: 5/5 (100.0%)
+    Weighted: 25.00 points
+    ✅ Dimensions specified
+    ✅ Color codes specified
+    ✅ Layout described
+    ... and 2 more
+
+  Completeness:
+    Score: 4/4 (100.0%)
+    Weighted: 20.00 points
+    ✅ Layout section present
+    ✅ Style section present
+    ✅ Technical requirements present
+    ... and 1 more
+
+  Clarity:
+    Score: 3/3 (100.0%)
+    Weighted: 20.00 points
+    ✅ Clear section headers
+    ✅ Contains specific numbers/dimensions
+    ✅ Contains examples/references
+
+  Brand Consistency:
+    Score: 3/3 (100.0%)
+    Weighted: 15.00 points
+    ✅ Primary brand color specified
+    ✅ Accent color specified
+    ✅ Brand elements mentioned
+
+  Ui Focus:
+    Score: 3/3 (100.0%)
+    Weighted: 20.00 points
+    ✅ UI-specific terms used
+    ✅ Clarifies UI not photo
+    ✅ Emphasizes realistic UI
+
+
+Prompt: admin-dashboard
+Score: 100.00/100
+Grade: A
+Length: 1596 characters, 221 words
+
+  Specificity:
+    Score: 5/5 (100.0%)
+    Weighted: 25.00 points
+    ✅ Dimensions specified
+    ✅ Color codes specified
+    ✅ Layout described
+    ... and 2 more
+
+  Completeness:
+    Score: 4/4 (100.0%)
+    Weighted: 20.00 points
+    ✅ Layout section present
+    ✅ Style section present
+    ✅ Technical requirements present
+    ... and 1 more
+
+  Clarity:
+    Score: 3/3 (100.0%)
+    Weighted: 20.00 points
+    ✅ Clear section headers
+    ✅ Contains specific numbers/dimensions
+    ✅ Contains examples/references
+
+  Brand Consistency:
+    Score: 3/3 (100.0%)
+    Weighted: 15.00 points
+    ✅ Primary brand color specified
+    ✅ Accent color specified
+    ✅ Brand elements mentioned
+
+  Ui Focus:
+    Score: 3/3 (100.0%)
+    Weighted: 20.00 points
+    ✅ UI-specific terms used
+    ✅ Clarifies UI not photo
+    ✅ Emphasizes realistic UI
+
+
+================================================================================
+OVERALL SUMMARY
+================================================================================
+Total Prompts Reviewed: 3
+Average Score: 100.00/100
+Average Grade: A
+================================================================================

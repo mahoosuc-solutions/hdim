@@ -1,0 +1,196 @@
+package com.healthdata.authentication.repository;
+
+import com.healthdata.authentication.entity.AuditLog;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Repository for audit log operations.
+ * Provides methods to query audit logs for compliance reporting and security monitoring.
+ */
+@Repository
+public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
+
+    /**
+     * Find audit logs by user ID.
+     *
+     * @param userId   User ID to search for
+     * @param pageable Pagination parameters
+     * @return Page of audit logs
+     */
+    Page<AuditLog> findByUserId(UUID userId, Pageable pageable);
+
+    /**
+     * Find audit logs by username.
+     * Useful for tracking failed login attempts where user_id may be null.
+     *
+     * @param username Username to search for
+     * @param pageable Pagination parameters
+     * @return Page of audit logs
+     */
+    Page<AuditLog> findByUsername(String username, Pageable pageable);
+
+    /**
+     * Find audit logs by tenant ID.
+     *
+     * @param tenantId Tenant ID to search for
+     * @param pageable Pagination parameters
+     * @return Page of audit logs
+     */
+    Page<AuditLog> findByTenantId(String tenantId, Pageable pageable);
+
+    /**
+     * Find audit logs by event type.
+     *
+     * @param eventType Event type to search for
+     * @param pageable  Pagination parameters
+     * @return Page of audit logs
+     */
+    Page<AuditLog> findByEventType(String eventType, Pageable pageable);
+
+    /**
+     * Find audit logs within a timestamp range.
+     *
+     * @param startTime Start of the time range
+     * @param endTime   End of the time range
+     * @param pageable  Pagination parameters
+     * @return Page of audit logs
+     */
+    Page<AuditLog> findByTimestampBetween(Instant startTime, Instant endTime, Pageable pageable);
+
+    /**
+     * Find audit logs by user ID within a timestamp range.
+     *
+     * @param userId    User ID to search for
+     * @param startTime Start of the time range
+     * @param endTime   End of the time range
+     * @param pageable  Pagination parameters
+     * @return Page of audit logs
+     */
+    Page<AuditLog> findByUserIdAndTimestampBetween(UUID userId, Instant startTime, Instant endTime, Pageable pageable);
+
+    /**
+     * Find audit logs by tenant ID within a timestamp range.
+     *
+     * @param tenantId  Tenant ID to search for
+     * @param startTime Start of the time range
+     * @param endTime   End of the time range
+     * @param pageable  Pagination parameters
+     * @return Page of audit logs
+     */
+    Page<AuditLog> findByTenantIdAndTimestampBetween(String tenantId, Instant startTime, Instant endTime, Pageable pageable);
+
+    /**
+     * Find failed events by event type.
+     *
+     * @param eventType Event type to search for
+     * @param success   Success flag (typically false)
+     * @param pageable  Pagination parameters
+     * @return Page of audit logs
+     */
+    Page<AuditLog> findByEventTypeAndSuccess(String eventType, Boolean success, Pageable pageable);
+
+    /**
+     * Find audit logs by resource type and ID.
+     *
+     * @param resourceType Type of resource
+     * @param resourceId   ID of resource
+     * @param pageable     Pagination parameters
+     * @return Page of audit logs
+     */
+    Page<AuditLog> findByResourceTypeAndResourceId(String resourceType, String resourceId, Pageable pageable);
+
+    /**
+     * Find audit logs by IP address.
+     * Useful for tracking suspicious activity from specific IPs.
+     *
+     * @param ipAddress IP address to search for
+     * @param pageable  Pagination parameters
+     * @return Page of audit logs
+     */
+    Page<AuditLog> findByIpAddress(String ipAddress, Pageable pageable);
+
+    /**
+     * Complex query to find audit logs with multiple filters.
+     *
+     * @param userId    User ID (optional)
+     * @param tenantId  Tenant ID (optional)
+     * @param eventType Event type (optional)
+     * @param startTime Start time (optional)
+     * @param endTime   End time (optional)
+     * @param pageable  Pagination parameters
+     * @return Page of audit logs
+     */
+    @Query("SELECT a FROM AuditLog a WHERE " +
+        "(:userId IS NULL OR a.userId = :userId) AND " +
+        "(:tenantId IS NULL OR a.tenantId = :tenantId) AND " +
+        "(:eventType IS NULL OR a.eventType = :eventType) AND " +
+        "(:startTime IS NULL OR a.timestamp >= :startTime) AND " +
+        "(:endTime IS NULL OR a.timestamp <= :endTime)")
+    Page<AuditLog> findByFilters(
+        @Param("userId") UUID userId,
+        @Param("tenantId") String tenantId,
+        @Param("eventType") String eventType,
+        @Param("startTime") Instant startTime,
+        @Param("endTime") Instant endTime,
+        Pageable pageable
+    );
+
+    /**
+     * Count failed login attempts for a username within a time range.
+     *
+     * @param username  Username to check
+     * @param startTime Start of time range
+     * @return Count of failed attempts
+     */
+    @Query("SELECT COUNT(a) FROM AuditLog a WHERE " +
+        "a.username = :username AND " +
+        "a.eventType = 'LOGIN' AND " +
+        "a.success = false AND " +
+        "a.timestamp >= :startTime")
+    long countFailedLoginAttempts(
+        @Param("username") String username,
+        @Param("startTime") Instant startTime
+    );
+
+    /**
+     * Find recent failed login attempts for security monitoring.
+     *
+     * @param startTime Start of time range
+     * @param pageable  Pagination parameters
+     * @return Page of audit logs
+     */
+    @Query("SELECT a FROM AuditLog a WHERE " +
+        "a.eventType = 'LOGIN' AND " +
+        "a.success = false AND " +
+        "a.timestamp >= :startTime " +
+        "ORDER BY a.timestamp DESC")
+    Page<AuditLog> findRecentFailedLogins(
+        @Param("startTime") Instant startTime,
+        Pageable pageable
+    );
+
+    /**
+     * Find access denied events for security analysis.
+     *
+     * @param startTime Start of time range
+     * @param pageable  Pagination parameters
+     * @return Page of audit logs
+     */
+    @Query("SELECT a FROM AuditLog a WHERE " +
+        "a.eventType = 'ACCESS_DENIED' AND " +
+        "a.timestamp >= :startTime " +
+        "ORDER BY a.timestamp DESC")
+    Page<AuditLog> findAccessDeniedEvents(
+        @Param("startTime") Instant startTime,
+        Pageable pageable
+    );
+}

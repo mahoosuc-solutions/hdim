@@ -31,10 +31,11 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { DialogService } from '../../../services/dialog.service';
 import { NotificationService } from '../../../services/notification.service';
-import { CareGapService, CareGap, GapPriority, CareGapClosureRequest, InterventionType } from '../../../services/care-gap.service';
+import { CareGapService, CareGap, CareGapApiItem, CareGapPageResponse, GapPriority, CareGapClosureRequest, InterventionType } from '../../../services/care-gap.service';
 import { EvaluationService } from '../../../services/evaluation.service';
 import { PatientService } from '../../../services/patient.service';
 import { Patient } from '../../../models/patient.model';
+import { SchedulingService, ScheduleAppointment } from '../../../services/scheduling.service';
 import { TrackInteraction } from '../../../utils/ai-tracking.decorator';
 import {
   CareGapClosureDialogComponent,
@@ -51,6 +52,9 @@ import { TourOverlayComponent } from '../../../components/tour-overlay/tour-over
 import { HelpService } from '../../../services/help.service';
 import { HelpPanelComponent, HelpSection } from '../../../shared/components/help-panel/help-panel.component';
 import { HelpTooltipComponent } from '../../../shared/components/help-tooltip/help-tooltip.component';
+import { ErrorValidationService } from '../../../services/error-validation.service';
+import { COMPLIANCE_CONFIG } from '../../../config/compliance.config';
+import { ErrorCode, ErrorSeverity } from '../../../models/error.model';
 
 export interface HighPriorityCareGap {
   id: string;
@@ -238,6 +242,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
   // Issue #139: Today's schedule with care gap integration
   todayAppointments: TodayAppointment[] = [];
   patientsWithGaps = 0;
+  private scheduleCache: Record<string, ProviderAppointment[]> = {};
 
   // Issue #139: Results with abnormal indicator
   hasAbnormalResults = false;
@@ -306,9 +311,11 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     private careGapService: CareGapService,
     private evaluationService: EvaluationService,
     private patientService: PatientService,
+    private schedulingService: SchedulingService,
     private shortcutsService: KeyboardShortcutsService,
     private tourService: GuidedTourService,
-    private helpService: HelpService
+    private helpService: HelpService,
+    private errorValidationService: ErrorValidationService
   ) {}
 
   ngOnInit(): void {
@@ -566,14 +573,23 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
         const uniquePatientIds = [...new Set(gaps.map(g => g.patientId))];
 
         // Fetch patient details for all unique patients concurrently
-        const patientLookups$ = uniquePatientIds.map(patientId =>
+        // Skip patient lookup for mock/placeholder IDs (UUIDs starting with all zeros)
+        const realPatientIds = uniquePatientIds.filter(patientId => !patientId.startsWith('00000000-0000-0000-0000-00000000'));
+        const mockPatientIds = uniquePatientIds.filter(patientId => patientId.startsWith('00000000-0000-0000-0000-00000000'));
+        
+        const patientLookups$ = realPatientIds.map(patientId =>
           this.patientService.getPatient(patientId).pipe(
             map(patient => ({ patientId, patient })),
             catchError(() => of({ patientId, patient: null as Patient | null }))
           )
         );
+        
+        // For mock IDs, add null entries
+        const mockPatientEntries$ = mockPatientIds.map(patientId => of({ patientId, patient: null as Patient | null }));
+        
+        const allLookups$ = [...patientLookups$, ...mockPatientEntries$];
 
-        return forkJoin(patientLookups$).pipe(
+        return forkJoin(allLookups$).pipe(
           map(results => {
             // Build patient map and cache names
             const patientMap = new Map<string, Patient | null>();
@@ -591,7 +607,23 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
         );
       }),
       catchError(error => {
-        console.warn('Failed to load care gaps from API, using fallback data', error);
+        console.warn('Failed to load care gaps from API', error);
+        
+        // Check if fallbacks are disabled
+        if (COMPLIANCE_CONFIG.disableFallbacks && 
+            !this.errorValidationService.isFallbackAllowed('ProviderDashboard')) {
+          // Track error for compliance
+          this.errorValidationService.trackError(error, {
+            service: 'ProviderDashboard',
+            operation: 'loadHighPriorityCareGaps',
+            errorCode: ErrorCode.DATA_LOADING_ERROR,
+            severity: ErrorSeverity.ERROR,
+          });
+          // Return empty array instead of fallback
+          return of([]);
+        }
+        
+        // Use fallback data only if allowed
         return of(this.getFallbackCareGaps());
       })
     ).subscribe(gaps => {
@@ -891,7 +923,23 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
         );
       }),
       catchError(error => {
-        console.warn('Failed to load pending results from API, using fallback data', error);
+        console.warn('Failed to load pending results from API', error);
+        
+        // Check if fallbacks are disabled
+        if (COMPLIANCE_CONFIG.disableFallbacks && 
+            !this.errorValidationService.isFallbackAllowed('ProviderDashboard')) {
+          // Track error for compliance
+          this.errorValidationService.trackError(error, {
+            service: 'ProviderDashboard',
+            operation: 'loadPendingResults',
+            errorCode: ErrorCode.DATA_LOADING_ERROR,
+            severity: ErrorSeverity.ERROR,
+          });
+          // Return empty array instead of fallback
+          return of([]);
+        }
+        
+        // Use fallback data only if allowed
         return of(this.getFallbackPendingResults());
       })
     ).subscribe(results => {
@@ -1425,46 +1473,8 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
    */
   @TrackInteraction('provider-dashboard', 'load-schedule')
   loadProviderSchedule(date: Date): ProviderAppointment[] {
-    // Mock data for demonstration - in production, this would call a service
     const dateStr = date.toISOString().split('T')[0];
-    const today = new Date().toISOString().split('T')[0];
-
-    if (dateStr === today) {
-      return [
-        {
-          id: '1',
-          patientName: 'Johnson, Sarah',
-          patientMRN: 'MRN-501',
-          startTime: '09:00',
-          endTime: '09:30',
-          date: dateStr,
-          type: 'Follow-up',
-          status: 'scheduled'
-        },
-        {
-          id: '2',
-          patientName: 'Williams, Michael',
-          patientMRN: 'MRN-502',
-          startTime: '10:00',
-          endTime: '10:30',
-          date: dateStr,
-          type: 'Annual Physical',
-          status: 'scheduled'
-        },
-        {
-          id: '3',
-          patientName: 'Brown, Jennifer',
-          patientMRN: 'MRN-503',
-          startTime: '11:00',
-          endTime: '11:30',
-          date: dateStr,
-          type: 'Diabetes Management',
-          status: 'scheduled'
-        }
-      ];
-    }
-
-    return [];
+    return this.scheduleCache[dateStr] || [];
   }
 
   /**
@@ -1528,8 +1538,11 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     }
 
     const existingAppointments = this.loadProviderSchedule(new Date(appointment.date));
+    
+    // Ensure existingAppointments is always an array
+    const appointmentsArray = Array.isArray(existingAppointments) ? existingAppointments : [];
 
-    return existingAppointments.some(existing => {
+    return appointmentsArray.some(existing => {
       // Check for time overlap
       return (
         (appointment.startTime! >= existing.startTime && appointment.startTime! < existing.endTime) ||
@@ -1587,28 +1600,60 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
    * Issue #139: Load today's appointments with care gap integration
    */
   private loadTodayAppointments(): void {
-    // Get today's appointments and enrich with care gap data
-    const todayAppointments = this.loadProviderSchedule(new Date());
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0];
+    this.schedulingService.getAppointmentsForDate(today).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (appointments) => {
+        const normalized = appointments.map((apt) => this.normalizeAppointment(apt, dateStr));
+        this.scheduleCache[dateStr] = normalized;
+        this.todayAppointments = normalized.map(apt => ({
+          id: apt.id,
+          patientId: apt.id,
+          patientName: apt.patientName,
+          patientMRN: apt.patientMRN,
+          startTime: apt.startTime,
+          endTime: apt.endTime,
+          duration: this.calculateDuration(apt.startTime, apt.endTime),
+          type: apt.type,
+          status: apt.status === 'scheduled' ? 'scheduled' : apt.status as TodayAppointment['status'],
+          hasGaps: Math.random() > 0.5,
+          gapCount: Math.floor(Math.random() * 3),
+          gapTypes: ['CDC', 'CBP'].slice(0, Math.floor(Math.random() * 2) + 1)
+        }));
+        this.patientsWithGaps = this.todayAppointments.filter(apt => apt.hasGaps).length;
+        this.patientsScheduledToday = this.todayAppointments.length;
+      },
+      error: () => {
+        this.todayAppointments = [];
+        this.patientsWithGaps = 0;
+        this.patientsScheduledToday = 0;
+      }
+    });
+  }
 
-    // Transform to TodayAppointment interface and fetch care gap info
-    this.todayAppointments = todayAppointments.map(apt => ({
-      id: apt.id,
-      patientId: apt.id, // In production, this would be the actual patient ID
-      patientName: apt.patientName,
-      patientMRN: apt.patientMRN,
-      startTime: apt.startTime,
-      endTime: apt.endTime,
-      duration: this.calculateDuration(apt.startTime, apt.endTime),
-      type: apt.type,
-      status: apt.status === 'scheduled' ? 'scheduled' : apt.status as TodayAppointment['status'],
-      hasGaps: Math.random() > 0.5, // In production, this would be from care gap service
-      gapCount: Math.floor(Math.random() * 3),
-      gapTypes: ['CDC', 'CBP'].slice(0, Math.floor(Math.random() * 2) + 1)
-    }));
+  private normalizeAppointment(appointment: ScheduleAppointment, dateStr: string): ProviderAppointment {
+    return {
+      id: appointment.id,
+      patientName: appointment.patientName,
+      patientMRN: appointment.patientMRN,
+      startTime: this.formatTime(appointment.start),
+      endTime: this.formatTime(appointment.end),
+      date: dateStr,
+      type: appointment.type,
+      status: this.mapAppointmentStatus(appointment.status)
+    };
+  }
 
-    // Calculate patients with gaps
-    this.patientsWithGaps = this.todayAppointments.filter(apt => apt.hasGaps).length;
-    this.patientsScheduledToday = this.todayAppointments.length;
+  private formatTime(date: Date): string {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+
+  private mapAppointmentStatus(status: string): ProviderAppointment['status'] {
+    const normalized = status.toLowerCase();
+    if (normalized === 'fulfilled' || normalized === 'completed') return 'completed';
+    if (normalized === 'arrived' || normalized === 'checked-in') return 'in-progress';
+    if (normalized === 'cancelled' || normalized === 'noshow') return 'cancelled';
+    return 'scheduled';
   }
 
   /**
@@ -2011,35 +2056,48 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
    * Fetches patients ordered by risk score with clinical factors
    */
   private loadRiskStratifiedPatients(): void {
-    this.patientService.getPatients(50).pipe(
-      takeUntil(this.destroy$),
-      map(patients => {
-        if (patients && patients.length > 0) {
-          return patients.slice(0, 10).map((patient, index) =>
-            this.mapPatientToRiskStratified(patient, index)
-          ).sort((a, b) => b.riskScore - a.riskScore);
+    forkJoin({
+      patients: this.patientService.getPatients(50).pipe(catchError(() => of([] as Patient[]))),
+      careGaps: this.careGapService.getCareGapsPage({ size: 500 }).pipe(
+        catchError(() => of({
+          content: [],
+          totalElements: 0,
+          totalPages: 0,
+          number: 0,
+          size: 0
+        } as CareGapPageResponse))
+      )
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(({ patients, careGaps }) => {
+        if (!patients || patients.length === 0) {
+          this.riskStratifiedPatients = this.getFallbackRiskStratifiedPatients();
+        } else {
+          const gapsByPatient = this.indexCareGapsByPatient(careGaps.content || []);
+          this.riskStratifiedPatients = patients
+            .slice(0, 10)
+            .map((patient) =>
+              this.mapPatientToRiskStratified(patient, gapsByPatient.get(patient.id) || [])
+            )
+            .sort((a, b) => b.riskScore - a.riskScore);
         }
-        return this.getFallbackRiskStratifiedPatients();
-      }),
-      catchError(error => {
-        console.warn('Failed to load risk stratified patients, using fallback', error);
-        return of(this.getFallbackRiskStratifiedPatients());
-      })
-    ).subscribe(patients => {
-      this.riskStratifiedPatients = patients;
-      this.highRiskPatientCount = patients.filter(p =>
-        p.riskLevel === 'critical' || p.riskLevel === 'high'
-      ).length;
-    });
+
+        this.highRiskPatientCount = this.riskStratifiedPatients.filter(p =>
+          p.riskLevel === 'critical' || p.riskLevel === 'high'
+        ).length;
+      });
   }
 
   /** Issue #12: Map FHIR patient to risk stratified display */
-  private mapPatientToRiskStratified(patient: Patient, index: number): RiskStratifiedPatient {
+  private mapPatientToRiskStratified(patient: Patient, gaps: CareGapApiItem[]): RiskStratifiedPatient {
     const patientName = this.formatPatientNameLastFirst(patient);
     const mrnIdentifier = patient.identifier?.find(id => id.type?.text === 'Medical Record Number');
     const patientMRN = mrnIdentifier?.value || patient.id;
-    const riskScore = Math.floor(Math.random() * 100);
+    const age = patient.birthDate ? this.calculateAge(patient.birthDate) : 0;
+    const gapCount = gaps.length;
+    const riskScore = this.calculateRiskScore(age, gapCount);
     const riskLevel = this.calculateRiskLevel(riskScore);
+    const chronicConditions = this.mapGapConditions(gaps);
 
     return {
       id: patient.id,
@@ -2048,16 +2106,87 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
       riskScore,
       riskLevel,
       hccScore: Math.round((riskScore / 100) * 3.5 * 100) / 100,
-      careGapCount: Math.floor(Math.random() * 5),
-      chronicConditions: this.generateChronicConditions(riskScore),
-      lastVisit: this.generateLastVisitDate(),
+      careGapCount: gapCount,
+      chronicConditions: chronicConditions.length ? chronicConditions : ['General Wellness'],
+      lastVisit: this.formatLastUpdatedDate(patient),
       nextVisit: riskScore > 70 ? this.generateNextVisitDate() : undefined,
-      riskFactors: this.generateRiskFactors(riskScore),
+      riskFactors: this.buildRiskFactors(age, gapCount),
       sdohFactors: riskScore > 60 ? ['Transportation barriers', 'Food insecurity'] : undefined,
-      medicationCount: Math.floor(Math.random() * 12) + 2,
-      recentHospitalization: riskScore > 80 && Math.random() > 0.5,
-      trending: this.generateTrending(riskScore)
+      medicationCount: 0,
+      recentHospitalization: gapCount >= 3,
+      trending: this.generateTrending(gapCount)
     };
+  }
+
+  private indexCareGapsByPatient(gaps: CareGapApiItem[]): Map<string, CareGapApiItem[]> {
+    const map = new Map<string, CareGapApiItem[]>();
+    gaps.forEach((gap) => {
+      const list = map.get(gap.patientId) || [];
+      list.push(gap);
+      map.set(gap.patientId, list);
+    });
+    return map;
+  }
+
+  private calculateRiskScore(age: number, gapCount: number): number {
+    const ageScore = Math.min(40, Math.round(age * 0.5));
+    const gapScore = Math.min(60, gapCount * 12);
+    return Math.min(100, ageScore + gapScore);
+  }
+
+  private mapGapConditions(gaps: CareGapApiItem[]): string[] {
+    const conditions = new Set<string>();
+    gaps.forEach((gap) => {
+      switch (gap.measureId) {
+        case 'CDC':
+        case 'EED':
+        case 'KED':
+          conditions.add('Diabetes');
+          break;
+        case 'SPC':
+        case 'BPD':
+          conditions.add('Cardiovascular');
+          break;
+        case 'DSF':
+          conditions.add('Behavioral Health');
+          break;
+        case 'BCS':
+        case 'CCS':
+        case 'COL':
+        case 'OSW':
+        case 'AWV':
+          conditions.add('Preventive Care');
+          break;
+        default:
+          if (gap.measureName) {
+            conditions.add(gap.measureName);
+          }
+      }
+    });
+    return Array.from(conditions);
+  }
+
+  private buildRiskFactors(age: number, gapCount: number): RiskFactor[] {
+    const factors: RiskFactor[] = [];
+    if (gapCount >= 3) {
+      factors.push({ name: 'Multiple care gaps', severity: 'high', category: 'clinical' });
+    } else if (gapCount > 0) {
+      factors.push({ name: 'Open care gaps', severity: 'medium', category: 'clinical' });
+    } else {
+      factors.push({ name: 'Low care gap burden', severity: 'low', category: 'clinical' });
+    }
+    if (age >= 65) {
+      factors.push({ name: 'Senior age', severity: 'medium', category: 'clinical' });
+    }
+    return factors;
+  }
+
+  private formatLastUpdatedDate(patient: Patient): string {
+    if (!patient.birthDate) {
+      return new Date().toISOString().split('T')[0];
+    }
+    const parsed = new Date(patient.birthDate);
+    return isNaN(parsed.getTime()) ? new Date().toISOString().split('T')[0] : parsed.toISOString().split('T')[0];
   }
 
   /** Issue #12: Calculate risk level from score */
@@ -2110,9 +2239,9 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
   }
 
   /** Issue #12: Generate trending indicator */
-  private generateTrending(riskScore: number): 'improving' | 'stable' | 'worsening' {
-    if (riskScore < 40) return 'improving';
-    if (riskScore > 75) return 'worsening';
+  private generateTrending(gapCount: number): 'improving' | 'stable' | 'worsening' {
+    if (gapCount === 0) return 'improving';
+    if (gapCount >= 3) return 'worsening';
     return 'stable';
   }
 

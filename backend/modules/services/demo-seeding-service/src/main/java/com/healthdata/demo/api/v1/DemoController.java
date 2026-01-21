@@ -1,11 +1,15 @@
 package com.healthdata.demo.api.v1;
 
 import com.healthdata.demo.api.v1.dto.*;
+import com.healthdata.demo.application.DemoProgressService;
 import com.healthdata.demo.application.DemoResetService;
 import com.healthdata.demo.application.DemoSeedingService;
 import com.healthdata.demo.application.ScenarioLoaderService;
 import com.healthdata.demo.domain.model.DemoScenario;
+import com.healthdata.demo.domain.model.DemoSession;
+import com.healthdata.demo.domain.model.DemoSessionProgress;
 import com.healthdata.demo.domain.model.DemoSnapshot;
+import com.healthdata.demo.domain.repository.DemoSessionRepository;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +40,20 @@ public class DemoController {
     private final DemoSeedingService seedingService;
     private final ScenarioLoaderService scenarioLoaderService;
     private final DemoResetService resetService;
+    private final DemoSessionRepository sessionRepository;
+    private final DemoProgressService progressService;
 
     public DemoController(
             DemoSeedingService seedingService,
             ScenarioLoaderService scenarioLoaderService,
-            DemoResetService resetService) {
+            DemoResetService resetService,
+            DemoSessionRepository sessionRepository,
+            DemoProgressService progressService) {
         this.seedingService = seedingService;
         this.scenarioLoaderService = scenarioLoaderService;
         this.resetService = resetService;
+        this.sessionRepository = sessionRepository;
+        this.progressService = progressService;
     }
 
     /**
@@ -87,6 +97,32 @@ public class DemoController {
         return result.isSuccess() ?
             ResponseEntity.ok(response) :
             ResponseEntity.internalServerError().body(response);
+    }
+
+    /**
+     * Reset demo data for the current scenario's tenant.
+     */
+    @PostMapping("/reset/current-tenant")
+    public ResponseEntity<ResetResponse> resetCurrentTenant() {
+        logger.info("POST /api/v1/demo/reset/current-tenant");
+
+        var sessionOpt = sessionRepository.findCurrentSession();
+        if (sessionOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        DemoSession session = sessionOpt.get();
+        if (session.getScenario() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        resetService.resetDemoData(session.getScenario().getTenantId());
+        session.reset();
+        sessionRepository.save(session);
+
+        ResetResponse response = new ResetResponse();
+        response.setSuccess(true);
+        response.setResetTimeMs(0);
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -149,7 +185,7 @@ public class DemoController {
                 response.setLastResetAt(info.getLastResetAt());
                 return ResponseEntity.ok(response);
             })
-            .orElse(ResponseEntity.notFound().build());
+            .orElse(ResponseEntity.<Void>notFound().build());
     }
 
     /**
@@ -173,6 +209,71 @@ public class DemoController {
         return result.isSuccess() ?
             ResponseEntity.ok(response) :
             ResponseEntity.badRequest().body(response);
+    }
+
+    /**
+     * Get progress for a specific session.
+     */
+    @GetMapping("/sessions/{sessionId}/progress")
+    public ResponseEntity<ProgressResponse> getProgress(@PathVariable String sessionId) {
+        logger.info("GET /api/v1/demo/sessions/{}/progress", sessionId);
+        return progressService.getBySessionId(UUID.fromString(sessionId))
+            .map(progress -> ResponseEntity.ok(toProgressResponse(progress)))
+            .orElse(ResponseEntity.<Void>notFound().build());
+    }
+
+    /**
+     * Get progress for the current session.
+     */
+    @GetMapping("/sessions/current/progress")
+    public ResponseEntity<ProgressResponse> getCurrentProgress() {
+        logger.info("GET /api/v1/demo/sessions/current/progress");
+        var sessionOpt = sessionRepository.findCurrentSession();
+        if (sessionOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return progressService.getBySessionId(sessionOpt.get().getId())
+            .map(progress -> ResponseEntity.ok(toProgressResponse(progress)))
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Request cancellation of the current session load.
+     */
+    @PostMapping("/sessions/current/cancel")
+    public ResponseEntity<Void> cancelCurrentSession() {
+        logger.info("POST /api/v1/demo/sessions/current/cancel");
+        var sessionOpt = sessionRepository.findCurrentSession();
+        if (sessionOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        progressService.requestCancel(sessionOpt.get().getId(), "Cancellation requested");
+        return ResponseEntity.accepted().build();
+    }
+
+    /**
+     * Stop the current session.
+     */
+    @PostMapping("/sessions/current/stop")
+    public ResponseEntity<Void> stopCurrentSession() {
+        logger.info("POST /api/v1/demo/sessions/current/stop");
+        var sessionOpt = sessionRepository.findCurrentSession();
+        if (sessionOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        DemoSession session = sessionOpt.get();
+        progressService.getBySessionId(session.getId()).ifPresent(progress -> {
+            String stage = progress.getStage();
+            if (!"COMPLETE".equals(stage) && !"FAILED".equals(stage) && !"CANCELLED".equals(stage)) {
+                progressService.markCancelled(session.getId(), "Session stopped");
+            }
+        });
+        session.end();
+        sessionRepository.save(session);
+        return ResponseEntity.ok().build();
     }
 
     /**
@@ -362,6 +463,23 @@ public class DemoController {
         response.setCreatedBy(snapshot.getCreatedBy());
         response.setLastRestoredAt(snapshot.getLastRestoredAt());
         response.setRestoreCount(snapshot.getRestoreCount());
+        return response;
+    }
+
+    private ProgressResponse toProgressResponse(DemoSessionProgress progress) {
+        ProgressResponse response = new ProgressResponse();
+        response.setSessionId(progress.getSessionId().toString());
+        response.setScenarioName(progress.getScenarioName());
+        response.setTenantId(progress.getTenantId());
+        response.setStage(progress.getStage());
+        response.setProgressPercent(progress.getProgressPercent());
+        response.setPatientsGenerated(progress.getPatientsGenerated());
+        response.setPatientsPersisted(progress.getPatientsPersisted());
+        response.setCareGapsCreated(progress.getCareGapsCreated());
+        response.setMeasuresSeeded(progress.getMeasuresSeeded());
+        response.setMessage(progress.getMessage());
+        response.setUpdatedAt(progress.getUpdatedAt() != null ? progress.getUpdatedAt().toString() : null);
+        response.setCancelRequested(progress.isCancelRequested());
         return response;
     }
 }

@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.healthdata.fhir.service.EncounterService;
+import com.healthdata.fhir.util.FhirDateRangeParser;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
@@ -122,12 +123,20 @@ public class EncounterController {
     public ResponseEntity<String> searchEncounters(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(value = "patient", required = false) String patientId,
+            @RequestParam(value = "date", required = false) java.util.List<String> dateParams,
             @RequestParam(value = "date-start", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateStart,
             @RequestParam(value = "date-end", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateEnd,
             @PageableDefault(size = 20) Pageable pageable) {
 
         try {
             if (patientId == null) {
+                FhirDateRangeParser.DateRange range = FhirDateRangeParser.parseDateRange(dateParams);
+                if (range != null) {
+                    Bundle bundle = encounterService.searchEncountersByDateRange(
+                            tenantId, range.start(), range.end());
+                    String responseJson = JSON_PARSER.encodeResourceToString(bundle);
+                    return ResponseEntity.ok(responseJson);
+                }
                 return ResponseEntity.badRequest()
                         .body("{\"error\": \"patient parameter is required\"}");
             }
@@ -139,9 +148,15 @@ public class EncounterController {
                 bundle = encounterService.searchEncountersByPatientAndDateRange(
                         tenantId, patientId, dateStart, dateEnd);
             } else {
-                // Search by patient only (with pagination)
-                bundle = encounterService.searchEncountersByPatient(
-                        tenantId, patientId, pageable);
+                FhirDateRangeParser.DateRange range = FhirDateRangeParser.parseDateRange(dateParams);
+                if (range != null) {
+                    bundle = encounterService.searchEncountersByPatientAndDateRange(
+                            tenantId, patientId, range.start(), range.end());
+                } else {
+                    // Search by patient only (with pagination)
+                    bundle = encounterService.searchEncountersByPatient(
+                            tenantId, patientId, pageable);
+                }
             }
 
             String responseJson = JSON_PARSER.encodeResourceToString(bundle);

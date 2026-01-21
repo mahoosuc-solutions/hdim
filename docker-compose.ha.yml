@@ -35,7 +35,7 @@ services:
       -c config_file=/etc/postgresql/postgresql.conf
       -c hba_file=/etc/postgresql/pg_hba.conf
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-healthdata}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-healthdata} -d ${POSTGRES_DB:-healthdata_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -74,7 +74,7 @@ services:
       postgres-primary:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-healthdata}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-healthdata} -d ${POSTGRES_DB:-healthdata_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -111,7 +111,7 @@ services:
       postgres-primary:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-healthdata}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-healthdata} -d ${POSTGRES_DB:-healthdata_db}"]
       interval: 10s
       timeout: 5s
       retries: 5

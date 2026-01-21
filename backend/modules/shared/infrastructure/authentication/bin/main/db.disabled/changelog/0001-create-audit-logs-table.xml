@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0001-create-audit-logs-table" author="claude">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="audit_logs"/>
+            </not>
+        </preConditions>
+
+        <comment>
+            Create audit_logs table for HIPAA compliance.
+            Tracks all security-relevant events including authentication, authorization, and resource access.
+        </comment>
+
+        <createTable tableName="audit_logs">
+            <!-- Primary key -->
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Event identification -->
+            <column name="event_type" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="action" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- User information -->
+            <column name="user_id" type="uuid"/>
+            <column name="username" type="varchar(255)"/>
+
+            <!-- Tenant context -->
+            <column name="tenant_id" type="varchar(64)"/>
+
+            <!-- Resource information -->
+            <column name="resource_type" type="varchar(64)"/>
+            <column name="resource_id" type="varchar(255)"/>
+
+            <!-- Request information -->
+            <column name="ip_address" type="varchar(45)"/>
+            <column name="user_agent" type="varchar(512)"/>
+            <column name="request_uri" type="varchar(512)"/>
+            <column name="http_method" type="varchar(16)"/>
+            <column name="session_id" type="varchar(128)"/>
+
+            <!-- Outcome -->
+            <column name="success" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="failure_reason" type="TEXT"/>
+
+            <!-- Timestamp -->
+            <column name="timestamp" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Additional contextual data -->
+            <column name="additional_data" type="jsonb"/>
+        </createTable>
+
+        <!-- Index for user queries -->
+        <createIndex indexName="idx_audit_user_id" tableName="audit_logs">
+            <column name="user_id"/>
+            <column name="timestamp" descending="true"/>
+        </createIndex>
+
+        <!-- Index for username queries (for failed login attempts where user_id may be null) -->
+        <createIndex indexName="idx_audit_username" tableName="audit_logs">
+            <column name="username"/>
+            <column name="timestamp" descending="true"/>
+        </createIndex>
+
+        <!-- Index for tenant queries -->
+        <createIndex indexName="idx_audit_tenant" tableName="audit_logs">
+            <column name="tenant_id"/>
+            <column name="timestamp" descending="true"/>
+        </createIndex>
+
+        <!-- Index for event type queries -->
+        <createIndex indexName="idx_audit_event_type" tableName="audit_logs">
+            <column name="event_type"/>
+            <column name="timestamp" descending="true"/>
+        </createIndex>
+
+        <!-- Index for timestamp range queries -->
+        <createIndex indexName="idx_audit_timestamp" tableName="audit_logs">
+            <column name="timestamp" descending="true"/>
+        </createIndex>
+
+        <!-- Index for failed events -->
+        <createIndex indexName="idx_audit_failures" tableName="audit_logs">
+            <column name="success"/>
+            <column name="event_type"/>
+            <column name="timestamp" descending="true"/>
+        </createIndex>
+
+        <!-- Index for resource access queries -->
+        <createIndex indexName="idx_audit_resource" tableName="audit_logs">
+            <column name="resource_type"/>
+            <column name="resource_id"/>
+            <column name="timestamp" descending="true"/>
+        </createIndex>
+
+        <!-- Index for IP address tracking -->
+        <createIndex indexName="idx_audit_ip_address" tableName="audit_logs">
+            <column name="ip_address"/>
+            <column name="timestamp" descending="true"/>
+        </createIndex>
+
+        <!-- Composite index for common query patterns -->
+        <createIndex indexName="idx_audit_user_tenant_time" tableName="audit_logs">
+            <column name="user_id"/>
+            <column name="tenant_id"/>
+            <column name="timestamp" descending="true"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="audit_logs"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

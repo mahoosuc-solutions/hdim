@@ -1,0 +1,73 @@
+{
+  "tenantId": "acme-health",
+  "expectedTotals": {
+    "patients": 10,
+    "careGaps": 16,
+    "priority": {
+      "HIGH": 10,
+      "MEDIUM": 6
+    }
+  },
+  "patients": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "name": "Maria Garcia",
+      "mrn": "MRN-2024-4521",
+      "expectedGaps": ["COL", "BCS"]
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "name": "Sarah Johnson",
+      "mrn": "MRN-2024-4522",
+      "expectedGaps": ["BCS"]
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "name": "Linda Chen",
+      "mrn": "MRN-2024-4523",
+      "expectedGaps": ["CDC", "EED"]
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440004",
+      "name": "Michael Williams",
+      "mrn": "MRN-2024-4524",
+      "expectedGaps": ["SPC"]
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440005",
+      "name": "Patricia Davis",
+      "mrn": "MRN-2024-4525",
+      "expectedGaps": ["CCS"]
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440006",
+      "name": "James Thompson",
+      "mrn": "MRN-2024-4526",
+      "expectedGaps": ["AWV", "COL"]
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440007",
+      "name": "Barbara Martinez",
+      "mrn": "MRN-2024-4527",
+      "expectedGaps": ["OSW"]
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440008",
+      "name": "William Anderson",
+      "mrn": "MRN-2024-4528",
+      "expectedGaps": ["DSF"]
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440009",
+      "name": "Susan Taylor",
+      "mrn": "MRN-2024-4529",
+      "expectedGaps": ["EED", "KED"]
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440010",
+      "name": "David Brown",
+      "mrn": "MRN-2024-4530",
+      "expectedGaps": ["KED", "SPC", "BPD"]
+    }
+  ]
+}

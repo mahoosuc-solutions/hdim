@@ -84,7 +84,22 @@
       "Bash(then echo \"✅ HAS preconditions\")",
       "Bash(else echo \"⚠️  MISSING preconditions\")",
       "Bash(docker inspect:*)",
-      "Bash(do echo \"=== $service ===\")"
+      "Bash(do echo \"=== $service ===\")",
+      "Bash(docker info:*)",
+      "Bash(docker system:*)",
+      "Read(//mnt/**)",
+      "Bash(cmd.exe /c \"echo %USERNAME%\")",
+      "Bash(mount:*)",
+      "Bash(wsl.exe -l:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(docker image ls:*)",
+      "Read(//home/webemo-aaron/docker-images/**)",
+      "Bash(jobs)",
+      "Read(//etc/**)",
+      "Bash(lsblk:*)",
+      "Bash(docker image inspect:*)",
+      "Bash(docker history:*)",
+      "Bash(docker buildx du:*)"
     ],
     "deny": [],
     "ask": []

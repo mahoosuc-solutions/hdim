@@ -19,10 +19,13 @@ import org.springframework.kafka.annotation.EnableKafka;
 @SpringBootApplication
 @EnableKafka
 @EnableFeignClients
-@EnableJpaRepositories(basePackages = "com.healthdata.qualitymeasure.persistence")
+@EnableJpaRepositories(basePackages = {
+    "com.healthdata.qualitymeasure.persistence",
+    "com.healthdata.qualitymeasure.repository"
+})
 @EntityScan(basePackages = {
     "com.healthdata.qualitymeasure",
-    "com.healthdata.qualityevent.projection"
+    "com.healthdata.qualitymeasure.projection"
 })
 @ComponentScan(basePackages = {
     "com.healthdata.qualitymeasure",

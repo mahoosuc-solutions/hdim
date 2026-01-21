@@ -19,7 +19,10 @@ import org.springframework.kafka.annotation.EnableKafka;
 @SpringBootApplication
 @EnableKafka
 @EnableFeignClients
-@EnableJpaRepositories(basePackages = "com.healthdata.workflow.persistence")
+@EnableJpaRepositories(basePackages = {
+    "com.healthdata.workflow.persistence",
+    "com.healthdata.workflow.repository"
+})
 @EntityScan(basePackages = {
     "com.healthdata.workflow",
     "com.healthdata.workflow.projection"

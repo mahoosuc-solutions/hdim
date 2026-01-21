@@ -5,6 +5,9 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
+    <!-- Authentication tables (required by shared authentication module dependency) -->
+    <include file="db/changelog/0000-create-authentication-tables.xml"/>
+
     <include file="db/changelog/0001-create-care-gap-projections-table.xml"/>
 
 </databaseChangeLog>

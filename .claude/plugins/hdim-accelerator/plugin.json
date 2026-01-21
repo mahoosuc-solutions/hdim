@@ -1,0 +1,106 @@
+{
+  "name": "hdim-accelerator",
+  "version": "3.0.0",
+  "description": "Comprehensive HDIM development accelerator with 7 proactive technology agents (Spring Boot, Spring Security, Redis, PostgreSQL, Kafka, Docker, GCP), event-driven CQRS scaffolding, entity-migration synchronization, and HIPAA compliance automation",
+  "author": "HDIM Platform Team",
+  "repository": "hdim-master",
+  "tags": [
+    "healthcare",
+    "fhir",
+    "microservices",
+    "spring-boot",
+    "spring-security",
+    "redis",
+    "postgresql",
+    "kafka",
+    "docker",
+    "gcp",
+    "kubernetes",
+    "terraform",
+    "liquibase",
+    "hedis",
+    "cql",
+    "hipaa",
+    "cqrs",
+    "event-driven"
+  ],
+  "permissions": {
+    "tools": [
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "Bash"
+    ],
+    "commands": [
+      "git:*",
+      "docker:*",
+      "gradle:*"
+    ]
+  },
+  "configuration": {
+    "proactive_validation": {
+      "description": "Enable proactive schema and security validation",
+      "default": true
+    },
+    "auto_generate_tests": {
+      "description": "Automatically generate test stubs for new components",
+      "default": true
+    },
+    "hipaa_strict_mode": {
+      "description": "Enforce strict HIPAA compliance checks (PHI cache TTL, audit logging)",
+      "default": true
+    }
+  },
+  "components": {
+    "commands": [
+      "add-entity",
+      "add-migration",
+      "validate-schema",
+      "create-service",
+      "add-endpoint",
+      "fhir-resource",
+      "add-cql-measure",
+      "create-event-service",
+      "clean-build",
+      "docker-prune",
+      "release-validation"
+    ],
+    "skills": [
+      "database-migrations",
+      "gateway-trust-auth",
+      "fhir-development",
+      "quality-measures",
+      "hipaa-compliance",
+      "testcontainers-integration",
+      "cqrs-event-driven"
+    ],
+    "agents": [
+      "migration-validator",
+      "service-generator",
+      "fhir-assistant",
+      "cql-measure-builder",
+      "security-auditor",
+      "test-stabilizer",
+      "spring-boot-agent",
+      "spring-security-agent",
+      "redis-agent",
+      "postgres-agent",
+      "kafka-agent",
+      "docker-agent",
+      "gcp-agent"
+    ],
+    "hooks": {
+      "PreToolUse": "Auto-detect file modifications and launch specialized technology agents",
+      "PostToolUse": "Validate changes after Write/Edit operations",
+      "Stop": "Verify HDIM quality standards before task completion",
+      "SessionStart": "Load HDIM platform context and environment configuration"
+    }
+  },
+  "documentation": {
+    "readme": "README.md",
+    "examples": "examples/",
+    "troubleshooting": "TROUBLESHOOTING.md"
+  }
+}

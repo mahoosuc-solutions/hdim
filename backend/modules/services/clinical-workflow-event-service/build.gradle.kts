@@ -27,7 +27,8 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:tracing"))
     implementation(libs.jackson.databind)
     implementation(libs.jackson.datatype.jsr310)
-    implementation(libs.spring.boot.starter.data.redis)
+    // REMOVED: Event services use PostgreSQL only, no Redis needed
+    // implementation(libs.spring.boot.starter.data.redis)
     implementation(libs.resilience4j.spring.boot3)
     implementation(libs.resilience4j.circuitbreaker)
     implementation(libs.resilience4j.retry)

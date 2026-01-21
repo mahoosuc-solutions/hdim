@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="{{MIGRATION_ID}}-create-{{TABLE_NAME}}-table" author="{{AUTHOR}}">
+        <comment>{{MIGRATION_DESCRIPTION}}</comment>
+
+        <createTable tableName="{{TABLE_NAME}}">
+            <!-- Primary Key -->
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_{{TABLE_NAME}}"/>
+            </column>
+
+            <!-- Multi-tenant Isolation (CRITICAL) -->
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- TODO: Add your domain-specific columns here -->
+            <!-- Example:
+            <column name="field_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            -->
+
+            <!-- Audit Fields -->
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+        </createTable>
+
+        <!-- Index on tenant_id for query performance (CRITICAL for multi-tenant) -->
+        <createIndex indexName="idx_{{TABLE_NAME}}_tenant_id" tableName="{{TABLE_NAME}}">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <!-- Index on created_at for sorting performance -->
+        <createIndex indexName="idx_{{TABLE_NAME}}_created_at" tableName="{{TABLE_NAME}}">
+            <column name="created_at"/>
+        </createIndex>
+
+        <!-- TODO: Add additional indexes here -->
+        <!-- Example:
+        <createIndex indexName="idx_{{TABLE_NAME}}_field_name" tableName="{{TABLE_NAME}}">
+            <column name="field_name"/>
+        </createIndex>
+        -->
+
+        <!-- Rollback SQL (REQUIRED - 100% coverage enforced) -->
+        <rollback>
+            <dropTable tableName="{{TABLE_NAME}}"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

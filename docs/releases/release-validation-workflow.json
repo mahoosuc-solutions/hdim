@@ -1,0 +1,512 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "workflow_metadata": {
+    "workflow_id": "hdim-release-validation",
+    "version": "1.0.0",
+    "description": "Comprehensive release validation workflow for HDIM platform with 5 phases and 20 validation tasks",
+    "author": "HDIM Platform Team",
+    "created_date": "2026-01-20",
+    "max_iterations_per_phase": 10,
+    "require_phase_confirmation": true,
+    "estimated_duration_minutes": 120
+  },
+  "phases": [
+    {
+      "phase_id": "phase-1-validation",
+      "name": "Code Quality & Testing Validation",
+      "description": "Validate codebase quality, test coverage, schema synchronization, and HIPAA compliance",
+      "dependency": "none",
+      "completion_promise": "PHASE_1_COMPLETE",
+      "tasks": [
+        {
+          "task_id": "task-01",
+          "name": "Entity-Migration Synchronization Validation",
+          "prompt": "Validate that all JPA entities have corresponding Liquibase migrations across all 34 microservices.\n\n**Actions:**\n1. Run EntityMigrationValidationTest for each service\n2. Verify 100% pass rate (0 failures)\n3. Check that ddl-auto is set to 'validate' in all application*.yml files (NEVER create/update)\n4. Generate entity-migration-report.md in docs/releases/v{VERSION}/validation/\n\n**Completion Criteria:**\n- All EntityMigrationValidationTest tests pass\n- ddl-auto: validate confirmed in all 34 services\n- No schema-validation errors in logs\n- All entities have synchronized Liquibase migrations\n\n**Validation Command:**\n./scripts/release-validation/test-entity-migration-sync.sh\n\n**Expected Output:**\ndocs/releases/v{VERSION}/validation/entity-migration-report.md",
+          "completion_criteria": [
+            "All EntityMigrationValidationTest tests pass (0 failures)",
+            "ddl-auto: validate confirmed in all 34 services",
+            "No schema-validation errors in logs",
+            "All entities have synchronized Liquibase migrations",
+            "Report file created: docs/releases/v{VERSION}/validation/entity-migration-report.md"
+          ],
+          "agent": "postgres-agent",
+          "commands": ["/validate-schema all"],
+          "validation_script": "scripts/release-validation/test-entity-migration-sync.sh",
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/validation/entity-migration-report.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 600,
+          "retry_on_failure": false
+        },
+        {
+          "task_id": "task-02",
+          "name": "Liquibase Rollback SQL Coverage Validation",
+          "prompt": "Validate that all Liquibase changesets across all 34 services have explicit <rollback> tags.\n\n**Actions:**\n1. Run backend/scripts/test-liquibase-rollback.sh\n2. Verify 100% coverage (199/199 changesets as of Phase 21)\n3. Check all changesets have explicit <rollback> tags (not auto-generated)\n4. Generate liquibase-rollback-report.md\n\n**Completion Criteria:**\n- test-liquibase-rollback.sh exits with code 0\n- 100% rollback SQL coverage confirmed\n- No changesets missing <rollback> tags\n- Rollback patterns validated against DATABASE_MIGRATION_RUNBOOK.md\n\n**Validation Command:**\n./backend/scripts/test-liquibase-rollback.sh\n\n**Expected Output:**\ndocs/releases/v{VERSION}/validation/liquibase-rollback-report.md",
+          "completion_criteria": [
+            "test-liquibase-rollback.sh exits with code 0",
+            "100% rollback SQL coverage confirmed (199/199 changesets)",
+            "No changesets missing <rollback> tags",
+            "Rollback patterns follow DATABASE_MIGRATION_RUNBOOK.md",
+            "Report file created: docs/releases/v{VERSION}/validation/liquibase-rollback-report.md"
+          ],
+          "agent": "postgres-agent",
+          "commands": [],
+          "validation_script": "backend/scripts/test-liquibase-rollback.sh",
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/validation/liquibase-rollback-report.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 300,
+          "retry_on_failure": false
+        },
+        {
+          "task_id": "task-03",
+          "name": "Test Suite Execution and Coverage Validation",
+          "prompt": "Run full Gradle test suite across all backend modules and validate test pass rate and coverage.\n\n**Actions:**\n1. Run ./gradlew test across all backend modules\n2. Validate test pass rate is 100% (1,577/1,577 tests as of Phase 21)\n3. Check service layer coverage ≥80% and overall coverage ≥70%\n4. Generate JaCoCo coverage reports\n5. Generate test-coverage-report.md with metrics\n\n**Completion Criteria:**\n- ./gradlew test exits with BUILD SUCCESSFUL\n- Test pass rate: 100% (0 failures, 0 errors)\n- Service layer coverage ≥80%\n- Overall coverage ≥70%\n- JaCoCo reports generated\n\n**Validation Command:**\n./scripts/release-validation/run-full-test-suite.sh\n\n**Expected Outputs:**\n- backend/build/reports/tests/test/index.html\n- backend/build/reports/jacoco/test/html/index.html\n- docs/releases/v{VERSION}/validation/test-coverage-report.md",
+          "completion_criteria": [
+            "./gradlew test exits with BUILD SUCCESSFUL",
+            "Test pass rate: 100% (0 failures)",
+            "Service layer coverage ≥80%",
+            "Overall coverage ≥70%",
+            "JaCoCo reports generated in build/reports/jacoco/",
+            "Report file created: docs/releases/v{VERSION}/validation/test-coverage-report.md"
+          ],
+          "agent": "manual",
+          "commands": [],
+          "validation_script": "scripts/release-validation/run-full-test-suite.sh",
+          "expected_artifacts": [
+            "backend/build/reports/tests/test/index.html",
+            "backend/build/reports/jacoco/test/html/index.html",
+            "docs/releases/v{VERSION}/validation/test-coverage-report.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 1800,
+          "retry_on_failure": true
+        },
+        {
+          "task_id": "task-04",
+          "name": "HIPAA Compliance Validation",
+          "prompt": "Validate HIPAA compliance across all services for PHI handling and cache controls.\n\n**Actions:**\n1. Verify all @Cacheable PHI caches have TTL ≤5 minutes (300,000ms)\n2. Confirm Cache-Control: no-store headers on all PHI endpoints\n3. Validate @Audited annotations on PHI access methods\n4. Check multi-tenant isolation tests exist and pass\n5. Verify HIPAA-CACHE-COMPLIANCE.md requirements met\n6. Generate HIPAA_COMPLIANCE_REPORT.md\n\n**Completion Criteria:**\n- All PHI caches have TTL ≤300,000ms (recommend 120,000ms)\n- All PHI responses include Cache-Control: no-store, no-cache headers\n- @Audited annotations present on PHI access methods\n- Multi-tenant isolation tests passing\n- HIPAA-CACHE-COMPLIANCE.md requirements verified\n\n**Validation Command:**\n./scripts/release-validation/validate-hipaa-compliance.sh\n\n**Expected Output:**\ndocs/releases/v{VERSION}/validation/HIPAA_COMPLIANCE_REPORT.md",
+          "completion_criteria": [
+            "All PHI caches have TTL ≤300,000ms (5 minutes)",
+            "All PHI responses include Cache-Control: no-store",
+            "@Audited annotations present on PHI access methods",
+            "Multi-tenant isolation tests passing",
+            "HIPAA-CACHE-COMPLIANCE.md requirements met",
+            "Report file created: docs/releases/v{VERSION}/validation/HIPAA_COMPLIANCE_REPORT.md"
+          ],
+          "agent": "redis-agent",
+          "commands": [],
+          "validation_script": "scripts/release-validation/validate-hipaa-compliance.sh",
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/validation/HIPAA_COMPLIANCE_REPORT.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 600,
+          "retry_on_failure": false
+        }
+      ]
+    },
+    {
+      "phase_id": "phase-2-documentation",
+      "name": "Documentation Completeness Validation",
+      "description": "Validate all release documentation is complete, accurate, and production-ready",
+      "dependency": "phase-1-validation",
+      "completion_promise": "PHASE_2_COMPLETE",
+      "tasks": [
+        {
+          "task_id": "task-05",
+          "name": "Release Notes Validation",
+          "prompt": "Validate RELEASE_NOTES_v{VERSION}.md file exists and is complete.\n\n**Actions:**\n1. Check if docs/releases/v{VERSION}/RELEASE_NOTES_v{VERSION}.md exists\n2. If not, auto-generate from template using generate-release-docs.sh\n3. Validate content includes:\n   - All new features with API endpoint documentation\n   - Breaking changes clearly listed\n   - Security/HIPAA enhancements\n   - Performance improvements with metrics\n   - Database migration summary (number of changesets, impacted services)\n   - Known issues and workarounds\n\n**Completion Criteria:**\n- RELEASE_NOTES_v{VERSION}.md exists\n- All new features documented with API examples\n- Breaking changes section complete\n- Security enhancements listed\n- Database migration count accurate\n\n**Auto-Generation:**\nIf file missing: ./scripts/release-validation/generate-release-docs.sh v{VERSION}\n\n**Expected Output:**\ndocs/releases/v{VERSION}/RELEASE_NOTES_v{VERSION}.md",
+          "completion_criteria": [
+            "RELEASE_NOTES_v{VERSION}.md exists",
+            "All new features documented with endpoints",
+            "Breaking changes section complete",
+            "Security enhancements listed",
+            "Database migration summary accurate"
+          ],
+          "agent": "manual",
+          "commands": [],
+          "validation_script": null,
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/RELEASE_NOTES_v{VERSION}.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 300,
+          "retry_on_failure": false
+        },
+        {
+          "task_id": "task-06",
+          "name": "Upgrade Guide Validation",
+          "prompt": "Validate UPGRADE_GUIDE_v{VERSION}.md file exists and contains step-by-step upgrade instructions.\n\n**Actions:**\n1. Check if docs/releases/v{VERSION}/UPGRADE_GUIDE_v{VERSION}.md exists\n2. If not, auto-generate from template\n3. Validate content includes:\n   - Step-by-step upgrade instructions (sequential, testable)\n   - Required environment variable changes\n   - Database migration steps (backup, migrate, verify)\n   - Breaking change migration paths\n   - Rollback procedures with commands\n   - Service restart order (dependencies first)\n\n**Completion Criteria:**\n- UPGRADE_GUIDE_v{VERSION}.md exists\n- Upgrade steps are sequential and testable\n- Environment variable changes documented\n- Database migration instructions present\n- Rollback procedure documented with commands\n\n**Auto-Generation:**\nIf file missing: ./scripts/release-validation/generate-release-docs.sh v{VERSION}\n\n**Expected Output:**\ndocs/releases/v{VERSION}/UPGRADE_GUIDE_v{VERSION}.md",
+          "completion_criteria": [
+            "UPGRADE_GUIDE_v{VERSION}.md exists",
+            "Upgrade steps are sequential and executable",
+            "Environment variable changes documented",
+            "Database migration instructions complete",
+            "Rollback procedure includes commands"
+          ],
+          "agent": "manual",
+          "commands": [],
+          "validation_script": null,
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/UPGRADE_GUIDE_v{VERSION}.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 300,
+          "retry_on_failure": false
+        },
+        {
+          "task_id": "task-07",
+          "name": "CHANGELOG Update Validation",
+          "prompt": "Validate CHANGELOG.md has been updated with v{VERSION} entry.\n\n**Actions:**\n1. Check if CHANGELOG.md (root directory) has v{VERSION} entry\n2. Verify entry follows Keep a Changelog format\n3. Validate all categories populated:\n   - Added (new features)\n   - Changed (modifications to existing functionality)\n   - Deprecated (soon-to-be-removed features)\n   - Removed (deleted features)\n   - Fixed (bug fixes)\n   - Security (security updates, HIPAA compliance)\n4. Verify links to relevant PRs or issues included\n5. Confirm release date is accurate\n\n**Completion Criteria:**\n- CHANGELOG.md contains v{VERSION} entry\n- Entry follows Keep a Changelog format\n- All categories populated (Added, Changed, Fixed, Security)\n- Links to PRs/issues included\n- Release date accurate\n\n**Expected Output:**\nCHANGELOG.md (updated)",
+          "completion_criteria": [
+            "CHANGELOG.md contains v{VERSION} entry",
+            "Entry follows Keep a Changelog format",
+            "All categories populated",
+            "Links to PRs/issues included",
+            "Release date is accurate"
+          ],
+          "agent": "manual",
+          "commands": [],
+          "validation_script": null,
+          "expected_artifacts": [
+            "CHANGELOG.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 180,
+          "retry_on_failure": false
+        },
+        {
+          "task_id": "task-08",
+          "name": "API Documentation Validation",
+          "prompt": "Validate OpenAPI specifications are generated for all modified services.\n\n**Actions:**\n1. Run docs/api/generate-openapi-specs.sh to generate specs\n2. Verify Swagger UI is accessible for each service: /{service}/swagger-ui.html\n3. Check that all new endpoints are documented with:\n   - Request schemas (all parameters, body)\n   - Response schemas (success + error responses)\n   - Authentication requirements (@PreAuthorize roles)\n   - Example requests and responses\n4. Generate API documentation report\n\n**Completion Criteria:**\n- generate-openapi-specs.sh exits successfully\n- OpenAPI specs generated for all modified services\n- Swagger UI accessible at /{service}/swagger-ui.html\n- All new endpoints have complete documentation\n- API documentation report created\n\n**Validation Command:**\n./docs/api/generate-openapi-specs.sh\n\n**Expected Outputs:**\n- docs/api/openapi-specs/{service}-openapi.json (for each service)\n- docs/releases/v{VERSION}/validation/api-documentation-report.md",
+          "completion_criteria": [
+            "generate-openapi-specs.sh exits successfully",
+            "OpenAPI specs generated for modified services",
+            "Swagger UI accessible for each service",
+            "All new endpoints documented completely",
+            "API documentation report created"
+          ],
+          "agent": "manual",
+          "commands": [],
+          "validation_script": "docs/api/generate-openapi-specs.sh",
+          "expected_artifacts": [
+            "docs/api/openapi-specs/*.json",
+            "docs/releases/v{VERSION}/validation/api-documentation-report.md"
+          ],
+          "blocking": false,
+          "timeout_seconds": 600,
+          "retry_on_failure": true
+        }
+      ]
+    },
+    {
+      "phase_id": "phase-3-integration",
+      "name": "Integration & Configuration Validation",
+      "description": "Validate service integration, distributed tracing, database connection pooling, Kafka messaging, and gateway authentication",
+      "dependency": "phase-2-documentation",
+      "completion_promise": "PHASE_3_COMPLETE",
+      "tasks": [
+        {
+          "task_id": "task-09",
+          "name": "Distributed Tracing OTLP Validation",
+          "prompt": "Validate OpenTelemetry OTLP configuration across all 34 services.\n\n**Actions:**\n1. Verify OTEL_EXPORTER_OTLP_ENDPOINT points to http://jaeger:4318/v1/traces in all services\n2. Confirm OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf in all services\n3. Check _JAVA_OPTIONS includes -Djava.net.preferIPv4Stack=true\n4. Start services and validate Jaeger UI shows traces from ≥6 services\n5. Test W3C Trace Context propagation across services\n6. Generate Jaeger integration validation report\n\n**Completion Criteria:**\n- All 34 services have complete OTLP environment variables\n- OTLP endpoints correct (http://jaeger:4318/v1/traces)\n- Jaeger UI accessible at http://localhost:16686\n- ≥6 services sending traces to Jaeger confirmed\n- W3C Trace Context propagation working\n\n**Validation Command:**\n./scripts/release-validation/validate-jaeger-integration.sh\n\n**Expected Output:**\ndocs/releases/v{VERSION}/validation/JAEGER_INTEGRATION_VALIDATION.md",
+          "completion_criteria": [
+            "All 34 services have complete OTLP config",
+            "OTLP endpoints correct",
+            "Jaeger UI accessible",
+            "≥6 services sending traces confirmed",
+            "W3C Trace Context propagation verified",
+            "Report created: docs/releases/v{VERSION}/validation/JAEGER_INTEGRATION_VALIDATION.md"
+          ],
+          "agent": "docker-agent",
+          "commands": [],
+          "validation_script": "scripts/release-validation/validate-jaeger-integration.sh",
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/validation/JAEGER_INTEGRATION_VALIDATION.md"
+          ],
+          "blocking": false,
+          "timeout_seconds": 600,
+          "retry_on_failure": true
+        },
+        {
+          "task_id": "task-10",
+          "name": "HikariCP Connection Pool Validation",
+          "prompt": "Validate HikariCP configuration across all 34 services follows timing formula.\n\n**Actions:**\n1. Verify timing formula: max-lifetime ≥ 6x idle-timeout (1800s ≥ 6×300s)\n2. Confirm traffic tier pool sizes:\n   - HIGH traffic: maximum-pool-size=50\n   - MEDIUM traffic: maximum-pool-size=20\n   - LOW traffic: maximum-pool-size=10\n3. Validate keepalive-time=240s (< idle-timeout)\n4. Check leak-detection-threshold=60000 (60 seconds)\n5. Verify no connection pool errors in service logs\n6. Generate HikariCP configuration report\n\n**Completion Criteria:**\n- All 34 services pass HikariCP timing formula\n- Traffic tier pool sizes correctly configured\n- Keepalive-time=240s in all services\n- Leak detection configured with 60s threshold\n- No connection pool errors in logs\n\n**Validation Command:**\n./scripts/release-validation/validate-hikaricp-config.sh\n\n**Expected Output:**\ndocs/releases/v{VERSION}/validation/hikaricp-config-report.md",
+          "completion_criteria": [
+            "All services pass timing formula (max-lifetime ≥ 6x idle-timeout)",
+            "Traffic tier pool sizes correct (HIGH=50, MEDIUM=20, LOW=10)",
+            "Keepalive-time=240s verified",
+            "Leak detection threshold=60000ms",
+            "No pool errors in logs",
+            "Report created: docs/releases/v{VERSION}/validation/hikaricp-config-report.md"
+          ],
+          "agent": "postgres-agent",
+          "commands": [],
+          "validation_script": "scripts/release-validation/validate-hikaricp-config.sh",
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/validation/hikaricp-config-report.md"
+          ],
+          "blocking": false,
+          "timeout_seconds": 300,
+          "retry_on_failure": false
+        },
+        {
+          "task_id": "task-11",
+          "name": "Kafka Trace Propagation Validation",
+          "prompt": "Validate Kafka trace propagation across all 19 Kafka-enabled services.\n\n**Actions:**\n1. Verify spring.json.add.type.headers: false in all producers\n2. Confirm spring.json.use.type.headers: false in all consumers\n3. Check interceptor.classes configured:\n   - Producer: KafkaProducerTraceInterceptor\n   - Consumer: KafkaConsumerTraceInterceptor\n4. Validate trace continuity across Kafka topics (send event, verify trace ID propagates)\n5. Check for ClassNotFoundException errors in logs (indicates type header issues)\n6. Generate Kafka tracing validation report\n\n**Completion Criteria:**\n- All 19 Kafka services have type headers disabled\n- KafkaProducerTraceInterceptor configured in all producers\n- KafkaConsumerTraceInterceptor configured in all consumers\n- Trace propagation working across Kafka topics\n- No ClassNotFoundException errors in logs\n\n**Validation Command:**\n./scripts/release-validation/validate-kafka-tracing.sh\n\n**Expected Output:**\ndocs/releases/v{VERSION}/validation/kafka-tracing-report.md",
+          "completion_criteria": [
+            "All 19 Kafka services have type headers disabled",
+            "Producer interceptor configured in all producers",
+            "Consumer interceptor configured in all consumers",
+            "Trace propagation verified across topics",
+            "No ClassNotFoundException in logs",
+            "Report created: docs/releases/v{VERSION}/validation/kafka-tracing-report.md"
+          ],
+          "agent": "kafka-agent",
+          "commands": [],
+          "validation_script": "scripts/release-validation/validate-kafka-tracing.sh",
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/validation/kafka-tracing-report.md"
+          ],
+          "blocking": false,
+          "timeout_seconds": 600,
+          "retry_on_failure": true
+        },
+        {
+          "task_id": "task-12",
+          "name": "Gateway Trust Authentication Validation",
+          "prompt": "Validate gateway trust authentication pattern across all backend services.\n\n**Actions:**\n1. Verify SecurityConfig uses TrustedHeaderAuthFilter + TrustedTenantAccessFilter\n2. Confirm filter ordering (TrustedHeaderAuthFilter BEFORE UsernamePasswordAuthenticationFilter)\n3. Check all endpoints have @PreAuthorize annotations (scan all @GetMapping, @PostMapping, @PutMapping, @DeleteMapping)\n4. Validate tests use GatewayTrustTestHeaders for authentication\n5. Verify no JWT validation in backend services (only gateway validates JWT)\n6. Generate gateway trust authentication validation report\n\n**Completion Criteria:**\n- All backend services use TrustedHeaderAuthFilter\n- Filter ordering correct in all SecurityConfig classes\n- All API endpoints have @PreAuthorize annotations\n- Integration tests use GatewayTrustTestHeaders\n- No JWT validation in backend (gateway-only)\n\n**Validation Command:**\n./scripts/release-validation/validate-gateway-trust-auth.sh\n\n**Expected Output:**\ndocs/releases/v{VERSION}/validation/GATEWAY_TRUST_VALIDATION.md",
+          "completion_criteria": [
+            "All services use TrustedHeaderAuthFilter + TrustedTenantAccessFilter",
+            "Filter ordering verified in all SecurityConfig",
+            "All endpoints have @PreAuthorize",
+            "Tests use GatewayTrustTestHeaders",
+            "No JWT validation in backend services",
+            "Report created: docs/releases/v{VERSION}/validation/GATEWAY_TRUST_VALIDATION.md"
+          ],
+          "agent": "spring-security-agent",
+          "commands": [],
+          "validation_script": "scripts/release-validation/validate-gateway-trust-auth.sh",
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/validation/GATEWAY_TRUST_VALIDATION.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 600,
+          "retry_on_failure": false
+        }
+      ]
+    },
+    {
+      "phase_id": "phase-4-deployment",
+      "name": "Deployment Readiness Validation",
+      "description": "Validate Docker configuration, health checks, environment variables, and deployment artifacts",
+      "dependency": "phase-3-integration",
+      "completion_promise": "PHASE_4_COMPLETE",
+      "tasks": [
+        {
+          "task_id": "task-13",
+          "name": "Docker Image Build Validation",
+          "prompt": "Build all Docker images for modified services and validate security and optimization.\n\n**Actions:**\n1. Run docker compose build for all modified services\n2. Validate all images use non-root user (UID 1001)\n3. Check JVM container optimization flags present:\n   - -XX:MaxRAMPercentage=75.0\n   - -Djava.net.preferIPv4Stack=true\n4. Verify image sizes are reasonable (<500MB for Java services)\n5. Run security scan on images (check for vulnerabilities in base images)\n6. Generate docker build validation report and image manifest\n\n**Completion Criteria:**\n- docker compose build completes successfully\n- All images use non-root user (UID 1001)\n- JVM optimization flags present in all Java services\n- Image sizes documented in manifest\n- No critical security vulnerabilities in base images\n\n**Validation Command:**\n./scripts/release-validation/build-and-validate-images.sh\n\n**Expected Outputs:**\n- docs/releases/v{VERSION}/artifacts/docker-image-manifest.json\n- docs/releases/v{VERSION}/validation/docker-build-report.md\n- docs/releases/v{VERSION}/validation/security-scan-report.md",
+          "completion_criteria": [
+            "docker compose build completes successfully",
+            "All images use non-root user (UID 1001)",
+            "JVM flags present: -XX:MaxRAMPercentage=75.0, -Djava.net.preferIPv4Stack=true",
+            "Image sizes < 500MB for Java services",
+            "No critical vulnerabilities in base images",
+            "Manifest created: docs/releases/v{VERSION}/artifacts/docker-image-manifest.json"
+          ],
+          "agent": "docker-agent",
+          "commands": [],
+          "validation_script": "scripts/release-validation/build-and-validate-images.sh",
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/artifacts/docker-image-manifest.json",
+            "docs/releases/v{VERSION}/validation/docker-build-report.md",
+            "docs/releases/v{VERSION}/validation/security-scan-report.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 1800,
+          "retry_on_failure": true
+        },
+        {
+          "task_id": "task-14",
+          "name": "Health Check Configuration Validation",
+          "prompt": "Validate health check configuration in docker-compose.yml for all services.\n\n**Actions:**\n1. Verify all services have health check configuration\n2. Check health check timing parameters are appropriate:\n   - interval: 30s (standard) or service-specific\n   - timeout: 10s\n   - retries: 3\n   - start-period: 60s (or longer for slow-starting services)\n3. Test all health endpoints return HTTP 200 when healthy\n4. Validate service dependencies use condition: service_healthy\n5. Verify services start in correct order (dependencies first)\n6. Generate health check validation report\n\n**Completion Criteria:**\n- All services have health check configuration\n- Health check timing parameters appropriate\n- All health endpoints return HTTP 200\n- Service dependencies use condition: service_healthy\n- Services start in correct order\n\n**Validation Command:**\n./scripts/release-validation/validate-health-checks.sh\n\n**Expected Output:**\ndocs/releases/v{VERSION}/validation/health-check-validation-report.md",
+          "completion_criteria": [
+            "All services have health check config",
+            "Timing params: interval=30s, timeout=10s, retries=3, start-period=60s+",
+            "All health endpoints return HTTP 200",
+            "Dependencies use condition: service_healthy",
+            "Service start order correct (dependencies first)",
+            "Report created: docs/releases/v{VERSION}/validation/health-check-validation-report.md"
+          ],
+          "agent": "docker-agent",
+          "commands": [],
+          "validation_script": "scripts/release-validation/validate-health-checks.sh",
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/validation/health-check-validation-report.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 600,
+          "retry_on_failure": false
+        },
+        {
+          "task_id": "task-15",
+          "name": "Environment Variable Validation",
+          "prompt": "Validate all required environment variables are documented and configured correctly.\n\n**Actions:**\n1. Check PRODUCTION_DEPLOYMENT_CHECKLIST for complete env var list\n2. Verify sensitive vars use ${SECRET} placeholders in docker-compose.yml (no hardcoded secrets)\n3. Confirm all OTLP environment variables present for distributed tracing\n4. Validate database connection vars correct for all 34 services\n5. Check Kafka bootstrap servers configured correctly\n6. Verify environment-specific profiles (dev/staging/prod) documented\n7. Generate environment variable validation report\n\n**Completion Criteria:**\n- All required env vars documented in deployment checklist\n- No hardcoded secrets in docker-compose.yml\n- OTLP environment variables complete for all services\n- Database connection vars correct\n- Kafka bootstrap servers configured\n\n**Validation Command:**\n./scripts/release-validation/validate-environment-vars.sh\n\n**Expected Output:**\ndocs/releases/v{VERSION}/validation/environment-validation-report.md",
+          "completion_criteria": [
+            "All required env vars in PRODUCTION_DEPLOYMENT_CHECKLIST",
+            "No hardcoded secrets in docker-compose.yml",
+            "OTLP vars complete (ENDPOINT, PROTOCOL, _JAVA_OPTIONS)",
+            "Database vars correct for all 34 services",
+            "Kafka bootstrap servers configured",
+            "Report created: docs/releases/v{VERSION}/validation/environment-validation-report.md"
+          ],
+          "agent": "spring-boot-agent",
+          "commands": [],
+          "validation_script": "scripts/release-validation/validate-environment-vars.sh",
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/validation/environment-validation-report.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 300,
+          "retry_on_failure": false
+        },
+        {
+          "task_id": "task-16",
+          "name": "Production Deployment Checklist Validation",
+          "prompt": "Validate PRODUCTION_DEPLOYMENT_CHECKLIST_v{VERSION}.md is complete and accurate.\n\n**Actions:**\n1. Check if docs/releases/v{VERSION}/PRODUCTION_DEPLOYMENT_CHECKLIST_v{VERSION}.md exists\n2. If not, auto-generate from template\n3. Validate checklist includes:\n   - Pre-deployment tasks (backups, secrets rotation, DNS updates)\n   - Deployment steps (sequential, executable commands)\n   - Post-deployment validation steps (health checks, smoke tests)\n   - Rollback procedures (with specific commands)\n   - Communication plan (stakeholder notifications)\n4. Verify all steps are testable and have clear success criteria\n\n**Completion Criteria:**\n- PRODUCTION_DEPLOYMENT_CHECKLIST_v{VERSION}.md exists\n- Pre-deployment section complete\n- Deployment steps clear and executable\n- Post-deployment validation checklist present\n- Rollback procedure documented with commands\n\n**Auto-Generation:**\nIf file missing: ./scripts/release-validation/generate-release-docs.sh v{VERSION}\n\n**Expected Output:**\ndocs/releases/v{VERSION}/PRODUCTION_DEPLOYMENT_CHECKLIST_v{VERSION}.md",
+          "completion_criteria": [
+            "PRODUCTION_DEPLOYMENT_CHECKLIST_v{VERSION}.md exists",
+            "Pre-deployment tasks listed (backups, secrets, DNS)",
+            "Deployment steps sequential and executable",
+            "Post-deployment validation present",
+            "Rollback procedure with commands"
+          ],
+          "agent": "manual",
+          "commands": [],
+          "validation_script": null,
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/PRODUCTION_DEPLOYMENT_CHECKLIST_v{VERSION}.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 300,
+          "retry_on_failure": false
+        }
+      ]
+    },
+    {
+      "phase_id": "phase-5-release",
+      "name": "Final Release Preparation",
+      "description": "Execute final pre-release checks, create git tag, and prepare GitHub release",
+      "dependency": "phase-4-deployment",
+      "completion_promise": "PHASE_5_COMPLETE",
+      "tasks": [
+        {
+          "task_id": "task-17",
+          "name": "Version Matrix Validation",
+          "prompt": "Validate VERSION_MATRIX_v{VERSION}.md contains accurate version numbers for all components.\n\n**Actions:**\n1. Check if docs/releases/v{VERSION}/VERSION_MATRIX_v{VERSION}.md exists\n2. If not, auto-generate from template (extracts versions from gradle/libs.versions.toml, docker-compose.yml)\n3. Validate content includes accurate versions for:\n   - All 34 microservices (with port numbers)\n   - Infrastructure components (PostgreSQL, Redis, Kafka, Jaeger)\n   - Dependencies (Spring Boot, HAPI FHIR, Liquibase, HikariCP)\n   - Docker base images (openjdk, postgres, redis, kafka)\n   - Compatibility matrix (Java, Gradle, Node.js versions)\n4. Cross-reference versions with gradle/libs.versions.toml\n\n**Completion Criteria:**\n- VERSION_MATRIX_v{VERSION}.md exists\n- All 34 service versions documented\n- Infrastructure versions accurate\n- Dependency versions match gradle/libs.versions.toml\n- Compatibility matrix complete\n\n**Auto-Generation:**\nIf file missing: ./scripts/release-validation/generate-release-docs.sh v{VERSION}\n\n**Validation Command:**\n./scripts/release-validation/validate-version-matrix.sh\n\n**Expected Output:**\ndocs/releases/v{VERSION}/VERSION_MATRIX_v{VERSION}.md",
+          "completion_criteria": [
+            "VERSION_MATRIX_v{VERSION}.md exists",
+            "All 34 services documented with ports",
+            "Infrastructure versions accurate",
+            "Dependencies match gradle/libs.versions.toml",
+            "Compatibility matrix complete"
+          ],
+          "agent": "manual",
+          "commands": [],
+          "validation_script": "scripts/release-validation/validate-version-matrix.sh",
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/VERSION_MATRIX_v{VERSION}.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 300,
+          "retry_on_failure": false
+        },
+        {
+          "task_id": "task-18",
+          "name": "Git Repository Status Validation",
+          "prompt": "Validate git repository is ready for release tagging.\n\n**Actions:**\n1. Run git status and verify:\n   - No unstaged modified files (except docs/releases/)\n   - No merge conflicts exist\n   - Recent commits follow conventional commits (feat:, fix:, docs:)\n   - Branch synchronized with remote (git fetch, compare)\n   - No .gitignore violations\n2. Verify no uncommitted experimental code or debug statements\n3. Check that all validation reports are committed\n4. Generate git status report\n\n**Completion Criteria:**\n- git status clean (no unstaged changes except docs/releases/)\n- No merge conflicts\n- Commits follow convention (feat:, fix:, docs:, chore:)\n- Branch up-to-date with remote\n- No .gitignore violations\n\n**Validation Command:**\n./scripts/release-validation/validate-git-status.sh\n\n**Expected Output:**\ndocs/releases/v{VERSION}/validation/git-status-report.md",
+          "completion_criteria": [
+            "git status shows no unstaged modified files",
+            "No merge conflicts present",
+            "Recent commits follow conventional commits format",
+            "Branch synchronized with remote",
+            "No .gitignore violations",
+            "Report created: docs/releases/v{VERSION}/validation/git-status-report.md"
+          ],
+          "agent": "manual",
+          "commands": [],
+          "validation_script": "scripts/release-validation/validate-git-status.sh",
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/validation/git-status-report.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 180,
+          "retry_on_failure": false
+        },
+        {
+          "task_id": "task-19",
+          "name": "Create Git Tag",
+          "prompt": "Create annotated git tag for release and push to remote.\n\n**Actions:**\n1. Create annotated git tag:\n   git tag -a v{VERSION} -m \"Release v{VERSION}: [brief summary from RELEASE_NOTES]\"\n2. Verify tag points to correct commit hash (git log --oneline -1)\n3. Push tag to remote: git push origin v{VERSION}\n4. Confirm tag appears on GitHub repository tags page\n5. Generate tag confirmation report\n\n**Completion Criteria:**\n- Annotated git tag v{VERSION} created successfully\n- Tag points to correct commit hash\n- Tag pushed to remote repository\n- Tag visible on GitHub tags page\n\n**Commands:**\n```bash\ngit tag -a v{VERSION} -m \"Release v{VERSION}: [summary]\"\ngit push origin v{VERSION}\n```\n\n**Expected Output:**\ndocs/releases/v{VERSION}/git-tag-confirmation.md",
+          "completion_criteria": [
+            "Annotated git tag v{VERSION} created",
+            "Tag points to latest commit",
+            "Tag pushed to remote successfully",
+            "Tag visible on GitHub /tags page",
+            "Confirmation report created"
+          ],
+          "agent": "manual",
+          "commands": [],
+          "validation_script": null,
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/git-tag-confirmation.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 120,
+          "retry_on_failure": false
+        },
+        {
+          "task_id": "task-20",
+          "name": "Create GitHub Release",
+          "prompt": "Create GitHub release from tag with documentation attachments.\n\n**Actions:**\n1. Navigate to GitHub releases page: https://github.com/{ORG}/hdim/releases/new\n2. Select tag: v{VERSION}\n3. Set release title: \"HDIM Platform v{VERSION}\"\n4. Copy content from RELEASE_NOTES_v{VERSION}.md to description\n5. Attach documentation files:\n   - UPGRADE_GUIDE_v{VERSION}.md\n   - VERSION_MATRIX_v{VERSION}.md\n   - PRODUCTION_DEPLOYMENT_CHECKLIST_v{VERSION}.md\n   - KNOWN_ISSUES_v{VERSION}.md (if exists)\n6. Mark as \"Latest release\" (if applicable)\n7. Publish release\n8. Save GitHub release URL\n\n**Completion Criteria:**\n- GitHub release created for v{VERSION}\n- Release notes populated from RELEASE_NOTES\n- All documentation files attached\n- Release marked as \"Latest\" (if applicable)\n- Release is publicly visible\n\n**Expected Output:**\ndocs/releases/v{VERSION}/github-release-url.txt",
+          "completion_criteria": [
+            "GitHub release created for tag v{VERSION}",
+            "Release title: HDIM Platform v{VERSION}",
+            "Release notes from RELEASE_NOTES attached",
+            "Documentation files attached (UPGRADE_GUIDE, VERSION_MATRIX, DEPLOYMENT_CHECKLIST)",
+            "Release marked as Latest (if applicable)",
+            "Release URL saved: docs/releases/v{VERSION}/github-release-url.txt"
+          ],
+          "agent": "manual",
+          "commands": [],
+          "validation_script": null,
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/github-release-url.txt"
+          ],
+          "blocking": true,
+          "timeout_seconds": 600,
+          "retry_on_failure": false
+        }
+      ]
+    }
+  ],
+  "ralph_loop_config": {
+    "description": "Configuration for executing each phase as a Ralph Wiggum loop",
+    "notes": [
+      "Each phase runs as a separate ralph-loop invocation",
+      "User confirms before starting next phase (semi-automated approach)",
+      "completion_promise signals phase completion",
+      "max_iterations_per_phase prevents infinite loops"
+    ],
+    "phase_execution_pattern": {
+      "phase_1": "/ralph-loop \"Execute Phase 1: Code Quality & Testing Validation. Complete tasks 01-04. Output <promise>PHASE_1_COMPLETE</promise> when all validation reports created and tests pass.\" --max-iterations 10 --completion-promise \"PHASE_1_COMPLETE\"",
+      "phase_2": "/ralph-loop \"Execute Phase 2: Documentation Completeness Validation. Complete tasks 05-08. Auto-generate missing docs. Output <promise>PHASE_2_COMPLETE</promise> when all documentation validated.\" --max-iterations 10 --completion-promise \"PHASE_2_COMPLETE\"",
+      "phase_3": "/ralph-loop \"Execute Phase 3: Integration & Configuration Validation. Complete tasks 09-12. Output <promise>PHASE_3_COMPLETE</promise> when all integration checks pass.\" --max-iterations 10 --completion-promise \"PHASE_3_COMPLETE\"",
+      "phase_4": "/ralph-loop \"Execute Phase 4: Deployment Readiness Validation. Complete tasks 13-16. Output <promise>PHASE_4_COMPLETE</promise> when Docker builds complete and deployment checklist validated.\" --max-iterations 10 --completion-promise \"PHASE_4_COMPLETE\"",
+      "phase_5": "/ralph-loop \"Execute Phase 5: Final Release Preparation. Complete tasks 17-20. Output <promise>PHASE_5_COMPLETE</promise> when git tag created and GitHub release published.\" --max-iterations 10 --completion-promise \"PHASE_5_COMPLETE\""
+    }
+  }
+}

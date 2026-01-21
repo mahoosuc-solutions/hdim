@@ -55,11 +55,14 @@ class CareGapSecurityConfigTest {
     void shouldBuildProductionChainWithGatewayTrustFilters() throws Exception {
         CareGapSecurityConfig config = new CareGapSecurityConfig();
         TrustedHeaderAuthFilter trustedHeaderFilter = mock(TrustedHeaderAuthFilter.class);
+        com.healthdata.caregap.security.TenantHeaderNormalizationFilter tenantNormalizationFilter =
+            mock(com.healthdata.caregap.security.TenantHeaderNormalizationFilter.class);
         TrustedTenantAccessFilter trustedTenantFilter = mock(TrustedTenantAccessFilter.class);
 
         SecurityFilterChain chain = config.securityFilterChain(
             httpSecurity(),
             trustedHeaderFilter,
+            tenantNormalizationFilter,
             trustedTenantFilter
         );
 

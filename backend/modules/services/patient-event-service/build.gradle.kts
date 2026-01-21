@@ -41,8 +41,8 @@ dependencies {
     implementation(libs.jackson.databind)
     implementation(libs.jackson.datatype.jsr310)
 
-    // Spring Cache
-    implementation(libs.spring.boot.starter.data.redis)
+    // Spring Cache - REMOVED: Event services use PostgreSQL only, no Redis needed
+    // implementation(libs.spring.boot.starter.data.redis)
 
     // Resilience4j
     implementation(libs.resilience4j.spring.boot3)

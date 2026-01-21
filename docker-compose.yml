@@ -600,14 +600,13 @@ services:
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: healthdata_password
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
       SERVER_PORT: 8110
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      SPRING_CACHE_TYPE: redis
+      SPRING_CACHE_TYPE: simple
       # OpenTelemetry OTLP HTTP Exporter
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
@@ -653,9 +652,10 @@ services:
       SERVER_PORT: 8111
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      SPRING_CACHE_TYPE: redis
+      SPRING_CACHE_TYPE: simple
       # OpenTelemetry OTLP HTTP Exporter
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
@@ -701,9 +701,10 @@ services:
       SERVER_PORT: 8112
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      SPRING_CACHE_TYPE: redis
+      SPRING_CACHE_TYPE: simple
       # OpenTelemetry OTLP HTTP Exporter
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
@@ -749,9 +750,10 @@ services:
       SERVER_PORT: 8113
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      SPRING_CACHE_TYPE: redis
+      SPRING_CACHE_TYPE: simple
       # OpenTelemetry OTLP HTTP Exporter
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf

@@ -2,6 +2,7 @@ package com.healthdata.clinicalworkflowevent;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -23,6 +24,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         "com.healthdata.shared"
     }
 )
+@EntityScan(basePackages = {
+    "com.healthdata.clinicalworkflowevent.projection",
+    "com.healthdata.authentication.domain"
+})
 @EnableJpaRepositories(
     basePackages = "com.healthdata.clinicalworkflowevent.repository"
 )

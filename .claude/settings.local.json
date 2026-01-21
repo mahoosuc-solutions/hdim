@@ -58,7 +58,8 @@
       "Bash(docker commit:*)",
       "Bash(docker run:*)",
       "Bash(docker rmi:*)",
-      "Bash(docker image inspect:*)"
+      "Bash(docker image inspect:*)",
+      "Read(//tmp/**)"
     ],
     "deny": [],
     "ask": []

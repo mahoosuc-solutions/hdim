@@ -41,7 +41,6 @@ import { PerformanceMetricsPanel } from './components/PerformanceMetricsPanel';
 import { BatchSelector } from './components/BatchSelector';
 import type { Batch } from './components/BatchSelector';
 import { SimpleEventFilter } from './components/SimpleEventFilter';
-import type { EventFilters } from './store/evaluationStore';
 import { SearchBar } from './components/SearchBar';
 import { ExportButton } from './components/ExportButton';
 import EventDetailsModal from './components/EventDetailsModal';
@@ -130,7 +129,8 @@ function App() {
 
   // Advanced features hooks
   const { showNotification, notificationsEnabled, requestPermission } = useNotifications();
-  const { settings: _settings } = useSettings(); // Prefix with _ to mark as intentionally unused
+  // Settings hook called for side effects (loads settings into context)
+  useSettings();
 
   // Convert BatchProgressEvents to Batch type for BatchSelector
   const batches: Batch[] = useMemo(() => {

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0042-fix-health-scores-column-types" author="tdd-swarm-team">
+        <comment>
+            Fix entity-migration synchronization issue: Convert score columns from decimal(5,2) to DOUBLE PRECISION
+
+            Root Cause: JPA entities use Double (expects DOUBLE PRECISION) but migrations used decimal(5,2) (creates NUMERIC).
+            This mismatch causes schema validation failures with ddl-auto: validate on fresh databases.
+
+            Impact: 7 columns in health_scores table
+            Pattern: Follows existing fix from migrations 0032/0033 for chronic_disease_monitoring
+        </comment>
+
+        <!-- health_scores table: 7 columns -->
+        <modifyDataType tableName="health_scores" columnName="overall_score" newDataType="DOUBLE PRECISION"/>
+        <modifyDataType tableName="health_scores" columnName="physical_health_score" newDataType="DOUBLE PRECISION"/>
+        <modifyDataType tableName="health_scores" columnName="mental_health_score" newDataType="DOUBLE PRECISION"/>
+        <modifyDataType tableName="health_scores" columnName="social_determinants_score" newDataType="DOUBLE PRECISION"/>
+        <modifyDataType tableName="health_scores" columnName="preventive_care_score" newDataType="DOUBLE PRECISION"/>
+        <modifyDataType tableName="health_scores" columnName="chronic_disease_score" newDataType="DOUBLE PRECISION"/>
+        <modifyDataType tableName="health_scores" columnName="previous_score" newDataType="DOUBLE PRECISION"/>
+
+        <rollback>
+            <!-- Rollback: Convert back to decimal(5,2) -->
+            <sql>
+                ALTER TABLE health_scores ALTER COLUMN overall_score TYPE decimal(5,2);
+                ALTER TABLE health_scores ALTER COLUMN physical_health_score TYPE decimal(5,2);
+                ALTER TABLE health_scores ALTER COLUMN mental_health_score TYPE decimal(5,2);
+                ALTER TABLE health_scores ALTER COLUMN social_determinants_score TYPE decimal(5,2);
+                ALTER TABLE health_scores ALTER COLUMN preventive_care_score TYPE decimal(5,2);
+                ALTER TABLE health_scores ALTER COLUMN chronic_disease_score TYPE decimal(5,2);
+                ALTER TABLE health_scores ALTER COLUMN previous_score TYPE decimal(5,2);
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0042-fix-health-score-history-column-types" author="tdd-swarm-team">
+        <comment>
+            Fix entity-migration synchronization issue: Convert score columns from decimal(5,2) to DOUBLE PRECISION
+
+            Impact: 8 columns in health_score_history table (7 score columns + score_delta)
+        </comment>
+
+        <!-- health_score_history table: 8 columns -->
+        <modifyDataType tableName="health_score_history" columnName="overall_score" newDataType="DOUBLE PRECISION"/>
+        <modifyDataType tableName="health_score_history" columnName="physical_health_score" newDataType="DOUBLE PRECISION"/>
+        <modifyDataType tableName="health_score_history" columnName="mental_health_score" newDataType="DOUBLE PRECISION"/>
+        <modifyDataType tableName="health_score_history" columnName="social_determinants_score" newDataType="DOUBLE PRECISION"/>
+        <modifyDataType tableName="health_score_history" columnName="preventive_care_score" newDataType="DOUBLE PRECISION"/>
+        <modifyDataType tableName="health_score_history" columnName="chronic_disease_score" newDataType="DOUBLE PRECISION"/>
+        <modifyDataType tableName="health_score_history" columnName="previous_score" newDataType="DOUBLE PRECISION"/>
+        <modifyDataType tableName="health_score_history" columnName="score_delta" newDataType="DOUBLE PRECISION"/>
+
+        <rollback>
+            <!-- Rollback: Convert back to decimal(5,2) -->
+            <sql>
+                ALTER TABLE health_score_history ALTER COLUMN overall_score TYPE decimal(5,2);
+                ALTER TABLE health_score_history ALTER COLUMN physical_health_score TYPE decimal(5,2);
+                ALTER TABLE health_score_history ALTER COLUMN mental_health_score TYPE decimal(5,2);
+                ALTER TABLE health_score_history ALTER COLUMN social_determinants_score TYPE decimal(5,2);
+                ALTER TABLE health_score_history ALTER COLUMN preventive_care_score TYPE decimal(5,2);
+                ALTER TABLE health_score_history ALTER COLUMN chronic_disease_score TYPE decimal(5,2);
+                ALTER TABLE health_score_history ALTER COLUMN previous_score TYPE decimal(5,2);
+                ALTER TABLE health_score_history ALTER COLUMN score_delta TYPE decimal(5,2);
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

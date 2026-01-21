@@ -77,4 +77,19 @@
     <include file="db/changelog/0040-create-patient-measure-eligibility-cache.xml"/>
     <include file="db/changelog/0041-create-evaluation-default-presets.xml"/>
 
+    <!-- Fix column type mismatch: health_scores and health_score_history NUMERIC -> DOUBLE PRECISION -->
+    <include file="db/changelog/0042-fix-health-score-column-types.xml"/>
+
+    <!-- Fix missing column: Add measure_id to measure_config_profiles -->
+    <include file="db/changelog/0043-add-measure-id-to-config-profiles.xml"/>
+
+    <!-- Fix column name: Rename change_summary to change_description in measure_modification_audit -->
+    <include file="db/changelog/0044-fix-measure-modification-audit-columns.xml"/>
+
+    <!-- Fix missing column: Add created_by to patient_measure_assignments -->
+    <include file="db/changelog/0045-add-created-by-to-patient-measure-assignments.xml"/>
+
+    <!-- Fix missing column: Add created_by to patient_profile_assignments -->
+    <include file="db/changelog/0046-add-created-by-to-patient-profile-assignments.xml"/>
+
 </databaseChangeLog>

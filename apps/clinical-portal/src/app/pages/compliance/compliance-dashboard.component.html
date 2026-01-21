@@ -1,0 +1,274 @@
+<div class="compliance-dashboard">
+  <div class="header">
+    <h1>Compliance Validation Dashboard</h1>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="refresh()" [attr.data-testid]="'compliance-refresh'">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+      <button mat-icon-button [matMenuTriggerFor]="exportMenu" [attr.data-testid]="'compliance-export-menu'">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #exportMenu="matMenu">
+        <button mat-menu-item (click)="exportAsJson()" [attr.data-testid]="'compliance-export-json'">
+          <mat-icon>code</mat-icon>
+          Export as JSON
+        </button>
+        <button mat-menu-item (click)="exportAsCsv()" [attr.data-testid]="'compliance-export-csv'">
+          <mat-icon>table_chart</mat-icon>
+          Export as CSV
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="clearErrors()" [attr.data-testid]="'compliance-clear-errors'">
+          <mat-icon>delete</mat-icon>
+          Clear All Errors
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+
+  @if (complianceConfig) {
+    <mat-card class="config-card" [attr.data-testid]="'compliance-config'">
+      <mat-card-header>
+        <mat-card-title>Compliance Configuration</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="config-grid">
+          <div class="config-item">
+            <span class="config-label">Fallbacks Disabled:</span>
+            <mat-chip [color]="complianceConfig.disableFallbacks ? 'warn' : 'primary'">
+              {{ complianceConfig.disableFallbacks ? 'Yes' : 'No' }}
+            </mat-chip>
+          </div>
+          <div class="config-item">
+            <span class="config-label">Strict Error Handling:</span>
+            <mat-chip [color]="complianceConfig.strictErrorHandling ? 'warn' : 'primary'">
+              {{ complianceConfig.strictErrorHandling ? 'Enabled' : 'Disabled' }}
+            </mat-chip>
+          </div>
+          <div class="config-item">
+            <span class="config-label">Error Tracking:</span>
+            <mat-chip [color]="complianceConfig.enableErrorTracking ? 'primary' : ''">
+              {{ complianceConfig.enableErrorTracking ? 'Enabled' : 'Disabled' }}
+            </mat-chip>
+          </div>
+          <div class="config-item">
+            <span class="config-label">Retention:</span>
+            <mat-chip>{{ complianceConfig.errorRetentionDays || 30 }} days</mat-chip>
+          </div>
+          <div class="config-item">
+            <span class="config-label">Backend Sync:</span>
+            <mat-chip [color]="complianceConfig.syncToBackend ? 'primary' : ''">
+              {{ complianceConfig.syncToBackend ? 'Enabled' : 'Disabled' }}
+            </mat-chip>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Alerts Section -->
+  @if (alerts.length > 0) {
+    <mat-card class="alerts-card" [attr.data-testid]="'compliance-alerts'">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon [color]="'warn'">warning</mat-icon>
+          Active Alerts ({{ alerts.length }})
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="alerts-list">
+          @for (alert of alerts; track alert.timestamp) {
+            <div class="alert-item" [class]="'alert-' + alert.severity">
+              <div class="alert-header">
+                <mat-icon>{{ alert.severity === 'critical' ? 'error' : 'warning' }}</mat-icon>
+                <span class="alert-type">{{ alert.type }}</span>
+                <span class="alert-time">{{ alert.timestamp | date:'short' }}</span>
+              </div>
+              <div class="alert-message">{{ alert.message }}</div>
+              <div class="alert-details">
+                Threshold: {{ alert.details.threshold }} | Actual: {{ alert.details.actual }}
+              </div>
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (summary) {
+    <div class="summary-grid">
+      <!-- Compliance Score -->
+      <mat-card class="score-card" [attr.data-testid]="'compliance-score'">
+        <mat-card-header>
+          <mat-card-title>Compliance Score</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="score-display">
+            <div class="score-value" [attr.data-testid]="'compliance-score-value'">
+              {{ summary.complianceScore }}
+            </div>
+            <div class="score-label">out of 100</div>
+            <mat-progress-bar 
+              mode="determinate" 
+              [value]="summary.complianceScore"
+              [color]="getComplianceScoreColor(summary.complianceScore)">
+            </mat-progress-bar>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Total Errors -->
+      <mat-card class="stat-card" [attr.data-testid]="'compliance-total-errors'">
+        <mat-card-header>
+          <mat-card-title>Total Errors</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-value">{{ summary.totalErrors }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Failed Endpoints -->
+      <mat-card class="stat-card" [attr.data-testid]="'compliance-failed-endpoints'">
+        <mat-card-header>
+          <mat-card-title>Failed Endpoints</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-value">{{ summary.failedEndpoints.size }}</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Errors by Service -->
+    @if (summary.errorsByService.size > 0) {
+      <mat-card class="section-card" [attr.data-testid]="'compliance-errors-by-service'">
+        <mat-card-header>
+          <mat-card-title>Errors by Service</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="service-list">
+            @for (entry of summary.errorsByService | keyvalue; track entry.key) {
+              <div class="service-item">
+                <span class="service-name">{{ entry.key }}</span>
+                <mat-chip>{{ entry.value }}</mat-chip>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- Errors by Severity -->
+    @if (summary.errorsBySeverity.size > 0) {
+      <mat-card class="section-card" [attr.data-testid]="'compliance-errors-by-severity'">
+        <mat-card-header>
+          <mat-card-title>Errors by Severity</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="severity-list">
+            @for (entry of summary.errorsBySeverity | keyvalue; track entry.key) {
+              <div class="severity-item">
+                <mat-chip [color]="getSeverityColor(entry.key)">
+                  {{ entry.key }}: {{ entry.value }}
+                </mat-chip>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- Recommendations -->
+    @if (report && report.recommendations.length > 0) {
+      <mat-card class="section-card" [attr.data-testid]="'compliance-recommendations'">
+        <mat-card-header>
+          <mat-card-title>Recommendations</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <ul class="recommendations-list">
+            @for (rec of report.recommendations; track rec) {
+              <li>{{ rec }}</li>
+            }
+          </ul>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- Recent Errors Table -->
+    @if (recentErrors.length > 0) {
+      <mat-card class="section-card" [attr.data-testid]="'compliance-recent-errors'">
+        <mat-card-header>
+          <mat-card-title>Recent Errors (Last 50)</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <table mat-table [dataSource]="recentErrors" class="errors-table">
+            <ng-container matColumnDef="timestamp">
+              <th mat-header-cell *matHeaderCellDef>Timestamp</th>
+              <td mat-cell *matCellDef="let error">
+                {{ error.timestamp | date:'short' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="service">
+              <th mat-header-cell *matHeaderCellDef>Service</th>
+              <td mat-cell *matCellDef="let error">{{ error.context.service }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="operation">
+              <th mat-header-cell *matHeaderCellDef>Operation</th>
+              <td mat-cell *matCellDef="let error">{{ error.context.operation }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="endpoint">
+              <th mat-header-cell *matHeaderCellDef>Endpoint</th>
+              <td mat-cell *matCellDef="let error">
+                <span class="endpoint-text">{{ error.context.endpoint || '-' }}</span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="errorCode">
+              <th mat-header-cell *matHeaderCellDef>Error Code</th>
+              <td mat-cell *matCellDef="let error">
+                <mat-chip>{{ getErrorCodeName(error.context.errorCode) }}</mat-chip>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="severity">
+              <th mat-header-cell *matHeaderCellDef>Severity</th>
+              <td mat-cell *matCellDef="let error">
+                <mat-chip [color]="getSeverityColor(error.context.severity)">
+                  {{ error.context.severity }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="message">
+              <th mat-header-cell *matHeaderCellDef>Message</th>
+              <td mat-cell *matCellDef="let error">
+                <span class="message-text" [matTooltip]="error.message">
+                  {{ error.message }}
+                </span>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- Empty State -->
+    @if (summary.totalErrors === 0) {
+      <mat-card class="empty-card" [attr.data-testid]="'compliance-empty'">
+        <mat-card-content>
+          <div class="empty-state">
+            <mat-icon>check_circle</mat-icon>
+            <h2>No Errors Tracked</h2>
+            <p>All systems are operating correctly. No errors have been recorded.</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  }
+</div>

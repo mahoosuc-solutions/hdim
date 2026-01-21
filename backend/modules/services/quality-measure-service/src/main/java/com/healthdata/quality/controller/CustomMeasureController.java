@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/quality-measure/custom-measures")
+@RequestMapping("/custom-measures")
 @RequiredArgsConstructor
 @Slf4j
 @Validated
@@ -31,7 +31,7 @@ public class CustomMeasureController {
 
     private final CustomMeasureService customMeasureService;
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @PostMapping
     public ResponseEntity<CustomMeasureEntity> createDraft(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -49,7 +49,7 @@ public class CustomMeasureController {
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @GetMapping
     public ResponseEntity<List<CustomMeasureEntity>> list(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -58,7 +58,7 @@ public class CustomMeasureController {
         return ResponseEntity.ok(customMeasureService.list(tenantId, status));
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<CustomMeasureEntity> getById(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -67,7 +67,7 @@ public class CustomMeasureController {
         return ResponseEntity.ok(customMeasureService.getById(tenantId, id));
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<CustomMeasureEntity> updateDraft(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -84,7 +84,7 @@ public class CustomMeasureController {
         ));
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'ADMIN', 'SUPER_ADMIN')")
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a custom measure (soft delete)")
     @Audited(
@@ -101,7 +101,7 @@ public class CustomMeasureController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'ADMIN', 'SUPER_ADMIN')")
     @PostMapping("/batch-publish")
     @Operation(summary = "Batch publish draft measures", description = "Publish multiple draft measures at once. Only DRAFT measures will be published, others will be skipped.")
     @Audited(
@@ -139,7 +139,7 @@ public class CustomMeasureController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
-    @DeleteMapping("/batch-delete")
+    @PostMapping("/batch-delete")
     @Operation(summary = "Batch delete custom measures", description = "Soft delete multiple custom measures at once. Measures with evaluations require force=true.")
     @Audited(
             action = AuditAction.DELETE,
@@ -150,7 +150,7 @@ public class CustomMeasureController {
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
             @Valid @RequestBody BatchDeleteRequest request
     ) {
-        log.info("DELETE /quality-measure/custom-measures/batch-delete - tenant {}, count {}, force {}",
+        log.info("POST /quality-measure/custom-measures/batch-delete - tenant {}, count {}, force {}",
                 tenantId, request.measureIds().size(), request.force());
 
         try {
@@ -175,6 +175,113 @@ public class CustomMeasureController {
                     new BatchDeleteResponse(0, 0, List.of(e.getMessage()), List.of())
             );
         }
+    }
+
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PutMapping("/{id}/cql")
+    @Operation(summary = "Update CQL text for a custom measure")
+    @Audited(
+            action = AuditAction.UPDATE,
+            resourceType = "CustomMeasure",
+            description = "Update CQL text"
+    )
+    public ResponseEntity<CustomMeasureEntity> updateCql(
+            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @PathVariable("id") UUID id,
+            @Valid @RequestBody UpdateCqlRequest request
+    ) {
+        log.info("PUT /quality-measure/custom-measures/{}/cql - tenant {}", id, tenantId);
+        return ResponseEntity.ok(customMeasureService.updateCql(tenantId, id, request.cqlText()));
+    }
+
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PutMapping("/{id}/value-sets")
+    @Operation(summary = "Update value sets for a custom measure")
+    @Audited(
+            action = AuditAction.UPDATE,
+            resourceType = "CustomMeasure",
+            description = "Update value sets"
+    )
+    public ResponseEntity<CustomMeasureEntity> updateValueSets(
+            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @PathVariable("id") UUID id,
+            @Valid @RequestBody UpdateValueSetsRequest request
+    ) {
+        log.info("PUT /quality-measure/custom-measures/{}/value-sets - tenant {}", id, tenantId);
+        // Convert valueSets list to JSON string for storage
+        String valueSetsJson = request.valueSets() != null ? request.valueSets().toString() : null;
+        return ResponseEntity.ok(customMeasureService.updateValueSets(tenantId, id, valueSetsJson));
+    }
+
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'ADMIN', 'SUPER_ADMIN')")
+    @PostMapping("/{id}/publish")
+    @Operation(summary = "Publish a single custom measure")
+    @Audited(
+            action = AuditAction.UPDATE,
+            resourceType = "CustomMeasure",
+            description = "Publish custom measure"
+    )
+    public ResponseEntity<CustomMeasureEntity> publish(
+            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @PathVariable("id") UUID id
+    ) {
+        log.info("POST /quality-measure/custom-measures/{}/publish - tenant {}", id, tenantId);
+        try {
+            return ResponseEntity.ok(customMeasureService.publish(tenantId, id));
+        } catch (IllegalStateException e) {
+            log.warn("Cannot publish measure {}: {}", id, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PostMapping("/{id}/clone")
+    @Operation(summary = "Clone a custom measure as a new draft")
+    @Audited(
+            action = AuditAction.CREATE,
+            resourceType = "CustomMeasure",
+            description = "Clone custom measure"
+    )
+    public ResponseEntity<CustomMeasureEntity> cloneMeasure(
+            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @PathVariable("id") UUID id
+    ) {
+        log.info("POST /quality-measure/custom-measures/{}/clone - tenant {}", id, tenantId);
+        CustomMeasureEntity cloned = customMeasureService.clone(tenantId, id, "clinical-portal");
+        return ResponseEntity.status(HttpStatus.CREATED).body(cloned);
+    }
+
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PostMapping("/{id}/test")
+    @Operation(summary = "Test a custom measure against sample patients")
+    @Audited(
+            action = AuditAction.READ,
+            resourceType = "CustomMeasure",
+            description = "Test custom measure"
+    )
+    public ResponseEntity<CustomMeasureService.TestMeasureResult> testMeasure(
+            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @PathVariable("id") UUID id
+    ) {
+        log.info("POST /quality-measure/custom-measures/{}/test - tenant {}", id, tenantId);
+        return ResponseEntity.ok(customMeasureService.testMeasure(tenantId, id));
+    }
+
+    @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PostMapping("/evaluate-patient")
+    @Operation(summary = "Evaluate CQL text against a specific patient")
+    @Audited(
+            action = AuditAction.READ,
+            resourceType = "CustomMeasure",
+            description = "Evaluate CQL against patient"
+    )
+    public ResponseEntity<PatientEvaluationResult> evaluatePatient(
+            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Valid @RequestBody EvaluatePatientRequest request
+    ) {
+        log.info("POST /quality-measure/custom-measures/evaluate-patient - tenant {}, patientId {}", tenantId, request.patientId());
+        PatientEvaluationResult result = customMeasureService.evaluatePatient(tenantId, request.cqlText(), request.patientId());
+        return ResponseEntity.ok(result);
     }
 
     // Request/Response DTOs
@@ -217,5 +324,42 @@ public class CustomMeasureController {
             int failedCount,
             List<String> errors,
             List<String> measuresInUse
+    ) {}
+
+    public record UpdateCqlRequest(
+            @NotBlank(message = "CQL text is required")
+            String cqlText
+    ) {}
+
+    public record UpdateValueSetsRequest(
+            List<Object> valueSets
+    ) {}
+
+    public record EvaluatePatientRequest(
+            @NotBlank(message = "CQL text is required")
+            String cqlText,
+            @NotBlank(message = "Patient ID is required")
+            String patientId
+    ) {}
+
+    /**
+     * Result of evaluating CQL against a specific patient
+     */
+    public record PatientEvaluationResult(
+            String patientId,
+            String patientName,
+            String mrn,
+            String outcome,
+            List<MatchedCriterion> matchedCriteria,
+            String message
+    ) {}
+
+    /**
+     * Individual criterion evaluation result
+     */
+    public record MatchedCriterion(
+            String criterionName,
+            boolean matched,
+            String reason
     ) {}
 }

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0003-create-consent-history-table" author="healthdata-system">
+        <comment>Create consent history table for audit trail of consent changes</comment>
+
+        <createTable tableName="consent_history">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="consent_id" type="uuid">
+                <constraints nullable="false"
+                            foreignKeyName="fk_consent_history_consent"
+                            references="consents(id)"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="action" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="previous_state" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="new_state" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="ip_address" type="varchar(45)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_consent_history_consent" tableName="consent_history">
+            <column name="consent_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_consent_history_patient" tableName="consent_history">
+            <column name="patient_id"/>
+            <column name="changed_at" descending="true"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="consent_history"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

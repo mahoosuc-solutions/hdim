@@ -98,6 +98,13 @@
 - [ ] **Vulnerability scan** clean
 - [ ] **Secrets rotated** (JWT, API keys, passwords)
 - [ ] **Backup system** tested
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
+  ```bash
+  python3 scripts/compliance/update-third-party-notices.py
+  python3 scripts/compliance/verify-third-party-licenses.py
+  rg -n "license: unknown\\)" docs/compliance/THIRD_PARTY_NOTICES.md
+  # Should return no results
+  ```
 
 ### Team Readiness
 
@@ -445,6 +452,7 @@ npm run test:e2e:prod
 - [ ] **No memory leaks** (stable memory usage)
 - [ ] **CPU usage** under 50%
 - [ ] **Disk space** sufficient (>20% free)
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### Performance Baseline
 

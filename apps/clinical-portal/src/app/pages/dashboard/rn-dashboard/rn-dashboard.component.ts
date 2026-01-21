@@ -19,7 +19,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatBadgeModule } from '@angular/material/badge';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
@@ -29,6 +30,10 @@ import { CareGapService, InterventionType } from '../../../services/care-gap.ser
 import { ToastService } from '../../../services/toast.service';
 import { TrackInteraction } from '../../../utils/ai-tracking.decorator';
 import { LoggerService, ContextualLogger } from '../../../services/logger.service';
+import { NurseWorkflowService } from '../../../services/nurse-workflow/nurse-workflow.service';
+import { MedicationService } from '../../../services/medication/medication.service';
+import { CarePlanService } from '../../../services/care-plan/care-plan.service';
+import { WorkflowLauncherService, type WorkflowType } from '../../../services/workflow/workflow-launcher.service';
 
 export interface CareGapTask {
   id: string;
@@ -95,7 +100,11 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private careGapService: CareGapService,
     private toastService: ToastService,
-    private logger: LoggerService
+    private logger: LoggerService,
+    private nurseWorkflowService: NurseWorkflowService,
+    private medicationService: MedicationService,
+    private carePlanService: CarePlanService,
+    private workflowLauncher: WorkflowLauncherService
   ) {
     this.log = this.logger.withContext('RNDashboardComponent');
   }
@@ -110,126 +119,240 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load RN dashboard data
+   * Load RN dashboard data from real services
    */
   private loadDashboardData(): void {
     this.loading = true;
-    this.loadCareGaps();
-    this.loadOutreachTasks();
-    this.loadMetrics();
+
+    // Initialize services with tenant context
+    // In production, get tenant ID from authenticated user context
+    const tenantId = 'TENANT001'; // TODO: Get from AuthService
+    this.nurseWorkflowService.setTenantContext(tenantId);
+    this.medicationService.setTenantContext(tenantId);
+    this.carePlanService.setTenantContext(tenantId);
+
+    // Load all data in parallel using forkJoin
+    forkJoin([
+      // NurseWorkflow service data
+      this.nurseWorkflowService.getPendingOutreachLogs(0, 50).pipe(
+        catchError((error) => {
+          this.log.error('Failed to load outreach logs:', error);
+          this.toastService.error('Failed to load outreach data');
+          return of([]);
+        })
+      ),
+      this.nurseWorkflowService.getPendingMedicationReconciliations(0, 50).pipe(
+        catchError((error) => {
+          this.log.error('Failed to load medication reconciliations:', error);
+          return of([]);
+        })
+      ),
+      this.nurseWorkflowService.getEducationSessionsWithPoorUnderstanding().pipe(
+        catchError((error) => {
+          this.log.error('Failed to load education sessions:', error);
+          return of([]);
+        })
+      ),
+      this.nurseWorkflowService.getReferralsAwaitingScheduling().pipe(
+        catchError((error) => {
+          this.log.error('Failed to load pending referrals:', error);
+          return of([]);
+        })
+      ),
+      this.nurseWorkflowService.getMedicationReconciliationMetrics().pipe(
+        catchError((error) => {
+          this.log.error('Failed to load metrics:', error);
+          return of({ totalReconciliations: 0, pendingReconciliations: 0, completionRate: 0 });
+        })
+      ),
+      // MedicationService data
+      this.medicationService.getPendingOrdersAwaitingPharmacy(0, 50).pipe(
+        catchError((error) => {
+          this.log.error('Failed to load medication orders:', error);
+          return of({ content: [], totalElements: 0, totalPages: 0, currentPage: 0, pageSize: 50, hasNext: false, hasPrevious: false });
+        })
+      ),
+      // CarePlanService data
+      this.carePlanService.getCarePlansDueForReview(0, 50).pipe(
+        catchError((error) => {
+          this.log.error('Failed to load care plans:', error);
+          return of({ content: [], totalElements: 0, totalPages: 0, currentPage: 0, pageSize: 50, hasNext: false, hasPrevious: false });
+        })
+      ),
+    ]).pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ([outreachLogs, medReconciliations, educationSessions, referrals, metrics, medicationOrders, carePlans]) => {
+          this.processDashboardData(outreachLogs, medReconciliations, educationSessions, referrals, metrics, medicationOrders, carePlans);
+          this.loading = false;
+        },
+        error: (error) => {
+          this.log.error('Failed to load dashboard data:', error);
+          this.toastService.error('Failed to load dashboard. Please refresh the page.');
+          this.loading = false;
+        },
+      });
   }
 
   /**
-   * Load care gap tasks
+   * Process loaded dashboard data and transform to UI models
    */
-  private loadCareGaps(): void {
-    // Mock data for demonstration
-    setTimeout(() => {
-      this.careGaps = [
-        {
-          id: '1',
-          patientName: 'Davis, Jennifer',
-          patientMRN: 'MRN-101',
-          gapType: 'Diabetes Education',
-          priority: 'high',
-          category: 'education',
-          dueDate: '2025-12-01',
-          assignedTo: 'RN Davis',
-          status: 'pending'
-        },
-        {
-          id: '2',
-          patientName: 'Miller, Michael',
-          patientMRN: 'MRN-102',
-          gapType: 'Medication Reconciliation',
-          priority: 'high',
-          category: 'medication',
-          dueDate: '2025-11-28',
-          assignedTo: 'RN Davis',
-          status: 'in-progress'
-        },
-        {
-          id: '3',
-          patientName: 'Wilson, Sarah',
-          patientMRN: 'MRN-103',
-          gapType: 'Hypertension Follow-up',
-          priority: 'medium',
-          category: 'coordination',
-          dueDate: '2025-12-05',
-          assignedTo: 'RN Davis',
-          status: 'pending'
-        },
-        {
-          id: '4',
-          patientName: 'Moore, James',
-          patientMRN: 'MRN-104',
-          gapType: 'Depression Screening',
-          priority: 'high',
-          category: 'assessment',
-          dueDate: '2025-11-30',
-          assignedTo: 'RN Davis',
-          status: 'pending'
-        }
-      ];
-      this.loading = false;
-    }, 500);
+  private processDashboardData(
+    outreachLogs: any,
+    medReconciliations: any,
+    educationSessions: any,
+    referrals: any,
+    metrics: any,
+    medicationOrders: any,
+    carePlans: any
+  ): void {
+    // Transform outreach logs to PatientOutreach
+    const outreachContent = outreachLogs?.content || [];
+    this.outreachTasks = outreachContent.map((log: any) => ({
+      id: log.id,
+      patientName: log.patientName || 'Unknown',
+      patientMRN: log.patientMRN || 'N/A',
+      outreachType: log.contactMethod?.toLowerCase() || 'call',
+      reason: log.reason,
+      scheduledDate: new Date(log.contactedAt).toLocaleString(),
+      status: 'scheduled' as const,
+    }));
+
+    // Transform medication reconciliations to care gaps
+    const medRecContent = medReconciliations?.content || [];
+    const medicationGaps = medRecContent.map((rec: any) => ({
+      id: rec.id,
+      patientName: rec.patientName || 'Unknown',
+      patientMRN: rec.patientMRN || 'N/A',
+      gapType: 'Medication Reconciliation',
+      priority: 'high' as const,
+      category: 'medication' as const,
+      dueDate: rec.startDate,
+      assignedTo: 'RN',
+      status: 'pending' as const,
+    }));
+
+    // Transform education sessions to care gaps
+    const educationContent = educationSessions || [];
+    const educationGaps = educationContent.map((session: any) => ({
+      id: session.id,
+      patientName: session.patientName || 'Unknown',
+      patientMRN: session.patientMRN || 'N/A',
+      gapType: 'Patient Education',
+      priority: 'medium' as const,
+      category: 'education' as const,
+      dueDate: session.deliveredAt,
+      assignedTo: 'RN',
+      status: 'pending' as const,
+    }));
+
+    // Transform referrals to care gaps
+    const referralContent = referrals || [];
+    const referralGaps = referralContent.map((ref: any) => ({
+      id: ref.id,
+      patientName: ref.patientName || 'Unknown',
+      patientMRN: ref.patientMRN || 'N/A',
+      gapType: `${ref.specialtyType} Referral`,
+      priority: ref.priority?.toLowerCase() || 'medium' as const,
+      category: 'coordination' as const,
+      dueDate: ref.requestedAt,
+      assignedTo: 'RN',
+      status: 'pending' as const,
+    }));
+
+    // Combine all care gaps
+    this.careGaps = [...medicationGaps, ...educationGaps, ...referralGaps];
+
+    // Update metrics from real data
+    this.medReconciliationsNeeded = metrics?.pendingReconciliations || 0;
+    this.careGapsAssigned = this.careGaps.length;
+    this.patientCallsPending = this.outreachTasks.filter(t => t.outreachType === 'call').length;
+    this.patientEducationDue = educationGaps.length;
+
+    this.log.debug('Dashboard data loaded', {
+      outreach: this.outreachTasks.length,
+      careGaps: this.careGaps.length,
+      metrics: { medReconciliationsNeeded: this.medReconciliationsNeeded, patientCallsPending: this.patientCallsPending },
+    });
   }
 
   /**
-   * Load patient outreach tasks
-   */
-  private loadOutreachTasks(): void {
-    setTimeout(() => {
-      this.outreachTasks = [
-        {
-          id: '1',
-          patientName: 'Anderson, Lisa',
-          patientMRN: 'MRN-201',
-          outreachType: 'call',
-          reason: 'Pre-visit preparation',
-          scheduledDate: '2025-11-26 10:00',
-          status: 'scheduled'
-        },
-        {
-          id: '2',
-          patientName: 'Taylor, Robert',
-          patientMRN: 'MRN-202',
-          outreachType: 'call',
-          reason: 'Lab results review',
-          scheduledDate: '2025-11-26 14:00',
-          status: 'scheduled'
-        },
-        {
-          id: '3',
-          patientName: 'Thomas, Emily',
-          patientMRN: 'MRN-203',
-          outreachType: 'email',
-          reason: 'Care plan update',
-          scheduledDate: '2025-11-27',
-          status: 'scheduled'
-        }
-      ];
-    }, 500);
-  }
-
-  /**
-   * Load dashboard metrics
-   */
-  private loadMetrics(): void {
-    this.careGapsAssigned = 15;
-    this.patientCallsPending = 8;
-    this.medReconciliationsNeeded = 5;
-    this.patientEducationDue = 7;
-  }
-
-  /**
-   * Address care gap
+   * Address care gap by launching appropriate workflow dialog
    */
   addressCareGap(gap: CareGapTask): void {
     this.log.debug('Addressing care gap:', gap.gapType);
-    this.router.navigate(['/patients', gap.id], {
-      queryParams: { action: 'address-gap', gapId: gap.id }
-    });
+
+    try {
+      // Map care gap category to workflow type
+      const workflowType: WorkflowType = this.workflowLauncher.mapCategoryToWorkflow(gap.category);
+
+      // Launch workflow with completion callback
+      this.workflowLauncher.launchWorkflow(
+        workflowType,
+        {
+          id: gap.id,
+          patientId: gap.id, // Note: Transform gap.id to patientId as needed by workflows
+          patientName: gap.patientName,
+          patientMRN: gap.patientMRN,
+          category: gap.category,
+          gapType: gap.gapType,
+          priority: gap.priority,
+          dueDate: gap.dueDate,
+          status: gap.status,
+        },
+        (result) => {
+          if (result.success) {
+            // Update care gap status after workflow completion
+            gap.status = 'completed';
+            this.careGapsAssigned = Math.max(0, this.careGapsAssigned - 1);
+            this.log.info(`Care gap ${gap.id} marked as completed`);
+
+            // Remove from list after brief delay for UI update
+            setTimeout(() => {
+              const index = this.careGaps.indexOf(gap);
+              if (index > -1) {
+                this.careGaps.splice(index, 1);
+              }
+            }, 300);
+          }
+        }
+      );
+    } catch (error) {
+      this.log.error('Failed to launch workflow:', error);
+      this.toastService.error('Failed to launch workflow. Please try again.');
+    }
+  }
+
+  /**
+   * Quick launch a workflow without a specific care gap task
+   * Used for launching workflows from quick action buttons
+   */
+  quickLaunchWorkflow(workflowType: WorkflowType): void {
+    this.log.debug('Quick launching workflow:', workflowType);
+
+    try {
+      // Create a dummy task for quick launch
+      const dummyTask = {
+        id: `${workflowType}-${Date.now()}`,
+        patientId: '',
+        patientName: 'Demo Patient',
+        patientMRN: 'N/A',
+        category: workflowType,
+        gapType: this.workflowLauncher.getWorkflowConfig(workflowType).label,
+        priority: 'medium' as const,
+        dueDate: new Date().toISOString(),
+        status: 'pending' as const,
+      };
+
+      // Launch workflow
+      this.workflowLauncher.launchWorkflow(workflowType, dummyTask, (result) => {
+        if (result.success) {
+          this.log.info(`${workflowType} workflow completed successfully`);
+        }
+      });
+    } catch (error) {
+      this.log.error('Failed to quick launch workflow:', error);
+      this.toastService.error('Failed to launch workflow. Please try again.');
+    }
   }
 
   /**

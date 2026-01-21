@@ -110,7 +110,7 @@ curl -s -H "X-Tenant-ID: default" \
 ```bash
 # Population report via Kong
 curl -s -H "X-Tenant-ID: default" \
-  "http://localhost:8000/api/quality/quality-measure/report/population" | jq '.'
+  "http://localhost:8000/api/quality/report/population" | jq '.'
 ```
 
 **Expected**: JSON response with quality metrics
@@ -357,10 +357,10 @@ curl -X DELETE http://localhost:8001/routes/cql-engine-api
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/quality/quality-measure/report/patient` | Patient quality report |
-| GET | `/api/quality/quality-measure/report/population` | Population quality report |
-| GET | `/api/quality/quality-measure/results` | Quality measure results |
-| POST | `/api/quality/quality-measure/calculate` | Calculate quality measure |
+| GET | `/api/quality/report/patient` | Patient quality report |
+| GET | `/api/quality/report/population` | Population quality report |
+| GET | `/api/quality/results` | Quality measure results |
+| POST | `/api/quality/calculate` | Calculate quality measure |
 
 ### FHIR Server (via Kong)
 

@@ -1405,6 +1405,7 @@ audit:
 - [ ] Review rate limits and plan query strategy
 - [ ] Test authentication in sandbox environment
 - [ ] Map required FHIR resources to quality measures
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### During Integration
 

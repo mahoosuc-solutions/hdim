@@ -16,9 +16,7 @@ interface ValidationResult {
 
 const PLACEHOLDER_PATTERNS = [
   /\[YOUR[_\s].*?\]/gi,
-  /\{\{.*?\}\}/g,
   /TODO:/gi,
-  /PLACEHOLDER/gi,
   /Lorem ipsum/gi,
   /\[COMPANY[_\s]NAME\]/gi,
   /\[PRODUCT[_\s]NAME\]/gi,

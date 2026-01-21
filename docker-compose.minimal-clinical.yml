@@ -40,7 +40,7 @@ services:
 
   jaeger:
     container_name: hdim-jaeger
-    image: jaegertracing/all-in-one:1.52
+    image: jaegertracing/all-in-one:1.53
     restart: unless-stopped
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
@@ -150,7 +150,7 @@ services:
       # Backend service URLs for Docker networking (include context paths)
       BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir
       BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084/patient
-      BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087/quality-measure/quality-measure
+      BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087/quality-measure
       BACKEND_SERVICES_CARE_GAP_URL: http://care-gap-service:8086/care-gap
       BACKEND_SERVICES_CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
     extra_hosts:

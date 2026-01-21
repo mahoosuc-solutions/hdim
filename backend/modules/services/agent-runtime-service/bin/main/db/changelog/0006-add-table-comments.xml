@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+    <changeSet id="0006-add-table-comments" author="hdim">
+        <comment>Add table comments for documentation</comment>
+
+        <sql>
+            COMMENT ON TABLE agent_task_executions IS 'Stores all agent task executions for auditing and analytics';
+            COMMENT ON TABLE agent_configurations IS 'Stores custom agent configurations created by tenants';
+            COMMENT ON TABLE agent_versions IS 'Stores version history for agent configurations';
+            COMMENT ON TABLE agent_execution_metrics IS 'Daily aggregated metrics for agent performance';
+            COMMENT ON TABLE ai_consent IS 'Tracks patient consent for AI features';
+        </sql>
+
+        <rollback>
+            <sql>
+                COMMENT ON TABLE agent_task_executions IS NULL;
+                COMMENT ON TABLE agent_configurations IS NULL;
+                COMMENT ON TABLE agent_versions IS NULL;
+                COMMENT ON TABLE agent_execution_metrics IS NULL;
+                COMMENT ON TABLE ai_consent IS NULL;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -110,7 +110,7 @@ else
         -e POSTGRES_PASSWORD=healthdata_password \
         -e POSTGRES_DB=healthdata_db \
         -p 5432:5432 \
-        postgres:15-alpine
+        postgres:16-alpine
 fi
 
 # Wait for PostgreSQL to be ready

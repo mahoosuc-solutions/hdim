@@ -1,0 +1,284 @@
+# ====================================================================================================
+# Spring Boot Production Configuration - CQL Engine Service
+# ====================================================================================================
+# This configuration is activated with: -Dspring.profiles.active=production
+# Environment variables should be set via .env.production file
+
+spring:
+  application:
+    name: cql-engine-service
+
+  # Database Configuration
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      pool-name: CqlEngineHikariPool
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Never auto-create in production
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        show_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+    open-in-view: false
+
+  # Liquibase
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  # Redis Configuration
+  redis:
+    host: ${SPRING_REDIS_HOST}
+    port: ${SPRING_REDIS_PORT}
+    password: ${SPRING_REDIS_PASSWORD}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 20
+        max-idle: 10
+        min-idle: 5
+        max-wait: 2000ms
+      shutdown-timeout: 100ms
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    consumer:
+      group-id: cql-engine-service
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.healthdata.*"
+        max.poll.records: 100
+        max.poll.interval.ms: 300000
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        linger.ms: 10
+        batch.size: 32768
+        compression.type: snappy
+    listener:
+      ack-mode: manual
+      concurrency: 3
+
+  # Jackson Configuration
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      indent-output: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+    time-zone: UTC
+
+# ====================================================================================================
+# Server Configuration with SSL/TLS
+# ====================================================================================================
+server:
+  port: 8081
+
+  # SSL Configuration
+  ssl:
+    enabled: ${SSL_ENABLED:true}
+    key-store: ${SSL_KEY_STORE:/etc/ssl/keystore.p12}
+    key-store-password: ${SSL_KEY_STORE_PASSWORD}
+    key-store-type: PKCS12
+    key-alias: healthdata-production
+    # TLS protocol configuration
+    protocol: TLS
+    enabled-protocols: TLSv1.3,TLSv1.2
+    # Strong cipher suites only
+    ciphers:
+      - TLS_AES_128_GCM_SHA256
+      - TLS_AES_256_GCM_SHA384
+      - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+      - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+
+  # HTTP/2 support
+  http2:
+    enabled: true
+
+  # Compression
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/xml
+    min-response-size: 1024
+
+  # Context path
+  servlet:
+    context-path: /cql-engine
+    session:
+      timeout: 30m
+      cookie:
+        secure: true
+        http-only: true
+        same-site: strict
+
+  # Error handling
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+
+  # Shutdown
+  shutdown: graceful
+
+  # Tomcat specific settings
+  tomcat:
+    max-connections: 10000
+    threads:
+      max: 200
+      min-spare: 10
+    connection-timeout: 20000
+    max-http-header-size: 8KB
+    accept-count: 100
+
+# ====================================================================================================
+# Spring Actuator Configuration
+# ====================================================================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        step: 1m
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+    tags:
+      application: ${spring.application.name}
+      environment: production
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+# ====================================================================================================
+# Application-Specific Configuration
+# ====================================================================================================
+application:
+  # FHIR Service Configuration
+  fhir:
+    service-url: ${FHIR_SERVICE_URL}
+    timeout: 30000
+    max-retry-attempts: 3
+    retry-delay: 1000
+
+  # Security Configuration
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration-ms: ${JWT_EXPIRATION_MS:3600000}  # 1 hour default
+      refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:86400000}  # 24 hours
+      header: Authorization
+      prefix: "Bearer "
+    api-key:
+      header: X-API-Key
+      required: ${SERVICE_API_KEY}
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS}
+      allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+      allowed-headers: "*"
+      exposed-headers: Authorization,X-Total-Count,X-Page-Number
+      allow-credentials: true
+      max-age: 3600
+
+  # Rate Limiting
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    requests-per-minute: ${RATE_LIMIT_REQUESTS_PER_MINUTE:100}
+    requests-per-hour: ${RATE_LIMIT_REQUESTS_PER_HOUR:1000}
+
+  # Cache Configuration
+  cache:
+    ttl:
+      evaluation-result: 3600  # 1 hour
+      measure-definition: 86400  # 24 hours
+      value-set: 604800  # 7 days
+    max-size: 10000
+
+  # WebSocket Configuration
+  websocket:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+    heartbeat-interval: 30000
+    max-sessions: 1000
+    message-size-limit: 65536
+
+  # Evaluation Configuration
+  evaluation:
+    max-concurrent: 50
+    timeout-seconds: 300
+    async-pool-size: 20
+
+# ====================================================================================================
+# Logging Configuration
+# ====================================================================================================
+logging:
+  level:
+    root: ${LOGGING_LEVEL_ROOT:INFO}
+    com.healthdata: INFO
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    com.zaxxer.hikari: WARN
+    org.springframework.kafka: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/healthdata/cql-engine-service.log
+    max-size: 10MB
+    max-history: 30
+    total-size-cap: 1GB
+
+# ====================================================================================================
+# Security Headers (Spring Security will apply these)
+# ====================================================================================================
+# These are configured in SecurityConfig.java, documented here for reference:
+# - Strict-Transport-Security: max-age=31536000; includeSubDomains
+# - X-Content-Type-Options: nosniff
+# - X-Frame-Options: DENY
+# - X-XSS-Protection: 1; mode=block
+# - Content-Security-Policy: default-src 'self'
+# - Referrer-Policy: strict-origin-when-cross-origin
+# - Permissions-Policy: geolocation=(), microphone=(), camera=()

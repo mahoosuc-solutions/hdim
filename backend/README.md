@@ -185,7 +185,7 @@ Retention: 7 years (HIPAA requirement)
 
 - **Framework**: Spring Boot 3.x
 - **Java**: 21 (LTS)
-- **Database**: PostgreSQL 15
+- **Database**: PostgreSQL 16
 - **Cache**: Redis 7
 - **Messaging**: Kafka 3.x
 - **FHIR**: HAPI FHIR 7.x (R4)

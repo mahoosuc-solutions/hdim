@@ -750,6 +750,7 @@ For 100,000 patients evaluated monthly:
 - ✅ Proper date filtering for FHIR queries
 - ✅ Care gaps include type, description, action, priority, due date
 - ✅ Details map for debugging and audit trail
+- ✅ License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ---
 

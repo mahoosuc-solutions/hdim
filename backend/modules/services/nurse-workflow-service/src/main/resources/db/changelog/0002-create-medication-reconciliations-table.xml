@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0002-create-medication-reconciliations-table" author="hdim-nurse-workflow-team">
+        <comment>Create medication_reconciliations table for medication reconciliation tracking</comment>
+
+        <createTable tableName="medication_reconciliations">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_medication_reconciliations"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reconciler_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="medication_count" type="INT"/>
+            <column name="discrepancy_count" type="INT"/>
+            <column name="patient_education_provided" type="BOOLEAN"/>
+            <column name="patient_understanding" type="VARCHAR(20)"/>
+            <column name="notes" type="TEXT"/>
+            <column name="task_id" type="VARCHAR(128)"/>
+            <column name="encounter_id" type="VARCHAR(128)"/>
+            <column name="started_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="completed_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Create indexes for query performance -->
+        <createIndex indexName="idx_med_rec_tenant_patient" tableName="medication_reconciliations">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_med_rec_reconciler" tableName="medication_reconciliations">
+            <column name="reconciler_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_med_rec_status" tableName="medication_reconciliations">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_med_rec_trigger" tableName="medication_reconciliations">
+            <column name="trigger_type"/>
+        </createIndex>
+
+        <!-- Rollback -->
+        <rollback>
+            <dropTable tableName="medication_reconciliations"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

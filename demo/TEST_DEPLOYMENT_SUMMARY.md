@@ -133,7 +133,7 @@
 All of the following must be true:
 - All 6 services start successfully
 - All health endpoints return 200 OK
-- Demo data seeded (10 patients, 18 care gaps)
+- Demo data seeded (10 patients, 16 care gaps)
 - API endpoints return valid responses
 - FHIR p95 latency < 500ms
 - Care Gap p95 latency < 500ms

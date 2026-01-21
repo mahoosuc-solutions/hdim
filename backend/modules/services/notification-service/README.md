@@ -1650,7 +1650,7 @@ notification-service-tests:
   runs-on: ubuntu-latest
   services:
     postgres:
-      image: postgres:15
+      image: postgres:16
       env:
         POSTGRES_DB: testdb
         POSTGRES_USER: test

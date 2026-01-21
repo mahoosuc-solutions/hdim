@@ -50,6 +50,22 @@ export interface MatchedCriterion {
 }
 
 /**
+ * Backend API response from /custom-measures/evaluate-patient
+ */
+export interface PatientEvaluationApiResponse {
+  patientId: string;
+  patientName: string;
+  mrn: string;
+  outcome: string;
+  matchedCriteria: Array<{
+    criterionName: string;
+    matched: boolean;
+    reason: string;
+  }>;
+  message: string;
+}
+
+/**
  * Live preview evaluation request
  */
 export interface LivePreviewRequest {
@@ -585,27 +601,27 @@ export class LivePreviewService {
 
   /**
    * Evaluate CQL against a specific patient by ID
+   * Uses the backend /custom-measures/evaluate-patient endpoint
    */
   evaluateSpecificPatient(
     cqlText: string,
     patientId: string,
     tenantId: string = API_CONFIG.DEFAULT_TENANT_ID
   ): Observable<LivePreviewResponse> {
-    const url = `${API_CONFIG.QUALITY_MEASURE_URL}/cql/preview/patient/${patientId}`;
+    // Use the new evaluate-patient endpoint
+    const url = `${API_CONFIG.QUALITY_MEASURE_URL}/custom-measures/evaluate-patient`;
     const headers = new HttpHeaders({
       'X-Tenant-ID': tenantId,
+      'Content-Type': 'application/json',
     });
 
-    const request: LivePreviewRequest = {
+    const request = {
       cqlText,
-      patientIds: [patientId],
-      measurementPeriod: {
-        start: this.getMeasurementPeriodStart(),
-        end: this.getMeasurementPeriodEnd(),
-      },
+      patientId,
     };
 
-    return this.http.post<LivePreviewResponse>(url, request, { headers }).pipe(
+    return this.http.post<PatientEvaluationApiResponse>(url, request, { headers }).pipe(
+      map((response) => this.mapApiResponseToLivePreview(response)),
       catchError(() => {
         // Fallback: Try to find patient in sample patients
         const samplePatient = this.samplePatients.find(p => p.id === patientId || p.mrn === patientId);
@@ -635,6 +651,53 @@ export class LivePreviewService {
         });
       })
     );
+  }
+
+  /**
+   * Map backend API response to LivePreviewResponse format
+   */
+  private mapApiResponseToLivePreview(apiResponse: PatientEvaluationApiResponse): LivePreviewResponse {
+    const outcome = apiResponse.outcome as PatientEvaluationResult['outcome'];
+    
+    const result: PatientEvaluationResult = {
+      patientId: apiResponse.patientId,
+      patientName: apiResponse.patientName,
+      mrn: apiResponse.mrn,
+      evaluationStatus: 'complete',
+      inInitialPopulation: outcome !== 'not-eligible',
+      inDenominator: outcome === 'pass' || outcome === 'fail',
+      inNumerator: outcome === 'pass',
+      inDenominatorExclusion: false,
+      inDenominatorException: false,
+      inNumeratorExclusion: false,
+      outcome,
+      matchedCriteria: apiResponse.matchedCriteria?.map(c => ({
+        criterionName: c.criterionName,
+        matched: c.matched,
+        reason: c.reason,
+      })) || [],
+    };
+
+    return {
+      evaluationId: `eval-${Date.now()}`,
+      status: 'complete',
+      timestamp: new Date().toISOString(),
+      cqlValid: true,
+      cqlErrors: [],
+      results: [result],
+      summary: {
+        total: 1,
+        inInitialPopulation: result.inInitialPopulation ? 1 : 0,
+        inDenominator: result.inDenominator ? 1 : 0,
+        inNumerator: result.inNumerator ? 1 : 0,
+        passed: outcome === 'pass' ? 1 : 0,
+        failed: outcome === 'fail' ? 1 : 0,
+        excluded: outcome === 'excluded' ? 1 : 0,
+        notEligible: outcome === 'not-eligible' ? 1 : 0,
+        errors: outcome === 'error' ? 1 : 0,
+      },
+      executionTimeMs: 50,
+    };
   }
 
   /**

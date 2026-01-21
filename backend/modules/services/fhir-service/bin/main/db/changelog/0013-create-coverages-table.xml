@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0013-create-coverages-table" author="hdim">
+        <comment>Create coverages table for FHIR Coverage resources</comment>
+
+        <createTable tableName="coverages">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_json" type="JSONB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(32)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="type_code" type="VARCHAR(64)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="type_display" type="VARCHAR(256)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="subscriber_id" type="VARCHAR(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="group_number" type="VARCHAR(64)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="payor_reference" type="VARCHAR(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="payor_display" type="VARCHAR(256)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="period_start" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="period_end" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="dependent" type="VARCHAR(32)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="relationship_code" type="VARCHAR(32)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="coverage_order" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+            <column name="network" type="VARCHAR(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="last_modified_by" type="VARCHAR(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="version" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="true"/>
+            </column>
+            <column name="deleted_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes for common queries -->
+        <createIndex indexName="idx_coverages_tenant_patient" tableName="coverages">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_coverages_tenant_status" tableName="coverages">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_coverages_tenant_subscriber" tableName="coverages">
+            <column name="tenant_id"/>
+            <column name="subscriber_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_coverages_tenant_payor" tableName="coverages">
+            <column name="tenant_id"/>
+            <column name="payor_reference"/>
+        </createIndex>
+
+        <createIndex indexName="idx_coverages_period" tableName="coverages">
+            <column name="tenant_id"/>
+            <column name="period_start"/>
+            <column name="period_end"/>
+        </createIndex>
+
+        <createIndex indexName="idx_coverages_deleted" tableName="coverages">
+            <column name="deleted_at"/>
+        </createIndex>
+
+        <!-- GIN index for JSONB full-text search -->
+        <sql>
+            CREATE INDEX idx_coverages_resource_gin ON coverages USING GIN (resource_json jsonb_path_ops);
+        </sql>
+
+        <rollback>
+            <dropTable tableName="coverages"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

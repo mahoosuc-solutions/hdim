@@ -8,6 +8,7 @@ import { MeasureService } from '../../services/measure.service';
 import { EvaluationService } from '../../services/evaluation.service';
 import { PatientService } from '../../services/patient.service';
 import { DialogService } from '../../services/dialog.service';
+import { ToastService } from '../../services/toast.service';
 import { CqlLibraryFactory } from '../../../testing/factories/cql-library.factory';
 import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { EvaluationFactory } from '../../../testing/factories/evaluation.factory';
@@ -20,6 +21,7 @@ describe('EvaluationsComponent', () => {
   let mockEvaluationService: jest.Mocked<EvaluationService>;
   let mockPatientService: jest.Mocked<PatientService>;
   let mockDialogService: jest.Mocked<DialogService>;
+  let mockToastService: jest.Mocked<ToastService>;
 
   beforeEach(async () => {
     // Create mock services
@@ -31,8 +33,14 @@ describe('EvaluationsComponent', () => {
     mockEvaluationService = {
       calculateQualityMeasure: jest.fn(),
       getAllResults: jest.fn(),
+      getDefaultEvaluationPreset: jest.fn(),
+      saveDefaultEvaluationPreset: jest.fn(),
+      clearDefaultEvaluationPreset: jest.fn(),
     } as any;
     mockEvaluationService.getAllResults.mockReturnValue(of([]));
+    mockEvaluationService.getDefaultEvaluationPreset.mockReturnValue(of(null));
+    mockEvaluationService.saveDefaultEvaluationPreset.mockReturnValue(of(null));
+    mockEvaluationService.clearDefaultEvaluationPreset.mockReturnValue(of(null));
 
     mockPatientService = {
       getPatientsSummary: jest.fn(),
@@ -44,6 +52,13 @@ describe('EvaluationsComponent', () => {
     } as any;
     mockDialogService.confirm.mockReturnValue(of(true));
 
+    mockToastService = {
+      success: jest.fn(),
+      error: jest.fn(),
+      info: jest.fn(),
+      warning: jest.fn(),
+    } as any;
+
     await TestBed.configureTestingModule({
       imports: [EvaluationsComponent, ReactiveFormsModule, NoopAnimationsModule],
       providers: [
@@ -52,6 +67,7 @@ describe('EvaluationsComponent', () => {
         { provide: EvaluationService, useValue: mockEvaluationService },
         { provide: PatientService, useValue: mockPatientService },
         { provide: DialogService, useValue: mockDialogService },
+        { provide: ToastService, useValue: mockToastService },
       ],
     }).compileComponents();
 

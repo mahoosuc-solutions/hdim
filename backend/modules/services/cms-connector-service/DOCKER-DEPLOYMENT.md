@@ -666,7 +666,7 @@ docker-compose -f docker-compose.prod.yml exec postgres \
   pg_dump -U cms_service cms_production > backup-$(date +%Y%m%d).sql
 
 # Quarterly: Security updates
-docker pull postgres:15
+docker pull postgres:16
 docker pull redis:7
 docker-compose -f docker-compose.prod.yml build --no-cache
 docker-compose -f docker-compose.prod.yml up -d

@@ -1,0 +1,54 @@
+server:
+  port: 8107
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/notification_db}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:healthdata_password}
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: ""
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:29092}
+
+  mail:
+    host: ${SMTP_HOST:mailhog}
+    port: ${SMTP_PORT:1025}
+
+healthdata:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456}
+
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456}
+
+management:
+  health:
+    mail:
+      enabled: false
+    redis:
+      enabled: true
+    db:
+      enabled: true
+    diskspace:
+      enabled: true
+  endpoint:
+    health:
+      show-details: always
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${TRACING_URL:http://jaeger:4318/v1/traces}
+
+logging:
+  level:
+    root: INFO
+    com.healthdata: INFO

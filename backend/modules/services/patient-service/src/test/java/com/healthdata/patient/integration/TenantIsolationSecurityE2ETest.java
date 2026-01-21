@@ -1,0 +1,439 @@
+package com.healthdata.patient.integration;
+
+import com.healthdata.patient.api.dto.PatientRequest;
+import com.healthdata.patient.domain.model.Patient;
+import com.healthdata.patient.repository.PatientDemographicsRepository;
+import com.healthdata.testfixtures.security.GatewayTrustTestHeaders;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.time.LocalDate;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+/**
+ * End-to-End Security Tests for Multi-Tenant Database Isolation.
+ *
+ * These tests validate that the patient service properly enforces tenant isolation
+ * at the database level, preventing unauthorized cross-tenant data access.
+ *
+ * SECURITY TEST COVERAGE:
+ * - HIPAA Security Rule: Access Control (§164.312(a)(1))
+ * - OWASP A01: Broken Access Control
+ * - Multi-tenant data isolation
+ * - Database-level tenant filtering
+ * - SQL injection prevention in tenant queries
+ *
+ * TEST STRATEGY:
+ * 1. Create patients in different tenants
+ * 2. Attempt cross-tenant access with various attack vectors
+ * 3. Verify that only authorized tenant data is accessible
+ * 4. Test edge cases: SQL injection, header manipulation, missing tenant context
+ */
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Testcontainers
+@Transactional
+@DisplayName("Multi-Tenant Database Isolation E2E Security Tests")
+class TenantIsolationSecurityE2ETest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private PatientDemographicsRepository patientRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private UUID tenant1PatientId;
+    private UUID tenant2PatientId;
+    private UUID tenant3PatientId;
+
+    @BeforeEach
+    void setUp() {
+        // Clear existing test data
+        patientRepository.deleteAll();
+
+        // Create test patients in different tenants
+        Patient tenant1Patient = Patient.builder()
+            .tenantId("tenant-1")
+            .firstName("John")
+            .lastName("Doe")
+            .dateOfBirth(LocalDate.of(1980, 1, 1))
+            .build();
+        tenant1PatientId = patientRepository.save(tenant1Patient).getId();
+
+        Patient tenant2Patient = Patient.builder()
+            .tenantId("tenant-2")
+            .firstName("Jane")
+            .lastName("Smith")
+            .dateOfBirth(LocalDate.of(1985, 5, 15))
+            .build();
+        tenant2PatientId = patientRepository.save(tenant2Patient).getId();
+
+        Patient tenant3Patient = Patient.builder()
+            .tenantId("tenant-3")
+            .firstName("Bob")
+            .lastName("Johnson")
+            .dateOfBirth(LocalDate.of(1990, 10, 30))
+            .build();
+        tenant3PatientId = patientRepository.save(tenant3Patient).getId();
+    }
+
+    @Nested
+    @DisplayName("Basic Tenant Isolation")
+    class BasicTenantIsolation {
+
+        @Test
+        @DisplayName("should only return patients for authorized tenant")
+        void shouldOnlyReturnAuthorizedTenantPatients() throws Exception {
+            var headers = GatewayTrustTestHeaders.adminHeaders("tenant-1");
+
+            mockMvc.perform(get("/api/v1/patients")
+                    .headers(headers))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].firstName").value("John"))
+                .andExpect(jsonPath("$[0].lastName").value("Doe"));
+        }
+
+        @Test
+        @DisplayName("should prevent access to patient from different tenant by ID")
+        void shouldPreventCrossTenantAccessById() throws Exception {
+            var headers = GatewayTrustTestHeaders.adminHeaders("tenant-1");
+
+            // Try to access tenant-2's patient using tenant-1's credentials
+            mockMvc.perform(get("/api/v1/patients/" + tenant2PatientId)
+                    .headers(headers))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Patient not found"));
+        }
+
+        @Test
+        @DisplayName("should allow access to patient from same tenant")
+        void shouldAllowAccessToSameTenantPatient() throws Exception {
+            var headers = GatewayTrustTestHeaders.adminHeaders("tenant-1");
+
+            mockMvc.perform(get("/api/v1/patients/" + tenant1PatientId)
+                    .headers(headers))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("John"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-Tenant User Access")
+    class MultiTenantUserAccess {
+
+        @Test
+        @DisplayName("should allow multi-tenant user to access authorized tenants only")
+        void shouldAllowMultiTenantAccess() throws Exception {
+            // User has access to tenant-1 and tenant-2, but not tenant-3
+            var headers = GatewayTrustTestHeaders.builder()
+                .tenantId("tenant-1")
+                .tenantIds("tenant-1", "tenant-2")
+                .roles("ADMIN")
+                .build();
+
+            // Should access tenant-1 data
+            mockMvc.perform(get("/api/v1/patients/" + tenant1PatientId)
+                    .headers(headers))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("John"));
+
+            // Should access tenant-2 data with proper tenant header
+            var tenant2Headers = GatewayTrustTestHeaders.builder()
+                .tenantId("tenant-2")
+                .tenantIds("tenant-1", "tenant-2")
+                .roles("ADMIN")
+                .build();
+
+            mockMvc.perform(get("/api/v1/patients/" + tenant2PatientId)
+                    .headers(tenant2Headers))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("Jane"));
+
+            // Should NOT access tenant-3 data (not in authorized list)
+            var tenant3Headers = GatewayTrustTestHeaders.builder()
+                .tenantId("tenant-3")
+                .tenantIds("tenant-1", "tenant-2")  // tenant-3 not in list
+                .roles("ADMIN")
+                .build();
+
+            mockMvc.perform(get("/api/v1/patients/" + tenant3PatientId)
+                    .headers(tenant3Headers))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Access denied to tenant"));
+        }
+    }
+
+    @Nested
+    @DisplayName("SQL Injection Prevention")
+    class SqlInjectionPrevention {
+
+        @Test
+        @DisplayName("should prevent SQL injection via tenant ID header")
+        void shouldPreventSqlInjectionInTenantId() throws Exception {
+            // Attempt SQL injection in tenant ID
+            String sqlInjection = "tenant-1' OR '1'='1";
+
+            var headers = GatewayTrustTestHeaders.builder()
+                .tenantId(sqlInjection)
+                .roles("ADMIN")
+                .build();
+
+            mockMvc.perform(get("/api/v1/patients")
+                    .headers(headers))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid tenant ID format"));
+        }
+
+        @Test
+        @DisplayName("should prevent SQL injection via patient search parameters")
+        void shouldPreventSqlInjectionInSearchParams() throws Exception {
+            var headers = GatewayTrustTestHeaders.adminHeaders("tenant-1");
+
+            // Attempt SQL injection in search parameter
+            String sqlInjection = "John'; DROP TABLE patients; --";
+
+            mockMvc.perform(get("/api/v1/patients/search")
+                    .param("firstName", sqlInjection)
+                    .headers(headers))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));  // Should find nothing, not execute SQL
+        }
+
+        @Test
+        @DisplayName("should sanitize tenant IDs in query parameters")
+        void shouldSanitizeTenantIdsInQueries() throws Exception {
+            var headers = GatewayTrustTestHeaders.builder()
+                .tenantId("tenant-1")
+                .tenantIds("tenant-1' UNION SELECT * FROM users WHERE '1'='1")
+                .roles("ADMIN")
+                .build();
+
+            mockMvc.perform(get("/api/v1/patients")
+                    .headers(headers))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid tenant IDs format"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Create and Update Operations")
+    class CreateAndUpdateOperations {
+
+        @Test
+        @DisplayName("should create patient only in authorized tenant")
+        void shouldCreatePatientInAuthorizedTenant() throws Exception {
+            var headers = GatewayTrustTestHeaders.adminHeaders("tenant-1");
+
+            PatientRequest newPatient = PatientRequest.builder()
+                .firstName("Alice")
+                .lastName("Williams")
+                .dateOfBirth(LocalDate.of(1995, 3, 20))
+                .build();
+
+            mockMvc.perform(post("/api/v1/patients")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(newPatient)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.firstName").value("Alice"))
+                .andExpect(jsonPath("$.tenantId").value("tenant-1"));
+        }
+
+        @Test
+        @DisplayName("should prevent updating patient from different tenant")
+        void shouldPreventCrossTenantUpdate() throws Exception {
+            var headers = GatewayTrustTestHeaders.adminHeaders("tenant-1");
+
+            PatientRequest update = PatientRequest.builder()
+                .firstName("Hacked")
+                .lastName("Hacker")
+                .dateOfBirth(LocalDate.of(1980, 1, 1))
+                .build();
+
+            // Try to update tenant-2's patient using tenant-1's credentials
+            mockMvc.perform(put("/api/v1/patients/" + tenant2PatientId)
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(update)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Patient not found"));
+
+            // Verify tenant-2 patient unchanged
+            var tenant2Headers = GatewayTrustTestHeaders.adminHeaders("tenant-2");
+            mockMvc.perform(get("/api/v1/patients/" + tenant2PatientId)
+                    .headers(tenant2Headers))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("Jane"));  // Original name
+        }
+
+        @Test
+        @DisplayName("should prevent deleting patient from different tenant")
+        void shouldPreventCrossTenantDelete() throws Exception {
+            var headers = GatewayTrustTestHeaders.adminHeaders("tenant-1");
+
+            // Try to delete tenant-2's patient
+            mockMvc.perform(delete("/api/v1/patients/" + tenant2PatientId)
+                    .headers(headers))
+                .andExpect(status().isNotFound());
+
+            // Verify tenant-2 patient still exists
+            var tenant2Headers = GatewayTrustTestHeaders.adminHeaders("tenant-2");
+            mockMvc.perform(get("/api/v1/patients/" + tenant2PatientId)
+                    .headers(tenant2Headers))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("Jane"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Batch Operations Security")
+    class BatchOperationsSecurity {
+
+        @Test
+        @DisplayName("should only batch export patients from authorized tenant")
+        void shouldOnlyExportAuthorizedTenantPatients() throws Exception {
+            var headers = GatewayTrustTestHeaders.adminHeaders("tenant-1");
+
+            mockMvc.perform(post("/api/v1/patients/export")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalCount").value(1))
+                .andExpect(jsonPath("$.patients", hasSize(1)))
+                .andExpect(jsonPath("$.patients[0].firstName").value("John"));
+        }
+
+        @Test
+        @DisplayName("should prevent batch operations with mixed tenant patient IDs")
+        void shouldPreventMixedTenantBatchOperations() throws Exception {
+            var headers = GatewayTrustTestHeaders.adminHeaders("tenant-1");
+
+            // Attempt to batch update patients from different tenants
+            Map<String, Object> batchUpdate = Map.of(
+                "patientIds", java.util.List.of(tenant1PatientId.toString(), tenant2PatientId.toString()),
+                "status", "ACTIVE"
+            );
+
+            mockMvc.perform(post("/api/v1/patients/batch-update")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(batchUpdate)))
+                .andExpect(status().isPartialContent())  // 206: only some succeeded
+                .andExpect(jsonPath("$.successCount").value(1))  // Only tenant-1 patient
+                .andExpect(jsonPath("$.failedCount").value(1));  // tenant-2 patient rejected
+        }
+    }
+
+    @Nested
+    @DisplayName("Missing or Invalid Tenant Context")
+    class MissingTenantContext {
+
+        @Test
+        @DisplayName("should reject request without tenant ID header")
+        void shouldRejectRequestWithoutTenantId() throws Exception {
+            // Create headers without tenant context
+            var headers = GatewayTrustTestHeaders.builder()
+                .roles("ADMIN")
+                // No tenantId or tenantIds
+                .build();
+
+            mockMvc.perform(get("/api/v1/patients")
+                    .headers(headers))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Tenant context is required"));
+        }
+
+        @Test
+        @DisplayName("should reject request with empty tenant ID")
+        void shouldRejectEmptyTenantId() throws Exception {
+            var headers = GatewayTrustTestHeaders.builder()
+                .tenantId("")
+                .roles("ADMIN")
+                .build();
+
+            mockMvc.perform(get("/api/v1/patients")
+                    .headers(headers))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Tenant ID cannot be empty"));
+        }
+
+        @Test
+        @DisplayName("should reject request with null tenant ID characters")
+        void shouldRejectNullCharactersInTenantId() throws Exception {
+            var headers = GatewayTrustTestHeaders.builder()
+                .tenantId("tenant-1\0malicious")
+                .roles("ADMIN")
+                .build();
+
+            mockMvc.perform(get("/api/v1/patients")
+                    .headers(headers))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid tenant ID format"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Role-Based Tenant Access")
+    class RoleBasedTenantAccess {
+
+        @Test
+        @DisplayName("VIEWER role should have read-only access to tenant data")
+        void viewerShouldHaveReadOnlyAccess() throws Exception {
+            var headers = GatewayTrustTestHeaders.viewerHeaders("tenant-1");
+
+            // Should read data
+            mockMvc.perform(get("/api/v1/patients/" + tenant1PatientId)
+                    .headers(headers))
+                .andExpect(status().isOk());
+
+            // Should NOT create data
+            PatientRequest newPatient = PatientRequest.builder()
+                .firstName("Test")
+                .lastName("User")
+                .dateOfBirth(LocalDate.of(1990, 1, 1))
+                .build();
+
+            mockMvc.perform(post("/api/v1/patients")
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(newPatient)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Insufficient permissions"));
+        }
+
+        @Test
+        @DisplayName("EVALUATOR role should access patients for quality measure evaluation")
+        void evaluatorShouldAccessPatientsForEvaluation() throws Exception {
+            var headers = GatewayTrustTestHeaders.evaluatorHeaders("tenant-1");
+
+            // Should read patient data for evaluation
+            mockMvc.perform(get("/api/v1/patients/" + tenant1PatientId)
+                    .headers(headers))
+                .andExpect(status().isOk());
+
+            // Should access quality measure endpoints (tested in integration with quality-measure-service)
+        }
+    }
+}

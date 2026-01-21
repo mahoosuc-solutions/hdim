@@ -12,11 +12,13 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RestController;
+import com.healthdata.audit.service.ai.AIAuditEventPublisher;
 
 /**
  * Quality Measure Service - HEDIS Quality Measure Calculation and Reporting
@@ -56,6 +58,7 @@ import org.springframework.web.bind.annotation.RestController;
         )
     }
 )
+@Import(AIAuditEventPublisher.class)
 @EnableFeignClients
 @EnableCaching
 @EnableScheduling  // Enable @Scheduled annotations for WebSocket session timeout monitoring (HIPAA §164.312(a)(2)(iii))

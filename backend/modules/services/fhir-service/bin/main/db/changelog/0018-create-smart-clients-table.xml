@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0018-1" author="healthdata">
+        <comment>Create smart_clients table for SMART on FHIR client registrations</comment>
+        <createTable tableName="smart_clients">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="client_id" type="VARCHAR(128)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="client_secret" type="VARCHAR(256)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="client_name" type="VARCHAR(256)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_type" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="token_endpoint_auth_method" type="VARCHAR(64)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="jwks_uri" type="VARCHAR(512)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="description" type="VARCHAR(1000)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="logo_uri" type="VARCHAR(512)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="client_uri" type="VARCHAR(512)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="policy_uri" type="VARCHAR(512)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="tos_uri" type="VARCHAR(512)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(64)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="require_pkce" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="access_token_lifetime" type="INT" defaultValueNumeric="3600">
+                <constraints nullable="false"/>
+            </column>
+            <column name="refresh_token_lifetime" type="INT" defaultValueNumeric="86400">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <rollback>
+            <dropTable tableName="smart_clients"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0018-2" author="healthdata">
+        <comment>Create smart_client_redirect_uris table</comment>
+        <createTable tableName="smart_client_redirect_uris">
+            <column name="client_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="redirect_uri" type="VARCHAR(512)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+            baseTableName="smart_client_redirect_uris"
+            baseColumnNames="client_id"
+            constraintName="fk_smart_redirect_uris_client"
+            referencedTableName="smart_clients"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="smart_client_redirect_uris"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0018-3" author="healthdata">
+        <comment>Create smart_client_scopes table</comment>
+        <createTable tableName="smart_client_scopes">
+            <column name="client_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scope" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+            baseTableName="smart_client_scopes"
+            baseColumnNames="client_id"
+            constraintName="fk_smart_scopes_client"
+            referencedTableName="smart_clients"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="smart_client_scopes"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0018-4" author="healthdata">
+        <comment>Create smart_client_grant_types table</comment>
+        <createTable tableName="smart_client_grant_types">
+            <column name="client_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="grant_type" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+            baseTableName="smart_client_grant_types"
+            baseColumnNames="client_id"
+            constraintName="fk_smart_grant_types_client"
+            referencedTableName="smart_clients"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="smart_client_grant_types"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0018-5" author="healthdata">
+        <comment>Create indexes for smart_clients</comment>
+        <createIndex indexName="idx_smart_clients_client_id" tableName="smart_clients">
+            <column name="client_id"/>
+        </createIndex>
+        <createIndex indexName="idx_smart_clients_tenant" tableName="smart_clients">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex indexName="idx_smart_clients_active" tableName="smart_clients">
+            <column name="active"/>
+        </createIndex>
+
+        <rollback>
+            <!-- Indexes will be dropped when table is dropped -->
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0018-6" author="healthdata">
+        <comment>Insert demo SMART client for testing</comment>
+        <insert tableName="smart_clients">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="client_id" value="demo-smart-app"/>
+            <column name="client_secret" value="demo-secret-change-in-production"/>
+            <column name="client_name" value="Demo SMART App"/>
+            <column name="client_type" value="CONFIDENTIAL"/>
+            <column name="token_endpoint_auth_method" value="CLIENT_SECRET_BASIC"/>
+            <column name="description" value="Demo SMART on FHIR application for testing"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="require_pkce" valueBoolean="true"/>
+            <column name="access_token_lifetime" valueNumeric="3600"/>
+            <column name="refresh_token_lifetime" valueNumeric="86400"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="smart_clients">
+                <where>client_id='demo-smart-app'</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0018-7" author="healthdata">
+        <comment>Add redirect URIs for demo client</comment>
+        <sql>
+            INSERT INTO smart_client_redirect_uris (client_id, redirect_uri)
+            SELECT id, 'http://localhost:3000/callback'
+            FROM smart_clients WHERE client_id = 'demo-smart-app';
+
+            INSERT INTO smart_client_redirect_uris (client_id, redirect_uri)
+            SELECT id, 'http://localhost:4200/callback'
+            FROM smart_clients WHERE client_id = 'demo-smart-app';
+        </sql>
+
+        <rollback>
+            <sql>
+                DELETE FROM smart_client_redirect_uris WHERE client_id IN (SELECT id FROM smart_clients WHERE client_id = 'demo-smart-app');
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0018-8" author="healthdata">
+        <comment>Add scopes for demo client</comment>
+        <sql>
+            INSERT INTO smart_client_scopes (client_id, scope)
+            SELECT id, 'launch' FROM smart_clients WHERE client_id = 'demo-smart-app';
+
+            INSERT INTO smart_client_scopes (client_id, scope)
+            SELECT id, 'launch/patient' FROM smart_clients WHERE client_id = 'demo-smart-app';
+
+            INSERT INTO smart_client_scopes (client_id, scope)
+            SELECT id, 'openid' FROM smart_clients WHERE client_id = 'demo-smart-app';
+
+            INSERT INTO smart_client_scopes (client_id, scope)
+            SELECT id, 'fhirUser' FROM smart_clients WHERE client_id = 'demo-smart-app';
+
+            INSERT INTO smart_client_scopes (client_id, scope)
+            SELECT id, 'offline_access' FROM smart_clients WHERE client_id = 'demo-smart-app';
+
+            INSERT INTO smart_client_scopes (client_id, scope)
+            SELECT id, 'patient/*.read' FROM smart_clients WHERE client_id = 'demo-smart-app';
+
+            INSERT INTO smart_client_scopes (client_id, scope)
+            SELECT id, 'user/*.read' FROM smart_clients WHERE client_id = 'demo-smart-app';
+        </sql>
+
+        <rollback>
+            <sql>
+                DELETE FROM smart_client_scopes WHERE client_id IN (SELECT id FROM smart_clients WHERE client_id = 'demo-smart-app');
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0018-9" author="healthdata">
+        <comment>Add grant types for demo client</comment>
+        <sql>
+            INSERT INTO smart_client_grant_types (client_id, grant_type)
+            SELECT id, 'authorization_code' FROM smart_clients WHERE client_id = 'demo-smart-app';
+
+            INSERT INTO smart_client_grant_types (client_id, grant_type)
+            SELECT id, 'refresh_token' FROM smart_clients WHERE client_id = 'demo-smart-app';
+        </sql>
+
+        <rollback>
+            <sql>
+                DELETE FROM smart_client_grant_types WHERE client_id IN (SELECT id FROM smart_clients WHERE client_id = 'demo-smart-app');
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

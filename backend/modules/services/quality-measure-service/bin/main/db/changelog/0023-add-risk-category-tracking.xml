@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0015-add-risk-category-tracking" author="tdd-swarm-agent-5">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="risk_assessments" columnName="risk_category"/>
+            </not>
+        </preConditions>
+        <comment>
+            Phase 4: Risk Stratification Automation - Add category-specific risk tracking
+
+            Enhancements:
+            1. Add risk_category column for category-specific assessments (CARDIOVASCULAR, DIABETES, RESPIRATORY, MENTAL_HEALTH)
+            2. Add assessment_trigger column to track what triggered the assessment
+            3. Add index for category-based queries
+            4. Add index for historical trend analysis
+
+            This enables:
+            - Category-specific risk assessment
+            - Historical risk tracking by category
+            - Rapid deterioration detection
+            - Risk trend analysis over time
+        </comment>
+
+        <!-- Add risk_category column -->
+        <addColumn tableName="risk_assessments">
+            <column name="risk_category" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add assessment_trigger column -->
+        <addColumn tableName="risk_assessments">
+            <column name="assessment_trigger" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add comment column for additional context -->
+        <addColumn tableName="risk_assessments">
+            <column name="notes" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add index for category-based queries -->
+        <createIndex indexName="idx_ra_patient_category" tableName="risk_assessments">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="risk_category"/>
+            <column name="assessment_date" descending="true"/>
+        </createIndex>
+
+        <!-- Add index for category-specific lookups -->
+        <createIndex indexName="idx_ra_category_date" tableName="risk_assessments">
+            <column name="risk_category"/>
+            <column name="assessment_date" descending="true"/>
+        </createIndex>
+
+        <!-- Add index for deterioration queries -->
+        <createIndex indexName="idx_ra_level_category" tableName="risk_assessments">
+            <column name="tenant_id"/>
+            <column name="risk_level"/>
+            <column name="risk_category"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="risk_assessments" indexName="idx_ra_level_category"/>
+            <dropIndex tableName="risk_assessments" indexName="idx_ra_category_date"/>
+            <dropIndex tableName="risk_assessments" indexName="idx_ra_patient_category"/>
+            <dropColumn tableName="risk_assessments" columnName="notes"/>
+            <dropColumn tableName="risk_assessments" columnName="assessment_trigger"/>
+            <dropColumn tableName="risk_assessments" columnName="risk_category"/>
+        </rollback>
+
+    </changeSet>
+
+    <changeSet id="0015-populate-existing-risk-categories" author="tdd-swarm-agent-5">
+
+        <comment>
+            Populate risk_category for existing assessments based on risk factors.
+            Default to null (overall risk) if no specific category can be determined.
+        </comment>
+
+        <!-- This is a data migration - we'll set assessment_trigger for existing records -->
+        <sql>
+            UPDATE risk_assessments
+            SET assessment_trigger = 'MANUAL'
+            WHERE assessment_trigger IS NULL;
+        </sql>
+
+        <rollback>
+            <sql>
+                UPDATE risk_assessments
+                SET assessment_trigger = NULL
+                WHERE assessment_trigger = 'MANUAL';
+            </sql>
+        </rollback>
+
+    </changeSet>
+
+</databaseChangeLog>

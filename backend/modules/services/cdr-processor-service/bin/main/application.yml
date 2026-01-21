@@ -1,0 +1,183 @@
+spring:
+  application:
+    name: cdr-processor-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  # Database Configuration
+  # ⚠️ SECURITY: Database credentials MUST be provided via environment variables
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:healthdata_cdr}
+    username: ${DB_USERNAME:healthdata}
+    password: ${DB_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: MEDIUM  # CDR/HL7 processor: 10-100 req/sec, clinical data repository
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 50
+
+  # Liquibase Configuration
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  # Disable Flyway (using Liquibase instead)
+  flyway:
+    enabled: false
+
+  # Redis Cache Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # Distributed tracing: Propagate trace context through Kafka messages
+        interceptor.classes: com.healthdata.tracing.KafkaProducerTraceInterceptor
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      group-id: cdr-processor-group
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "com.healthdata.*"
+        # Distributed tracing: Extract trace context from Kafka messages
+        interceptor.classes: com.healthdata.tracing.KafkaConsumerTraceInterceptor
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8099}
+  servlet:
+    context-path: /
+
+# HL7 Configuration
+hl7:
+  enabled: true
+  validation:
+    enabled: ${HL7_VALIDATION_ENABLED:false}
+    strict: false
+  parser:
+    version: "2.5"
+    allow-unknown-versions: true
+  processing:
+    batch-size: 100
+    thread-pool-size: 10
+    timeout-seconds: 60
+  fhir:
+    conversion-enabled: true
+    auto-convert: false
+
+# CDR Configuration
+cdr:
+  audit:
+    enabled: true
+    include-message-content: ${CDR_AUDIT_INCLUDE_CONTENT:false}
+  dlq:
+    enabled: true
+    topic: cdr-dlq
+    max-retries: 3
+  storage:
+    persist-messages: ${CDR_PERSIST_MESSAGES:true}
+    retention-days: 90
+
+# JWT Configuration (for authentication)
+# ⚠️ SECURITY: JWT secret MUST be provided via environment variable
+jwt:
+  secret: ${JWT_SECRET:}
+  access-token-expiration-seconds: ${JWT_ACCESS_TOKEN_EXPIRATION_SECONDS:3600}
+  refresh-token-expiration-seconds: ${JWT_REFRESH_TOKEN_EXPIRATION_SECONDS:604800}
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.healthdata.cdr: DEBUG
+    ca.uhn.hl7v2: INFO
+    org.hl7.fhir: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# OpenAPI Documentation
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+  show-actuator: true
+
+# Cache Configuration
+cache:
+  hl7-messages:
+    ttl-seconds: 300
+    max-entries: 1000
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      cdrProcessorDefault:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+
+  retry:
+    instances:
+      cdrProcessorDefault:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+
+  timelimiter:
+    instances:
+      cdrProcessorDefault:
+        timeoutDuration: 30s
+        cancelRunningFuture: true
+
+  ratelimiter:
+    instances:
+      cdrProcessorDefault:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1s
+        timeoutDuration: 5s

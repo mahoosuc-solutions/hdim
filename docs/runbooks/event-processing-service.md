@@ -14,6 +14,7 @@ Kafka consumer/processor that creates alerts and care gaps.
 1. Check `/actuator/health`.
 2. Inspect Kafka consumer lag via Grafana or `kafka-consumer-groups`.
 3. Check DLQ topics for recurring patterns.
+4. License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md).
 
 ## Common Tasks
 ### Replay DLQ

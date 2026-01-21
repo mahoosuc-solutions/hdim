@@ -1,0 +1,152 @@
+package com.healthdata.authentication.config;
+
+import com.healthdata.authentication.filter.JwtAuthenticationFilter;
+import com.healthdata.authentication.security.CustomUserDetailsService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+/**
+ * Security configuration for JWT and Basic authentication.
+ *
+ * This configuration:
+ * - Enables JWT authentication via JwtAuthenticationFilter
+ * - Enables Basic authentication for backward compatibility
+ * - Configures stateless session management
+ * - Defines public and protected endpoints
+ * - Sets up authentication providers
+ *
+ * Authentication Flow:
+ * 1. Request arrives at filter chain
+ * 2. JwtAuthenticationFilter checks for Bearer token
+ * 3. If valid JWT, sets authentication in SecurityContext
+ * 4. If no JWT, falls back to Basic auth (if enabled)
+ * 5. If authenticated, allows access to protected resources
+ *
+ * Security Features:
+ * - Stateless session (JWT-based)
+ * - CSRF disabled (stateless API)
+ * - CORS configured
+ * - Method-level security (@PreAuthorize)
+ * - BCrypt password encoding
+ */
+@Slf4j
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final CustomUserDetailsService userDetailsService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    /**
+     * Configure HTTP security.
+     * Sets up authentication, authorization, and filters.
+     *
+     * @param http HttpSecurity builder
+     * @return SecurityFilterChain
+     * @throws Exception if configuration fails
+     */
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        log.info("Configuring security filter chain with JWT authentication");
+
+        http
+            // Disable CSRF for stateless API
+            .csrf(AbstractHttpConfigurer::disable)
+
+            // Configure authorization rules
+            .authorizeHttpRequests(auth -> auth
+                // Public endpoints (no authentication required)
+                .requestMatchers(
+                    "/api/v1/auth/login",
+                    "/api/v1/auth/register",
+                    "/api/v1/auth/refresh",  // Allow refresh token endpoint without authentication
+                    "/actuator/health",
+                    "/actuator/health/**",
+                    "/actuator/info",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/swagger-resources/**",
+                    "/webjars/**"
+                ).permitAll()
+
+                // All other endpoints require authentication
+                .anyRequest().authenticated()
+            )
+
+            // Configure session management (stateless for JWT)
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+
+            // Configure Basic authentication (for backward compatibility)
+            .httpBasic(basic -> {
+                // Basic auth is available but JWT is preferred
+                log.debug("Basic authentication enabled for backward compatibility");
+            })
+
+            // Add JWT authentication filter before UsernamePasswordAuthenticationFilter
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+
+            // Configure authentication provider
+            .authenticationProvider(authenticationProvider());
+
+        log.info("Security filter chain configured successfully");
+        return http.build();
+    }
+
+    /**
+     * Configure authentication provider.
+     * Uses CustomUserDetailsService and BCrypt password encoder.
+     *
+     * @return AuthenticationProvider
+     */
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+
+    /**
+     * Configure password encoder.
+     * Uses BCrypt with default strength (10 rounds).
+     *
+     * @return PasswordEncoder
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * Expose AuthenticationManager bean.
+     * Required for programmatic authentication in controllers.
+     *
+     * @param config AuthenticationConfiguration
+     * @return AuthenticationManager
+     * @throws Exception if configuration fails
+     */
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+}

@@ -62,6 +62,9 @@ class AgentOrchestratorTest {
     private ApprovalIntegration approvalIntegration;
 
     @Mock
+    private com.healthdata.agent.audit.AgentRuntimeAuditIntegration auditIntegration;
+
+    @Mock
     private LLMProvider llmProvider;
 
     @Mock
@@ -87,6 +90,7 @@ class AgentOrchestratorTest {
             objectMapper,
             guardrailService,
             approvalIntegration,
+            auditIntegration,
             meterRegistry
         );
 

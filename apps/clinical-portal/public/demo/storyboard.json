@@ -1,0 +1,104 @@
+{
+  "version": "1.0",
+  "title": "HDIM Demo Walkthrough",
+  "steps": [
+    {
+      "id": "login",
+      "title": "Welcome & Login",
+      "route": "/login",
+      "narration": "We start at the secure login. Demo credentials are preloaded for a frictionless walkthrough.",
+      "popups": [
+        {
+          "id": "demo-login",
+          "selector": ".demo-notice",
+          "content": "Demo mode is active with pre-seeded data and guided highlights.",
+          "position": "right"
+        }
+      ]
+    },
+    {
+      "id": "dashboard-overview",
+      "title": "Dashboard Overview",
+      "route": "/dashboard",
+      "narration": "The provider dashboard surfaces real-time care gap activity, priority alerts, and next-best actions.",
+      "popups": [
+        {
+          "id": "summary-cards",
+          "selector": ".statistics-grid, .metrics-grid, .stats-grid",
+          "content": "These cards show total open gaps, high-priority items, and current performance.",
+          "position": "bottom"
+        }
+      ]
+    },
+    {
+      "id": "hero-patient",
+      "title": "Hero Patient Workflow",
+      "route": "/care-gaps",
+      "narration": "We focus on Maria Garcia to show a real care gap workflow and prioritization logic.",
+      "popups": [
+        {
+          "id": "care-gap-list",
+          "selector": ".care-gaps-list, table",
+          "content": "Care gaps are sorted by urgency so teams can act immediately.",
+          "position": "top"
+        }
+      ]
+    },
+    {
+      "id": "intervention",
+      "title": "Taking Action",
+      "route": "/patients/550e8400-e29b-41d4-a716-446655440001",
+      "narration": "Interventions and outreach actions are captured in one place to close gaps faster.",
+      "popups": [
+        {
+          "id": "gap-actions",
+          "selector": ".care-gap-actions, .close-gap-btn, button",
+          "content": "One-click actions log outreach, appointments, and follow-ups.",
+          "position": "right"
+        }
+      ]
+    },
+    {
+      "id": "quality-impact",
+      "title": "Quality Impact",
+      "route": "/results",
+      "narration": "Quality outcomes update instantly as care gaps close, showing impact on HEDIS measures.",
+      "popups": [
+        {
+          "id": "results-table",
+          "selector": "table, .results-table, mat-table",
+          "content": "Measure performance and trends are tracked in real time.",
+          "position": "bottom"
+        }
+      ]
+    },
+    {
+      "id": "technical",
+      "title": "Live Monitoring",
+      "route": "/visualization/live-monitor",
+      "narration": "Real-time monitoring confirms the platform is processing live data across services.",
+      "popups": [
+        {
+          "id": "live-monitor",
+          "selector": "canvas, svg, .monitor, .chart",
+          "content": "Live telemetry shows evaluation flow and service performance.",
+          "position": "left"
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": "AI Solutioning",
+      "route": "/ai-assistant",
+      "narration": "AI-driven guidance explains the next-best action and accelerates care coordination.",
+      "popups": [
+        {
+          "id": "ai-panel",
+          "selector": "app-ai-dashboard, .ai-dashboard, .assistant-panel",
+          "content": "AI highlights the highest impact moves for patient outcomes.",
+          "position": "left"
+        }
+      ]
+    }
+  ]
+}

@@ -1032,7 +1032,7 @@ Tests API endpoints with TestContainers (PostgreSQL, Kafka) for realistic integr
 class DeadLetterQueueControllerIntegrationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
         .withDatabaseName("testdb")
         .withUsername("test")
         .withPassword("test");
@@ -1177,7 +1177,7 @@ Tests verify strict tenant isolation for DLQ entries.
 class EventProcessingMultiTenantTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
 
     @Autowired
     private DeadLetterQueueService dlqService;
@@ -1485,7 +1485,7 @@ Tests benchmark event processing latency and throughput.
 class EventProcessingPerformanceTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
 
     @Container
     static KafkaContainer kafka = new KafkaContainer(
@@ -1620,7 +1620,7 @@ class EventProcessingPerformanceTest {
 public abstract class EventProcessingBaseIntegrationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
         .withDatabaseName("events_test")
         .withUsername("test")
         .withPassword("test");

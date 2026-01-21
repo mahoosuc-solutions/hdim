@@ -1,5 +1,0 @@
-/home/mahoosuc-solutions/projects/hdim-master/backend/modules/services/cms-connector-service/src/main/java/com/healthdata/cms/CmsConnectorServiceApplication.java
-/home/mahoosuc-solutions/projects/hdim-master/backend/modules/services/cms-connector-service/src/main/java/com/healthdata/cms/repository/SyncAuditLogRepository.java
-/home/mahoosuc-solutions/projects/hdim-master/backend/modules/services/cms-connector-service/src/main/java/com/healthdata/cms/model/SyncAuditLog.java
-/home/mahoosuc-solutions/projects/hdim-master/backend/modules/services/cms-connector-service/src/main/java/com/healthdata/cms/model/CmsClaim.java
-/home/mahoosuc-solutions/projects/hdim-master/backend/modules/services/cms-connector-service/src/main/java/com/healthdata/cms/repository/CmsClaimRepository.java

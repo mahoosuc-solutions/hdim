@@ -17,7 +17,8 @@ chmod +x *.sh
 ./start-demo.sh
 
 # Open browser to http://localhost:4200
-# Login: demo_user / demo_password
+# Login: demo_admin / demo123
+# Quality Measure Dev: demo.developer / demo123
 ```
 
 ### Option 2: Direct Deploy
@@ -30,13 +31,15 @@ chmod +x *.sh
 # Open browser to http://localhost:4200
 ```
 
+Optional: copy `demo/.env.example` to `demo/.env` and set `POSTGRES_PASSWORD` to keep database credentials consistent across services.
+
 ## What's Included
 
 This demo includes:
 
 - **6 Core Microservices**: Gateway, FHIR Server, Patient Service, Care Gap Service, Quality Measure Service, CQL Engine
 - **Clinical Portal Frontend**: Angular-based care manager interface
-- **Demo Data**: 10 patients with 18 realistic care gaps across 11 HEDIS measures
+- **Demo Data**: 10 patients with 16 realistic care gaps across 11 HEDIS measures
 - **Full Walkthrough Guide**: Step-by-step demo script for customer presentations
 
 ## System Requirements
@@ -53,13 +56,18 @@ This demo includes:
 | File | Purpose |
 |------|---------|
 | `test-demo-deployment.sh` | **Comprehensive E2E testing** (37 tests) |
-| `start-demo.sh` | One-command startup script |
-| `docker-compose.demo.yml` | Minimal service configuration |
+| `start-demo.sh` | One-command full-stack startup (users + seeding) |
+| `docker-compose.demo.yml` | Full demo stack configuration |
+| `.env.example` | Demo environment variable template (database password) |
 | `init-demo-db.sh` | Database initialization |
 | `seed-demo-data.sh` | Demo patient and care gap data |
+| `validate-demo-data.sh` | Validate seeded data against expected results |
 | `DEMO_WALKTHROUGH.md` | Customer presentation guide (15-20 min) |
 | `DEPLOYMENT_GUIDE.md` | Multi-platform deployment guide |
 | `TEST_DEPLOYMENT_SUMMARY.md` | Test suite documentation |
+| `../scripts/record-demo-startup.sh` | Live startup recording + storyboard walkthrough |
+| `../scripts/run-demo-storyboard.js` | Automated UI walkthrough with storyboard overlays |
+| `run-showcase.sh` | One-command demo showcase (startup, seed, Playwright, optional recording) |
 
 ## Commands
 
@@ -101,7 +109,41 @@ This demo includes:
 
 # Stop demo
 ./start-demo.sh --stop
+
+# Validate seeded data
+./validate-demo-data.sh
 ```
+
+### Live Demo Recording + Storyboard
+
+```bash
+# Record startup logs/stats and run the automated storyboard walkthrough
+../scripts/record-demo-startup.sh --clean
+
+# Skip storyboard if you only want startup logs
+../scripts/record-demo-startup.sh --clean --skip-storyboard
+```
+
+### One-Command Showcase
+
+```bash
+# Full demo: start, seed, validate, walkthrough (headed)
+./run-showcase.sh --clean
+
+# Record the screen with ffmpeg
+./run-showcase.sh --clean --record
+```
+
+### AI Narration (Optional)
+
+```bash
+# Generate narration lines from the storyboard using AG-UI tooling
+../scripts/generate-demo-narration.sh
+```
+
+### Demo Startup Monitor
+
+Open `http://localhost:4200/demo-startup?demo=true&storyboard=1` to view real-time service health.
 
 ## Ports
 

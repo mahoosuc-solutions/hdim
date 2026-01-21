@@ -22,3 +22,10 @@ INSERT INTO user_roles (user_id, role) VALUES
 ('550e8400-e29b-41d4-a716-446655440011', 'EVALUATOR'),
 ('550e8400-e29b-41d4-a716-446655440012', 'VIEWER')
 ON CONFLICT DO NOTHING;
+
+-- Map demo users to demo tenant(s)
+INSERT INTO user_tenants (user_id, tenant_id) VALUES
+('550e8400-e29b-41d4-a716-446655440010', 'acme-health'),
+('550e8400-e29b-41d4-a716-446655440011', 'acme-health'),
+('550e8400-e29b-41d4-a716-446655440012', 'acme-health')
+ON CONFLICT DO NOTHING;

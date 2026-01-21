@@ -123,6 +123,36 @@ public class EvaluationProgressWebSocketHandler extends TextWebSocketHandler {
     }
 
     /**
+     * Broadcast a data flow step to connected clients
+     *
+     * @param step The data flow step to broadcast
+     * @param evaluationId The evaluation ID for filtering
+     * @param tenantId The tenant ID for filtering (null = broadcast to all)
+     */
+    public void broadcastDataFlowStep(Object step, String evaluationId, String tenantId) {
+        Map<String, Object> message = Map.of(
+                "type", "DATA_FLOW_STEP",
+                "data", step,
+                "evaluationId", evaluationId != null ? evaluationId : "",
+                "timestamp", System.currentTimeMillis()
+        );
+
+        sessions.forEach((sessionId, session) -> {
+            // Filter by tenant if both event and session have tenant IDs
+            String sessionTenantId = sessionTenants.get(sessionId);
+            if (tenantId != null && sessionTenantId != null && !tenantId.equals(sessionTenantId)) {
+                return; // Skip this session (different tenant)
+            }
+
+            try {
+                sendMessage(session, message);
+            } catch (Exception e) {
+                logger.error("Failed to send data flow step to session {}: {}", sessionId, e.getMessage());
+            }
+        });
+    }
+
+    /**
      * Send a message to a specific session
      */
     private void sendMessage(WebSocketSession session, Object message) {

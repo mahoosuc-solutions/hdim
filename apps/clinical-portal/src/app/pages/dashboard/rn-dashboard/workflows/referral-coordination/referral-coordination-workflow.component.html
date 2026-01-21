@@ -1,0 +1,262 @@
+<!-- Referral Coordination Workflow Dialog -->
+<h2 mat-dialog-title>
+  <mat-icon>send</mat-icon>
+  Referral Coordination - {{ patientName }}
+</h2>
+
+<div class="workflow-progress">
+  <mat-progress-bar mode="determinate" [value]="(currentStep / (totalSteps - 1)) * 100"></mat-progress-bar>
+  <span class="progress-text">Step {{ currentStep + 1 }} of {{ totalSteps }}</span>
+</div>
+
+<mat-dialog-content [formGroup]="form">
+  <!-- Step 0: Review Referral -->
+  @if (currentStep === 0) {
+    <div class="workflow-step">
+      <h3>Review Referral Request</h3>
+      <p class="step-description">Verify the referral details before proceeding</p>
+
+      <mat-card class="referral-info">
+        <mat-card-header>
+          <mat-card-title>Referral Details</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <strong>Patient:</strong>
+            <span>{{ patientName }}</span>
+          </div>
+          <div class="info-row">
+            <strong>Specialty Needed:</strong>
+            <span>{{ referralType }}</span>
+          </div>
+          <div class="info-row">
+            <strong>Status:</strong>
+            <mat-chip color="primary">New</mat-chip>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Referral Reason</mat-label>
+        <textarea matInput formControlName="referralReason" placeholder="Why is this referral being made?"></textarea>
+      </mat-form-field>
+
+      <mat-checkbox formControlName="referralReviewed" class="full-width">
+        I have reviewed the referral details and confirm they are accurate
+      </mat-checkbox>
+    </div>
+  }
+
+  <!-- Step 1: Select Specialist -->
+  @if (currentStep === 1) {
+    <div class="workflow-step">
+      <h3>Select Specialist</h3>
+      <p class="step-description">Choose the appropriate healthcare provider</p>
+
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Specialist</mat-label>
+        <mat-select formControlName="selectedSpecialist" (selectionChange)="onSpecialistSelected()">
+          <mat-option value="">-- Select Specialist --</mat-option>
+          @for (specialist of availableSpecialists; track specialist.id) {
+            <mat-option [value]="specialist.id">
+              {{ specialist.name }} @if (!specialist.acceptingPatients) {
+                (Not accepting)
+              }
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (selectedSpecialistName) {
+        <mat-card class="specialist-info">
+          <mat-card-header>
+            <mat-card-title>Selected Specialist</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="info-row">
+              <strong>Name:</strong>
+              <span>{{ selectedSpecialistName }}</span>
+            </div>
+            <button mat-stroked-button (click)="loadSpecialists()">
+              <mat-icon>refresh</mat-icon>
+              Refresh List
+            </button>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+
+  <!-- Step 2: Verify Insurance -->
+  @if (currentStep === 2) {
+    <div class="workflow-step">
+      <h3>Verify Insurance Coverage</h3>
+      <p class="step-description">Check if the referral is covered by the patient's insurance</p>
+
+      @if (insuranceCoverage) {
+        <mat-card [class.covered]="insuranceCoverage.covered" [class.not-covered]="!insuranceCoverage.covered" class="insurance-card">
+          <mat-card-header>
+            <mat-card-title>
+              @if (insuranceCoverage.covered) {
+                <mat-icon color="primary">check_circle</mat-icon>
+                Coverage Verified
+              } @else {
+                <mat-icon color="warn">warning</mat-icon>
+                Coverage Issue
+              }
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @if (insuranceCoverage.reason) {
+              <p>{{ insuranceCoverage.reason }}</p>
+            }
+
+            @if (requiresPriorAuth) {
+              <div class="prior-auth-section">
+                <mat-icon>info</mat-icon>
+                <span>Prior authorization is required</span>
+              </div>
+
+              <mat-form-field appearance="fill" class="full-width">
+                <mat-label>Prior Auth Number (if available)</mat-label>
+                <input matInput formControlName="priorAuthNumber" />
+              </mat-form-field>
+
+              <mat-checkbox formControlName="acknowledgeInsurance">
+                I acknowledge that prior authorization is required and will be submitted
+              </mat-checkbox>
+            }
+          </mat-card-content>
+        </mat-card>
+      } @else {
+        <button mat-raised-button color="primary" (click)="verifyInsuranceCoverage()" [disabled]="loading">
+          <mat-icon>verified_user</mat-icon>
+          Verify Insurance Coverage
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Step 3: Send Referral -->
+  @if (currentStep === 3) {
+    <div class="workflow-step">
+      <h3>Send Referral Request</h3>
+      <p class="step-description">Submit the referral to the selected specialist</p>
+
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Urgency Level</mat-label>
+        <mat-select formControlName="urgencyLevel">
+          <mat-option value="ROUTINE">Routine (1-2 weeks)</mat-option>
+          <mat-option value="URGENT">Urgent (3-5 days)</mat-option>
+          <mat-option value="STAT">Stat (Same day)</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-card class="referral-summary">
+        <mat-card-header>
+          <mat-card-title>Referral Summary</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <strong>Patient:</strong>
+            <span>{{ patientName }}</span>
+          </div>
+          <div class="info-row">
+            <strong>Specialty:</strong>
+            <span>{{ referralType }}</span>
+          </div>
+          <div class="info-row">
+            <strong>Urgency:</strong>
+            <span>{{ form.get('urgencyLevel')?.value | titlecase }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      @if (!referralSent) {
+        <button mat-raised-button color="primary" (click)="sendReferral()" [disabled]="loading" class="full-width">
+          <mat-icon>send</mat-icon>
+          Send Referral
+        </button>
+      } @else {
+        <div class="sent-confirmation">
+          <mat-icon>check_circle</mat-icon>
+          <span>Referral has been sent successfully</span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Step 4: Track Appointment & Follow-up -->
+  @if (currentStep === 4) {
+    <div class="workflow-step">
+      <h3>Track Appointment & Follow-up</h3>
+      <p class="step-description">Monitor appointment status and document outcome</p>
+
+      @if (appointmentScheduled) {
+        <mat-card class="appointment-card">
+          <mat-card-header>
+            <mat-card-title>Appointment Scheduled</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="info-row">
+              <strong>Date:</strong>
+              <span>{{ form.get('appointmentDate')?.value | date: 'short' }}</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      } @else {
+        <div class="pending-appointment">
+          <mat-icon>schedule</mat-icon>
+          <p>Awaiting appointment confirmation from specialist</p>
+        </div>
+      }
+
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Appointment Notes</mat-label>
+        <textarea matInput formControlName="appointmentNotes" placeholder="Document any relevant appointment details..."></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Post-Visit Summary</mat-label>
+        <textarea matInput formControlName="postVisitNotes" placeholder="Summary of specialist visit outcome..."></textarea>
+      </mat-form-field>
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelWorkflow()">
+    <mat-icon>close</mat-icon>
+    Cancel
+  </button>
+
+  @if (currentStep > 0) {
+    <button mat-stroked-button (click)="previousStep()">
+      <mat-icon>arrow_back</mat-icon>
+      Back
+    </button>
+  }
+
+  @if (currentStep < totalSteps - 1) {
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="nextStep()"
+      [disabled]="!canProceedToNextStep() || loading">
+      <mat-icon>arrow_forward</mat-icon>
+      Next
+    </button>
+  } @else {
+    <button
+      mat-raised-button
+      color="accent"
+      (click)="completeReferralWorkflow()"
+      [disabled]="!canProceedToNextStep() || loading">
+      @if (loading) {
+        <mat-spinner diameter="20"></mat-spinner>
+      }
+      <mat-icon>save</mat-icon>
+      Complete Referral
+    </button>
+  }
+</mat-dialog-actions>

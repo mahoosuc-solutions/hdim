@@ -620,6 +620,7 @@ public class AsyncConfig {
 - ✅ Care gaps include type, description, action, priority, due date
 - ✅ Details map for debugging and audit trail
 - ✅ Evidence map for quality reporting
+- ✅ License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ---
 

@@ -6,9 +6,10 @@ package com.healthdata.authentication.domain;
  * Role Hierarchy (from most to least privileged):
  * 1. SUPER_ADMIN - Full system access across all tenants
  * 2. ADMIN - Tenant-level administration
- * 3. EVALUATOR - Can create and execute evaluations
- * 4. ANALYST - Can view results and analytics (read-only)
- * 5. VIEWER - Can only view basic information (read-only)
+ * 3. MEASURE_DEVELOPER - Can create and manage measure definitions
+ * 4. EVALUATOR - Can create and execute evaluations
+ * 5. ANALYST - Can view results and analytics (read-only)
+ * 6. VIEWER - Can only view basic information (read-only)
  */
 public enum UserRole {
     /**
@@ -29,6 +30,14 @@ public enum UserRole {
      * - Library management
      */
     ADMIN("Administrator", "Tenant administration and configuration"),
+
+    /**
+     * Measure developer role.
+     * - Create and manage measure definitions
+     * - Maintain measure versions
+     * - Execute measure evaluations for validation
+     */
+    MEASURE_DEVELOPER("Measure Developer", "Create and manage quality measures"),
 
     /**
      * Evaluator role.
@@ -90,7 +99,7 @@ public enum UserRole {
      * Check if role can execute evaluations.
      */
     public boolean canExecuteEvaluations() {
-        return this == SUPER_ADMIN || this == ADMIN || this == EVALUATOR;
+        return this == SUPER_ADMIN || this == ADMIN || this == MEASURE_DEVELOPER || this == EVALUATOR;
     }
 
     /**

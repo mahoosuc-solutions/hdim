@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.healthdata.fhir.persistence.ConditionEntity;
 import com.healthdata.fhir.persistence.ConditionRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
@@ -36,14 +37,17 @@ public class ConditionService {
     private final ConditionRepository conditionRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final Cache cache;
+    private final ObjectMapper objectMapper;
 
     public ConditionService(
             ConditionRepository conditionRepository,
             KafkaTemplate<String, Object> kafkaTemplate,
-            CacheManager cacheManager) {
+            CacheManager cacheManager,
+            ObjectMapper objectMapper) {
         this.conditionRepository = conditionRepository;
         this.kafkaTemplate = kafkaTemplate;
         this.cache = cacheManager.getCache(CACHE_NAME);
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -62,8 +66,8 @@ public class ConditionService {
 
         cachePut(tenantId, conditionId.toString(), savedCondition);
         kafkaTemplate.send("fhir.conditions.created", conditionId.toString(),
-                new ConditionEvent(conditionId.toString(), tenantId, patientId.toString(),
-                        "CREATED", Instant.now(), createdBy));
+                buildResourceEvent(tenantId, patientId.toString(), "fhir.conditions.created",
+                        "Condition", conditionId.toString(), createdBy, savedCondition));
 
         return savedCondition;
     }
@@ -118,8 +122,8 @@ public class ConditionService {
 
         cachePut(tenantId, conditionId, savedCondition);
         kafkaTemplate.send("fhir.conditions.updated", conditionId,
-                new ConditionEvent(conditionId, tenantId, patientId.toString(),
-                        "UPDATED", Instant.now(), updatedBy));
+                buildResourceEvent(tenantId, patientId.toString(), "fhir.conditions.updated",
+                        "Condition", conditionId, updatedBy, savedCondition));
 
         return savedCondition;
     }
@@ -133,8 +137,8 @@ public class ConditionService {
         conditionRepository.delete(entity);
         cacheEvict(tenantId, conditionId);
         kafkaTemplate.send("fhir.conditions.deleted", conditionId,
-                new ConditionEvent(conditionId, tenantId, entity.getPatientId().toString(),
-                        "DELETED", Instant.now(), deletedBy));
+                buildResourceEvent(tenantId, entity.getPatientId().toString(), "fhir.conditions.deleted",
+                        "Condition", conditionId, deletedBy, null));
     }
 
     @Transactional(readOnly = true)
@@ -410,6 +414,35 @@ public class ConditionService {
 
     private String cacheKey(String tenantId, String conditionId) {
         return tenantId + ":cond:" + conditionId;
+    }
+
+    private java.util.Map<String, Object> buildResourceEvent(
+            String tenantId,
+            String patientId,
+            String eventType,
+            String resourceType,
+            String resourceId,
+            String actor,
+            Condition resource) {
+        java.util.Map<String, Object> event = new java.util.HashMap<>();
+        event.put("eventId", java.util.UUID.randomUUID().toString());
+        event.put("eventType", eventType);
+        event.put("resourceType", resourceType);
+        event.put("resourceId", resourceId);
+        event.put("tenantId", tenantId);
+        event.put("patientId", patientId);
+        event.put("occurredAt", Instant.now().toString());
+        event.put("actor", actor);
+        if (resource != null) {
+            String json = JSON_PARSER.encodeResourceToString(resource);
+            try {
+                event.put("resource", objectMapper.readValue(json, java.util.Map.class));
+            } catch (Exception e) {
+                // Fall back to raw JSON when mapping fails.
+                event.put("resource", json);
+            }
+        }
+        return event;
     }
 
     public record ConditionEvent(String id, String tenantId, String patientId, String type,

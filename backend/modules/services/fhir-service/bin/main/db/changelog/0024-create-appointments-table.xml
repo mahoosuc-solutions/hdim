@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0024-create-appointments-table" author="codex">
+        <createTable tableName="appointments">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_json" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(32)"/>
+            <column name="start_time" type="timestamp"/>
+            <column name="end_time" type="timestamp"/>
+            <column name="appointment_type_code" type="varchar(128)"/>
+            <column name="appointment_type_display" type="varchar(256)"/>
+            <column name="description" type="varchar(512)"/>
+            <column name="location_id" type="varchar(255)"/>
+            <column name="practitioner_id" type="varchar(255)"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <sql>CREATE INDEX idx_appointments_resource_json_gin ON appointments USING gin (resource_json);</sql>
+
+        <createIndex indexName="idx_appointments_tenant_start" tableName="appointments">
+            <column name="tenant_id"/>
+            <column name="start_time"/>
+        </createIndex>
+
+        <createIndex indexName="idx_appointments_tenant_patient_start" tableName="appointments">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="start_time"/>
+        </createIndex>
+
+        <createIndex indexName="idx_appointments_status" tableName="appointments">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_appointments_location" tableName="appointments">
+            <column name="tenant_id"/>
+            <column name="location_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint
+            baseTableName="appointments"
+            baseColumnNames="patient_id"
+            constraintName="fk_appointments_patient"
+            referencedTableName="patients"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="appointments"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

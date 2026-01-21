@@ -9,7 +9,6 @@ import com.healthdata.quality.persistence.SavedReportEntity;
 import com.healthdata.quality.persistence.SavedReportRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +35,6 @@ public class QualityReportService {
     /**
      * Get comprehensive quality report for a patient
      */
-    @Cacheable(value = "qualityReport", key = "#tenantId + ':' + #patientId")
     public QualityReport getPatientQualityReport(String tenantId, UUID patientId) {
         log.info("Generating quality report for patient: {}", patientId);
 
@@ -72,11 +70,27 @@ public class QualityReportService {
     /**
      * Get population-level quality report
      */
-    @Cacheable(value = "populationQualityReport", key = "#tenantId + ':' + #year")
     public PopulationQualityReport getPopulationQualityReport(String tenantId, int year) {
         log.info("Generating population quality report for year: {}", year);
 
-        List<QualityMeasureResultEntity> results = repository.findByMeasureYear(tenantId, year);
+        List<QualityMeasureResultEntity> results;
+        try {
+            results = repository.findByMeasureYear(tenantId, year);
+            log.debug("Found {} results for year {}", results.size(), year);
+        } catch (Exception e) {
+            log.warn("Error querying by measure year ({}), falling back to all results: {}", year, e.getMessage());
+            // Fallback: get all results and filter in memory by calculationDate year
+            results = repository.findByTenantId(tenantId);
+            if (year > 0) {
+                // Filter by year using calculationDate
+                final int targetYear = year;
+                results = results.stream()
+                    .filter(r -> r.getCalculationDate() != null && 
+                                r.getCalculationDate().getYear() == targetYear)
+                    .collect(java.util.stream.Collectors.toList());
+                log.debug("Filtered to {} results for year {} using calculationDate", results.size(), year);
+            }
+        }
 
         long totalMeasures = results.size();
         long compliantMeasures = results.stream()

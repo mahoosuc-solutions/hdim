@@ -33,7 +33,7 @@ services:
       - ./docker/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh
       - ./e2e/fixtures/seed-data.sql:/docker-entrypoint-initdb.d/02-seed-data.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U healthdata"]
+      test: ["CMD-SHELL", "pg_isready -U healthdata -d ${POSTGRES_DB:-healthdata_db}"]
       interval: 5s
       timeout: 5s
       retries: 10

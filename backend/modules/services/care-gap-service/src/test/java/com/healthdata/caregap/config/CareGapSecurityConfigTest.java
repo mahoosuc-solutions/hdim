@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
+import com.healthdata.caregap.security.TenantHeaderNormalizationFilter;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -55,14 +56,14 @@ class CareGapSecurityConfigTest {
     void shouldBuildProductionChainWithGatewayTrustFilters() throws Exception {
         CareGapSecurityConfig config = new CareGapSecurityConfig();
         TrustedHeaderAuthFilter trustedHeaderFilter = mock(TrustedHeaderAuthFilter.class);
-        com.healthdata.caregap.security.TenantHeaderNormalizationFilter tenantNormalizationFilter =
-            mock(com.healthdata.caregap.security.TenantHeaderNormalizationFilter.class);
+        TenantHeaderNormalizationFilter tenantHeaderNormalizationFilter =
+            mock(TenantHeaderNormalizationFilter.class);
         TrustedTenantAccessFilter trustedTenantFilter = mock(TrustedTenantAccessFilter.class);
 
         SecurityFilterChain chain = config.securityFilterChain(
             httpSecurity(),
             trustedHeaderFilter,
-            tenantNormalizationFilter,
+            tenantHeaderNormalizationFilter,
             trustedTenantFilter
         );
 

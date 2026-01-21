@@ -57,8 +57,13 @@ export const API_CONFIG = {
   // Base URL fallback for services without specific configuration
   BASE_URL: USE_API_GATEWAY ? API_GATEWAY_URL : '',
 
+  // Compliance/Error Tracking API
+  COMPLIANCE_URL: USE_API_GATEWAY
+    ? `${API_GATEWAY_URL}/api/v1/compliance`
+    : '/api/v1/compliance',  // Proxied to gateway-clinical-service
+
   // Tenant Configuration - must match backend test data
-  DEFAULT_TENANT_ID: 'demo-tenant',  // Demo tenant for clinical portal
+  DEFAULT_TENANT_ID: 'acme-health',  // Demo tenant for clinical portal
 
   // HTTP Settings
   TIMEOUT_MS: 30000, // 30 seconds
@@ -108,6 +113,9 @@ export const CQL_ENGINE_ENDPOINTS = {
 export const QUALITY_MEASURE_ENDPOINTS = {
   // Local Measure Registry (service discovery)
   LOCAL_MEASURES: '/measures/local',  // GET - returns available measures with metadata
+
+  // Evaluation Presets
+  EVALUATION_PRESET_DEFAULT: '/evaluation-presets/default',
 
   // Calculation Endpoints
   CALCULATE: '/calculate',
@@ -208,6 +216,15 @@ export const FHIR_ENDPOINTS = {
   MEDICATION_STATEMENT: '/MedicationStatement',
   QUESTIONNAIRE_RESPONSE: '/QuestionnaireResponse',
   SERVICE_REQUEST: '/ServiceRequest',
+  APPOINTMENT: '/Appointment',
+  SCHEDULE: '/Schedule',
+  SLOT: '/Slot',
+  TASK: '/Task',
+  PRACTITIONER: '/Practitioner',
+  PRACTITIONER_ROLE: '/PractitionerRole',
+  ORGANIZATION: '/Organization',
+  LOCATION: '/Location',
+  ENCOUNTER: '/Encounter',
 };
 
 /**

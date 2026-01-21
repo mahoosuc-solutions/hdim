@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0013-create-email-sequence-steps-table" author="hdim-platform">
+        <comment>
+            Create email_sequence_steps table for individual steps in email campaigns
+            Entity: com.healthdata.sales.entity.EmailSequenceStep
+        </comment>
+
+        <createTable tableName="email_sequence_steps">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="sequence_id" type="UUID">
+                <constraints nullable="false"
+                             foreignKeyName="fk_email_sequence_steps_sequence"
+                             references="email_sequences(id)"/>
+            </column>
+
+            <column name="step_order" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="delay_days" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="delay_hours" type="INTEGER"/>
+
+            <column name="subject" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="preview_text" type="VARCHAR(255)"/>
+
+            <column name="body_html" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="body_text" type="TEXT"/>
+
+            <column name="template_id" type="VARCHAR(100)"/>
+
+            <column name="step_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="is_active" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="send_time_preference" type="VARCHAR(50)"/>
+
+            <column name="skip_weekends" type="BOOLEAN"/>
+
+            <column name="condition_field" type="VARCHAR(100)"/>
+
+            <column name="condition_operator" type="VARCHAR(50)"/>
+
+            <column name="condition_value" type="VARCHAR(255)"/>
+
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes for email_sequence_steps table -->
+        <createIndex indexName="idx_sequence_steps_sequence" tableName="email_sequence_steps">
+            <column name="sequence_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_sequence_steps_order" tableName="email_sequence_steps">
+            <column name="step_order"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="email_sequence_steps"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

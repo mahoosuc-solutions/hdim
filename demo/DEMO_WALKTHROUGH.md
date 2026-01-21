@@ -29,7 +29,7 @@ Before starting the demo, verify:
 
 - [ ] Demo environment is running: `./start-demo.sh --status`
 - [ ] Browser open to http://localhost:4200
-- [ ] Demo data loaded (10 patients, 18 care gaps)
+- [ ] Demo data loaded (10 patients, 16 care gaps)
 - [ ] Screen sharing ready (if remote demo)
 
 ---
@@ -47,8 +47,8 @@ Before starting the demo, verify:
 > "Your quality team runs batch reports weekly or monthly. By the time a care manager sees a gap, the patient might have already addressed it elsewhere—or the opportunity to intervene has passed."
 
 **Login**:
-- Username: `demo_user`
-- Password: `demo_password`
+- Username: `demo_admin`
+- Password: `demo123`
 
 ---
 

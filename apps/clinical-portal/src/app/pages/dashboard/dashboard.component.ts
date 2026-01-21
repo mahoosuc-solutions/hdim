@@ -10,7 +10,8 @@ import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartData, ChartOptions } from 'chart.js';
 import { forkJoin, catchError, of, finalize, takeUntil } from 'rxjs';
 import { injectDestroy } from '../../shared/utils';
 import { EvaluationService } from '../../services/evaluation.service';
@@ -93,28 +94,6 @@ export interface ComplianceTrendPoint {
 }
 
 /**
- * NgxCharts Data Point
- */
-export interface ChartDataPoint {
-  name: string;
-  value: number;
-}
-
-/**
- * NgxCharts Series Data (for line/area charts)
- */
-export interface ChartSeriesData {
-  name: string;
-  series: ChartDataPoint[];
-}
-
-/**
- * NgxCharts Color Scheme
- * Uses the Color type from @swimlane/ngx-charts
- */
-export type ChartColorScheme = Color;
-
-/**
  * Dashboard Component
  * Provides overview statistics, recent activity, and quick actions
  */
@@ -131,7 +110,7 @@ export type ChartColorScheme = Color;
     MatChipsModule,
     MatTooltipModule,
     MatButtonToggleModule,
-    NgxChartsModule,
+    BaseChartDirective,
     LoadingButtonComponent,
     LoadingOverlayComponent,
     StatCardComponent,
@@ -182,43 +161,47 @@ export class DashboardComponent implements OnInit {
   careGapSummary: CareGapSummary | null = null;
   urgentCareGaps: CareGapAlert[] = [];
 
-  // Chart data for ngx-charts
-  complianceTrendChartData: ChartSeriesData[] = [];
-  measurePerformanceChartData: ChartDataPoint[] = [];
-
-  // Chart configuration
-  // Line chart config
-  lineChartView: [number, number] = [700, 300];
-  lineChartShowXAxis = true;
-  lineChartShowYAxis = true;
-  lineChartGradient = false;
-  lineChartShowLegend = false;
-  lineChartShowXAxisLabel = true;
-  lineChartXAxisLabel = 'Period';
-  lineChartShowYAxisLabel = true;
-  lineChartYAxisLabel = 'Compliance Rate (%)';
-  lineChartColorScheme: ChartColorScheme = {
-    name: 'Compliance',
-    selectable: true,
-    group: ScaleType.Ordinal,
-    domain: ['#5AA454', '#E44D25', '#CFC0BB', '#7aa3e5', '#a8385d', '#aae3f5']
+  // Chart data for ng2-charts
+  complianceTrendChartData: ChartData<'line'> = {
+    labels: [],
+    datasets: [],
+  };
+  measurePerformanceChartData: ChartData<'bar'> = {
+    labels: [],
+    datasets: [],
   };
 
-  // Bar chart config for measure performance
-  barChartView: [number, number] = [700, 400];
-  barChartShowXAxis = true;
-  barChartShowYAxis = true;
-  barChartGradient = false;
-  barChartShowLegend = false;
-  barChartShowXAxisLabel = true;
-  barChartXAxisLabel = 'Measure';
-  barChartShowYAxisLabel = true;
-  barChartYAxisLabel = 'Compliance Rate (%)';
-  barChartColorScheme: ChartColorScheme = {
-    name: 'Performance',
-    selectable: true,
-    group: ScaleType.Ordinal,
-    domain: ['#5AA454', '#A10A28', '#C7B42C', '#AAAAAA']
+  // Chart configuration
+  lineChartOptions: ChartOptions<'line'> = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: true },
+    },
+    scales: {
+      x: { title: { display: true, text: 'Period' } },
+      y: {
+        title: { display: true, text: 'Compliance Rate (%)' },
+        min: 0,
+        max: 100,
+      },
+    },
+  };
+
+  barChartOptions: ChartOptions<'bar'> = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: true },
+    },
+    scales: {
+      x: { title: { display: true, text: 'Measure' } },
+      y: {
+        title: { display: true, text: 'Compliance Rate (%)' },
+        min: 0,
+        max: 100,
+      },
+    },
   };
 
   // UI State
@@ -609,15 +592,25 @@ export class DashboardComponent implements OnInit {
     // Sort by compliance rate descending
     this.measurePerformance.sort((a, b) => b.complianceRate - a.complianceRate);
 
-    // Transform data for ngx-charts bar chart (top 10 measures)
-    this.measurePerformanceChartData = this.measurePerformance
-      .slice(0, 10)
-      .map(measure => ({
-        name: measure.measureName.length > 30
-          ? measure.measureName.substring(0, 27) + '...'
-          : measure.measureName,
-        value: measure.complianceRate
-      }));
+    // Transform data for bar chart (top 10 measures)
+    const topMeasures = this.measurePerformance.slice(0, 10);
+    const labels = topMeasures.map(measure =>
+      measure.measureName.length > 30
+        ? measure.measureName.substring(0, 27) + '...'
+        : measure.measureName
+    );
+    const data = topMeasures.map(measure => measure.complianceRate);
+
+    this.measurePerformanceChartData = {
+      labels,
+      datasets: [
+        {
+          label: 'Compliance Rate',
+          data,
+          backgroundColor: '#5AA454',
+        },
+      ],
+    };
   }
 
   /**
@@ -678,16 +671,22 @@ export class DashboardComponent implements OnInit {
       })
       .sort((a, b) => a.period.localeCompare(b.period));
 
-    // Transform data for ngx-charts line chart
-    this.complianceTrendChartData = [
-      {
-        name: 'Compliance Rate',
-        series: this.complianceTrends.map(trend => ({
-          name: trend.period,
-          value: trend.complianceRate
-        }))
-      }
-    ];
+    // Transform data for line chart
+    const labels = this.complianceTrends.map(trend => trend.period);
+    const data = this.complianceTrends.map(trend => trend.complianceRate);
+    this.complianceTrendChartData = {
+      labels,
+      datasets: [
+        {
+          label: 'Compliance Rate',
+          data,
+          borderColor: '#5AA454',
+          backgroundColor: 'rgba(90, 164, 84, 0.2)',
+          fill: false,
+          tension: 0.3,
+        },
+      ],
+    };
   }
 
   /**

@@ -1,0 +1,486 @@
+package com.healthdata.quality.ml;
+
+import com.healthdata.quality.persistence.MLPredictionEntity;
+import com.healthdata.quality.persistence.MLPredictionRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.Instant;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+/**
+ * Test-Driven Development for Predictive Analytics Service
+ *
+ * Foundation for ML-based predictions:
+ * - Feature vector extraction
+ * - Model versioning
+ * - Prediction storage
+ * - Confidence scoring
+ */
+@ExtendWith(MockitoExtension.class)
+class PredictiveAnalyticsServiceTest {
+
+    @Mock
+    private MLPredictionRepository predictionRepository;
+
+    @Mock
+    private FeatureExtractor featureExtractor;
+
+    @Mock
+    private ModelRegistry modelRegistry;
+
+    @InjectMocks
+    private PredictiveAnalyticsService predictiveService;
+
+    private String tenantId;
+    private String patientId;
+    private Instant now;
+
+    @BeforeEach
+    void setUp() {
+        tenantId = "test-tenant";
+        patientId = "Patient/123";
+        now = Instant.now();
+    }
+
+    /**
+     * TEST 1: Extract Feature Vector for Patient
+     * Should create ML-ready feature vector from patient data
+     */
+    @Test
+    void testExtractFeatureVector() {
+        // Arrange
+        when(featureExtractor.extractFeatures(tenantId, patientId))
+            .thenReturn(createSampleFeatureVector());
+
+        // Act
+        Map<String, Object> features = predictiveService.extractFeatures(tenantId, patientId);
+
+        // Assert
+        assertNotNull(features);
+        assertTrue(features.containsKey("age"));
+        assertTrue(features.containsKey("chronicConditionCount"));
+        assertTrue(features.containsKey("recentHospitalizations"));
+        assertTrue(features.containsKey("medicationCount"));
+        assertTrue(features.containsKey("bmi"));
+        assertTrue(features.containsKey("hasDepression"));
+        assertTrue(features.containsKey("hasDiabetes"));
+        assertTrue(features.containsKey("edVisitsLast90Days"));
+    }
+
+    /**
+     * TEST 2: Predict Hospital Readmission Risk
+     * Should calculate 30-day readmission probability
+     */
+    @Test
+    void testPredictReadmissionRisk() {
+        // Arrange
+        Map<String, Object> features = createSampleFeatureVector();
+
+        when(featureExtractor.extractFeatures(tenantId, patientId))
+            .thenReturn(features);
+
+        when(modelRegistry.getModel("ReadmissionRisk", "v1.2"))
+            .thenReturn(createMockModel(0.35)); // 35% readmission probability
+
+        when(predictionRepository.save(any(MLPredictionEntity.class))).thenAnswer(i -> {
+            MLPredictionEntity entity = i.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        // Act
+        MLPredictionEntity result = predictiveService.predictReadmissionRisk(tenantId, patientId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(patientId, result.getPatientId());
+        assertEquals(MLPredictionEntity.PredictionType.READMISSION_RISK, result.getPredictionType());
+        assertEquals(0.35, result.getPredictionValue(), 0.01);
+        assertTrue(result.getConfidenceScore() >= 0.0 && result.getConfidenceScore() <= 1.0);
+        assertNotNull(result.getFeaturesUsed());
+        assertEquals("ReadmissionRisk", result.getModelName());
+        assertEquals("v1.2", result.getModelVersion());
+    }
+
+    /**
+     * TEST 3: Predict ED Visit Risk
+     * Should calculate emergency department visit probability
+     */
+    @Test
+    void testPredictEDVisitRisk() {
+        // Arrange
+        Map<String, Object> features = createSampleFeatureVector();
+
+        when(featureExtractor.extractFeatures(tenantId, patientId))
+            .thenReturn(features);
+
+        when(modelRegistry.getModel("EDVisitRisk", "v1.0"))
+            .thenReturn(createMockModel(0.42)); // 42% ED visit probability
+
+        when(predictionRepository.save(any(MLPredictionEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        MLPredictionEntity result = predictiveService.predictEDVisitRisk(tenantId, patientId);
+
+        // Assert
+        assertEquals(MLPredictionEntity.PredictionType.ED_VISIT_RISK, result.getPredictionType());
+        assertEquals(0.42, result.getPredictionValue(), 0.01);
+    }
+
+    /**
+     * TEST 4: Predict Disease Progression
+     * Should predict likelihood of chronic disease worsening
+     */
+    @Test
+    void testPredictDiseaseProgression() {
+        // Arrange
+        Map<String, Object> features = createSampleFeatureVector();
+
+        when(featureExtractor.extractFeatures(tenantId, patientId))
+            .thenReturn(features);
+
+        when(modelRegistry.getModel("DiseaseProgression", "v2.1"))
+            .thenReturn(createMockModel(0.28));
+
+        when(predictionRepository.save(any(MLPredictionEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        MLPredictionEntity result = predictiveService.predictDiseaseProgression(
+            tenantId,
+            patientId,
+            "diabetes"
+        );
+
+        // Assert
+        assertEquals(MLPredictionEntity.PredictionType.DISEASE_PROGRESSION, result.getPredictionType());
+        assertEquals(0.28, result.getPredictionValue(), 0.01);
+    }
+
+    /**
+     * TEST 5: Calculate Confidence Score
+     * Should provide confidence interval for predictions
+     */
+    @Test
+    void testCalculateConfidenceScore() {
+        // Arrange
+        Map<String, Object> features = createSampleFeatureVector();
+
+        // Complete feature set should have high confidence
+        when(featureExtractor.getFeatureCompleteness(features))
+            .thenReturn(0.95); // 95% of features available
+
+        // Act
+        double confidence = predictiveService.calculateConfidenceScore(features);
+
+        // Assert
+        assertTrue(confidence >= 0.85); // High confidence with complete features
+    }
+
+    @Test
+    void testCalculateConfidenceScore_IncompleteFeatures() {
+        // Arrange
+        Map<String, Object> features = Map.of(
+            "age", 65,
+            "chronicConditionCount", 2
+            // Missing many features
+        );
+
+        when(featureExtractor.getFeatureCompleteness(features))
+            .thenReturn(0.30); // Only 30% of features available
+
+        // Act
+        double confidence = predictiveService.calculateConfidenceScore(features);
+
+        // Assert
+        assertTrue(confidence < 0.50); // Low confidence with incomplete features
+    }
+
+    /**
+     * TEST 6: Store Prediction
+     * Should persist prediction for tracking and validation
+     */
+    @Test
+    void testStorePrediction() {
+        // Arrange
+        Map<String, Object> features = createSampleFeatureVector();
+
+        when(predictionRepository.save(any(MLPredictionEntity.class))).thenAnswer(i -> {
+            MLPredictionEntity entity = i.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        // Act
+        MLPredictionEntity result = predictiveService.storePrediction(
+            tenantId,
+            patientId,
+            MLPredictionEntity.PredictionType.READMISSION_RISK,
+            "ReadmissionRisk",
+            "v1.2",
+            0.35,
+            0.87,
+            features,
+            now.plusSeconds(86400 * 30) // Outcome date 30 days from now
+        );
+
+        // Assert
+        ArgumentCaptor<MLPredictionEntity> captor = ArgumentCaptor.forClass(MLPredictionEntity.class);
+        verify(predictionRepository).save(captor.capture());
+
+        MLPredictionEntity saved = captor.getValue();
+        assertEquals(tenantId, saved.getTenantId());
+        assertEquals(patientId, saved.getPatientId());
+        assertEquals(MLPredictionEntity.PredictionType.READMISSION_RISK, saved.getPredictionType());
+        assertEquals(0.35, saved.getPredictionValue());
+        assertEquals(0.87, saved.getConfidenceScore());
+        assertNotNull(saved.getFeaturesUsed());
+        assertNotNull(saved.getPredictedAt());
+        assertNotNull(saved.getOutcomeDate());
+        assertNull(saved.getActualOutcome()); // Not yet known
+    }
+
+    /**
+     * TEST 7: Record Actual Outcome
+     * Should update prediction with actual outcome for model validation
+     */
+    @Test
+    void testRecordActualOutcome() {
+        // Arrange
+        UUID predictionId = UUID.randomUUID();
+        MLPredictionEntity prediction = MLPredictionEntity.builder()
+            .id(predictionId)
+            .tenantId(tenantId)
+            .patientId(patientId)
+            .predictionType(MLPredictionEntity.PredictionType.READMISSION_RISK)
+            .predictionValue(0.35)
+            .confidenceScore(0.87)
+            .predictedAt(now.minusSeconds(86400 * 30))
+            .outcomeDate(now)
+            .build();
+
+        when(predictionRepository.findById(predictionId))
+            .thenReturn(Optional.of(prediction));
+
+        when(predictionRepository.save(any(MLPredictionEntity.class)))
+            .thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        predictiveService.recordActualOutcome(predictionId, true); // Patient was readmitted
+
+        // Assert
+        ArgumentCaptor<MLPredictionEntity> captor = ArgumentCaptor.forClass(MLPredictionEntity.class);
+        verify(predictionRepository).save(captor.capture());
+
+        MLPredictionEntity updated = captor.getValue();
+        assertNotNull(updated.getActualOutcome());
+        assertTrue(updated.getActualOutcome());
+    }
+
+    /**
+     * TEST 8: Get Model Accuracy
+     * Should calculate model performance metrics
+     */
+    @Test
+    void testGetModelAccuracy() {
+        // Arrange
+        String modelName = "ReadmissionRisk";
+        String modelVersion = "v1.2";
+
+        // Mock repository to return predictions with outcomes
+        when(predictionRepository.countCorrectPredictions(
+            tenantId,
+            modelName,
+            modelVersion,
+            0.5 // Threshold
+        )).thenReturn(85L);
+
+        when(predictionRepository.countTotalPredictionsWithOutcomes(
+            tenantId,
+            modelName,
+            modelVersion
+        )).thenReturn(100L);
+
+        // Act
+        double accuracy = predictiveService.getModelAccuracy(
+            tenantId,
+            modelName,
+            modelVersion,
+            0.5
+        );
+
+        // Assert
+        assertEquals(0.85, accuracy, 0.01); // 85% accuracy
+    }
+
+    /**
+     * TEST 9: Model Versioning
+     * Should track and manage multiple model versions
+     */
+    @Test
+    void testModelVersioning() {
+        // Arrange
+        when(modelRegistry.getLatestVersion("ReadmissionRisk"))
+            .thenReturn("v1.3");
+
+        when(modelRegistry.getModel("ReadmissionRisk", "v1.3"))
+            .thenReturn(createMockModel(0.32));
+
+        when(featureExtractor.extractFeatures(tenantId, patientId))
+            .thenReturn(createSampleFeatureVector());
+
+        when(predictionRepository.save(any(MLPredictionEntity.class)))
+            .thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        MLPredictionEntity result = predictiveService.predictReadmissionRiskLatest(tenantId, patientId);
+
+        // Assert
+        assertEquals("v1.3", result.getModelVersion());
+        verify(modelRegistry).getLatestVersion("ReadmissionRisk");
+    }
+
+    /**
+     * TEST 10: Feature Importance Analysis
+     * Should identify which features contribute most to predictions
+     */
+    @Test
+    void testFeatureImportanceAnalysis() {
+        // Arrange
+        String modelName = "ReadmissionRisk";
+        String modelVersion = "v1.2";
+
+        when(modelRegistry.getFeatureImportance(modelName, modelVersion))
+            .thenReturn(Map.of(
+                "recentHospitalizations", 0.35,
+                "chronicConditionCount", 0.25,
+                "edVisitsLast90Days", 0.20,
+                "age", 0.10,
+                "medicationCount", 0.10
+            ));
+
+        // Act
+        Map<String, Double> importance = predictiveService.getFeatureImportance(modelName, modelVersion);
+
+        // Assert
+        assertNotNull(importance);
+        assertEquals(0.35, importance.get("recentHospitalizations"), 0.01);
+        assertEquals(0.25, importance.get("chronicConditionCount"), 0.01);
+    }
+
+    /**
+     * TEST 11: Batch Predictions
+     * Should generate predictions for multiple patients efficiently
+     */
+    @Test
+    void testBatchPredictions() {
+        // Arrange
+        String[] patientIds = {"Patient/123", "Patient/456", "Patient/789"};
+
+        for (String pid : patientIds) {
+            when(featureExtractor.extractFeatures(tenantId, pid))
+                .thenReturn(createSampleFeatureVector());
+        }
+
+        when(modelRegistry.getModel("ReadmissionRisk", "v1.2"))
+            .thenReturn(createMockModel(0.35));
+
+        when(predictionRepository.save(any(MLPredictionEntity.class)))
+            .thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        var results = predictiveService.batchPredictReadmissionRisk(tenantId, patientIds);
+
+        // Assert
+        assertEquals(3, results.size());
+        verify(predictionRepository, times(3)).save(any(MLPredictionEntity.class));
+    }
+
+    /**
+     * TEST 12: Multi-Tenant Model Isolation
+     * Should maintain separate model performance per tenant
+     */
+    @Test
+    void testMultiTenantModelIsolation() {
+        // Arrange
+        String tenant1 = "tenant-1";
+        String tenant2 = "tenant-2";
+
+        when(predictionRepository.countCorrectPredictions(eq(tenant1), anyString(), anyString(), anyDouble()))
+            .thenReturn(85L);
+        when(predictionRepository.countTotalPredictionsWithOutcomes(eq(tenant1), anyString(), anyString()))
+            .thenReturn(100L);
+
+        when(predictionRepository.countCorrectPredictions(eq(tenant2), anyString(), anyString(), anyDouble()))
+            .thenReturn(70L);
+        when(predictionRepository.countTotalPredictionsWithOutcomes(eq(tenant2), anyString(), anyString()))
+            .thenReturn(100L);
+
+        // Act
+        double accuracy1 = predictiveService.getModelAccuracy(tenant1, "ReadmissionRisk", "v1.2", 0.5);
+        double accuracy2 = predictiveService.getModelAccuracy(tenant2, "ReadmissionRisk", "v1.2", 0.5);
+
+        // Assert
+        assertEquals(0.85, accuracy1, 0.01);
+        assertEquals(0.70, accuracy2, 0.01);
+        assertNotEquals(accuracy1, accuracy2); // Different tenant performance
+    }
+
+    /**
+     * Helper Methods
+     */
+
+    private Map<String, Object> createSampleFeatureVector() {
+        return Map.of(
+            "age", 72,
+            "chronicConditionCount", 3,
+            "recentHospitalizations", 1,
+            "medicationCount", 8,
+            "bmi", 28.5,
+            "hasDepression", true,
+            "hasDiabetes", true,
+            "edVisitsLast90Days", 2,
+            "lastVisitDaysAgo", 15,
+            "activeCareGaps", 4
+        );
+    }
+
+    private MLModel createMockModel(double predictionValue) {
+        return new MLModel() {
+            @Override
+            public double predict(Map<String, Object> features) {
+                return predictionValue;
+            }
+
+            @Override
+            public String getName() {
+                return "MockModel";
+            }
+
+            @Override
+            public String getVersion() {
+                return "v1.0";
+            }
+        };
+    }
+
+    /**
+     * Mock ML Model interface for testing
+     */
+    interface MLModel {
+        double predict(Map<String, Object> features);
+        String getName();
+        String getVersion();
+    }
+}

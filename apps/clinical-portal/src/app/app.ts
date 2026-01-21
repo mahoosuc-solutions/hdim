@@ -15,6 +15,7 @@ import { ThemeService } from './services/theme.service';
 import { AuthService } from './services/auth.service';
 import { DemoControlBarComponent } from './demo-mode/components/demo-control-bar/demo-control-bar.component';
 import { DemoModeService } from './demo-mode/services/demo-mode.service';
+import { DemoStoryboardOverlayComponent } from './demo-mode/components/demo-storyboard-overlay/demo-storyboard-overlay.component';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -32,6 +33,7 @@ import { Subscription } from 'rxjs';
     MatTooltipModule,
     BreadcrumbComponent,
     DemoControlBarComponent,
+    DemoStoryboardOverlayComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
@@ -52,21 +54,38 @@ export class App implements OnInit, OnDestroy {
   private sessionCountdownId: ReturnType<typeof setInterval> | null = null;
   private authSubscription: Subscription | null = null;
 
-  protected navItems = [
-    { path: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
-    { path: '/patients', icon: 'people', label: 'Patients' },
-    { path: '/quality-measures', icon: 'library_books', label: 'Quality Measures' },
-    { path: '/evaluations', icon: 'assessment', label: 'Evaluations' },
-    { path: '/results', icon: 'analytics', label: 'Results' },
-    { path: '/care-gaps', icon: 'warning', label: 'Care Gaps' },
-    { path: '/risk-stratification', icon: 'speed', label: 'Risk Stratification' },
-    { path: '/outreach-campaigns', icon: 'campaign', label: 'Outreach' },
-    { path: '/reports', icon: 'description', label: 'Reports' },
-    { path: '/measure-builder', icon: 'build_circle', label: 'Measure Builder' },
-    { path: '/visualization/live-monitor', icon: '3d_rotation', label: 'Live Monitor' },
-    { path: '/ai-assistant', icon: 'smart_toy', label: 'AI Assistant' },
-    { path: '/knowledge-base', icon: 'menu_book', label: 'Knowledge Base' },
-  ];
+  /**
+   * Navigation items - conditionally includes demo/testing routes when demo mode is enabled
+   */
+  protected get navItems() {
+    const baseItems = [
+      { path: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
+      { path: '/patients', icon: 'people', label: 'Patients' },
+      { path: '/quality-measures', icon: 'library_books', label: 'Quality Measures' },
+      { path: '/evaluations', icon: 'assessment', label: 'Evaluations' },
+      { path: '/results', icon: 'analytics', label: 'Results' },
+      { path: '/care-gaps', icon: 'warning', label: 'Care Gaps' },
+      { path: '/risk-stratification', icon: 'speed', label: 'Risk Stratification' },
+      { path: '/outreach-campaigns', icon: 'campaign', label: 'Outreach' },
+      { path: '/reports', icon: 'description', label: 'Reports' },
+      { path: '/measure-builder', icon: 'build_circle', label: 'Measure Builder' },
+      { path: '/visualization/live-monitor', icon: '3d_rotation', label: 'Live Monitor' },
+      { path: '/ai-assistant', icon: 'smart_toy', label: 'AI Assistant' },
+      { path: '/knowledge-base', icon: 'menu_book', label: 'Knowledge Base' },
+    ];
+
+    // Add demo/testing routes when demo mode is enabled
+    if (this.demoModeService.isDemoMode()) {
+      return [
+        ...baseItems,
+        { path: '/demo-startup', icon: 'power', label: 'Demo Startup' },
+        { path: '/testing', icon: 'bug_report', label: 'Testing' },
+        { path: '/compliance', icon: 'verified_user', label: 'Compliance' },
+      ];
+    }
+
+    return baseItems;
+  }
 
   constructor(
     private globalSearchService: GlobalSearchService,
@@ -197,7 +216,7 @@ export class App implements OnInit, OnDestroy {
   }
 
   get isDarkMode(): boolean {
-    return this.themeService.currentTheme() === 'dark';
+    return false;
   }
 
   logout(): void {

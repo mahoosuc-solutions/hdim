@@ -59,7 +59,7 @@ public class SdohSecurityConfig {
     @Value("${gateway.auth.signing-secret:}")
     private String signingSecret;
 
-    @Value("${gateway.auth.dev-mode:true}")
+    @Value("${gateway.auth.dev-mode:false}")
     private boolean devMode;
 
     /**

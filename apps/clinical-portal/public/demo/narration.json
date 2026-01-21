@@ -1,0 +1,26 @@
+{
+  "version": "1.0",
+  "steps": {
+    "login": {
+      "text": "We start with secure access and a demo-ready login to show the workflow end to end."
+    },
+    "dashboard-overview": {
+      "text": "This dashboard is the command center for care gap visibility and action."
+    },
+    "hero-patient": {
+      "text": "Maria Garcia represents a high-impact care gap scenario with immediate outreach potential."
+    },
+    "intervention": {
+      "text": "Outreach, scheduling, and follow-up are captured in one workflow to close care gaps faster."
+    },
+    "quality-impact": {
+      "text": "Measure performance updates as care gaps close, revealing the quality impact instantly."
+    },
+    "technical": {
+      "text": "Real-time monitoring demonstrates that services are actively processing patient data."
+    },
+    "summary": {
+      "text": "AI-guided recommendations highlight next-best actions and explain why they matter."
+    }
+  }
+}

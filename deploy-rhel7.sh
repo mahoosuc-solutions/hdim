@@ -241,7 +241,7 @@ log_info "Verifying Kong routes..."
 curl -sf -H "X-Tenant-ID: default" "http://localhost:8000/api/cql/api/v1/cql/evaluations?page=0&size=1" > /dev/null && \
     log_info "  ✓ CQL Engine via Kong: working" || log_warn "  ✗ CQL Engine via Kong: not working"
 
-curl -sf -H "X-Tenant-ID: default" "http://localhost:8000/api/quality/quality-measure/results?page=0&size=1" > /dev/null && \
+curl -sf -H "X-Tenant-ID: default" "http://localhost:8000/api/quality/results?page=0&size=1" > /dev/null && \
     log_info "  ✓ Quality Measure via Kong: working" || log_warn "  ✗ Quality Measure via Kong: not working"
 
 curl -sf "http://localhost:8000/api/fhir/Patient?_count=1" > /dev/null && \

@@ -334,14 +334,16 @@ class Hl7v2ParserServiceTest {
         @Test
         @DisplayName("Should handle unsupported message type")
         void parseMessage_withUnsupportedType_logsWarning() throws HL7Exception {
-            String rawMessage = "MSH|^~\\&|APP|FAC|EMR|FAC|20240115120000||XXX^Y01|000|P|2.5";
-            Message mockMessage = createMockMessage("XXX", "Y01", "000", "2.5");
+            // Test with a real but unsupported HL7 message type (QBP - Query by Parameter)
+            // QBP is a valid HL7 message type but not currently supported by our handlers
+            String rawMessage = "MSH|^~\\&|APP|FAC|EMR|FAC|20240115120000||QBP^Q11|000|P|2.5";
+            Message mockMessage = createMockMessage("QBP", "Q11", "000", "2.5");
             when(hl7v2Parser.parse(rawMessage)).thenReturn(mockMessage);
 
             Hl7v2Message result = parserService.parseMessage(rawMessage, TENANT_ID);
 
             assertThat(result.getStatus()).isEqualTo("PARSED");
-            assertThat(result.getMessageType()).isEqualTo("XXX");
+            assertThat(result.getMessageType()).isEqualTo("QBP");
             assertThat(result.getParsedData()).containsKey("warning");
         }
     }

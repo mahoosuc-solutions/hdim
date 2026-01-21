@@ -59,7 +59,7 @@ public class QualityMeasureResultEntity implements Serializable {
     @Column(name = "numerator_compliant", nullable = false)
     private Boolean numeratorCompliant;
 
-    @Column(name = "denominator_elligible", nullable = false)
+    @Column(name = "denominator_eligible", nullable = false)
     private Boolean denominatorElligible;
 
     @Column(name = "compliance_rate")

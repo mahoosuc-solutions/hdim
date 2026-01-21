@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0044-rename-change-summary-to-change-description" author="tdd-swarm-team">
+        <comment>
+            Fix entity-migration synchronization issue: Rename change_summary to change_description
+
+            Root Cause: Migration 0039 created "change_summary" column but MeasureModificationAuditEntity
+            expects "change_description" column (line 77-78 of entity).
+
+            Impact: 1 column name mismatch in measure_modification_audit table
+            Related: Entity MeasureModificationAuditEntity.java, migration 0039 (original table creation)
+
+            Note: Migration 0039 includes additional audit columns (reason, impact_assessment, ip_address,
+            user_agent, created_at) that are not yet in the entity. These are intentionally kept in the
+            database schema for future feature development and do not affect Hibernate validation.
+        </comment>
+
+        <!-- Rename change_summary to change_description -->
+        <renameColumn tableName="measure_modification_audit"
+                      oldColumnName="change_summary"
+                      newColumnName="change_description"
+                      columnDataType="TEXT"/>
+
+        <rollback>
+            <renameColumn tableName="measure_modification_audit"
+                          oldColumnName="change_description"
+                          newColumnName="change_summary"
+                          columnDataType="TEXT"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -3,6 +3,7 @@ package com.healthdata.demo.application;
 import ca.uhn.fhir.context.FhirContext;
 import com.healthdata.demo.client.CareGapServiceClient;
 import com.healthdata.demo.client.FhirServiceClient;
+import com.healthdata.demo.client.QualityMeasureServiceClient;
 import com.healthdata.demo.client.UserSeedingClient;
 import com.healthdata.demo.domain.model.DemoScenario;
 import com.healthdata.demo.domain.repository.DemoScenarioRepository;
@@ -63,6 +64,9 @@ class DemoSeedingServiceTest {
     private CareGapServiceClient careGapServiceClient;
 
     @Mock
+    private QualityMeasureServiceClient qualityMeasureServiceClient;
+
+    @Mock
     private UserSeedingClient userSeedingClient;
 
     private DemoSeedingService service;
@@ -82,6 +86,7 @@ class DemoSeedingServiceTest {
                 fhirContext,
                 fhirServiceClient,
                 careGapServiceClient,
+                qualityMeasureServiceClient,
                 userSeedingClient,
                 false  // persistToServices = false for unit tests
         );

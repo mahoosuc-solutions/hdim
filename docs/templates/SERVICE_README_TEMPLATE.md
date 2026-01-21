@@ -283,6 +283,7 @@ See: [Gateway Trust Architecture](/backend/docs/GATEWAY_TRUST_ARCHITECTURE.md)
 - [ ] `@Audited` annotation on PHI access methods
 - [ ] No PHI in log messages
 - [ ] Cache-Control headers on PHI endpoints
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ---
 

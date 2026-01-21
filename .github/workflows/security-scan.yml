@@ -98,6 +98,44 @@ jobs:
           extra_args: --only-verified
 
   # ============================================================================
+  # License Compliance - Verify third-party license metadata
+  # ============================================================================
+  license-compliance:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Update dependency inventory
+        run: python3 scripts/compliance/update-third-party-notices.py
+
+      - name: Verify dependency licenses
+        run: python3 scripts/compliance/verify-third-party-licenses.py
+
+      - name: Fail on unknown licenses
+        run: |
+          if rg -n "license: unknown\\)" docs/compliance/THIRD_PARTY_NOTICES.md; then
+            echo "Unknown licenses detected. Review docs/compliance/THIRD_PARTY_NOTICES.md."
+            exit 1
+          fi
+
+      - name: Fail on allowlisted licenses (release gate)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+        run: |
+          if [ -s docs/compliance/LICENSE_ALLOWLIST.txt ]; then
+            echo "Allowlist is not empty. Resolve licenses before release."
+            cat docs/compliance/LICENSE_ALLOWLIST.txt
+            exit 1
+          fi
+
+  # ============================================================================
   # Container Scanning - Scan Docker images for vulnerabilities
   # ============================================================================
   container-scan:

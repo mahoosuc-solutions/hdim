@@ -40,6 +40,7 @@ public class CareGapIdentificationService {
     private final PatientServiceClient patientServiceClient;
     private final CqlEngineServiceClient cqlEngineServiceClient;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final CareGapAuditIntegration careGapAuditIntegration;
     private final FhirContext fhirContext = FhirContext.forR4();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -122,6 +123,16 @@ public class CareGapIdentificationService {
             gaps.add(saved);
 
             log.info("Created care gap: {} for measure: {}", saved.getId(), libraryName);
+
+            // Publish audit event for AI-driven care gap identification
+            careGapAuditIntegration.publishCareGapIdentificationEvent(
+                    tenantId,
+                    patientId.toString(),
+                    libraryName,
+                    saved.getId().toString(),
+                    cqlResult,
+                    createdBy
+            );
         }
 
         return gaps;
@@ -202,6 +213,17 @@ public class CareGapIdentificationService {
 
         // Publish gap closure event
         publishGapClosureEvent(tenantId, gapId.toString(), closedBy);
+
+        // Publish audit event for care gap closure
+        careGapAuditIntegration.publishCareGapClosureEvent(
+                tenantId,
+                gap.getPatientId().toString(),
+                gap.getMeasureId(),
+                gapId.toString(),
+                closedBy,
+                closureReason,
+                closureAction
+        );
 
         return saved;
     }

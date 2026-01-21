@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="0007-create-demo-session-progress-table" author="demo-seeding-service">
+        <comment>Create demo_session_progress table for live scenario progress tracking</comment>
+
+        <createTable tableName="demo_session_progress">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="session_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scenario_name" type="VARCHAR(100)"/>
+            <column name="tenant_id" type="VARCHAR(100)"/>
+            <column name="stage" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="progress_percent" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patients_generated" type="INT"/>
+            <column name="patients_persisted" type="INT"/>
+            <column name="care_gaps_created" type="INT"/>
+            <column name="measures_seeded" type="INT"/>
+            <column name="message" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="demo_session_progress" indexName="idx_demo_progress_session">
+            <column name="session_id"/>
+        </createIndex>
+
+        <createIndex tableName="demo_session_progress" indexName="idx_demo_progress_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="demo_session_progress"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

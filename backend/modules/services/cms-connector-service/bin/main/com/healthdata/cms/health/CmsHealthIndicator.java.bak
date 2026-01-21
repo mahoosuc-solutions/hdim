@@ -1,0 +1,223 @@
+package com.healthdata.cms.health;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * CMS Health Indicator
+ * Monitors health of:
+ * - PostgreSQL Database
+ * - Redis Cache
+ * - BCDA API
+ * - DPC API
+ * - AB2D API
+ *
+ * Used by Kubernetes liveness and readiness probes
+ */
+@Slf4j
+@Component
+public class CmsHealthIndicator implements HealthIndicator {
+
+    private final RestTemplate restTemplate;
+    private final JdbcTemplate jdbcTemplate;
+    private final String bcdaHealthUrl;
+    private final String dpcHealthUrl;
+    private final String ab2dHealthUrl;
+
+    public CmsHealthIndicator(RestTemplate restTemplate, JdbcTemplate jdbcTemplate) {
+        this.restTemplate = restTemplate;
+        this.jdbcTemplate = jdbcTemplate;
+        this.bcdaHealthUrl = System.getenv().getOrDefault("BCDA_HEALTH_URL", "https://api.bcda.cms.gov/health");
+        this.dpcHealthUrl = System.getenv().getOrDefault("DPC_HEALTH_URL", "https://api.dpc.cms.gov/health");
+        this.ab2dHealthUrl = System.getenv().getOrDefault("AB2D_HEALTH_URL", "https://api.ab2d.cms.gov/health");
+    }
+
+    @Override
+    public Health health() {
+        log.debug("Running CMS health check");
+
+        try {
+            Map<String, Object> components = new LinkedHashMap<>();
+
+            // Check database
+            Map<String, Object> dbHealth = checkDatabase();
+            components.put("database", dbHealth);
+
+            // Check APIs in parallel for faster response
+            Map<String, Object> apisHealth = checkApisInParallel();
+            components.putAll(apisHealth);
+
+            // Determine overall health status
+            boolean allHealthy = isAllComponentsHealthy(components);
+
+            if (allHealthy) {
+                return Health.up()
+                        .withDetails(components)
+                        .build();
+            } else {
+                return Health.degraded()
+                        .withDetails(components)
+                        .withDetail("message", "One or more CMS components are degraded")
+                        .build();
+            }
+
+        } catch (Exception e) {
+            log.error("Health check failed", e);
+            return Health.down()
+                    .withDetail("error", e.getMessage())
+                    .build();
+        }
+    }
+
+    /**
+     * Check PostgreSQL database connectivity
+     */
+    private Map<String, Object> checkDatabase() {
+        Map<String, Object> result = new LinkedHashMap<>();
+        long startTime = System.currentTimeMillis();
+
+        try {
+            // Simple query to check connectivity
+            String dbVersion = jdbcTemplate.queryForObject("SELECT version()", String.class);
+            long duration = System.currentTimeMillis() - startTime;
+
+            result.put("status", "UP");
+            result.put("database", "PostgreSQL");
+            result.put("response_time_ms", duration);
+            result.put("version", dbVersion.split(",")[0]);
+
+            if (duration > 5000) {
+                result.put("status", "DEGRADED");
+                result.put("warning", "Database response time exceeds 5 seconds");
+            }
+
+        } catch (Exception e) {
+            log.warn("Database health check failed", e);
+            result.put("status", "DOWN");
+            result.put("error", e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * Check all CMS APIs in parallel
+     */
+    private Map<String, Object> checkApisInParallel() {
+        Map<String, Object> results = new LinkedHashMap<>();
+
+        CompletableFuture<Map<String, Object>> bcdaFuture = CompletableFuture.supplyAsync(() ->
+            checkApi("BCDA", bcdaHealthUrl)
+        );
+
+        CompletableFuture<Map<String, Object>> dpcFuture = CompletableFuture.supplyAsync(() ->
+            checkApi("DPC", dpcHealthUrl)
+        );
+
+        CompletableFuture<Map<String, Object>> ab2dFuture = CompletableFuture.supplyAsync(() ->
+            checkApi("AB2D", ab2dHealthUrl)
+        );
+
+        try {
+            // Wait for all API checks with timeout
+            CompletableFuture.allOf(bcdaFuture, dpcFuture, ab2dFuture)
+                    .get(10, TimeUnit.SECONDS);
+
+            results.put("bcda_api", bcdaFuture.getNow(Map.of("status", "TIMEOUT")));
+            results.put("dpc_api", dpcFuture.getNow(Map.of("status", "TIMEOUT")));
+            results.put("ab2d_api", ab2dFuture.getNow(Map.of("status", "TIMEOUT")));
+
+        } catch (Exception e) {
+            log.warn("API parallel health check failed", e);
+            results.put("bcda_api", Map.of("status", "UNKNOWN", "error", e.getMessage()));
+            results.put("dpc_api", Map.of("status", "UNKNOWN", "error", e.getMessage()));
+            results.put("ab2d_api", Map.of("status", "UNKNOWN", "error", e.getMessage()));
+        }
+
+        return results;
+    }
+
+    /**
+     * Check single CMS API
+     */
+    private Map<String, Object> checkApi(String apiName, String healthUrl) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        long startTime = System.currentTimeMillis();
+
+        try {
+            // Attempt to reach API health endpoint
+            Map<?, ?> response = restTemplate.getForObject(healthUrl, Map.class);
+            long duration = System.currentTimeMillis() - startTime;
+
+            result.put("status", "UP");
+            result.put("response_time_ms", duration);
+
+            // Check if response indicates health
+            if (response != null && response.containsKey("status")) {
+                String apiStatus = response.get("status").toString();
+                if ("UP".equals(apiStatus) || "ACTIVE".equals(apiStatus)) {
+                    result.put("api_status", "HEALTHY");
+                } else {
+                    result.put("status", "DEGRADED");
+                    result.put("api_status", apiStatus);
+                }
+            }
+
+            if (duration > 10000) {
+                result.put("status", "DEGRADED");
+                result.put("warning", "API response time exceeds 10 seconds");
+            }
+
+        } catch (Exception e) {
+            log.warn("{} API health check failed: {}", apiName, e.getMessage());
+            result.put("status", "DOWN");
+            result.put("error", e.getClass().getSimpleName());
+            result.put("message", e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * Determine if all critical components are healthy
+     */
+    private boolean isAllComponentsHealthy(Map<String, Object> components) {
+        // Database must be UP
+        Map<String, Object> dbHealth = (Map<String, Object>) components.get("database");
+        if (dbHealth == null || !"UP".equals(dbHealth.get("status"))) {
+            return false;
+        }
+
+        // At least one API must be UP
+        Map<String, Object> bcdaHealth = (Map<String, Object>) components.get("bcda_api");
+        Map<String, Object> dpcHealth = (Map<String, Object>) components.get("dpc_api");
+        Map<String, Object> ab2dHealth = (Map<String, Object>) components.get("ab2d_api");
+
+        boolean anyApiUp = (bcdaHealth != null && "UP".equals(bcdaHealth.get("status"))) ||
+                           (dpcHealth != null && "UP".equals(dpcHealth.get("status"))) ||
+                           (ab2dHealth != null && "UP".equals(ab2dHealth.get("status")));
+
+        return anyApiUp;
+    }
+
+    /**
+     * Get detailed health report (for debugging)
+     */
+    public Map<String, Object> getDetailedReport() {
+        Map<String, Object> report = new LinkedHashMap<>();
+        report.put("timestamp", System.currentTimeMillis());
+        report.put("database", checkDatabase());
+        report.put("bcda_api", checkApi("BCDA", bcdaHealthUrl));
+        report.put("dpc_api", checkApi("DPC", dpcHealthUrl));
+        report.put("ab2d_api", checkApi("AB2D", ab2dHealthUrl));
+        return report;
+    }
+}

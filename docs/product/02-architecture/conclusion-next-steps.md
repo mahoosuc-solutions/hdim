@@ -198,6 +198,7 @@ Before making a decision, confirm:
 □ ROI expectations realistic
 □ Vendor references contacted
 □ Legal/compliance reviewed
+□ License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ## Frequently Asked Questions
 

@@ -1,0 +1,211 @@
+package com.healthdata.authentication.controller;
+
+import com.healthdata.authentication.entity.AuditLog;
+import com.healthdata.authentication.service.AuditLogService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.Instant;
+import java.util.UUID;
+
+/**
+ * REST controller for audit log operations.
+ * All endpoints require ADMIN or SUPER_ADMIN role.
+ *
+ * HIPAA Compliance: Provides secure access to audit logs for compliance reporting
+ * and security monitoring.
+ *
+ * Endpoints:
+ * - GET /api/v1/audit/logs - Query audit logs with filters
+ * - GET /api/v1/audit/logs/{id} - Get specific audit log
+ * - GET /api/v1/audit/logs/user/{userId} - Get logs for specific user
+ * - GET /api/v1/audit/logs/tenant/{tenantId} - Get logs for specific tenant
+ * - GET /api/v1/audit/logs/failed-logins - Get recent failed login attempts
+ * - GET /api/v1/audit/logs/access-denied - Get recent access denied events
+ */
+@Slf4j
+@RestController
+@RequestMapping("/api/v1/audit")
+@RequiredArgsConstructor
+public class AuditLogController {
+
+    private final AuditLogService auditLogService;
+
+    /**
+     * Query audit logs with optional filters.
+     * Supports pagination and sorting.
+     *
+     * @param userId    Optional user ID filter
+     * @param tenantId  Optional tenant ID filter
+     * @param eventType Optional event type filter
+     * @param startTime Optional start time filter
+     * @param endTime   Optional end time filter
+     * @param page      Page number (0-indexed)
+     * @param size      Page size
+     * @param sort      Sort field (default: timestamp)
+     * @param direction Sort direction (default: DESC)
+     * @return Page of audit logs
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @GetMapping("/logs")
+    public ResponseEntity<Page<AuditLog>> queryAuditLogs(
+        @RequestParam(required = false) UUID userId,
+        @RequestParam(required = false) String tenantId,
+        @RequestParam(required = false) String eventType,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startTime,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endTime,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size,
+        @RequestParam(defaultValue = "timestamp") String sort,
+        @RequestParam(defaultValue = "DESC") Sort.Direction direction
+    ) {
+        log.info("Querying audit logs: userId={}, tenantId={}, eventType={}, startTime={}, endTime={}",
+            userId, tenantId, eventType, startTime, endTime);
+
+        // Validate pagination parameters
+        if (page < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page number must be >= 0");
+        }
+        if (size < 1 || size > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page size must be between 1 and 100");
+        }
+
+        // Create pageable with sorting
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort));
+
+        // Query audit logs
+        Page<AuditLog> auditLogs = auditLogService.queryAuditLogs(
+            userId, tenantId, eventType, startTime, endTime, pageable
+        );
+
+        return ResponseEntity.ok(auditLogs);
+    }
+
+    /**
+     * Get audit logs for a specific user.
+     *
+     * @param userId User ID
+     * @param page   Page number
+     * @param size   Page size
+     * @return Page of audit logs
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @GetMapping("/logs/user/{userId}")
+    public ResponseEntity<Page<AuditLog>> getAuditLogsByUser(
+        @PathVariable UUID userId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        log.info("Getting audit logs for user: {}", userId);
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "timestamp"));
+        Page<AuditLog> auditLogs = auditLogService.getAuditLogsByUser(userId, pageable);
+
+        return ResponseEntity.ok(auditLogs);
+    }
+
+    /**
+     * Get audit logs for a specific tenant.
+     *
+     * @param tenantId Tenant ID
+     * @param page     Page number
+     * @param size     Page size
+     * @return Page of audit logs
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @GetMapping("/logs/tenant/{tenantId}")
+    public ResponseEntity<Page<AuditLog>> getAuditLogsByTenant(
+        @PathVariable String tenantId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        log.info("Getting audit logs for tenant: {}", tenantId);
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "timestamp"));
+        Page<AuditLog> auditLogs = auditLogService.getAuditLogsByTenant(tenantId, pageable);
+
+        return ResponseEntity.ok(auditLogs);
+    }
+
+    /**
+     * Get recent failed login attempts.
+     * Useful for security monitoring and brute force attack detection.
+     *
+     * @param hoursBack How many hours back to look (default 24)
+     * @param page      Page number
+     * @param size      Page size
+     * @return Page of failed login audit logs
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @GetMapping("/logs/failed-logins")
+    public ResponseEntity<Page<AuditLog>> getFailedLogins(
+        @RequestParam(defaultValue = "24") int hoursBack,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        log.info("Getting failed login attempts from last {} hours", hoursBack);
+
+        Instant since = Instant.now().minusSeconds(hoursBack * 3600L);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AuditLog> failedLogins = auditLogService.getRecentFailedLogins(since, pageable);
+
+        return ResponseEntity.ok(failedLogins);
+    }
+
+    /**
+     * Get recent access denied events.
+     * Useful for identifying unauthorized access attempts.
+     *
+     * @param hoursBack How many hours back to look (default 24)
+     * @param page      Page number
+     * @param size      Page size
+     * @return Page of access denied audit logs
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @GetMapping("/logs/access-denied")
+    public ResponseEntity<Page<AuditLog>> getAccessDeniedEvents(
+        @RequestParam(defaultValue = "24") int hoursBack,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        log.info("Getting access denied events from last {} hours", hoursBack);
+
+        Instant since = Instant.now().minusSeconds(hoursBack * 3600L);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AuditLog> accessDeniedEvents = auditLogService.getAccessDeniedEvents(since, pageable);
+
+        return ResponseEntity.ok(accessDeniedEvents);
+    }
+
+    /**
+     * Count failed login attempts for a specific username.
+     * Useful for account lockout decisions.
+     *
+     * @param username  Username to check
+     * @param hoursBack How many hours back to look (default 1)
+     * @return Count of failed attempts
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @GetMapping("/logs/failed-login-count")
+    public ResponseEntity<Long> countFailedLoginAttempts(
+        @RequestParam String username,
+        @RequestParam(defaultValue = "1") int hoursBack
+    ) {
+        log.info("Counting failed login attempts for user: {} in last {} hours", username, hoursBack);
+
+        Instant since = Instant.now().minusSeconds(hoursBack * 3600L);
+        long count = auditLogService.countFailedLoginAttempts(username, since);
+
+        return ResponseEntity.ok(count);
+    }
+}

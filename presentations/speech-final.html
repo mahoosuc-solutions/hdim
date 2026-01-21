@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kill Tony Speech | The Age of AI Solutioning</title>
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --accent-gold: #fbbf24;
+            --accent-orange: #f97316;
+            --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-purple: #a855f7;
+            --text-white: #ffffff;
+            --text-gray: #9ca3af;
+            --glow-gold: rgba(251, 191, 36, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-white);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated gradient background */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(ellipse at 0% 0%, rgba(251, 191, 36, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 100% 100%, rgba(239, 68, 68, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(168, 85, 247, 0.05) 0%, transparent 60%);
+            animation: gradient-shift 15s ease-in-out infinite;
+        }
+
+        @keyframes gradient-shift {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(30deg); }
+        }
+
+        /* Spotlight effect */
+        .spotlight {
+            position: fixed;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.15) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+            transition: transform 0.3s ease-out;
+        }
+
+        /* Header - Comedy Club Style */
+        .header {
+            text-align: center;
+            padding: 4rem 2rem 3rem;
+            position: relative;
+        }
+
+        .mic-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: mic-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes mic-glow {
+            0%, 100% {
+                filter: drop-shadow(0 0 20px var(--glow-gold));
+                transform: scale(1);
+            }
+            50% {
+                filter: drop-shadow(0 0 40px var(--glow-gold)) drop-shadow(0 0 60px var(--glow-gold));
+                transform: scale(1.05);
+            }
+        }
+
+        .title {
+            font-size: clamp(2rem, 6vw, 4rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-orange) 50%, var(--accent-red) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-gray);
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .duration-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-red), var(--accent-orange));
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-top: 1.5rem;
+            animation: pulse-badge 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+            50% { transform: scale(1.02); box-shadow: 0 0 40px rgba(239, 68, 68, 0.8); }
+        }
+
+        /* Container */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Speech Section */
+        .speech-section {
+            background: var(--bg-card);
+            border-radius: 1.5rem;
+            padding: 3rem;
+            margin-bottom: 3rem;
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .speech-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-gold), var(--accent-orange), var(--accent-red));
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* Speech Lines */
+        .speech-block {
+            margin-bottom: 2.5rem;
+            padding-left: 1rem;
+            border-left: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .speech-block:hover {
+            border-left-color: var(--accent-gold);
+            background: rgba(251, 191, 36, 0.05);
+            padding: 1rem;
+            margin-left: -1rem;
+            border-radius: 0 1rem 1rem 0;
+        }
+
+        .slide-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            padding: 0.3rem 0.8rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent-gold);
+            margin-bottom: 0.75rem;
+        }
+
+        .slide-indicator .time {
+            color: var(--text-gray);
+        }
+
+        .speech-text {
+            font-size: 1.25rem;
+            line-height: 1.8;
+            color: var(--text-white);
+        }
+
+        .speech-text em {
+            color: var(--accent-gold);
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .speech-text strong {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .speech-text .number {
+            color: var(--accent-green);
+            font-weight: 800;
+            font-size: 1.4rem;
+        }
+
+        .speech-text .pause {
+            display: inline-block;
+            color: var(--text-gray);
+            font-style: italic;
+            margin: 0 0.5rem;
+        }
+
+        /* Verified Metrics Table */
+        .metrics-section {
+            background: var(--bg-card);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .metrics-section::before {
+            content: '✓ VERIFIED METRICS';
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent-green);
+            margin-bottom: 1.5rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .metric-item {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 1rem;
+            padding: 1.25rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .metric-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-green);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--accent-green);
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-gray);
+            margin-top: 0.25rem;
+        }
+
+        /* Timing Guide */
+        .timing-section {
+            background: var(--bg-card);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            border: 1px solid rgba(168, 85, 247, 0.2);
+        }
+
+        .timing-section::before {
+            content: '⏱️ TIMING GUIDE';
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent-purple);
+            margin-bottom: 1.5rem;
+        }
+
+        .timing-grid {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .timing-row {
+            display: grid;
+            grid-template-columns: 80px 60px 1fr;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: rgba(168, 85, 247, 0.05);
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .timing-row:hover {
+            background: rgba(168, 85, 247, 0.15);
+        }
+
+        .timing-time {
+            font-family: 'Monaco', monospace;
+            font-size: 0.9rem;
+            color: var(--accent-purple);
+            font-weight: 600;
+        }
+
+        .timing-slide {
+            background: var(--accent-purple);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .timing-cue {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+
+        .timing-cue em {
+            color: var(--text-white);
+            font-style: normal;
+        }
+
+        /* External Sources */
+        .sources-section {
+            background: var(--bg-card);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .sources-section::before {
+            content: '📚 EXTERNAL SOURCES';
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent-blue);
+            margin-bottom: 1.5rem;
+        }
+
+        .source-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .source-item:last-child {
+            border-bottom: none;
+        }
+
+        .source-claim {
+            color: var(--text-white);
+            font-weight: 500;
+        }
+
+        .source-link {
+            color: var(--accent-blue);
+            font-size: 0.85rem;
+            text-decoration: none;
+            padding: 0.3rem 0.8rem;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 50px;
+            transition: all 0.2s ease;
+        }
+
+        .source-link:hover {
+            background: rgba(59, 130, 246, 0.3);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-gray);
+        }
+
+        .footer-cta {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange));
+            color: var(--bg-dark);
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .footer-cta:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 40px var(--glow-gold);
+        }
+
+        /* Print mode */
+        .print-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--accent-gold);
+            color: var(--bg-dark);
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .print-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 30px var(--glow-gold);
+        }
+
+        @media print {
+            .bg-gradient, .spotlight, .print-btn { display: none; }
+            body { background: white; color: black; }
+            .speech-section, .metrics-section, .timing-section, .sources-section {
+                background: white;
+                border: 1px solid #ddd;
+            }
+            .speech-text, .metric-value, .timing-time { color: black; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .speech-section, .metrics-section, .timing-section, .sources-section {
+                padding: 1.5rem;
+            }
+            .speech-text { font-size: 1.1rem; }
+            .timing-row { grid-template-columns: 70px 50px 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="spotlight" id="spotlight"></div>
+
+    <header class="header">
+        <div class="mic-icon">🎤</div>
+        <h1 class="title">Kill Tony Speech</h1>
+        <p class="subtitle">The Age of AI Solutioning</p>
+        <div class="duration-badge">⏱️ 60 SECONDS • 12 SLIDES</div>
+    </header>
+
+    <main class="container">
+        <!-- The Speech -->
+        <section class="speech-section">
+            <div class="section-header">
+                <div class="section-icon">📜</div>
+                <h2 class="section-title">The Speech</h2>
+            </div>
+
+            <div class="speech-block">
+                <div class="slide-indicator">Slide 1 <span class="time">• 0:00-0:05</span></div>
+                <p class="speech-text">
+                    I've been building software for <em>thirty years</em>. And for thirty years, we've been doing it <strong>backwards</strong>.
+                </p>
+            </div>
+
+            <div class="speech-block">
+                <div class="slide-indicator">Slide 2 <span class="time">• 0:05-0:10</span></div>
+                <p class="speech-text">
+                    Think about it. <em>"Vibe coding"</em> — that's what they called it. <span class="number">Eight thousand</span> startups tried it. <span class="number">Ninety-five percent</span> failed. Developers thought AI made them faster but were actually <span class="number">nineteen percent slower</span>.
+                </p>
+            </div>
+
+            <div class="speech-block">
+                <div class="slide-indicator">Slide 3 <span class="time">• 0:10-0:15</span></div>
+                <p class="speech-text">
+                    But here's what I realized: AI doesn't think in lines of code. AI thinks in <em>systems</em>. In architectures. In <strong>solutions</strong>.
+                </p>
+            </div>
+
+            <div class="speech-block">
+                <div class="slide-indicator">Slide 4 <span class="time">• 0:15-0:20</span></div>
+                <p class="speech-text">
+                    So I flipped it. <strong>Top down</strong>. Start with what you're actually trying to solve. Define the specification. Map the architecture. Let the human wisdom guide the structure — and let AI fill in the implementation.
+                </p>
+            </div>
+
+            <div class="speech-block">
+                <div class="slide-indicator">Slide 5 <span class="time">• 0:20-0:28</span></div>
+                <p class="speech-text">
+                    I didn't prompt my way to <span class="number">thirty-six</span> microservices. I <em>designed</em> them. <span class="number">Twenty-nine</span> databases. <span class="number">Five hundred fifty-two</span> migrations. <span class="number">Ninety-nine thousand</span> lines of code.
+                </p>
+            </div>
+
+            <div class="speech-block">
+                <div class="slide-indicator">Slide 6 <span class="time">• 0:28-0:33</span></div>
+                <p class="speech-text">
+                    Java 21. Spring Boot. HAPI FHIR. PostgreSQL. Kafka. Redis. Angular. Every piece chosen with <em>purpose</em>.
+                </p>
+            </div>
+
+            <div class="speech-block">
+                <div class="slide-indicator">Slide 7 <span class="time">• 0:33-0:38</span></div>
+                <p class="speech-text">
+                    Replit and Lovable <strong>can't build this</strong>. They run in one container. They have no migrations. They <em>deleted a production database and lied about it</em>. I have <span class="number">three hundred seventy-one</span> audited methods and <span class="number">four hundred sixty-eight</span> test classes.
+                </p>
+            </div>
+
+            <div class="speech-block">
+                <div class="slide-indicator">Slide 8 <span class="time">• 0:38-0:43</span></div>
+                <p class="speech-text">
+                    The AI didn't know <em>HEDIS measures</em> exist. It didn't know <em>FHIR R4 compliance</em> matters. It didn't know that caching patient data for more than five minutes <strong>violates federal law</strong>. <span class="pause">*pause*</span> I did. Thirty years of knowing where healthcare software actually breaks.
+                </p>
+            </div>
+
+            <div class="speech-block">
+                <div class="slide-indicator">Slide 9 <span class="time">• 0:43-0:48</span></div>
+                <p class="speech-text">
+                    This isn't AI replacing expertise. This is expertise finally having an <strong>engine that can keep up</strong>.
+                </p>
+            </div>
+
+            <div class="speech-block">
+                <div class="slide-indicator">Slide 10 <span class="time">• 0:48-0:53</span></div>
+                <p class="speech-text">
+                    The old way: start with code, hope it connects. The new way: start with the <em>problem</em>, design the architecture, let human wisdom guide, and AI implements at <strong>speed</strong>.
+                </p>
+            </div>
+
+            <div class="speech-block">
+                <div class="slide-indicator">Slide 11 <span class="time">• 0:53-0:57</span></div>
+                <p class="speech-text">
+                    Every complex problem — healthcare, climate, poverty — they all need software. And for the first time in history, <strong>one person</strong> with deep expertise can build what used to take <em>armies</em>. That's not a tool. That's a <strong>superpower</strong>.
+                </p>
+            </div>
+
+            <div class="speech-block">
+                <div class="slide-indicator">Slide 12 <span class="time">• 0:57-1:00</span></div>
+                <p class="speech-text">
+                    Welcome to the age of <strong>AI solutioning</strong>. Human-led. AI-built. Top-down. <span class="pause">*beat*</span> I'm just the first one through the door.
+                </p>
+            </div>
+        </section>
+
+        <!-- Verified Metrics -->
+        <section class="metrics-section">
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <div class="metric-value">36</div>
+                    <div class="metric-label">Microservices</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">29</div>
+                    <div class="metric-label">Databases</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">552</div>
+                    <div class="metric-label">Migrations</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">99K</div>
+                    <div class="metric-label">Lines of Code</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">468</div>
+                    <div class="metric-label">Test Classes</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">371</div>
+                    <div class="metric-label">Audited Methods</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">396</div>
+                    <div class="metric-label">RBAC Protected</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">1,037</div>
+                    <div class="metric-label">API Endpoints</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Build Timeline -->
+        <section style="margin: 3rem 0; padding: 2rem; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1)); border-radius: 1rem; border: 1px solid rgba(16, 185, 129, 0.3);">
+            <h3 style="text-align: center; font-size: 1.5rem; color: var(--accent-green); margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 2px;">
+                ⚡ Development Timeline
+            </h3>
+            <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 2rem; text-align: center;">
+                <div>
+                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent-cyan);">42</div>
+                    <div style="color: var(--text-gray); font-size: 0.9rem;">Days</div>
+                </div>
+                <div>
+                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent-blue);">614</div>
+                    <div style="color: var(--text-gray); font-size: 0.9rem;">Commits</div>
+                </div>
+                <div>
+                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent-purple);">719K</div>
+                    <div style="color: var(--text-gray); font-size: 0.9rem;">Total LOC</div>
+                </div>
+                <div>
+                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent-gold);">16</div>
+                    <div style="color: var(--text-gray); font-size: 0.9rem;">Containers</div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                <span style="color: var(--text-gray); font-size: 0.85rem;">Dec 5, 2025 → Jan 16, 2026</span>
+                <span style="margin-left: 1rem; padding: 0.25rem 0.75rem; background: var(--accent-green); color: black; border-radius: 50px; font-size: 0.75rem; font-weight: 600;">GIT VERIFIED</span>
+            </div>
+        </section>
+
+        <!-- Full Architecture -->
+        <section style="margin: 3rem 0;">
+            <h3 style="text-align: center; font-size: 1.8rem; color: var(--accent-gold); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 3px;">
+                36 Microservices Architecture
+            </h3>
+            <p style="text-align: center; color: var(--text-gray); margin-bottom: 2rem; font-size: 0.95rem;">
+                Every service is a standalone Spring Boot application with its own database
+            </p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+
+                <!-- Core Clinical -->
+                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 1rem; padding: 1.25rem;">
+                    <h4 style="color: var(--accent-green); margin-bottom: 0.75rem; font-size: 1rem;">🏥 Core Clinical (6)</h4>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); line-height: 1.7;">
+                        fhir-service • patient-service • cdr-processor-service • consent-service • ehr-connector-service • ecr-service
+                    </div>
+                </div>
+
+                <!-- Quality & Measures -->
+                <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05)); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 1rem; padding: 1.25rem;">
+                    <h4 style="color: var(--accent-blue); margin-bottom: 0.75rem; font-size: 1rem;">📊 Quality & Measures (4)</h4>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); line-height: 1.7;">
+                        quality-measure-service • cql-engine-service • care-gap-service • qrda-export-service
+                    </div>
+                </div>
+
+                <!-- API Gateways -->
+                <div style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(168, 85, 247, 0.05)); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 1rem; padding: 1.25rem;">
+                    <h4 style="color: var(--accent-purple); margin-bottom: 0.75rem; font-size: 1rem;">🌐 API Gateways (4)</h4>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); line-height: 1.7;">
+                        gateway-service • gateway-clinical-service • gateway-fhir-service • gateway-admin-service
+                    </div>
+                </div>
+
+                <!-- AI & Agents -->
+                <div style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(6, 182, 212, 0.05)); border: 1px solid rgba(6, 182, 212, 0.4); border-radius: 1rem; padding: 1.25rem;">
+                    <h4 style="color: var(--accent-cyan); margin-bottom: 0.75rem; font-size: 1rem;">🤖 AI & Agents (4)</h4>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); line-height: 1.7;">
+                        agent-builder-service • agent-runtime-service • ai-assistant-service • predictive-analytics-service
+                    </div>
+                </div>
+
+                <!-- Payer & Workflows -->
+                <div style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(249, 115, 22, 0.05)); border: 1px solid rgba(249, 115, 22, 0.4); border-radius: 1rem; padding: 1.25rem;">
+                    <h4 style="color: var(--accent-orange); margin-bottom: 0.75rem; font-size: 1rem;">💼 Payer & Workflows (5)</h4>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); line-height: 1.7;">
+                        payer-workflows-service • prior-auth-service • approval-service • cms-connector-service • hcc-service
+                    </div>
+                </div>
+
+                <!-- Data & Analytics -->
+                <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(236, 72, 153, 0.05)); border: 1px solid rgba(236, 72, 153, 0.4); border-radius: 1rem; padding: 1.25rem;">
+                    <h4 style="color: #ec4899; margin-bottom: 0.75rem; font-size: 1rem;">📈 Data & Analytics (4)</h4>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); line-height: 1.7;">
+                        analytics-service • data-enrichment-service • cost-analysis-service • sdoh-service
+                    </div>
+                </div>
+
+                <!-- Event Infrastructure -->
+                <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05)); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 1rem; padding: 1.25rem;">
+                    <h4 style="color: #ef4444; margin-bottom: 0.75rem; font-size: 1rem;">⚡ Event Infrastructure (3)</h4>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); line-height: 1.7;">
+                        event-processing-service • event-router-service • notification-service
+                    </div>
+                </div>
+
+                <!-- Platform & Ops -->
+                <div style="background: linear-gradient(135deg, rgba(148, 163, 184, 0.15), rgba(148, 163, 184, 0.05)); border: 1px solid rgba(148, 163, 184, 0.4); border-radius: 1rem; padding: 1.25rem;">
+                    <h4 style="color: #94a3b8; margin-bottom: 0.75rem; font-size: 1rem;">🔧 Platform & Ops (6)</h4>
+                    <div style="font-size: 0.8rem; color: var(--text-gray); line-height: 1.7;">
+                        demo-seeding-service • demo-orchestrator-service • devops-agent-service • migration-workflow-service • documentation-service • sales-automation-service
+                    </div>
+                </div>
+            </div>
+
+            <!-- Infrastructure Row -->
+            <div style="margin-top: 1.5rem; padding: 1.25rem; background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.05)); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 1rem;">
+                <h4 style="color: var(--accent-gold); margin-bottom: 0.75rem; font-size: 1rem; text-align: center;">🐳 Infrastructure Stack</h4>
+                <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 1.5rem; font-size: 0.85rem; color: var(--text-gray);">
+                    <span><strong style="color: var(--accent-cyan);">PostgreSQL 16</strong> - 29 Databases</span>
+                    <span><strong style="color: var(--accent-red);">Redis 7</strong> - Caching</span>
+                    <span><strong style="color: var(--accent-orange);">Kafka 3.x</strong> - Events</span>
+                    <span><strong style="color: var(--accent-purple);">Jaeger</strong> - Tracing</span>
+                    <span><strong style="color: var(--accent-green);">NGINX</strong> - Gateway</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Healthcare Data Standards -->
+        <section style="margin: 3rem 0;">
+            <h3 style="text-align: center; font-size: 1.8rem; color: var(--accent-cyan); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 3px;">
+                Healthcare Data Standards
+            </h3>
+            <p style="text-align: center; color: var(--text-gray); margin-bottom: 2rem; font-size: 0.95rem;">
+                What data types flow through the platform - from legacy EHR to CMS submission
+            </p>
+
+            <!-- Message Type Legend -->
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-card); border-radius: 1rem; border: 1px solid rgba(6, 182, 212, 0.3);">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #ef4444; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">HL7 v2.x</span>
+                    <span style="color: var(--text-gray); font-size: 0.85rem;">ADT, ORU, ORM</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #3b82f6; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">FHIR R4</span>
+                    <span style="color: var(--text-gray); font-size: 0.85rem;">Resources, Bundles</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #8b5cf6; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">C-CDA</span>
+                    <span style="color: var(--text-gray); font-size: 0.85rem;">CCD, Discharge</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">CQL</span>
+                    <span style="color: var(--text-gray); font-size: 0.85rem;">Measure Logic</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #f59e0b; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">QRDA I/III</span>
+                    <span style="color: var(--text-gray); font-size: 0.85rem;">CMS Submission</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #06b6d4; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">NDJSON</span>
+                    <span style="color: var(--text-gray); font-size: 0.85rem;">Bulk Data</span>
+                </div>
+            </div>
+
+            <!-- Visual Data Flow -->
+            <div style="background: var(--bg-card); border-radius: 1rem; padding: 2rem; border: 1px solid rgba(6, 182, 212, 0.3);">
+                <h4 style="text-align: center; margin-bottom: 1.5rem; color: var(--accent-gold); font-size: 1.1rem;">Data Transformation Pipeline</h4>
+
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.5rem;">
+                    <!-- EHR Source -->
+                    <div style="background: rgba(239, 68, 68, 0.1); border: 2px solid #ef4444; border-radius: 0.75rem; padding: 1rem; text-align: center; min-width: 100px;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">🏥</div>
+                        <div style="font-weight: 600; font-size: 0.85rem;">EHR/HIE</div>
+                        <span style="background: #ef4444; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">HL7 v2.x</span>
+                    </div>
+                    <div style="color: var(--text-gray); font-size: 1.5rem;">→</div>
+
+                    <!-- CDR Processor -->
+                    <div style="background: rgba(139, 92, 246, 0.1); border: 2px solid #8b5cf6; border-radius: 0.75rem; padding: 1rem; text-align: center; min-width: 100px;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">⚙️</div>
+                        <div style="font-weight: 600; font-size: 0.85rem;">CDR</div>
+                        <span style="background: #8b5cf6; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">C-CDA</span>
+                    </div>
+                    <div style="color: var(--text-gray); font-size: 1.5rem;">→</div>
+
+                    <!-- FHIR Service -->
+                    <div style="background: rgba(59, 130, 246, 0.1); border: 2px solid #3b82f6; border-radius: 0.75rem; padding: 1rem; text-align: center; min-width: 100px;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">📁</div>
+                        <div style="font-weight: 600; font-size: 0.85rem;">FHIR</div>
+                        <span style="background: #3b82f6; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">FHIR R4</span>
+                    </div>
+                    <div style="color: var(--text-gray); font-size: 1.5rem;">→</div>
+
+                    <!-- CQL Engine -->
+                    <div style="background: rgba(16, 185, 129, 0.1); border: 2px solid #10b981; border-radius: 0.75rem; padding: 1rem; text-align: center; min-width: 100px;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">🧮</div>
+                        <div style="font-weight: 600; font-size: 0.85rem;">CQL</div>
+                        <span style="background: #10b981; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">CQL</span>
+                    </div>
+                    <div style="color: var(--text-gray); font-size: 1.5rem;">→</div>
+
+                    <!-- Quality Measure -->
+                    <div style="background: rgba(59, 130, 246, 0.1); border: 2px solid #3b82f6; border-radius: 0.75rem; padding: 1rem; text-align: center; min-width: 100px;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">📊</div>
+                        <div style="font-weight: 600; font-size: 0.85rem;">Measure</div>
+                        <span style="background: #3b82f6; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">MeasureReport</span>
+                    </div>
+                    <div style="color: var(--text-gray); font-size: 1.5rem;">→</div>
+
+                    <!-- QRDA Export -->
+                    <div style="background: rgba(245, 158, 11, 0.1); border: 2px solid #f59e0b; border-radius: 0.75rem; padding: 1rem; text-align: center; min-width: 100px;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">📋</div>
+                        <div style="font-weight: 600; font-size: 0.85rem;">CMS</div>
+                        <span style="background: #f59e0b; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">QRDA I/III</span>
+                    </div>
+                </div>
+
+                <!-- Standards Summary -->
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 800; color: #ef4444;">HL7</div>
+                        <div style="font-size: 0.75rem; color: var(--text-gray);">Legacy Integration</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 800; color: #3b82f6;">FHIR</div>
+                        <div style="font-size: 0.75rem; color: var(--text-gray);">Modern Standard</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 800; color: #f59e0b;">QRDA</div>
+                        <div style="font-size: 0.75rem; color: var(--text-gray);">CMS Compliance</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Timing Guide -->
+        <section class="timing-section">
+            <div class="timing-grid">
+                <div class="timing-row">
+                    <span class="timing-time">0:00</span>
+                    <span class="timing-slide">1</span>
+                    <span class="timing-cue"><em>"thirty years... backwards"</em></span>
+                </div>
+                <div class="timing-row">
+                    <span class="timing-time">0:05</span>
+                    <span class="timing-slide">2</span>
+                    <span class="timing-cue"><em>"vibe coding... eight thousand"</em></span>
+                </div>
+                <div class="timing-row">
+                    <span class="timing-time">0:10</span>
+                    <span class="timing-slide">3</span>
+                    <span class="timing-cue"><em>"AI thinks in systems"</em></span>
+                </div>
+                <div class="timing-row">
+                    <span class="timing-time">0:15</span>
+                    <span class="timing-slide">4</span>
+                    <span class="timing-cue"><em>"flipped it... top down"</em></span>
+                </div>
+                <div class="timing-row">
+                    <span class="timing-time">0:20</span>
+                    <span class="timing-slide">5</span>
+                    <span class="timing-cue"><em>"thirty-six microservices"</em></span>
+                </div>
+                <div class="timing-row">
+                    <span class="timing-time">0:28</span>
+                    <span class="timing-slide">6</span>
+                    <span class="timing-cue"><em>"Java 21... Spring Boot"</em></span>
+                </div>
+                <div class="timing-row">
+                    <span class="timing-time">0:33</span>
+                    <span class="timing-slide">7</span>
+                    <span class="timing-cue"><em>"Replit can't build this"</em></span>
+                </div>
+                <div class="timing-row">
+                    <span class="timing-time">0:38</span>
+                    <span class="timing-slide">8</span>
+                    <span class="timing-cue"><em>"HEDIS... FHIR... federal law"</em></span>
+                </div>
+                <div class="timing-row">
+                    <span class="timing-time">0:43</span>
+                    <span class="timing-slide">9</span>
+                    <span class="timing-cue"><em>"expertise... engine"</em></span>
+                </div>
+                <div class="timing-row">
+                    <span class="timing-time">0:48</span>
+                    <span class="timing-slide">10</span>
+                    <span class="timing-cue"><em>"old way... new way"</em></span>
+                </div>
+                <div class="timing-row">
+                    <span class="timing-time">0:53</span>
+                    <span class="timing-slide">11</span>
+                    <span class="timing-cue"><em>"superpower"</em></span>
+                </div>
+                <div class="timing-row">
+                    <span class="timing-time">0:57</span>
+                    <span class="timing-slide">12</span>
+                    <span class="timing-cue"><em>"first through the door"</em></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- External Sources -->
+        <section class="sources-section">
+            <div class="source-item">
+                <span class="source-claim">"8,000 startups need rebuilds"</span>
+                <a href="https://techstartups.com/2025/12/11/the-vibe-coding-delusion/" class="source-link" target="_blank">TechStartups →</a>
+            </div>
+            <div class="source-item">
+                <span class="source-claim">"95% AI pilots failed"</span>
+                <a href="#" class="source-link">MIT 2025 Study →</a>
+            </div>
+            <div class="source-item">
+                <span class="source-claim">"19% slower with AI"</span>
+                <a href="https://stackoverflow.blog/2026/01/02/" class="source-link" target="_blank">Stack Overflow →</a>
+            </div>
+            <div class="source-item">
+                <span class="source-claim">"Replit deleted production DB"</span>
+                <a href="https://fortune.com/2025/07/23/" class="source-link" target="_blank">Fortune →</a>
+            </div>
+            <div class="source-item">
+                <span class="source-claim">"Lovable: 60-70% solution"</span>
+                <a href="https://www.eesel.ai/blog/lovable" class="source-link" target="_blank">eesel.ai →</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>All codebase metrics independently verifiable</p>
+        <a href="validation-report.html" class="footer-cta">View Full Validation Report →</a>
+    </footer>
+
+    <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+
+    <script>
+        // Spotlight follow cursor
+        const spotlight = document.getElementById('spotlight');
+        document.addEventListener('mousemove', (e) => {
+            spotlight.style.transform = `translate(${e.clientX - 400}px, ${e.clientY - 400}px)`;
+        });
+
+        // Animate speech blocks on scroll
+        const blocks = document.querySelectorAll('.speech-block');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateX(0)';
+                }
+            });
+        }, { threshold: 0.2 });
+
+        blocks.forEach((block, i) => {
+            block.style.opacity = '0';
+            block.style.transform = 'translateX(-20px)';
+            block.style.transition = `all 0.5s ease ${i * 0.1}s`;
+            observer.observe(block);
+        });
+    </script>
+</body>
+</html>

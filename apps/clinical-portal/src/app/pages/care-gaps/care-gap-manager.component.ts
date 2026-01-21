@@ -23,13 +23,14 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { SelectionModel } from '@angular/cdk/collections';
-import { Subject, Observable } from 'rxjs';
+import { Subject, Observable, forkJoin } from 'rxjs';
 import { debounceTime, takeUntil, finalize } from 'rxjs/operators';
 
 import { PatientService } from '../../services/patient.service';
 import { MeasureService } from '../../services/measure.service';
 import { DialogService } from '../../services/dialog.service';
 import { CareGapAlert, CareGapSummary, getCareGapIcon, getUrgencyColor, formatDaysOverdue } from '../../models/care-gap.model';
+import { CareGapService, CareGapApiItem, GapPriority } from '../../services/care-gap.service';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { QuickActionDialogComponent, QuickActionType, QuickActionConfig, QuickActionResult } from './dialogs/quick-action-dialog.component';
@@ -289,6 +290,7 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
   constructor(
     private patientService: PatientService,
     private measureService: MeasureService,
+    private careGapService: CareGapService,
     private dialogService: DialogService,
     private dialog: MatDialog,
     private router: Router,
@@ -360,13 +362,24 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
     this.loading = true;
     this.error = null;
 
-    // In a real implementation, this would call the backend service
-    // For now, we'll generate mock data
-    this.generateMockCareGaps();
-
-    this.loading = false;
-    this.calculateSummary();
-    this.applyFilters();
+    forkJoin({
+      careGapPage: this.careGapService.getCareGapsPage({ size: 200 }),
+      patients: this.patientService.getPatientsSummaryCached(),
+    })
+      .pipe(finalize(() => (this.loading = false)))
+      .subscribe({
+        next: ({ careGapPage, patients }) => {
+          this.careGaps = this.mapCareGaps(careGapPage.content, patients);
+          this.calculateSummary();
+          this.applyFilters();
+        },
+        error: () => {
+          this.careGaps = [];
+          this.filteredGaps = [];
+          this.dataSource.data = [];
+          this.error = 'Unable to load care gaps. Please try again.';
+        },
+      });
   }
 
   /**
@@ -543,6 +556,76 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
     this.careGaps = mockGaps;
   }
 
+  private mapCareGaps(
+    gaps: CareGapApiItem[],
+    patients: Array<{ id: string; fullName: string; mrn?: string }>
+  ): CareGapAlert[] {
+    const patientById = new Map(patients.map((patient) => [patient.id, patient]));
+    const now = new Date();
+
+    return gaps.map((gap) => {
+      const patient = patientById.get(gap.patientId);
+      const dueDate = this.parseGapDate(gap.dueDate);
+      const daysOverdue = dueDate
+        ? Math.ceil((now.getTime() - dueDate.getTime()) / 86400000)
+        : 0;
+
+      return {
+        gapId: gap.id,
+        patientId: gap.patientId,
+        patientName: patient?.fullName || gap.patientId,
+        mrn: patient?.mrn || 'N/A',
+        gapType: this.mapGapType(gap.gapCategory),
+        gapDescription: gap.gapDescription || gap.measureName || gap.measureId,
+        daysOverdue,
+        urgency: this.mapUrgency(gap.priority),
+        measureName: gap.measureName || gap.measureId,
+        dueDate: dueDate ? dueDate.toISOString() : undefined,
+      };
+    });
+  }
+
+  private mapGapType(category?: string): CareGapAlert['gapType'] {
+    switch (category) {
+      case 'PREVENTIVE':
+        return 'screening';
+      case 'MEDICATION':
+        return 'medication';
+      case 'FOLLOW_UP':
+        return 'followup';
+      case 'LAB':
+        return 'lab';
+      case 'ASSESSMENT':
+        return 'assessment';
+      default:
+        return 'screening';
+    }
+  }
+
+  private mapUrgency(priority?: string): CareGapAlert['urgency'] {
+    switch (priority) {
+      case 'HIGH':
+      case GapPriority.HIGH:
+        return 'high';
+      case 'MEDIUM':
+      case GapPriority.MEDIUM:
+        return 'medium';
+      default:
+        return 'low';
+    }
+  }
+
+  private parseGapDate(value?: number[] | string): Date | null {
+    if (Array.isArray(value) && value.length >= 3) {
+      return new Date(value[0], value[1] - 1, value[2]);
+    }
+    if (typeof value === 'string') {
+      const parsed = new Date(value);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+    return null;
+  }
+
   /**
    * Calculate summary statistics
    */
@@ -670,7 +753,7 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
     }
 
     const intervention: CareGapIntervention = {
-      gapId: `gap-${this.selectedGap.patientId}`,
+      gapId: this.selectedGap.gapId || `gap-${this.selectedGap.patientId}`,
       patientId: this.selectedGap.patientId,
       ...this.interventionForm.value,
     };
@@ -715,7 +798,7 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
     }
 
     const closure: CareGapClosure = {
-      gapId: `gap-${this.selectedGap.patientId}`,
+      gapId: this.selectedGap.gapId || `gap-${this.selectedGap.patientId}`,
       patientId: this.selectedGap.patientId,
       ...this.closureForm.value,
     };

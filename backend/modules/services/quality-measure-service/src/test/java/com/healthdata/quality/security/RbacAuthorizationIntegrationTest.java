@@ -169,24 +169,42 @@ class RbacAuthorizationIntegrationTest {
     }
 
     @Test
-    @DisplayName("ANALYST role SHOULD be able to view results but NOT calculate")
-    void analystCanViewButNotCalculate() throws Exception {
+    @DisplayName("MEASURE_DEVELOPER role SHOULD be able to view results and calculate")
+    void measureDeveloperCanViewAndCalculate() throws Exception {
         var headers = GatewayTrustTestHeaders.builder()
             .tenantId(TENANT_ID)
-            .roles("ANALYST")
+            .roles("MEASURE_DEVELOPER")
             .build();
 
-        // Analyst can view results (has ANALYST role)
+        // Can view results
         mockMvc.perform(get("/quality-measure/results")
                 .headers(headers)
                 .param("patient", PATIENT_ID.toString()))
             .andExpect(status().isOk());
 
-        // But cannot calculate (lacks EVALUATOR/ADMIN role)
+        // Can calculate
+        when(cqlEngineServiceClient.evaluateCql(
+            anyString(),
+            anyString(),
+            any(UUID.class),
+            anyString()
+        )).thenReturn("""
+            {
+                "libraryName": "HEDIS_CDC_2024",
+                "measureResult": {
+                    "measureName": "Diabetes Care",
+                    "inNumerator": true,
+                    "inDenominator": true,
+                    "complianceRate": 90.0,
+                    "score": 95.0
+                }
+            }
+            """);
+
         mockMvc.perform(post("/quality-measure/calculate")
                 .headers(headers)
                 .param("patient", PATIENT_ID.toString())
                 .param("measure", MEASURE_CDC_A1C9))
-            .andExpect(status().isForbidden());
+            .andExpect(status().isCreated());
     }
 }

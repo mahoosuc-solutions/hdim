@@ -1,0 +1,26 @@
+# Batch Generation Config: Dashboard UIs
+# Generate all dashboard variations for marketing and documentation
+
+items:
+  # Clinical Dashboard Variations
+  - template: dashboard-clinical
+    variations: [light, dark, mobile]
+    parameters:
+      total_patients: "12,847"
+      open_gaps: "2,340"
+      closed_month: "847"
+      hedis_score: "78.4"
+  
+  # Admin Dashboard Variations
+  - template: dashboard-admin
+    variations: [light, dark]
+    parameters:
+      services_count: "37"
+      uptime_percentage: "99.9"
+  
+  # Analytics Dashboard
+  - template: dashboard-analytics
+    variations: [light]
+    parameters:
+      quality_score: "82.5"
+      cost_per_member: "$450"

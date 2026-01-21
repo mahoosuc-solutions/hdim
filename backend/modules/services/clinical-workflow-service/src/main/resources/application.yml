@@ -1,0 +1,164 @@
+spring:
+  application:
+    name: clinical-workflow-service
+    description: Clinical Workflow Service for MA, RN, and Provider workflows
+
+  profiles:
+    active: dev
+
+  # Data Source Configuration
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 10000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+
+  # JPA/Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate  # CRITICAL: Always validate, never create/update in production
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # Liquibase Configuration
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    drop-first: false
+    auto-update: true
+
+  # Redis Configuration (HIPAA-compliant caching)
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000  # 5 minutes for PHI compliance
+  data:
+    redis:
+      host: localhost
+      port: 6380
+      password: ${REDIS_PASSWORD:}
+      timeout: 60000
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    producer:
+      acks: all
+      retries: 3
+      properties:
+        interceptor.classes: com.healthdata.tracing.KafkaProducerTraceInterceptor
+    consumer:
+      group-id: clinical-workflow-service
+      properties:
+        interceptor.classes: com.healthdata.tracing.KafkaConsumerTraceInterceptor
+
+  # WebSocket Configuration
+  websocket:
+    message-broker:
+      relay:
+        host: localhost
+        port: 61613
+        user-name: guest
+        password: guest
+      broker-relay-host: localhost
+      broker-relay-port: 61613
+
+server:
+  port: 8110
+  servlet:
+    context-path: /clinical-workflow
+    compression:
+      enabled: true
+      min-response-size: 1024
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0  # Capture all traces in dev
+
+logging:
+  level:
+    com.healthdata: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# OpenAPI/Swagger Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  show-actuator: true
+
+# Application-specific Configuration
+clinical-workflow:
+  vitals:
+    # Blood Pressure Thresholds
+    systolic-bp:
+      critical-high: 180
+      warning-high: 140
+      normal-high: 120
+      normal-low: 90
+      warning-low: 70
+      critical-low: 60
+    diastolic-bp:
+      critical-high: 120
+      warning-high: 90
+      normal-high: 80
+      normal-low: 60
+      warning-low: 50
+      critical-low: 40
+    # Heart Rate Thresholds (bpm)
+    heart-rate:
+      critical-high: 130
+      warning-high: 100
+      normal-high: 100
+      normal-low: 60
+      warning-low: 50
+      critical-low: 40
+    # Temperature Thresholds (Fahrenheit)
+    temperature-f:
+      critical-high: 104.5
+      warning-high: 100.4
+      normal-high: 99.5
+      normal-low: 97
+      warning-low: 95
+      critical-low: 90
+    # Oxygen Saturation Thresholds (%)
+    oxygen-saturation:
+      critical-low: 85
+      warning-low: 90
+      normal-high: 100
+      normal-low: 95
+
+  queue:
+    # Waiting Queue Configuration
+    estimated-wait-minutes: 15
+    update-frequency-seconds: 30
+
+  rooms:
+    # Room Management Configuration
+    cleaning-time-minutes: 15
+    default-room-type: standard

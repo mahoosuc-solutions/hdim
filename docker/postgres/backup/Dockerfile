@@ -1,7 +1,7 @@
 # HDIM PostgreSQL Backup Service
 # Runs scheduled backups using cron
 
-FROM postgres:15-alpine
+FROM postgres:16-alpine
 
 # Install dependencies (using busybox crond instead of dcron for container compatibility)
 RUN apk add --no-cache \

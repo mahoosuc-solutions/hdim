@@ -16,6 +16,25 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Configuration
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
+TENANT_ID="${TENANT_ID:-acme-health}"
+AUTH_USERNAME="${AUTH_USERNAME:-demo.admin}"
+AUTH_PASSWORD="${AUTH_PASSWORD:-demo123}"
+QUALITY_API_BASE="${QUALITY_API_BASE:-${GATEWAY_URL}/api/quality}"
+FHIR_URL="${FHIR_URL:-http://localhost:8085/fhir}"
+FRONTEND_URL="${FRONTEND_URL:-http://localhost:4200}"
+ROOT_DIR="$(pwd)"
+
+AUTH_TOKEN=$(curl -s -X POST "${GATEWAY_URL}/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}" | jq -r '.accessToken' 2>/dev/null)
+
+AUTH_HEADER=()
+if [ -n "$AUTH_TOKEN" ] && [ "$AUTH_TOKEN" != "null" ]; then
+  AUTH_HEADER=(-H "Authorization: Bearer $AUTH_TOKEN")
+fi
+
 # Test counters
 TESTS_RUN=0
 TESTS_PASSED=0
@@ -66,26 +85,26 @@ run_test "Quality Measure service is running" \
   "http_check 'http://localhost:8087/quality-measure/actuator/health' '200'"
 
 # Test 2: Get all jobs endpoint (should return empty array initially)
-run_test "GET /api/v1/population/jobs returns 200" \
-  "http_check 'http://localhost:8087/quality-measure/api/v1/population/jobs' '200' 'GET' '-H \"X-Tenant-ID: default-tenant\"'"
+run_test "GET /population/jobs returns 200" \
+  "http_check '${QUALITY_API_BASE}/population/jobs' '200' 'GET' '-H \"X-Tenant-ID: ${TENANT_ID}\" -H \"Authorization: Bearer ${AUTH_TOKEN}\"'"
 
 # Test 3: Start batch calculation
 echo ""
 echo -e "${YELLOW}Starting batch calculation job...${NC}"
 START_RESPONSE=$(curl -s -X POST \
-  -H "X-Tenant-ID: default-tenant" \
-  "http://localhost:8087/quality-measure/api/v1/population/calculate?fhirServerUrl=http://fhir-service-mock:8080/fhir&createdBy=e2e-test")
+  -H "X-Tenant-ID: ${TENANT_ID}" "${AUTH_HEADER[@]}" \
+  "${QUALITY_API_BASE}/population/calculate?fhirServerUrl=${FHIR_URL}&createdBy=e2e-test")
 
 JOB_ID=$(echo "$START_RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin).get('jobId', ''))" 2>/dev/null)
 
 if [ -n "$JOB_ID" ]; then
   TESTS_RUN=$((TESTS_RUN + 1))
-  echo -e "Test $TESTS_RUN: POST /api/v1/population/calculate starts job... ${GREEN}PASSED${NC}"
+  echo -e "Test $TESTS_RUN: POST /population/calculate starts job... ${GREEN}PASSED${NC}"
   echo "   Job ID: $JOB_ID"
   TESTS_PASSED=$((TESTS_PASSED + 1))
 else
   TESTS_RUN=$((TESTS_RUN + 1))
-  echo -e "Test $TESTS_RUN: POST /api/v1/population/calculate starts job... ${RED}FAILED${NC}"
+  echo -e "Test $TESTS_RUN: POST /population/calculate starts job... ${RED}FAILED${NC}"
   TESTS_FAILED=$((TESTS_FAILED + 1))
   echo "   Response: $START_RESPONSE"
 fi
@@ -93,12 +112,12 @@ fi
 # Test 4: Get job status
 if [ -n "$JOB_ID" ]; then
   sleep 2  # Give job time to process
-  run_test "GET /api/v1/population/jobs/{jobId} returns 200" \
-    "http_check 'http://localhost:8087/quality-measure/api/v1/population/jobs/$JOB_ID' '200' 'GET' '-H \"X-Tenant-ID: default-tenant\"'"
+  run_test "GET /population/jobs/{jobId} returns 200" \
+    "http_check '${QUALITY_API_BASE}/population/jobs/$JOB_ID' '200' 'GET' '-H \"X-Tenant-ID: ${TENANT_ID}\" -H \"Authorization: Bearer ${AUTH_TOKEN}\"'"
 
   # Test 5: Verify job status contains expected fields
-  JOB_STATUS=$(curl -s -H "X-Tenant-ID: default-tenant" \
-    "http://localhost:8087/quality-measure/api/v1/population/jobs/$JOB_ID")
+  JOB_STATUS=$(curl -s -H "X-Tenant-ID: ${TENANT_ID}" "${AUTH_HEADER[@]}" \
+    "${QUALITY_API_BASE}/population/jobs/$JOB_ID")
 
   echo -n "Test $((TESTS_RUN + 1)): Job status contains required fields... "
   TESTS_RUN=$((TESTS_RUN + 1))
@@ -120,8 +139,8 @@ if [ -n "$JOB_ID" ]; then
   fi
 
   # Test 6: Verify job appears in all jobs list
-  run_test "Job appears in GET /api/v1/population/jobs list" \
-    "curl -s -H 'X-Tenant-ID: default-tenant' 'http://localhost:8087/quality-measure/api/v1/population/jobs' | grep -q '$JOB_ID'"
+  run_test "Job appears in GET /population/jobs list" \
+    "curl -s -H 'X-Tenant-ID: ${TENANT_ID}' -H 'Authorization: Bearer ${AUTH_TOKEN}' '${QUALITY_API_BASE}/population/jobs' | grep -q '$JOB_ID'"
 fi
 
 echo ""
@@ -132,15 +151,15 @@ echo ""
 
 # Test 7: Frontend build exists
 run_test "Frontend build directory exists" \
-  "test -d '/home/webemo-aaron/projects/healthdata-in-motion/dist/apps/clinical-portal'"
+  "test -d '${ROOT_DIR}/dist/apps/clinical-portal'"
 
 # Test 8: Main JS bundle exists
 run_test "Main JavaScript bundle exists" \
-  "test -f /home/webemo-aaron/projects/healthdata-in-motion/dist/apps/clinical-portal/browser/main*.js"
+  "test -f ${ROOT_DIR}/dist/apps/clinical-portal/browser/main*.js"
 
 # Test 9: Dashboard component compiled
 run_test "Dashboard component chunk exists" \
-  "ls /home/webemo-aaron/projects/healthdata-in-motion/dist/apps/clinical-portal/browser/*.js | xargs grep -l 'dashboard-component' | head -1"
+  "ls ${ROOT_DIR}/dist/apps/clinical-portal/browser/*.js | xargs grep -l 'dashboard-component' | head -1"
 
 echo ""
 echo "=========================================="
@@ -150,19 +169,19 @@ echo ""
 
 # Test 10: Angular dev server is accessible
 run_test "Angular dev server responds on port 4200" \
-  "http_check 'http://localhost:4200' '200'"
+  "http_check '${FRONTEND_URL}' '200'"
 
 # Test 11: API proxy configuration works
 run_test "Proxied FHIR endpoint accessible via Angular" \
-  "http_check 'http://localhost:4200/fhir/Patient?_count=1' '200'"
+  "http_check '${FRONTEND_URL}/fhir/Patient?_count=1' '200'"
 
 # Test 12: Proxied Quality Measure endpoint accessible
 run_test "Proxied Quality Measure endpoint accessible" \
-  "http_check 'http://localhost:4200/quality-measure/actuator/health' '200'"
+  "http_check '${FRONTEND_URL}/quality-measure/actuator/health' '200'"
 
 # Test 13: Batch calculation endpoints proxied correctly
 run_test "Proxied batch calculation endpoint accessible" \
-  "http_check 'http://localhost:4200/quality-measure/api/v1/population/jobs' '200' 'GET' '-H \"X-Tenant-ID: default-tenant\"'"
+  "http_check '${FRONTEND_URL}/quality-measure/population/jobs' '200' 'GET' '-H \"X-Tenant-ID: ${TENANT_ID}\" -H \"Authorization: Bearer ${AUTH_TOKEN}\"'"
 
 echo ""
 echo "=========================================="
@@ -172,19 +191,19 @@ echo ""
 
 # Test 14: BatchCalculationService exists
 run_test "BatchCalculationService file exists" \
-  "test -f '/home/webemo-aaron/projects/healthdata-in-motion/apps/clinical-portal/src/app/services/batch-calculation.service.ts'"
+  "test -f '${ROOT_DIR}/apps/clinical-portal/src/app/services/batch-calculation.service.ts'"
 
 # Test 15: BatchCalculationComponent exists
 run_test "BatchCalculationComponent file exists" \
-  "test -f '/home/webemo-aaron/projects/healthdata-in-motion/apps/clinical-portal/src/app/shared/components/batch-calculation/batch-calculation.component.ts'"
+  "test -f '${ROOT_DIR}/apps/clinical-portal/src/app/shared/components/batch-calculation/batch-calculation.component.ts'"
 
 # Test 16: Component integrated into dashboard
 run_test "Dashboard imports BatchCalculationComponent" \
-  "grep -q 'BatchCalculationComponent' '/home/webemo-aaron/projects/healthdata-in-motion/apps/clinical-portal/src/app/pages/dashboard/dashboard.component.ts'"
+  "grep -q 'BatchCalculationComponent' '${ROOT_DIR}/apps/clinical-portal/src/app/pages/dashboard/dashboard.component.ts'"
 
 # Test 17: Component rendered in dashboard HTML
 run_test "Dashboard HTML includes batch calculation component" \
-  "grep -q 'app-batch-calculation' '/home/webemo-aaron/projects/healthdata-in-motion/apps/clinical-portal/src/app/pages/dashboard/dashboard.component.html'"
+  "grep -q 'app-batch-calculation' '${ROOT_DIR}/apps/clinical-portal/src/app/pages/dashboard/dashboard.component.html'"
 
 echo ""
 echo "=========================================="
@@ -194,15 +213,15 @@ echo ""
 
 # Test 18: API config has batch endpoints
 run_test "API config includes POPULATION_CALCULATE endpoint" \
-  "grep -q 'POPULATION_CALCULATE' '/home/webemo-aaron/projects/healthdata-in-motion/apps/clinical-portal/src/app/config/api.config.ts'"
+  "grep -q 'POPULATION_CALCULATE' '${ROOT_DIR}/apps/clinical-portal/src/app/config/api.config.ts'"
 
 # Test 19: Proxy configuration exists
 run_test "Proxy configuration file exists" \
-  "test -f '/home/webemo-aaron/projects/healthdata-in-motion/apps/clinical-portal/proxy.conf.json'"
+  "test -f '${ROOT_DIR}/apps/clinical-portal/proxy.conf.json'"
 
 # Test 20: Proxy configured for quality-measure
 run_test "Proxy config includes quality-measure route" \
-  "grep -q 'quality-measure' '/home/webemo-aaron/projects/healthdata-in-motion/apps/clinical-portal/proxy.conf.json'"
+  "grep -q 'quality-measure' '${ROOT_DIR}/apps/clinical-portal/proxy.conf.json'"
 
 echo ""
 echo "=========================================="

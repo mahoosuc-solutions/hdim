@@ -131,7 +131,7 @@ import { MfaVerifyComponent } from './mfa-verify.component';
               <mat-icon>info</mat-icon>
               <div class="demo-text">
                 <strong>Demo Mode</strong>
-                <p>Use any credentials or click "Demo Login" for quick access.</p>
+                <p>Demo login: demo_admin / demo123</p>
               </div>
             </div>
             <button
@@ -432,49 +432,35 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   demoLogin(): void {
-    // For demo mode, bypass authentication and set demo user
+    // For demo mode, use real gateway authentication
     this.isLoading = true;
 
-    // Simulate a brief loading state
-    setTimeout(() => {
-      // Set demo token and user in localStorage
-      const demoToken = 'demo-jwt-token-' + Date.now();
-      const demoUser = {
-        id: 'demo-user-1',
-        username: 'demo',
-        email: 'demo@healthdata.com',
-        firstName: 'Demo',
-        lastName: 'User',
-        fullName: 'Demo User',
-        roles: [
-          {
-            id: 'role-admin',
-            name: 'ADMIN',
-            description: 'Administrator',
-            permissions: [
-              { id: 'perm-1', name: 'VIEW_PATIENTS', description: 'View patients' },
-              { id: 'perm-2', name: 'EDIT_PATIENTS', description: 'Edit patients' },
-              { id: 'perm-3', name: 'VIEW_EVALUATIONS', description: 'View evaluations' },
-              { id: 'perm-4', name: 'RUN_EVALUATIONS', description: 'Run evaluations' },
-              { id: 'perm-5', name: 'EXPORT_DATA', description: 'Export data' },
-            ],
-          },
-        ],
-        tenantId: 'acme-health',
-        active: true,
-      };
+    this.authService
+      .login('demo_admin', 'demo123')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (this.authService.isMfaRequired(response)) {
+            this.isLoading = false;
+            this.mfaToken = (response as MfaRequiredResponse).mfaToken;
+            this.showMfaVerify = true;
+            this.mfaErrorMessage = '';
+            return;
+          }
 
-      // Store demo credentials
-      localStorage.setItem('healthdata_auth_token', demoToken);
-      localStorage.setItem('healthdata_user', JSON.stringify(demoUser));
-
-      this.snackBar.open('Demo login successful!', 'Close', {
-        duration: 3000,
-        panelClass: ['success-snackbar'],
+          this.snackBar.open('Demo login successful!', 'Close', {
+            duration: 3000,
+            panelClass: ['success-snackbar'],
+          });
+          this.router.navigate([this.returnUrl]);
+        },
+        error: () => {
+          this.isLoading = false;
+          this.snackBar.open('Demo login failed. Please try again.', 'Close', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+          });
+        },
       });
-
-      // Force page reload to reinitialize auth state
-      window.location.href = this.returnUrl;
-    }, 500);
   }
 }

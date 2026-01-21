@@ -371,6 +371,7 @@ When generating each asset, verify:
 - [ ] Dimensions match specifications
 - [ ] Mood aligns with brand (hopeful, trustworthy, innovative)
 - [ ] Healthcare context is authentic, not cliché
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ---
 

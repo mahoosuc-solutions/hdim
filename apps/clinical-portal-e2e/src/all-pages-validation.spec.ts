@@ -16,6 +16,8 @@ import { test, expect, Page } from '@playwright/test';
 const WAIT_FOR_LOAD = 3000;
 const NAVIGATION_TIMEOUT = 10000;
 
+const DEMO_SAFE = process.env['DEMO_SAFE'] === '1' || process.env['DEMO_SAFE'] === 'true';
+
 // Page definitions with expected elements
 const PAGES = [
   {
@@ -109,6 +111,16 @@ const PAGES = [
   },
 ];
 
+const DEMO_SAFE_SKIP_PATHS = new Set([
+  '/ai-assistant',
+  '/agent-builder',
+  '/visualization/live-monitor',
+]);
+
+const ACTIVE_PAGES = DEMO_SAFE
+  ? PAGES.filter((page) => !DEMO_SAFE_SKIP_PATHS.has(page.path))
+  : PAGES;
+
 // Helper to check if page has light theme
 async function hasLightTheme(page: Page): Promise<boolean> {
   const body = page.locator('body');
@@ -175,7 +187,7 @@ interface PageTestResult {
 
 test.describe('All Pages Validation', () => {
   test.describe('Page Load Tests', () => {
-    for (const pageDef of PAGES) {
+    for (const pageDef of ACTIVE_PAGES) {
       test(`${pageDef.name} - should load successfully`, async ({ page }) => {
         const startTime = Date.now();
 
@@ -214,7 +226,7 @@ test.describe('All Pages Validation', () => {
       let pagesWithToolbar = 0;
       let pagesLoaded = 0;
       // Test only first 3 pages to keep test fast
-      for (const pageDef of PAGES.slice(0, 3)) {
+      for (const pageDef of ACTIVE_PAGES.slice(0, 3)) {
         try {
           await page.goto(pageDef.path);
           await page.waitForLoadState('domcontentloaded');
@@ -251,7 +263,7 @@ test.describe('All Pages Validation', () => {
       let pagesWithSidenav = 0;
       let pagesLoaded = 0;
       // Test only first 3 pages to keep test fast
-      for (const pageDef of PAGES.slice(0, 3)) {
+      for (const pageDef of ACTIVE_PAGES.slice(0, 3)) {
         try {
           await page.goto(pageDef.path);
           await page.waitForLoadState('domcontentloaded');
@@ -290,7 +302,7 @@ test.describe('All Pages Validation', () => {
       let pagesWithLightTheme = 0;
       let pagesLoaded = 0;
       // Test only first 3 pages to keep test fast
-      for (const pageDef of PAGES.slice(0, 3)) {
+      for (const pageDef of ACTIVE_PAGES.slice(0, 3)) {
         try {
           await page.goto(pageDef.path);
           await page.waitForLoadState('domcontentloaded');
@@ -327,7 +339,7 @@ test.describe('All Pages Validation', () => {
       let pagesLoaded = 0;
 
       // Test only first 3 pages to keep test fast
-      for (const pageDef of PAGES.slice(0, 3)) {
+      for (const pageDef of ACTIVE_PAGES.slice(0, 3)) {
         try {
           await page.goto(pageDef.path);
           await page.waitForLoadState('domcontentloaded');
@@ -374,7 +386,7 @@ test.describe('All Pages Validation', () => {
       let pagesWithToolbarText = 0;
       let pagesLoaded = 0;
       // Test only first 3 pages to keep test fast
-      for (const pageDef of PAGES.slice(0, 3)) {
+      for (const pageDef of ACTIVE_PAGES.slice(0, 3)) {
         try {
           await page.goto(pageDef.path);
           await page.waitForLoadState('domcontentloaded');
@@ -412,7 +424,7 @@ test.describe('All Pages Validation', () => {
       let pagesWithHeadings = 0;
       let pagesLoaded = 0;
       // Test only first 3 pages to keep test fast
-      for (const pageDef of PAGES.slice(0, 3)) {
+      for (const pageDef of ACTIVE_PAGES.slice(0, 3)) {
         try {
           await page.goto(pageDef.path);
           await page.waitForLoadState('domcontentloaded');
@@ -503,7 +515,7 @@ test.describe('All Pages Validation', () => {
       let totalButtonsChecked = 0;
 
       // Test only first 3 pages to keep test fast
-      for (const pageDef of PAGES.slice(0, 3)) {
+      for (const pageDef of ACTIVE_PAGES.slice(0, 3)) {
         try {
           await page.goto(pageDef.path);
           await page.waitForLoadState('domcontentloaded');
@@ -552,7 +564,7 @@ test.describe('All Pages Validation', () => {
     test('Forms should have labels', async ({ page }) => {
       let formsChecked = 0;
       // Test only first 3 pages to keep test fast
-      for (const pageDef of PAGES.slice(0, 3)) {
+      for (const pageDef of ACTIVE_PAGES.slice(0, 3)) {
         try {
           await page.goto(pageDef.path);
           await page.waitForLoadState('domcontentloaded');
@@ -604,7 +616,7 @@ test.describe('All Pages Validation', () => {
       await page.setViewportSize({ width: 768, height: 1024 });
       let pagesWithoutHorizontalScroll = 0;
 
-      for (const pageDef of PAGES.slice(0, 5)) { // Test first 5 pages
+      for (const pageDef of ACTIVE_PAGES.slice(0, 5)) { // Test first 5 pages
         await page.goto(pageDef.path);
         await page.waitForLoadState('domcontentloaded');
         await page.waitForTimeout(2000);
@@ -627,7 +639,7 @@ test.describe('All Pages Validation', () => {
       await page.setViewportSize({ width: 375, height: 667 });
       let pagesWithContent = 0;
 
-      for (const pageDef of PAGES.slice(0, 5)) { // Test first 5 pages
+      for (const pageDef of ACTIVE_PAGES.slice(0, 5)) { // Test first 5 pages
         await page.goto(pageDef.path);
         await page.waitForLoadState('domcontentloaded');
         await page.waitForTimeout(2000);
@@ -657,7 +669,7 @@ test.describe('Generate Validation Report', () => {
     console.log('═══════════════════════════════════════════════════════════\n');
 
     // Test only first 5 pages to keep report generation fast
-    for (const pageDef of PAGES.slice(0, 5)) {
+    for (const pageDef of ACTIVE_PAGES.slice(0, 5)) {
       const result: PageTestResult = {
         page: pageDef.name,
         path: pageDef.path,

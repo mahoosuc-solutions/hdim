@@ -1,0 +1,256 @@
+<div class="evaluation-data-flow-container">
+  <!-- Header -->
+  <mat-card class="header-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>timeline</mat-icon>
+        Data Processing Flow
+      </mat-card-title>
+      <mat-card-subtitle>
+        Real-time visualization of FHIR, Kafka, and CQL processing
+      </mat-card-subtitle>
+    </mat-card-header>
+  </mat-card>
+
+  <!-- Statistics Overview -->
+  <div class="statistics-row">
+    <mat-card class="stat-card">
+      <div class="stat-content">
+        <mat-icon color="primary">cloud_download</mat-icon>
+        <div class="stat-info">
+          <div class="stat-value">{{ fhirResourceCount }}</div>
+          <div class="stat-label">FHIR Resources</div>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-content">
+        <mat-icon color="accent">send</mat-icon>
+        <div class="stat-info">
+          <div class="stat-value">{{ kafkaMessagesCount }}</div>
+          <div class="stat-label">Kafka Messages</div>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-content">
+        <mat-icon color="warn">code</mat-icon>
+        <div class="stat-info">
+          <div class="stat-value">{{ cqlExpressionsEvaluated }}</div>
+          <div class="stat-label">CQL Expressions</div>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-content">
+        <mat-icon>schedule</mat-icon>
+        <div class="stat-info">
+          <div class="stat-value">{{ formatDuration(totalDuration) }}</div>
+          <div class="stat-label">Total Duration</div>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Progress Bar -->
+  @if (isProcessing) {
+    <mat-card class="progress-card">
+      <mat-progress-bar mode="determinate" [value]="progress"></mat-progress-bar>
+      <div class="progress-info">
+        <span>Processing: {{ steps.length }} steps completed</span>
+        @if (currentStep) {
+          <span class="current-step">{{ currentStep.stepName }}</span>
+        }
+      </div>
+    </mat-card>
+  }
+
+  <!-- Data Flow Steps -->
+  <div class="steps-container">
+    <!-- FHIR Processing Section -->
+    <mat-expansion-panel [expanded]="true" class="section-panel">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon color="primary">cloud_download</mat-icon>
+          FHIR Data Processing
+        </mat-panel-title>
+        <mat-panel-description>
+          {{ fhirSteps.length }} steps
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      @if (fhirSteps.length === 0) {
+        <div class="empty-state">
+          <mat-icon>hourglass_empty</mat-icon>
+          <p>Waiting for FHIR data retrieval...</p>
+        </div>
+      } @else {
+        <div class="steps-list">
+          @for (step of fhirSteps; track step.stepNumber) {
+            <mat-card class="step-card fhir-step">
+              <div class="step-header">
+                <div class="step-number">{{ step.stepNumber }}</div>
+                <div class="step-info">
+                  <div class="step-name">{{ step.stepName }}</div>
+                  <div class="step-meta">
+                    <mat-chip [color]="getStepTypeColor(step.stepType)">
+                      <mat-icon>{{ getStepTypeIcon(step.stepType) }}</mat-icon>
+                      {{ step.stepType }}
+                    </mat-chip>
+                    @if (step.durationMs) {
+                      <span class="duration">{{ formatDuration(step.durationMs) }}</span>
+                    }
+                  </div>
+                </div>
+              </div>
+              
+              @if (step.resourcesAccessed && step.resourcesAccessed.length > 0) {
+                <div class="step-resources">
+                  <strong>Resources:</strong>
+                  @for (resource of step.resourcesAccessed; track resource) {
+                    <mat-chip>{{ resource }}</mat-chip>
+                  }
+                </div>
+              }
+
+              @if (step.decision) {
+                <div class="step-decision">
+                  <strong>Decision:</strong> {{ step.decision }}
+                </div>
+              }
+
+              @if (step.reasoning) {
+                <div class="step-reasoning">
+                  <strong>Reasoning:</strong> {{ step.reasoning }}
+                </div>
+              }
+            </mat-card>
+          }
+        </div>
+      }
+    </mat-expansion-panel>
+
+    <!-- Kafka Processing Section -->
+    <mat-expansion-panel [expanded]="true" class="section-panel">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon color="accent">send</mat-icon>
+          Kafka Message Flow
+        </mat-panel-title>
+        <mat-panel-description>
+          {{ kafkaSteps.length }} messages
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      @if (kafkaSteps.length === 0) {
+        <div class="empty-state">
+          <mat-icon>hourglass_empty</mat-icon>
+          <p>Waiting for Kafka messages...</p>
+        </div>
+      } @else {
+        <div class="steps-list">
+          @for (step of kafkaSteps; track step.stepNumber) {
+            <mat-card class="step-card kafka-step">
+              <div class="step-header">
+                <div class="step-number">{{ step.stepNumber }}</div>
+                <div class="step-info">
+                  <div class="step-name">{{ step.stepName }}</div>
+                  <div class="step-meta">
+                    <mat-chip [color]="getStepTypeColor(step.stepType)">
+                      <mat-icon>{{ getStepTypeIcon(step.stepType) }}</mat-icon>
+                      Kafka
+                    </mat-chip>
+                    @if (step.durationMs) {
+                      <span class="duration">{{ formatDuration(step.durationMs) }}</span>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              @if (step.decision) {
+                <div class="step-decision">
+                  <strong>Message:</strong> {{ step.decision }}
+                </div>
+              }
+
+              @if (step.reasoning) {
+                <div class="step-reasoning">
+                  <strong>Details:</strong> {{ step.reasoning }}
+                </div>
+              }
+            </mat-card>
+          }
+        </div>
+      }
+    </mat-expansion-panel>
+
+    <!-- CQL Processing Section -->
+    <mat-expansion-panel [expanded]="true" class="section-panel">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon color="warn">code</mat-icon>
+          CQL Evaluation Steps
+        </mat-panel-title>
+        <mat-panel-description>
+          {{ cqlSteps.length }} expressions
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      @if (cqlSteps.length === 0) {
+        <div class="empty-state">
+          <mat-icon>hourglass_empty</mat-icon>
+          <p>Waiting for CQL evaluation...</p>
+        </div>
+      } @else {
+        <div class="steps-list">
+          @for (step of cqlSteps; track step.stepNumber) {
+            <mat-card class="step-card cql-step">
+              <div class="step-header">
+                <div class="step-number">{{ step.stepNumber }}</div>
+                <div class="step-info">
+                  <div class="step-name">{{ step.stepName }}</div>
+                  <div class="step-meta">
+                    <mat-chip [color]="getStepTypeColor(step.stepType)">
+                      <mat-icon>{{ getStepTypeIcon(step.stepType) }}</mat-icon>
+                      {{ step.stepType }}
+                    </mat-chip>
+                    @if (step.durationMs) {
+                      <span class="duration">{{ formatDuration(step.durationMs) }}</span>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              @if (step.inputData) {
+                <div class="step-input">
+                  <strong>Input:</strong> {{ step.inputData }}
+                </div>
+              }
+
+              @if (step.outputData) {
+                <div class="step-output">
+                  <strong>Output:</strong> {{ step.outputData }}
+                </div>
+              }
+
+              @if (step.decision) {
+                <div class="step-decision">
+                  <strong>Decision:</strong> {{ step.decision }}
+                </div>
+              }
+
+              @if (step.reasoning) {
+                <div class="step-reasoning">
+                  <strong>Reasoning:</strong> {{ step.reasoning }}
+                </div>
+              }
+            </mat-card>
+          }
+        </div>
+      }
+    </mat-expansion-panel>
+  </div>
+</div>

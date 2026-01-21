@@ -208,6 +208,54 @@ export interface AuditLogFilter {
   pageSize?: number;
 }
 
+// Config Versioning
+export type ConfigStatus =
+  | 'DRAFT'
+  | 'PENDING_APPROVAL'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'ACTIVE'
+  | 'SUPERSEDED';
+
+export interface ConfigVersion {
+  id: string;
+  tenantId: string;
+  serviceName: string;
+  versionNumber: number;
+  status: ConfigStatus;
+  config: Record<string, unknown> | null;
+  configHash: string;
+  changeSummary?: string;
+  sourceVersionId?: string;
+  createdBy: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface ConfigAuditEntry {
+  id: string;
+  tenantId: string;
+  serviceName: string;
+  versionId: string;
+  action: string;
+  actor: string;
+  details?: Record<string, unknown> | null;
+  createdAt?: Date;
+}
+
+export type ConfigApprovalAction = 'REQUESTED' | 'APPROVED' | 'REJECTED';
+
+export interface ConfigApproval {
+  id: string;
+  tenantId: string;
+  serviceName: string;
+  versionId: string;
+  action: ConfigApprovalAction;
+  actor: string;
+  comment?: string | null;
+  createdAt?: Date;
+}
+
 // Service Catalog
 export interface ServiceDefinition {
   id: string;

@@ -60,6 +60,19 @@ public class JwtTokenProvider {
     }
 
     /**
+     * Generate JWT token with username, roles, and tenant context.
+     *
+     * @param username User's username
+     * @param roles User's roles/authorities
+     * @param userId User's unique identifier (optional)
+     * @param tenantId Tenant identifier (optional)
+     * @return JWT token string
+     */
+    public String generateToken(String username, List<String> roles, String userId, String tenantId) {
+        return createToken(username, roles, tokenExpirationMs, userId, tenantId);
+    }
+
+    /**
      * Generate JWT token with username and roles
      *
      * @param username User's username
@@ -67,7 +80,7 @@ public class JwtTokenProvider {
      * @return JWT token string
      */
     public String generateToken(String username, List<String> roles) {
-        return createToken(username, roles, tokenExpirationMs);
+        return createToken(username, roles, tokenExpirationMs, null, null);
     }
 
     /**
@@ -78,7 +91,20 @@ public class JwtTokenProvider {
      * @return Refresh token string
      */
     public String generateRefreshToken(String username, List<String> roles) {
-        return createToken(username, roles, refreshTokenExpirationMs);
+        return createToken(username, roles, refreshTokenExpirationMs, null, null);
+    }
+
+    /**
+     * Generate refresh token with username, roles, and tenant context.
+     *
+     * @param username User's username
+     * @param roles User's roles/authorities
+     * @param userId User's unique identifier (optional)
+     * @param tenantId Tenant identifier (optional)
+     * @return Refresh token string
+     */
+    public String generateRefreshToken(String username, List<String> roles, String userId, String tenantId) {
+        return createToken(username, roles, refreshTokenExpirationMs, userId, tenantId);
     }
 
     /**
@@ -96,6 +122,26 @@ public class JwtTokenProvider {
     }
 
     /**
+     * Generate both access and refresh tokens with tenant context.
+     *
+     * @param username User's username
+     * @param roles User's roles/authorities
+     * @param userId User's unique identifier (optional)
+     * @param tenantId Tenant identifier (optional)
+     * @return Map containing "accessToken" and "refreshToken"
+     */
+    public Map<String, String> generateTokenPair(
+            String username,
+            List<String> roles,
+            String userId,
+            String tenantId) {
+        Map<String, String> tokens = new HashMap<>();
+        tokens.put("accessToken", generateToken(username, roles, userId, tenantId));
+        tokens.put("refreshToken", generateRefreshToken(username, roles, userId, tenantId));
+        return tokens;
+    }
+
+    /**
      * Create JWT token with specified expiration time
      *
      * @param username Username claim
@@ -103,12 +149,23 @@ public class JwtTokenProvider {
      * @param expirationMs Token expiration time in milliseconds
      * @return Signed JWT token
      */
-    private String createToken(String username, List<String> roles, long expirationMs) {
+    private String createToken(
+            String username,
+            List<String> roles,
+            long expirationMs,
+            String userId,
+            String tenantId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationMs);
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", roles);
+        claims.put(JwtConstants.CLAIM_ROLES, roles);
+        if (userId != null && !userId.isBlank()) {
+            claims.put(JwtConstants.CLAIM_USER_ID, userId);
+        }
+        if (tenantId != null && !tenantId.isBlank()) {
+            claims.put(JwtConstants.CLAIM_TENANT_ID, tenantId);
+        }
 
         String token = Jwts.builder()
                 .setClaims(claims)
@@ -169,7 +226,7 @@ public class JwtTokenProvider {
      */
     public String getUserIdFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        Object userId = claims.get("userId");
+        Object userId = claims.get(JwtConstants.CLAIM_USER_ID);
         return userId != null ? userId.toString() : null;
     }
 
@@ -182,8 +239,20 @@ public class JwtTokenProvider {
     @SuppressWarnings("unchecked")
     public List<String> getRolesFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        Object roles = claims.get("roles");
+        Object roles = claims.get(JwtConstants.CLAIM_ROLES);
         return roles != null ? (List<String>) roles : List.of();
+    }
+
+    /**
+     * Extract tenant ID from JWT token (if present)
+     *
+     * @param token JWT token
+     * @return Tenant ID or null if not present
+     */
+    public String getTenantIdFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        Object tenantId = claims.get(JwtConstants.CLAIM_TENANT_ID);
+        return tenantId != null ? tenantId.toString() : null;
     }
 
     /**

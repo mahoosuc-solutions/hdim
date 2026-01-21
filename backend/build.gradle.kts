@@ -17,8 +17,17 @@ version = "1.0.0-SNAPSHOT"
 // Configure all projects
 allprojects {
     repositories {
+        // Primary: Maven Central
         mavenCentral()
-        maven { url = uri("https://build.fhir.org/ig/") } // For FHIR resources
+
+        // Fallback: Aliyun mirror (faster, better TLS support, especially in Docker)
+        maven {
+            url = uri("https://maven.aliyun.com/repository/public")
+            name = "Aliyun Maven Repository"
+        }
+
+        // FHIR resources
+        maven { url = uri("https://build.fhir.org/ig/") }
     }
 }
 

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0001-create-compliance-errors-table" author="healthdata-system">
+        <comment>Create compliance_errors table for tracking frontend errors for compliance validation</comment>
+
+        <createTable tableName="compliance_errors">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="timestamp" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="service" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="endpoint" type="varchar(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="operation" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="error_code" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="severity" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stack" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="additional_data" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_compliance_tenant_timestamp" tableName="compliance_errors">
+            <column name="tenant_id"/>
+            <column name="timestamp"/>
+        </createIndex>
+
+        <createIndex indexName="idx_compliance_severity" tableName="compliance_errors">
+            <column name="severity"/>
+        </createIndex>
+
+        <createIndex indexName="idx_compliance_service" tableName="compliance_errors">
+            <column name="service"/>
+        </createIndex>
+
+        <createIndex indexName="idx_compliance_timestamp" tableName="compliance_errors">
+            <column name="timestamp"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

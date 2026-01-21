@@ -1,0 +1,373 @@
+package com.healthdata.quality.scheduler;
+
+import com.healthdata.quality.persistence.JobExecutionEntity;
+import com.healthdata.quality.persistence.JobExecutionRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+/**
+ * Test-Driven Development for Job Execution Tracker
+ *
+ * Tracks all scheduled job executions for:
+ * - Success/failure tracking
+ * - Duration monitoring
+ * - Failure recovery
+ * - Audit trail
+ */
+@ExtendWith(MockitoExtension.class)
+class JobExecutionTrackerTest {
+
+    @Mock
+    private JobExecutionRepository jobExecutionRepository;
+
+    @InjectMocks
+    private JobExecutionTracker tracker;
+
+    private String tenantId;
+    private Instant now;
+
+    @BeforeEach
+    void setUp() {
+        tenantId = "test-tenant";
+        now = Instant.now();
+    }
+
+    /**
+     * TEST 1: Start Job Execution Tracking
+     * Should record job start time and return execution ID
+     */
+    @Test
+    void testStartJobExecution() {
+        // Arrange
+        String jobName = "RiskReassessmentJob";
+
+        when(jobExecutionRepository.save(any(JobExecutionEntity.class))).thenAnswer(i -> {
+            JobExecutionEntity entity = i.getArgument(0);
+            entity.setId(UUID.randomUUID());
+            return entity;
+        });
+
+        // Act
+        UUID executionId = tracker.startJobExecution(tenantId, jobName);
+
+        // Assert
+        assertNotNull(executionId);
+
+        ArgumentCaptor<JobExecutionEntity> captor = ArgumentCaptor.forClass(JobExecutionEntity.class);
+        verify(jobExecutionRepository).save(captor.capture());
+
+        JobExecutionEntity saved = captor.getValue();
+        assertEquals(tenantId, saved.getTenantId());
+        assertEquals(jobName, saved.getJobName());
+        assertEquals(JobExecutionEntity.Status.RUNNING, saved.getStatus());
+        assertNotNull(saved.getStartedAt());
+        assertNull(saved.getCompletedAt());
+    }
+
+    /**
+     * TEST 2: Complete Job Execution Successfully
+     * Should record success, duration, and metrics
+     */
+    @Test
+    void testCompleteJobExecutionSuccess() {
+        // Arrange
+        UUID executionId = UUID.randomUUID();
+        JobExecutionEntity execution = createRunningJob(executionId, "RiskReassessmentJob");
+
+        when(jobExecutionRepository.findById(executionId)).thenReturn(Optional.of(execution));
+        when(jobExecutionRepository.save(any(JobExecutionEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        tracker.completeJobExecution(executionId, true, "Processed 150 patients", null);
+
+        // Assert
+        ArgumentCaptor<JobExecutionEntity> captor = ArgumentCaptor.forClass(JobExecutionEntity.class);
+        verify(jobExecutionRepository).save(captor.capture());
+
+        JobExecutionEntity completed = captor.getValue();
+        assertEquals(JobExecutionEntity.Status.SUCCESS, completed.getStatus());
+        assertNotNull(completed.getCompletedAt());
+        assertTrue(completed.getDurationMs() > 0);
+        assertEquals("Processed 150 patients", completed.getResultMessage());
+        assertNull(completed.getErrorMessage());
+    }
+
+    /**
+     * TEST 3: Complete Job Execution with Failure
+     * Should record failure and error details
+     */
+    @Test
+    void testCompleteJobExecutionFailure() {
+        // Arrange
+        UUID executionId = UUID.randomUUID();
+        JobExecutionEntity execution = createRunningJob(executionId, "PopulationUpdateJob");
+
+        when(jobExecutionRepository.findById(executionId)).thenReturn(Optional.of(execution));
+        when(jobExecutionRepository.save(any(JobExecutionEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+        String errorMessage = "Database connection timeout";
+
+        // Act
+        tracker.completeJobExecution(executionId, false, "Failed after 50 patients", errorMessage);
+
+        // Assert
+        ArgumentCaptor<JobExecutionEntity> captor = ArgumentCaptor.forClass(JobExecutionEntity.class);
+        verify(jobExecutionRepository).save(captor.capture());
+
+        JobExecutionEntity completed = captor.getValue();
+        assertEquals(JobExecutionEntity.Status.FAILED, completed.getStatus());
+        assertEquals("Failed after 50 patients", completed.getResultMessage());
+        assertEquals(errorMessage, completed.getErrorMessage());
+    }
+
+    /**
+     * TEST 4: Get Last Successful Execution
+     * Should retrieve most recent successful run for a job
+     */
+    @Test
+    void testGetLastSuccessfulExecution() {
+        // Arrange
+        String jobName = "RiskReassessmentJob";
+        JobExecutionEntity lastExecution = createCompletedJob(
+            UUID.randomUUID(),
+            jobName,
+            JobExecutionEntity.Status.SUCCESS,
+            now.minusSeconds(3600)
+        );
+
+        when(jobExecutionRepository.findLastSuccessfulExecution(tenantId, jobName))
+            .thenReturn(Optional.of(lastExecution));
+
+        // Act
+        Optional<JobExecutionEntity> result = tracker.getLastSuccessfulExecution(tenantId, jobName);
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals(jobName, result.get().getJobName());
+        assertEquals(JobExecutionEntity.Status.SUCCESS, result.get().getStatus());
+    }
+
+    /**
+     * TEST 5: Check if Job is Currently Running
+     * Should detect concurrent executions
+     */
+    @Test
+    void testIsJobCurrentlyRunning_True() {
+        // Arrange
+        String jobName = "PopulationUpdateJob";
+
+        when(jobExecutionRepository.hasRunningJob(tenantId, jobName))
+            .thenReturn(true);
+
+        // Act
+        boolean isRunning = tracker.isJobCurrentlyRunning(tenantId, jobName);
+
+        // Assert
+        assertTrue(isRunning);
+    }
+
+    @Test
+    void testIsJobCurrentlyRunning_False() {
+        // Arrange
+        String jobName = "PopulationUpdateJob";
+
+        when(jobExecutionRepository.hasRunningJob(tenantId, jobName))
+            .thenReturn(false);
+
+        // Act
+        boolean isRunning = tracker.isJobCurrentlyRunning(tenantId, jobName);
+
+        // Assert
+        assertFalse(isRunning);
+    }
+
+    /**
+     * TEST 6: Prevent Concurrent Execution
+     * Should not start new job if one is already running
+     */
+    @Test
+    void testPreventConcurrentExecution() {
+        // Arrange
+        String jobName = "RiskReassessmentJob";
+
+        when(jobExecutionRepository.hasRunningJob(tenantId, jobName))
+            .thenReturn(true);
+
+        // Act & Assert
+        assertThrows(IllegalStateException.class, () -> {
+            tracker.startJobExecutionIfNotRunning(tenantId, jobName);
+        });
+
+        verify(jobExecutionRepository, never()).save(any());
+    }
+
+    /**
+     * TEST 7: Get Job Execution History
+     * Should retrieve recent executions for monitoring
+     */
+    @Test
+    void testGetJobExecutionHistory() {
+        // Arrange
+        String jobName = "RiskReassessmentJob";
+        List<JobExecutionEntity> history = Arrays.asList(
+            createCompletedJob(UUID.randomUUID(), jobName, JobExecutionEntity.Status.SUCCESS, now.minusSeconds(3600)),
+            createCompletedJob(UUID.randomUUID(), jobName, JobExecutionEntity.Status.SUCCESS, now.minusSeconds(86400)),
+            createCompletedJob(UUID.randomUUID(), jobName, JobExecutionEntity.Status.FAILED, now.minusSeconds(172800))
+        );
+
+        when(jobExecutionRepository.findRecentExecutions(tenantId, jobName, 10))
+            .thenReturn(history);
+
+        // Act
+        List<JobExecutionEntity> result = tracker.getJobExecutionHistory(tenantId, jobName, 10);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(3, result.size());
+        // Verify chronological order (newest first)
+        assertTrue(result.get(0).getCompletedAt().isAfter(result.get(1).getCompletedAt()));
+    }
+
+    /**
+     * TEST 8: Calculate Success Rate
+     * Should calculate job reliability metrics
+     */
+    @Test
+    void testCalculateSuccessRate() {
+        // Arrange
+        String jobName = "PopulationUpdateJob";
+        long successCount = 18L;
+        long totalCount = 20L;
+
+        when(jobExecutionRepository.countSuccessfulExecutions(tenantId, jobName, now.minusSeconds(86400 * 30)))
+            .thenReturn(successCount);
+        when(jobExecutionRepository.countTotalExecutions(tenantId, jobName, now.minusSeconds(86400 * 30)))
+            .thenReturn(totalCount);
+
+        // Act
+        double successRate = tracker.calculateSuccessRate(tenantId, jobName, 30);
+
+        // Assert
+        assertEquals(90.0, successRate, 0.1); // 18/20 = 90%
+    }
+
+    /**
+     * TEST 9: Detect Long-Running Jobs
+     * Should alert on jobs exceeding expected duration
+     */
+    @Test
+    void testDetectLongRunningJob() {
+        // Arrange
+        UUID executionId = UUID.randomUUID();
+        JobExecutionEntity execution = JobExecutionEntity.builder()
+            .id(executionId)
+            .tenantId(tenantId)
+            .jobName("PopulationUpdateJob")
+            .status(JobExecutionEntity.Status.RUNNING)
+            .startedAt(now.minusSeconds(7200)) // Started 2 hours ago
+            .build();
+
+        when(jobExecutionRepository.findById(executionId)).thenReturn(Optional.of(execution));
+
+        // Act
+        boolean isLongRunning = tracker.isJobLongRunning(executionId, Duration.ofHours(1));
+
+        // Assert
+        assertTrue(isLongRunning);
+    }
+
+    /**
+     * TEST 10: Auto-Cleanup Old Execution Records
+     * Should delete old execution records to prevent table bloat
+     */
+    @Test
+    void testAutoCleanupOldRecords() {
+        // Arrange
+        Instant cutoffDate = now.minusSeconds(86400 * 90); // 90 days ago
+
+        // Act
+        tracker.cleanupOldExecutions(tenantId, cutoffDate);
+
+        // Assert
+        verify(jobExecutionRepository).deleteOldExecutions(tenantId, cutoffDate);
+    }
+
+    /**
+     * TEST 11: Track Job Metrics
+     * Should store custom metrics with execution
+     */
+    @Test
+    void testTrackJobMetrics() {
+        // Arrange
+        UUID executionId = UUID.randomUUID();
+        JobExecutionEntity execution = createRunningJob(executionId, "RiskReassessmentJob");
+
+        when(jobExecutionRepository.findById(executionId)).thenReturn(Optional.of(execution));
+        when(jobExecutionRepository.save(any(JobExecutionEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+        var metrics = java.util.Map.of(
+            "patientsProcessed", 150,
+            "careGapsCreated", 45,
+            "alertsSent", 12
+        );
+
+        // Act
+        tracker.recordJobMetrics(executionId, metrics);
+
+        // Assert
+        ArgumentCaptor<JobExecutionEntity> captor = ArgumentCaptor.forClass(JobExecutionEntity.class);
+        verify(jobExecutionRepository).save(captor.capture());
+
+        JobExecutionEntity saved = captor.getValue();
+        assertNotNull(saved.getMetrics());
+        assertEquals(150, saved.getMetrics().get("patientsProcessed"));
+        assertEquals(45, saved.getMetrics().get("careGapsCreated"));
+    }
+
+    /**
+     * Helper Methods
+     */
+
+    private JobExecutionEntity createRunningJob(UUID id, String jobName) {
+        return JobExecutionEntity.builder()
+            .id(id)
+            .tenantId(tenantId)
+            .jobName(jobName)
+            .status(JobExecutionEntity.Status.RUNNING)
+            .startedAt(now)
+            .build();
+    }
+
+    private JobExecutionEntity createCompletedJob(
+        UUID id,
+        String jobName,
+        JobExecutionEntity.Status status,
+        Instant completedAt
+    ) {
+        return JobExecutionEntity.builder()
+            .id(id)
+            .tenantId(tenantId)
+            .jobName(jobName)
+            .status(status)
+            .startedAt(completedAt.minusSeconds(300))
+            .completedAt(completedAt)
+            .durationMs(300000L)
+            .build();
+    }
+}

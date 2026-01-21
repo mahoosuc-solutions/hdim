@@ -56,6 +56,8 @@
 
 - [ ] **Compliance & audit**
   - [ ] HIPAA compliance reviewed
+  - [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
+  - [ ] No allowlisted unknown licenses for production release (docs/compliance/LICENSE_ALLOWLIST.txt)
   - [ ] Audit logging enabled
   - [ ] Data retention policies configured
   - [ ] Security audit completed
@@ -840,6 +842,7 @@ Next update in: 1 hour
 - [ ] Dependency vulnerability scan clean
 - [ ] OWASP Top 10 compliance verified
 - [ ] HIPAA compliance audit passed
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 - [ ] Security policies documented
 - [ ] Incident response plan tested
 - [ ] Disaster recovery plan validated

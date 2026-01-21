@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Data In Motion - Product Roadmap</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f7fa;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: #667eea;
+        }
+        
+        .quarter {
+            margin-bottom: 4rem;
+            position: relative;
+        }
+        
+        .quarter-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .quarter-dot {
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid #f5f7fa;
+            z-index: 1;
+        }
+        
+        .quarter-title {
+            display: inline-block;
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .quarter-theme {
+            font-size: 1.1rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid #667eea;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+        
+        .feature-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .feature-icon {
+            font-size: 1.5rem;
+        }
+        
+        .feature-description {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-meta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .badge-priority {
+            background: #fee;
+            color: #c33;
+        }
+        
+        .badge-effort {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+        
+        .badge-team {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+        
+        .metrics {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 3rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .metrics h2 {
+            margin-bottom: 1.5rem;
+            color: #667eea;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .metric-card {
+            text-align: center;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            margin-top: 4rem;
+        }
+        
+        @media (max-width: 768px) {
+            .timeline::before {
+                left: 20px;
+            }
+            
+            .quarter-dot {
+                left: 20px;
+            }
+            
+            .quarter-header {
+                text-align: left;
+                padding-left: 60px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Health Data In Motion</h1>
+        <p>18-Month Product Roadmap | Q1 2026 - Q2 2027</p>
+    </div>
+    
+    <div class="container">
+        <div class="metrics">
+            <h2>Roadmap at a Glance</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value">18</div>
+                    <div class="metric-label">Months</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">150+</div>
+                    <div class="metric-label">Features</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">7</div>
+                    <div class="metric-label">New Portals</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">30+</div>
+                    <div class="metric-label">Microservices</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="timeline">
+            <!-- Q1 2026 -->
+            <div class="quarter">
+                <div class="quarter-dot"></div>
+                <div class="quarter-header">
+                    <div class="quarter-title">Q1 2026: Foundation & MVP Launch</div>
+                    <div class="quarter-theme">"Viable Product, Visible Value"</div>
+                </div>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">🏥</span>
+                            Clinical Portal
+                        </div>
+                        <div class="feature-description">
+                            Complete clinical user portal with patient search, 360° view, care gap dashboard, quality measures, and AI clinical assistant.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P0-Critical</span>
+                            <span class="badge badge-effort">12 weeks</span>
+                            <span class="badge badge-team">3 engineers</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">⚙️</span>
+                            Enhanced Admin Portal
+                        </div>
+                        <div class="feature-description">
+                            Unified service dashboard, real-time monitoring, audit log viewer, user & tenant management, configuration editor.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P0-Critical</span>
+                            <span class="badge badge-effort">10 weeks</span>
+                            <span class="badge badge-team">2 engineers</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">🤖</span>
+                            AI Agent Studio
+                        </div>
+                        <div class="feature-description">
+                            No-code platform for creating AI agents with visual designer, prompt library, testing sandbox, and version control.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P0-Critical</span>
+                            <span class="badge badge-effort">9 weeks</span>
+                            <span class="badge badge-team">2 engineers</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">👨‍💻</span>
+                            Developer Portal
+                        </div>
+                        <div class="feature-description">
+                            Interactive API documentation, Postman collections, code examples, sandbox environment, webhook configuration.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P0-Critical</span>
+                            <span class="badge badge-effort">8 weeks</span>
+                            <span class="badge badge-team">3 engineers</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">🔒</span>
+                            SSO & MFA
+                        </div>
+                        <div class="feature-description">
+                            Enterprise authentication with SAML 2.0, OAuth 2.0, TOTP/SMS MFA, 13 roles, 31 permissions, session management.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P0-Critical</span>
+                            <span class="badge badge-effort">8 weeks</span>
+                            <span class="badge badge-team">3 engineers</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Q2 2026 -->
+            <div class="quarter">
+                <div class="quarter-dot"></div>
+                <div class="quarter-header">
+                    <div class="quarter-title">Q2 2026: Enterprise Readiness</div>
+                    <div class="quarter-theme">"Scale, Stability, Support"</div>
+                </div>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">👤</span>
+                            Patient Portal
+                        </div>
+                        <div class="feature-description">
+                            Patient-facing portal with health record access, appointment scheduling, secure messaging, care gap notifications.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P0-Critical</span>
+                            <span class="badge badge-effort">10 weeks</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">📊</span>
+                            Analytics Portal
+                        </div>
+                        <div class="feature-description">
+                            Executive dashboard with KPIs, drill-down analytics, cohort analysis, custom reports, scheduled exports.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P0-Critical</span>
+                            <span class="badge badge-effort">9 weeks</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">🏗️</span>
+                            High Availability
+                        </div>
+                        <div class="feature-description">
+                            PostgreSQL replication, Kafka clustering, Redis Sentinel, load balancing, automated backups, cross-region DR.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P0-Critical</span>
+                            <span class="badge badge-effort">8 weeks</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">📈</span>
+                            Observability Stack
+                        </div>
+                        <div class="feature-description">
+                            Prometheus metrics, Grafana dashboards, Jaeger tracing, ELK logging, PagerDuty alerting, K6 load testing.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P0-Critical</span>
+                            <span class="badge badge-effort">10 weeks</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">🔌</span>
+                            HL7 v2 & X12
+                        </div>
+                        <div class="feature-description">
+                            HL7 v2 message support (ADT, ORM, ORU), X12 claims (837/835), Epic & Cerner integrations.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P0-Critical</span>
+                            <span class="badge badge-effort">12 weeks</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Q3 2026 -->
+            <div class="quarter">
+                <div class="quarter-dot"></div>
+                <div class="quarter-header">
+                    <div class="quarter-title">Q3 2026: Market Differentiation</div>
+                    <div class="quarter-theme">"AI-First, Mobile-First, API-First"</div>
+                </div>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">📱</span>
+                            Mobile Apps
+                        </div>
+                        <div class="feature-description">
+                            iOS & Android apps built with React Native. Biometric auth, offline support, push notifications, App Store deployment.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P0-Critical</span>
+                            <span class="badge badge-effort">16 weeks</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">🔮</span>
+                            Predictive Analytics
+                        </div>
+                        <div class="feature-description">
+                            Risk stratification models for hospitalization, care gaps, costs, medication adherence with performance dashboards.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P1-High</span>
+                            <span class="badge badge-effort">12 weeks</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">🏥</span>
+                            Population Health
+                        </div>
+                        <div class="feature-description">
+                            Cohort builder, SMS/email campaigns, SDOH data collection, health equity analytics.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P1-High</span>
+                            <span class="badge badge-effort">11 weeks</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">🔍</span>
+                            GraphQL Gateway
+                        </div>
+                        <div class="feature-description">
+                            Unified GraphQL API with schema stitching, real-time subscriptions, interactive playground.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P1-High</span>
+                            <span class="badge badge-effort">8 weeks</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Q4 2026 -->
+            <div class="quarter">
+                <div class="quarter-dot"></div>
+                <div class="quarter-header">
+                    <div class="quarter-title">Q4 2026: Revenue Growth</div>
+                    <div class="quarter-theme">"Expand, Monetize, Optimize"</div>
+                </div>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">🎨</span>
+                            White-Labeling
+                        </div>
+                        <div class="feature-description">
+                            Custom branding per tenant, multi-level tenancy hierarchy, complete data isolation, usage metering.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P0-Critical</span>
+                            <span class="badge badge-effort">8 weeks</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">💰</span>
+                            Usage-Based Billing
+                        </div>
+                        <div class="feature-description">
+                            Stripe integration, subscription management, self-service upgrade/downgrade, cost calculator, automated invoicing.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P0-Critical</span>
+                            <span class="badge badge-effort">9 weeks</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">✅</span>
+                            SOC 2 Type II
+                        </div>
+                        <div class="feature-description">
+                            Complete SOC 2 audit, HITRUST CSF progress, GDPR compliance, comprehensive compliance documentation.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P0-Critical</span>
+                            <span class="badge badge-effort">12 weeks</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Q1-Q2 2027 -->
+            <div class="quarter">
+                <div class="quarter-dot"></div>
+                <div class="quarter-header">
+                    <div class="quarter-title">Q1-Q2 2027: Innovation & Global Reach</div>
+                    <div class="quarter-theme">"Performance, Reliability, Future Tech"</div>
+                </div>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">⚡</span>
+                            Performance Optimization
+                        </div>
+                        <div class="feature-description">
+                            Query optimization (<100ms p95), CDN deployment, database sharding, read replicas, connection pooling.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P0-Critical</span>
+                            <span class="badge badge-effort">10 weeks</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">🌍</span>
+                            Global Expansion
+                        </div>
+                        <div class="feature-description">
+                            Multi-region deployment (US, EU, APAC), geo-routing, internationalization (Spanish, French, Mandarin).
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P1-High</span>
+                            <span class="badge badge-effort">12 weeks</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">✨</span>
+                            Generative AI
+                        </div>
+                        <div class="feature-description">
+                            Clinical note generation, care plan generation, prior auth letters, patient education materials.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P1-High</span>
+                            <span class="badge badge-effort">10 weeks</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">
+                            <span class="feature-icon">🔗</span>
+                            Blockchain
+                        </div>
+                        <div class="feature-description">
+                            Immutable audit trail, patient-controlled data, smart contracts for prior authorization.
+                        </div>
+                        <div class="feature-meta">
+                            <span class="badge badge-priority">P2-Medium</span>
+                            <span class="badge badge-effort">12 weeks</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="metrics">
+            <h2>Success Metrics by Quarter</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-title">Q1 2026</div>
+                    <ul style="list-style-position: inside; color: #666;">
+                        <li>5+ pilot customers</li>
+                        <li>&lt;5 sec clinical queries</li>
+                        <li>80%+ user satisfaction</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">Q2 2026</div>
+                    <ul style="list-style-position: inside; color: #666;">
+                        <li>99.9% uptime SLA</li>
+                        <li>&lt;100ms p95 latency</li>
+                        <li>10+ enterprise customers</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">Q3 2026</div>
+                    <ul style="list-style-position: inside; color: #666;">
+                        <li>10,000+ mobile downloads</li>
+                        <li>50+ marketplace integrations</li>
+                        <li>85%+ AI accuracy</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">Q4 2026</div>
+                    <ul style="list-style-position: inside; color: #666;">
+                        <li>$5M ARR</li>
+                        <li>100+ customers</li>
+                        <li>90%+ retention rate</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">Q1-Q2 2027</div>
+                    <ul style="list-style-position: inside; color: #666;">
+                        <li>&lt;50ms p95 latency</li>
+                        <li>10+ countries served</li>
+                        <li>100,000+ users</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>&copy; 2026 Health Data In Motion. All rights reserved.</p>
+        <p>For more information, visit <a href="https://hdim.io" style="color: #667eea;">hdim.io</a></p>
+    </div>
+</body>
+</html>

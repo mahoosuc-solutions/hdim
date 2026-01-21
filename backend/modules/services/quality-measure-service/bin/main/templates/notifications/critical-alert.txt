@@ -1,0 +1,10 @@
+🚨 CRITICAL ALERT
+
+Patient: [(${patientName})]
+MRN: [(${mrn})]
+
+[(${alertType})]: [(${alertMessage})]
+
+View details: [(${actionUrl})]
+
+- HealthData-in-Motion

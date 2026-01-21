@@ -1240,7 +1240,7 @@ class EmailSequenceServiceTest {
 class LeadControllerTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
         .withDatabaseName("testdb")
         .withUsername("test")
         .withPassword("test");
@@ -1338,7 +1338,7 @@ class LeadControllerTest {
 class SalesMultiTenantIsolationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
 
     @Autowired
     private LeadRepository leadRepository;
@@ -1694,7 +1694,7 @@ class ZohoClientTest {
 class SalesPerformanceTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
 
     @Autowired
     private LeadService leadService;

@@ -1,0 +1,116 @@
+server:
+  port: 0  # Random port for tests
+
+# JWT Authentication Configuration for Tests
+jwt:
+  secret: test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+  access-token-expiration: 1h
+  refresh-token-expiration: 1d
+  issuer: healthdata-in-motion-test
+  audience: healthdata-api-test
+
+spring:
+  application:
+    name: quality-measure-service-test
+  main:
+    allow-bean-definition-overriding: true
+
+  # Jackson Configuration - Fix LocalDate serialization to ISO-8601 format
+  # Without this: "effectiveFrom": [2026, 1, 13] (array - WRONG)
+  # With this:    "effectiveFrom": "2026-01-13" (ISO-8601 string - CORRECT)
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+    deserialization:
+      ADJUST_DATES_TO_CONTEXT_TIME_ZONE: false
+
+  datasource:
+    url: jdbc:tc:postgresql:15-alpine:///testdb?TC_STARTUP_TIMEOUT=180
+    username: sa
+    password:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+    show-sql: false
+
+  liquibase:
+    enabled: false
+
+  # Cache Configuration - must be at spring.cache level
+  cache:
+    type: simple
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+# HDIM shared persistence module configuration
+healthdata:
+  persistence:
+    primary:
+      url: jdbc:tc:postgresql:15-alpine:///testdb?TC_STARTUP_TIMEOUT=180
+      username: sa
+      password: ""
+      driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+      pool-name: test-pool
+      maximum-pool-size: 5
+      minimum-idle: 1
+    rls-enabled: false
+    jpa:
+      auditing-enabled: false
+
+  # Kafka Configuration (disable for tests)
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+    consumer:
+      bootstrap-servers: localhost:9092
+      auto-offset-reset: earliest
+
+# Disable external service URLs for tests (use mocks)
+fhir:
+  server:
+    url: http://localhost:8085/fhir
+
+patient:
+  service:
+    url: http://localhost:8084/patient
+
+care-gap:
+  service:
+    url: http://localhost:8086/care-gap
+
+cql:
+  engine:
+    url: http://localhost:8081/cql-engine
+
+# Feign Client Configuration for tests
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+
+# HIPAA Audit Configuration
+audit:
+  enabled: false
+
+# WebSocket Configuration
+websocket:
+  enabled: false  # Disable WebSocket in tests
+
+# Logging Configuration
+logging:
+  level:
+    root: WARN
+    com.healthdata.quality: INFO
+    org.springframework.test: INFO

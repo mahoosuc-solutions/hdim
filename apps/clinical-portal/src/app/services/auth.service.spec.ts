@@ -60,7 +60,10 @@ describe('AuthService', () => {
     refreshToken: 'mock-refresh-token',
     tokenType: 'Bearer',
     expiresIn: 3600,
-    user: mockUser,
+    username: 'testuser',
+    email: 'test@example.com',
+    roles: ['USER'],
+    tenantIds: ['tenant-123'],
   };
 
   const mockTokenResponse: TokenResponse = {

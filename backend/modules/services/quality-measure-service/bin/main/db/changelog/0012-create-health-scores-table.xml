@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0008-create-health-scores-table" author="health-score-service">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="health_scores"/>
+            </not>
+        </preConditions>
+        <comment>
+            Create health_scores table for tracking comprehensive patient health scores.
+
+            Health scores are calculated from multiple components:
+            - Physical health (30% weight): vitals, labs, chronic conditions
+            - Mental health (25% weight): PHQ-9, GAD-7 scores
+            - Social determinants (15% weight): SDOH screening
+            - Preventive care (15% weight): screening compliance
+            - Chronic disease (15% weight): care plan adherence, gap closure
+        </comment>
+
+        <createTable tableName="health_scores">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="patient_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="tenant_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Overall score (0-100) -->
+            <column name="overall_score" type="decimal(5,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Component scores (0-100) -->
+            <column name="physical_health_score" type="decimal(5,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="mental_health_score" type="decimal(5,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="social_determinants_score" type="decimal(5,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="preventive_care_score" type="decimal(5,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="chronic_disease_score" type="decimal(5,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Metadata -->
+            <column name="calculated_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="previous_score" type="decimal(5,2)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="significant_change" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="change_reason" type="text">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Audit columns -->
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes for performance -->
+        <createIndex indexName="idx_hs_patient_calc" tableName="health_scores">
+            <column name="patient_id"/>
+            <column name="calculated_at" descending="true"/>
+        </createIndex>
+
+        <createIndex indexName="idx_hs_tenant_patient" tableName="health_scores">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_hs_significant_change" tableName="health_scores">
+            <column name="significant_change"/>
+            <column name="calculated_at" descending="true"/>
+        </createIndex>
+
+        <createIndex indexName="idx_hs_overall_score" tableName="health_scores">
+            <column name="tenant_id"/>
+            <column name="overall_score"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="health_scores"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

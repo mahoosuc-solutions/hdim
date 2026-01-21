@@ -1,0 +1,159 @@
+package com.healthdata.authentication.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * Entity representing an audit log entry for HIPAA compliance.
+ * Tracks all security-relevant events including authentication, authorization, and resource access.
+ *
+ * HIPAA Security Rule requires:
+ * - Tracking of access and activity logs
+ * - Immutable audit trail
+ * - Regular review of audit logs
+ * - Protection against unauthorized access
+ */
+@Entity
+@Table(name = "audit_logs")
+@EntityListeners(AuditingEntityListener.class)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class AuditLog {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    /**
+     * Type of event being logged.
+     * Examples: LOGIN, LOGOUT, REGISTER, ACCESS_DENIED, RESOURCE_ACCESS, DATA_EXPORT
+     */
+    @Column(name = "event_type", nullable = false, length = 64)
+    private String eventType;
+
+    /**
+     * Action performed on the resource.
+     * Examples: CREATE, READ, UPDATE, DELETE, EVALUATE, EXPORT, QUERY
+     */
+    @Column(name = "action", nullable = false, length = 64)
+    private String action;
+
+    /**
+     * User ID who performed the action.
+     * Nullable for failed login attempts where user doesn't exist.
+     */
+    @Column(name = "user_id")
+    private UUID userId;
+
+    /**
+     * Username of the user who performed the action.
+     * Captured even for failed logins to track attempts.
+     */
+    @Column(name = "username", length = 255)
+    private String username;
+
+    /**
+     * Tenant ID in multi-tenant context.
+     * Used to isolate audit logs per tenant.
+     */
+    @Column(name = "tenant_id", length = 64)
+    private String tenantId;
+
+    /**
+     * Type of resource being accessed.
+     * Examples: PATIENT, QUALITY_MEASURE, CQL_LIBRARY, CONSENT, FHIR_RESOURCE
+     */
+    @Column(name = "resource_type", length = 64)
+    private String resourceType;
+
+    /**
+     * ID of the specific resource being accessed.
+     */
+    @Column(name = "resource_id", length = 255)
+    private String resourceId;
+
+    /**
+     * IP address from which the request originated.
+     * IPv4 or IPv6 format.
+     */
+    @Column(name = "ip_address", length = 45)
+    private String ipAddress;
+
+    /**
+     * User agent string from the HTTP request.
+     * Helps identify the client application.
+     */
+    @Column(name = "user_agent", length = 512)
+    private String userAgent;
+
+    /**
+     * URI of the request.
+     */
+    @Column(name = "request_uri", length = 512)
+    private String requestUri;
+
+    /**
+     * HTTP method of the request.
+     * Examples: GET, POST, PUT, DELETE, PATCH
+     */
+    @Column(name = "http_method", length = 16)
+    private String httpMethod;
+
+    /**
+     * Session ID if applicable.
+     * Used to track activities within a single user session.
+     */
+    @Column(name = "session_id", length = 128)
+    private String sessionId;
+
+    /**
+     * Whether the action was successful.
+     */
+    @Column(name = "success", nullable = false)
+    private Boolean success;
+
+    /**
+     * Reason for failure if success is false.
+     * Examples: Invalid credentials, Access denied, Resource not found
+     */
+    @Column(name = "failure_reason", columnDefinition = "TEXT")
+    private String failureReason;
+
+    /**
+     * Timestamp when the event occurred.
+     * Automatically set on creation.
+     */
+    @CreatedDate
+    @Column(name = "timestamp", nullable = false, updatable = false)
+    private Instant timestamp;
+
+    /**
+     * Additional contextual data in JSON format.
+     * Can store method parameters, response codes, execution time, etc.
+     * IMPORTANT: Never store passwords or sensitive tokens here.
+     */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "additional_data", columnDefinition = "jsonb")
+    private Map<String, Object> additionalData;
+
+    /**
+     * Pre-persist hook to ensure timestamp is set.
+     */
+    @PrePersist
+    protected void onCreate() {
+        if (timestamp == null) {
+            timestamp = Instant.now();
+        }
+    }
+}

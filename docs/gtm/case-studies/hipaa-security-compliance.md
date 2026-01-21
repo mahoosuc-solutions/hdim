@@ -224,6 +224,9 @@ HDIM provides ready-to-use compliance documentation:
 | Encryption at Rest | Database inspection | AES-256-GCM |
 | Encryption in Transit | TLS certificate validation | TLS 1.2+ |
 | Rate Limiting | Brute-force simulation | Active |
+| License Compliance | Third-party notices review | Verified |
+
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### Code References
 

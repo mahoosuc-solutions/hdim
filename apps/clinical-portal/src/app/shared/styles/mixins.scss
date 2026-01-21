@@ -215,15 +215,29 @@
 
 // Dark Theme Mixin
 @mixin dark-theme {
-  @media (prefers-color-scheme: dark) {
+  :host-context(.dark-theme),
+  :host-context([data-theme='dark']) {
     @content;
+  }
+
+  :host-context(body:not(.light-theme):not(.dark-theme)) {
+    @media (prefers-color-scheme: dark) {
+      @content;
+    }
   }
 }
 
 // Light Theme Mixin
 @mixin light-theme {
-  @media (prefers-color-scheme: light) {
+  :host-context(.light-theme),
+  :host-context([data-theme='light']) {
     @content;
+  }
+
+  :host-context(body:not(.light-theme):not(.dark-theme)) {
+    @media (prefers-color-scheme: light) {
+      @content;
+    }
   }
 }
 

@@ -50,7 +50,7 @@ public class QualityMeasureSecurityConfig {
     @Value("${gateway.auth.signing-secret:}")
     private String signingSecret;
 
-    @Value("${gateway.auth.dev-mode:true}")
+    @Value("${gateway.auth.dev-mode:false}")
     private boolean devMode;
 
     /**
@@ -120,7 +120,7 @@ public class QualityMeasureSecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .anyRequest().permitAll()
             )
-            .anonymous(anonymous -> anonymous.authorities("ROLE_ANALYST", "ROLE_EVALUATOR", "ROLE_ADMIN", "ROLE_SUPER_ADMIN"));
+            .anonymous(anonymous -> anonymous.authorities("ROLE_MEASURE_DEVELOPER", "ROLE_EVALUATOR", "ROLE_ADMIN", "ROLE_SUPER_ADMIN"));
 
         return http.build();
     }

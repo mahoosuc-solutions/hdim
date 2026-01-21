@@ -1,0 +1,102 @@
+spring:
+  application:
+    name: sdoh-service
+  # ⚠️ SECURITY: Database credentials MUST be provided via environment variables
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/healthdata_sdoh}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: LOW  # SDOH tracking: <10 req/sec, simple queries
+
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  cache:
+    type: redis
+
+server:
+  port: ${SERVER_PORT:8094}
+
+# API Documentation
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+# Multi-tenant configuration
+multitenancy:
+  enabled: true
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      sdohDefault:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+
+  retry:
+    instances:
+      sdohDefault:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+
+  timelimiter:
+    instances:
+      sdohDefault:
+        timeoutDuration: 30s
+        cancelRunningFuture: true
+
+  ratelimiter:
+    instances:
+      sdohDefault:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1s
+        timeoutDuration: 5s
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging
+logging:
+  level:
+    com.healthdata.sdoh: INFO
+    org.springframework.security: DEBUG

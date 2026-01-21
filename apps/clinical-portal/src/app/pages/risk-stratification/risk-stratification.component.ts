@@ -19,8 +19,8 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatBadgeModule } from '@angular/material/badge';
-import { Subject } from 'rxjs';
-import { takeUntil, debounceTime } from 'rxjs/operators';
+import { Subject, forkJoin, of } from 'rxjs';
+import { takeUntil, debounceTime, catchError } from 'rxjs/operators';
 
 import {
   RiskLevel,
@@ -33,9 +33,11 @@ import {
   getRiskLevel,
   getRiskLevelByName,
   getRiskTrendIcon,
-  getRiskTrendClass,
-  generateMockPatients
+  getRiskTrendClass
 } from './risk-model.config';
+import { PatientService } from '../../services/patient.service';
+import { CareGapService, CareGapApiItem, CareGapPageResponse } from '../../services/care-gap.service';
+import { Patient } from '../../models/patient.model';
 
 /**
  * Risk Stratification Component
@@ -109,7 +111,11 @@ export class RiskStratificationComponent implements OnInit, OnDestroy {
   readonly riskFactors = RISK_FACTORS;
   readonly conditionCategories = CONDITION_CATEGORIES;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private patientService: PatientService,
+    private careGapService: CareGapService
+  ) {}
 
   ngOnInit(): void {
     this.setupSearch();
@@ -133,14 +139,164 @@ export class RiskStratificationComponent implements OnInit, OnDestroy {
 
   loadPatients(): void {
     this.loading = true;
+    forkJoin({
+      patients: this.patientService.getPatients(200).pipe(
+        catchError(() => of([] as Patient[]))
+      ),
+      careGaps: this.careGapService.getCareGapsPage({ size: 500 }).pipe(
+        catchError(() => of({
+          content: [],
+          totalElements: 0,
+          totalPages: 0,
+          number: 0,
+          size: 0
+        } as CareGapPageResponse))
+      )
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(({ patients, careGaps }) => {
+        const gapsByPatient = this.indexCareGaps(careGaps.content || []);
+        this.allPatients = patients.map((patient) =>
+          this.mapPatientToRiskProfile(patient, gapsByPatient.get(patient.id) || [])
+        );
+        this.calculateRiskGroupSummaries();
+        this.applyFilters();
+        this.loading = false;
+      });
+  }
 
-    // Simulate API call with mock data
-    setTimeout(() => {
-      this.allPatients = generateMockPatients(75);
-      this.calculateRiskGroupSummaries();
-      this.applyFilters();
-      this.loading = false;
-    }, 800);
+  private indexCareGaps(gaps: CareGapApiItem[]): Map<string, CareGapApiItem[]> {
+    const map = new Map<string, CareGapApiItem[]>();
+    gaps.forEach((gap) => {
+      const list = map.get(gap.patientId) || [];
+      list.push(gap);
+      map.set(gap.patientId, list);
+    });
+    return map;
+  }
+
+  private mapPatientToRiskProfile(patient: Patient, gaps: CareGapApiItem[]): PatientRiskProfile {
+    const summary = this.patientService.toPatientSummary(patient);
+    const age = summary.age ?? 0;
+    const gapCount = gaps.length;
+    const riskScore = this.calculateRiskScore(age, gapCount);
+    const riskLevel = getRiskLevel(riskScore).level;
+    const primaryConditions = this.mapGapConditions(gaps);
+    const riskFactors = this.buildRiskFactors(age, gapCount);
+
+    return {
+      patientId: patient.id,
+      patientName: summary.fullName,
+      mrn: summary.mrn || 'N/A',
+      dateOfBirth: patient.birthDate || 'N/A',
+      age,
+      gender: patient.gender || 'unknown',
+      overallRiskScore: riskScore,
+      riskLevel,
+      riskFactors,
+      primaryConditions: primaryConditions.length ? primaryConditions : ['General Wellness'],
+      openCareGaps: gapCount,
+      lastVisit: this.formatLastUpdated(patient),
+      nextScheduledVisit: undefined,
+      recentEdVisits: 0,
+      hccScore: Math.round((riskScore / 100) * 3.5 * 100) / 100,
+      sdohRiskFactors: undefined,
+      trending: this.getTrending(gapCount)
+    };
+  }
+
+  private calculateRiskScore(age: number, gapCount: number): number {
+    const ageScore = Math.min(40, Math.round(age * 0.5));
+    const gapScore = Math.min(60, gapCount * 12);
+    return Math.min(100, ageScore + gapScore);
+  }
+
+  private mapGapConditions(gaps: CareGapApiItem[]): string[] {
+    const conditions = new Set<string>();
+    gaps.forEach((gap) => {
+      switch (gap.measureId) {
+        case 'CDC':
+        case 'EED':
+        case 'KED':
+          conditions.add('Diabetes');
+          break;
+        case 'SPC':
+        case 'BPD':
+          conditions.add('Cardiovascular');
+          break;
+        case 'DSF':
+          conditions.add('Behavioral Health');
+          break;
+        case 'BCS':
+        case 'CCS':
+        case 'COL':
+        case 'OSW':
+        case 'AWV':
+          conditions.add('Preventive Care');
+          break;
+        default:
+          if (gap.measureName) {
+            conditions.add(gap.measureName);
+          }
+      }
+    });
+    return Array.from(conditions);
+  }
+
+  private buildRiskFactors(age: number, gapCount: number): PatientRiskProfile['riskFactors'] {
+    const factors = [];
+    if (gapCount >= 3) {
+      factors.push({
+        factorId: 'care-gaps',
+        factorName: 'Multiple care gaps',
+        rawScore: gapCount,
+        weightedScore: Math.min(40, gapCount * 10),
+        maxScore: 40,
+        percentContribution: 40
+      });
+    } else if (gapCount > 0) {
+      factors.push({
+        factorId: 'care-gaps',
+        factorName: 'Open care gaps',
+        rawScore: gapCount,
+        weightedScore: Math.min(25, gapCount * 8),
+        maxScore: 25,
+        percentContribution: 25
+      });
+    }
+    if (age >= 65) {
+      factors.push({
+        factorId: 'age',
+        factorName: 'Senior age',
+        rawScore: age,
+        weightedScore: 30,
+        maxScore: 30,
+        percentContribution: 30
+      });
+    }
+    if (factors.length === 0) {
+      factors.push({
+        factorId: 'low-risk',
+        factorName: 'Low risk profile',
+        rawScore: 0,
+        weightedScore: 10,
+        maxScore: 10,
+        percentContribution: 10
+      });
+    }
+    return factors;
+  }
+
+  private formatLastUpdated(patient: Patient): string {
+    if (!patient.birthDate) return new Date().toISOString().split('T')[0];
+    const parsed = new Date(patient.birthDate);
+    return isNaN(parsed.getTime()) ? new Date().toISOString().split('T')[0] : parsed.toISOString().split('T')[0];
+  }
+
+  private getTrending(gapCount: number): 'improving' | 'stable' | 'worsening' {
+    if (gapCount >= 3) return 'worsening';
+    if (gapCount === 0) return 'improving';
+    return 'stable';
   }
 
   private calculateRiskGroupSummaries(): void {

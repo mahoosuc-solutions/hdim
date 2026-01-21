@@ -114,7 +114,7 @@ Services using Testcontainers: 4
 @Container
 @ServiceConnection
 static PostgreSQLContainer<?> postgres =
-    new PostgreSQLContainer<>("postgres:15-alpine");
+    new PostgreSQLContainer<>("postgres:16-alpine");
 ```
 
 #### Critical Gaps

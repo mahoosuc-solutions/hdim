@@ -199,6 +199,19 @@ public class EncounterService {
     }
 
     /**
+     * Search encounters by tenant and date range
+     */
+    @Transactional(readOnly = true)
+    public Bundle searchEncountersByDateRange(String tenantId, LocalDateTime startDate, LocalDateTime endDate) {
+        log.debug("Searching encounters for tenant: {} in date range: {} to {}", tenantId, startDate, endDate);
+
+        List<EncounterEntity> encounters = encounterRepository.findByTenantAndDateRange(
+                tenantId, startDate, endDate);
+
+        return createBundle(encounters, encounters.size());
+    }
+
+    /**
      * Get finished encounters for a patient
      */
     @Transactional(readOnly = true)

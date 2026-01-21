@@ -108,7 +108,7 @@ sudo service postgresql restart
 # docker-compose.external-postgres.yml
 services:
   external-postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     network_mode: "host"
     environment:
       POSTGRES_USER: healthdata
@@ -192,7 +192,7 @@ EXTERNAL_FHIR_URL=https://api.logicahealth.org/hdimtest/open
 ```bash
 # Generate synthetic patient data with Synthea
 docker run --rm -v $(pwd)/synthea-output:/output \
-  synthetichealth/synthea:latest \
+  synthetichealth/synthea:3.1.1 \
   -p 1000 \                          # 1000 patients
   --exporter.fhir.export=true \
   --exporter.years_of_history=5 \
@@ -542,7 +542,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 **Verification**:
 ```bash
 # Test connectivity
-docker run --rm postgres:15 psql \
+docker run --rm postgres:16 psql \
   -h host.docker.internal -U healthdata -d healthdata_db \
   -c "SELECT 1"
 ```
@@ -775,7 +775,7 @@ open http://localhost:16686
 sudo netstat -tlnp | grep 5432
 
 # Test from Docker
-docker run --rm postgres:15 pg_isready \
+docker run --rm postgres:16 pg_isready \
   -h host.docker.internal -p 5432 -U healthdata
 
 # Check pg_hba.conf allows Docker network

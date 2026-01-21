@@ -112,7 +112,7 @@ public class MeasureVersionController {
     /**
      * Get version history for a measure.
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'ANALYST')")
+    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'MEASURE_DEVELOPER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{measureId}/versions", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Page<MeasureVersionDTO>> getVersionHistory(
@@ -133,7 +133,7 @@ public class MeasureVersionController {
     /**
      * Get version summaries (lightweight for dropdowns).
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'ANALYST')")
+    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'MEASURE_DEVELOPER')")
     @GetMapping(value = "/{measureId}/versions/summaries", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Map<String, Object>>> getVersionSummaries(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -148,7 +148,7 @@ public class MeasureVersionController {
     /**
      * Get a specific version.
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'ANALYST')")
+    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'MEASURE_DEVELOPER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{measureId}/versions/{version}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MeasureVersionDTO> getVersion(
@@ -165,7 +165,7 @@ public class MeasureVersionController {
     /**
      * Get the current active version.
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'ANALYST')")
+    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'MEASURE_DEVELOPER')")
     @GetMapping(value = "/{measureId}/versions/current", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MeasureVersionDTO> getCurrentVersion(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -215,9 +215,28 @@ public class MeasureVersionController {
     }
 
     /**
+     * Retire a version (mark as no longer active).
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
+    @PostMapping(value = "/{measureId}/versions/{version}/retire", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<MeasureVersionDTO> retireVersion(
+            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @RequestHeader("X-Auth-User-Id") @NotBlank(message = "User ID is required") String userId,
+            @PathVariable @NotNull(message = "Measure ID is required") UUID measureId,
+            @PathVariable @NotBlank(message = "Version is required") String version) {
+
+        log.info("POST /api/v1/measures/{}/versions/{}/retire - tenant: {}", measureId, version, tenantId);
+
+        MeasureVersionEntity entity = versionService.retireVersion(
+                tenantId, measureId, version, UUID.fromString(userId));
+        return ResponseEntity.ok(MeasureVersionDTO.fromEntity(entity));
+    }
+
+    /**
      * Get all published versions for a measure.
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'ANALYST')")
+    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'MEASURE_DEVELOPER')")
     @GetMapping(value = "/{measureId}/versions/published", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MeasureVersionDTO>> getPublishedVersions(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -236,7 +255,7 @@ public class MeasureVersionController {
     /**
      * Compare two versions.
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'ANALYST')")
+    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'MEASURE_DEVELOPER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{measureId}/versions/compare", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<VersionComparisonDTO> compareVersions(
@@ -257,7 +276,7 @@ public class MeasureVersionController {
     /**
      * Get version count for a measure.
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'ANALYST')")
+    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'MEASURE_DEVELOPER')")
     @GetMapping(value = "/{measureId}/versions/count", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Long>> getVersionCount(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,

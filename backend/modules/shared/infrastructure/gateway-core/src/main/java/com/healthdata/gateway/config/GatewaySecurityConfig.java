@@ -127,16 +127,19 @@ public class GatewaySecurityConfig {
     /**
      * Production security filter chain with centralized gateway authentication.
      *
-     * Authentication flow:
-     * 1. GatewayAuthenticationFilter validates JWT and injects trusted headers
-     * 2. Spring Security permits all (actual auth handled by filter)
-     * 3. Filter chain continues to route request to backend services
+     * Filter order (from first to last):
+     * 1. AuditLoggingFilter (if present) - Captures all requests/responses for HIPAA compliance
+     * 2. RateLimitingFilter (if present) - Enforces rate limits per tenant/endpoint/role
+     * 3. GatewayAuthenticationFilter - Validates JWT and injects trusted headers
+     * 4. Spring Security - Authorization checks
      *
      * The GatewayAuthenticationFilter handles:
      * - Stripping external X-Auth-* headers (security)
      * - JWT validation
      * - Public path checking via PublicPathRegistry
      * - Injecting trusted headers for downstream services
+     *
+     * Note: Audit and rate limiting filters are added by gateway-service module
      */
     @Bean
     @Profile("!test")
@@ -166,7 +169,7 @@ public class GatewaySecurityConfig {
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            // Add gateway auth filter before UsernamePasswordAuthenticationFilter
+            // Gateway auth filter validates JWT and injects trusted headers
             .addFilterBefore(gatewayAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

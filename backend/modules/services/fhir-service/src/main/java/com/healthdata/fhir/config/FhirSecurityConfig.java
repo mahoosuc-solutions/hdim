@@ -1,5 +1,6 @@
 package com.healthdata.fhir.config;
 
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
 import io.micrometer.core.instrument.MeterRegistry;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
@@ -12,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Profile;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -25,12 +27,14 @@ import org.springframework.security.web.SecurityFilterChain;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.web.cors.CorsConfigurationSource;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.Arrays;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -65,7 +69,7 @@ public class FhirSecurityConfig {
     @Value("${gateway.auth.signing-secret:}")
     private String signingSecret;
 
-    @Value("${gateway.auth.dev-mode:true}")
+    @Value("${gateway.auth.dev-mode:false}")
     private boolean devMode;
 
     /**
@@ -88,6 +92,14 @@ public class FhirSecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public FilterRegistrationBean<CorsFilter> corsFilterRegistration(
+            @Qualifier("corsConfigurationSource") CorsConfigurationSource source) {
+        FilterRegistrationBean<CorsFilter> registration = new FilterRegistrationBean<>(new CorsFilter(source));
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return registration;
     }
 
     /**

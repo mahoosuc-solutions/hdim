@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: demo-cli
+  main:
+    web-application-type: none
+    banner-mode: off
+
+# Demo API configuration
+demo:
+  api:
+    base-url: ${DEMO_API_URL:http://localhost:8098}
+
+logging:
+  level:
+    root: WARN
+    com.healthdata.democli: INFO

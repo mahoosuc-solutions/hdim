@@ -1,0 +1,178 @@
+package com.healthdata.authentication.filter;
+
+import com.healthdata.authentication.entity.AuditLog;
+import com.healthdata.authentication.service.AuditLogService;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Filter to automatically log all authenticated HTTP requests for audit trail.
+ * Excludes health check and actuator endpoints.
+ *
+ * This filter captures:
+ * - User context
+ * - HTTP method and URI
+ * - IP address and user agent
+ * - Response status
+ * - Execution time
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class AuditLoggingFilter extends OncePerRequestFilter {
+
+    private final AuditLogService auditLogService;
+
+    // Paths to exclude from audit logging
+    private static final List<String> EXCLUDED_PATHS = Arrays.asList(
+        "/actuator",
+        "/health",
+        "/metrics",
+        "/api/v1/audit" // Don't log audit log queries to avoid recursion
+    );
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        long startTime = System.currentTimeMillis();
+
+        // Check if path should be excluded
+        String requestUri = request.getRequestURI();
+        if (shouldExclude(requestUri)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Get authentication context before processing request
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean wasAuthenticated = authentication != null && authentication.isAuthenticated() &&
+            !"anonymousUser".equals(authentication.getName());
+
+        // Process the request
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            // Log after request completes (if authenticated)
+            if (wasAuthenticated) {
+                try {
+                    logRequest(request, response, authentication, startTime);
+                } catch (Exception e) {
+                    // Never let audit logging break the application
+                    log.error("Failed to log audit event for request: {} {}", request.getMethod(), requestUri, e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Check if request path should be excluded from audit logging.
+     *
+     * @param requestUri Request URI
+     * @return True if should be excluded
+     */
+    private boolean shouldExclude(String requestUri) {
+        return EXCLUDED_PATHS.stream().anyMatch(requestUri::startsWith);
+    }
+
+    /**
+     * Log the HTTP request as an audit event.
+     *
+     * @param request        HTTP request
+     * @param response       HTTP response
+     * @param authentication User authentication
+     * @param startTime      Request start time
+     */
+    private void logRequest(HttpServletRequest request, HttpServletResponse response,
+                           Authentication authentication, long startTime) {
+        try {
+            String username = authentication.getName();
+            String requestUri = request.getRequestURI();
+            String httpMethod = request.getMethod();
+            int statusCode = response.getStatus();
+            long executionTime = System.currentTimeMillis() - startTime;
+
+            // Extract request details
+            String ipAddress = extractIpAddress(request);
+            String userAgent = request.getHeader("User-Agent");
+            String tenantId = request.getHeader("X-Tenant-ID");
+
+            // Determine event type from HTTP method
+            String action = mapHttpMethodToAction(httpMethod);
+
+            // Determine if request was successful
+            boolean success = statusCode >= 200 && statusCode < 400;
+
+            // Create audit log
+            AuditLog auditLog = AuditLog.builder()
+                .eventType("HTTP_REQUEST")
+                .action(action)
+                .username(username)
+                .userId(null) // Would need to lookup user ID from username
+                .tenantId(tenantId)
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .requestUri(requestUri)
+                .httpMethod(httpMethod)
+                .success(success)
+                .failureReason(success ? null : "HTTP " + statusCode)
+                .timestamp(Instant.now())
+                .build();
+
+            // Add execution time to additional data if needed
+            if (executionTime > 1000) { // Log slow requests
+                log.warn("Slow request: {} {} took {}ms", httpMethod, requestUri, executionTime);
+            }
+
+            // Log asynchronously
+            auditLogService.logEvent(auditLog);
+
+        } catch (Exception e) {
+            log.error("Error creating audit log for request", e);
+            // Don't rethrow - audit logging should not break application
+        }
+    }
+
+    /**
+     * Extract IP address from HTTP request.
+     *
+     * @param request HTTP request
+     * @return IP address
+     */
+    private String extractIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
+    }
+
+    /**
+     * Map HTTP method to audit action.
+     *
+     * @param httpMethod HTTP method
+     * @return Action string
+     */
+    private String mapHttpMethodToAction(String httpMethod) {
+        return switch (httpMethod.toUpperCase()) {
+            case "GET" -> "READ";
+            case "POST" -> "CREATE";
+            case "PUT", "PATCH" -> "UPDATE";
+            case "DELETE" -> "DELETE";
+            default -> httpMethod;
+        };
+    }
+}

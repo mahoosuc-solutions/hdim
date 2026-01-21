@@ -32,6 +32,7 @@ public class ZohoConfig {
     public static class Sync {
         private boolean enabled = false;
         private int intervalMinutes = 15;
+        private String defaultTenantId; // Optional: Default tenant ID for scheduled sync if no tenants found
     }
 
     @Data

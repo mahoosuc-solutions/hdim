@@ -1,0 +1,330 @@
+<!-- Patient Education Workflow Dialog -->
+<h2 mat-dialog-title>
+  <mat-icon>school</mat-icon>
+  Patient Education - {{ patientName }}
+</h2>
+
+<div class="workflow-progress">
+  <mat-progress-bar mode="determinate" [value]="(currentStep / (totalSteps - 1)) * 100"></mat-progress-bar>
+  <span class="progress-text">Step {{ currentStep + 1 }} of {{ totalSteps }}</span>
+</div>
+
+<mat-dialog-content [formGroup]="form">
+  <!-- Step 0: Select Topic -->
+  @if (currentStep === 0) {
+    <div class="workflow-step">
+      <h3>Select Education Topic</h3>
+      <p class="step-description">Choose the topic you'd like to educate the patient about</p>
+
+      @if (loading) {
+        <div class="loading">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Loading topics...</p>
+        </div>
+      } @else {
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Education Topic</mat-label>
+          <mat-select formControlName="selectedTopic">
+            <mat-option value="">-- Select Topic --</mat-option>
+            @for (topic of educationTopics; track topic.id) {
+              <mat-option [value]="topic.id">
+                {{ topic.name }} ({{ topic.materials.length }} materials)
+              </mat-option>
+            }
+          </mat-select>
+          @if (form.get('selectedTopic')?.hasError('required') && form.get('selectedTopic')?.touched) {
+            <mat-error>Topic is required</mat-error>
+          }
+        </mat-form-field>
+
+        @if (selectedTopicName) {
+          <mat-card class="topic-info">
+            <mat-card-header>
+              <mat-card-title>{{ selectedTopicName }}</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p>Available materials: {{ selectedTopicMaterials.length }}</p>
+              <div class="material-list">
+                @for (material of selectedTopicMaterials; track material.id) {
+                  <div class="material-item">
+                    <mat-icon>{{ material.type === 'VIDEO' ? 'play_circle' : 'description' }}</mat-icon>
+                    <span>{{ material.title }}</span>
+                    @if (material.duration) {
+                      <span class="duration">({{ material.duration }} min)</span>
+                    }
+                  </div>
+                }
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+      }
+    </div>
+  }
+
+  <!-- Step 1: Select Material Type -->
+  @if (currentStep === 1) {
+    <div class="workflow-step">
+      <h3>Select Material Type</h3>
+      <p class="step-description">Choose how to present the educational material</p>
+
+      <div class="material-types">
+        @for (type of materialTypes; track type) {
+          <mat-card class="material-type-card" [class.selected]="form.get('materialType')?.value === type">
+            <mat-radio-button [value]="type" formControlName="materialType">
+              <div class="type-content">
+                <mat-icon>{{ type === 'VIDEO' ? 'play_circle' : type === 'HANDOUT' ? 'description' : 'quiz' }}</mat-icon>
+                <div>
+                  <h4>{{ type | titlecase }}</h4>
+                  <p>{{ getTypeDescription(type) }}</p>
+                  @if (type === 'VIDEO' && getMaterialDuration() > 0) {
+                    <span class="duration">{{ getMaterialDuration() }} minutes</span>
+                  }
+                </div>
+              </div>
+            </mat-radio-button>
+          </mat-card>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Step 2: Present Material -->
+  @if (currentStep === 2) {
+    <div class="workflow-step">
+      <h3>Educational Material</h3>
+      <p class="step-description">Present the selected educational content</p>
+
+      @if (shouldShowMaterialContent()) {
+        <div class="material-content">
+          @if (isVideoMaterial()) {
+            <div class="video-container">
+              <mat-icon class="video-icon">play_circle</mat-icon>
+              <p>Video: {{ selectedTopicName }}</p>
+              <p class="note">Duration: {{ getMaterialDuration() }} minutes</p>
+              <button mat-raised-button color="primary" (click)="markMaterialComplete()">
+                <mat-icon>check_circle</mat-icon>
+                Mark Video Completed
+              </button>
+            </div>
+          }
+
+          @if (isHandoutMaterial()) {
+            <div class="handout-container">
+              <mat-icon class="handout-icon">description</mat-icon>
+              <p>Handout: {{ selectedTopicName }}</p>
+              <div class="handout-content">
+                <p>Educational material preview would display here in production</p>
+              </div>
+              <button mat-raised-button color="primary" (click)="markMaterialComplete()">
+                <mat-icon>check_circle</mat-icon>
+                Mark Handout Reviewed
+              </button>
+            </div>
+          }
+
+          @if (isInteractiveMaterial()) {
+            <div class="interactive-container">
+              <mat-icon class="interactive-icon">quiz</mat-icon>
+              <p>Interactive Learning: {{ selectedTopicName }}</p>
+              <div class="interactive-content">
+                <p>Interactive module would load here in production</p>
+              </div>
+              <button mat-raised-button color="primary" (click)="markMaterialComplete()">
+                <mat-icon>check_circle</mat-icon>
+                Complete Interactive Module
+              </button>
+            </div>
+          }
+        </div>
+
+        @if (materialCompleted) {
+          <div class="completion-badge">
+            <mat-icon>check_circle</mat-icon>
+            <span>Material completed</span>
+          </div>
+        }
+      }
+    </div>
+  }
+
+  <!-- Step 3: Assess Understanding -->
+  @if (currentStep === 3) {
+    <div class="workflow-step">
+      <h3>Assess Understanding</h3>
+      <p class="step-description">Evaluate patient comprehension through assessment</p>
+
+      <mat-expansion-panel class="assessment-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>quiz</mat-icon>
+            Assessment Questions (Minimum score needed: 70%)
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="assessment-content">
+          <p>Conduct assessment through:</p>
+          <ul>
+            <li>Ask open-ended questions about key concepts</li>
+            <li>Use teach-back method</li>
+            <li>Observe patient demonstration</li>
+            <li>Ask about confidence level</li>
+          </ul>
+
+          <div class="score-input">
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Understanding Score (%)</mat-label>
+              <input matInput type="number" formControlName="understandingScore" min="0" max="100" />
+            </mat-form-field>
+          </div>
+
+          @if (understandingScore > 0) {
+            <div class="score-feedback" [class]="'level-' + understandingLevel.toLowerCase()">
+              <mat-icon>
+                @if (understandingLevel === 'EXCELLENT' || understandingLevel === 'GOOD') {
+                  check_circle
+                } @else if (understandingLevel === 'FAIR') {
+                  info
+                } @else {
+                  warning
+                }
+              </mat-icon>
+              <div>
+                <strong>Understanding Level: {{ understandingLevel }}</strong>
+                <p>Score: {{ understandingScore }}%</p>
+              </div>
+            </div>
+          }
+        </div>
+      </mat-expansion-panel>
+    </div>
+  }
+
+  <!-- Step 4: Document Barriers & Follow-up -->
+  @if (currentStep === 4) {
+    <div class="workflow-step">
+      <h3>Learning Barriers & Follow-up</h3>
+      <p class="step-description">Identify barriers and schedule follow-up as needed</p>
+
+      <mat-expansion-panel class="barriers-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>accessibility</mat-icon>
+            Learning Barriers (Select all that apply)
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="barriers-content">
+          @for (barrier of learningBarrierOptions; track barrier.key) {
+            <div class="barrier-item">
+              <mat-checkbox [formControl]="getFormControl(barrier.key)">
+                <strong>{{ barrier.label }}</strong>
+                <p>{{ barrier.description }}</p>
+              </mat-checkbox>
+            </div>
+          }
+
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Additional Barrier Notes</mat-label>
+            <textarea matInput formControlName="barrierNotes" placeholder="Document specific barriers or challenges..."></textarea>
+          </mat-form-field>
+        </div>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel class="followup-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>schedule</mat-icon>
+            Schedule Follow-up Session
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="followup-content">
+          <mat-checkbox formControlName="needsFollowUp">
+            Schedule follow-up education session
+          </mat-checkbox>
+
+          @if (form.get('needsFollowUp')?.value) {
+            <div class="followup-details">
+              <mat-form-field appearance="fill" class="full-width">
+                <mat-label>Recommended Date</mat-label>
+                <input matInput [matDatepicker]="picker" formControlName="followUpDate" />
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+
+              <mat-form-field appearance="fill" class="full-width">
+                <mat-label>Reason for Follow-up</mat-label>
+                <textarea matInput formControlName="followUpReason" placeholder="Why is follow-up needed?"></textarea>
+              </mat-form-field>
+
+              <div class="info-box">
+                <mat-icon>info</mat-icon>
+                <span>Recommended follow-up: {{ suggestFollowUpInterval() }} day(s)</span>
+              </div>
+            </div>
+          }
+        </div>
+      </mat-expansion-panel>
+
+      <mat-card class="education-summary">
+        <mat-card-header>
+          <mat-card-title>Education Session Summary</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (educationSummary) {
+            <div class="summary-item">
+              <strong>Topic:</strong> {{ educationSummary.topicName }}
+            </div>
+            <div class="summary-item">
+              <strong>Understanding Level:</strong> {{ educationSummary.understandingLevel }} ({{ educationSummary.understandingScore }}%)
+            </div>
+            <div class="summary-item">
+              <strong>Learning Barriers:</strong>
+              @for (barrier of getActiveBarriers(); track barrier.key) {
+                <span class="barrier-badge">{{ barrier.label }}</span>
+              }
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelWorkflow()">
+    <mat-icon>close</mat-icon>
+    Cancel
+  </button>
+
+  @if (currentStep > 0) {
+    <button mat-stroked-button (click)="previousStep()">
+      <mat-icon>arrow_back</mat-icon>
+      Back
+    </button>
+  }
+
+  @if (currentStep < totalSteps - 1) {
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="nextStep()"
+      [disabled]="!canProceedToNextStep() || loading">
+      <mat-icon>arrow_forward</mat-icon>
+      Next
+    </button>
+  } @else {
+    <button
+      mat-raised-button
+      color="accent"
+      (click)="completeEducationWorkflow()"
+      [disabled]="!canProceedToNextStep() || loading">
+      @if (loading) {
+        <mat-spinner diameter="20"></mat-spinner>
+      }
+      <mat-icon>save</mat-icon>
+      Complete Education
+    </button>
+  }
+</mat-dialog-actions>

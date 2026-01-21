@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.healthdata.fhir.persistence.ObservationEntity;
 import com.healthdata.fhir.persistence.ObservationRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
@@ -37,14 +38,17 @@ public class ObservationService {
     private final ObservationRepository observationRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final Cache cache;
+    private final ObjectMapper objectMapper;
 
     public ObservationService(
             ObservationRepository observationRepository,
             KafkaTemplate<String, Object> kafkaTemplate,
-            CacheManager cacheManager) {
+            CacheManager cacheManager,
+            ObjectMapper objectMapper) {
         this.observationRepository = observationRepository;
         this.kafkaTemplate = kafkaTemplate;
         this.cache = cacheManager.getCache(CACHE_NAME);
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -63,8 +67,8 @@ public class ObservationService {
 
         cachePut(tenantId, observationId.toString(), savedObservation);
         kafkaTemplate.send("fhir.observations.created", observationId.toString(),
-                new ObservationEvent(observationId.toString(), tenantId, patientId.toString(),
-                        "CREATED", Instant.now(), createdBy));
+                buildResourceEvent(tenantId, patientId.toString(), "fhir.observations.created",
+                        "Observation", observationId.toString(), createdBy, savedObservation));
 
         return savedObservation;
     }
@@ -117,8 +121,8 @@ public class ObservationService {
 
         cachePut(tenantId, observationId, savedObservation);
         kafkaTemplate.send("fhir.observations.updated", observationId,
-                new ObservationEvent(observationId, tenantId, patientId.toString(),
-                        "UPDATED", Instant.now(), updatedBy));
+                buildResourceEvent(tenantId, patientId.toString(), "fhir.observations.updated",
+                        "Observation", observationId, updatedBy, savedObservation));
 
         return savedObservation;
     }
@@ -132,8 +136,8 @@ public class ObservationService {
         observationRepository.delete(entity);
         cacheEvict(tenantId, observationId);
         kafkaTemplate.send("fhir.observations.deleted", observationId,
-                new ObservationEvent(observationId, tenantId, entity.getPatientId().toString(),
-                        "DELETED", Instant.now(), deletedBy));
+                buildResourceEvent(tenantId, entity.getPatientId().toString(), "fhir.observations.deleted",
+                        "Observation", observationId, deletedBy, null));
     }
 
     @Transactional(readOnly = true)
@@ -384,6 +388,35 @@ public class ObservationService {
 
     private String cacheKey(String tenantId, String observationId) {
         return tenantId + ":obs:" + observationId;
+    }
+
+    private java.util.Map<String, Object> buildResourceEvent(
+            String tenantId,
+            String patientId,
+            String eventType,
+            String resourceType,
+            String resourceId,
+            String actor,
+            Observation resource) {
+        java.util.Map<String, Object> event = new java.util.HashMap<>();
+        event.put("eventId", java.util.UUID.randomUUID().toString());
+        event.put("eventType", eventType);
+        event.put("resourceType", resourceType);
+        event.put("resourceId", resourceId);
+        event.put("tenantId", tenantId);
+        event.put("patientId", patientId);
+        event.put("occurredAt", Instant.now().toString());
+        event.put("actor", actor);
+        if (resource != null) {
+            String json = JSON_PARSER.encodeResourceToString(resource);
+            try {
+                event.put("resource", objectMapper.readValue(json, java.util.Map.class));
+            } catch (Exception e) {
+                // Fall back to raw JSON when mapping fails.
+                event.put("resource", json);
+            }
+        }
+        return event;
     }
 
     public record ObservationEvent(String id, String tenantId, String patientId, String type,

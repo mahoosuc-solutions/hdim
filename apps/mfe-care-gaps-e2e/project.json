@@ -1,0 +1,9 @@
+{
+  "name": "mfe-care-gaps-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/mfe-care-gaps-e2e/src",
+  "implicitDependencies": ["mfe-care-gaps"],
+  "// targets": "to see all targets run: nx show project mfe-care-gaps-e2e --web",
+  "targets": {}
+}

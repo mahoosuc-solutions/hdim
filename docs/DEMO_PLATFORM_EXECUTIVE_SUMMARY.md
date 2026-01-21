@@ -356,6 +356,7 @@ curl http://localhost:8098/api/v1/demo/status
 - [ ] Zero errors during recording
 - [ ] Quick reset (< 30 seconds)
 - [ ] Professional, polished UI
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### Video Quality
 - [ ] Clear value proposition in first 30 seconds
@@ -363,6 +364,7 @@ curl http://localhost:8098/api/v1/demo/status
 - [ ] Smooth pacing, no dead air
 - [ ] No technical glitches visible
 - [ ] Compelling narrative flow
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### Business Impact
 - [ ] 4 high-quality videos recorded

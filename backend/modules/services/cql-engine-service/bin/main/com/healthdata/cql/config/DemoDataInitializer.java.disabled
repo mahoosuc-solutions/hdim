@@ -1,0 +1,247 @@
+package com.healthdata.cql.config;
+
+import com.healthdata.authentication.domain.User;
+import com.healthdata.authentication.domain.UserRole;
+import com.healthdata.cql.service.UserService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+
+import java.util.Set;
+
+/**
+ * Demo data initializer for development and testing environments.
+ * Creates demo users with different roles for testing authentication and authorization.
+ *
+ * SECURITY WARNING: Only enable this in development/demo environments!
+ * Never use these demo accounts in production.
+ */
+@Configuration
+@Profile({"dev", "demo", "local"})
+@RequiredArgsConstructor
+@Slf4j
+public class DemoDataInitializer {
+
+    private final UserService userService;
+
+    @Bean
+    public CommandLineRunner initializeDemoUsers() {
+        return args -> {
+            log.info("==========================================");
+            log.info("  Initializing Demo User Accounts");
+            log.info("==========================================");
+            log.warn("⚠️  DEMO MODE: Creating test accounts with known passwords");
+            log.warn("⚠️  NEVER use these accounts in production!");
+            log.info("");
+
+            // Demo tenants
+            String tenant1 = "DEMO_TENANT_001";
+            String tenant2 = "DEMO_TENANT_002";
+
+            try {
+                // 1. Super Admin User
+                createUserIfNotExists(
+                    "superadmin",
+                    "superadmin@healthdata.demo",
+                    "SuperAdmin123!",
+                    "Super",
+                    "Administrator",
+                    Set.of(UserRole.SUPER_ADMIN),
+                    Set.of(tenant1, tenant2),
+                    "Super administrator with full system access"
+                );
+
+                // 2. Admin User for Tenant 1
+                createUserIfNotExists(
+                    "admin",
+                    "admin@healthdata.demo",
+                    "Admin123!",
+                    "Admin",
+                    "User",
+                    Set.of(UserRole.ADMIN),
+                    Set.of(tenant1),
+                    "Administrator for DEMO_TENANT_001"
+                );
+
+                // 3. Evaluator User
+                createUserIfNotExists(
+                    "evaluator",
+                    "evaluator@healthdata.demo",
+                    "Evaluator123!",
+                    "Eval",
+                    "User",
+                    Set.of(UserRole.EVALUATOR),
+                    Set.of(tenant1),
+                    "Can create and execute quality measure evaluations"
+                );
+
+                // 4. Analyst User
+                createUserIfNotExists(
+                    "analyst",
+                    "analyst@healthdata.demo",
+                    "Analyst123!",
+                    "Ana",
+                    "Lyst",
+                    Set.of(UserRole.ANALYST),
+                    Set.of(tenant1),
+                    "Can view and analyze evaluation results (read-only)"
+                );
+
+                // 5. Viewer User
+                createUserIfNotExists(
+                    "viewer",
+                    "viewer@healthdata.demo",
+                    "Viewer123!",
+                    "View",
+                    "User",
+                    Set.of(UserRole.VIEWER),
+                    Set.of(tenant1),
+                    "Basic read-only access"
+                );
+
+                // 6. Multi-role User (Evaluator + Analyst)
+                createUserIfNotExists(
+                    "multiuser",
+                    "multi@healthdata.demo",
+                    "Multi123!",
+                    "Multi",
+                    "Role",
+                    Set.of(UserRole.EVALUATOR, UserRole.ANALYST),
+                    Set.of(tenant1),
+                    "User with multiple roles for testing"
+                );
+
+                // 7. Multi-tenant User
+                createUserIfNotExists(
+                    "multitenant",
+                    "multitenant@healthdata.demo",
+                    "MultiTenant123!",
+                    "Multi",
+                    "Tenant",
+                    Set.of(UserRole.EVALUATOR),
+                    Set.of(tenant1, tenant2),
+                    "User with access to multiple tenants"
+                );
+
+                log.info("");
+                log.info("==========================================");
+                log.info("  Demo User Accounts Created Successfully");
+                log.info("==========================================");
+                log.info("");
+                printDemoAccounts();
+
+            } catch (Exception e) {
+                log.error("Error initializing demo users", e);
+            }
+        };
+    }
+
+    private void createUserIfNotExists(
+        String username,
+        String email,
+        String password,
+        String firstName,
+        String lastName,
+        Set<UserRole> roles,
+        Set<String> tenantIds,
+        String notes
+    ) {
+        if (userService.findByUsername(username).isPresent()) {
+            log.info("User already exists: {}", username);
+            return;
+        }
+
+        User user = User.builder()
+            .username(username)
+            .email(email)
+            .firstName(firstName)
+            .lastName(lastName)
+            .roles(roles)
+            .tenantIds(tenantIds)
+            .active(true)
+            .emailVerified(true)
+            .notes(notes)
+            .build();
+
+        userService.createUser(user, password);
+        log.info("✅ Created demo user: {} ({}) with roles: {}", username, email, roles);
+    }
+
+    private void printDemoAccounts() {
+        log.info("┌─────────────────────────────────────────────────────────────────────────┐");
+        log.info("│                         DEMO ACCOUNTS                                   │");
+        log.info("├─────────────────────────────────────────────────────────────────────────┤");
+        log.info("│                                                                         │");
+        log.info("│  1. SUPER ADMIN                                                         │");
+        log.info("│     Username: superadmin                                                │");
+        log.info("│     Password: SuperAdmin123!                                            │");
+        log.info("│     Email:    superadmin@healthdata.demo                                │");
+        log.info("│     Roles:    SUPER_ADMIN                                               │");
+        log.info("│     Tenants:  DEMO_TENANT_001, DEMO_TENANT_002                          │");
+        log.info("│     Access:   Full system access, all permissions                       │");
+        log.info("│                                                                         │");
+        log.info("│  2. ADMIN                                                               │");
+        log.info("│     Username: admin                                                     │");
+        log.info("│     Password: Admin123!                                                 │");
+        log.info("│     Email:    admin@healthdata.demo                                     │");
+        log.info("│     Roles:    ADMIN                                                     │");
+        log.info("│     Tenants:  DEMO_TENANT_001                                           │");
+        log.info("│     Access:   Tenant administration, user management, configuration     │");
+        log.info("│                                                                         │");
+        log.info("│  3. EVALUATOR                                                           │");
+        log.info("│     Username: evaluator                                                 │");
+        log.info("│     Password: Evaluator123!                                             │");
+        log.info("│     Email:    evaluator@healthdata.demo                                 │");
+        log.info("│     Roles:    EVALUATOR                                                 │");
+        log.info("│     Tenants:  DEMO_TENANT_001                                           │");
+        log.info("│     Access:   Create/execute evaluations, view results                  │");
+        log.info("│                                                                         │");
+        log.info("│  4. ANALYST                                                             │");
+        log.info("│     Username: analyst                                                   │");
+        log.info("│     Password: Analyst123!                                               │");
+        log.info("│     Email:    analyst@healthdata.demo                                   │");
+        log.info("│     Roles:    ANALYST                                                   │");
+        log.info("│     Tenants:  DEMO_TENANT_001                                           │");
+        log.info("│     Access:   View results, analytics, reports (read-only)             │");
+        log.info("│                                                                         │");
+        log.info("│  5. VIEWER                                                              │");
+        log.info("│     Username: viewer                                                    │");
+        log.info("│     Password: Viewer123!                                                │");
+        log.info("│     Email:    viewer@healthdata.demo                                    │");
+        log.info("│     Roles:    VIEWER                                                    │");
+        log.info("│     Tenants:  DEMO_TENANT_001                                           │");
+        log.info("│     Access:   Basic read-only access                                    │");
+        log.info("│                                                                         │");
+        log.info("│  6. MULTI-ROLE USER                                                     │");
+        log.info("│     Username: multiuser                                                 │");
+        log.info("│     Password: Multi123!                                                 │");
+        log.info("│     Email:    multi@healthdata.demo                                     │");
+        log.info("│     Roles:    EVALUATOR, ANALYST                                        │");
+        log.info("│     Tenants:  DEMO_TENANT_001                                           │");
+        log.info("│     Access:   Combined evaluator and analyst permissions                │");
+        log.info("│                                                                         │");
+        log.info("│  7. MULTI-TENANT USER                                                   │");
+        log.info("│     Username: multitenant                                               │");
+        log.info("│     Password: MultiTenant123!                                           │");
+        log.info("│     Email:    multitenant@healthdata.demo                               │");
+        log.info("│     Roles:    EVALUATOR                                                 │");
+        log.info("│     Tenants:  DEMO_TENANT_001, DEMO_TENANT_002                          │");
+        log.info("│     Access:   Evaluator access across multiple tenants                  │");
+        log.info("│                                                                         │");
+        log.info("└─────────────────────────────────────────────────────────────────────────┘");
+        log.info("");
+        log.info("🔐 Use these credentials to test different role-based access scenarios");
+        log.info("📋 All accounts are active and email verified");
+        log.info("⚠️  Account locks after 5 failed login attempts for 15 minutes");
+        log.info("");
+        log.info("🧪 Test Scenarios:");
+        log.info("   - Login with different roles to test authorization");
+        log.info("   - Test tenant isolation with multi-tenant user");
+        log.info("   - Test permission boundaries with read-only users");
+        log.info("   - Test failed login attempts and account locking");
+        log.info("");
+    }
+}

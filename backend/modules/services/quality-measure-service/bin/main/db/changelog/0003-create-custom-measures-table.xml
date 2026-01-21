@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0003-create-custom-measures-table" author="codex">
+        <createTable tableName="custom_measures">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="category" type="VARCHAR(50)"/>
+            <column name="year" type="INT"/>
+            <column name="cql_text" type="TEXT"/>
+            <column name="value_sets" type="JSONB"/>
+            <column name="created_by" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+
+        <createIndex indexName="idx_custom_measures_tenant" tableName="custom_measures">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex indexName="idx_custom_measures_status" tableName="custom_measures">
+            <column name="status"/>
+        </createIndex>
+        <createIndex indexName="idx_custom_measures_name" tableName="custom_measures">
+            <column name="name"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="custom_measures"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

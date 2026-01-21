@@ -17,6 +17,7 @@ export default defineConfig({
       { text: 'Workflows', link: '/workflows/' },
       { text: 'Guides', link: '/guides/' },
       { text: 'API Reference', link: '/api/' },
+      { text: 'Performance', link: '/performance/benchmarking' },
       { text: 'Security', link: '/security/' },
       { text: 'About', link: '/about/' }
     ],
@@ -79,6 +80,14 @@ export default defineConfig({
           text: 'Security',
           items: [
             { text: 'Security Architecture', link: '/security/' }
+          ]
+        }
+      ],
+      '/performance/': [
+        {
+          text: 'Performance',
+          items: [
+            { text: 'Benchmarking', link: '/performance/benchmarking' }
           ]
         }
       ],

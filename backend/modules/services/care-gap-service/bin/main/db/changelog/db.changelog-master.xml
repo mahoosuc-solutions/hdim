@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <include file="db/changelog/0001-create-care-gaps-table.xml"/>
+    <include file="db/changelog/0002-create-care-gap-recommendations-table.xml"/>
+    <include file="db/changelog/0003-create-care-gap-closures-table.xml"/>
+    <include file="db/changelog/0004-update-care-gaps-table.xml"/>
+    <include file="db/changelog/0005-add-care-gaps-extended-fields.xml"/>
+    <include file="db/changelog/0009-create-audit-events-table.xml"/>
+
+</databaseChangeLog>

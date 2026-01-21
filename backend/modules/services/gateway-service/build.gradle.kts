@@ -8,6 +8,10 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:gateway-core"))
     implementation(project(":modules:shared:infrastructure:persistence"))
     implementation(project(":modules:shared:infrastructure:database-config"))
+    implementation(project(":modules:shared:infrastructure:tracing"))
+
+    // Kafka for distributed tracing (required by TracingAutoConfiguration)
+    implementation(libs.bundles.kafka)
 
     // Testing
     testImplementation(project(":platform:test-fixtures"))

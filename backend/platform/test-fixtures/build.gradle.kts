@@ -23,6 +23,9 @@ dependencies {
     api(libs.mockito.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
 
+    // Micrometer for test metrics (SimpleMeterRegistry)
+    api("io.micrometer:micrometer-core:1.11.5")
+
     // Note: AssertJ is included transitively via spring-boot-starter-test
 
     // FHIR for test data generation

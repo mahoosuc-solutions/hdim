@@ -1,0 +1,26 @@
+{
+  "name": "frontend-dev",
+  "version": "1.0.0",
+  "description": "Comprehensive frontend development toolkit for React + TypeScript projects with testing, code review, and component generation",
+  "author": "HDIM Platform Team",
+  "commands": {
+    "build": "commands/build.md",
+    "test": "commands/test.md",
+    "lint": "commands/lint.md",
+    "generate": "commands/generate.md",
+    "e2e": "commands/e2e.md",
+    "feature-dev": "commands/feature-dev.md"
+  },
+  "agents": {
+    "code-reviewer": "agents/code-reviewer.md",
+    "accessibility-analyzer": "agents/accessibility-analyzer.md",
+    "test-coverage-analyzer": "agents/test-coverage-analyzer.md",
+    "performance-analyzer": "agents/performance-analyzer.md"
+  },
+  "skills": {
+    "react-patterns": "skills/react-patterns.md",
+    "testing-strategy": "skills/testing-strategy.md",
+    "mui-customization": "skills/mui-customization.md",
+    "zustand-patterns": "skills/zustand-patterns.md"
+  }
+}

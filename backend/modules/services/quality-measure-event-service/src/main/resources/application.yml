@@ -24,12 +24,10 @@ spring:
       properties:
         spring.json.trusted.packages: "*"
 
-  # Cache Configuration (Redis)
-  # ⚠️ CRITICAL HIPAA COMPLIANCE - TTL <= 5 minutes ⚠️
+  # Cache Configuration
+  # No caching for event services (projection read model)
   cache:
-    type: redis
-    redis:
-      time-to-live: 300000  # 5 minutes (HIPAA compliant for PHI)
+    type: none
 
 # HealthData Database Configuration
 healthdata:
@@ -44,8 +42,6 @@ healthdata:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-        archive:
-          autodetection: none
     show-sql: false
 
   liquibase:

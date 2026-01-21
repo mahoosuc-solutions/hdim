@@ -20,7 +20,10 @@ import org.springframework.kafka.annotation.EnableKafka;
 @SpringBootApplication
 @EnableKafka
 @EnableFeignClients
-@EnableJpaRepositories(basePackages = "com.healthdata.patientevent.persistence")
+@EnableJpaRepositories(basePackages = {
+    "com.healthdata.patientevent.persistence",
+    "com.healthdata.patientevent.repository"
+})
 @EntityScan(basePackages = {
     "com.healthdata.patientevent",
     "com.healthdata.patientevent.projection"

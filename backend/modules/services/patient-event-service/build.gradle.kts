@@ -11,7 +11,7 @@ dependencyManagement {
 }
 
 dependencies {
-    // Phase 4 Event Handler Library
+    // Phase 4 Event Handler Library - used as library, NOT deployed as embedded service
     implementation(project(":modules:services:patient-event-handler-service"))
 
     // Shared modules

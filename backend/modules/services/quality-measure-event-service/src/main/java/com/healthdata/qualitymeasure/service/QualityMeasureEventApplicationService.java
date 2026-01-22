@@ -121,10 +121,22 @@ public class QualityMeasureEventApplicationService {
 
         return MeasureEventResponse.builder()
             .patientId(patientId)
-            .riskLevel(proj.getRiskLevel())
-            .score(proj.getScore())
+            .riskLevel(calculateRiskLevel(proj.getScore()))  // Calculate risk level from score
+            .score(proj.getScore().floatValue())
             .timestamp(Instant.now())
             .build();
+    }
+
+    /**
+     * Calculate risk level from measure score
+     * LOW: score >= 80%, MEDIUM: 60-80%, HIGH: 40-60%, VERY_HIGH: < 40%
+     */
+    private String calculateRiskLevel(Double score) {
+        if (score == null) return "UNKNOWN";
+        if (score >= 80.0) return "LOW";
+        if (score >= 60.0) return "MEDIUM";
+        if (score >= 40.0) return "HIGH";
+        return "VERY_HIGH";
     }
 
     /**
@@ -162,7 +174,7 @@ public class QualityMeasureEventApplicationService {
         CohortMeasureRateProjection cohort = cohortRepository
             .findByMeasureCodeAndTenant(measureCode, tenantId)
             .orElseGet(() -> {
-                CohortMeasureRateProjection newCohort = new CohortMeasureRateProjection(measureCode, tenantId);
+                CohortMeasureRateProjection newCohort = new CohortMeasureRateProjection(tenantId, measureCode);
                 newCohort.setDenominatorCount(0);
                 newCohort.setNumeratorCount(0);
                 newCohort.setComplianceRate(0.0f);

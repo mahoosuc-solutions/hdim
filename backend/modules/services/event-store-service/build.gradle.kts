@@ -25,7 +25,7 @@ dependencies {
     implementation(libs.liquibase)
 
     // JSONB support for PostgreSQL
-    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.0")
+    implementation(libs.hypersistence.utils.hibernate.63)
 
     // Jackson for JSON processing
     implementation(libs.jackson.databind)
@@ -52,7 +52,6 @@ dependencies {
     testImplementation(libs.bundles.testing)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
-    testImplementation("org.springframework.security:spring-security-test")
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
 }

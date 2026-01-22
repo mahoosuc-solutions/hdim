@@ -2,10 +2,8 @@ package com.healthdata.caregap;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.annotation.EnableKafka;
 
 /**
@@ -14,25 +12,19 @@ import org.springframework.kafka.annotation.EnableKafka;
  * Spring Boot microservice for processing care gap detection and closure events.
  * Wraps Phase 4 CareGapEventHandler library with REST API, persistence, and Kafka integration.
  *
- * Port: 8092 (configurable via application.yml)
+ * Port: 8111 (configured in application.yml)
+ *
+ * Note: JPA entity scanning is configured in JpaConfig to prevent conflicts between
+ * handler library and event service projection entities.
  */
 @SpringBootApplication
 @EnableKafka
-@EnableFeignClients
-@EnableJpaRepositories(basePackages = {
-    "com.healthdata.caregap.persistence",
-    "com.healthdata.caregap.repository"
-})
-@EntityScan(basePackages = {
-    "com.healthdata.caregap",
-    "com.healthdata.caregap.projection"
-})
+@EnableFeignClients(basePackages = {"com.healthdata.caregap", "com.healthdata.eventstore.client"})
 @ComponentScan(basePackages = {
     "com.healthdata.caregap",
-    "com.healthdata.caregap.api",
-    "com.healthdata.caregap.service",
-    "com.healthdata.caregap.persistence",
-    "com.healthdata.caregap.config"
+    "com.healthdata.caregapevent",
+    "com.healthdata.eventstore.client",
+    "com.healthdata.shared"
 })
 public class CareGapEventServiceApplication {
 

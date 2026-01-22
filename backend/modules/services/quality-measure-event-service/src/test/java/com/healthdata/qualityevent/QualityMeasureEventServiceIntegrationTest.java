@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.RedisTemplate;
+// import org.springframework.data.redis.core.RedisTemplate;  // Redis removed from event services
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -54,8 +54,8 @@ class QualityMeasureEventServiceIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired(required = false)
-    private RedisTemplate<String, Object> redisTemplate;
+    // @Autowired(required = false)
+    // private RedisTemplate<String, Object> redisTemplate;  // Redis removed from event services
 
     private static final String TENANT_ID = "TENANT-001";
     private static final String API_BASE_PATH = "/api/v1/measures";
@@ -71,10 +71,10 @@ class QualityMeasureEventServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Clear Redis cache if available
-        if (redisTemplate != null) {
-            redisTemplate.getConnectionFactory().getConnection().flushDb();
-        }
+        // Redis removed from event services - no cache cleanup needed
+        // if (redisTemplate != null) {
+        //     redisTemplate.getConnectionFactory().getConnection().flushDb();
+        // }
     }
 
     // ===== Measure Evaluation Tests =====

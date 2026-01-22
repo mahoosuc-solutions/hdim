@@ -7,6 +7,9 @@ spring:
   application:
     name: clinical-workflow-event-service
 
+  main:
+    allow-bean-definition-overriding: true  # Allow handler lib repos to override event service repos
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/clinical_workflow_event_db}
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}

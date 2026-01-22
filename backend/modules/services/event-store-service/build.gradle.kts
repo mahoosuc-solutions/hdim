@@ -25,7 +25,7 @@ dependencies {
     implementation(libs.liquibase)
 
     // JSONB support for PostgreSQL
-    implementation(libs.hypersistence.utils.hibernate.63)
+    implementation("io.hypersistence:hypersistence-utils-hibernate-63:${libs.versions.hypersistence.utils.get()}")
 
     // Jackson for JSON processing
     implementation(libs.jackson.databind)

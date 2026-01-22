@@ -10,7 +10,7 @@ import java.time.LocalDate;
  * Built from care gap events via event sourcing.
  * Optimized for gap queries (status, severity, patient qualification).
  */
-@Entity
+@Entity(name = "CareGapHandlerProjection")  // Explicit name to avoid conflict with event service entity
 @Table(name = "care_gap_projections", indexes = {
     @Index(name = "idx_caregap_tenant_status", columnList = "tenant_id, status"),
     @Index(name = "idx_caregap_patient_tenant", columnList = "patient_id, tenant_id")

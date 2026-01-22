@@ -12,15 +12,14 @@ spring:
     name: documentation-service-test
 
   datasource:
-    url: jdbc:tc:postgresql:15-alpine:///testdb
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-    username: sa
-    password:
-
+    url: jdbc:postgresql://localhost:5435/docs_db
+    driver-class-name: org.postgresql.Driver
+    username: healthdata
+    password: healthdata_password
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     properties:
       hibernate:
         format_sql: false
@@ -28,8 +27,7 @@ spring:
           batch_size: 20
 
   liquibase:
-    enabled: false
-
+    enabled: true
 logging:
   level:
     root: WARN

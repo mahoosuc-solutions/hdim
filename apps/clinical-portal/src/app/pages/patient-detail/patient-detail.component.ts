@@ -21,6 +21,7 @@ import { QualityMeasureResult } from '../../models/quality-result.model';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { PatientHealthOverviewComponent } from '../patient-health-overview/patient-health-overview.component';
+import { LoggerService } from '../../services/logger.service';
 
 @Component({
   selector: 'app-patient-detail',
@@ -80,13 +81,16 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
     'results': 3
   };
 
+  private logger = this.loggerService.withContext('PatientDetailComponent');
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private patientService: PatientService,
     private fhirClinicalService: FhirClinicalService,
     private evaluationService: EvaluationService,
-    private contextNavService: ContextNavigationService
+    private contextNavService: ContextNavigationService,
+    private loggerService: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -176,7 +180,7 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
   private initiateGapClosure(careGapId: string): void {
     // This would open a dialog or panel for gap closure
     // Implementation depends on the care gap service integration
-    console.log('Initiating gap closure for:', careGapId);
+    this.logger.info('Initiating gap closure', careGapId);
   }
 
   /**
@@ -207,7 +211,7 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
         this.loadQualityResults();
       },
       error: (err: any) => {
-        console.error('Error loading patient:', err);
+        this.logger.error('Error loading patient', err);
         this.error = 'Failed to load patient information';
         this.loading = false;
       },
@@ -223,7 +227,7 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
         this.loading = false;
       },
       error: (err: any) => {
-        console.error('Error loading clinical data:', err);
+        this.logger.error('Error loading clinical data', err);
         this.loading = false;
       },
     });
@@ -237,7 +241,7 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
         this.qualityResults = results;
       },
       error: (err: any) => {
-        console.error('Error loading quality results:', err);
+        this.logger.error('Error loading quality results', err);
       },
     });
   }

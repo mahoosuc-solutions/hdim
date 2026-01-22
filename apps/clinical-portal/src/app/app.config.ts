@@ -1,5 +1,6 @@
 import {
   ApplicationConfig,
+  ErrorHandler,
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from '@angular/core';
@@ -13,10 +14,12 @@ import { MONACO_PATH } from '@materia-ui/ngx-monaco-editor';
 import { appRoutes } from './app.routes';
 import { tenantInterceptor } from './interceptors/tenant.interceptor';
 import { authInterceptor } from './interceptors/auth.interceptor';
+import { auditInterceptor } from './interceptors/audit.interceptor';
 import { errorInterceptor } from './interceptors/error.interceptor';
 import { reducers } from './store';
 import { PatientEffects } from './store/effects/patient.effects';
 import { CareRecommendationEffects } from './store/effects/care-recommendation.effects';
+import { GlobalErrorHandler } from './services/global-error-handler.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -24,10 +27,14 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes),
     provideAnimations(),
+
+    // Global error handler (HIPAA compliance: error logging and incident detection)
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
     provideHttpClient(
       withInterceptors([
         tenantInterceptor,
         authInterceptor,
+        auditInterceptor,  // HIPAA compliance: automatic audit logging
         errorInterceptor,
       ])
     ),

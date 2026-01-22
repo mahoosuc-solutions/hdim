@@ -3,7 +3,7 @@ package com.healthdata.audit.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.audit.aspects.AuditAspect;
 import com.healthdata.audit.mapper.AuditEventMapper;
-import com.healthdata.audit.repository.AuditEventRepository;
+import com.healthdata.audit.repository.shared.AuditEventRepository;
 import com.healthdata.audit.service.AuditEncryptionService;
 import com.healthdata.audit.service.AuditService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -19,7 +19,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  */
 @Configuration
 @EnableAspectJAutoProxy
-@EnableJpaRepositories(basePackages = "com.healthdata.audit.repository")
+@EnableJpaRepositories(basePackages = "com.healthdata.audit.repository.shared")
 @ConditionalOnProperty(prefix = "audit", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AuditAutoConfiguration {
 

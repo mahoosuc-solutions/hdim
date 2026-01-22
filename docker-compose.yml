@@ -1734,6 +1734,69 @@ services:
     networks:
       - healthdata-network
 
+  # Port 8088 - Audit Query Service (HIPAA-compliant audit log query API)
+  audit-query-service:
+    container_name: healthdata-audit-query-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/audit-query-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      # Spring Boot datasource configuration
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/audit_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      # Healthdata persistence module configuration (overrides Spring datasource)
+      HEALTHDATA_PERSISTENCE_PRIMARY_URL: jdbc:postgresql://postgres:5432/audit_db
+      HEALTHDATA_PERSISTENCE_PRIMARY_USERNAME: healthdata
+      HEALTHDATA_PERSISTENCE_PRIMARY_PASSWORD: healthdata_password
+      HEALTHDATA_PERSISTENCE_PRIMARY_DRIVER_CLASS_NAME: org.postgresql.Driver
+      HEALTHDATA_PERSISTENCE_PRIMARY_POOL_NAME: audit-pool
+      HEALTHDATA_PERSISTENCE_PRIMARY_MAXIMUM_POOL_SIZE: 10
+      HEALTHDATA_PERSISTENCE_PRIMARY_MINIMUM_IDLE: 2
+      # Kafka configuration
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      # Server configuration
+      SERVER_PORT: 8088
+      # JWT configuration
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      HEALTHDATA_SECURITY_JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      # Liquibase configuration
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL-AUTO: validate
+      # Cache configuration
+      SPRING_CACHE_TYPE: redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      # OpenTelemetry OTLP HTTP Exporter
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: audit-query-service
+      # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+    ports:
+      - "8088:8088"
+    networks:
+      - healthdata-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8088/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
   # ============================================
   # FRONTEND SERVICE
   # ============================================

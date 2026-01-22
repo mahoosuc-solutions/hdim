@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0002-create-audit-resource-access-daily" author="hdim-system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="audit_resource_access_daily"/>
+            </not>
+        </preConditions>
+
+        <comment>
+            Create audit_resource_access_daily table for daily resource access projections.
+            Aggregates audit events by tenant, resource, and day for compliance reporting.
+            Helps identify most accessed resources and unusual access patterns.
+        </comment>
+
+        <createTable tableName="audit_resource_access_daily">
+            <!-- Composite Primary Key -->
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_type" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="access_date" type="date">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Metrics -->
+            <column name="access_count" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unique_users" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey
+            tableName="audit_resource_access_daily"
+            columnNames="tenant_id,resource_type,resource_id,access_date"
+            constraintName="pk_audit_resource_access_daily"/>
+
+        <!-- Indexes for fast queries -->
+        <createIndex
+            indexName="idx_resource_access_tenant_date"
+            tableName="audit_resource_access_daily">
+            <column name="tenant_id"/>
+            <column name="access_date"/>
+        </createIndex>
+
+        <createIndex
+            indexName="idx_resource_access_resource"
+            tableName="audit_resource_access_daily">
+            <column name="tenant_id"/>
+            <column name="resource_type"/>
+            <column name="resource_id"/>
+            <column name="access_date"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="audit_resource_access_daily"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

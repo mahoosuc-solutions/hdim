@@ -29,7 +29,8 @@ include(
     "modules:shared:infrastructure:gateway-core",
     "modules:shared:infrastructure:api-docs",
     "modules:shared:infrastructure:tracing",
-    "modules:shared:infrastructure:metrics"
+    "modules:shared:infrastructure:metrics",
+    "modules:shared:test-infrastructure"
 )
 
 // Shared API Contracts
@@ -78,7 +79,8 @@ include(
     "modules:services:sales-automation-service",
     "modules:services:notification-service",
     "modules:services:demo-seeding-service",
-    "modules:services:cms-connector-service"
+    "modules:services:cms-connector-service",
+    "modules:services:audit-query-service"
 )
 
 // Applications

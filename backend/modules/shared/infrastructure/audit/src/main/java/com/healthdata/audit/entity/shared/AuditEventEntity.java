@@ -1,4 +1,4 @@
-package com.healthdata.audit.entity;
+package com.healthdata.audit.entity.shared;
 
 import com.healthdata.audit.models.AuditAction;
 import com.healthdata.audit.models.AuditOutcome;

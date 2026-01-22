@@ -10,5 +10,6 @@
 
     <!-- Clinical Workflow Event Service Liquibase Migrations -->
     <include file="db/changelog/0001-create-workflow-projections-table.xml"/>
+    <include file="db/changelog/0002-fix-workflow-projections-schema.xml"/>
 
 </databaseChangeLog>

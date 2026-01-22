@@ -112,13 +112,13 @@
       <!-- Preset Buttons -->
       <div class="preset-buttons">
         <button
-          *ngFor="let [presetKey, preset] of getAvailablePresets()"
+          *ngFor="let presetEntry of getAvailablePresets()"
           type="button"
           class="preset-button"
-          [class.active]="isPresetActive(presetKey)"
-          (click)="applyPreset(presetKey)"
-          [title]="preset.label">
-          {{ preset.label }}
+          [class.active]="isPresetActive(presetEntry[0])"
+          (click)="applyPreset(presetEntry[0])"
+          [title]="presetEntry[1].label">
+          {{ presetEntry[1].label }}
         </button>
       </div>
     </div>

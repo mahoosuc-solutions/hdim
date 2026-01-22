@@ -1,0 +1,463 @@
+name: HDIM Compliance Validation
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**/*.java'
+      - 'backend/**/*.cql'
+      - 'backend/**/application*.yml'
+      - 'backend/**/application*.properties'
+      - '.claude/plugins/hdim-accelerator/**'
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - 'backend/**/*.java'
+      - 'backend/**/*.cql'
+      - 'backend/**/application*.yml'
+      - '.claude/plugins/hdim-accelerator/**'
+  workflow_dispatch:
+
+jobs:
+  agent-validation:
+    name: Healthcare Compliance Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+
+      - name: Set up Python for validation scripts
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install validation dependencies
+        run: |
+          pip install pyyaml jinja2
+
+      - name: Detect modified files
+        id: changed-files
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT_NAME" == "pull_request" ]; then
+            BASE_SHA="$PR_BASE_SHA"
+            HEAD_SHA="$PR_HEAD_SHA"
+          else
+            BASE_SHA="HEAD^"
+            HEAD_SHA="HEAD"
+          fi
+
+          # Get changed files
+          CONTROLLERS=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -E 'Controller\.java$' || true)
+          FHIR_FILES=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -E 'Bundle.*\.java$|FhirConfig\.java$' || true)
+          CQL_FILES=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -E '\.cql$' || true)
+
+          {
+            echo "controllers<<EOF"
+            echo "$CONTROLLERS"
+            echo "EOF"
+            echo "fhir_files<<EOF"
+            echo "$FHIR_FILES"
+            echo "EOF"
+            echo "cql_files<<EOF"
+            echo "$CQL_FILES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          # Count files for summary
+          CONTROLLER_COUNT=$(echo "$CONTROLLERS" | grep -c . || echo "0")
+          FHIR_COUNT=$(echo "$FHIR_FILES" | grep -c . || echo "0")
+          CQL_COUNT=$(echo "$CQL_FILES" | grep -c . || echo "0")
+
+          echo "controller_count=$CONTROLLER_COUNT" >> "$GITHUB_OUTPUT"
+          echo "fhir_count=$FHIR_COUNT" >> "$GITHUB_OUTPUT"
+          echo "cql_count=$CQL_COUNT" >> "$GITHUB_OUTPUT"
+
+      - name: Create validation report directory
+        run: mkdir -p validation-reports
+
+      - name: HIPAA Compliance Validation (Simulated)
+        if: steps.changed-files.outputs.controller_count != '0'
+        env:
+          CONTROLLER_FILES: ${{ steps.changed-files.outputs.controllers }}
+          CONTROLLER_COUNT: ${{ steps.changed-files.outputs.controller_count }}
+        run: |
+          echo "## HIPAA Compliance Validation Report" > validation-reports/hipaa-report.md
+          echo "" >> validation-reports/hipaa-report.md
+          echo "**Files Analyzed:** $CONTROLLER_COUNT" >> validation-reports/hipaa-report.md
+          echo "" >> validation-reports/hipaa-report.md
+
+          # Simulate HIPAA validation (would call actual agent when plugins are loaded)
+          echo "### Validation Checks" >> validation-reports/hipaa-report.md
+          echo "" >> validation-reports/hipaa-report.md
+
+          VIOLATIONS=0
+
+          # Process each controller file
+          while IFS= read -r file; do
+            if [ -n "$file" ] && [ -f "$file" ]; then
+              echo "#### Analyzing: \`$file\`" >> validation-reports/hipaa-report.md
+
+              # Check for PHI endpoints without @Audited
+              PHI_METHODS=$(grep -n -E '@(Get|Post|Put|Delete)Mapping.*/(patient|fhir/Patient|observation)' "$file" || true)
+              if [ -n "$PHI_METHODS" ]; then
+                # Check if @Audited exists near these methods
+                while IFS= read -r line; do
+                  if [ -n "$line" ]; then
+                    LINE_NUM=$(echo "$line" | cut -d: -f1)
+                    CONTEXT_START=$((LINE_NUM - 5))
+                    CONTEXT_END=$((LINE_NUM + 2))
+
+                    AUDITED_CHECK=$(sed -n "${CONTEXT_START},${CONTEXT_END}p" "$file" | grep -c "@Audited" || echo "0")
+
+                    if [ "$AUDITED_CHECK" -eq 0 ]; then
+                      echo "- ⚠️ **WARNING**: Line $LINE_NUM - PHI endpoint may be missing @Audited annotation" >> validation-reports/hipaa-report.md
+                      VIOLATIONS=$((VIOLATIONS + 1))
+                    else
+                      echo "- ✅ **PASS**: Line $LINE_NUM - @Audited annotation present" >> validation-reports/hipaa-report.md
+                    fi
+                  fi
+                done <<< "$PHI_METHODS"
+              fi
+
+              # Check for Cache-Control headers in responses
+              RESPONSE_ENTITIES=$(grep -n "ResponseEntity" "$file" || true)
+              if [ -n "$RESPONSE_ENTITIES" ]; then
+                CACHE_CONTROL_COUNT=$(grep -c 'header.*Cache-Control' "$file" || echo "0")
+                if [ "$CACHE_CONTROL_COUNT" -eq 0 ]; then
+                  echo "- ⚠️ **WARNING**: No explicit Cache-Control headers found (verify gateway configuration)" >> validation-reports/hipaa-report.md
+                  VIOLATIONS=$((VIOLATIONS + 1))
+                fi
+              fi
+
+              echo "" >> validation-reports/hipaa-report.md
+            fi
+          done <<< "$CONTROLLER_FILES"
+
+          echo "### Summary" >> validation-reports/hipaa-report.md
+          echo "" >> validation-reports/hipaa-report.md
+          echo "- **Total Warnings:** $VIOLATIONS" >> validation-reports/hipaa-report.md
+
+          if [ $VIOLATIONS -gt 0 ]; then
+            echo "- **Status:** ⚠️ REVIEW REQUIRED" >> validation-reports/hipaa-report.md
+            echo "violations=$VIOLATIONS" >> "$GITHUB_ENV"
+          else
+            echo "- **Status:** ✅ COMPLIANT" >> validation-reports/hipaa-report.md
+            echo "violations=0" >> "$GITHUB_ENV"
+          fi
+
+      - name: CQL Measure Validation (Simulated)
+        if: steps.changed-files.outputs.cql_count != '0'
+        env:
+          CQL_FILES: ${{ steps.changed-files.outputs.cql_files }}
+          CQL_COUNT: ${{ steps.changed-files.outputs.cql_count }}
+        run: |
+          echo "## CQL Measure Validation Report" > validation-reports/cql-report.md
+          echo "" >> validation-reports/cql-report.md
+          echo "**Files Analyzed:** $CQL_COUNT" >> validation-reports/cql-report.md
+          echo "" >> validation-reports/cql-report.md
+
+          CQL_VIOLATIONS=0
+
+          while IFS= read -r file; do
+            if [ -n "$file" ] && [ -f "$file" ]; then
+              echo "### Analyzing: \`$file\`" >> validation-reports/cql-report.md
+              echo "" >> validation-reports/cql-report.md
+
+              # Check for required library structure
+              if ! grep -q "^library " "$file"; then
+                echo "- ❌ **CRITICAL**: Missing library declaration" >> validation-reports/cql-report.md
+                CQL_VIOLATIONS=$((CQL_VIOLATIONS + 1))
+              else
+                echo "- ✅ Library declaration present" >> validation-reports/cql-report.md
+              fi
+
+              # Check for FHIR version
+              if ! grep -q "using FHIR version" "$file"; then
+                echo "- ❌ **CRITICAL**: Missing FHIR version declaration" >> validation-reports/cql-report.md
+                CQL_VIOLATIONS=$((CQL_VIOLATIONS + 1))
+              else
+                echo "- ✅ FHIR version declared" >> validation-reports/cql-report.md
+              fi
+
+              # Check for required definitions (proportion measure)
+              HAS_INITIAL=$(grep -c '^define "Initial Population"' "$file" || echo "0")
+              HAS_DENOMINATOR=$(grep -c '^define "Denominator"' "$file" || echo "0")
+              HAS_NUMERATOR=$(grep -c '^define "Numerator"' "$file" || echo "0")
+
+              if [ "$HAS_INITIAL" -eq 0 ]; then
+                echo "- ⚠️ **WARNING**: No 'Initial Population' definition found" >> validation-reports/cql-report.md
+                CQL_VIOLATIONS=$((CQL_VIOLATIONS + 1))
+              fi
+
+              if [ "$HAS_DENOMINATOR" -eq 0 ]; then
+                echo "- ⚠️ **WARNING**: No 'Denominator' definition found" >> validation-reports/cql-report.md
+                CQL_VIOLATIONS=$((CQL_VIOLATIONS + 1))
+              fi
+
+              if [ "$HAS_NUMERATOR" -eq 0 ]; then
+                echo "- ❌ **CRITICAL**: Missing required 'Numerator' definition" >> validation-reports/cql-report.md
+                CQL_VIOLATIONS=$((CQL_VIOLATIONS + 1))
+              fi
+
+              echo "" >> validation-reports/cql-report.md
+            fi
+          done <<< "$CQL_FILES"
+
+          echo "### Summary" >> validation-reports/cql-report.md
+          echo "" >> validation-reports/cql-report.md
+          echo "- **Total Violations:** $CQL_VIOLATIONS" >> validation-reports/cql-report.md
+
+          if [ $CQL_VIOLATIONS -gt 0 ]; then
+            echo "- **Status:** ⚠️ REVIEW REQUIRED" >> validation-reports/cql-report.md
+            echo "cql_violations=$CQL_VIOLATIONS" >> "$GITHUB_ENV"
+          else
+            echo "- **Status:** ✅ COMPLIANT" >> validation-reports/cql-report.md
+            echo "cql_violations=0" >> "$GITHUB_ENV"
+          fi
+
+      - name: Generate Summary Report
+        if: always()
+        env:
+          CONTROLLER_COUNT: ${{ steps.changed-files.outputs.controller_count }}
+          FHIR_COUNT: ${{ steps.changed-files.outputs.fhir_count }}
+          CQL_COUNT: ${{ steps.changed-files.outputs.cql_count }}
+        run: |
+          {
+            echo "# HDIM Healthcare Compliance Validation Summary"
+            echo ""
+            echo "## Files Analyzed"
+            echo "- **Controllers (HIPAA):** $CONTROLLER_COUNT"
+            echo "- **FHIR Files:** $FHIR_COUNT"
+            echo "- **CQL Measures:** $CQL_COUNT"
+            echo ""
+            echo "## Validation Status"
+          } > validation-reports/summary.md
+
+          if [ -f validation-reports/hipaa-report.md ]; then
+            echo "### HIPAA Compliance" >> validation-reports/summary.md
+            grep "Status:" validation-reports/hipaa-report.md >> validation-reports/summary.md || echo "Status not found" >> validation-reports/summary.md
+            echo "" >> validation-reports/summary.md
+          fi
+
+          if [ -f validation-reports/cql-report.md ]; then
+            echo "### CQL Measure Quality" >> validation-reports/summary.md
+            grep "Status:" validation-reports/cql-report.md >> validation-reports/summary.md || echo "Status not found" >> validation-reports/summary.md
+            echo "" >> validation-reports/summary.md
+          fi
+
+          {
+            echo "## Next Steps"
+            echo ""
+            echo "For full agent-based validation, the HDIM accelerator plugin must be loaded in Claude Code."
+            echo "This workflow provides basic pattern matching as a pre-check."
+            echo ""
+            echo "**Detailed Reports:**"
+            echo "- See workflow artifacts for complete validation reports"
+          } >> validation-reports/summary.md
+
+      - name: Upload validation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-validation-reports
+          path: validation-reports/
+          retention-days: 30
+
+      - name: Comment on PR (if applicable)
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        env:
+          VIOLATIONS: ${{ env.violations }}
+          CQL_VIOLATIONS: ${{ env.cql_violations }}
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('validation-reports/summary.md', 'utf8');
+
+            let comment = `## 🏥 HDIM Healthcare Compliance Validation\n\n${summary}`;
+
+            // Add detailed reports if violations found
+            const violations = parseInt(process.env.VIOLATIONS || '0');
+            const cqlViolations = parseInt(process.env.CQL_VIOLATIONS || '0');
+
+            if (violations > 0 || cqlViolations > 0) {
+              comment += '\n\n⚠️ **Action Required**: Review validation reports in workflow artifacts.\n';
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Set workflow status
+        if: always()
+        env:
+          VIOLATIONS: ${{ env.violations }}
+          CQL_VIOLATIONS: ${{ env.cql_violations }}
+        run: |
+          TOTAL_VIOLATIONS=$((${VIOLATIONS:-0} + ${CQL_VIOLATIONS:-0}))
+
+          if [ $TOTAL_VIOLATIONS -gt 0 ]; then
+            echo "::warning::Found $TOTAL_VIOLATIONS potential compliance issues. Review validation reports."
+            # Don't fail the workflow, just warn
+            exit 0
+          else
+            echo "::notice::All compliance validation checks passed!"
+            exit 0
+          fi
+
+  agent-unit-tests:
+    name: Agent Implementation Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate agent markdown files
+        run: |
+          echo "Validating agent implementation files..."
+
+          AGENTS=(.claude/plugins/hdim-accelerator/agents/*.md)
+
+          for agent in "${AGENTS[@]}"; do
+            if [ -f "$agent" ]; then
+              echo "✅ Found: $agent"
+
+              # Basic YAML frontmatter validation
+              if grep -q "^---$" "$agent"; then
+                echo "  ✓ YAML frontmatter present"
+              else
+                echo "  ⚠️ No YAML frontmatter"
+              fi
+
+              # Check for required sections
+              if grep -q "## When to Use This Agent" "$agent"; then
+                echo "  ✓ Usage guidelines present"
+              fi
+
+              if grep -q "## Validation Steps" "$agent"; then
+                echo "  ✓ Validation steps documented"
+              fi
+            fi
+          done
+
+      - name: Validate skill markdown files
+        run: |
+          echo "Validating skill implementation files..."
+
+          SKILLS=(.claude/plugins/hdim-accelerator/skills/*.md)
+
+          for skill in "${SKILLS[@]}"; do
+            if [ -f "$skill" ]; then
+              echo "✅ Found: $skill"
+
+              # Check for code examples
+              CODE_BLOCKS=$(grep -c '```' "$skill" || echo "0")
+              echo "  ✓ Code examples: $((CODE_BLOCKS / 2))"
+            fi
+          done
+
+      - name: Test agent test samples
+        run: |
+          echo "Validating test samples exist..."
+
+          if [ -f test-samples/PatientTestController.java ]; then
+            echo "✅ HIPAA test sample exists"
+            VIOLATIONS=$(grep -c "VIOLATION" test-samples/PatientTestController.java || echo "0")
+            echo "  Intentional violations: $VIOLATIONS"
+          fi
+
+          if [ -f test-samples/BundleProcessingService.java ]; then
+            echo "✅ FHIR test sample exists"
+          fi
+
+          if [ -f test-samples/HEDIS-CDC-H-TEST.cql ]; then
+            echo "✅ CQL test sample exists"
+          fi
+
+  documentation-validation:
+    name: Documentation Completeness
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate plugin documentation
+        run: |
+          echo "## Documentation Validation" > doc-validation.md
+          echo "" >> doc-validation.md
+
+          # Check for required documentation files
+          DOCS=(
+            "docs/CLAUDE_CODE_PLUGINS.md"
+            "docs/PLUGIN_ACTIVATION_CHECKLIST.md"
+            "docs/PLUGIN_IMPLEMENTATION_COMPLETE.md"
+            "test-samples/AGENT_TEST_RESULTS.md"
+            "test-samples/REAL_WORLD_AGENT_VALIDATION.md"
+          )
+
+          MISSING=0
+          for doc in "${DOCS[@]}"; do
+            if [ -f "$doc" ]; then
+              LINES=$(wc -l < "$doc")
+              echo "- ✅ \`$doc\` ($LINES lines)" >> doc-validation.md
+            else
+              echo "- ❌ Missing: \`$doc\`" >> doc-validation.md
+              MISSING=$((MISSING + 1))
+            fi
+          done
+
+          echo "" >> doc-validation.md
+          if [ $MISSING -eq 0 ]; then
+            echo "**Status:** ✅ Complete" >> doc-validation.md
+          else
+            echo "**Status:** ⚠️ $MISSING missing" >> doc-validation.md
+          fi
+
+          cat doc-validation.md
+
+      - name: Validate CLAUDE.md integration
+        run: |
+          if grep -q "Claude Code Plugins" CLAUDE.md; then
+            echo "✅ CLAUDE.md includes plugin documentation"
+          else
+            echo "⚠️ CLAUDE.md missing plugin section"
+          fi
+
+  summary:
+    name: Validation Summary
+    runs-on: ubuntu-latest
+    needs: [agent-validation, agent-unit-tests, documentation-validation]
+    if: always()
+
+    steps:
+      - name: Generate summary
+        env:
+          AGENT_RESULT: ${{ needs.agent-validation.result }}
+          UNIT_RESULT: ${{ needs.agent-unit-tests.result }}
+          DOC_RESULT: ${{ needs.documentation-validation.result }}
+        run: |
+          {
+            echo "# HDIM Healthcare Compliance Validation Complete"
+            echo ""
+            echo "## Jobs Status"
+            echo "- Agent Validation: $AGENT_RESULT"
+            echo "- Agent Unit Tests: $UNIT_RESULT"
+            echo "- Documentation: $DOC_RESULT"
+            echo ""
+            echo "## Next Steps"
+            echo "Full agent-based validation requires Claude Code with HDIM accelerator plugin loaded."
+            echo "This CI/CD workflow provides automated pre-checks and pattern matching."
+          } >> "$GITHUB_STEP_SUMMARY"

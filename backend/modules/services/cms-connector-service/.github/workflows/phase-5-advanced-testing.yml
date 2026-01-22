@@ -37,7 +37,7 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'schedule'
     services:
       postgres:
-        image: postgres:15-alpine
+        image: postgres:16-alpine
         env:
           POSTGRES_DB: cms_development
           POSTGRES_USER: healthdata
@@ -105,7 +105,7 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'schedule'
     services:
       postgres:
-        image: postgres:15-alpine
+        image: postgres:16-alpine
         env:
           POSTGRES_DB: cms_development
           POSTGRES_USER: healthdata
@@ -163,7 +163,7 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'schedule'
     services:
       postgres:
-        image: postgres:15-alpine
+        image: postgres:16-alpine
         env:
           POSTGRES_DB: cms_development
           POSTGRES_USER: healthdata

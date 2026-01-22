@@ -38,6 +38,66 @@
 
 ---
 
+## 🤖 Claude Code Plugins
+
+**31 plugins installed** for enhanced HDIM development workflow.
+
+### Quick Commands
+
+```bash
+/commit                    # AI-generated commit messages
+/feature-dev               # Guided feature development
+/review-pr [PR_NUMBER]     # Comprehensive PR review
+/hookify                   # Create custom automation hooks
+/help                      # List all available commands
+```
+
+### Key Plugins for HDIM
+
+| Plugin | Purpose | Priority |
+|--------|---------|----------|
+| `jdtls-lsp` | Java IntelliSense (requires JDT.LS) | ⭐ Critical |
+| `security-guidance` | HIPAA compliance scanning | ⭐ Critical |
+| `commit-commands` | Enhanced git workflow | ⭐ Critical |
+| `feature-dev` | Guided feature development | ⭐ Critical |
+| `pr-review-toolkit` | Multi-agent PR review | ⭐ Critical |
+| `code-review` | Automated code review | High |
+| `typescript-lsp` | TypeScript support (Angular) | Medium |
+| `hookify` | Custom automation hooks | Medium |
+
+### Documentation
+
+- **[Complete Plugin Reference](./docs/CLAUDE_CODE_PLUGINS.md)** - All 31 plugins with usage examples
+- **[Activation Checklist](./docs/PLUGIN_ACTIVATION_CHECKLIST.md)** - Step-by-step setup guide
+- **[Installation Status](./docs/PLUGIN_ACTIVATION_STATUS.md)** - Current installation state
+
+### Setup Requirements
+
+**JDT.LS (Java Language Server):**
+```bash
+# Install for Java IntelliSense
+brew install jdtls  # macOS
+
+# Or use automated script for WSL2/Ubuntu
+./scripts/install-jdtls-wsl.sh
+```
+
+**Verify installation:**
+```bash
+which jdtls
+jdtls --version
+```
+
+### Recommended Hooks for HDIM
+
+Use `/hookify` to create custom automation:
+
+1. **Prevent direct schema changes** - Enforce Liquibase migrations
+2. **Auto-validate entity-migrations** - Run validation before Docker builds
+3. **HIPAA compliance check** - Scan for PHI in logs/cache configurations
+
+---
+
 ## Tech Stack
 
 ### Backend
@@ -596,11 +656,13 @@ Before submitting code, verify:
 - ✅ Entity-migration validation fixed: All 29+ services now properly validate entities against actual Liquibase migrations (not Hibernate-generated schemas)
 - ✅ Shift-left validation: Pre-build scripts catch schema mismatches before Docker build, preventing runtime failures
 - ✅ CI/CD enforcement: GitHub Actions validates entity-migrations on all PRs modifying entities or migrations
+- ✅ Claude Code plugins installed: 31 plugins for enhanced development workflow (Java IntelliSense, HIPAA scanning, git automation, PR review)
+- ✅ HDIM Accelerator Plugin: 3 healthcare-specific agents (HIPAA Compliance, FHIR, CQL Measure Builder), 3 skills, 1 command - 100% agent coverage
 
 ---
 
-_Last Updated: January 19, 2026_
-_Version: 2.1_ - Architecture Documentation Expansion: Added Event Sourcing Architecture Guide and Gateway Architecture Guide with modularization details. Phase directories archived. Documentation references updated throughout CLAUDE.md.
+_Last Updated: January 21, 2026_
+_Version: 2.2_ - Claude Code Integration: Added 31 development plugins with comprehensive documentation. HDIM Accelerator Plugin enhanced with 3 healthcare-specific agents achieving 100% agent coverage, 100% skill coverage, and 80% healthcare domain coverage. Plugin documentation added to Quick Reference section.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

@@ -8,6 +8,9 @@
     <!-- PostgreSQL extensions must come FIRST -->
     <include file="db/changelog/0000-enable-extensions.xml"/>
 
+    <!-- Authentication tables (required by shared authentication module dependency) -->
+    <include file="db/changelog/0000-create-authentication-tables.xml"/>
+
     <include file="db/changelog/0001-create-quality-measure-results-table.xml"/>
     <include file="db/changelog/0002-create-saved-reports-table.xml"/>
     <include file="db/changelog/0003-create-custom-measures-table.xml"/>

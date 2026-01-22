@@ -23,16 +23,18 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @Configuration
 @EnableJpaRepositories(
     basePackages = {
-        "com.healthdata.caregap.persistence",      // NEW package structure
-        "com.healthdata.caregapevent.repository"   // OLD package structure (legacy)
+        "com.healthdata.caregapevent.repository",   // Event service repositories for controllers
+        "com.healthdata.caregap.persistence"        // Handler library repositories for ApplicationService
     }
 )
 @EntityScan(
     basePackages = {
-        "com.healthdata.caregap.projection",       // Handler library projections
-        "com.healthdata.caregapevent.projection"   // Event service projections (legacy)
+        "com.healthdata.caregapevent.projection",   // Event service projections for query model
+        "com.healthdata.caregap.projection",        // Handler library projections
+        "com.healthdata.authentication.domain"      // Authentication entities
     }
 )
 public class JpaConfig {
     // Configuration through annotations only
+    // Bean overriding enabled in application.yml to resolve name conflicts
 }

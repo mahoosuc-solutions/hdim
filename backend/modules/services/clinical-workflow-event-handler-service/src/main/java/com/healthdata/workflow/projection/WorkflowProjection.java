@@ -10,7 +10,7 @@ import java.time.LocalDate;
  * Built from workflow events via event sourcing.
  * Optimized for workflow queries (status, duration, assignments).
  */
-@Entity
+@Entity(name = "WorkflowHandlerProjection")
 @Table(name = "workflow_projections", indexes = {
     @Index(name = "idx_workflow_tenant_status", columnList = "tenant_id, status"),
     @Index(name = "idx_workflow_patient_tenant", columnList = "patient_id, tenant_id")

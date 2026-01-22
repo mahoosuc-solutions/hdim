@@ -4,7 +4,8 @@ import {
   Input,
   Output,
   EventEmitter,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  NO_ERRORS_SCHEMA
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -27,6 +28,7 @@ import { SliderConfig, DistributionSliderConfig, PeriodSelectorConfig } from '..
 @Component({
   selector: 'app-distribution-period-slider',
   standalone: true,
+  schemas: [NO_ERRORS_SCHEMA],
   imports: [CommonModule, FormsModule],
   templateUrl: './distribution-period-slider.component.html',
   styleUrl: './distribution-period-slider.component.scss',

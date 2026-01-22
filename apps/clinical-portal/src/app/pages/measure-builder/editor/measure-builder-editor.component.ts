@@ -5,6 +5,7 @@ import {
   HostListener,
   ViewChild,
   ElementRef,
+  NO_ERRORS_SCHEMA,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -41,6 +42,7 @@ import { MeasureConfigSliderComponent } from '../components/measure-config-slide
 @Component({
   selector: 'app-measure-builder-editor',
   standalone: true,
+  schemas: [NO_ERRORS_SCHEMA],
   imports: [
     CommonModule,
     FormsModule,

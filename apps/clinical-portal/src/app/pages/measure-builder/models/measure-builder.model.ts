@@ -10,6 +10,7 @@
 export interface PopulationBlock {
   id: string;
   label: string;
+  name?: string; // Alternate property for label
   description?: string;
   condition: string; // CQL condition
   color: string;
@@ -19,6 +20,11 @@ export interface PopulationBlock {
   };
   type: 'initial' | 'denominator' | 'numerator' | 'exclusion' | 'exception';
   metadata?: Record<string, any>;
+  // Visual rendering properties
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
 }
 
 /**
@@ -28,6 +34,9 @@ export interface BlockConnection {
   id: string;
   sourceBlockId: string;
   targetBlockId: string;
+  // Alternate property names for compatibility
+  fromBlockId?: string;
+  toBlockId?: string;
   label?: string;
   connectionType: 'inclusion' | 'exclusion' | 'exception';
 }
@@ -40,6 +49,7 @@ export interface ComponentWeight {
   componentName: string;
   weight: number; // 0-100
   color: string;
+  label?: string; // Alternate property for componentName
 }
 
 /**
@@ -53,6 +63,8 @@ export interface MeasureAlgorithm {
   exceptions?: PopulationBlock[];
   connections?: BlockConnection[];
   compositeWeights?: ComponentWeight[];
+  // Collection of all blocks for visual builder
+  blocks?: PopulationBlock[];
 }
 
 /**
@@ -68,12 +80,17 @@ export interface SliderPreset {
  * Range Slider Configuration
  */
 export interface RangeSliderConfig extends BaseSliderConfig {
-  type: 'range-dual' | 'range-single';
+  type: 'range-dual' | 'range-single' | 'range';
   min: number;
   max: number;
   step: number;
   value: number | number[];
   unit?: string;
+  // Alternate property names for compatibility
+  minValue?: number;
+  maxValue?: number;
+  currentMin?: number;
+  currentMax?: number;
 }
 
 /**
@@ -85,7 +102,14 @@ export interface ThresholdSliderConfig extends BaseSliderConfig {
   max: number;
   step: number;
   value: number;
+  currentValue?: number; // Alternate property for current value
   unit?: string;
+  // Alternate property names for min/max
+  minValue?: number;
+  maxValue?: number;
+  // Threshold properties
+  warningThreshold?: number;
+  criticalThreshold?: number;
   warning?: {
     value: number;
     message: string;
@@ -110,14 +134,20 @@ export interface DistributionSliderConfig extends BaseSliderConfig {
  * Period Selector Configuration
  */
 export interface PeriodSelectorConfig extends BaseSliderConfig {
-  type: 'period-selector';
+  type: 'period-selector' | 'period';
   options: PeriodOption[];
   value: number | string;
   allowCustom?: boolean;
   customMax?: number;
+  // Date range properties
+  startDate?: string | Date;
+  endDate?: string | Date;
+  periodType?: string;
+  presetPeriods?: PeriodOption[];
 }
 
 export interface PeriodOption {
+  id?: string;
   label: string;
   value: number | string;
   duration?: number; // in days
@@ -129,6 +159,7 @@ export interface PeriodOption {
 export interface BaseSliderConfig {
   id: string;
   label: string;
+  name?: string; // Alternate property for label
   type: string;
   category: SliderCategory;
   description?: string;

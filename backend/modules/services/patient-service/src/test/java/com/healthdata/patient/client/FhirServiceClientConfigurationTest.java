@@ -14,15 +14,15 @@ class FhirServiceClientConfigurationTest {
     private final FhirServiceClientConfiguration configuration = new FhirServiceClientConfiguration();
 
     @Test
-    @DisplayName("Should provide BASIC logging level")
-    void shouldProvideBasicLogging() {
-        assertThat(configuration.fhirServiceLoggerLevel()).isEqualTo(Logger.Level.BASIC);
+    @DisplayName("Should provide FULL logging level")
+    void shouldProvideFullLogging() {
+        assertThat(configuration.fhirServiceLoggerLevel()).isEqualTo(Logger.Level.FULL);
     }
 
     @Test
     @DisplayName("Should apply FHIR JSON headers")
     void shouldApplyFhirHeaders() {
-        RequestInterceptor interceptor = configuration.fhirAcceptHeaderInterceptor();
+        RequestInterceptor interceptor = configuration.fhirContentTypeInterceptor();
         RequestTemplate template = new RequestTemplate();
 
         interceptor.apply(template);

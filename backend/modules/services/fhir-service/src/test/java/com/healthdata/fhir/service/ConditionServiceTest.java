@@ -41,6 +41,7 @@ import com.healthdata.fhir.persistence.ConditionRepository;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Condition Service Tests")
@@ -61,12 +62,15 @@ class ConditionServiceTest {
     @Mock
     private Cache cache;
 
+    @Mock
+    private ObjectMapper objectMapper;
+
     private ConditionService service;
 
     @BeforeEach
     void setUp() {
         when(cacheManager.getCache("fhir-conditions")).thenReturn(cache);
-        service = new ConditionService(repository, kafkaTemplate, cacheManager);
+        service = new ConditionService(repository, kafkaTemplate, cacheManager, objectMapper);
     }
 
     @Test
@@ -293,7 +297,7 @@ class ConditionServiceTest {
     void shouldHandleMissingCache() {
         CacheManager noCacheManager = org.mockito.Mockito.mock(CacheManager.class);
         when(noCacheManager.getCache("fhir-conditions")).thenReturn(null);
-        ConditionService noCacheService = new ConditionService(repository, kafkaTemplate, noCacheManager);
+        ConditionService noCacheService = new ConditionService(repository, kafkaTemplate, noCacheManager, objectMapper);
 
         UUID conditionId = UUID.randomUUID();
         UUID patientId = UUID.randomUUID();

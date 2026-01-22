@@ -1,11 +1,11 @@
 package com.healthdata.audit.service;
 
-import com.healthdata.audit.entity.AuditEventEntity;
+import com.healthdata.audit.entity.shared.AuditEventEntity;
 import com.healthdata.audit.mapper.AuditEventMapper;
 import com.healthdata.audit.models.AuditEvent;
 import com.healthdata.audit.models.AuditAction;
 import com.healthdata.audit.models.AuditOutcome;
-import com.healthdata.audit.repository.AuditEventRepository;
+import com.healthdata.audit.repository.shared.AuditEventRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;

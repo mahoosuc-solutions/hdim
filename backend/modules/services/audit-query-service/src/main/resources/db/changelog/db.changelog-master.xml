@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Audit Query Service Database Migrations -->
+    <!-- Note: audit_events table is created by shared audit infrastructure -->
+
+    <include file="db/changelog/0001-create-audit-user-activity-daily.xml"/>
+    <include file="db/changelog/0002-create-audit-resource-access-daily.xml"/>
+
+</databaseChangeLog>

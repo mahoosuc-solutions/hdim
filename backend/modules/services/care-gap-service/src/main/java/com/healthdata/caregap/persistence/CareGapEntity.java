@@ -119,18 +119,18 @@ public class CareGapEntity {
     @Column(name = "cql_expression", length = 200)
     private String cqlExpression;
 
-    @Column(name = "cql_result", columnDefinition = "TEXT")
+    @Column(name = "cql_result", columnDefinition = "JSONB")
     private String cqlResult;
 
     // FHIR references
-    @Column(name = "related_encounter_id", length = 128)
-    private String relatedEncounterId;
+    @Column(name = "related_encounter_id")
+    private UUID relatedEncounterId;
 
-    @Column(name = "related_condition_id", length = 128)
-    private String relatedConditionId;
+    @Column(name = "related_condition_id")
+    private UUID relatedConditionId;
 
-    @Column(name = "related_procedure_id", length = 128)
-    private String relatedProcedureId;
+    @Column(name = "related_procedure_id")
+    private UUID relatedProcedureId;
 
     // Closure information
     @Column(name = "closed_by", length = 100)

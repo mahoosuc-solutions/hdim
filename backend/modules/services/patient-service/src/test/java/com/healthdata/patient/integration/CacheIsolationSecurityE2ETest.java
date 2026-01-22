@@ -17,11 +17,6 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
-
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Objects;
@@ -50,24 +45,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Client-side cache prevention
  *
  * CRITICAL: All PHI must have cache TTL <= 5 minutes per HIPAA compliance requirements.
+ *
+ * NOTE: This test uses the running Docker Redis container (localhost:6380) instead of
+ * Testcontainers to align with the Testcontainers fix strategy for improved test reliability.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles("test-redis")
-@Testcontainers
+@ActiveProfiles("test")
 @Transactional
 @DisplayName("HIPAA-Compliant Cache Isolation E2E Security Tests")
 class CacheIsolationSecurityE2ETest {
 
-    @Container
-    static GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
-        .withExposedPorts(6379)
-        .withReuse(true);
-
     @DynamicPropertySource
     static void redisProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.data.redis.host", redis::getHost);
-        registry.add("spring.data.redis.port", redis::getFirstMappedPort);
+        registry.add("spring.data.redis.host", () -> "localhost");
+        registry.add("spring.data.redis.port", () -> 6380);
     }
 
     @Autowired

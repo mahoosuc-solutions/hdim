@@ -48,6 +48,7 @@ include(
     "modules:services:consent-service",
     "modules:services:event-processing-service",
     "modules:services:event-router-service",
+    "modules:services:event-store-service",
     "modules:services:patient-service",
     "modules:services:patient-event-service",
     "modules:services:quality-measure-service",

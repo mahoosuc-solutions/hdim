@@ -1120,6 +1120,56 @@ services:
     networks:
       - healthdata-network
 
+  # Port 8090 - Event Store Service (Immutable Event Log)
+  event-store-service:
+    container_name: healthdata-event-store-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/event-store-service/Dockerfile
+    profiles: ["core", "demo", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/event_store_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SERVER_PORT: 8090
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_LIQUIBASE_ENABLED: "true"
+      # Gateway Trust Authentication
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+      # OpenTelemetry - distributed tracing
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: event-store-service
+      # Force IPv4 for OTLP connections
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      # Event Store Configuration
+      EVENTSTORE_SNAPSHOT_FREQUENCY: "100"
+      EVENTSTORE_SNAPSHOT_AUTO_CREATE: "true"
+      EVENTSTORE_PROCESSING_MAX_LAG_SECONDS: "300"
+      EVENTSTORE_PROCESSING_HEALTH_CHECK_ENABLED: "true"
+      # Performance tuning - optimized for high write throughput
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "20"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "5"
+      SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: "30000"
+    ports:
+      - "8090:8090"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8090/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
   # Port 8099 - CDR Processor Service
   cdr-processor-service:
     container_name: healthdata-cdr-processor-service

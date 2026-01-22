@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0030-drop-legacy-denominator-column" author="platform-fix">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="quality_measure_results" columnName="denominator_elligible"/>
+                <columnExists tableName="quality_measure_results" columnName="denominator_eligible"/>
+            </and>
+        </preConditions>
+
+        <dropColumn tableName="quality_measure_results" columnName="denominator_elligible"/>
+
+        <rollback>
+            <addColumn tableName="quality_measure_results">
+                <column name="denominator_elligible" type="INTEGER"/>
+            </addColumn>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

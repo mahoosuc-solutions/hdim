@@ -257,7 +257,7 @@ export class MeasureBuilderIntegrationService {
   updateSlider(sliderId: string, updates: Partial<SliderConfig>): void {
     const current = this.slidersSubject.value;
     const updated = current.map(s =>
-      s.id === sliderId ? { ...s, ...updates } : s
+      s.id === sliderId ? { ...s, ...updates } as SliderConfig : s
     );
     this.slidersSubject.next(updated);
     this.regenerateCQL();

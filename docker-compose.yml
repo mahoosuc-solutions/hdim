@@ -189,8 +189,8 @@ services:
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_LIQUIBASE_ENABLED: "true"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
       # Backend service URLs (include context-path + internal controller path)
       BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir
       BACKEND_SERVICES_CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
@@ -234,7 +234,7 @@ services:
       OTEL_SERVICE_NAME: gateway-service
       _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
     ports:
-      - "8087:8080"
+      - "8080:8080"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
       interval: 30s

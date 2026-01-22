@@ -23,13 +23,14 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @Configuration
 @EnableJpaRepositories(
     basePackages = {
-        "com.healthdata.caregapevent.persistence",
-        "com.healthdata.caregapevent.repository"   // Event service repositories ONLY
+        "com.healthdata.caregap.persistence",      // NEW package structure
+        "com.healthdata.caregapevent.repository"   // OLD package structure (legacy)
     }
 )
 @EntityScan(
     basePackages = {
-        "com.healthdata.caregapevent.projection"  // Event service projections ONLY
+        "com.healthdata.caregap.projection",       // Handler library projections
+        "com.healthdata.caregapevent.projection"   // Event service projections (legacy)
     }
 )
 public class JpaConfig {

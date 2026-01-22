@@ -59,7 +59,7 @@ export class GlobalErrorHandler implements ErrorHandler {
     logger.withContext('GlobalErrorHandler').error(errorMessage, {
       name: error.name,
       message: errorMessage,
-      stack: this.sanitizeStackTrace(error.stack),
+      stack: this.sanitizeStackTrace(error instanceof Error ? error.stack : undefined),
       url: errorContext.url,
       httpStatus: isHttpError ? error.status : undefined,
       errorType: isHttpError ? 'HTTP' : 'Application',
@@ -124,8 +124,8 @@ export class GlobalErrorHandler implements ErrorHandler {
       ? error.url || window.location.href
       : window.location.href;
 
-    // Try to extract component name from stack trace
-    const component = this.extractComponentFromStack(error.stack);
+    // Try to extract component name from stack trace (only available for Error instances)
+    const component = this.extractComponentFromStack(error instanceof Error ? error.stack : undefined);
 
     return { url, component };
   }

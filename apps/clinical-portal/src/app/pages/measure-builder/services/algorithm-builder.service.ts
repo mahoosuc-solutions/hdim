@@ -359,7 +359,7 @@ export class AlgorithmBuilderService {
     const newBlock = this.createPopulationBlock(
       sourceBlock.type,
       sourceBlock.label + ' (Copy)',
-      sourceBlock.description,
+      sourceBlock.description || '',
       sourceBlock.color,
       {
         x: sourceBlock.position.x + offsetX,
@@ -400,6 +400,7 @@ export class AlgorithmBuilderService {
       timestamp: new Date(),
       state: {
         name: '',
+        category: '',
         algorithm: JSON.parse(JSON.stringify(algorithm)),
         sliderConfigurations: [],
         currentCql: '',

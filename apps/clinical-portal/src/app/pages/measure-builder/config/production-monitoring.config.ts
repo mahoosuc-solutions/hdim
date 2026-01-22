@@ -252,14 +252,15 @@ export function performHealthCheck(): {
   const warnings: string[] = [];
   const recommendations: string[] = [];
 
-  // Check memory usage
-  if (performance.memory && performance.memory.usedJSHeapSize > 100 * 1024 * 1024) {
+  // Check memory usage (performance.memory is non-standard Chrome-only API)
+  const perfMemory = (performance as any).memory;
+  if (perfMemory && perfMemory.usedJSHeapSize > 100 * 1024 * 1024) {
     warnings.push('High memory usage detected');
     recommendations.push('Consider implementing memory pooling');
   }
 
   // Check for memory leaks
-  if (performance.memory && performance.memory.jsHeapSizeLimit < performance.memory.usedJSHeapSize * 2) {
+  if (perfMemory && perfMemory.jsHeapSizeLimit < perfMemory.usedJSHeapSize * 2) {
     warnings.push('Heap size nearing limit');
     recommendations.push('Check for subscription leaks in components');
   }

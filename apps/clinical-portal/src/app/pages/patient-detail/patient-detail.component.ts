@@ -81,7 +81,7 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
     'results': 3
   };
 
-  private logger = this.loggerService.withContext('PatientDetailComponent');
+  private logger!: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private route: ActivatedRoute,
@@ -91,7 +91,9 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
     private evaluationService: EvaluationService,
     private contextNavService: ContextNavigationService,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('PatientDetailComponent');
+  }
 
   ngOnInit(): void {
     this.patientId = this.route.snapshot.paramMap.get('id');

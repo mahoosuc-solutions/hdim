@@ -40,7 +40,12 @@ export class MeasureCqlGeneratorService {
     cqlLines.push('');
 
     for (const slider of sliderConfigs) {
-      cqlLines.push(slider.cqlGenerator(slider.value));
+      // Access value based on slider type
+      if (slider.type === 'range-dual' || slider.type === 'range-single' || slider.type === 'threshold' || slider.type === 'period-selector') {
+        cqlLines.push(slider.cqlGenerator(slider.value));
+      } else if (slider.type === 'distribution') {
+        cqlLines.push(slider.cqlGenerator(slider.components));
+      }
       cqlLines.push('');
     }
 

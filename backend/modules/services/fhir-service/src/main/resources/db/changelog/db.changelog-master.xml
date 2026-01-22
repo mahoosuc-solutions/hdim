@@ -34,5 +34,6 @@
     <include file="db/changelog/0024-create-appointments-table.xml"/>
     <include file="db/changelog/0025-create-tasks-table.xml"/>
     <include file="db/changelog/0026-alter-medication-requests-dosage-instruction.xml"/>
+    <include file="db/changelog/0028-add-oauth-columns-to-users.xml"/>
 
 </databaseChangeLog>

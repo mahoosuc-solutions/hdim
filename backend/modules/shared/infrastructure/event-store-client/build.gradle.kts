@@ -1,6 +1,7 @@
 plugins {
-    id("java")
-    id("io.spring.dependency-management")
+    `java-library`
+    alias(libs.plugins.spring.boot) apply false
+    alias(libs.plugins.spring.dependency.management)
 }
 
 group = "com.healthdata"
@@ -17,17 +18,17 @@ repositories {
 
 dependencyManagement {
     imports {
-        mavenBom(libs.spring.boot.dependencies.get().toString())
-        mavenBom(libs.spring.cloud.dependencies.get().toString())
+        mavenBom(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
     }
 }
 
 dependencies {
-    implementation(project(":modules:shared:domain:common"))
+    api(project(":modules:shared:domain:common"))
 
     // Spring Boot
-    implementation(libs.spring.boot.starter.web)
-    implementation(libs.spring.cloud.starter.openfeign)
+    api("org.springframework.boot:spring-boot-starter-web")
+    api("org.springframework.cloud:spring-cloud-starter-openfeign")
 
     // Jackson for JSON
     implementation(libs.jackson.databind)
@@ -38,10 +39,10 @@ dependencies {
     annotationProcessor(libs.lombok)
 
     // Logging
-    implementation(libs.slf4j.api)
+    implementation("org.slf4j:slf4j-api")
 
     // Testing
-    testImplementation(libs.spring.boot.starter.test)
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(libs.junit.jupiter)
 }
 

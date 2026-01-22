@@ -22,10 +22,12 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.kafka.core.KafkaTemplate;
+import io.micrometer.core.instrument.MeterRegistry;
 
 import com.healthdata.fhir.persistence.PatientEntity;
 import com.healthdata.fhir.persistence.PatientRepository;
 import com.healthdata.fhir.validation.PatientValidator;
+import com.healthdata.fhir.audit.FhirAuditIntegration;
 
 class PatientServiceTest {
 
@@ -48,13 +50,19 @@ class PatientServiceTest {
     @Mock
     private PatientValidator validator;
 
+    @Mock
+    private MeterRegistry meterRegistry;
+
+    @Mock
+    private FhirAuditIntegration fhirAuditIntegration;
+
     private PatientService patientService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         when(cacheManager.getCache("fhir-patients")).thenReturn(cache);
-        patientService = new PatientService(patientRepository, validator, kafkaTemplate, cacheManager);
+        patientService = new PatientService(patientRepository, validator, kafkaTemplate, cacheManager, meterRegistry, fhirAuditIntegration);
     }
 
     @Test
@@ -211,7 +219,7 @@ class PatientServiceTest {
     void shouldHandleMissingCache() {
         CacheManager noCacheManager = org.mockito.Mockito.mock(CacheManager.class);
         when(noCacheManager.getCache("fhir-patients")).thenReturn(null);
-        PatientService noCacheService = new PatientService(patientRepository, validator, kafkaTemplate, noCacheManager);
+        PatientService noCacheService = new PatientService(patientRepository, validator, kafkaTemplate, noCacheManager, meterRegistry, fhirAuditIntegration);
 
         PatientEntity entity = PatientEntity.builder()
                 .id(UUID.fromString(PATIENT_ID))

@@ -16,7 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -44,11 +43,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 2. Attempt cross-tenant access with various attack vectors
  * 3. Verify that only authorized tenant data is accessible
  * 4. Test edge cases: SQL injection, header manipulation, missing tenant context
+ *
+ * NOTE: This test uses the running Docker PostgreSQL container (localhost:5435/patient_db)
+ * instead of Testcontainers to align with the Testcontainers fix strategy for improved
+ * test reliability.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Testcontainers
 @Transactional
 @DisplayName("Multi-Tenant Database Isolation E2E Security Tests")
 class TenantIsolationSecurityE2ETest {

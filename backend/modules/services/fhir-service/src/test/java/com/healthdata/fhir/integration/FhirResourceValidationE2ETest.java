@@ -167,10 +167,11 @@ class FhirResourceValidationE2ETest {
                 .setDisplay("Diabetes mellitus type 2");
             condition.setCode(code);
 
-            condition.setClinicalStatus(new CodeableConcept()
-                .addCoding()
+            CodeableConcept clinicalStatus = new CodeableConcept();
+            clinicalStatus.addCoding()
                 .setSystem("http://terminology.hl7.org/CodeSystem/condition-clinical")
-                .setCode("active"));
+                .setCode("active");
+            condition.setClinicalStatus(clinicalStatus);
 
             String conditionJson = fhirContext.newJsonParser()
                 .encodeResourceToString(condition);
@@ -505,10 +506,11 @@ class FhirResourceValidationE2ETest {
                 .setDisplay("Diabetes mellitus type 2");
             condition.setCode(code);
 
-            condition.setClinicalStatus(new CodeableConcept()
-                .addCoding()
+            CodeableConcept clinicalStatus = new CodeableConcept();
+            clinicalStatus.addCoding()
                 .setSystem("http://terminology.hl7.org/CodeSystem/condition-clinical")
-                .setCode("active"));
+                .setCode("active");
+            condition.setClinicalStatus(clinicalStatus);
 
             String conditionJson = fhirContext.newJsonParser()
                 .encodeResourceToString(condition);

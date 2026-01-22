@@ -656,6 +656,8 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
+      event-store-service:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/care_gap_event_db
@@ -679,6 +681,9 @@ services:
       # Gateway Trust Authentication
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+      # Event Store Integration
+      EVENT_STORE_HOST: event-store-service
+      EVENT_STORE_PORT: 8090
     ports:
       - "8111:8111"
     healthcheck:
@@ -705,6 +710,8 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
+      event-store-service:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/quality_event_db
@@ -728,6 +735,9 @@ services:
       # Gateway Trust Authentication
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+      # Event Store Integration
+      EVENT_STORE_HOST: event-store-service
+      EVENT_STORE_PORT: 8090
     ports:
       - "8112:8112"
     healthcheck:
@@ -754,6 +764,8 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
+      event-store-service:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/clinical_workflow_event_db
@@ -777,6 +789,9 @@ services:
       # Gateway Trust Authentication
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+      # Event Store Integration
+      EVENT_STORE_HOST: event-store-service
+      EVENT_STORE_PORT: 8090
     ports:
       - "8113:8113"
     healthcheck:

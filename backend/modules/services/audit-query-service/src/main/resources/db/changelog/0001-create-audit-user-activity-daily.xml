@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0001-create-audit-user-activity-daily" author="hdim-system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="audit_user_activity_daily"/>
+            </not>
+        </preConditions>
+
+        <comment>
+            Create audit_user_activity_daily table for daily user activity projections.
+            Aggregates audit events by tenant, user, and day for fast dashboard queries.
+            Updated via Kafka consumer processing audit-events topic.
+        </comment>
+
+        <createTable tableName="audit_user_activity_daily">
+            <!-- Composite Primary Key -->
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="activity_date" type="date">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Metrics -->
+            <column name="total_events" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="phi_access_count" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="failed_events" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unique_resources" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey
+            tableName="audit_user_activity_daily"
+            columnNames="tenant_id,user_id,activity_date"
+            constraintName="pk_audit_user_activity_daily"/>
+
+        <!-- Indexes for fast queries -->
+        <createIndex
+            indexName="idx_user_activity_tenant_date"
+            tableName="audit_user_activity_daily">
+            <column name="tenant_id"/>
+            <column name="activity_date"/>
+        </createIndex>
+
+        <createIndex
+            indexName="idx_user_activity_user_date"
+            tableName="audit_user_activity_daily">
+            <column name="tenant_id"/>
+            <column name="user_id"/>
+            <column name="activity_date"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="audit_user_activity_daily"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

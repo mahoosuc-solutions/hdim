@@ -1,6 +1,6 @@
-package com.healthdata.audit.repository;
+package com.healthdata.audit.repository.shared;
 
-import com.healthdata.audit.entity.AuditEventEntity;
+import com.healthdata.audit.entity.shared.AuditEventEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

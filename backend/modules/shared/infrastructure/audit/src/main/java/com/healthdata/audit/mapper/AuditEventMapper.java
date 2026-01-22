@@ -3,7 +3,7 @@ package com.healthdata.audit.mapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.healthdata.audit.entity.AuditEventEntity;
+import com.healthdata.audit.entity.shared.AuditEventEntity;
 import com.healthdata.audit.models.AuditEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

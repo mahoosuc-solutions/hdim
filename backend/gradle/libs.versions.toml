@@ -50,6 +50,10 @@ commons-lang3 = "3.17.0"
 guava = "33.3.1-jre"
 hypersistence-utils = "3.9.0"
 
+# Export Libraries
+opencsv = "5.9"
+itext7 = "8.0.2"
+
 # Monitoring & Observability
 micrometer = "1.13.6"
 prometheus = "1.13.6"
@@ -164,6 +168,10 @@ mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.re
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 hypersistence-utils-hibernate-63 = { module = "io.hypersistence:hypersistence-utils-hibernate-63", version.ref = "hypersistence-utils" }
+
+# Export Libraries
+opencsv = { module = "com.opencsv:opencsv", version.ref = "opencsv" }
+itext7-core = { module = "com.itextpdf:itext7-core", version.ref = "itext7" }
 
 # Monitoring
 micrometer-core = { module = "io.micrometer:micrometer-core", version.ref = "micrometer" }

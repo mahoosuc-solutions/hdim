@@ -31,9 +31,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
     "com.healthdata.qualityevent.projection",
     "com.healthdata.authentication.domain"
 })
-@EnableJpaRepositories(
-    basePackages = "com.healthdata.qualityevent.repository"
-)
+@EnableJpaRepositories(basePackages = {
+    "com.healthdata.qualityevent.repository",
+    "com.healthdata.qualitymeasure.persistence"  // Application service repositories
+})
 @EnableFeignClients(basePackages = {"com.healthdata.qualityevent", "com.healthdata.eventstore.client"})
 @EnableTransactionManagement
 @EnableKafka

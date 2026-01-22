@@ -64,8 +64,9 @@ public interface CareGapProjectionRepository extends JpaRepository<CareGapProjec
 
     /**
      * Find care gaps due within N days
+     * Note: Using native query because JPQL doesn't support date arithmetic directly
      */
-    @Query("SELECT c FROM CareGapProjection c WHERE c.tenantId = :tenantId AND c.status = 'OPEN' AND c.dueDate BETWEEN CURRENT_DATE AND CURRENT_DATE + :days")
+    @Query(value = "SELECT * FROM care_gap_projections WHERE tenant_id = :tenantId AND status = 'OPEN' AND due_date BETWEEN CURRENT_DATE AND (CURRENT_DATE + CAST(:days AS INTEGER))", nativeQuery = true)
     List<CareGapProjection> findCareGapsDueWithinDays(@Param("tenantId") String tenantId, @Param("days") Integer days);
 
     /**

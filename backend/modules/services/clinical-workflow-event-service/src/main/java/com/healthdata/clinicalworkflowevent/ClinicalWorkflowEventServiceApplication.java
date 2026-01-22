@@ -3,6 +3,7 @@ package com.healthdata.clinicalworkflowevent;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -21,7 +22,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication(
     scanBasePackages = {
         "com.healthdata.clinicalworkflowevent",
-        "com.healthdata.shared"
+        "com.healthdata.workflow",
+        "com.healthdata.shared",
+        "com.healthdata.eventstore.client"
     }
 )
 @EntityScan(basePackages = {
@@ -31,6 +34,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableJpaRepositories(
     basePackages = "com.healthdata.clinicalworkflowevent.repository"
 )
+@EnableFeignClients(basePackages = {"com.healthdata.clinicalworkflowevent", "com.healthdata.eventstore.client"})
 @EnableTransactionManagement
 @EnableKafka
 public class ClinicalWorkflowEventServiceApplication {

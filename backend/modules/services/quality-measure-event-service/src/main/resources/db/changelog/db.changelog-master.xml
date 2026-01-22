@@ -9,5 +9,6 @@
     <include file="db/changelog/0000-create-authentication-tables.xml"/>
 
     <include file="db/changelog/0001-create-measure-evaluation-projections-table.xml"/>
+    <include file="db/changelog/0002-create-cohort-measure-rates-table.xml"/>
 
 </databaseChangeLog>

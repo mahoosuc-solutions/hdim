@@ -1,6 +1,10 @@
 package com.healthdata.qualityevent.projection;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -12,6 +16,10 @@ import java.time.LocalDate;
  */
 @Entity
 @Table(name = "measure_evaluations")
+@Data
+@Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class MeasureEvaluationProjection {
     @Id
     @Column(name = "id")
@@ -56,6 +64,10 @@ public class MeasureEvaluationProjection {
     @Column(name = "last_updated")
     private Instant lastUpdated;
 
+    /**
+     * Custom constructor for convenience
+     * Used by event handlers to create projections from events
+     */
     public MeasureEvaluationProjection(String patientId, String tenantId, String measureCode, String measureDescription) {
         this.patientId = patientId;
         this.tenantId = tenantId;
@@ -69,33 +81,11 @@ public class MeasureEvaluationProjection {
         this.evaluationDate = LocalDate.now();
     }
 
-    // Getters
-    public String getPatientId() { return patientId; }
-    public String getTenantId() { return tenantId; }
-    public String getMeasureCode() { return measureCode; }
-    public String getMeasureDescription() { return measureDescription; }
-    public float getScore() { return score; }
-    public String getStatus() { return status; }
-    public String getEvaluationReason() { return evaluationReason; }
-    public boolean isInNumerator() { return inNumerator; }
-    public boolean isInDenominator() { return inDenominator; }
-    public String getRiskLevel() { return riskLevel; }
-    public LocalDate getEvaluationDate() { return evaluationDate; }
-    public long getVersion() { return version; }
-    public Instant getLastUpdated() { return lastUpdated; }
+    // Getters, setters, and equals/hashCode provided by @Data
 
-    // Setters
-    public void setMeasureDescription(String measureDescription) { this.measureDescription = measureDescription; }
-    public void setScore(float score) { this.score = score; }
-    public void setStatus(String status) { this.status = status; }
-    public void setEvaluationReason(String evaluationReason) { this.evaluationReason = evaluationReason; }
-    public void setInNumerator(boolean inNumerator) { this.inNumerator = inNumerator; }
-    public void setInDenominator(boolean inDenominator) { this.inDenominator = inDenominator; }
-    public void setRiskLevel(String riskLevel) { this.riskLevel = riskLevel; }
-    public void setEvaluationDate(LocalDate evaluationDate) { this.evaluationDate = evaluationDate; }
-    public void setVersion(long version) { this.version = version; }
-    public void setLastUpdated(Instant lastUpdated) { this.lastUpdated = lastUpdated; }
-
+    /**
+     * Increment version and update timestamp
+     */
     public void incrementVersion() {
         this.version++;
         this.lastUpdated = Instant.now();

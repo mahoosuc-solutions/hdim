@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0003-add-assigned-at-column" author="hdim-platform-team">
+        <comment>Add missing assigned_at column to workflow_projections</comment>
+
+        <addColumn tableName="workflow_projections">
+            <column name="assigned_at" type="TIMESTAMP WITH TIME ZONE" remarks="When workflow was assigned">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="workflow_projections" columnName="assigned_at"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

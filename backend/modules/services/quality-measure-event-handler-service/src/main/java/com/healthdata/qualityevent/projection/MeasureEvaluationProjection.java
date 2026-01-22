@@ -14,7 +14,7 @@ import java.time.LocalDate;
  * Built from quality measure events via event sourcing.
  * Optimized for fast queries (measure lookup, status checks).
  */
-@Entity
+@Entity(name = "MeasureEvaluationHandlerProjection")
 @Table(name = "measure_evaluations")
 @Data
 @Builder(toBuilder = true)

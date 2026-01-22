@@ -8,7 +8,7 @@ import java.time.Instant;
  *
  * Tracks gap statistics across patient cohort for reporting and analytics.
  */
-@Entity
+@Entity(name = "PopulationHealthHandlerProjection")
 @Table(name = "population_health_projections")
 public class PopulationHealthProjection {
     @Id

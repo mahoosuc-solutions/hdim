@@ -11,6 +11,8 @@
     <!-- Clinical Workflow Event Service Liquibase Migrations -->
     <include file="db/changelog/0001-create-workflow-projections-table.xml"/>
     <include file="db/changelog/0002-fix-workflow-projections-schema.xml"/>
-    <include file="db/changelog/0003-add-assigned-at-column.xml"/>
+    <include file="db/changelog/0003-complete-workflow-projections-schema.xml"/>
+    <include file="db/changelog/0004-fix-due-date-column-type.xml"/>
+    <include file="db/changelog/0005-fix-uuid-column-types.xml"/>
 
 </databaseChangeLog>

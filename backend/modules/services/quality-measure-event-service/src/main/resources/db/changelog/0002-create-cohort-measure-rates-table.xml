@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0002-create-cohort-measure-rates-table" author="claude">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cohort_measure_rates"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="cohort_measure_rates">
+            <column name="id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="measure_code" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="denominator_count" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="numerator_count" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="compliance_rate" type="FLOAT" defaultValueNumeric="0.0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_cohort_measure_rates_tenant_measure" tableName="cohort_measure_rates">
+            <column name="tenant_id"/>
+            <column name="measure_code"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="cohort_measure_rates"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

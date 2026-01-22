@@ -30,6 +30,8 @@ include(
     "modules:shared:infrastructure:api-docs",
     "modules:shared:infrastructure:tracing",
     "modules:shared:infrastructure:metrics",
+    "modules:shared:infrastructure:event-sourcing",
+    "modules:shared:infrastructure:event-store-client",
     "modules:shared:test-infrastructure"
 )
 
@@ -81,7 +83,11 @@ include(
     "modules:services:notification-service",
     "modules:services:demo-seeding-service",
     "modules:services:cms-connector-service",
-    "modules:services:audit-query-service"
+    "modules:services:audit-query-service",
+    "modules:services:patient-event-handler-service",
+    "modules:services:care-gap-event-handler-service",
+    "modules:services:quality-measure-event-handler-service",
+    "modules:services:clinical-workflow-event-handler-service"
 )
 
 // Applications

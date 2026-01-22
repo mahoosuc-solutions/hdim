@@ -29,6 +29,11 @@ spring:
   cache:
     type: none
 
+# Event Store Service Configuration
+event-store:
+  service:
+    url: http://${EVENT_STORE_HOST:localhost}:${EVENT_STORE_PORT:8090}
+
 # HealthData Database Configuration
 healthdata:
   database:

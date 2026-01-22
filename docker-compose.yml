@@ -234,7 +234,7 @@ services:
       OTEL_SERVICE_NAME: gateway-service
       _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
     ports:
-      - "8080:8080"
+      - "18080:8080"  # Use 18080 on host to avoid conflicts
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
       interval: 30s

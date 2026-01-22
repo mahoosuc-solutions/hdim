@@ -6,7 +6,8 @@ import {
   ElementRef,
   AfterViewInit,
   ChangeDetectorRef,
-  HostListener
+  HostListener,
+  Input
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject } from 'rxjs';
@@ -39,7 +40,7 @@ import { MeasureAlgorithm, PopulationBlock } from '../../models/measure-builder.
 export class VisualAlgorithmBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('svgCanvas') svgCanvas?: ElementRef<SVGSVGElement>;
 
-  algorithm: MeasureAlgorithm | null = null;
+  @Input() algorithm: MeasureAlgorithm | null = null;
   hoveredBlockId: string | null = null;
   selectedBlockId: string | null = null;
 
@@ -93,7 +94,7 @@ export class VisualAlgorithmBuilderComponent implements OnInit, AfterViewInit, O
    */
   private loadAlgorithm(): void {
     this.algorithmService
-      .getAlgorithm()
+      .algorithm$
       .pipe(takeUntil(this.destroy$))
       .subscribe(algorithm => {
         this.algorithm = algorithm;
@@ -240,13 +241,13 @@ export class VisualAlgorithmBuilderComponent implements OnInit, AfterViewInit, O
     tooltipBg.setAttribute('fill', '#333');
     tooltipBg.setAttribute('stroke', '#999');
     tooltipBg.setAttribute('rx', '4');
-    tooltipBg.setAttribute('x', block.width / 2 - 100);
-    tooltipBg.setAttribute('y', -(block.height + 10));
+    tooltipBg.setAttribute('x', String(block.width! / 2 - 100));
+    tooltipBg.setAttribute('y', String(-(block.height! + 10)));
     tooltip.appendChild(tooltipBg);
 
     const tooltipText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    tooltipText.setAttribute('x', block.width / 2);
-    tooltipText.setAttribute('y', -(block.height + 50));
+    tooltipText.setAttribute('x', String(block.width! / 2));
+    tooltipText.setAttribute('y', String(-(block.height! + 50)));
     tooltipText.setAttribute('text-anchor', 'middle');
     tooltipText.setAttribute('font-size', '11');
     tooltipText.setAttribute('fill', 'white');

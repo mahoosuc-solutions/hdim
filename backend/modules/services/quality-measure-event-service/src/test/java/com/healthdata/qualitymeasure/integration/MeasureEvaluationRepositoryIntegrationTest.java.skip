@@ -1,0 +1,331 @@
+package com.healthdata.qualitymeasure.integration;
+
+import com.healthdata.qualityevent.projection.MeasureEvaluationProjection;
+import com.healthdata.qualitymeasure.persistence.MeasureEvaluationRepository;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * In-memory database integration tests for MeasureEvaluationRepository
+ *
+ * Uses H2 with PostgreSQL compatibility mode
+ * No Liquibase migrations - schema auto-created by Hibernate
+ *
+ * ★ Insight ─────────────────────────────────────
+ * Integration tests verify JPA queries and multi-tenant isolation:
+ *
+ * 1. **@DataJpaTest** - Lightweight Spring context with just JPA/Hibernate
+ * 2. **H2 In-Memory** - Fast database startup (< 1 second)
+ * 3. **PostgreSQL Mode** - Emulates production database dialect
+ * 4. **Auto-Rollback** - Each test transaction rolls back (test isolation)
+ *
+ * These tests validate:
+ * - Custom @Query annotations work correctly
+ * - Multi-tenant filtering prevents data leakage
+ * - Entity mappings match database schema
+ * - JPQL syntax is valid
+ * ─────────────────────────────────────────────────
+ */
+@DataJpaTest
+@ActiveProfiles("test")
+class MeasureEvaluationRepositoryIntegrationTest {
+
+    @Autowired
+    private MeasureEvaluationRepository repository;
+
+    private static final String TENANT_1 = "tenant-1";
+    private static final String TENANT_2 = "tenant-2";
+    private static final String PATIENT_ID = "patient-123";
+    private static final String MEASURE_CODE = "CMS122";
+
+    // ==================== Basic CRUD Operations ====================
+
+    @Test
+    void shouldSaveAndRetrieveEvaluation() {
+        // Given
+        MeasureEvaluationProjection evaluation = new MeasureEvaluationProjection(
+            PATIENT_ID, TENANT_1, MEASURE_CODE, "Diabetes HbA1c test"
+        );
+        evaluation.setScore(85.5f);
+        evaluation.setStatus("MET");
+        evaluation.setRiskLevel("LOW");
+
+        // When
+        MeasureEvaluationProjection saved = repository.save(evaluation);
+
+        // Then
+        assertThat(saved).isNotNull();
+        assertThat(saved.getPatientId()).isEqualTo(PATIENT_ID);
+        assertThat(saved.getTenantId()).isEqualTo(TENANT_1);
+        assertThat(saved.getScore()).isEqualTo(85.5f);
+        assertThat(saved.getStatus()).isEqualTo("MET");
+    }
+
+    @Test
+    void shouldFindById() {
+        // Given
+        MeasureEvaluationProjection evaluation = new MeasureEvaluationProjection(
+            PATIENT_ID, TENANT_1, MEASURE_CODE, "Test measure"
+        );
+        MeasureEvaluationProjection saved = repository.save(evaluation);
+
+        // When
+        Optional<MeasureEvaluationProjection> retrieved = repository.findById(saved.getPatientId());
+
+        // Then
+        assertThat(retrieved).isPresent();
+        assertThat(retrieved.get().getPatientId()).isEqualTo(PATIENT_ID);
+    }
+
+    @Test
+    void shouldDeleteEvaluation() {
+        // Given
+        MeasureEvaluationProjection evaluation = new MeasureEvaluationProjection(
+            PATIENT_ID, TENANT_1, MEASURE_CODE, "Test measure"
+        );
+        MeasureEvaluationProjection saved = repository.save(evaluation);
+
+        // When
+        repository.deleteById(saved.getPatientId());
+
+        // Then
+        assertThat(repository.findById(saved.getPatientId())).isEmpty();
+    }
+
+    // ==================== Multi-Tenant Isolation Tests ====================
+
+    @Test
+    void findByPatientIdAndTenant_ShouldIsolateByTenant() {
+        // Given - save evaluation for tenant-1
+        MeasureEvaluationProjection eval1 = new MeasureEvaluationProjection(
+            PATIENT_ID, TENANT_1, MEASURE_CODE, "Tenant 1 measure"
+        );
+        eval1.setScore(85.0f);
+        repository.save(eval1);
+
+        // When - query with tenant-2
+        Optional<MeasureEvaluationProjection> result = repository.findByPatientIdAndTenant(PATIENT_ID, TENANT_2);
+
+        // Then - should not find tenant-1 data
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void findByPatientIdAndTenant_ShouldReturnCorrectTenantData() {
+        // Given - save evaluations for two tenants with same patient ID
+        MeasureEvaluationProjection eval1 = new MeasureEvaluationProjection(
+            PATIENT_ID, TENANT_1, MEASURE_CODE, "Tenant 1 measure"
+        );
+        eval1.setScore(85.0f);
+
+        MeasureEvaluationProjection eval2 = new MeasureEvaluationProjection(
+            PATIENT_ID, TENANT_2, "CMS123", "Tenant 2 measure"
+        );
+        eval2.setScore(70.0f);
+
+        repository.save(eval1);
+        repository.save(eval2);
+
+        // When
+        Optional<MeasureEvaluationProjection> result1 = repository.findByPatientIdAndTenant(PATIENT_ID, TENANT_1);
+        Optional<MeasureEvaluationProjection> result2 = repository.findByPatientIdAndTenant(PATIENT_ID, TENANT_2);
+
+        // Then
+        assertThat(result1).isPresent();
+        assertThat(result1.get().getMeasureCode()).isEqualTo(MEASURE_CODE);
+        assertThat(result1.get().getScore()).isEqualTo(85.0f);
+
+        assertThat(result2).isPresent();
+        assertThat(result2.get().getMeasureCode()).isEqualTo("CMS123");
+        assertThat(result2.get().getScore()).isEqualTo(70.0f);
+    }
+
+    @Test
+    void findByMeasureCodeAndTenant_ShouldIsolateByTenant() {
+        // Given - save evaluations for multiple tenants
+        MeasureEvaluationProjection eval1 = new MeasureEvaluationProjection(
+            "patient-1", TENANT_1, MEASURE_CODE, "Tenant 1 measure"
+        );
+        MeasureEvaluationProjection eval2 = new MeasureEvaluationProjection(
+            "patient-2", TENANT_1, MEASURE_CODE, "Tenant 1 measure"
+        );
+        MeasureEvaluationProjection eval3 = new MeasureEvaluationProjection(
+            "patient-3", TENANT_2, MEASURE_CODE, "Tenant 2 measure"
+        );
+
+        repository.save(eval1);
+        repository.save(eval2);
+        repository.save(eval3);
+
+        // When
+        List<MeasureEvaluationProjection> tenant1Results = repository.findByMeasureCodeAndTenant(MEASURE_CODE, TENANT_1);
+        List<MeasureEvaluationProjection> tenant2Results = repository.findByMeasureCodeAndTenant(MEASURE_CODE, TENANT_2);
+
+        // Then - tenant-1 should only see 2 evaluations
+        assertThat(tenant1Results).hasSize(2);
+        assertThat(tenant1Results).extracting(MeasureEvaluationProjection::getTenantId)
+            .containsOnly(TENANT_1);
+
+        // tenant-2 should only see 1 evaluation
+        assertThat(tenant2Results).hasSize(1);
+        assertThat(tenant2Results).extracting(MeasureEvaluationProjection::getTenantId)
+            .containsOnly(TENANT_2);
+    }
+
+    // ==================== Query Method Tests ====================
+
+    @Test
+    void findByMeasureCodeAndTenant_ShouldOrderByLastUpdated() {
+        // Given - save evaluations with different timestamps
+        MeasureEvaluationProjection eval1 = new MeasureEvaluationProjection(
+            "patient-1", TENANT_1, MEASURE_CODE, "First evaluation"
+        );
+        Thread.sleep(10);  // Ensure different timestamps
+
+        MeasureEvaluationProjection eval2 = new MeasureEvaluationProjection(
+            "patient-2", TENANT_1, MEASURE_CODE, "Second evaluation"
+        );
+
+        repository.save(eval1);
+        Thread.sleep(10);
+        repository.save(eval2);
+
+        // When
+        List<MeasureEvaluationProjection> results = repository.findByMeasureCodeAndTenant(MEASURE_CODE, TENANT_1);
+
+        // Then - should be ordered by lastUpdated DESC (newest first)
+        assertThat(results).hasSize(2);
+        assertThat(results.get(0).getPatientId()).isEqualTo("patient-2");  // newer
+        assertThat(results.get(1).getPatientId()).isEqualTo("patient-1");  // older
+    }
+
+    @Test
+    void countMetByMeasureCodeAndTenant_ShouldCountOnlyMetStatus() {
+        // Given
+        MeasureEvaluationProjection met1 = new MeasureEvaluationProjection(
+            "patient-1", TENANT_1, MEASURE_CODE, "Met measure"
+        );
+        met1.setStatus("MET");
+
+        MeasureEvaluationProjection met2 = new MeasureEvaluationProjection(
+            "patient-2", TENANT_1, MEASURE_CODE, "Met measure"
+        );
+        met2.setStatus("MET");
+
+        MeasureEvaluationProjection notMet = new MeasureEvaluationProjection(
+            "patient-3", TENANT_1, MEASURE_CODE, "Not met measure"
+        );
+        notMet.setStatus("NOT_MET");
+
+        MeasureEvaluationProjection pending = new MeasureEvaluationProjection(
+            "patient-4", TENANT_1, MEASURE_CODE, "Pending measure"
+        );
+        pending.setStatus("PENDING");
+
+        repository.save(met1);
+        repository.save(met2);
+        repository.save(notMet);
+        repository.save(pending);
+
+        // When
+        long count = repository.countMetByMeasureCodeAndTenant(MEASURE_CODE, TENANT_1);
+
+        // Then - should only count MET status
+        assertThat(count).isEqualTo(2);
+    }
+
+    @Test
+    void countMetByMeasureCodeAndTenant_ShouldIsolateByTenant() {
+        // Given
+        MeasureEvaluationProjection tenant1Met = new MeasureEvaluationProjection(
+            "patient-1", TENANT_1, MEASURE_CODE, "Tenant 1 met"
+        );
+        tenant1Met.setStatus("MET");
+
+        MeasureEvaluationProjection tenant2Met = new MeasureEvaluationProjection(
+            "patient-2", TENANT_2, MEASURE_CODE, "Tenant 2 met"
+        );
+        tenant2Met.setStatus("MET");
+
+        repository.save(tenant1Met);
+        repository.save(tenant2Met);
+
+        // When
+        long tenant1Count = repository.countMetByMeasureCodeAndTenant(MEASURE_CODE, TENANT_1);
+        long tenant2Count = repository.countMetByMeasureCodeAndTenant(MEASURE_CODE, TENANT_2);
+
+        // Then
+        assertThat(tenant1Count).isEqualTo(1);
+        assertThat(tenant2Count).isEqualTo(1);
+    }
+
+    // ==================== Edge Cases ====================
+
+    @Test
+    void shouldHandleEmptyResults() {
+        // When
+        List<MeasureEvaluationProjection> results = repository.findByMeasureCodeAndTenant("NONEXISTENT", TENANT_1);
+
+        // Then
+        assertThat(results).isEmpty();
+    }
+
+    @Test
+    void shouldHandleZeroCount() {
+        // When
+        long count = repository.countMetByMeasureCodeAndTenant("NONEXISTENT", TENANT_1);
+
+        // Then
+        assertThat(count).isEqualTo(0);
+    }
+
+    @Test
+    void shouldFindByPatientIdAndTenant_WhenNotExists() {
+        // When
+        Optional<MeasureEvaluationProjection> result = repository.findByPatientIdAndTenant("nonexistent", TENANT_1);
+
+        // Then
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void shouldHandleNullScoreField() {
+        // Given - evaluation without score set
+        MeasureEvaluationProjection evaluation = new MeasureEvaluationProjection(
+            PATIENT_ID, TENANT_1, MEASURE_CODE, "Test"
+        );
+        // score defaults to 0.0f
+
+        // When
+        MeasureEvaluationProjection saved = repository.save(evaluation);
+
+        // Then
+        assertThat(saved.getScore()).isEqualTo(0.0f);
+    }
+
+    @Test
+    void shouldIncrementVersion() {
+        // Given
+        MeasureEvaluationProjection evaluation = new MeasureEvaluationProjection(
+            PATIENT_ID, TENANT_1, MEASURE_CODE, "Test"
+        );
+        MeasureEvaluationProjection saved = repository.save(evaluation);
+        long originalVersion = saved.getVersion();
+
+        // When
+        saved.incrementVersion();
+        repository.save(saved);
+
+        // Then
+        Optional<MeasureEvaluationProjection> retrieved = repository.findById(saved.getPatientId());
+        assertThat(retrieved).isPresent();
+        assertThat(retrieved.get().getVersion()).isEqualTo(originalVersion + 1);
+    }
+}

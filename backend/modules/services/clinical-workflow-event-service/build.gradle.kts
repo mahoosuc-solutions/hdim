@@ -4,6 +4,10 @@ plugins {
     java
 }
 
+springBoot {
+    mainClass.set("com.healthdata.clinicalworkflowevent.ClinicalWorkflowEventServiceApplication")
+}
+
 dependencyManagement {
     imports {
         mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
@@ -17,11 +21,16 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:persistence"))
     implementation(project(":modules:shared:infrastructure:database-config"))
     implementation(project(":modules:shared:infrastructure:messaging"))
+    implementation(project(":modules:shared:infrastructure:event-store-client"))
+
+    // Event handler library (Phase 4)
+    implementation(project(":modules:services:clinical-workflow-event-handler-service"))
     implementation(libs.bundles.spring.boot.web)
     implementation(libs.bundles.spring.boot.data)
     implementation(libs.spring.boot.starter.security)
     implementation(libs.spring.boot.starter.validation)
     implementation(libs.spring.kafka)
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
     implementation(libs.springdoc.openapi.starter.webmvc.ui)
     implementation(libs.bundles.monitoring)
     implementation(project(":modules:shared:infrastructure:tracing"))
@@ -43,6 +52,14 @@ dependencies {
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.testcontainers.kafka)
+
+    // Mockito for unit tests
+    testImplementation("org.mockito:mockito-core:5.8.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.8.0")
+
+    // H2 for in-memory integration tests
+    testImplementation("com.h2database:h2:2.2.224")
+
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
 }

@@ -223,7 +223,7 @@ services:
       BACKEND_SERVICES_DOCUMENTATION_URL: http://documentation-service:8091
       # Authentication enforcement - require JWT tokens for all protected endpoints
       # Set to "false" only for development/demo mode (allows unauthenticated access with demo user context)
-      GATEWAY_AUTH_ENFORCED: "true"
+      GATEWAY_AUTH_ENFORCED: "false"  # Development mode - use demo user context
       GATEWAY_AUTH_DEMO_USER_USER_ID: "00000000-0000-0000-0000-000000000001"
       GATEWAY_AUTH_DEMO_USER_USERNAME: "demo-user"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "acme-health"

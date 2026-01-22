@@ -27,8 +27,8 @@ import java.util.UUID;
 public class WorkflowProjection {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", length = 255)
+    private String id;  // Composite key: tenant_id + workflow_id
 
     // Tenant Isolation (CRITICAL)
     @Column(name = "tenant_id", nullable = false, length = 100)

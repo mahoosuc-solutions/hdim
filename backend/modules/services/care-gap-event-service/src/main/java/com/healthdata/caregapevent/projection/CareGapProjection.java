@@ -68,6 +68,9 @@ public class CareGapProjection {
     @Column(name = "closed_at")
     private Instant closedAt;
 
+    @Column(name = "closure_date")
+    private LocalDate closureDate;  // Date gap was closed (from database schema)
+
     @Column(name = "closed_reason", length = 255)
     private String closedReason;
 

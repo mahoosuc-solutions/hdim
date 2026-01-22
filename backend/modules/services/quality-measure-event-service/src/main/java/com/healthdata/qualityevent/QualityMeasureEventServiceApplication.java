@@ -22,19 +22,16 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication(
     scanBasePackages = {
         "com.healthdata.qualityevent",
-        "com.healthdata.qualitymeasure",
         "com.healthdata.shared",
         "com.healthdata.eventstore.client"
     }
 )
 @EntityScan(basePackages = {
-    "com.healthdata.qualityevent.projection",       // Event service projections
-    "com.healthdata.qualitymeasure.projection",     // Handler library projections
+    "com.healthdata.qualityevent.projection",       // Event service projections ONLY
     "com.healthdata.authentication.domain"
 })
 @EnableJpaRepositories(basePackages = {
-    "com.healthdata.qualityevent.repository",       // Event service repositories for controllers
-    "com.healthdata.qualitymeasure.persistence"     // Handler library repositories for ApplicationService
+    "com.healthdata.qualityevent.repository"        // Event service repositories ONLY
 })
 @EnableFeignClients(basePackages = {"com.healthdata.qualityevent", "com.healthdata.eventstore.client"})
 @EnableTransactionManagement

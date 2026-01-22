@@ -3,7 +3,7 @@ package com.healthdata.qualityevent.projection;
 import jakarta.persistence.*;
 import java.time.Instant;
 
-@Entity
+@Entity(name = "CohortMeasureRateHandlerProjection")
 @Table(name = "cohort_measure_rates")
 public class CohortMeasureRateProjection {
     @Id

@@ -21,8 +21,8 @@ import org.springframework.kafka.annotation.EnableKafka;
 @EnableKafka
 @EnableFeignClients(basePackages = {"com.healthdata.caregap", "com.healthdata.eventstore.client"})
 @ComponentScan(basePackages = {
-    "com.healthdata.caregap",
-    "com.healthdata.caregapevent",
+    "com.healthdata.caregapevent",       // Event service package
+    "com.healthdata.caregap.config",     // JPA configuration
     "com.healthdata.eventstore.client",
     "com.healthdata.shared"
 })

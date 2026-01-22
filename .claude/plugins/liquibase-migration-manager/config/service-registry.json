@@ -1,0 +1,180 @@
+{
+  "version": "0.2.0-phase2",
+  "last_updated": "2026-01-21",
+  "description": "Service registry for HDIM Liquibase Migration Manager - Phase 2 includes 5 core service agents",
+  "services": [
+    {
+      "name": "quality-measure-service",
+      "database": "quality_db",
+      "port": 8087,
+      "context_path": "/quality-measure",
+      "agent": "quality-measure-liquibase-agent",
+      "migration_path": "backend/modules/services/quality-measure-service/src/main/resources/db/changelog",
+      "entity_path": "backend/modules/services/quality-measure-service/src/main/java/com/healthdata/quality/persistence",
+      "changelog_master": "backend/modules/services/quality-measure-service/src/main/resources/db/changelog/db.changelog-master.xml",
+      "entities": [
+        "MeasureModificationAuditEntity",
+        "MeasureConfigProfileEntity",
+        "HealthScoresEntity",
+        "HealthScoreHistoryEntity",
+        "ChronicDiseaseMonitoringEntity",
+        "CareGapEntity",
+        "PatientMeasureAssignmentEntity"
+      ],
+      "migration_count": 44,
+      "last_migration": "0044-fix-measure-modification-audit-columns.xml",
+      "status": "active",
+      "current_issues": [
+        {
+          "type": "entity-migration-mismatch",
+          "description": "Column name mismatch: change_summary vs change_description",
+          "migration_fix": "0044-fix-measure-modification-audit-columns.xml",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "name": "patient-service",
+      "database": "patient_db",
+      "port": 8084,
+      "context_path": "/patient",
+      "agent": "patient-liquibase-agent",
+      "migration_path": "backend/modules/services/patient-service/src/main/resources/db/changelog",
+      "entity_path": "backend/modules/services/patient-service/src/main/java/com/healthdata/patient/persistence",
+      "changelog_master": "backend/modules/services/patient-service/src/main/resources/db/changelog/db.changelog-master.xml",
+      "entities": [
+        "Patient",
+        "Insurance",
+        "Address",
+        "ContactInfo",
+        "EmergencyContact",
+        "PatientConsent",
+        "PatientPreference"
+      ],
+      "migration_count": 0,
+      "last_migration": "",
+      "status": "active"
+    },
+    {
+      "name": "care-gap-service",
+      "database": "caregap_db",
+      "port": 8086,
+      "context_path": "/care-gap",
+      "agent": "care-gap-liquibase-agent",
+      "migration_path": "backend/modules/services/care-gap-service/src/main/resources/db/changelog",
+      "entity_path": "backend/modules/services/care-gap-service/src/main/java/com/healthdata/caregap/persistence",
+      "changelog_master": "backend/modules/services/care-gap-service/src/main/resources/db/changelog/db.changelog-master.xml",
+      "entities": [
+        "CareGap",
+        "GapClosure",
+        "RecommendedAction",
+        "GapPriority",
+        "PopulationGapAnalysis",
+        "GapRiskStratification"
+      ],
+      "migration_count": 0,
+      "last_migration": "",
+      "status": "active",
+      "current_issues": [
+        {
+          "type": "entity-migration-mismatch",
+          "description": "Missing 8 columns in care_gaps table",
+          "affected_columns": [
+            "gap_description",
+            "clinical_rationale",
+            "gap_severity",
+            "intervention_type",
+            "target_completion_date",
+            "assigned_to",
+            "notes",
+            "last_reviewed_at"
+          ],
+          "status": "identified"
+        }
+      ]
+    },
+    {
+      "name": "fhir-service",
+      "database": "fhir_db",
+      "port": 8085,
+      "context_path": "/fhir",
+      "agent": "fhir-liquibase-agent",
+      "migration_path": "backend/modules/services/fhir-service/src/main/resources/db/changelog",
+      "entity_path": "backend/modules/services/fhir-service/src/main/java/com/healthdata/fhir/persistence",
+      "changelog_master": "backend/modules/services/fhir-service/src/main/resources/db/changelog/db.changelog-master.xml",
+      "entities": [
+        "FhirResource",
+        "FhirBundle",
+        "FhirSearchIndex",
+        "FhirResourceVersion",
+        "FhirReference",
+        "FhirTerminology"
+      ],
+      "migration_count": 0,
+      "last_migration": "",
+      "status": "active"
+    },
+    {
+      "name": "cql-engine-service",
+      "database": "cql_db",
+      "port": 8081,
+      "context_path": "/cql-engine",
+      "agent": "cql-engine-liquibase-agent",
+      "migration_path": "backend/modules/services/cql-engine-service/src/main/resources/db/changelog",
+      "entity_path": "backend/modules/services/cql-engine-service/src/main/java/com/healthdata/cql/persistence",
+      "changelog_master": "backend/modules/services/cql-engine-service/src/main/resources/db/changelog/db.changelog-master.xml",
+      "entities": [
+        "CqlLibrary",
+        "CqlExpression",
+        "ValueSet",
+        "CodeSystem",
+        "ConceptMap",
+        "CqlEvaluationCache",
+        "MeasureParameter"
+      ],
+      "migration_count": 0,
+      "last_migration": "",
+      "status": "active"
+    }
+  ],
+  "future_services": [
+    "gateway-service",
+    "analytics-service",
+    "hcc-service",
+    "prior-auth-service",
+    "qrda-export-service",
+    "sdoh-service",
+    "consent-service",
+    "notification-service",
+    "audit-service",
+    "ehr-connector-service",
+    "care-plan-service",
+    "claims-service",
+    "cds-service",
+    "data-integration-service",
+    "document-management-service",
+    "interoperability-service",
+    "medication-management-service",
+    "patient-engagement-service",
+    "predictive-analytics-service",
+    "provider-directory-service",
+    "referral-management-service",
+    "scheduling-service",
+    "workflow-engine-service",
+    "sales-automation-service"
+  ],
+  "notes": {
+    "phase_2_complete": "Phase 2 expansion complete with 5 core service agents",
+    "active_agents": [
+      "quality-measure-liquibase-agent",
+      "patient-liquibase-agent",
+      "care-gap-liquibase-agent",
+      "fhir-liquibase-agent",
+      "cql-engine-liquibase-agent"
+    ],
+    "expansion_plan": "Additional service agents will be added in phases 3-10 following the implementation roadmap",
+    "total_services_planned": 29,
+    "active_service_count": 5,
+    "remaining_service_count": 24
+  }
+}

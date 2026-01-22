@@ -84,7 +84,76 @@ This directory contains historical completion reports, status updates, progress 
 
 ---
 
-### `misc/` (36 files)
+### `demo-work/` (8 files) - NEW in Phase 2
+**Focus**: Demo setup, stabilization, and Docker improvements
+
+**Key Documents**:
+- DEMO_STABILIZATION_PLAN.md - Demo stabilization strategy
+- DEMO_STABILIZATION_READY.md - Demo readiness assessment
+- DEMO_DOCKER_COMPOSE_IMPROVEMENTS.md - Docker optimizations for demos
+
+---
+
+### `testing-validation/` (6 files) - NEW in Phase 2
+**Focus**: Testing strategies, execution, and improvements
+
+**Key Documents**:
+- TESTING_COMPREHENSIVE_REVIEW.md - Comprehensive testing review
+- AI_AUDIT_INTEGRATION_TESTING.md - Audit integration testing
+- BUILD_DEPLOY_TEST_EXECUTION.md - Build/deploy/test workflow
+
+---
+
+### `execution-plans/` (5 files) - NEW in Phase 2
+**Focus**: Daily execution plans and schedules
+
+**Key Documents**:
+- DAILY_SCHEDULE_TRACKER.md - Daily progress tracking
+- DEPLOYMENT_PLAN_AND_MERGE_STRATEGY.md - Deployment strategies
+- OPTION_2_IMPLEMENTATION_PLAN.md - Implementation planning
+
+---
+
+### `diagnostics/` (6 files) - NEW in Phase 2
+**Focus**: System health, recovery, and crash diagnostics
+
+**Key Documents**:
+- DOCKER_CRASH_RECOVERY.md - Recovery procedures
+- CONTAINER_HEALTH_DIAGNOSIS.md - Health diagnostics
+- RECOVERY_INDEX.md - Recovery documentation index
+
+---
+
+### `measure-builder/` (4 files) - NEW in Phase 2
+**Focus**: Measure Builder feature work
+
+**Key Documents**:
+- MEASURE_BUILDER_SWARM_KICKOFF.md - TDD Swarm kickoff
+- MEASURE_BUILDER_DEPLOYMENT_READINESS.md - Deployment readiness
+
+---
+
+### `next-steps/` (7 files) - NEW in Phase 2
+**Focus**: Next steps, recommendations, and action items
+
+**Key Documents**:
+- COMPREHENSIVE_NEXT_STEPS.md - Comprehensive recommendations
+- CQRS_NEXT_STEPS.md - CQRS implementation next steps
+- URGENT_NEXT_STEPS.md - Urgent action items
+
+---
+
+### `misc-notes/` (8 files) - NEW in Phase 3
+**Focus**: Quick reference notes and architectural decisions
+
+**Key Documents**:
+- ARCHITECTURE_DECISION.md - Key architectural decisions
+- CIO_CISO_QUICK_REFERENCE.md - Executive quick reference
+- CQL_ENGINE_HEAVYWEIGHT_TEST_NOTE.md - Testing notes
+
+---
+
+### `misc/` (49 files)
 **Focus**: Miscellaneous completion reports, session summaries, and status updates
 
 **Key Categories**:

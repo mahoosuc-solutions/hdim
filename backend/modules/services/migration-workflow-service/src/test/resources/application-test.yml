@@ -14,10 +14,10 @@ spring:
     name: migration-workflow-service-test
 
   datasource:
-    url: jdbc:tc:postgresql:15-alpine:///testdb
-    username: sa
-    password:
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:postgresql://localhost:5435/migration_db
+    username: healthdata
+    password: healthdata_password
+    driver-class-name: org.postgresql.Driver
     routing:
       enabled: false
 
@@ -26,25 +26,29 @@ datasource:
   routing:
     enabled: false
   primary:
-    url: jdbc:tc:postgresql:15-alpine:///testdb
-    username: sa
-    password:
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:postgresql://localhost:5435/migration_db
+    username: healthdata
+    password: healthdata_password
+    driver-class-name: org.postgresql.Driver
 
 healthdata:
+  database:
+    enabled: true
+    hikari:
+      traffic-tier: LOW  # Minimal connections for tests
   persistence:
     primary:
-      url: jdbc:tc:postgresql:15-alpine:///testdb
-      username: sa
-      password:
-      driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+      url: jdbc:postgresql://localhost:5435/migration_db
+      username: healthdata
+      password: healthdata_password
+      driver-class-name: org.postgresql.Driver
       pool-name: test-pool
       maximum-pool-size: 5
       minimum-idle: 1
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -54,8 +58,7 @@ healthdata:
     show-sql: false
 
   liquibase:
-    enabled: false
-
+    enabled: true
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration

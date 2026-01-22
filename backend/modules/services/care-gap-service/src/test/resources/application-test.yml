@@ -12,16 +12,15 @@ spring:
 
   # Database Configuration - H2 in-memory for tests
   datasource:
-    url: jdbc:tc:postgresql:16-alpine:///testdb
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-    username: sa
-    password:
-
+    url: jdbc:postgresql://localhost:5435/caregap_db
+    driver-class-name: org.postgresql.Driver
+    username: healthdata
+    password: healthdata_password
   # JPA Configuration
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: create-drop  # Use create-drop for tests to avoid Liquibase timing issues
     properties:
       hibernate:
         format_sql: true
@@ -32,8 +31,7 @@ spring:
     show-sql: false
 
   liquibase:
-    enabled: false
-
+    enabled: false  # Disable Liquibase in tests - use JPA schema generation instead
   # Redis - Embedded for tests
   data:
     redis:

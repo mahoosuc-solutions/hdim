@@ -1,4 +1,16 @@
 {
+  "/auth": {
+    "target": "http://localhost:18080",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/auth": "/api/v1/auth"
+    },
+    "headers": {
+      "X-Tenant-ID": "acme-health"
+    }
+  },
   "/fhir": {
     "target": "http://localhost:8085",
     "secure": false,

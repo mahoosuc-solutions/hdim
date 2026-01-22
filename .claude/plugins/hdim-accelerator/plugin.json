@@ -1,7 +1,7 @@
 {
   "name": "hdim-accelerator",
   "version": "3.0.0",
-  "description": "Comprehensive HDIM development accelerator with 7 proactive technology agents (Spring Boot, Spring Security, Redis, PostgreSQL, Kafka, Docker, GCP), event-driven CQRS scaffolding, entity-migration synchronization, and HIPAA compliance automation",
+  "description": "Comprehensive HDIM development accelerator with 10 proactive agents (HIPAA Compliance, FHIR, CQL Measure Builder, Spring Boot, Spring Security, Redis, PostgreSQL, Kafka, Docker, GCP), event-driven CQRS scaffolding, entity-migration synchronization, and healthcare compliance automation",
   "author": "HDIM Platform Team",
   "repository": "hdim-master",
   "tags": [
@@ -77,10 +77,11 @@
       "cqrs-event-driven"
     ],
     "agents": [
+      "hipaa-compliance-agent",
+      "fhir-agent",
+      "cql-measure-builder",
       "migration-validator",
       "service-generator",
-      "fhir-assistant",
-      "cql-measure-builder",
       "security-auditor",
       "test-stabilizer",
       "spring-boot-agent",

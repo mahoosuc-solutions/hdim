@@ -1,7 +1,7 @@
 package com.healthdata.gateway.service;
 
-import com.healthdata.gateway.domain.RefreshToken;
-import com.healthdata.gateway.domain.RefreshTokenRepository;
+import com.healthdata.authentication.entity.RefreshToken;
+import com.healthdata.authentication.repository.RefreshTokenRepository;
 import com.healthdata.gateway.dto.TokenRefreshRequest;
 import com.healthdata.gateway.dto.TokenRefreshResponse;
 import com.healthdata.gateway.exception.*;
@@ -59,25 +59,19 @@ public class TokenRefreshService {
         String refreshToken = request.getRefreshToken();
 
         // Step 1: Validate token signature
-        if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
             log.warn("Invalid refresh token signature");
             throw new InvalidTokenException("Invalid or expired refresh token");
         }
 
         // Step 2: Extract claims from token
-        String tokenJti = jwtTokenProvider.getJtiFromToken(refreshToken);
-        if (tokenJti == null) {
-            log.warn("Missing JTI claim in refresh token");
-            throw new InvalidTokenException("Invalid refresh token: missing JTI");
-        }
-
         String userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
         String tokenTenantId = jwtTokenProvider.getTenantIdFromToken(refreshToken);
 
-        // Step 3: Lookup token in database
-        Optional<RefreshToken> storedToken = refreshTokenRepository.findByTokenJti(tokenJti);
+        // Step 3: Lookup token in database by token value
+        Optional<RefreshToken> storedToken = refreshTokenRepository.findByToken(refreshToken);
         if (storedToken.isEmpty()) {
-            log.warn("Refresh token not found in database: {}", tokenJti);
+            log.warn("Refresh token not found in database");
             throw new InvalidTokenException("Invalid or expired refresh token");
         }
 
@@ -85,18 +79,18 @@ public class TokenRefreshService {
 
         // Step 4: Check token not expired
         if (token.isExpired()) {
-            log.warn("Refresh token expired: {}", tokenJti);
+            log.warn("Refresh token expired for user: {}", userId);
             throw new ExpiredTokenException("Refresh token has expired");
         }
 
         // Step 5: Check token not revoked
         if (token.isRevoked()) {
-            log.warn("Refresh token revoked: {} (reason: {})", tokenJti, token.getRevocationReason());
+            log.warn("Refresh token revoked for user: {}", userId);
             throw new RevokedTokenException("Refresh token has been revoked");
         }
 
-        // Step 6: Verify tenant isolation
-        if (!tenantId.equals(tokenTenantId) || !tenantId.equals(token.getTenantId())) {
+        // Step 6: Verify tenant isolation (check tenant from JWT matches request)
+        if (!tenantId.equals(tokenTenantId)) {
             log.warn("Tenant mismatch for refresh token: expected {}, got {}", tenantId, tokenTenantId);
             throw new TenantAccessDeniedException("Token belongs to different tenant");
         }
@@ -109,11 +103,7 @@ public class TokenRefreshService {
             String newAccessToken = jwtTokenProvider.generateAccessToken(userId, tenantId);
             String newRefreshToken = jwtTokenProvider.generateRefreshToken(userId, tenantId);
 
-            // Step 9: Update last_used_at timestamp (sliding window)
-            token.setLastUsedAt(Instant.now());
-            refreshTokenRepository.save(token);
-
-            // Step 10: Audit log the refresh
+            // Step 9: Audit log the refresh
             auditLogService.logTokenRefresh(userId, tenantId, "SUCCESS");
 
             log.info("Token refreshed successfully for user: {} tenant: {}", userId, tenantId);

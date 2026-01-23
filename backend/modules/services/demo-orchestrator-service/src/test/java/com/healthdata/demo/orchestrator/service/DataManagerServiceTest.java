@@ -56,6 +56,8 @@ class DataManagerServiceTest {
         ReflectionTestUtils.setField(dataManagerService, "demoTenantId", DEMO_TENANT_ID);
         ReflectionTestUtils.setField(dataManagerService, "gatewayUrl",
             "http://localhost:" + mockWebServer.getPort());
+        ReflectionTestUtils.setField(dataManagerService, "demoSeedingServiceUrl",
+            "http://localhost:" + mockWebServer.getPort());
     }
 
     @AfterEach
@@ -223,5 +225,181 @@ class DataManagerServiceTest {
         assertThat(result.getSuccessfulOperations()).contains("Evaluations: 30");
         assertThat(result.getSuccessfulOperations()).contains("FHIR Resources: 40");
         assertThat(result.getSuccessfulOperations()).contains("Predictions: 10");
+    }
+
+    // ===== seedBaseData() tests =====
+
+    @Test
+    void seedBaseData_ShouldInitializeAndGeneratePatients_WhenServicesSucceed() throws InterruptedException {
+        // Given: Initialize and generate endpoints succeed
+        String initResponse = "{\"success\": true, \"message\": \"Demo platform initialized successfully\"}";
+        String generateResponse = "{"
+            + "\"success\": true,"
+            + "\"tenantId\": \"" + DEMO_TENANT_ID + "\","
+            + "\"patientCount\": 100,"
+            + "\"careGapCount\": 40,"
+            + "\"medicationCount\": 150,"
+            + "\"observationCount\": 200,"
+            + "\"encounterCount\": 120,"
+            + "\"procedureCount\": 80,"
+            + "\"generationTimeMs\": 2500"
+            + "}";
+
+        mockWebServer.enqueue(new MockResponse()
+            .setBody(initResponse)
+            .addHeader("Content-Type", "application/json"));
+        mockWebServer.enqueue(new MockResponse()
+            .setBody(generateResponse)
+            .addHeader("Content-Type", "application/json"));
+
+        // When
+        dataManagerService.seedBaseData();
+
+        // Then: Both endpoints called correctly
+        RecordedRequest initRequest = mockWebServer.takeRequest();
+        assertThat(initRequest.getPath()).isEqualTo("/demo/api/v1/demo/initialize");
+        assertThat(initRequest.getMethod()).isEqualTo("POST");
+        assertThat(initRequest.getHeader("X-Tenant-ID")).isEqualTo(DEMO_TENANT_ID);
+
+        RecordedRequest generateRequest = mockWebServer.takeRequest();
+        assertThat(generateRequest.getPath()).isEqualTo("/demo/api/v1/demo/patients/generate");
+        assertThat(generateRequest.getMethod()).isEqualTo("POST");
+        assertThat(generateRequest.getHeader("X-Tenant-ID")).isEqualTo(DEMO_TENANT_ID);
+        assertThat(generateRequest.getBody().readUtf8())
+            .contains("\"count\": 100")
+            .contains("\"tenantId\": \"" + DEMO_TENANT_ID + "\"")
+            .contains("\"careGapPercentage\": 40");
+
+        // Verify audit logging
+        verify(devopsAgent).publishLog(eq("INFO"), eq("Seeding base demo data..."), eq("SEED"));
+        verify(devopsAgent).publishLog(eq("INFO"), eq("Initializing demo scenarios..."), eq("SEED"));
+        verify(devopsAgent).publishLog(eq("INFO"), eq("Generating patient cohort..."), eq("SEED"));
+        verify(devopsAgent).publishLog(eq("INFO"),
+            contains("Base data seeding completed: 100 patients, 40 care gaps"), eq("SEED"));
+    }
+
+    @Test
+    void seedBaseData_ShouldContinue_WhenInitializationFails() throws InterruptedException {
+        // Given: Initialize fails but generate succeeds
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(500)
+            .setBody("Initialization failed"));
+        mockWebServer.enqueue(new MockResponse()
+            .setBody("{\"success\": true, \"patientCount\": 100, \"careGapCount\": 40,"
+                + "\"medicationCount\": 150, \"observationCount\": 200,"
+                + "\"encounterCount\": 120, \"procedureCount\": 80,"
+                + "\"generationTimeMs\": 2500, \"tenantId\": \"" + DEMO_TENANT_ID + "\"}")
+            .addHeader("Content-Type", "application/json"));
+
+        // When: Should continue despite initialization failure
+        dataManagerService.seedBaseData();
+
+        // Then: Both endpoints called
+        assertThat(mockWebServer.getRequestCount()).isEqualTo(2);
+
+        RecordedRequest initRequest = mockWebServer.takeRequest();
+        assertThat(initRequest.getPath()).isEqualTo("/demo/api/v1/demo/initialize");
+
+        RecordedRequest generateRequest = mockWebServer.takeRequest();
+        assertThat(generateRequest.getPath()).isEqualTo("/demo/api/v1/demo/patients/generate");
+
+        // Verify successful completion logged despite init failure
+        verify(devopsAgent).publishLog(eq("INFO"),
+            contains("Base data seeding completed: 100 patients"), eq("SEED"));
+    }
+
+    @Test
+    void seedBaseData_ShouldHandleGenerationFailure_Gracefully() throws InterruptedException {
+        // Given: Initialize succeeds, generate fails
+        mockWebServer.enqueue(new MockResponse()
+            .setBody("{\"success\": true, \"message\": \"Initialized\"}")
+            .addHeader("Content-Type", "application/json"));
+        mockWebServer.enqueue(new MockResponse()
+            .setBody("{\"success\": false, \"errorMessage\": \"Database connection failed\"}")
+            .addHeader("Content-Type", "application/json"));
+
+        // When
+        dataManagerService.seedBaseData();
+
+        // Then: Failure logged
+        verify(devopsAgent).publishLog(eq("ERROR"),
+            contains("Base data seeding failed: Database connection failed"), eq("SEED"));
+    }
+
+    @Test
+    void seedBaseData_ShouldHandleServiceUnavailable() {
+        // Given: Service completely unavailable (503 returns failure response)
+        mockWebServer.enqueue(new MockResponse().setResponseCode(503).setBody("Service Unavailable"));
+        mockWebServer.enqueue(new MockResponse().setResponseCode(503).setBody("Service Unavailable"));
+
+        // When
+        dataManagerService.seedBaseData();
+
+        // Then: Error logged (503 from WebClient throws exception, caught and logged as failure)
+        verify(devopsAgent).publishLog(eq("ERROR"),
+            contains("Base data seeding failed"), eq("SEED"));
+    }
+
+    @Test
+    void seedBaseData_ShouldIncludeAllCounts_InSuccessMessage() throws InterruptedException {
+        // Given: Full successful response
+        String generateResponse = "{"
+            + "\"success\": true,"
+            + "\"tenantId\": \"" + DEMO_TENANT_ID + "\","
+            + "\"patientCount\": 100,"
+            + "\"careGapCount\": 40,"
+            + "\"medicationCount\": 150,"
+            + "\"observationCount\": 200,"
+            + "\"encounterCount\": 120,"
+            + "\"procedureCount\": 80,"
+            + "\"generationTimeMs\": 2500"
+            + "}";
+
+        mockWebServer.enqueue(new MockResponse()
+            .setBody("{\"success\": true}")
+            .addHeader("Content-Type", "application/json"));
+        mockWebServer.enqueue(new MockResponse()
+            .setBody(generateResponse)
+            .addHeader("Content-Type", "application/json"));
+
+        // When
+        dataManagerService.seedBaseData();
+
+        // Then: Summary includes all resource counts
+        verify(devopsAgent).publishLog(eq("INFO"),
+            argThat(msg -> msg.contains("100 patients")
+                && msg.contains("40 care gaps")
+                && msg.contains("150 medications")
+                && msg.contains("200 observations")
+                && msg.contains("120 encounters")
+                && msg.contains("80 procedures")
+                && msg.contains("took 2500 ms")),
+            eq("SEED"));
+    }
+
+    @Test
+    void seedBaseData_ShouldUse100PatientsAnd40PercentCareGaps() throws InterruptedException {
+        // Given
+        mockWebServer.enqueue(new MockResponse()
+            .setBody("{\"success\": true}")
+            .addHeader("Content-Type", "application/json"));
+        mockWebServer.enqueue(new MockResponse()
+            .setBody("{\"success\": true, \"patientCount\": 100, \"careGapCount\": 40,"
+                + "\"medicationCount\": 0, \"observationCount\": 0,"
+                + "\"encounterCount\": 0, \"procedureCount\": 0,"
+                + "\"generationTimeMs\": 0, \"tenantId\": \"" + DEMO_TENANT_ID + "\"}")
+            .addHeader("Content-Type", "application/json"));
+
+        // When
+        dataManagerService.seedBaseData();
+
+        // Then: Verify request parameters
+        mockWebServer.takeRequest();  // Skip initialize request
+        RecordedRequest generateRequest = mockWebServer.takeRequest();
+        String requestBody = generateRequest.getBody().readUtf8();
+
+        assertThat(requestBody).contains("\"count\": 100");
+        assertThat(requestBody).contains("\"careGapPercentage\": 40");
+        assertThat(requestBody).contains("\"tenantId\": \"" + DEMO_TENANT_ID + "\"");
     }
 }

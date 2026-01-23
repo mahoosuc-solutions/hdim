@@ -12,5 +12,6 @@
     <include file="db/changelog/0004-extend-user-roles.xml"/>
     <include file="db/changelog/0005-create-tenants-table.xml"/>
     <include file="db/changelog/0006-seed-demo-tenant.xml"/>
+    <include file="db/changelog/0007-seed-demo-user.xml"/>
 
 </databaseChangeLog>

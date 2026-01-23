@@ -27,7 +27,9 @@ import { LoggerService } from '../services/logger.service';
   providedIn: 'root',
 })
 export class PermissionGuard implements CanActivate {
-  private logger = this.loggerService.withContext('PermissionGuard');
+  private get logger() {
+    return this.loggerService.withContext('PermissionGuard');
+  }
 
   constructor(
     private authService: AuthService,

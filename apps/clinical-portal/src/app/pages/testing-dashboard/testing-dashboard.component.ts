@@ -73,7 +73,9 @@ export class TestingDashboardComponent implements OnInit, OnDestroy {
   complianceConfig = COMPLIANCE_CONFIG;
 
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('TestingDashboardComponent');
+  private get logger() {
+    return this.loggerService.withContext('TestingDashboardComponent');
+  }
 
   constructor(
     private demoModeService: DemoModeService,

@@ -70,7 +70,9 @@ export class VisualAlgorithmBuilderComponent implements OnInit, AfterViewInit, O
   ]);
 
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('VisualAlgorithmBuilderComponent');
+  private get logger() {
+    return this.loggerService.withContext('VisualAlgorithmBuilderComponent');
+  }
 
   constructor(
     private algorithmService: AlgorithmBuilderService,

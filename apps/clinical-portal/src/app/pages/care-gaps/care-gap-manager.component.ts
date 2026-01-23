@@ -287,7 +287,9 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
   // Search debounce
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('CareGapManagerComponent');
+  private get logger() {
+    return this.loggerService.withContext('CareGapManagerComponent');
+  }
 
   constructor(
     private patientService: PatientService,

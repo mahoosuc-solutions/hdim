@@ -27,7 +27,9 @@ import { LoggerService } from '../../services/logger.service';
 export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
 
   // Contextual logger
-  private logger = this.loggerService.withContext('MpiAuditDashboardComponent');
+  private get logger() {
+    return this.loggerService.withContext('MpiAuditDashboardComponent');
+  }
 
   // MPI Audit Events
   mpiEvents: MPIAuditEvent[] = [];

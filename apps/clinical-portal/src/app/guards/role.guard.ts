@@ -27,7 +27,9 @@ import { LoggerService } from '../services/logger.service';
   providedIn: 'root',
 })
 export class RoleGuard implements CanActivate {
-  private logger = this.loggerService.withContext('RoleGuard');
+  private get logger() {
+    return this.loggerService.withContext('RoleGuard');
+  }
 
   constructor(
     private authService: AuthService,

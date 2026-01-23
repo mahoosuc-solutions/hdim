@@ -89,7 +89,9 @@ import { TrackInteraction } from '../../utils/ai-tracking.decorator';
 })
 export class ResultsComponent implements OnInit, AfterViewInit {
   private destroy$ = injectDestroy();
-  private logger = this.loggerService.withContext('ResultsComponent');
+  private get logger() {
+    return this.loggerService.withContext('ResultsComponent');
+  }
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;

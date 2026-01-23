@@ -132,7 +132,9 @@ export class DemoModeService {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   });
 
-  private logger = this.loggerService.withContext('DemoModeService');
+  private get logger() {
+    return this.loggerService.withContext('DemoModeService');
+  }
 
   constructor(
     private http: HttpClient,

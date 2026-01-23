@@ -13,6 +13,7 @@ import { BreadcrumbComponent } from './shared/components/breadcrumb/breadcrumb.c
 import { GlobalSearchService } from './shared/services/global-search.service';
 import { ThemeService } from './services/theme.service';
 import { AuthService } from './services/auth.service';
+import { LoggerService } from './services/logger.service';
 import { DemoControlBarComponent } from './demo-mode/components/demo-control-bar/demo-control-bar.component';
 import { DemoModeService } from './demo-mode/services/demo-mode.service';
 import { DemoStoryboardOverlayComponent } from './demo-mode/components/demo-storyboard-overlay/demo-storyboard-overlay.component';
@@ -87,12 +88,17 @@ export class App implements OnInit, OnDestroy {
     return baseItems;
   }
 
+  private get logger() {
+    return this.loggerService.withContext('App');
+  }
+
   constructor(
     private globalSearchService: GlobalSearchService,
     protected themeService: ThemeService,
     private authService: AuthService,
     protected router: Router,
-    private demoModeService: DemoModeService
+    private demoModeService: DemoModeService,
+    private loggerService: LoggerService
   ) {
     // React to demo mode changes to add/remove body class
     effect(() => {

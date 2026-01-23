@@ -72,7 +72,9 @@ import { EvaluationDataFlowService } from '../../services/evaluation-data-flow.s
 })
 export class EvaluationsComponent implements OnInit, AfterViewInit {
   private destroy$ = injectDestroy();
-  private logger = this.loggerService.withContext('EvaluationsComponent');
+  private get logger() {
+    return this.loggerService.withContext('EvaluationsComponent');
+  }
 
   private defaultPresetApplied = false;
 

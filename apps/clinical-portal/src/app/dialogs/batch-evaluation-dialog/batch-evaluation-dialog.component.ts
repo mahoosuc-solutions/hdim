@@ -406,7 +406,9 @@ export class BatchEvaluationDialogComponent implements OnInit, OnDestroy {
   results: QualityMeasureResult[] = [];
   errors: { patientId: string; measureId: string; error: string }[] = [];
 
-  private logger = this.loggerService.withContext('BatchEvaluationDialogComponent');
+  private get logger() {
+    return this.loggerService.withContext('BatchEvaluationDialogComponent');
+  }
 
   constructor(
     private dialogRef: MatDialogRef<BatchEvaluationDialogComponent>,

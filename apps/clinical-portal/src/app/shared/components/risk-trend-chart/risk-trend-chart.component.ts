@@ -449,7 +449,9 @@ export class RiskTrendChartComponent
   };
 
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('RiskTrendChartComponent');
+  private get logger() {
+    return this.loggerService.withContext('RiskTrendChartComponent');
+  }
 
   constructor(
     private patientHealthService: PatientHealthService,

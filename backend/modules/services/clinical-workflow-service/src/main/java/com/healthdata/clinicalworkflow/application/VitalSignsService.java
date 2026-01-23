@@ -60,6 +60,7 @@ public class VitalSignsService {
 
     private final VitalSignsRecordRepository vitalsRepository;
     private final com.healthdata.clinicalworkflow.domain.repository.RoomAssignmentRepository roomAssignmentRepository;
+    private final com.healthdata.clinicalworkflow.client.PatientServiceClient patientServiceClient;
 
     /**
      * Record vital signs (internal version with UUID patientId)
@@ -707,7 +708,7 @@ public class VitalSignsService {
         return VitalSignsResponse.builder()
                 .id(entity.getId())
                 .patientId(entity.getPatientId().toString())
-                .patientName(null) // TODO: Fetch from patient service
+                .patientName(resolvePatientName(entity.getPatientId(), entity.getTenantId()))
                 .encounterId(entity.getEncounterId())
                 .measuredAt(entity.getRecordedAt() != null ?
                         LocalDateTime.ofInstant(entity.getRecordedAt(), ZoneId.systemDefault()) : null)
@@ -748,7 +749,7 @@ public class VitalSignsService {
                 .alertId(entity.getId()) // Using vitals ID as alert ID
                 .vitalSignsRecordId(entity.getId())
                 .patientId(entity.getPatientId().toString())
-                .patientName(null) // TODO: Fetch from patient service
+                .patientName(resolvePatientName(entity.getPatientId(), entity.getTenantId()))
                 .roomNumber(resolveRoomNumber(entity.getPatientId(), entity.getTenantId()))
                 .alertType(determineAlertType(entity))
                 .severity(entity.getAlertStatus().toUpperCase())
@@ -876,6 +877,47 @@ public class VitalSignsService {
             // Circuit breaker: Log error but don't fail the alert
             // This ensures vital sign alerts are still delivered even if room lookup fails
             log.warn("Failed to resolve room number for patient {} in tenant {}: {}",
+                patientId, tenantId, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Resolve patient name from Patient Service
+     *
+     * Fetches patient demographic information from Patient Service to display
+     * human-readable names in vital sign alerts. Uses circuit breaker pattern
+     * for resilience - returns null if service unavailable.
+     *
+     * Patient names are cached with 5-minute TTL (HIPAA compliant for PHI).
+     *
+     * Critical for clinical workflows: Providers need to know which patient
+     * has abnormal vital signs to prioritize response.
+     *
+     * @param patientId the patient UUID
+     * @param tenantId the tenant ID for multi-tenant isolation
+     * @return formatted patient name (e.g., "Smith, John") or null if unavailable
+     */
+    private String resolvePatientName(UUID patientId, String tenantId) {
+        try {
+            log.debug("Resolving patient name for patient {} in tenant {}", patientId, tenantId);
+
+            com.healthdata.clinicalworkflow.client.dto.PatientDTO patient =
+                patientServiceClient.getPatient(patientId, tenantId);
+
+            if (patient != null) {
+                String formattedName = patient.getFormattedName();
+                log.debug("Resolved patient name '{}' for patient {}", formattedName, patientId);
+                return formattedName;
+            }
+
+            log.debug("Patient {} not found in Patient Service for tenant {}", patientId, tenantId);
+            return null;
+
+        } catch (Exception e) {
+            // Circuit breaker: Log error but don't fail the alert
+            // This ensures vital sign alerts are still delivered even if patient lookup fails
+            log.warn("Failed to resolve patient name for patient {} in tenant {}: {}",
                 patientId, tenantId, e.getMessage());
             return null;
         }

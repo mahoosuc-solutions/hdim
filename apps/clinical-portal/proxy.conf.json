@@ -1,4 +1,13 @@
 {
+  "/tenants": {
+    "target": "http://localhost:18080",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/tenants": "/api/v1/tenants"
+    }
+  },
   "/auth": {
     "target": "http://localhost:18080",
     "secure": false,

@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription, interval } from 'rxjs';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * QA Audit Dashboard
@@ -23,7 +24,10 @@ import { Subscription, interval } from 'rxjs';
   styleUrls: ['./qa-audit-dashboard.component.scss']
 })
 export class QaAuditDashboardComponent implements OnInit, OnDestroy {
-  
+
+  // Contextual logger
+  private logger = this.loggerService.withContext('QaAuditDashboardComponent');
+
   // QA Review Queues
   pendingReviewDecisions: AIDecisionForReview[] = [];
   flaggedDecisions: AIDecisionForReview[] = [];
@@ -60,7 +64,9 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
   // Trend data for charts
   confidenceTrends: ConfidenceTrendData[] = [];
   accuracyTrends: AccuracyTrendData[] = [];
-  
+
+  constructor(private loggerService: LoggerService) {}
+
   ngOnInit(): void {
     this.loadQAReviewQueue();
     this.loadQAMetrics();
@@ -86,7 +92,7 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
    */
   loadQAReviewQueue(): void {
     // TODO: Call backend API /api/v1/audit/ai/qa/review-queue
-    console.log('Loading QA review queue...');
+    this.logger.info('Loading QA review queue');
   }
   
   /**
@@ -94,7 +100,7 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
    */
   loadQAMetrics(): void {
     // TODO: Call backend API /api/v1/audit/ai/qa/metrics
-    console.log('Loading QA metrics...');
+    this.logger.info('Loading QA metrics');
   }
   
   /**
@@ -102,7 +108,7 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
    */
   loadTrendData(): void {
     // TODO: Call backend API /api/v1/audit/ai/qa/trends
-    console.log('Loading trend data...');
+    this.logger.info('Loading trend data');
   }
   
   /**
@@ -127,13 +133,13 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
    */
   approveDecision(): void {
     if (!this.currentReviewDecision) return;
-    
+
     // TODO: Call backend API POST /api/v1/audit/ai/qa/review/{id}/approve
-    console.log('Approving decision:', this.currentReviewDecision.eventId, 'Notes:', this.reviewNotes);
-    
+    this.logger.info('Approving decision', { eventId: this.currentReviewDecision.eventId, notes: this.reviewNotes });
+
     this.qaMetrics.approvedDecisions++;
     this.qaMetrics.totalReviewed++;
-    
+
     this.removeFromQueue(this.currentReviewDecision.eventId);
     this.currentReviewDecision = null;
     this.reviewNotes = '';
@@ -144,13 +150,13 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
    */
   rejectDecision(): void {
     if (!this.currentReviewDecision) return;
-    
+
     // TODO: Call backend API POST /api/v1/audit/ai/qa/review/{id}/reject
-    console.log('Rejecting decision:', this.currentReviewDecision.eventId, 'Notes:', this.reviewNotes);
-    
+    this.logger.info('Rejecting decision', { eventId: this.currentReviewDecision.eventId, notes: this.reviewNotes });
+
     this.qaMetrics.rejectedDecisions++;
     this.qaMetrics.totalReviewed++;
-    
+
     this.removeFromQueue(this.currentReviewDecision.eventId);
     this.currentReviewDecision = null;
     this.reviewNotes = '';
@@ -161,13 +167,13 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
    */
   flagForEscalation(): void {
     if (!this.currentReviewDecision) return;
-    
+
     // TODO: Call backend API POST /api/v1/audit/ai/qa/review/{id}/flag
-    console.log('Flagging decision for escalation:', this.currentReviewDecision.eventId, 'Notes:', this.reviewNotes);
-    
+    this.logger.info('Flagging decision for escalation', { eventId: this.currentReviewDecision.eventId, notes: this.reviewNotes });
+
     this.qaMetrics.flaggedForEscalation++;
     this.flaggedDecisions.push(this.currentReviewDecision);
-    
+
     this.removeFromQueue(this.currentReviewDecision.eventId);
     this.currentReviewDecision = null;
     this.reviewNotes = '';
@@ -178,8 +184,8 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
    */
   markFalsePositive(decision: AIDecisionForReview): void {
     // TODO: Call backend API POST /api/v1/audit/ai/qa/review/{id}/false-positive
-    console.log('Marking as false positive:', decision.eventId);
-    
+    this.logger.info('Marking as false positive', decision.eventId);
+
     decision.qaReviewStatus = 'false-positive';
     this.removeFromQueue(decision.eventId);
   }
@@ -189,8 +195,8 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
    */
   markFalseNegative(decision: AIDecisionForReview): void {
     // TODO: Call backend API POST /api/v1/audit/ai/qa/review/{id}/false-negative
-    console.log('Marking as false negative:', decision.eventId);
-    
+    this.logger.info('Marking as false negative', decision.eventId);
+
     decision.qaReviewStatus = 'false-negative';
     this.removeFromQueue(decision.eventId);
   }
@@ -215,7 +221,7 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
    */
   applyFilters(): void {
     // TODO: Call backend with filter parameters
-    console.log('Applying filters:', {
+    this.logger.info('Applying filters', {
       agentType: this.filterAgentType,
       confidenceRange: this.filterConfidenceRange,
       dateRange: this.filterDateRange,
@@ -229,7 +235,7 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
    */
   exportQAReport(): void {
     // TODO: Call backend API GET /api/v1/audit/ai/qa/report/export
-    console.log('Exporting QA report...');
+    this.logger.info('Exporting QA report');
   }
   
   /**

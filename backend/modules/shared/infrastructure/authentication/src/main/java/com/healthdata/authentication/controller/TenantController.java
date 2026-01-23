@@ -3,6 +3,7 @@ package com.healthdata.authentication.controller;
 import com.healthdata.authentication.dto.TenantRegistrationRequest;
 import com.healthdata.authentication.dto.TenantRegistrationResponse;
 import com.healthdata.authentication.exception.TenantAlreadyExistsException;
+import com.healthdata.authentication.exception.UserAlreadyExistsException;
 import com.healthdata.authentication.service.TenantService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +65,9 @@ public class TenantController {
             log.warn("Tenant registration failed - tenant already exists: {}", request.getTenantId());
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Tenant already exists: " + request.getTenantId(), e);
+        } catch (UserAlreadyExistsException e) {
+            log.warn("Tenant registration failed - duplicate user: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
         } catch (Exception e) {
             log.error("Tenant registration failed for {}: {}",
                 request.getTenantId(), e.getMessage(), e);

@@ -23,7 +23,6 @@
             <column name="failed_login_attempts" valueNumeric="0"/>
             <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
             <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
-            <column name="notes" value="Demo user for development and testing"/>
         </insert>
 
         <!-- Assign ADMIN role to demo user -->

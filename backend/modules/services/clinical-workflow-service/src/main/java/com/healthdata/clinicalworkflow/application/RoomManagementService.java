@@ -6,6 +6,7 @@ import com.healthdata.clinicalworkflow.domain.model.RoomAssignmentEntity;
 import com.healthdata.clinicalworkflow.domain.repository.RoomAssignmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +44,7 @@ import java.util.UUID;
 public class RoomManagementService {
 
     private final RoomAssignmentRepository roomRepository;
+    private final CacheManager cacheManager;
 
     /**
      * Assign room to patient
@@ -192,6 +194,116 @@ public class RoomManagementService {
                 roomNumber, tenantId, cleaningMinutes);
 
         return updated;
+    }
+
+    /**
+     * Mark room as out of service
+     *
+     * Removes room from available pool due to maintenance, repair, or safety issues.
+     * Room cannot be assigned to patients until restored.
+     *
+     * @param roomNumber the room number
+     * @param tenantId the tenant ID
+     * @param reason optional reason for out-of-service status
+     * @return updated room assignment
+     */
+    @Transactional
+    public RoomAssignmentEntity markRoomOutOfService(
+            String roomNumber, String tenantId, String reason) {
+        log.debug("Marking room {} out of service in tenant {}: {}",
+                roomNumber, tenantId, reason);
+
+        RoomAssignmentEntity room = roomRepository.findRoomByNumberAndTenant(roomNumber, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Room not found: " + roomNumber));
+
+        // Ensure room is not currently occupied
+        if ("occupied".equalsIgnoreCase(room.getStatus())) {
+            throw new IllegalStateException(
+                    "Cannot mark occupied room as out of service: " + roomNumber);
+        }
+
+        room.setStatus("out-of-service");
+
+        // Store reason in notes field
+        if (reason != null && !reason.isBlank()) {
+            String existingNotes = room.getNotes() != null ? room.getNotes() : "";
+            String outOfServiceNote = String.format(
+                    "[OUT OF SERVICE] %s - %s",
+                    Instant.now(),
+                    reason
+            );
+            room.setNotes(existingNotes.isBlank() ? outOfServiceNote : existingNotes + "\n" + outOfServiceNote);
+        }
+
+        RoomAssignmentEntity updated = roomRepository.save(room);
+
+        log.info("Room {} marked out of service in tenant {}", roomNumber, tenantId);
+
+        // Evict cache to prevent out-of-service room from appearing in available list
+        evictAvailableRoomsCache(tenantId);
+
+        return updated;
+    }
+
+    /**
+     * Restore room from out-of-service status
+     *
+     * Returns room to available pool after maintenance/repair completed.
+     * Marks room as available and ready for patient assignment.
+     *
+     * @param roomNumber the room number
+     * @param tenantId the tenant ID
+     * @return updated room assignment
+     */
+    @Transactional
+    public RoomAssignmentEntity restoreRoomFromOutOfService(
+            String roomNumber, String tenantId) {
+        log.debug("Restoring room {} from out of service in tenant {}", roomNumber, tenantId);
+
+        RoomAssignmentEntity room = roomRepository.findRoomByNumberAndTenant(roomNumber, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Room not found: " + roomNumber));
+
+        if (!"out-of-service".equalsIgnoreCase(room.getStatus())) {
+            throw new IllegalStateException(
+                    "Room is not out of service: " + roomNumber);
+        }
+
+        room.setStatus("available");
+        room.setRoomReadyAt(Instant.now());
+
+        // Add restoration note
+        String existingNotes = room.getNotes() != null ? room.getNotes() : "";
+        String restorationNote = String.format(
+                "[RESTORED] %s - Room returned to service",
+                Instant.now()
+        );
+        room.setNotes(existingNotes.isBlank() ? restorationNote : existingNotes + "\n" + restorationNote);
+
+        RoomAssignmentEntity updated = roomRepository.save(room);
+
+        log.info("Room {} restored to service in tenant {}", roomNumber, tenantId);
+
+        // Evict cache to include restored room in available list
+        evictAvailableRoomsCache(tenantId);
+
+        return updated;
+    }
+
+    /**
+     * Evict available rooms cache for tenant
+     *
+     * @param tenantId the tenant ID
+     */
+    private void evictAvailableRoomsCache(String tenantId) {
+        try {
+            cacheManager.getCache("availableRooms").evict(tenantId);
+            log.debug("Evicted available rooms cache for tenant {}", tenantId);
+        } catch (Exception e) {
+            log.warn("Failed to evict available rooms cache for tenant {}: {}",
+                    tenantId, e.getMessage());
+        }
     }
 
     /**
@@ -405,8 +517,7 @@ public class RoomManagementService {
                 scheduleRoomCleaning(roomNumber, 15, tenantId);
                 break;
             case "OUT_OF_SERVICE":
-                // TODO: Add out-of-service status handling
-                room.setStatus("out-of-service");
+                markRoomOutOfService(roomNumber, tenantId, request.getReason());
                 break;
             default:
                 log.warn("Unknown room status: {}", request.getStatus());

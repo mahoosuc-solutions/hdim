@@ -16,7 +16,7 @@ import java.util.UUID;
  *
  * Tracks exam room allocation and status:
  * - Room assignment to patients/appointments
- * - Room status (available, occupied, cleaning, reserved)
+ * - Room status (available, occupied, cleaning, reserved, out-of-service)
  * - Timing (assigned, ready, discharged, cleaning completed)
  *
  * Enables room management dashboard for MAs
@@ -64,8 +64,8 @@ public class RoomAssignmentEntity {
     @Builder.Default
     private String roomType = "standard";
 
-    @Column(name = "status", nullable = false, length = 50, columnDefinition = "VARCHAR(50) COMMENT 'available, occupied, cleaning, reserved'")
-    private String status;  // available, occupied, cleaning, reserved
+    @Column(name = "status", nullable = false, length = 50, columnDefinition = "VARCHAR(50) COMMENT 'available, occupied, cleaning, reserved, out-of-service'")
+    private String status;  // available, occupied, cleaning, reserved, out-of-service
 
     @Column(name = "assigned_by", nullable = false, length = 255)
     private String assignedBy;

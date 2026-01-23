@@ -25,19 +25,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @ComponentScan(
     basePackages = {
         "com.healthdata.gateway",
-        "com.healthdata.authentication",       // Scan shared authentication module (provides AuthController)
-        "com.healthdata.audit.service",        // Core audit services only
-        "com.healthdata.audit.aspects",        // Audit aspects
-        "com.healthdata.audit.mapper",         // Audit mappers
-        "com.healthdata.audit.config"          // Audit configuration
+        "com.healthdata.authentication"        // Scan shared authentication module (provides AuthController)
         // Do NOT scan com.healthdata.cache - we manually import only CacheEvictionService
-        // Do NOT scan com.healthdata.audit.service.{qa,ai,clinical,mpi} - not needed for gateway
+        // Do NOT scan com.healthdata.audit - gateway has its own AuditLog/AuditLogService
     },
     excludeFilters = {
-        @ComponentScan.Filter(
-            type = FilterType.REGEX,
-            pattern = "com\\.healthdata\\.audit\\.service\\.(qa|ai|clinical|mpi)\\..*"
-        ),
         // Exclude gateway controllers that duplicate AuthController functionality
         // AuthController from authentication module provides comprehensive auth operations
         @ComponentScan.Filter(
@@ -51,13 +43,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EntityScan(basePackages = {
     "com.healthdata.gateway.domain",           // Gateway service entities (AuditLog, etc.)
     "com.healthdata.authentication.domain",
-    "com.healthdata.authentication.entity",
-    "com.healthdata.audit.entity"              // Audit entities (repositories configured by AuditAutoConfiguration)
+    "com.healthdata.authentication.entity"
 })
 @EnableJpaRepositories(basePackages = {
-    "com.healthdata.gateway.domain",                // Gateway service repositories
-    "com.healthdata.authentication.repository",
-    "com.healthdata.audit.repository.shared"        // Only scan essential audit repositories (avoid broken clinical queries)
+    "com.healthdata.gateway.domain",                // Gateway service repositories (includes AuditLogRepository)
+    "com.healthdata.authentication.repository"
 })
 public class GatewayApplication {
 

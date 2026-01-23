@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError, timer, retry, delayWhen } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { LoggerService } from '../services/logger.service';
 import { API_CONFIG } from '../config/api.config';
 import { ErrorValidationService } from '../services/error-validation.service';
 import { ErrorCode, ErrorSeverity } from '../models/error.model';
@@ -73,6 +74,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
   const errorValidationService = inject(ErrorValidationService);
+  const loggerService = inject(LoggerService);
+  const logger = loggerService.withContext('ErrorInterceptor');
 
   // Get tenant ID from current user or use default
   const tenantId = authService.getTenantId() || API_CONFIG.DEFAULT_TENANT_ID;
@@ -100,7 +103,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         }
 
         const delay = calculateBackoffDelay(count - 1);
-        console.warn(
+        logger.warn(
           `[Retry ${count}/${RETRY_CONFIG.maxRetries}] Request to ${req.url} failed with status ${error.status}. ` +
           `Retrying in ${Math.round(delay)}ms...`
         );
@@ -178,9 +181,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       const isAuditEndpoint = req.url.includes('/audit/events');
       const isComplianceEndpoint = req.url.includes('/api/v1/compliance/errors');
 
-      // Log error to console for debugging
+      // Log error for debugging (PHI-filtered by LoggerService)
       if (!isDemoEndpoint && !isAuditEndpoint && !isComplianceEndpoint) {
-        console.error('HTTP Error:', {
+        logger.error('HTTP Error', {
           url: req.url,
           method: req.method,
           status: error.status,

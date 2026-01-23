@@ -1,5 +1,7 @@
 package com.healthdata.patientevent.eventhandler;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.patientevent.projection.PatientActiveProjection;
 import com.healthdata.patientevent.publisher.CareGapEventPublisher;
 import com.healthdata.patientevent.publisher.QualityMeasureEventPublisher;
@@ -44,6 +46,7 @@ public class PatientMergedEventHandler {
     private final CareGapEventPublisher careGapEventPublisher;
     private final QualityMeasureEventPublisher qualityMeasureEventPublisher;
     private final WorkflowEventPublisher workflowEventPublisher;
+    private final ObjectMapper objectMapper;
 
     /**
      * Handle PatientMergedEvent
@@ -135,10 +138,19 @@ public class PatientMergedEventHandler {
 
             // Update with combined identifiers from merge
             if (mergedEvent.getCombinedIdentifiers() != null && !mergedEvent.getCombinedIdentifiers().isEmpty()) {
-                // Convert FHIR-compliant identifiers to string representation for denormalized storage
-                // TODO: Implement proper identifier serialization
-                log.debug("Updated target patient with combined identifiers: target={}, count={}",
-                    targetPatientId, mergedEvent.getCombinedIdentifiers().size());
+                try {
+                    // Serialize FHIR-compliant identifiers to JSON for denormalized storage
+                    // This preserves identifier system, value, type, use, and active fields
+                    String identifiersJson = objectMapper.writeValueAsString(mergedEvent.getCombinedIdentifiers());
+                    targetPatient.setIdentifiers(identifiersJson);
+
+                    log.debug("Updated target patient with combined identifiers: target={}, count={}",
+                        targetPatientId, mergedEvent.getCombinedIdentifiers().size());
+                } catch (JsonProcessingException e) {
+                    log.error("Failed to serialize combined identifiers for patient: target={}, tenant={}",
+                        targetPatientId, tenantId, e);
+                    // Continue processing - identifier update is not critical for merge completion
+                }
             }
 
             // Update merge tracking fields

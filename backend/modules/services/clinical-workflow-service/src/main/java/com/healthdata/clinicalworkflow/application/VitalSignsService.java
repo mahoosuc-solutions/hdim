@@ -6,6 +6,7 @@ import com.healthdata.clinicalworkflow.api.v1.dto.VitalsHistoryResponse;
 import com.healthdata.clinicalworkflow.client.FhirServiceClient;
 import com.healthdata.clinicalworkflow.domain.model.VitalSignsRecordEntity;
 import com.healthdata.clinicalworkflow.domain.repository.VitalSignsRecordRepository;
+import com.healthdata.clinicalworkflow.event.VitalSignsAlertPublisher;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -70,6 +71,7 @@ public class VitalSignsService {
     private final com.healthdata.clinicalworkflow.domain.repository.RoomAssignmentRepository roomAssignmentRepository;
     private final com.healthdata.clinicalworkflow.client.PatientServiceClient patientServiceClient;
     private final FhirServiceClient fhirServiceClient;
+    private final VitalSignsAlertPublisher vitalSignsAlertPublisher;
     private final SimpMessagingTemplate messagingTemplate;
 
     private static final FhirContext FHIR_CONTEXT = FhirContext.forR4();
@@ -361,6 +363,11 @@ public class VitalSignsService {
                 vitals.getPatientId(),
                 vitals.getAlertMessage());
 
+        // Resolve patient name and room number for both WebSocket and Kafka
+        String patientName = resolvePatientName(vitals.getPatientId(), tenantId);
+        String roomNumber = resolveRoomNumber(vitals.getPatientId(), tenantId);
+
+        // Publish to WebSocket for real-time provider notifications
         try {
             // Build WebSocket alert message
             Map<String, Object> alertMessage = new HashMap<>();
@@ -371,13 +378,11 @@ public class VitalSignsService {
             alertMessage.put("tenantId", tenantId);
 
             // Add patient name if available
-            String patientName = resolvePatientName(vitals.getPatientId(), tenantId);
             if (patientName != null) {
                 alertMessage.put("patientName", patientName);
             }
 
             // Add room number if available
-            String roomNumber = resolveRoomNumber(vitals.getPatientId(), tenantId);
             if (roomNumber != null) {
                 alertMessage.put("roomNumber", roomNumber);
             }
@@ -405,7 +410,16 @@ public class VitalSignsService {
             // Non-fatal - continue execution
         }
 
-        // TODO: In production, publish to Kafka topic: vitals.alert.{severity}
+        // Publish to Kafka for downstream processing (Alert Service, FHIR Service, Analytics)
+        // Non-blocking - failures don't prevent vital signs recording
+        try {
+            vitalSignsAlertPublisher.publishAlert(vitals, patientName, roomNumber);
+        } catch (Exception e) {
+            log.error("Failed to publish vital signs alert to Kafka for patient {}: {}",
+                    vitals.getPatientId(), e.getMessage(), e);
+            // Non-fatal - continue execution
+        }
+
         // TODO: Create FHIR Flag resource for abnormal vitals
     }
 

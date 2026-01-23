@@ -10,6 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 
 import java.util.*;
 
@@ -22,6 +24,12 @@ class RoomManagementServiceTest {
 
     @Mock
     private RoomAssignmentRepository roomRepository;
+
+    @Mock
+    private CacheManager cacheManager;
+
+    @Mock
+    private Cache availableRoomsCache;
 
     @InjectMocks
     private RoomManagementService roomService;
@@ -431,6 +439,189 @@ class RoomManagementServiceTest {
         // Then
         assertThat(result.getStatus()).isEqualTo("cleaning");
         assertThat(result.getCleaningStartedAt()).isNotNull();
+        verify(roomRepository).save(any());
+    }
+
+    // OUT_OF_SERVICE workflow tests
+
+    @Test
+    void markRoomOutOfService_ShouldUpdateStatus_WhenRoomAvailable() {
+        // Given
+        testRoom.setStatus("available");
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+        when(roomRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(cacheManager.getCache("availableRooms")).thenReturn(availableRoomsCache);
+
+        String reason = "HVAC system failure";
+
+        // When
+        RoomAssignmentEntity result = roomService.markRoomOutOfService(
+                ROOM_NUMBER, TENANT_ID, reason);
+
+        // Then
+        assertThat(result.getStatus()).isEqualTo("out-of-service");
+        assertThat(result.getNotes()).contains("[OUT OF SERVICE]");
+        assertThat(result.getNotes()).contains(reason);
+        verify(roomRepository).save(any(RoomAssignmentEntity.class));
+        verify(availableRoomsCache).evict(TENANT_ID);
+    }
+
+    @Test
+    void markRoomOutOfService_ShouldUpdateStatus_WhenRoomCleaning() {
+        // Given
+        testRoom.setStatus("cleaning");
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+        when(roomRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(cacheManager.getCache("availableRooms")).thenReturn(availableRoomsCache);
+
+        // When
+        RoomAssignmentEntity result = roomService.markRoomOutOfService(
+                ROOM_NUMBER, TENANT_ID, "Broken equipment");
+
+        // Then
+        assertThat(result.getStatus()).isEqualTo("out-of-service");
+        verify(roomRepository).save(any());
+    }
+
+    @Test
+    void markRoomOutOfService_ShouldThrowException_WhenRoomOccupied() {
+        // Given
+        testRoom.setStatus("occupied");
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+
+        // When/Then
+        assertThatThrownBy(() -> roomService.markRoomOutOfService(
+                ROOM_NUMBER, TENANT_ID, "Maintenance"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Cannot mark occupied room");
+    }
+
+    @Test
+    void markRoomOutOfService_ShouldAppendToExistingNotes() {
+        // Given
+        testRoom.setStatus("available");
+        testRoom.setNotes("Previous note");
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+        when(roomRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(cacheManager.getCache("availableRooms")).thenReturn(availableRoomsCache);
+
+        // When
+        RoomAssignmentEntity result = roomService.markRoomOutOfService(
+                ROOM_NUMBER, TENANT_ID, "Water damage");
+
+        // Then
+        assertThat(result.getNotes()).contains("Previous note");
+        assertThat(result.getNotes()).contains("[OUT OF SERVICE]");
+        assertThat(result.getNotes()).contains("Water damage");
+    }
+
+    @Test
+    void markRoomOutOfService_ShouldThrowException_WhenRoomNotFound() {
+        // Given
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> roomService.markRoomOutOfService(
+                ROOM_NUMBER, TENANT_ID, "Maintenance"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Room not found");
+    }
+
+    @Test
+    void restoreRoomFromOutOfService_ShouldRestoreToAvailable() {
+        // Given
+        testRoom.setStatus("out-of-service");
+        testRoom.setNotes("[OUT OF SERVICE] 2026-01-23T10:00:00Z - HVAC failure");
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+        when(roomRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(cacheManager.getCache("availableRooms")).thenReturn(availableRoomsCache);
+
+        // When
+        RoomAssignmentEntity result = roomService.restoreRoomFromOutOfService(
+                ROOM_NUMBER, TENANT_ID);
+
+        // Then
+        assertThat(result.getStatus()).isEqualTo("available");
+        assertThat(result.getRoomReadyAt()).isNotNull();
+        assertThat(result.getNotes()).contains("[RESTORED]");
+        assertThat(result.getNotes()).contains("Room returned to service");
+        verify(roomRepository).save(any(RoomAssignmentEntity.class));
+        verify(availableRoomsCache).evict(TENANT_ID);
+    }
+
+    @Test
+    void restoreRoomFromOutOfService_ShouldThrowException_WhenNotOutOfService() {
+        // Given
+        testRoom.setStatus("available");
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+
+        // When/Then
+        assertThatThrownBy(() -> roomService.restoreRoomFromOutOfService(
+                ROOM_NUMBER, TENANT_ID))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Room is not out of service");
+    }
+
+    @Test
+    void restoreRoomFromOutOfService_ShouldThrowException_WhenRoomNotFound() {
+        // Given
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> roomService.restoreRoomFromOutOfService(
+                ROOM_NUMBER, TENANT_ID))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Room not found");
+    }
+
+    @Test
+    void updateRoomStatus_ShouldCallMarkRoomOutOfService_WhenStatusIsOutOfService() {
+        // Given
+        RoomStatusUpdateRequest request = RoomStatusUpdateRequest.builder()
+                .status("OUT_OF_SERVICE")
+                .reason("Emergency repairs needed")
+                .build();
+
+        testRoom.setStatus("available");
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+        when(roomRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(cacheManager.getCache("availableRooms")).thenReturn(availableRoomsCache);
+
+        // When
+        RoomAssignmentEntity result = roomService.updateRoomStatus(
+                TENANT_ID, ROOM_NUMBER, request, "user123");
+
+        // Then
+        assertThat(result.getStatus()).isEqualTo("out-of-service");
+        assertThat(result.getNotes()).contains("Emergency repairs needed");
+        verify(roomRepository).save(any());
+        verify(availableRoomsCache).evict(TENANT_ID);
+    }
+
+    @Test
+    void markRoomOutOfService_ShouldHandleCacheEvictionFailure() {
+        // Given
+        testRoom.setStatus("available");
+        when(roomRepository.findRoomByNumberAndTenant(ROOM_NUMBER, TENANT_ID))
+                .thenReturn(Optional.of(testRoom));
+        when(roomRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(cacheManager.getCache("availableRooms")).thenReturn(null);  // Cache not found
+
+        // When
+        RoomAssignmentEntity result = roomService.markRoomOutOfService(
+                ROOM_NUMBER, TENANT_ID, "Maintenance");
+
+        // Then - Should complete successfully despite cache failure
+        assertThat(result.getStatus()).isEqualTo("out-of-service");
         verify(roomRepository).save(any());
     }
 }

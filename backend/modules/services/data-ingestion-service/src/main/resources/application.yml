@@ -2,19 +2,20 @@ spring:
   application:
     name: data-ingestion-service
 
-  datasource:
-    url: jdbc:postgresql://localhost:5435/data_ingestion_db
-    username: healthdata
-    password: healthdata_password
-    driver-class-name: org.postgresql.Driver
+  # Disable JPA and database entirely (stateless service with in-memory tracking)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
 
   jpa:
     hibernate:
-      ddl-auto: none  # No schema management
+      ddl-auto: none
     show-sql: false
 
   liquibase:
-    enabled: false  # No database migrations needed
+    enabled: false
 
 server:
   port: 8080
@@ -60,9 +61,6 @@ spring:
   config:
     activate:
       on-profile: docker
-
-  datasource:
-    url: jdbc:postgresql://postgres:5432/data_ingestion_db
 
 fhir:
   service:

@@ -14,6 +14,7 @@ import { GlobalSearchService } from './shared/services/global-search.service';
 import { ThemeService } from './services/theme.service';
 import { AuthService } from './services/auth.service';
 import { LoggerService } from './services/logger.service';
+import { AuditService } from './services/audit.service';
 import { DemoControlBarComponent } from './demo-mode/components/demo-control-bar/demo-control-bar.component';
 import { DemoModeService } from './demo-mode/services/demo-mode.service';
 import { DemoStoryboardOverlayComponent } from './demo-mode/components/demo-storyboard-overlay/demo-storyboard-overlay.component';
@@ -98,7 +99,8 @@ export class App implements OnInit, OnDestroy {
     private authService: AuthService,
     protected router: Router,
     private demoModeService: DemoModeService,
-    private loggerService: LoggerService
+    private loggerService: LoggerService,
+    private auditService: AuditService
   ) {
     // React to demo mode changes to add/remove body class
     effect(() => {
@@ -193,10 +195,19 @@ export class App implements OnInit, OnDestroy {
 
   /**
    * Handle session timeout - log out the user
+   * HIPAA §164.312(a)(2)(iii) - Automatic Logoff with Audit Trail
    */
   private onSessionTimeout(): void {
     this.showSessionWarning = false;
     this.clearSessionTimeout();
+
+    // HIPAA-compliant audit logging before logout
+    this.auditService.logSessionTimeout({
+      reason: 'IDLE_TIMEOUT',
+      idleDurationMinutes: this.SESSION_TIMEOUT_MS / (60 * 1000),
+      warningShown: true, // Warning was shown 2 minutes before timeout
+    });
+
     this.logger.warn('Session timeout - logging out user due to inactivity');
     this.authService.logout();
   }
@@ -227,6 +238,13 @@ export class App implements OnInit, OnDestroy {
 
   logout(): void {
     this.clearSessionTimeout();
+
+    // Log explicit user logout (not automatic timeout)
+    this.auditService.logSessionTimeout({
+      reason: 'EXPLICIT_LOGOUT',
+      warningShown: false,
+    });
+
     this.authService.logout();
   }
 }

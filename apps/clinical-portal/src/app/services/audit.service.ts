@@ -460,6 +460,33 @@ export class AuditService {
   }
 
   /**
+   * Log session timeout event
+   * HIPAA §164.312(a)(2)(iii) - Automatic Logoff Audit Requirement
+   *
+   * This method provides the audit trail required by HIPAA to prove that
+   * automatic logoff occurred after a period of inactivity.
+   */
+  logSessionTimeout(params: {
+    reason: 'IDLE_TIMEOUT' | 'EXPLICIT_LOGOUT' | 'TOKEN_EXPIRED';
+    idleDurationMinutes?: number;
+    warningShown?: boolean;
+  }): void {
+    this.log({
+      action: AuditAction.LOGOUT,
+      outcome: AuditOutcome.SUCCESS,
+      methodName: 'sessionTimeout',
+      purposeOfUse: 'AUTHENTICATION',
+      metadata: {
+        sessionTimeoutReason: params.reason,
+        idleDurationMinutes: params.idleDurationMinutes,
+        warningShown: params.warningShown,
+        automaticLogoff: params.reason === 'IDLE_TIMEOUT',
+        complianceNote: 'HIPAA §164.312(a)(2)(iii) - Automatic Logoff',
+      },
+    });
+  }
+
+  /**
    * Force flush all buffered events immediately
    * Call this on application shutdown or before navigation
    */

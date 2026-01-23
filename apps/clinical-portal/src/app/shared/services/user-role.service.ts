@@ -7,6 +7,7 @@
 
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { LoggerService } from '../../services/logger.service';
 
 export enum UserRole {
   MEDICAL_ASSISTANT = 'MA',
@@ -100,7 +101,9 @@ export class UserRoleService {
     }
   };
 
-  constructor() {
+  private logger = this.loggerService.withContext('UserRoleService');
+
+  constructor(private loggerService: LoggerService) {
     // Load saved role from localStorage
     this.loadSavedRole();
   }
@@ -163,7 +166,7 @@ export class UserRoleService {
     try {
       localStorage.setItem('userRole', role);
     } catch (err) {
-      console.error('Error saving user role:', err);
+      this.logger.error('Error saving user role:', err);
     }
   }
 
@@ -177,7 +180,7 @@ export class UserRoleService {
         this.currentRoleSubject.next(saved as UserRole);
       }
     } catch (err) {
-      console.error('Error loading user role:', err);
+      this.logger.error('Error loading user role:', err);
     }
   }
 

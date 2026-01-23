@@ -13,6 +13,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -204,38 +206,42 @@ class PatientCheckInServiceTest {
         LocalDate startDate = LocalDate.now().minusDays(30);
         LocalDate endDate = LocalDate.now();
         Pageable pageable = PageRequest.of(0, 10);
+        Page<PatientCheckInEntity> page = new PageImpl<>(List.of(testCheckIn, testCheckIn), pageable, 2);
 
-        when(checkInRepository.findByTenantIdAndPatientIdAndCheckInTimeBetween(
-                eq(TENANT_ID), eq(PATIENT_ID), any(Instant.class), any(Instant.class)))
-                .thenReturn(List.of(testCheckIn, testCheckIn));
+        when(checkInRepository.findByTenantIdAndPatientIdAndCheckInTimeBetweenWithPagination(
+                eq(TENANT_ID), eq(PATIENT_ID), any(Instant.class), any(Instant.class), eq(pageable)))
+                .thenReturn(page);
 
         // When
-        List<PatientCheckInEntity> result = checkInService.getCheckInHistory(
+        Page<PatientCheckInEntity> result = checkInService.getCheckInHistory(
                 TENANT_ID, PATIENT_ID.toString(), startDate, endDate, pageable);
 
         // Then
-        assertThat(result).hasSize(2);
-        verify(checkInRepository).findByTenantIdAndPatientIdAndCheckInTimeBetween(
-                eq(TENANT_ID), eq(PATIENT_ID), any(Instant.class), any(Instant.class));
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getTotalElements()).isEqualTo(2L);
+        verify(checkInRepository).findByTenantIdAndPatientIdAndCheckInTimeBetweenWithPagination(
+                eq(TENANT_ID), eq(PATIENT_ID), any(Instant.class), any(Instant.class), eq(pageable));
     }
 
     @Test
     void getCheckInHistory_WithNullDates_ShouldUseDefaults() {
         // Given
         Pageable pageable = PageRequest.of(0, 10);
+        Page<PatientCheckInEntity> page = new PageImpl<>(List.of(testCheckIn), pageable, 1);
 
-        when(checkInRepository.findByTenantIdAndPatientIdAndCheckInTimeBetween(
-                eq(TENANT_ID), eq(PATIENT_ID), any(Instant.class), any(Instant.class)))
-                .thenReturn(List.of(testCheckIn));
+        when(checkInRepository.findByTenantIdAndPatientIdAndCheckInTimeBetweenWithPagination(
+                eq(TENANT_ID), eq(PATIENT_ID), any(Instant.class), any(Instant.class), eq(pageable)))
+                .thenReturn(page);
 
         // When
-        List<PatientCheckInEntity> result = checkInService.getCheckInHistory(
+        Page<PatientCheckInEntity> result = checkInService.getCheckInHistory(
                 TENANT_ID, PATIENT_ID.toString(), null, null, pageable);
 
         // Then
-        assertThat(result).hasSize(1);
-        verify(checkInRepository).findByTenantIdAndPatientIdAndCheckInTimeBetween(
-                eq(TENANT_ID), eq(PATIENT_ID), any(Instant.class), any(Instant.class));
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getTotalElements()).isEqualTo(1L);
+        verify(checkInRepository).findByTenantIdAndPatientIdAndCheckInTimeBetweenWithPagination(
+                eq(TENANT_ID), eq(PATIENT_ID), any(Instant.class), any(Instant.class), eq(pageable));
     }
 
     // ========== 1e. verifyInsurance (new signature) Tests ==========

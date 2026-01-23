@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -172,7 +173,7 @@ class VitalSignsRecordRepositoryIntegrationTest {
         void shouldOrderHistoryByTimeDesc() {
             // Create additional vitals at different times
             VitalSignsRecordEntity older = createVitals(TENANT_ID, PATIENT_ID_1, "115", "75", "68", "98.2", "normal", null);
-            older.setRecordedAt(LocalDateTime.now().minusHours(2));
+            older.setRecordedAt(Instant.now().minusSeconds(7200));
             vitalSignsRepository.save(older);
 
             LocalDateTime from = LocalDateTime.now().minusHours(3);
@@ -208,7 +209,7 @@ class VitalSignsRecordRepositoryIntegrationTest {
         void shouldFindLatestVitalForPatient() {
             // Create additional vitals at different times
             VitalSignsRecordEntity latest = createVitals(TENANT_ID, PATIENT_ID_1, "125", "82", "74", "98.8", "normal", null);
-            latest.setRecordedAt(LocalDateTime.now().plusMinutes(30));
+            latest.setRecordedAt(Instant.now().plusSeconds(1800));
             vitalSignsRepository.save(latest);
 
             Optional<VitalSignsRecordEntity> found = vitalSignsRepository.findLatestVitalForPatient(PATIENT_ID_1, TENANT_ID);
@@ -378,7 +379,7 @@ class VitalSignsRecordRepositoryIntegrationTest {
                 .respirationRate(new BigDecimal("16"))
                 .alertStatus(alertStatus)
                 .alertMessage(alertMessage)
-                .recordedAt(LocalDateTime.now())
+                .recordedAt(Instant.now())
                 .build();
     }
 }

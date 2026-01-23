@@ -291,8 +291,8 @@ class PatientCheckInServiceTest {
         // Given
         UUID checkInId = UUID.randomUUID();
         ConsentRequest request = new ConsentRequest();
-        request.setConsentType("Treatment Consent");
-        request.setConsented(true);
+        request.setConsentType("TREATMENT");
+        request.setConsentObtained(true);
 
         testCheckIn.setId(checkInId);
         when(checkInRepository.findByIdAndTenantId(checkInId, TENANT_ID))

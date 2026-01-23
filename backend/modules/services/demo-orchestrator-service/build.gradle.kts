@@ -18,6 +18,7 @@ dependencies {
     implementation(libs.bundles.spring.boot.data)
     implementation(libs.spring.boot.starter.validation)
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
 
     // JSON Processing
     implementation(libs.jackson.databind)

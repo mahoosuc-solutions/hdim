@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -41,6 +42,9 @@ class VitalSignsServiceTest {
 
     @Mock
     private com.healthdata.clinicalworkflow.client.PatientServiceClient patientServiceClient;
+
+    @Mock
+    private SimpMessagingTemplate messagingTemplate;
 
     @InjectMocks
     private VitalSignsService vitalsService;
@@ -484,7 +488,7 @@ class VitalSignsServiceTest {
                 .thenReturn(Optional.of(testVitals));
 
         // When
-        Optional<VitalSignsRecordEntity> result = vitalsService.getLatestVitals(
+        Optional<VitalSignsRecordEntity> result = vitalsService.getLatestVitalsUUID(
                 PATIENT_ID, TENANT_ID);
 
         // Then
@@ -498,7 +502,7 @@ class VitalSignsServiceTest {
                 .thenReturn(Optional.empty());
 
         // When
-        Optional<VitalSignsRecordEntity> result = vitalsService.getLatestVitals(
+        Optional<VitalSignsRecordEntity> result = vitalsService.getLatestVitalsUUID(
                 PATIENT_ID, TENANT_ID);
 
         // Then
@@ -853,13 +857,13 @@ class VitalSignsServiceTest {
                         .status("occupied")
                         .build();
 
-        when(vitalsRepository.findActiveAlertsByTenant(TENANT_ID))
+        when(vitalsRepository.findByTenantIdAndAlertStatusOrderByRecordedAtDesc(TENANT_ID, "critical"))
                 .thenReturn(Collections.singletonList(criticalVitals));
         when(roomAssignmentRepository.findActiveRoomForPatient(TENANT_ID, PATIENT_ID))
                 .thenReturn(Optional.of(roomAssignment));
 
         // When
-        List<VitalAlertResponse> alerts = vitalsService.getActiveAlerts(TENANT_ID);
+        List<VitalAlertResponse> alerts = vitalsService.getCriticalAlerts(TENANT_ID);
 
         // Then
         assertThat(alerts).hasSize(1);
@@ -884,13 +888,13 @@ class VitalSignsServiceTest {
                 .recordedAt(Instant.now())
                 .build();
 
-        when(vitalsRepository.findActiveAlertsByTenant(TENANT_ID))
+        when(vitalsRepository.findByTenantIdAndAlertStatusOrderByRecordedAtDesc(TENANT_ID, "critical"))
                 .thenReturn(Collections.singletonList(criticalVitals));
         when(roomAssignmentRepository.findActiveRoomForPatient(TENANT_ID, PATIENT_ID))
                 .thenReturn(Optional.empty());
 
         // When
-        List<VitalAlertResponse> alerts = vitalsService.getActiveAlerts(TENANT_ID);
+        List<VitalAlertResponse> alerts = vitalsService.getCriticalAlerts(TENANT_ID);
 
         // Then
         assertThat(alerts).hasSize(1);
@@ -914,13 +918,13 @@ class VitalSignsServiceTest {
                 .recordedAt(Instant.now())
                 .build();
 
-        when(vitalsRepository.findActiveAlertsByTenant(TENANT_ID))
+        when(vitalsRepository.findByTenantIdAndAlertStatusOrderByRecordedAtDesc(TENANT_ID, "critical"))
                 .thenReturn(Collections.singletonList(criticalVitals));
         when(roomAssignmentRepository.findActiveRoomForPatient(TENANT_ID, PATIENT_ID))
                 .thenThrow(new RuntimeException("Database connection failed"));
 
         // When
-        List<VitalAlertResponse> alerts = vitalsService.getActiveAlerts(TENANT_ID);
+        List<VitalAlertResponse> alerts = vitalsService.getCriticalAlerts(TENANT_ID);
 
         // Then: Alert should still be delivered with null room number
         assertThat(alerts).hasSize(1);
@@ -952,7 +956,7 @@ class VitalSignsServiceTest {
                         .status("occupied")
                         .build();
 
-        when(vitalsRepository.findCriticalAlertsByTenant(TENANT_ID))
+        when(vitalsRepository.findByTenantIdAndAlertStatusOrderByRecordedAtDesc(TENANT_ID, "critical"))
                 .thenReturn(Collections.singletonList(criticalVitals));
         when(roomAssignmentRepository.findActiveRoomForPatient(TENANT_ID, PATIENT_ID))
                 .thenReturn(Optional.of(roomAssignment));
@@ -980,34 +984,34 @@ class VitalSignsServiceTest {
                         .mrn("MRN123456")
                         .build();
 
-        when(vitalsRepository.findByIdAndTenant(any(UUID.class), eq(TENANT_ID)))
+        when(vitalsRepository.findByIdAndTenantId(any(UUID.class), eq(TENANT_ID)))
                 .thenReturn(Optional.of(testVitals));
         when(patientServiceClient.getPatient(PATIENT_ID, TENANT_ID))
                 .thenReturn(patient);
 
         // When
-        Optional<VitalSignsResponse> result = vitalsService.getVitalById(testVitals.getId(), TENANT_ID);
+        VitalSignsResponse result = vitalsService.getVitalSigns(TENANT_ID, testVitals.getId());
 
         // Then
-        assertThat(result).isPresent();
-        assertThat(result.get().getPatientName()).isEqualTo("Smith, John");
+        assertThat(result).isNotNull();
+        assertThat(result.getPatientName()).isEqualTo("Smith, John");
         verify(patientServiceClient).getPatient(PATIENT_ID, TENANT_ID);
     }
 
     @Test
     void getVitalById_ShouldHandleNullPatientName_WhenPatientNotFound() {
         // Given
-        when(vitalsRepository.findByIdAndTenant(any(UUID.class), eq(TENANT_ID)))
+        when(vitalsRepository.findByIdAndTenantId(any(UUID.class), eq(TENANT_ID)))
                 .thenReturn(Optional.of(testVitals));
         when(patientServiceClient.getPatient(PATIENT_ID, TENANT_ID))
                 .thenReturn(null);
 
         // When
-        Optional<VitalSignsResponse> result = vitalsService.getVitalById(testVitals.getId(), TENANT_ID);
+        VitalSignsResponse result = vitalsService.getVitalSigns(TENANT_ID, testVitals.getId());
 
         // Then
-        assertThat(result).isPresent();
-        assertThat(result.get().getPatientName()).isNull();
+        assertThat(result).isNotNull();
+        assertThat(result.getPatientName()).isNull();
         verify(patientServiceClient).getPatient(PATIENT_ID, TENANT_ID);
     }
 
@@ -1031,7 +1035,7 @@ class VitalSignsServiceTest {
                         .mrn("MRN789")
                         .build();
 
-        when(vitalsRepository.findCriticalAlertsByTenant(TENANT_ID))
+        when(vitalsRepository.findByTenantIdAndAlertStatusOrderByRecordedAtDesc(TENANT_ID, "critical"))
                 .thenReturn(Collections.singletonList(criticalVitals));
         when(patientServiceClient.getPatient(PATIENT_ID, TENANT_ID))
                 .thenReturn(patient);
@@ -1057,7 +1061,7 @@ class VitalSignsServiceTest {
                 .alertMessage("Critical: O2 saturation 83% (normal: >90%)")
                 .build();
 
-        when(vitalsRepository.findCriticalAlertsByTenant(TENANT_ID))
+        when(vitalsRepository.findByTenantIdAndAlertStatusOrderByRecordedAtDesc(TENANT_ID, "critical"))
                 .thenReturn(Collections.singletonList(criticalVitals));
         when(patientServiceClient.getPatient(PATIENT_ID, TENANT_ID))
                 .thenThrow(new RuntimeException("Patient service unavailable"));
@@ -1100,5 +1104,217 @@ class VitalSignsServiceTest {
         com.healthdata.clinicalworkflow.client.dto.PatientDTO noName =
                 com.healthdata.clinicalworkflow.client.dto.PatientDTO.builder().build();
         assertThat(noName.getFormattedName()).isEqualTo("Unknown Patient");
+    }
+
+    // ===== WebSocket Alert Publishing Tests =====
+
+    @Test
+    void triggerAlerts_ShouldPublishToWebSocket_WhenCriticalVitals() {
+        // Given: Critical vital signs
+        VitalSignsRecordEntity criticalVitals = VitalSignsRecordEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .systolicBp(new BigDecimal("190"))
+                .diastolicBp(new BigDecimal("95"))
+                .heartRate(new BigDecimal("135"))
+                .temperatureF(new BigDecimal("98.6"))
+                .oxygenSaturation(new BigDecimal("82"))
+                .alertStatus("critical")
+                .alertMessage("CRITICAL: Systolic BP 190 mmHg (>180 mmHg); CRITICAL: Heart rate 135 bpm (>130 bpm); CRITICAL: O2 saturation 82% (<85%)")
+                .recordedAt(Instant.now())
+                .build();
+
+        // When
+        vitalsService.triggerAlerts(criticalVitals, TENANT_ID);
+
+        // Then: WebSocket message published to correct topic
+        verify(messagingTemplate).convertAndSend(
+                eq("/topic/vitals-alerts/" + PATIENT_ID),
+                argThat((Map<String, Object> message) -> {
+                    assertThat(message.get("alertStatus")).isEqualTo("critical");
+                    assertThat(message.get("patientId")).isEqualTo(PATIENT_ID);
+                    assertThat(message.get("tenantId")).isEqualTo(TENANT_ID);
+                    assertThat(message.get("alertMessage")).asString().contains("CRITICAL");
+
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> values = (Map<String, Object>) message.get("values");
+                    assertThat(values.get("systolicBp")).isEqualTo(new BigDecimal("190"));
+                    assertThat(values.get("heartRate")).isEqualTo(new BigDecimal("135"));
+                    assertThat(values.get("oxygenSaturation")).isEqualTo(new BigDecimal("82"));
+
+                    return true;
+                })
+        );
+    }
+
+    @Test
+    void triggerAlerts_ShouldIncludePatientName_WhenAvailable() {
+        // Given: Patient with name
+        VitalSignsRecordEntity warningVitals = VitalSignsRecordEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .systolicBp(new BigDecimal("150"))
+                .alertStatus("warning")
+                .alertMessage("WARNING: Systolic BP 150 mmHg (>140 mmHg)")
+                .recordedAt(Instant.now())
+                .build();
+
+        com.healthdata.clinicalworkflow.client.dto.PatientDTO patient =
+                com.healthdata.clinicalworkflow.client.dto.PatientDTO.builder()
+                        .id(PATIENT_ID)
+                        .firstName("John")
+                        .lastName("Doe")
+                        .mrn("MRN123456")
+                        .build();
+        when(patientServiceClient.getPatient(PATIENT_ID, TENANT_ID)).thenReturn(patient);
+
+        // When
+        vitalsService.triggerAlerts(warningVitals, TENANT_ID);
+
+        // Then: WebSocket message includes patient name
+        verify(messagingTemplate).convertAndSend(
+                eq("/topic/vitals-alerts/" + PATIENT_ID),
+                argThat((Map<String, Object> message) -> {
+                    assertThat(message.get("patientName")).isEqualTo("Doe, John");
+                    return true;
+                })
+        );
+    }
+
+    @Test
+    void triggerAlerts_ShouldIncludeRoomNumber_WhenAvailable() {
+        // Given: Patient in room
+        VitalSignsRecordEntity warningVitals = VitalSignsRecordEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .heartRate(new BigDecimal("110"))
+                .alertStatus("warning")
+                .alertMessage("WARNING: Heart rate 110 bpm (>100 bpm)")
+                .recordedAt(Instant.now())
+                .build();
+
+        com.healthdata.clinicalworkflow.domain.model.RoomAssignmentEntity room =
+                new com.healthdata.clinicalworkflow.domain.model.RoomAssignmentEntity();
+        room.setRoomNumber("Room 101");
+        when(roomAssignmentRepository.findActiveRoomForPatient(TENANT_ID, PATIENT_ID))
+                .thenReturn(Optional.of(room));
+
+        // When
+        vitalsService.triggerAlerts(warningVitals, TENANT_ID);
+
+        // Then: WebSocket message includes room number
+        verify(messagingTemplate).convertAndSend(
+                eq("/topic/vitals-alerts/" + PATIENT_ID),
+                argThat((Map<String, Object> message) -> {
+                    assertThat(message.get("roomNumber")).isEqualTo("Room 101");
+                    return true;
+                })
+        );
+    }
+
+    @Test
+    void triggerAlerts_ShouldHandleWebSocketFailure_Gracefully() {
+        // Given: WebSocket fails
+        VitalSignsRecordEntity criticalVitals = VitalSignsRecordEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .systolicBp(new BigDecimal("190"))
+                .alertStatus("critical")
+                .alertMessage("CRITICAL: Systolic BP 190 mmHg (>180 mmHg)")
+                .recordedAt(Instant.now())
+                .build();
+
+        doThrow(new RuntimeException("WebSocket connection failed"))
+                .when(messagingTemplate).convertAndSend(anyString(), any(Object.class));
+
+        // When: Should not throw exception
+        assertThatCode(() -> vitalsService.triggerAlerts(criticalVitals, TENANT_ID))
+                .doesNotThrowAnyException();
+
+        // Then: Error logged but execution continues
+        verify(messagingTemplate).convertAndSend(anyString(), any(Object.class));
+    }
+
+    @Test
+    void triggerAlerts_ShouldIncludeAllVitalValues_InMessage() {
+        // Given: Complete vital signs
+        VitalSignsRecordEntity completeVitals = VitalSignsRecordEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .systolicBp(new BigDecimal("150"))
+                .diastolicBp(new BigDecimal("90"))
+                .heartRate(new BigDecimal("110"))
+                .temperatureF(new BigDecimal("99.5"))
+                .respirationRate(new BigDecimal("22"))
+                .oxygenSaturation(new BigDecimal("93"))
+                .alertStatus("warning")
+                .alertMessage("WARNING: Systolic BP 150 mmHg (>140 mmHg); WARNING: Heart rate 110 bpm (>100 bpm)")
+                .recordedAt(Instant.now())
+                .build();
+
+        // When
+        vitalsService.triggerAlerts(completeVitals, TENANT_ID);
+
+        // Then: All values included in WebSocket message
+        verify(messagingTemplate).convertAndSend(
+                eq("/topic/vitals-alerts/" + PATIENT_ID),
+                argThat((Map<String, Object> message) -> {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> values = (Map<String, Object>) message.get("values");
+                    assertThat(values).containsKeys(
+                            "systolicBp", "diastolicBp", "heartRate",
+                            "temperature", "respiratoryRate", "oxygenSaturation"
+                    );
+                    assertThat(values.get("systolicBp")).isEqualTo(new BigDecimal("150"));
+                    assertThat(values.get("diastolicBp")).isEqualTo(new BigDecimal("90"));
+                    assertThat(values.get("heartRate")).isEqualTo(new BigDecimal("110"));
+                    assertThat(values.get("temperature")).isEqualTo(new BigDecimal("99.5"));
+                    assertThat(values.get("respiratoryRate")).isEqualTo(new BigDecimal("22"));
+                    assertThat(values.get("oxygenSaturation")).isEqualTo(new BigDecimal("93"));
+                    return true;
+                })
+        );
+    }
+
+    @Test
+    void triggerAlerts_ShouldUseCorrectTopicFormat_ForMultiplePatients() {
+        // Given: Two different patients with alerts
+        UUID patient1 = UUID.randomUUID();
+        UUID patient2 = UUID.randomUUID();
+
+        VitalSignsRecordEntity vitals1 = VitalSignsRecordEntity.builder()
+                .patientId(patient1)
+                .tenantId(TENANT_ID)
+                .systolicBp(new BigDecimal("190"))
+                .alertStatus("critical")
+                .alertMessage("CRITICAL")
+                .recordedAt(Instant.now())
+                .build();
+
+        VitalSignsRecordEntity vitals2 = VitalSignsRecordEntity.builder()
+                .patientId(patient2)
+                .tenantId(TENANT_ID)
+                .heartRate(new BigDecimal("135"))
+                .alertStatus("critical")
+                .alertMessage("CRITICAL")
+                .recordedAt(Instant.now())
+                .build();
+
+        // When
+        vitalsService.triggerAlerts(vitals1, TENANT_ID);
+        vitalsService.triggerAlerts(vitals2, TENANT_ID);
+
+        // Then: Each publishes to patient-specific topic
+        verify(messagingTemplate).convertAndSend(
+                eq("/topic/vitals-alerts/" + patient1),
+                any(Object.class));
+        verify(messagingTemplate).convertAndSend(
+                eq("/topic/vitals-alerts/" + patient2),
+                any(Object.class));
     }
 }

@@ -32,6 +32,7 @@ import { TrackInteraction } from '../../utils/ai-tracking.decorator';
 import { UserRoleService, UserRole } from '../../shared/services/user-role.service';
 import { MeasureFavoritesService, FavoriteMeasure, RecentMeasure } from '../../services/measure-favorites.service';
 import { ContextNavigationService } from '../../services/context-navigation.service';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * Dashboard Statistics Interface
@@ -123,6 +124,7 @@ export interface ComplianceTrendPoint {
 export class DashboardComponent implements OnInit {
   // Subscription cleanup
   private destroy$ = injectDestroy();
+  private logger = this.loggerService.withContext('DashboardComponent');
 
   /**
    * Configuration constants for trend calculation
@@ -270,7 +272,8 @@ export class DashboardComponent implements OnInit {
     public aiAssistant: AIAssistantService,
     private userRoleService: UserRoleService,
     public measureFavorites: MeasureFavoritesService,
-    private contextNavService: ContextNavigationService
+    private contextNavService: ContextNavigationService,
+    private loggerService: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -327,7 +330,7 @@ export class DashboardComponent implements OnInit {
           this.roleComponent = null;
       }
     } catch (error) {
-      console.error('Error loading role component:', error);
+      this.logger.error('Error loading role component', error);
       this.roleComponent = null;
     } finally {
       this.loadingRoleComponent = false;
@@ -366,7 +369,7 @@ export class DashboardComponent implements OnInit {
     }).pipe(
       takeUntil(this.destroy$),
       catchError((error) => {
-        console.error('Error loading critical dashboard data:', error);
+        this.logger.error('Error loading critical dashboard data', error);
         this.error = 'Failed to load dashboard data. Please try again.';
         return of(null);
       })
@@ -395,7 +398,7 @@ export class DashboardComponent implements OnInit {
     this.evaluationService.getAllEvaluationsCached().pipe(
       takeUntil(this.destroy$),
       catchError((error) => {
-        console.error('Error loading evaluations:', error);
+        this.logger.error('Error loading evaluations', error);
         // Continue with empty evaluations rather than failing completely
         return of([]);
       }),

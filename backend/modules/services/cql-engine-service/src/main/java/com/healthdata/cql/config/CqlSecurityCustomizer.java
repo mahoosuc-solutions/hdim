@@ -63,6 +63,7 @@ public class CqlSecurityCustomizer {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3001",  // React+Vite frontend
             "http://localhost:4200",
             "http://localhost:4201",
             "http://localhost:4202"

@@ -1,0 +1,77 @@
+spring:
+  application:
+    name: data-ingestion-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5435/data_ingestion_db
+    username: healthdata
+    password: healthdata_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none  # No schema management
+    show-sql: false
+
+  liquibase:
+    enabled: false  # No database migrations needed
+
+server:
+  port: 8080
+
+# Downstream service URLs
+fhir:
+  service:
+    url: http://localhost:8085/fhir
+
+care-gap:
+  service:
+    url: http://localhost:8086/care-gap
+
+quality-measure:
+  service:
+    url: http://localhost:8087/quality-measure
+
+# OpenTelemetry distributed tracing
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0  # Sample all traces (100%)
+
+# Logging configuration
+logging:
+  level:
+    root: INFO
+    com.healthdata.ingestion: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+---
+# Docker profile - used when running in Docker container
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/data_ingestion_db
+
+fhir:
+  service:
+    url: http://fhir-service:8085/fhir
+
+care-gap:
+  service:
+    url: http://care-gap-service:8086/care-gap
+
+quality-measure:
+  service:
+    url: http://quality-measure-service:8087/quality-measure

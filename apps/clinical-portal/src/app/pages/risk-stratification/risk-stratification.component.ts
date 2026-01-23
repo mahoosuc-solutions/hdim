@@ -38,6 +38,7 @@ import {
 import { PatientService } from '../../services/patient.service';
 import { CareGapService, CareGapApiItem, CareGapPageResponse } from '../../services/care-gap.service';
 import { Patient } from '../../models/patient.model';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * Risk Stratification Component
@@ -111,10 +112,13 @@ export class RiskStratificationComponent implements OnInit, OnDestroy {
   readonly riskFactors = RISK_FACTORS;
   readonly conditionCategories = CONDITION_CATEGORIES;
 
+  private logger = this.loggerService.withContext('RiskStratificationComponent');
+
   constructor(
     private router: Router,
     private patientService: PatientService,
-    private careGapService: CareGapService
+    private careGapService: CareGapService,
+    private loggerService: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -442,12 +446,12 @@ export class RiskStratificationComponent implements OnInit, OnDestroy {
 
   scheduleVisit(patient: PatientRiskProfile): void {
     // Would integrate with scheduling system
-    console.log('Schedule visit for:', patient.patientName);
+    this.logger.info('Schedule visit for patient', patient.patientName);
   }
 
   initiateOutreach(patient: PatientRiskProfile): void {
     // Would initiate care coordination outreach
-    console.log('Initiate outreach for:', patient.patientName);
+    this.logger.info('Initiate outreach for patient', patient.patientName);
   }
 
   exportPatientList(): void {

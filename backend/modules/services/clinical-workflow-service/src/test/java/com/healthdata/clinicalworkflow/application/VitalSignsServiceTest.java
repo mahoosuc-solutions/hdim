@@ -39,6 +39,9 @@ class VitalSignsServiceTest {
     @Mock
     private com.healthdata.clinicalworkflow.domain.repository.RoomAssignmentRepository roomAssignmentRepository;
 
+    @Mock
+    private com.healthdata.clinicalworkflow.client.PatientServiceClient patientServiceClient;
+
     @InjectMocks
     private VitalSignsService vitalsService;
 
@@ -962,5 +965,140 @@ class VitalSignsServiceTest {
         assertThat(alerts.get(0).getRoomNumber()).isEqualTo("EXAM-202");
         assertThat(alerts.get(0).getSeverity()).isEqualTo("CRITICAL");
         verify(roomAssignmentRepository).findActiveRoomForPatient(TENANT_ID, PATIENT_ID);
+    }
+
+    // ========== Patient Name Resolution Tests ==========
+
+    @Test
+    void getVitalById_ShouldIncludePatientName_WhenPatientFound() {
+        // Given
+        com.healthdata.clinicalworkflow.client.dto.PatientDTO patient =
+                com.healthdata.clinicalworkflow.client.dto.PatientDTO.builder()
+                        .id(PATIENT_ID)
+                        .firstName("John")
+                        .lastName("Smith")
+                        .mrn("MRN123456")
+                        .build();
+
+        when(vitalsRepository.findByIdAndTenant(any(UUID.class), eq(TENANT_ID)))
+                .thenReturn(Optional.of(testVitals));
+        when(patientServiceClient.getPatient(PATIENT_ID, TENANT_ID))
+                .thenReturn(patient);
+
+        // When
+        Optional<VitalSignsResponse> result = vitalsService.getVitalById(testVitals.getId(), TENANT_ID);
+
+        // Then
+        assertThat(result).isPresent();
+        assertThat(result.get().getPatientName()).isEqualTo("Smith, John");
+        verify(patientServiceClient).getPatient(PATIENT_ID, TENANT_ID);
+    }
+
+    @Test
+    void getVitalById_ShouldHandleNullPatientName_WhenPatientNotFound() {
+        // Given
+        when(vitalsRepository.findByIdAndTenant(any(UUID.class), eq(TENANT_ID)))
+                .thenReturn(Optional.of(testVitals));
+        when(patientServiceClient.getPatient(PATIENT_ID, TENANT_ID))
+                .thenReturn(null);
+
+        // When
+        Optional<VitalSignsResponse> result = vitalsService.getVitalById(testVitals.getId(), TENANT_ID);
+
+        // Then
+        assertThat(result).isPresent();
+        assertThat(result.get().getPatientName()).isNull();
+        verify(patientServiceClient).getPatient(PATIENT_ID, TENANT_ID);
+    }
+
+    @Test
+    void getCriticalAlerts_ShouldIncludePatientNames_WhenPatientsFound() {
+        // Given
+        VitalSignsRecordEntity criticalVitals = VitalSignsRecordEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .heartRate(new BigDecimal("140"))
+                .alertStatus("critical")
+                .alertMessage("Critical: Heart rate 140 bpm (normal: 60-100)")
+                .build();
+
+        com.healthdata.clinicalworkflow.client.dto.PatientDTO patient =
+                com.healthdata.clinicalworkflow.client.dto.PatientDTO.builder()
+                        .id(PATIENT_ID)
+                        .firstName("Jane")
+                        .lastName("Doe")
+                        .mrn("MRN789")
+                        .build();
+
+        when(vitalsRepository.findCriticalAlertsByTenant(TENANT_ID))
+                .thenReturn(Collections.singletonList(criticalVitals));
+        when(patientServiceClient.getPatient(PATIENT_ID, TENANT_ID))
+                .thenReturn(patient);
+
+        // When
+        List<VitalAlertResponse> alerts = vitalsService.getCriticalAlerts(TENANT_ID);
+
+        // Then
+        assertThat(alerts).hasSize(1);
+        assertThat(alerts.get(0).getPatientName()).isEqualTo("Doe, Jane");
+        verify(patientServiceClient).getPatient(PATIENT_ID, TENANT_ID);
+    }
+
+    @Test
+    void getCriticalAlerts_ShouldHandlePatientServiceFailure_Gracefully() {
+        // Given
+        VitalSignsRecordEntity criticalVitals = VitalSignsRecordEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .oxygenSaturation(new BigDecimal("83"))
+                .alertStatus("critical")
+                .alertMessage("Critical: O2 saturation 83% (normal: >90%)")
+                .build();
+
+        when(vitalsRepository.findCriticalAlertsByTenant(TENANT_ID))
+                .thenReturn(Collections.singletonList(criticalVitals));
+        when(patientServiceClient.getPatient(PATIENT_ID, TENANT_ID))
+                .thenThrow(new RuntimeException("Patient service unavailable"));
+
+        // When
+        List<VitalAlertResponse> alerts = vitalsService.getCriticalAlerts(TENANT_ID);
+
+        // Then
+        // Alert should still be returned despite patient service failure (circuit breaker)
+        assertThat(alerts).hasSize(1);
+        assertThat(alerts.get(0).getPatientName()).isNull(); // Name unavailable but alert delivered
+        assertThat(alerts.get(0).getSeverity()).isEqualTo("CRITICAL");
+    }
+
+    @Test
+    void patientDTO_GetFormattedName_ShouldHandleVariousFormats() {
+        // Test full name
+        com.healthdata.clinicalworkflow.client.dto.PatientDTO fullName =
+                com.healthdata.clinicalworkflow.client.dto.PatientDTO.builder()
+                        .firstName("John")
+                        .lastName("Smith")
+                        .build();
+        assertThat(fullName.getFormattedName()).isEqualTo("Smith, John");
+
+        // Test first name only
+        com.healthdata.clinicalworkflow.client.dto.PatientDTO firstOnly =
+                com.healthdata.clinicalworkflow.client.dto.PatientDTO.builder()
+                        .firstName("John")
+                        .build();
+        assertThat(firstOnly.getFormattedName()).isEqualTo("John");
+
+        // Test last name only
+        com.healthdata.clinicalworkflow.client.dto.PatientDTO lastOnly =
+                com.healthdata.clinicalworkflow.client.dto.PatientDTO.builder()
+                        .lastName("Smith")
+                        .build();
+        assertThat(lastOnly.getFormattedName()).isEqualTo("Smith");
+
+        // Test no name
+        com.healthdata.clinicalworkflow.client.dto.PatientDTO noName =
+                com.healthdata.clinicalworkflow.client.dto.PatientDTO.builder().build();
+        assertThat(noName.getFormattedName()).isEqualTo("Unknown Patient");
     }
 }

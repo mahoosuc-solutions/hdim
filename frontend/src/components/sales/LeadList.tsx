@@ -304,7 +304,11 @@ export function LeadList({ tenantId }: LeadListProps) {
                     </TableCell>
                     <TableCell align="right">
                       <Tooltip title="Actions">
-                        <IconButton size="small" onClick={(e) => handleMenuOpen(e, lead)}>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleMenuOpen(e, lead)}
+                          aria-label={`Actions for ${lead.firstName} ${lead.lastName}`}
+                        >
                           <MoreIcon />
                         </IconButton>
                       </Tooltip>

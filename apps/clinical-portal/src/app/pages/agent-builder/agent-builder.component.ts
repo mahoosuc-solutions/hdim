@@ -27,6 +27,7 @@ import { ToastService } from '../../services/toast.service';
 import { DialogService } from '../../services/dialog.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { ConfirmationDialogComponent } from '../../shared/components/confirmation-dialog/confirmation-dialog.component';
+import { LoggerService } from '../../services/logger.service';
 
 import { AgentBuilderService } from './services/agent-builder.service';
 import {
@@ -129,13 +130,16 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
   publishLoading = false;
   deleteLoading = false;
 
+  private logger = this.loggerService.withContext('AgentBuilderComponent');
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private dialog: MatDialog,
     private agentService: AgentBuilderService,
     private toast: ToastService,
-    private dialogService: DialogService
+    private dialogService: DialogService,
+    private loggerService: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -181,7 +185,7 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
         },
         error: (err) => {
           this.toast.error('Failed to load agents');
-          console.error('Error loading agents:', err);
+          this.logger.error('Error loading agents', err);
           this.loading = false;
         },
       });
@@ -194,7 +198,7 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (tools) => (this.availableTools = tools),
-        error: () => console.warn('Failed to load tools - using cached'),
+        error: () => this.logger.warn('Failed to load tools - using cached'),
       });
 
     // Load providers
@@ -203,7 +207,7 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (providers) => (this.providers = providers),
-        error: () => console.warn('Failed to load providers - using cached'),
+        error: () => this.logger.warn('Failed to load providers - using cached'),
       });
 
     // Check runtime health

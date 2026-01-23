@@ -11,6 +11,15 @@
       "X-Tenant-ID": "acme-health"
     }
   },
+  "/audit": {
+    "target": "http://localhost:18080",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/audit": "/api/audit"
+    }
+  },
   "/fhir": {
     "target": "http://localhost:18080",
     "secure": false,

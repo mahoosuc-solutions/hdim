@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +22,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -61,6 +64,7 @@ public class VitalSignsService {
     private final VitalSignsRecordRepository vitalsRepository;
     private final com.healthdata.clinicalworkflow.domain.repository.RoomAssignmentRepository roomAssignmentRepository;
     private final com.healthdata.clinicalworkflow.client.PatientServiceClient patientServiceClient;
+    private final SimpMessagingTemplate messagingTemplate;
 
     /**
      * Record vital signs (internal version with UUID patientId)
@@ -319,8 +323,26 @@ public class VitalSignsService {
     /**
      * Trigger alerts
      *
-     * Sends alerts to providers for abnormal vital signs.
-     * In production, this would publish to Kafka or send notifications.
+     * Sends real-time alerts to providers for abnormal vital signs via WebSocket.
+     * Publishes to /topic/vitals-alerts/{patientId} for provider subscription.
+     *
+     * Message Format:
+     * {
+     *   "alertStatus": "critical",
+     *   "alertMessage": "Systolic BP 180 mmHg - critical high",
+     *   "recordedAt": "2025-01-23T14:32:00Z",
+     *   "patientId": "uuid",
+     *   "patientName": "Doe, John",
+     *   "roomNumber": "Room 101",
+     *   "values": {
+     *     "systolicBp": 180,
+     *     "diastolicBp": 95,
+     *     "heartRate": 102,
+     *     "temperature": 98.6,
+     *     "respiratoryRate": 18,
+     *     "oxygenSaturation": 96
+     *   }
+     * }
      *
      * @param vitals the vital signs with alerts
      * @param tenantId the tenant ID
@@ -331,8 +353,51 @@ public class VitalSignsService {
                 vitals.getPatientId(),
                 vitals.getAlertMessage());
 
+        try {
+            // Build WebSocket alert message
+            Map<String, Object> alertMessage = new HashMap<>();
+            alertMessage.put("alertStatus", vitals.getAlertStatus());
+            alertMessage.put("alertMessage", vitals.getAlertMessage());
+            alertMessage.put("recordedAt", vitals.getRecordedAt());
+            alertMessage.put("patientId", vitals.getPatientId());
+            alertMessage.put("tenantId", tenantId);
+
+            // Add patient name if available
+            String patientName = resolvePatientName(vitals.getPatientId(), tenantId);
+            if (patientName != null) {
+                alertMessage.put("patientName", patientName);
+            }
+
+            // Add room number if available
+            String roomNumber = resolveRoomNumber(vitals.getPatientId(), tenantId);
+            if (roomNumber != null) {
+                alertMessage.put("roomNumber", roomNumber);
+            }
+
+            // Add vital sign values
+            Map<String, Object> values = new HashMap<>();
+            if (vitals.getSystolicBp() != null) values.put("systolicBp", vitals.getSystolicBp());
+            if (vitals.getDiastolicBp() != null) values.put("diastolicBp", vitals.getDiastolicBp());
+            if (vitals.getHeartRate() != null) values.put("heartRate", vitals.getHeartRate());
+            if (vitals.getTemperatureF() != null) values.put("temperature", vitals.getTemperatureF());
+            if (vitals.getRespirationRate() != null) values.put("respiratoryRate", vitals.getRespirationRate());
+            if (vitals.getOxygenSaturation() != null) values.put("oxygenSaturation", vitals.getOxygenSaturation());
+            alertMessage.put("values", values);
+
+            // Publish to WebSocket topic: /topic/vitals-alerts/{patientId}
+            String destination = String.format("/topic/vitals-alerts/%s", vitals.getPatientId());
+            messagingTemplate.convertAndSend(destination, alertMessage);
+
+            log.info("Published vital signs alert to WebSocket topic: {} (status: {})",
+                    destination, vitals.getAlertStatus());
+
+        } catch (Exception e) {
+            log.error("Failed to publish vital signs alert to WebSocket for patient {}: {}",
+                    vitals.getPatientId(), e.getMessage(), e);
+            // Non-fatal - continue execution
+        }
+
         // TODO: In production, publish to Kafka topic: vitals.alert.{severity}
-        // TODO: Send real-time notification to provider via WebSocket
         // TODO: Create FHIR Flag resource for abnormal vitals
     }
 

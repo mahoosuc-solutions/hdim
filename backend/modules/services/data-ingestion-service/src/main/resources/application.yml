@@ -21,6 +21,9 @@ server:
   port: 8080
 
 # Downstream service URLs
+# For load testing, we call services directly (bypassing gateway authentication)
+# This works because the data-ingestion-service is in the same Docker network
+# In production, you would route through gateway with proper authentication
 fhir:
   service:
     url: http://localhost:8085/fhir

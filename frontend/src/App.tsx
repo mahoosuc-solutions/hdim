@@ -65,6 +65,7 @@ import { ToastContainer } from './components/ToastContainer';
 import { AnalyticsPanel } from './components/AnalyticsPanel';
 import MultiBatchComparison from './components/MultiBatchComparison';
 import { ComplianceGauge } from './components/ComplianceGauge';
+import { SkipToContent } from './components/SkipToContent';
 import type { AnyEvaluationEvent } from './types/events';
 import { EventType } from './types/events';
 
@@ -275,9 +276,10 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <SkipToContent />
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
         {/* AppBar */}
-        <AppBar position="static" elevation={1}>
+        <AppBar position="static" elevation={1} component="nav" role="navigation" aria-label="main navigation">
           <Toolbar>
             <AssessmentOutlined sx={{ mr: 2 }} />
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
@@ -335,7 +337,14 @@ function App() {
         </AppBar>
 
         {/* Main Content */}
-        <Container maxWidth="xl" sx={{ mt: 4, mb: 4, flex: 1 }}>
+        <Container
+          id="main-content"
+          component="main"
+          role="main"
+          maxWidth="xl"
+          sx={{ mt: 4, mb: 4, flex: 1 }}
+          tabIndex={-1}
+        >
           <Grid container spacing={3}>
             {/* Quick Actions Panel */}
             {allBatches.length > 0 && (

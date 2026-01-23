@@ -14,6 +14,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AlgorithmBuilderService } from '../../services/algorithm-builder.service';
 import { MeasureAlgorithm, PopulationBlock } from '../../models/measure-builder.model';
+import { LoggerService } from '../../../../services/logger.service';
 
 /**
  * VisualAlgorithmBuilderComponent renders a visual SVG representation of a measure algorithm
@@ -69,10 +70,12 @@ export class VisualAlgorithmBuilderComponent implements OnInit, AfterViewInit, O
   ]);
 
   private destroy$ = new Subject<void>();
+  private logger = this.loggerService.withContext('VisualAlgorithmBuilderComponent');
 
   constructor(
     private algorithmService: AlgorithmBuilderService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private loggerService: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -452,7 +455,7 @@ export class VisualAlgorithmBuilderComponent implements OnInit, AfterViewInit, O
   editBlock(): void {
     if (this.contextMenu) {
       // Emit event or call service
-      console.log('Edit block:', this.contextMenu.blockId);
+      this.logger.info('Edit block', this.contextMenu.blockId);
     }
     this.hideContextMenu();
   }

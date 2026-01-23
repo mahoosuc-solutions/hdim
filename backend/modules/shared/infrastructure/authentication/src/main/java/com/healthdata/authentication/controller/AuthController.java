@@ -1,9 +1,14 @@
 package com.healthdata.authentication.controller;
 
 import com.healthdata.authentication.config.JwtConfig;
+import com.healthdata.authentication.domain.Tenant;
+import com.healthdata.authentication.domain.TenantStatus;
 import com.healthdata.authentication.domain.User;
 import com.healthdata.authentication.dto.*;
 import com.healthdata.authentication.entity.RefreshToken;
+import com.healthdata.authentication.exception.TenantInactiveException;
+import com.healthdata.authentication.exception.TenantNotFoundException;
+import com.healthdata.authentication.repository.TenantRepository;
 import com.healthdata.authentication.repository.UserRepository;
 import com.healthdata.authentication.audit.MfaAuditEvent;
 import com.healthdata.authentication.service.CookieService;
@@ -13,6 +18,10 @@ import com.healthdata.authentication.service.MfaService;
 import com.healthdata.authentication.service.MfaPolicyService;
 import com.healthdata.authentication.service.MfaTokenService;
 import com.healthdata.authentication.service.RefreshTokenService;
+import com.healthdata.audit.models.AuditAction;
+import com.healthdata.audit.models.AuditEvent;
+import com.healthdata.audit.models.AuditOutcome;
+import com.healthdata.audit.service.AuditService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -68,6 +77,7 @@ import java.util.Optional;
 public class AuthController {
 
     private final UserRepository userRepository;
+    private final TenantRepository tenantRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenService jwtTokenService;
@@ -78,6 +88,7 @@ public class AuthController {
     private final MfaTokenService mfaTokenService;
     private final CookieService cookieService;
     private final com.healthdata.authentication.service.MfaPolicyService mfaPolicyService;
+    private final AuditService auditService;
 
     /**
      * Authenticate user with username/password.
@@ -295,6 +306,16 @@ public class AuthController {
                 "Email already exists: " + request.getEmail());
         }
 
+        // Validate all tenant IDs exist and are active
+        for (String tenantId : request.getTenantIds()) {
+            Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new TenantNotFoundException(tenantId));
+
+            if (tenant.getStatus() != TenantStatus.ACTIVE) {
+                throw new TenantInactiveException(tenantId);
+            }
+        }
+
         // Hash password with BCrypt
         String passwordHash = passwordEncoder.encode(request.getPassword());
 
@@ -318,6 +339,31 @@ public class AuthController {
         log.info("User registered successfully: {} (ID: {}) by admin: {}",
             user.getUsername(), user.getId(),
             authentication != null ? authentication.getName() : "SYSTEM");
+
+        // Audit user creation (system-level event, no specific tenant)
+        String adminUserId = null;
+        String adminUsername = null;
+        if (authentication != null) {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof User) {
+                adminUserId = ((User) principal).getId().toString();
+                adminUsername = ((User) principal).getUsername();
+            } else if (principal instanceof String) {
+                adminUsername = (String) principal;
+            }
+        }
+
+        auditService.logAuditEvent(AuditEvent.builder()
+            .tenantId(null)  // System-level event
+            .userId(adminUserId)
+            .username(adminUsername)
+            .action(AuditAction.CREATE)
+            .resourceType("User")
+            .resourceId(user.getId().toString())
+            .outcome(AuditOutcome.SUCCESS)
+            .serviceName("AuthController")
+            .methodName("register")
+            .build());
 
         // Build response (never include password hash)
         UserInfoResponse response = UserInfoResponse.builder()

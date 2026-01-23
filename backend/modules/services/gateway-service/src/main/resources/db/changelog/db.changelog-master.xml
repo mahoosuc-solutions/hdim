@@ -10,5 +10,7 @@
     <include file="db/changelog/0002-create-api-keys-tables.xml"/>
     <include file="db/changelog/0003-create-tenant-service-configs.xml"/>
     <include file="db/changelog/0004-extend-user-roles.xml"/>
+    <include file="db/changelog/0005-create-tenants-table.xml"/>
+    <include file="db/changelog/0006-seed-demo-tenant.xml"/>
 
 </databaseChangeLog>

@@ -32,6 +32,7 @@ include(
     "modules:shared:infrastructure:metrics",
     "modules:shared:infrastructure:event-sourcing",
     "modules:shared:infrastructure:event-store-client",
+    "modules:shared:infrastructure:feature-flags",
     "modules:shared:test-infrastructure"
 )
 

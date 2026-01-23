@@ -75,6 +75,15 @@ notification:
     enabled: true
     from-address: noreply@healthdata.com
     from-name: HealthData Platform
+  sms:
+    twilio:
+      enabled: false
+      account-sid: ${TWILIO_ACCOUNT_SID:}
+      auth-token: ${TWILIO_AUTH_TOKEN:}
+      from-number: ${TWILIO_FROM_NUMBER:}
+      messaging-service-sid: ${TWILIO_MESSAGING_SERVICE_SID:}
+      default-sender-id: HealthData
+      max-message-length: 1600
   retry:
     max-attempts: 3
     delay-ms: 60000
@@ -119,3 +128,28 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      twilio-sms:
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 5s
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 5
+        minimum-number-of-calls: 10
+        sliding-window-size: 10
+        record-exceptions:
+          - com.twilio.exception.ApiException
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+  retry:
+    instances:
+      twilio-sms:
+        max-attempts: 3
+        wait-duration: 1s
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - com.twilio.exception.ApiException

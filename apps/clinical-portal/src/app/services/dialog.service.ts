@@ -6,6 +6,7 @@ import { PatientEditDialogComponent, PatientEditDialogData } from '../dialogs/pa
 import { EvaluationDetailsDialogComponent, EvaluationDetailsDialogData } from '../dialogs/evaluation-details-dialog/evaluation-details-dialog.component';
 import { AdvancedFilterDialogComponent, AdvancedFilterDialogData, FilterConfig, FilterField } from '../dialogs/advanced-filter-dialog/advanced-filter-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../components/dialogs/confirm-dialog.component';
+import { LoggerService } from './logger.service';
 
 /**
  * Batch evaluation result
@@ -74,8 +75,12 @@ export class DialogService {
     restoreFocus: true,
     panelClass: 'custom-dialog-container',
   };
+  private logger = this.loggerService.withContext('DialogService');
 
-  constructor(private dialog: MatDialog) {}
+  constructor(
+    private dialog: MatDialog,
+    private loggerService: LoggerService
+  ) {}
 
   /**
    * Open Patient Edit Dialog
@@ -217,7 +222,7 @@ export class DialogService {
         : error;
 
     // Note: ErrorDetailsDialogComponent would be imported here
-    console.error('Error Details:', errorInfo);
+    this.logger.error('Error Details', errorInfo);
   }
 
   /**
@@ -227,7 +232,7 @@ export class DialogService {
    */
   openHelp(topic: string): void {
     // Note: HelpDialogComponent would be imported here
-    console.log('Opening help for topic:', topic);
+    this.logger.info('Opening help for topic', topic);
   }
 
   /**

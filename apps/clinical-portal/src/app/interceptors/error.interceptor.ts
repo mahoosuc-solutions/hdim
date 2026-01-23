@@ -173,24 +173,29 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         }
       }
 
+      // Skip error logging/tracking for demo endpoints (expected to be missing in dev)
+      const isDemoEndpoint = req.url.includes('/demo/api/v1/demo');
+
       // Log error to console for debugging
-      console.error('HTTP Error:', {
-        url: req.url,
-        method: req.method,
-        status: error.status,
-        statusText: error.statusText,
-        message: errorMessage,
-        retryAttempts: retryAttempt,
-        error: error.error,
-      });
+      if (!isDemoEndpoint) {
+        console.error('HTTP Error:', {
+          url: req.url,
+          method: req.method,
+          status: error.status,
+          statusText: error.statusText,
+          message: errorMessage,
+          retryAttempts: retryAttempt,
+          error: error.error,
+        });
+      }
 
       // Track error for compliance validation if enabled
-      if (COMPLIANCE_CONFIG.enableErrorTracking) {
+      if (COMPLIANCE_CONFIG.enableErrorTracking && !isDemoEndpoint) {
         const errorCode = mapHttpStatusToErrorCode(error.status);
         const severity = mapHttpStatusToSeverity(error.status);
         const currentUser = authService.currentUserValue;
         const tenantId = authService.getTenantId();
-        
+
         errorValidationService.trackError(error, {
           service: extractServiceName(req.url),
           endpoint: req.url,

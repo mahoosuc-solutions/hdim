@@ -1,6 +1,8 @@
 package com.healthdata.clinicalworkflow.domain.repository;
 
 import com.healthdata.clinicalworkflow.domain.model.VitalSignsRecordEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -166,6 +168,29 @@ public interface VitalSignsRecordRepository extends JpaRepository<VitalSignsReco
     List<VitalSignsRecordEntity> findByTenantIdAndPatientIdOrderByRecordedAtDesc(
         String tenantId,
         UUID patientId
+    );
+
+    /**
+     * Find vitals for a patient with pagination support
+     *
+     * Paginated query for vital signs history. Supports sorting and filtering
+     * at the database level for efficient memory usage with large datasets.
+     *
+     * @param tenantId Tenant identifier for multi-tenant isolation
+     * @param patientId UUID of the patient
+     * @param pageable Pagination and sorting parameters
+     * @return Page of vital signs records for the patient
+     */
+    @Query("""
+        SELECT v FROM VitalSignsRecordEntity v
+        WHERE v.tenantId = :tenantId
+        AND v.patientId = :patientId
+        ORDER BY v.recordedAt DESC
+    """)
+    Page<VitalSignsRecordEntity> findByTenantIdAndPatientIdWithPagination(
+        @Param("tenantId") String tenantId,
+        @Param("patientId") UUID patientId,
+        Pageable pageable
     );
 
     /**

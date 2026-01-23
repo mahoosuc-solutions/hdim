@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -764,34 +765,53 @@ public class VitalSignsService {
     /**
      * 2c. Get vitals history with pagination support (returns DTO)
      *
-     * Retrieves vitals for patient with pagination.
-     * Converts String patientId to UUID.
+     * Retrieves vitals for patient with full pagination support at the database level.
+     * Efficient for large datasets - only fetches requested page from database.
+     * Results are sorted by recordedAt descending (most recent first).
      *
-     * @param tenantId the tenant ID
-     * @param patientId the patient ID (String)
-     * @param pageable pagination info (not yet fully implemented)
+     * Performance:
+     * - Database-level pagination via Spring Data JPA
+     * - Avoids loading entire result set into memory
+     * - Supports custom page sizes (default 20, max 100)
+     *
+     * HIPAA Compliance:
+     * - Multi-tenant isolation enforced at repository level
+     * - PHI data not cached (no @Cacheable annotation)
+     *
+     * @param tenantId the tenant ID (HIPAA §164.312(d))
+     * @param patientId the patient ID (String, converted to UUID)
+     * @param pageable pagination parameters (page, size, sort)
      * @return paginated vitals history as DTO
      */
     public VitalsHistoryResponse getVitalsHistory(
             String tenantId,
             String patientId,
             Pageable pageable) {
-        log.debug("Retrieving vitals history for patient {} in tenant {}", patientId, tenantId);
+        log.debug("Retrieving vitals history for patient {} in tenant {} (page {}, size {})",
+                patientId, tenantId, pageable.getPageNumber(), pageable.getPageSize());
 
         UUID pid = UUID.fromString(patientId);
-        // TODO: Implement full pagination support
-        // For now return all vitals sorted by recorded time descending
-        List<VitalSignsRecordEntity> entities = getAllPatientVitals(pid, tenantId);
-        List<VitalSignsResponse> vitals = entities.stream()
+
+        // Query database with pagination - only fetches requested page
+        Page<VitalSignsRecordEntity> page = vitalsRepository.findByTenantIdAndPatientIdWithPagination(
+                tenantId, pid, pageable);
+
+        // Map entities to DTOs
+        List<VitalSignsResponse> vitals = page.getContent().stream()
                 .map(this::mapToVitalSignsResponse)
                 .collect(Collectors.toList());
 
+        log.debug("Retrieved {} vitals records (page {} of {}, total {} records)",
+                vitals.size(), page.getNumber() + 1, page.getTotalPages(), page.getTotalElements());
+
         return VitalsHistoryResponse.builder()
                 .vitals(vitals)
-                .totalRecords((long) vitals.size())
-                .currentPage(pageable.getPageNumber())
-                .pageSize(pageable.getPageSize())
-                .totalPages((int) Math.ceil((double) vitals.size() / pageable.getPageSize()))
+                .totalRecords(page.getTotalElements())
+                .currentPage(page.getNumber())
+                .pageSize(page.getSize())
+                .totalPages(page.getTotalPages())
+                .hasNext(page.hasNext())
+                .hasPrevious(page.hasPrevious())
                 .build();
     }
 

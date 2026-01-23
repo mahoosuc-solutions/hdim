@@ -30,15 +30,12 @@
     }
   },
   "/quality-measure": {
-    "target": "http://localhost:8087",
+    "target": "http://localhost:18080",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug",
     "pathRewrite": {
       "^/quality-measure": "/quality-measure"
-    },
-    "headers": {
-      "X-Tenant-ID": "demo-tenant"
     }
   },
   "/cql-engine": {
@@ -51,39 +48,30 @@
     }
   },
   "/care-gap": {
-    "target": "http://localhost:8086",
+    "target": "http://localhost:18080",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug",
     "pathRewrite": {
       "^/care-gap": "/care-gap"
-    },
-    "headers": {
-      "X-Tenant-ID": "demo-tenant"
     }
   },
   "/patient": {
-    "target": "http://localhost:8084",
+    "target": "http://localhost:18080",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug",
     "pathRewrite": {
       "^/patient": "/patient"
-    },
-    "headers": {
-      "X-Tenant-ID": "demo-tenant"
     }
   },
   "/qrda": {
-    "target": "http://localhost:8104",
+    "target": "http://localhost:18080",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug",
     "pathRewrite": {
       "^/qrda": "/qrda-export"
-    },
-    "headers": {
-      "X-Tenant-ID": "demo-tenant"
     }
   },
   "/monitoring/prometheus": {

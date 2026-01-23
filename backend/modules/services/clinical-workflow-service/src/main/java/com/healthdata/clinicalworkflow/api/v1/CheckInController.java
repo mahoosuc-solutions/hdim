@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -207,15 +208,15 @@ public class CheckInController {
             @Parameter(description = "Pagination parameters")
             @PageableDefault(size = 20) Pageable pageable) {
 
-        List<PatientCheckInEntity> entities = checkInService.getCheckInHistory(
+        Page<PatientCheckInEntity> page = checkInService.getCheckInHistory(
             tenantId, patientId, startDate, endDate, pageable);
 
         return ResponseEntity.ok(
             checkInMapper.toCheckInHistoryResponse(
-                entities,
-                (long) entities.size(),  // Note: actual total count would require a count query
-                pageable.getPageNumber(),
-                pageable.getPageSize()));
+                page.getContent(),
+                page.getTotalElements(),
+                page.getNumber(),
+                page.getSize()));
     }
 
     /**

@@ -155,6 +155,10 @@ import { MfaVerifyComponent } from './mfa-verify.component';
           </p>
         </mat-card-footer>
       </mat-card>
+
+      <div class="register-link">
+        Don't have an account? <a routerLink="/register">Register your organization</a>
+      </div>
     </div>
   `,
   styles: [`
@@ -289,6 +293,23 @@ import { MfaVerifyComponent } from './mfa-verify.component';
       width: 16px;
       height: 16px;
       color: #4caf50;
+    }
+
+    .register-link {
+      margin-top: 16px;
+      text-align: center;
+      color: white;
+      font-size: 14px;
+    }
+
+    .register-link a {
+      color: white;
+      font-weight: 500;
+      text-decoration: underline;
+    }
+
+    .register-link a:hover {
+      opacity: 0.9;
     }
 
     mat-card-header {

@@ -397,7 +397,9 @@ export class DemoControlBarComponent implements OnInit {
   scenarioOptions: Array<{ name: string; label: string; icon: string }> = [];
   showDataFlow = false;
 
-  private logger = this.loggerService.withContext('DemoControlBarComponent');
+  private get logger() {
+    return this.loggerService.withContext('DemoControlBarComponent');
+  }
 
   constructor(
     public demoService: DemoModeService,

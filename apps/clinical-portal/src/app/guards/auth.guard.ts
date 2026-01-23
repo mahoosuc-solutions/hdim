@@ -26,7 +26,9 @@ import { LoggerService } from '../services/logger.service';
   providedIn: 'root',
 })
 export class AuthGuard implements CanActivate {
-  private logger = this.loggerService.withContext('AuthGuard');
+  private get logger() {
+    return this.loggerService.withContext('AuthGuard');
+  }
 
   constructor(
     private authService: AuthService,

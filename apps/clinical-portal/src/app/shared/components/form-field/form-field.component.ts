@@ -154,7 +154,9 @@ export class FormFieldComponent implements OnInit {
     pattern: 'Invalid format'
   };
 
-  private logger = this.loggerService.withContext('FormFieldComponent');
+  private get logger() {
+    return this.loggerService.withContext('FormFieldComponent');
+  }
 
   constructor(private loggerService: LoggerService) {}
 

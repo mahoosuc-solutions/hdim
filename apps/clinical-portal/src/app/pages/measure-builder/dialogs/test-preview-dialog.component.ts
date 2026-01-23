@@ -470,7 +470,9 @@ export class TestPreviewDialogComponent implements OnInit, OnDestroy {
   errorMessage: string | null = null;
   totalExecutionTimeMs = 0;
   private testSubscription?: Subscription;
-  private logger = this.loggerService.withContext('TestPreviewDialogComponent');
+  private get logger() {
+    return this.loggerService.withContext('TestPreviewDialogComponent');
+  }
 
   constructor(
     private dialogRef: MatDialogRef<TestPreviewDialogComponent>,

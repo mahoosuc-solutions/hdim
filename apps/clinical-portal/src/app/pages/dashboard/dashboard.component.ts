@@ -124,7 +124,9 @@ export interface ComplianceTrendPoint {
 export class DashboardComponent implements OnInit {
   // Subscription cleanup
   private destroy$ = injectDestroy();
-  private logger = this.loggerService.withContext('DashboardComponent');
+  private get logger() {
+    return this.loggerService.withContext('DashboardComponent');
+  }
 
   /**
    * Configuration constants for trend calculation

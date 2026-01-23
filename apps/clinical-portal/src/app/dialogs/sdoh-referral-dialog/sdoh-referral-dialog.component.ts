@@ -126,7 +126,9 @@ export class SDOHReferralDialogComponent implements OnInit, OnDestroy {
   // Destroy subject
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
-  private logger = this.loggerService.withContext('SDOHReferralDialogComponent');
+  private get logger() {
+    return this.loggerService.withContext('SDOHReferralDialogComponent');
+  }
 
   // Constants for template
   readonly INTERNAL_DESTINATION_NAMES = INTERNAL_DESTINATION_NAMES;

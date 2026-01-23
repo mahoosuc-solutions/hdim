@@ -304,7 +304,9 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     { text: 'Report a Problem', url: '#' },
   ];
 
-  private logger = this.loggerService.withContext('ProviderDashboardComponent');
+  private get logger() {
+    return this.loggerService.withContext('ProviderDashboardComponent');
+  }
 
   constructor(
     private router: Router,

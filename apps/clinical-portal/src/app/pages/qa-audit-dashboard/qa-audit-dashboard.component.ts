@@ -26,7 +26,9 @@ import { LoggerService } from '../../services/logger.service';
 export class QaAuditDashboardComponent implements OnInit, OnDestroy {
 
   // Contextual logger
-  private logger = this.loggerService.withContext('QaAuditDashboardComponent');
+  private get logger() {
+    return this.loggerService.withContext('QaAuditDashboardComponent');
+  }
 
   // QA Review Queues
   pendingReviewDecisions: AIDecisionForReview[] = [];

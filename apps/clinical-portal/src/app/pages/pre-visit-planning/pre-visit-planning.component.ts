@@ -107,7 +107,9 @@ export class PreVisitPlanningComponent implements OnInit, OnDestroy {
       sum + p.careGaps.filter(g => g.urgency === 'high').length, 0)
   );
 
-  private logger = this.loggerService.withContext('PreVisitPlanningComponent');
+  private get logger() {
+    return this.loggerService.withContext('PreVisitPlanningComponent');
+  }
 
   constructor(
     private patientService: PatientService,

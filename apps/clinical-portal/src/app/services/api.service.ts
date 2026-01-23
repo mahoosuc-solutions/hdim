@@ -24,7 +24,9 @@ export class ApiService {
   private readonly maxRetries = 3;
   private readonly retryDelay = 1000; // 1 second
   private readonly maxRetryDelay = 10000; // 10 seconds
-  private logger = this.loggerService.withContext('ApiService');
+  private get logger() {
+    return this.loggerService.withContext('ApiService');
+  }
 
   constructor(
     private http: HttpClient,

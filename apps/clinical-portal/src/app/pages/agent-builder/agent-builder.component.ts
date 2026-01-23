@@ -130,7 +130,9 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
   publishLoading = false;
   deleteLoading = false;
 
-  private logger = this.loggerService.withContext('AgentBuilderComponent');
+  private get logger() {
+    return this.loggerService.withContext('AgentBuilderComponent');
+  }
 
   constructor(
     private route: ActivatedRoute,

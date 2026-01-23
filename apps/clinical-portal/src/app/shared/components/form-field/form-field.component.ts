@@ -21,6 +21,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { LoggerService } from '../../../services/logger.service';
 
 /**
  * Validation error definition
@@ -153,9 +154,13 @@ export class FormFieldComponent implements OnInit {
     pattern: 'Invalid format'
   };
 
+  private logger = this.loggerService.withContext('FormFieldComponent');
+
+  constructor(private loggerService: LoggerService) {}
+
   ngOnInit(): void {
     if (!this.control) {
-      console.error('FormFieldComponent: control input is required');
+      this.logger.error('FormFieldComponent: control input is required');
     }
   }
 

@@ -47,9 +47,12 @@ testcontainers-redis = "2.2.2"
 lombok = "1.18.34"
 mapstruct = "1.6.2"
 commons-lang3 = "3.17.0"
+commons-csv = "1.11.0"
 guava = "33.3.1-jre"
 hypersistence-utils = "3.9.0"
 datafaker = "2.4.2"
+twilio = "9.14.0"
+poi-ooxml = "5.2.5"
 
 # Export Libraries
 opencsv = "5.9"
@@ -167,9 +170,12 @@ lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
 mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
+commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "commons-csv" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 hypersistence-utils-hibernate-63 = { module = "io.hypersistence:hypersistence-utils-hibernate-63", version.ref = "hypersistence-utils" }
 datafaker = { module = "net.datafaker:datafaker", version.ref = "datafaker" }
+twilio = { module = "com.twilio.sdk:twilio", version.ref = "twilio" }
+poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poi-ooxml" }
 
 # Export Libraries
 opencsv = { module = "com.opencsv:opencsv", version.ref = "opencsv" }

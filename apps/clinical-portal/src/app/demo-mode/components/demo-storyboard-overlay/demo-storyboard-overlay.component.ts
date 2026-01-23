@@ -91,11 +91,12 @@ export class DemoStoryboardOverlayComponent implements OnInit, OnDestroy {
     private demoModeService: DemoModeService,
     private narrationService: DemoNarrationService,
     private renderer: Renderer2
-  ) {}
-
-  ngOnInit(): void {
+  ) {
+    // Initialize reactive state from signals
     this.activeStep = this.demoModeService.activeStoryboardStep();
     this.connected = this.demoModeService.storyboardConnected();
+
+    // effect() must be called in constructor (injection context)
     effect(() => {
       const step = this.demoModeService.activeStoryboardStep();
       this.activeStep = step;
@@ -111,6 +112,10 @@ export class DemoStoryboardOverlayComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  ngOnInit(): void {
+    // Initialization moved to constructor
   }
 
   ngOnDestroy(): void {

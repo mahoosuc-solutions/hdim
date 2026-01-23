@@ -32,10 +32,17 @@ import com.healthdata.audit.service.ai.AIAuditEventPublisher;
  * - Batch evaluation: 200-400 req/s per instance
  * - Horizontal scaling: up to 8,000 req/s (20 pods)
  */
-@SpringBootApplication(scanBasePackages = {
-    // Service code - includes JWT security components
-    "com.healthdata.cql"
-})
+@SpringBootApplication(
+    scanBasePackages = {
+        // Service code - includes JWT security components
+        "com.healthdata.cql"
+    },
+    exclude = {
+        // Exclude authentication auto-configuration to prevent Tenant entity scanning
+        // CQL Engine doesn't need User/Tenant entities - uses gateway-trust authentication
+        com.healthdata.authentication.config.AuthenticationAutoConfiguration.class
+    }
+)
 @Import(AIAuditEventPublisher.class)
 @EnableFeignClients
 @EnableJpaRepositories(basePackages = {

@@ -1,6 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
+import { LoggerService } from '../../services/logger.service';
 import { API_CONFIG } from '../../config/api.config';
 import { environment } from '../../../environments/environment';
 
@@ -131,10 +132,13 @@ export class DemoModeService {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   });
 
+  private logger = this.loggerService.withContext('DemoModeService');
+
   constructor(
     private http: HttpClient,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private loggerService: LoggerService
   ) {
     // Check URL for demo parameter on init
     this.checkUrlForDemoMode();
@@ -194,7 +198,7 @@ export class DemoModeService {
     if (this.storyboardEnabled()) {
       this.loadStoryboard();
     }
-    console.log('[Demo Mode] Enabled');
+    this.logger.info('[Demo Mode] Enabled');
   }
 
   /**
@@ -209,7 +213,7 @@ export class DemoModeService {
     this.storyboardConnected.set(false);
     this.storyboardError.set(null);
     this.disconnectStoryboardSocket();
-    console.log('[Demo Mode] Disabled');
+    this.logger.info('[Demo Mode] Disabled');
 
     // Remove demo parameter from URL
     const url = new URL(window.location.href);
@@ -291,7 +295,7 @@ export class DemoModeService {
             this.setStoryboardStepIndex(message.stepIndex);
           }
         } catch (err) {
-          console.warn('[Demo Mode] Failed to parse storyboard message', err);
+          this.logger.warn('[Demo Mode] Failed to parse storyboard message', err);
         }
       };
       this.storyboardSocket.onerror = () => {
@@ -341,7 +345,7 @@ export class DemoModeService {
     } catch {
       // Backend not available - this is expected when demo service isn't running
       this.demoBackendAvailable = false;
-      console.log('[Demo Mode] Demo backend not available - using local-only mode');
+      this.logger.info('[Demo Mode] Demo backend not available - using local-only mode');
     } finally {
       this.backendCheckInProgress = false;
     }
@@ -385,7 +389,7 @@ export class DemoModeService {
         );
       }
     } catch (err: unknown) {
-      console.warn('[Demo Mode] Could not load status:', err);
+      this.logger.warn('[Demo Mode] Could not load status:', err);
       // Demo mode can still work without backend connection
       this.error.set('Demo backend not available');
     } finally {
@@ -412,7 +416,7 @@ export class DemoModeService {
       this.scenarios.set(resolved);
       return resolved;
     } catch (err) {
-      console.error('[Demo Mode] Could not load scenarios:', err);
+      this.logger.error('[Demo Mode] Could not load scenarios:', err);
       this.scenarios.set([]);
       return [];
     }
@@ -614,7 +618,7 @@ export class DemoModeService {
       }
     }, 1000);
 
-    console.log('[Demo Mode] Recording started');
+    this.logger.info('[Demo Mode] Recording started');
   }
 
   /**
@@ -630,7 +634,7 @@ export class DemoModeService {
     }
 
     const duration = this.recordingDuration();
-    console.log(`[Demo Mode] Recording stopped. Duration: ${this.formattedRecordingTime()}`);
+    this.logger.info(`[Demo Mode] Recording stopped. Duration: ${this.formattedRecordingTime()}`);
   }
 
   /**

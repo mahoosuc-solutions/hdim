@@ -8,6 +8,7 @@ import {
 } from '@angular/router';
 import { Observable } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { LoggerService } from '../services/logger.service';
 
 /**
  * Authentication Guard - Protects routes that require authentication
@@ -25,9 +26,12 @@ import { AuthService } from '../services/auth.service';
   providedIn: 'root',
 })
 export class AuthGuard implements CanActivate {
+  private logger = this.loggerService.withContext('AuthGuard');
+
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private loggerService: LoggerService
   ) {}
 
   canActivate(
@@ -40,7 +44,7 @@ export class AuthGuard implements CanActivate {
 
     // Store the attempted URL for redirecting after login
     const returnUrl = state.url;
-    console.warn(`User not authenticated. Redirecting to login. Return URL: ${returnUrl}`);
+    this.logger.warn(`User not authenticated. Redirecting to login. Return URL: ${returnUrl}`);
 
     // Redirect to login page with return URL
     return this.router.createUrlTree(['/login'], {

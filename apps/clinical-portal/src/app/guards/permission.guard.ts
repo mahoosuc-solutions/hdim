@@ -8,6 +8,7 @@ import {
 } from '@angular/router';
 import { Observable } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { LoggerService } from '../services/logger.service';
 
 /**
  * Permission Guard - Protects routes based on user permissions
@@ -26,9 +27,12 @@ import { AuthService } from '../services/auth.service';
   providedIn: 'root',
 })
 export class PermissionGuard implements CanActivate {
+  private logger = this.loggerService.withContext('PermissionGuard');
+
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private loggerService: LoggerService
   ) {}
 
   canActivate(
@@ -50,7 +54,7 @@ export class PermissionGuard implements CanActivate {
     }
 
     // User doesn't have required permission
-    console.warn(
+    this.logger.warn(
       `User doesn't have required permissions: ${requiredPermissions.join(', ')}. Redirecting to unauthorized.`
     );
 

@@ -10,6 +10,7 @@ import com.healthdata.clinicalworkflow.infrastructure.exception.ResourceNotFound
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -205,26 +206,38 @@ public class PatientCheckInService {
     }
 
     /**
-     * Get check-in history with pagination (1d)
+     * Get check-in history with pagination
      *
-     * Retrieves check-in history for a patient within a date range.
-     * Supports optional date filtering and pagination.
+     * Retrieves check-in records for a patient within a date range using database-level pagination.
+     * Only fetches the requested page from the database for efficient memory usage.
      *
-     * @param tenantId the tenant ID
-     * @param patientId the patient ID (as String)
-     * @param startDate optional start date
-     * @param endDate optional end date
-     * @param pageable pagination information
-     * @return list of check-in records
+     * Date Range Defaults:
+     * - Start date: 12 months ago (if not specified)
+     * - End date: Tomorrow (if not specified)
+     *
+     * Pagination:
+     * - Database-level LIMIT/OFFSET via Spring Data JPA Page<T>
+     * - Sorted by checkInTime DESC (most recent first)
+     * - Page numbering is 0-based
+     *
+     * Multi-Tenant Isolation:
+     * - All queries filter by tenantId
+     *
+     * @param tenantId Tenant identifier for multi-tenant isolation
+     * @param patientId UUID of the patient (as String)
+     * @param startDate Start of date range (nullable, defaults to 12 months ago)
+     * @param endDate End of date range (nullable, defaults to tomorrow)
+     * @param pageable Pagination parameters (page number, size, sorting)
+     * @return Page of check-in records ordered by check-in time descending
      */
-    public List<PatientCheckInEntity> getCheckInHistory(
+    public Page<PatientCheckInEntity> getCheckInHistory(
             String tenantId,
             String patientId,
             LocalDate startDate,
             LocalDate endDate,
             Pageable pageable) {
-        log.debug("Retrieving check-in history for patient {} from {} to {} in tenant {}",
-                patientId, startDate, endDate, tenantId);
+        log.debug("Retrieving check-in history for patient {} from {} to {} in tenant {} (page {})",
+                patientId, startDate, endDate, tenantId, pageable.getPageNumber());
 
         UUID pid = UUID.fromString(patientId);
 
@@ -236,10 +249,9 @@ public class PatientCheckInService {
                 endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()) :
                 LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault());
 
-        // TODO: Implement pagination support
-        // For now, return unpaged list sorted by check-in time descending
-        return checkInRepository.findByTenantIdAndPatientIdAndCheckInTimeBetween(
-                tenantId, pid, start.toInstant(), end.toInstant());
+        // Query database with pagination - only fetches requested page
+        return checkInRepository.findByTenantIdAndPatientIdAndCheckInTimeBetweenWithPagination(
+                tenantId, pid, start.toInstant(), end.toInstant(), pageable);
     }
 
     /**

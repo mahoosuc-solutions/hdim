@@ -1,6 +1,8 @@
 package com.healthdata.clinicalworkflow.domain.repository;
 
 import com.healthdata.clinicalworkflow.domain.model.PatientCheckInEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -230,5 +232,34 @@ public interface PatientCheckInRepository extends JpaRepository<PatientCheckInEn
         @Param("patientId") UUID patientId,
         @Param("start") Instant start,
         @Param("end") Instant end
+    );
+
+    /**
+     * Find check-ins for a patient within a time range with pagination
+     *
+     * Uses database-level pagination for efficient memory usage and performance.
+     * Only fetches the requested page of results from the database.
+     *
+     * @param tenantId Tenant identifier for multi-tenant isolation
+     * @param patientId UUID of the patient
+     * @param start Start of time range (inclusive)
+     * @param end End of time range (exclusive)
+     * @param pageable Pagination parameters (page number, size, sorting)
+     * @return Page of check-ins within the time range, ordered by check-in time descending
+     */
+    @Query("""
+        SELECT c FROM PatientCheckInEntity c
+        WHERE c.tenantId = :tenantId
+        AND c.patientId = :patientId
+        AND c.checkInTime >= :start
+        AND c.checkInTime < :end
+        ORDER BY c.checkInTime DESC
+    """)
+    Page<PatientCheckInEntity> findByTenantIdAndPatientIdAndCheckInTimeBetweenWithPagination(
+        @Param("tenantId") String tenantId,
+        @Param("patientId") UUID patientId,
+        @Param("start") Instant start,
+        @Param("end") Instant end,
+        Pageable pageable
     );
 }

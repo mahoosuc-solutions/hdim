@@ -2,6 +2,7 @@ package com.healthdata.clinicalworkflow.client;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
+import org.hl7.fhir.r4.model.Flag;
 import org.hl7.fhir.r4.model.Observation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -110,6 +111,83 @@ public class FhirServiceClient {
             Observation observation, String tenantId, String userId, Throwable throwable) {
         log.warn("FHIR service unavailable for creating Observation for patient {} in tenant {}: {}",
                 observation.getSubject().getReference(), tenantId, throwable.getMessage());
+        return null;
+    }
+
+    /**
+     * Create FHIR Flag resource
+     *
+     * Persists a Flag resource to the FHIR service to mark abnormal clinical conditions.
+     * Flags are used to alert providers to important patient information requiring attention.
+     *
+     * Use Cases:
+     * - Abnormal vital signs (critical blood pressure, low oxygen saturation)
+     * - Clinical alerts (drug allergies, fall risk, isolation precautions)
+     * - Care coordination (pending test results, unresolved care gaps)
+     *
+     * Circuit Breaker:
+     * - Fallback: Returns null if FHIR service unavailable
+     * - Calling code should handle null gracefully
+     *
+     * @param flag the FHIR R4 Flag resource
+     * @param tenantId the tenant ID (HIPAA §164.312(d))
+     * @param userId the user ID performing the action
+     * @return created Flag with server-assigned ID, or null if failed
+     */
+    @CircuitBreaker(name = "fhir-service", fallbackMethod = "createFlagFallback")
+    public Flag createFlag(Flag flag, String tenantId, String userId) {
+        try {
+            log.debug("Creating FHIR Flag for patient {} in tenant {} (code: {})",
+                    flag.getSubject().getReference(), tenantId,
+                    flag.getCode().getCodingFirstRep().getCode());
+
+            String url = String.format("%s/Flag", fhirServiceUrl);
+            String flagJson = JSON_PARSER.encodeResourceToString(flag);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.valueOf("application/fhir+json"));
+            headers.set("X-Tenant-ID", tenantId);
+            headers.set("X-User-ID", userId);
+
+            HttpEntity<String> request = new HttpEntity<>(flagJson, headers);
+
+            ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Flag created = (Flag) JSON_PARSER.parseResource(response.getBody());
+                log.info("Successfully created FHIR Flag {} for patient {} in tenant {} (code: {})",
+                        created.getIdElement().getIdPart(),
+                        flag.getSubject().getReference(),
+                        tenantId,
+                        flag.getCode().getCodingFirstRep().getCode());
+                return created;
+            }
+
+            log.warn("FHIR service returned non-success status for Flag creation: {}", response.getStatusCode());
+            return null;
+
+        } catch (Exception e) {
+            log.error("Error creating FHIR Flag for patient {}: {}",
+                    flag.getSubject().getReference(), e.getMessage());
+            throw e; // Circuit breaker will catch and invoke fallback
+        }
+    }
+
+    /**
+     * Fallback method when FHIR service is unavailable for Flag creation
+     *
+     * Returns null to indicate Flag could not be created.
+     * Calling code should handle null gracefully (e.g., log warning).
+     *
+     * @param flag the FHIR Flag resource
+     * @param tenantId the tenant ID
+     * @param userId the user ID
+     * @param throwable the exception that triggered fallback
+     * @return null (flag not created)
+     */
+    private Flag createFlagFallback(Flag flag, String tenantId, String userId, Throwable throwable) {
+        log.warn("FHIR service unavailable for creating Flag for patient {} in tenant {}: {}",
+                flag.getSubject().getReference(), tenantId, throwable.getMessage());
         return null;
     }
 }

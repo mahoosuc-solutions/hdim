@@ -94,6 +94,8 @@ const EventRow = ({
     }
   };
 
+  const eventLabel = `${event.eventType} event for ${getMeasureId(event)} at ${formatTimestamp(event.timestamp)}`;
+
   return (
     <Box
       style={style}
@@ -101,6 +103,7 @@ const EventRow = ({
       tabIndex={0}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
+      aria-label={eventLabel}
       sx={{
         display: 'flex',
         alignItems: 'center',

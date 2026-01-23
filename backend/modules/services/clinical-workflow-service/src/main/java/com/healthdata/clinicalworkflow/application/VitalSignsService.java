@@ -3,6 +3,7 @@ package com.healthdata.clinicalworkflow.application;
 import com.healthdata.clinicalworkflow.api.v1.dto.VitalAlertResponse;
 import com.healthdata.clinicalworkflow.api.v1.dto.VitalSignsResponse;
 import com.healthdata.clinicalworkflow.api.v1.dto.VitalsHistoryResponse;
+import com.healthdata.clinicalworkflow.client.FhirServiceClient;
 import com.healthdata.clinicalworkflow.domain.model.VitalSignsRecordEntity;
 import com.healthdata.clinicalworkflow.domain.repository.VitalSignsRecordRepository;
 import lombok.Builder;
@@ -28,6 +29,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.hl7.fhir.r4.model.*;
+import ca.uhn.fhir.context.FhirContext;
 
 /**
  * Vital Signs Service
@@ -64,7 +68,10 @@ public class VitalSignsService {
     private final VitalSignsRecordRepository vitalsRepository;
     private final com.healthdata.clinicalworkflow.domain.repository.RoomAssignmentRepository roomAssignmentRepository;
     private final com.healthdata.clinicalworkflow.client.PatientServiceClient patientServiceClient;
+    private final FhirServiceClient fhirServiceClient;
     private final SimpMessagingTemplate messagingTemplate;
+
+    private static final FhirContext FHIR_CONTEXT = FhirContext.forR4();
 
     /**
      * Record vital signs (internal version with UUID patientId)
@@ -557,28 +564,142 @@ public class VitalSignsService {
     /**
      * Create FHIR Observation resource
      *
-     * Converts vital signs to FHIR R4 Observation resource.
-     * In production, this would call FHIR service API.
+     * Converts vital signs to FHIR R4 Observation resource and persists it via FHIR Service.
+     * Creates a panel Observation (LOINC 85353-1 Vital Signs Panel) with components for
+     * each vital sign measurement.
+     *
+     * FHIR Compliance:
+     * - Uses LOINC codes for all measurements (USCDI requirement)
+     * - Structured as component-based Observation (FHIR R4 best practice)
+     * - Includes proper units (UCUM format)
+     *
+     * Circuit Breaker:
+     * - Gracefully handles FHIR service unavailability
+     * - Returns null if observation cannot be created
+     * - Calling code should handle null return gracefully
      *
      * @param vitals the vital signs record
-     * @return FHIR Observation JSON (placeholder)
+     * @return FHIR Observation resource with server-assigned ID, or null if failed
      */
-    public String createObservationResource(VitalSignsRecordEntity vitals) {
-        log.debug("Creating FHIR Observation for vitals {}", vitals.getId());
+    public Observation createObservationResource(VitalSignsRecordEntity vitals) {
+        log.debug("Creating FHIR Observation for vitals {} in tenant {}",
+                vitals.getId(), vitals.getTenantId());
 
-        // TODO: In production, use HAPI FHIR to create Observation resource
-        // TODO: Call FHIR service to persist Observation
-        // For now, return placeholder JSON structure
+        try {
+            // Create Observation resource
+            Observation observation = new Observation();
+            observation.setStatus(Observation.ObservationStatus.FINAL);
 
-        return String.format(
-                "{\"resourceType\": \"Observation\", \"id\": \"%s\", " +
-                "\"status\": \"final\", \"code\": {\"text\": \"Vital Signs\"}, " +
-                "\"subject\": {\"reference\": \"Patient/%s\"}, " +
-                "\"effectiveDateTime\": \"%s\"}",
-                vitals.getId(),
-                vitals.getPatientId(),
-                vitals.getRecordedAt()
-        );
+            // Set code: Vital Signs Panel (LOINC 85353-1)
+            CodeableConcept code = new CodeableConcept();
+            Coding coding = code.addCoding();
+            coding.setSystem("http://loinc.org");
+            coding.setCode("85353-1");
+            coding.setDisplay("Vital signs, weight, height, head circumference, oxygen saturation and BMI panel");
+            observation.setCode(code);
+
+            // Set subject reference
+            observation.setSubject(new Reference("Patient/" + vitals.getPatientId()));
+
+            // Set encounter reference if available
+            if (vitals.getEncounterId() != null) {
+                observation.setEncounter(new Reference("Encounter/" + vitals.getEncounterId()));
+            }
+
+            // Set effective date/time
+            observation.setEffective(new DateTimeType(java.util.Date.from(vitals.getRecordedAt())));
+
+            // Add components for each vital sign
+            addVitalSignComponent(observation, "8480-6", "Systolic blood pressure",
+                    vitals.getSystolicBp(), "mm[Hg]");
+            addVitalSignComponent(observation, "8462-4", "Diastolic blood pressure",
+                    vitals.getDiastolicBp(), "mm[Hg]");
+            addVitalSignComponent(observation, "8867-4", "Heart rate",
+                    vitals.getHeartRate(), "/min");
+            addVitalSignComponent(observation, "8310-5", "Body temperature",
+                    vitals.getTemperatureF(), "[degF]");
+            addVitalSignComponent(observation, "9279-1", "Respiratory rate",
+                    vitals.getRespirationRate(), "/min");
+            addVitalSignComponent(observation, "2708-6", "Oxygen saturation in Arterial blood",
+                    vitals.getOxygenSaturation(), "%");
+            addVitalSignComponent(observation, "29463-7", "Body weight",
+                    vitals.getWeightKg(), "kg");
+            addVitalSignComponent(observation, "8302-2", "Body height",
+                    vitals.getHeightCm(), "cm");
+            addVitalSignComponent(observation, "39156-5", "Body mass index (BMI)",
+                    vitals.getBmi(), "kg/m2");
+
+            // Add notes as comment if present
+            if (vitals.getNotes() != null && !vitals.getNotes().isEmpty()) {
+                observation.addNote(new Annotation().setText(vitals.getNotes()));
+            }
+
+            // Call FHIR service to persist observation
+            Observation created = fhirServiceClient.createObservation(
+                    observation,
+                    vitals.getTenantId(),
+                    vitals.getRecordedBy() != null ? vitals.getRecordedBy() : "system"
+            );
+
+            if (created != null) {
+                log.info("Successfully created FHIR Observation {} for vitals {} in tenant {}",
+                        created.getIdElement().getIdPart(),
+                        vitals.getId(),
+                        vitals.getTenantId());
+            } else {
+                log.warn("FHIR service unavailable for vitals {} in tenant {}",
+                        vitals.getId(), vitals.getTenantId());
+            }
+
+            return created;
+
+        } catch (Exception e) {
+            log.error("Error creating FHIR Observation for vitals {}: {}",
+                    vitals.getId(), e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Add vital sign component to Observation
+     *
+     * Helper method to add a single vital sign measurement as a component
+     * to the Observation resource with proper LOINC code and UCUM unit.
+     *
+     * @param observation the Observation resource
+     * @param loincCode the LOINC code for the vital sign
+     * @param display the human-readable display text
+     * @param value the measured value (can be null)
+     * @param unit the UCUM unit
+     */
+    private void addVitalSignComponent(
+            Observation observation,
+            String loincCode,
+            String display,
+            BigDecimal value,
+            String unit) {
+
+        if (value == null) {
+            return; // Skip if no value recorded
+        }
+
+        Observation.ObservationComponentComponent component = observation.addComponent();
+
+        // Set component code
+        CodeableConcept componentCode = new CodeableConcept();
+        Coding componentCoding = componentCode.addCoding();
+        componentCoding.setSystem("http://loinc.org");
+        componentCoding.setCode(loincCode);
+        componentCoding.setDisplay(display);
+        component.setCode(componentCode);
+
+        // Set component value
+        Quantity quantity = new Quantity();
+        quantity.setValue(value);
+        quantity.setUnit(unit);
+        quantity.setSystem("http://unitsofmeasure.org");
+        quantity.setCode(unit);
+        component.setValue(quantity);
     }
 
     /**

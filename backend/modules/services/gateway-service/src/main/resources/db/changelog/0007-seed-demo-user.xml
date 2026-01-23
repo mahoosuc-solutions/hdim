@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0007-seed-demo-user" author="development">
+        <comment>Create demo-user for development and testing (password: demo)</comment>
+
+        <!-- Insert demo user -->
+        <insert tableName="users">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="username" value="demo-user"/>
+            <column name="email" value="demo@healthdata.com"/>
+            <!-- BCrypt hash of "demo" with strength 12 -->
+            <column name="password_hash" value="$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYWY6L8qmz6"/>
+            <column name="first_name" value="Demo"/>
+            <column name="last_name" value="User"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="email_verified" valueBoolean="true"/>
+            <column name="mfa_enabled" valueBoolean="false"/>
+            <column name="failed_login_attempts" valueNumeric="0"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="notes" value="Demo user for development and testing"/>
+        </insert>
+
+        <!-- Assign ADMIN role to demo user -->
+        <insert tableName="user_roles">
+            <column name="user_id" valueComputed="(SELECT id FROM users WHERE username = 'demo-user')"/>
+            <column name="role" value="ADMIN"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="user_roles">
+                <where>user_id = (SELECT id FROM users WHERE username = 'demo-user')</where>
+            </delete>
+            <delete tableName="users">
+                <where>username = 'demo-user'</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

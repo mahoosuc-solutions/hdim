@@ -9,6 +9,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDividerModule } from '@angular/material/divider';
+import { LoggerService } from '../../../services/logger.service';
 import { DemoModeService } from '../../services/demo-mode.service';
 import { DemoSeedingDataFlowComponent } from '../demo-seeding-data-flow/demo-seeding-data-flow.component';
 
@@ -396,7 +397,12 @@ export class DemoControlBarComponent implements OnInit {
   scenarioOptions: Array<{ name: string; label: string; icon: string }> = [];
   showDataFlow = false;
 
-  constructor(public demoService: DemoModeService) {}
+  private logger = this.loggerService.withContext('DemoControlBarComponent');
+
+  constructor(
+    public demoService: DemoModeService,
+    private loggerService: LoggerService
+  ) {}
 
   async ngOnInit(): Promise<void> {
     const scenarios = await this.demoService.loadScenarios();
@@ -420,7 +426,7 @@ export class DemoControlBarComponent implements OnInit {
       this.showDataFlow = true;
       await this.demoService.loadScenario(scenarioId);
     } catch (err) {
-      console.error('Failed to load scenario:', err);
+      this.logger.error('Failed to load scenario:', err);
     }
   }
 
@@ -429,7 +435,7 @@ export class DemoControlBarComponent implements OnInit {
       try {
         await this.demoService.resetDemo();
       } catch (err) {
-        console.error('Failed to reset demo:', err);
+        this.logger.error('Failed to reset demo:', err);
       }
     }
   }
@@ -449,7 +455,7 @@ export class DemoControlBarComponent implements OnInit {
     try {
       await this.demoService.cancelCurrentLoad();
     } catch (err) {
-      console.error('Failed to cancel scenario load:', err);
+      this.logger.error('Failed to cancel scenario load:', err);
     }
   }
 
@@ -460,7 +466,7 @@ export class DemoControlBarComponent implements OnInit {
     try {
       await this.demoService.stopCurrentSession();
     } catch (err) {
-      console.error('Failed to stop demo session:', err);
+      this.logger.error('Failed to stop demo session:', err);
     }
   }
 
@@ -469,7 +475,7 @@ export class DemoControlBarComponent implements OnInit {
       try {
         await this.demoService.resetCurrentTenant();
       } catch (err) {
-        console.error('Failed to reset current tenant:', err);
+        this.logger.error('Failed to reset current tenant:', err);
       }
     }
   }
@@ -481,7 +487,7 @@ export class DemoControlBarComponent implements OnInit {
         await this.demoService.createSnapshot(name);
         alert('Snapshot created successfully!');
       } catch (err) {
-        console.error('Failed to create snapshot:', err);
+        this.logger.error('Failed to create snapshot:', err);
       }
     }
   }

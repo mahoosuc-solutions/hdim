@@ -53,6 +53,10 @@ dependencies {
     // Common domain models
     api(project(":modules:shared:domain:common"))
 
+    // Audit service for HIPAA-compliant logging
+    // Required for tenant registration audit trail
+    implementation(project(":modules:shared:infrastructure:audit"))
+
     // Cache eviction for HIPAA compliance (logout)
     // ⚠️ CRITICAL: Required for clearing PHI caches on user logout
     // See: /backend/HIPAA-CACHE-COMPLIANCE.md

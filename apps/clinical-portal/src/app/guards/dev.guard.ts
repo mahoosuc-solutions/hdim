@@ -7,6 +7,7 @@ import {
   UrlTree,
 } from '@angular/router';
 import { environment } from '../../environments/environment';
+import { LoggerService } from '../services/logger.service';
 
 /**
  * Development Guard - Allows access in development mode
@@ -27,7 +28,12 @@ import { environment } from '../../environments/environment';
   providedIn: 'root',
 })
 export class DevGuard implements CanActivate {
-  constructor(private router: Router) {}
+  private logger = this.loggerService.withContext('DevGuard');
+
+  constructor(
+    private router: Router,
+    private loggerService: LoggerService
+  ) {}
 
   canActivate(
     route: ActivatedRouteSnapshot,
@@ -39,7 +45,7 @@ export class DevGuard implements CanActivate {
     }
 
     // In production, redirect to login (should be used with AuthGuard)
-    console.warn('DevGuard: Production mode - access denied');
+    this.logger.warn('DevGuard: Production mode - access denied');
     return this.router.createUrlTree(['/login'], {
       queryParams: { returnUrl: state.url },
     });

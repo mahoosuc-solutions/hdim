@@ -35,6 +35,7 @@ import { LoadingButtonComponent } from '../../shared/components/loading-button/l
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { CSVHelper } from '../../utils/csv-helper';
 import { TrackInteraction } from '../../utils/ai-tracking.decorator';
+import { LoggerService } from '../../services/logger.service';
 
 interface PatientStatistics {
   totalPatients: number;
@@ -150,6 +151,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
   // Search debounce
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
+  private logger = this.loggerService.withContext('PatientsComponent');
 
   constructor(
     private patientService: PatientService,
@@ -160,7 +162,8 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
     private recentPatientsService: RecentPatientsService,
     private router: Router,
     private fb: FormBuilder,
-    public aiAssistant: AIAssistantService
+    public aiAssistant: AIAssistantService,
+    private loggerService: LoggerService
   ) {
     this.filterForm = this.fb.group({
       gender: [null],
@@ -248,7 +251,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
         error: (err) => {
           this.errorDetails = ErrorFactory.createFhirServiceError('load patients', err);
           this.error = this.errorDetails.userMessage;
-          console.error('[ERR-5001] Error loading patients:', err);
+          this.logger.error('[ERR-5001] Error loading patients', err);
         },
       });
   }
@@ -610,7 +613,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
           this.patientDetails = patient;
         },
         error: (err) => {
-          console.error('Error loading patient details:', err);
+          this.logger.error('Error loading patient details', err);
         },
       });
   }
@@ -641,7 +644,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
           });
         },
         error: (err) => {
-          console.error('Error loading patient evaluations:', err);
+          this.logger.error('Error loading patient evaluations', err);
           this.patientEvaluations = [];
         },
       });
@@ -1042,7 +1045,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
               errorCount++;
               this.bulkOperationProgress++;
               const appError = ErrorFactory.createDataDeleteError('patient', patient.id, { error: err });
-              console.error(`[${appError.code}] Error deleting patient ${patient.fullName}:`, err);
+              this.logger.error(`[${appError.code}] Error deleting patient ${patient.fullName}`, err);
 
               // Show summary after all attempts
               if (deletedCount + errorCount === selectedPatients.length) {
@@ -1080,7 +1083,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   private showDeletionSummary(deletedCount: number, errorCount: number): void {
     if (errorCount === 0) {
-      console.log(
+      this.logger.info(
         `Successfully deleted ${deletedCount} patient${deletedCount !== 1 ? 's' : ''}`
       );
     } else if (deletedCount === 0) {
@@ -1090,7 +1093,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
       });
       this.error = `Unable to delete selected patients. They may be in use or you may not have permission. Error code: ${this.errorDetails.code}`;
     } else {
-      console.log(
+      this.logger.info(
         `Deleted ${deletedCount} patient${deletedCount !== 1 ? 's' : ''}, but ${errorCount} failed. Some patients may be in use or you may not have permission.`
       );
     }
@@ -1127,7 +1130,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
           this.deduplicationStats = stats;
         },
         error: (err) => {
-          console.error('Error calculating deduplication statistics:', err);
+          this.logger.error('Error calculating deduplication statistics', err);
         }
       });
   }
@@ -1139,7 +1142,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
     this.detectingDuplicates = true;
     this.duplicateDetectionResult = null;
 
-    console.log(`Starting duplicate detection for ${this.patients.length} patients...`);
+    this.logger.info(`Starting duplicate detection for ${this.patients.length} patients`);
 
     this.deduplicationService.autoDetectAndLinkDuplicates(this.patients)
       .pipe(takeUntil(this.destroy$))
@@ -1147,7 +1150,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
         next: (result) => {
         this.detectingDuplicates = false;
 
-        console.log('Detection result:', result);
+        this.logger.info('Detection result', result);
 
         // Refresh the enhanced patient list
         this.patientsWithLinks = this.deduplicationService.enhancePatientList(this.patients);
@@ -1158,8 +1161,8 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
         // Update statistics
         this.updateDeduplicationStatistics();
 
-        console.log('Updated stats:', this.deduplicationStats);
-        console.log('Patients with links:', this.patientsWithLinks.filter(p => p.isMaster || p.masterPatientId).length);
+        this.logger.info('Updated stats', this.deduplicationStats);
+        this.logger.info('Patients with links', { count: this.patientsWithLinks.filter(p => p.isMaster || p.masterPatientId).length });
 
         // Show result message
         if (result.duplicatesLinked > 0) {
@@ -1176,7 +1179,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
       error: (err) => {
         this.detectingDuplicates = false;
         this.duplicateDetectionResult = 'Error detecting duplicates';
-        console.error('Error detecting duplicates:', err);
+        this.logger.error('Error detecting duplicates', err);
 
         setTimeout(() => {
           this.duplicateDetectionResult = null;

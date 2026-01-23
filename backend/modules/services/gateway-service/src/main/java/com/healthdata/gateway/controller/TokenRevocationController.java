@@ -20,8 +20,10 @@ import java.time.Instant;
  * Token Revocation Controller (Phase 2.0 Team 3.2)
  *
  * REST endpoints for token revocation operations:
- * - POST /api/v1/auth/logout - Revoke all tokens for authenticated user
- * - POST /api/v1/auth/revoke - Revoke specific access token
+ * - POST /api/v1/auth/revoke-token - Revoke specific access token
+ *
+ * NOTE: Logout and revoke-all-tokens are handled by AuthController.
+ * This controller provides gateway-specific token revocation with Redis tracking.
  *
  * Requires:
  * - Authentication: Bearer token in Authorization header
@@ -38,62 +40,6 @@ public class TokenRevocationController {
     private final TokenRevocationService tokenRevocationService;
 
     /**
-     * Logout endpoint - revoke all tokens for authenticated user
-     *
-     * @param tenantId Tenant ID from header
-     * @param request HTTP request context
-     * @return ResponseEntity with token count revoked
-     */
-    @PostMapping("/logout")
-    public ResponseEntity<TokenRevocationResponse> logout(
-            @RequestHeader(value = "X-Tenant-ID", required = true) String tenantId,
-            HttpServletRequest request) {
-
-        try {
-            // Get authenticated user from security context
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || !authentication.isAuthenticated()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-            String userId = authentication.getName();
-
-            // Validate tenant ID
-            if (tenantId == null || tenantId.trim().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(TokenRevocationResponse.builder()
-                        .message("X-Tenant-ID header is required")
-                        .build());
-            }
-
-            log.debug("Processing logout for user: {} (tenant: {})", userId, tenantId);
-
-            // Revoke all tokens for user
-            int tokensRevoked = tokenRevocationService.revokeAllUserTokens(userId, tenantId, "LOGOUT");
-
-            log.info("User logged out successfully: {} (tokens revoked: {})", userId, tokensRevoked);
-
-            return ResponseEntity.ok(TokenRevocationResponse.builder()
-                .message("Successfully logged out")
-                .tokensRevoked(tokensRevoked)
-                .build());
-
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid argument during logout: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(TokenRevocationResponse.builder()
-                    .message("Invalid tenant or user")
-                    .build());
-        } catch (Exception e) {
-            log.error("Unexpected error during logout", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(TokenRevocationResponse.builder()
-                    .message("Logout failed: " + e.getMessage())
-                    .build());
-        }
-    }
-
-    /**
      * Revoke specific token endpoint
      *
      * @param tenantId Tenant ID from header
@@ -101,7 +47,7 @@ public class TokenRevocationController {
      * @param httpRequest HTTP request context
      * @return ResponseEntity with revocation timestamp
      */
-    @PostMapping("/revoke")
+    @PostMapping("/revoke-token")
     public ResponseEntity<TokenRevocationResponse> revokeToken(
             @RequestHeader(value = "X-Tenant-ID", required = true) String tenantId,
             @Valid @RequestBody TokenRevocationRequest request,

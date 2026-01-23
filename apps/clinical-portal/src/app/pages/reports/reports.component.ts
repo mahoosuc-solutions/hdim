@@ -38,6 +38,7 @@ import { ToastService } from '../../services/toast.service';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { CSVHelper } from '../../utils/csv-helper';
+import { LoggerService } from '../../services/logger.service';
 import { TrackInteraction } from '../../utils/ai-tracking.decorator';
 
 const INITIAL_SAVED_REPORTS: SavedReport[] = [
@@ -2205,6 +2206,7 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
 })
 export class ReportsComponent implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();
+  private logger = this.loggerService.withContext('ReportsComponent');
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
@@ -2268,7 +2270,8 @@ export class ReportsComponent implements OnInit, OnDestroy, AfterViewInit {
     private toast: ToastService,
     private reportTemplatesService: ReportTemplatesService,
     private qrdaExportService: QrdaExportService,
-    public aiAssistant: AIAssistantService
+    public aiAssistant: AIAssistantService,
+    private loggerService: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -2695,7 +2698,7 @@ export class ReportsComponent implements OnInit, OnDestroy, AfterViewInit {
         },
         error: (err) => {
           errorCount++;
-          console.error(`Error deleting report ${report.reportName}:`, err);
+          this.logger.error(`Error deleting report ${report.reportName}`, err);
 
           // Show summary after all attempts
           if (deletedCount + errorCount === selectedReports.length) {

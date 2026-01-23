@@ -12,15 +12,12 @@
     }
   },
   "/fhir": {
-    "target": "http://localhost:8085",
+    "target": "http://localhost:18080",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug",
     "pathRewrite": {
       "^/fhir": "/fhir"
-    },
-    "headers": {
-      "X-Tenant-ID": "demo-tenant"
     }
   },
   "/quality-measure": {
@@ -36,15 +33,12 @@
     }
   },
   "/cql-engine": {
-    "target": "http://localhost:8081",
+    "target": "http://localhost:18080",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug",
     "pathRewrite": {
       "^/cql-engine": "/cql-engine"
-    },
-    "headers": {
-      "X-Tenant-ID": "demo-tenant"
     }
   },
   "/care-gap": {

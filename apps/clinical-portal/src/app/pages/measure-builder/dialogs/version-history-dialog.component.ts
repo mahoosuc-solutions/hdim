@@ -709,7 +709,9 @@ export class VersionHistoryDialogComponent implements OnInit, OnDestroy {
   comparisonV1 = '';
   comparisonV2 = '';
 
-  private logger = this.loggerService.withContext('VersionHistoryDialogComponent');
+  private get logger() {
+    return this.loggerService.withContext('VersionHistoryDialogComponent');
+  }
 
   constructor(
     private dialogRef: MatDialogRef<VersionHistoryDialogComponent>,

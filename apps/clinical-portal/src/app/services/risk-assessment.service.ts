@@ -23,7 +23,9 @@ import { LoggerService } from './logger.service';
   providedIn: 'root',
 })
 export class RiskAssessmentService {
-  private logger = this.loggerService.withContext('RiskAssessmentService');
+  private get logger() {
+    return this.loggerService.withContext('RiskAssessmentService');
+  }
 
   constructor(
     private apiService: ApiService,

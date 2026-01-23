@@ -98,7 +98,9 @@ export class EvaluationDetailsDialogComponent implements OnInit {
   evaluationDetails = signal<EvaluationDetails | null>(null);
   isLoading = signal(true);
   error = signal<string | null>(null);
-  private logger = this.loggerService.withContext('EvaluationDetailsDialogComponent');
+  private get logger() {
+    return this.loggerService.withContext('EvaluationDetailsDialogComponent');
+  }
 
   constructor(
     private dialogRef: MatDialogRef<EvaluationDetailsDialogComponent>,

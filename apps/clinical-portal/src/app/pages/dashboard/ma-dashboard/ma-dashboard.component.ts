@@ -108,7 +108,9 @@ export class MADashboardComponent implements OnInit, OnDestroy {
   outreachItems: OutreachItem[] = [];
 
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('MADashboardComponent');
+  private get logger() {
+    return this.loggerService.withContext('MADashboardComponent');
+  }
 
   constructor(
     private router: Router,

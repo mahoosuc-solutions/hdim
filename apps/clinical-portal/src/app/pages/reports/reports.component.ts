@@ -2206,7 +2206,9 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
 })
 export class ReportsComponent implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('ReportsComponent');
+  private get logger() {
+    return this.loggerService.withContext('ReportsComponent');
+  }
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 

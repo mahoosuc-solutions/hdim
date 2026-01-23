@@ -475,7 +475,9 @@ export class MfaSettingsComponent implements OnInit, OnDestroy {
   confirmForm: FormGroup;
 
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('MfaSettingsComponent');
+  private get logger() {
+    return this.loggerService.withContext('MfaSettingsComponent');
+  }
 
   constructor(
     private fb: FormBuilder,

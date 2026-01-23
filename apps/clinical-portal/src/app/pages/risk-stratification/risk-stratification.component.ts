@@ -112,7 +112,9 @@ export class RiskStratificationComponent implements OnInit, OnDestroy {
   readonly riskFactors = RISK_FACTORS;
   readonly conditionCategories = CONDITION_CATEGORIES;
 
-  private logger = this.loggerService.withContext('RiskStratificationComponent');
+  private get logger() {
+    return this.loggerService.withContext('RiskStratificationComponent');
+  }
 
   constructor(
     private router: Router,

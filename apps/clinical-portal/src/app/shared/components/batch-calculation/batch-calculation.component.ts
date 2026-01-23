@@ -29,7 +29,9 @@ import { LoggerService } from '../../../services/logger.service';
 })
 export class BatchCalculationComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('BatchCalculationComponent');
+  private get logger() {
+    return this.loggerService.withContext('BatchCalculationComponent');
+  }
 
   // Current active job
   activeJob: BatchCalculationJob | null = null;

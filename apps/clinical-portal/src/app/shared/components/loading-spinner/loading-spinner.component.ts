@@ -113,7 +113,9 @@ export class LoadingSpinnerComponent implements OnInit {
     return this.message || 'Loading content, please wait';
   }
 
-  private logger = this.loggerService.withContext('LoadingSpinnerComponent');
+  private get logger() {
+    return this.loggerService.withContext('LoadingSpinnerComponent');
+  }
 
   constructor(private loggerService: LoggerService) {}
 

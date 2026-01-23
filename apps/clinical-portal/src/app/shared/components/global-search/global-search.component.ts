@@ -65,7 +65,9 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
 
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('GlobalSearchComponent');
+  private get logger() {
+    return this.loggerService.withContext('GlobalSearchComponent');
+  }
 
   // Quick access pages
   private readonly QUICK_PAGES: SearchResult[] = [

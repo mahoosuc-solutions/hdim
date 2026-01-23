@@ -1177,7 +1177,9 @@ export class MeasureComparisonComponent implements OnInit, OnDestroy {
     };
   });
 
-  private logger = this.loggerService.withContext('MeasureComparisonComponent');
+  private get logger() {
+    return this.loggerService.withContext('MeasureComparisonComponent');
+  }
 
   constructor(
     private router: Router,

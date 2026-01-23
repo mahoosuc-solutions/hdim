@@ -62,7 +62,9 @@ export class PatientHealthOverviewComponent implements OnInit, OnDestroy {
   @Input() patientId!: string;
 
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('PatientHealthOverviewComponent');
+  private get logger() {
+    return this.loggerService.withContext('PatientHealthOverviewComponent');
+  }
 
   healthOverview: PatientHealthOverview | null = null;
   loading = true;

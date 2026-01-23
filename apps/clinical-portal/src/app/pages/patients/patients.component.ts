@@ -151,7 +151,9 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
   // Search debounce
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('PatientsComponent');
+  private get logger() {
+    return this.loggerService.withContext('PatientsComponent');
+  }
 
   constructor(
     private patientService: PatientService,

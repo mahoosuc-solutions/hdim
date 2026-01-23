@@ -27,7 +27,9 @@ import { LoggerService } from '../../services/logger.service';
 export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
 
   // Contextual logger
-  private logger = this.loggerService.withContext('ClinicalAuditDashboardComponent');
+  private get logger() {
+    return this.loggerService.withContext('ClinicalAuditDashboardComponent');
+  }
 
   // User role (determines visible features)
   userRole: 'CLINICAL_PHYSICIAN' | 'CLINICAL_NURSE' | 'PROVIDER' = 'CLINICAL_PHYSICIAN';

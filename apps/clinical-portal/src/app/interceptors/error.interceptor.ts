@@ -176,9 +176,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       // Skip error logging/tracking for expected failures in development
       const isDemoEndpoint = req.url.includes('/demo/api/v1/demo');
       const isAuditEndpoint = req.url.includes('/audit/events');
+      const isComplianceEndpoint = req.url.includes('/api/v1/compliance/errors');
 
       // Log error to console for debugging
-      if (!isDemoEndpoint && !isAuditEndpoint) {
+      if (!isDemoEndpoint && !isAuditEndpoint && !isComplianceEndpoint) {
         console.error('HTTP Error:', {
           url: req.url,
           method: req.method,
@@ -191,7 +192,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       // Track error for compliance validation if enabled
-      if (COMPLIANCE_CONFIG.enableErrorTracking && !isDemoEndpoint && !isAuditEndpoint) {
+      if (COMPLIANCE_CONFIG.enableErrorTracking && !isDemoEndpoint && !isAuditEndpoint && !isComplianceEndpoint) {
         const errorCode = mapHttpStatusToErrorCode(error.status);
         const severity = mapHttpStatusToSeverity(error.status);
         const currentUser = authService.currentUserValue;

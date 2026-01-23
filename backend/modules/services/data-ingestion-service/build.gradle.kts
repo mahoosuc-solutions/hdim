@@ -18,7 +18,7 @@ dependencies {
     implementation(libs.bundles.spring.boot.web)
     implementation(libs.bundles.spring.boot.data)
     implementation(libs.spring.boot.starter.validation)
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation(libs.spring.boot.starter.actuator)
 
     // OpenTelemetry for distributed tracing (TODO: Add proper version from libs.versions.toml)
     // implementation("io.opentelemetry:opentelemetry-api")

@@ -36,6 +36,9 @@ class VitalSignsServiceTest {
     @Mock
     private VitalSignsRecordRepository vitalsRepository;
 
+    @Mock
+    private com.healthdata.clinicalworkflow.domain.repository.RoomAssignmentRepository roomAssignmentRepository;
+
     @InjectMocks
     private VitalSignsService vitalsService;
 
@@ -818,5 +821,146 @@ class VitalSignsServiceTest {
                 "test-user".equals(vitals.getAcknowledgedBy()) &&
                         vitals.getAcknowledgedAt() != null
         ));
+    }
+
+    // ========== Room Number Resolution Tests (Issue #301) ==========
+
+    @Test
+    void getActiveAlerts_ShouldIncludeRoomNumber_WhenPatientHasActiveRoom() {
+        // Given: Patient with critical BP in room EXAM-101
+        VitalSignsRecordEntity criticalVitals = VitalSignsRecordEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .systolicBp(new BigDecimal("190"))
+                .diastolicBp(new BigDecimal("120"))
+                .heartRate(new BigDecimal("75"))
+                .temperatureF(new BigDecimal("98.6"))
+                .oxygenSaturation(new BigDecimal("98"))
+                .alertStatus("critical")
+                .alertMessage("Critical: Systolic BP 190 mmHg")
+                .recordedAt(Instant.now())
+                .build();
+
+        com.healthdata.clinicalworkflow.domain.model.RoomAssignmentEntity roomAssignment =
+                com.healthdata.clinicalworkflow.domain.model.RoomAssignmentEntity.builder()
+                        .tenantId(TENANT_ID)
+                        .patientId(PATIENT_ID)
+                        .roomNumber("EXAM-101")
+                        .status("occupied")
+                        .build();
+
+        when(vitalsRepository.findActiveAlertsByTenant(TENANT_ID))
+                .thenReturn(Collections.singletonList(criticalVitals));
+        when(roomAssignmentRepository.findActiveRoomForPatient(TENANT_ID, PATIENT_ID))
+                .thenReturn(Optional.of(roomAssignment));
+
+        // When
+        List<VitalAlertResponse> alerts = vitalsService.getActiveAlerts(TENANT_ID);
+
+        // Then
+        assertThat(alerts).hasSize(1);
+        assertThat(alerts.get(0).getRoomNumber()).isEqualTo("EXAM-101");
+        assertThat(alerts.get(0).getPatientId()).isEqualTo(PATIENT_ID.toString());
+        assertThat(alerts.get(0).getSeverity()).isEqualTo("CRITICAL");
+        verify(roomAssignmentRepository).findActiveRoomForPatient(TENANT_ID, PATIENT_ID);
+    }
+
+    @Test
+    void getActiveAlerts_ShouldReturnNullRoomNumber_WhenPatientNotInRoom() {
+        // Given: Patient with alert but no active room
+        VitalSignsRecordEntity criticalVitals = VitalSignsRecordEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .systolicBp(new BigDecimal("190"))
+                .diastolicBp(new BigDecimal("120"))
+                .heartRate(new BigDecimal("75"))
+                .alertStatus("critical")
+                .alertMessage("Critical: Systolic BP 190 mmHg")
+                .recordedAt(Instant.now())
+                .build();
+
+        when(vitalsRepository.findActiveAlertsByTenant(TENANT_ID))
+                .thenReturn(Collections.singletonList(criticalVitals));
+        when(roomAssignmentRepository.findActiveRoomForPatient(TENANT_ID, PATIENT_ID))
+                .thenReturn(Optional.empty());
+
+        // When
+        List<VitalAlertResponse> alerts = vitalsService.getActiveAlerts(TENANT_ID);
+
+        // Then
+        assertThat(alerts).hasSize(1);
+        assertThat(alerts.get(0).getRoomNumber()).isNull();
+        assertThat(alerts.get(0).getPatientId()).isEqualTo(PATIENT_ID.toString());
+        verify(roomAssignmentRepository).findActiveRoomForPatient(TENANT_ID, PATIENT_ID);
+    }
+
+    @Test
+    void getActiveAlerts_ShouldHandleRoomLookupFailure_Gracefully() {
+        // Given: Patient with alert, room lookup throws exception
+        VitalSignsRecordEntity criticalVitals = VitalSignsRecordEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .systolicBp(new BigDecimal("190"))
+                .diastolicBp(new BigDecimal("120"))
+                .heartRate(new BigDecimal("75"))
+                .alertStatus("critical")
+                .alertMessage("Critical: Systolic BP 190 mmHg")
+                .recordedAt(Instant.now())
+                .build();
+
+        when(vitalsRepository.findActiveAlertsByTenant(TENANT_ID))
+                .thenReturn(Collections.singletonList(criticalVitals));
+        when(roomAssignmentRepository.findActiveRoomForPatient(TENANT_ID, PATIENT_ID))
+                .thenThrow(new RuntimeException("Database connection failed"));
+
+        // When
+        List<VitalAlertResponse> alerts = vitalsService.getActiveAlerts(TENANT_ID);
+
+        // Then: Alert should still be delivered with null room number
+        assertThat(alerts).hasSize(1);
+        assertThat(alerts.get(0).getRoomNumber()).isNull();
+        assertThat(alerts.get(0).getPatientId()).isEqualTo(PATIENT_ID.toString());
+        assertThat(alerts.get(0).getSeverity()).isEqualTo("CRITICAL");
+    }
+
+    @Test
+    void getCriticalAlerts_ShouldIncludeRoomNumber_WhenPatientHasActiveRoom() {
+        // Given: Patient with critical alert in room EXAM-202
+        VitalSignsRecordEntity criticalVitals = VitalSignsRecordEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(TENANT_ID)
+                .patientId(PATIENT_ID)
+                .systolicBp(new BigDecimal("190"))
+                .diastolicBp(new BigDecimal("120"))
+                .heartRate(new BigDecimal("75"))
+                .alertStatus("critical")
+                .alertMessage("Critical: Systolic BP 190 mmHg")
+                .recordedAt(Instant.now())
+                .build();
+
+        com.healthdata.clinicalworkflow.domain.model.RoomAssignmentEntity roomAssignment =
+                com.healthdata.clinicalworkflow.domain.model.RoomAssignmentEntity.builder()
+                        .tenantId(TENANT_ID)
+                        .patientId(PATIENT_ID)
+                        .roomNumber("EXAM-202")
+                        .status("occupied")
+                        .build();
+
+        when(vitalsRepository.findCriticalAlertsByTenant(TENANT_ID))
+                .thenReturn(Collections.singletonList(criticalVitals));
+        when(roomAssignmentRepository.findActiveRoomForPatient(TENANT_ID, PATIENT_ID))
+                .thenReturn(Optional.of(roomAssignment));
+
+        // When
+        List<VitalAlertResponse> alerts = vitalsService.getCriticalAlerts(TENANT_ID);
+
+        // Then
+        assertThat(alerts).hasSize(1);
+        assertThat(alerts.get(0).getRoomNumber()).isEqualTo("EXAM-202");
+        assertThat(alerts.get(0).getSeverity()).isEqualTo("CRITICAL");
+        verify(roomAssignmentRepository).findActiveRoomForPatient(TENANT_ID, PATIENT_ID);
     }
 }

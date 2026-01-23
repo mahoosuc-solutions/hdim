@@ -172,22 +172,38 @@ public class PatientIdentifierResolver {
     /**
      * Find all patients merged into a target patient
      *
-     * Returns all source patients that were consolidated into the target.
-     * Useful for auditing consolidations and understanding patient history.
+     * Returns all source patients that were consolidated into the target,
+     * recursively following the entire merge chain. Handles multi-level merges:
+     * A → B → C returns [A, B] when querying for C.
+     *
+     * Uses PostgreSQL recursive CTE for efficient single-query resolution.
+     * Detects circular merges (returns empty list with error log).
      *
      * @param targetPatientId Target patient receiving merges
      * @param tenantId Tenant for isolation
-     * @return List of source patient IDs merged into target
+     * @return List of source patient IDs merged into target (ordered: deepest to shallowest)
      */
     @Transactional(readOnly = true)
     public java.util.List<String> findMergedSourcePatients(String targetPatientId, String tenantId) {
         try {
-            // TODO: Implement repository query to find all patients with this mergedIntoPatientId
-            // This would require adding a repository method to find by mergedIntoPatientId
             log.info("Finding merged source patients for target: target={}, tenant={}",
                 targetPatientId, tenantId);
 
-            return java.util.Collections.emptyList();
+            // Use recursive CTE query to find entire merge chain
+            java.util.List<String> mergeChain = patientProjectionRepository.findMergeChainRecursive(
+                targetPatientId, tenantId, MAX_MERGE_CHAIN_DEPTH
+            );
+
+            // Detect potential circular merge (if chain hits max depth, something is wrong)
+            if (mergeChain.size() >= MAX_MERGE_CHAIN_DEPTH) {
+                log.error("Potential circular merge detected: target={}, chainSize={}, tenant={}",
+                    targetPatientId, mergeChain.size(), tenantId);
+                // Return empty list to prevent exposing potentially corrupt data
+                return java.util.Collections.emptyList();
+            }
+
+            log.info("Found {} merged source patients for target {}", mergeChain.size(), targetPatientId);
+            return mergeChain;
 
         } catch (Exception e) {
             log.error("Error finding merged patients: target={}, tenant={}", targetPatientId, tenantId, e);

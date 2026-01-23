@@ -5,7 +5,7 @@ import com.healthdata.ingestion.api.v1.dto.IngestionResponse;
 import com.healthdata.ingestion.client.CareGapIngestionClient;
 import com.healthdata.ingestion.client.FhirIngestionClient;
 import com.healthdata.ingestion.client.QualityMeasureIngestionClient;
-import com.healthdata.ingestion.generator.SyntheticPatientGenerator;
+import com.healthdata.ingestion.generator.SimpleSyntheticPatientGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hl7.fhir.r4.model.Bundle;
@@ -33,7 +33,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class DataIngestionService {
 
-    private final SyntheticPatientGenerator patientGenerator;
+    private final SimpleSyntheticPatientGenerator patientGenerator;
     private final FhirIngestionClient fhirClient;
     private final CareGapIngestionClient careGapClient;
     private final QualityMeasureIngestionClient measureClient;

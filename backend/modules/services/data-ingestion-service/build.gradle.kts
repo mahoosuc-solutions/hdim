@@ -7,16 +7,19 @@ plugins {
 group = "com.healthdata"
 version = "1.0.0"
 
-dependencies {
-    // Shared modules
-    implementation(project(":modules:shared:domain:common"))
-    implementation(project(":modules:shared:infrastructure:persistence"))
-    implementation(project(":modules:shared:infrastructure:database-config"))
-    implementation(project(":modules:shared:infrastructure:audit"))
+// Spring Cloud BOM for OpenFeign version resolution
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
+}
 
-    // Spring Boot
+dependencies {
+    // Shared modules (minimal - no database needed for stateless service)
+    implementation(project(":modules:shared:domain:common"))
+
+    // Spring Boot (stateless - NO JPA/database)
     implementation(libs.bundles.spring.boot.web)
-    implementation(libs.bundles.spring.boot.data)
     implementation(libs.spring.boot.starter.validation)
     implementation(libs.spring.boot.starter.actuator)
 

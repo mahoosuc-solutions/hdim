@@ -55,6 +55,7 @@ import { HelpTooltipComponent } from '../../../shared/components/help-tooltip/he
 import { ErrorValidationService } from '../../../services/error-validation.service';
 import { COMPLIANCE_CONFIG } from '../../../config/compliance.config';
 import { ErrorCode, ErrorSeverity } from '../../../models/error.model';
+import { LoggerService } from '../../../services/logger.service';
 
 export interface HighPriorityCareGap {
   id: string;
@@ -303,6 +304,8 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     { text: 'Report a Problem', url: '#' },
   ];
 
+  private logger = this.loggerService.withContext('ProviderDashboardComponent');
+
   constructor(
     private router: Router,
     private dialog: MatDialog,
@@ -315,7 +318,8 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     private shortcutsService: KeyboardShortcutsService,
     private tourService: GuidedTourService,
     private helpService: HelpService,
-    private errorValidationService: ErrorValidationService
+    private errorValidationService: ErrorValidationService,
+    private loggerService: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -607,7 +611,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
         );
       }),
       catchError(error => {
-        console.warn('Failed to load care gaps from API', error);
+        this.logger.warn('Failed to load care gaps from API', error);
         
         // Check if fallbacks are disabled
         if (COMPLIANCE_CONFIG.disableFallbacks && 
@@ -809,7 +813,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
         return this.getFallbackQualityMeasures();
       }),
       catchError(error => {
-        console.warn('Failed to load quality measures from API, using fallback data', error);
+        this.logger.warn('Failed to load quality measures from API, using fallback data', error);
         return of(this.getFallbackQualityMeasures());
       })
     ).subscribe(measures => {
@@ -923,8 +927,8 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
         );
       }),
       catchError(error => {
-        console.warn('Failed to load pending results from API', error);
-        
+        this.logger.warn('Failed to load pending results from API', error);
+
         // Check if fallbacks are disabled
         if (COMPLIANCE_CONFIG.disableFallbacks && 
             !this.errorValidationService.isFallbackAllowed('ProviderDashboard')) {
@@ -1221,7 +1225,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     this.careGapsHighPriority = this.highPriorityCareGaps.length;
 
     // Log closure time for analytics
-    console.log(`Care gap closed in ${result.closureTimeMs}ms via ${result.action}`);
+    this.logger.info(`Care gap closed in ${result.closureTimeMs}ms via ${result.action}`);
 
     // Show success message
     const gapCount = result.closedGapIds.length;
@@ -1235,7 +1239,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
    * Review lab/imaging results
    */
   reviewResult(result: PendingResult): void {
-    console.log('Reviewing result:', result.resultType);
+    this.logger.info('Reviewing result', { resultType: result.resultType });
     this.router.navigate(['/patients', result.id], {
       queryParams: { action: 'review-results', resultId: result.id }
     });
@@ -1750,7 +1754,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
       localStorage.setItem(this.COLLAPSED_SECTIONS_KEY, JSON.stringify(this.collapsedSections));
       localStorage.setItem(this.SECTION_ORDER_KEY, JSON.stringify(this.sectionOrder));
     } catch (e) {
-      console.warn('Failed to save section preferences:', e);
+      this.logger.warn('Failed to save section preferences', e);
     }
   }
 

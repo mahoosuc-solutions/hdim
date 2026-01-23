@@ -32,4 +32,10 @@ public class VitalsHistoryResponse {
 
     @Schema(description = "Total number of pages", example = "3")
     private Integer totalPages;
+
+    @Schema(description = "Whether there is a next page available", example = "true")
+    private Boolean hasNext;
+
+    @Schema(description = "Whether there is a previous page available", example = "false")
+    private Boolean hasPrevious;
 }

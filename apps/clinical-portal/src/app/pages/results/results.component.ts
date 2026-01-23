@@ -48,6 +48,7 @@ import {
   getSecondaryResultActions,
 } from './result-enhancement.config';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
+import { LoggerService } from '../../services/logger.service';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { ErrorBannerComponent } from '../../shared/components/error-banner/error-banner.component';
@@ -88,6 +89,7 @@ import { TrackInteraction } from '../../utils/ai-tracking.decorator';
 })
 export class ResultsComponent implements OnInit, AfterViewInit {
   private destroy$ = injectDestroy();
+  private logger = this.loggerService.withContext('ResultsComponent');
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -219,7 +221,8 @@ export class ResultsComponent implements OnInit, AfterViewInit {
     private patientService: PatientService,
     private qrdaExportService: QrdaExportService,
     private reportExportService: ReportExportService,
-    public aiAssistant: AIAssistantService
+    public aiAssistant: AIAssistantService,
+    private loggerService: LoggerService
   ) {
     this.filterForm = this.fb.group({
       dateFrom: [null],
@@ -254,7 +257,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.error = 'Failed to load results. Please try again.';
-          console.error('Error loading results:', error);
+          this.logger.error('Error loading results', error);
           return of([]);
         }),
         finalize(() => {
@@ -429,7 +432,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
           }
         },
         error: (err) => {
-          console.error('Error loading patient:', err);
+          this.logger.error('Error loading patient', err);
         }
       });
     }
@@ -1007,7 +1010,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
           this.pollQrdaExportJob(job.id);
         },
         error: (err) => {
-          console.error('QRDA export failed:', err);
+          this.logger.error('QRDA export failed', err);
           this.qrdaExportError = err?.error?.message || 'Failed to initiate QRDA export. Please try again.';
           this.exportQrdaLoading = false;
         }
@@ -1035,7 +1038,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
           }
         },
         error: (err) => {
-          console.error('Error polling QRDA job:', err);
+          this.logger.error('Error polling QRDA job', err);
           this.exportQrdaLoading = false;
           this.qrdaExportError = 'Failed to check export status. Please try again.';
         }
@@ -1061,7 +1064,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
           this.qrdaExportService.triggerDownload(blob, filename);
         },
         error: (err) => {
-          console.error('Failed to download QRDA export:', err);
+          this.logger.error('Failed to download QRDA export', err);
           this.qrdaExportError = 'Failed to download the export file.';
         }
       });
@@ -1083,7 +1086,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
           this.exportQrdaLoading = false;
         },
         error: (err) => {
-          console.error('Failed to cancel QRDA export:', err);
+          this.logger.error('Failed to cancel QRDA export', err);
         }
       });
   }
@@ -1190,7 +1193,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
    */
   @TrackInteraction('results', 'quick-action')
   executeResultAction(result: EnhancedResult, actionType: ResultActionType): void {
-    console.log(`Executing action ${actionType} on result ${result.id}`);
+    this.logger.info(`Executing action ${actionType} on result ${result.id}`);
 
     // In a real implementation, this would call appropriate services
     switch (actionType) {
@@ -1326,7 +1329,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
           }
         },
         error: (err) => {
-          console.error('Error loading patient:', err);
+          this.logger.error('Error loading patient', err);
         }
       });
     }

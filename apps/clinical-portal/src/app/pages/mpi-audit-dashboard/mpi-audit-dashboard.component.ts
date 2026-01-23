@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription, interval } from 'rxjs';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * MPI Audit Dashboard
@@ -24,7 +25,10 @@ import { Subscription, interval } from 'rxjs';
   styleUrls: ['./mpi-audit-dashboard.component.scss']
 })
 export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
-  
+
+  // Contextual logger
+  private logger = this.loggerService.withContext('MpiAuditDashboardComponent');
+
   // MPI Audit Events
   mpiEvents: MPIAuditEvent[] = [];
   mergeEvents: MergeEvent[] = [];
@@ -65,7 +69,9 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
   // Auto-refresh
   private refreshSubscription?: Subscription;
   autoRefreshEnabled: boolean = true;
-  
+
+  constructor(private loggerService: LoggerService) {}
+
   ngOnInit(): void {
     this.loadMPIEvents();
     this.loadMPIMetrics();
@@ -90,7 +96,7 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
    */
   loadMPIEvents(): void {
     // TODO: Call backend API /api/v1/audit/ai/user-actions?actionType=MPI_*
-    console.log('Loading MPI audit events...');
+    this.logger.info('Loading MPI audit events');
   }
   
   /**
@@ -98,7 +104,7 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
    */
   loadMPIMetrics(): void {
     // TODO: Call backend API /api/v1/audit/mpi/metrics
-    console.log('Loading MPI metrics...');
+    this.logger.info('Loading MPI metrics');
   }
   
   /**
@@ -113,7 +119,7 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
    * Apply filters
    */
   applyFilters(): void {
-    console.log('Applying filters:', {
+    this.logger.info('Applying filters', {
       eventType: this.filterEventType,
       dateRange: this.filterDateRange,
       tenantId: this.filterTenantId,
@@ -141,7 +147,7 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
    */
   validateMerge(mergeEvent: MergeEvent): void {
     // TODO: Call backend API POST /api/v1/mpi/merges/{id}/validate
-    console.log('Validating merge:', mergeEvent.eventId);
+    this.logger.info('Validating merge', mergeEvent.eventId);
   }
   
   /**
@@ -150,7 +156,7 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
   rollbackMerge(mergeEvent: MergeEvent): void {
     if (confirm('Are you sure you want to rollback this merge operation?')) {
       // TODO: Call backend API POST /api/v1/mpi/merges/{id}/rollback
-      console.log('Rolling back merge:', mergeEvent.eventId);
+      this.logger.info('Rolling back merge', mergeEvent.eventId);
     }
   }
   
@@ -159,7 +165,7 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
    */
   resolveDataQualityIssue(issue: DataQualityIssue): void {
     // TODO: Call backend API POST /api/v1/mpi/data-quality/{id}/resolve
-    console.log('Resolving data quality issue:', issue.issueId);
+    this.logger.info('Resolving data quality issue', issue.issueId);
   }
   
   /**
@@ -167,7 +173,7 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
    */
   exportMPIReport(): void {
     // TODO: Call backend API GET /api/v1/audit/mpi/report/export
-    console.log('Exporting MPI audit report...');
+    this.logger.info('Exporting MPI audit report');
   }
   
   /**

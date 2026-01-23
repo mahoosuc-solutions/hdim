@@ -4,9 +4,10 @@ server:
 spring:
   application:
     name: gateway-service
-  
+
   main:
     allow-circular-references: true
+    allow-bean-definition-overriding: true  # Allow audit repository scanning override
   
   liquibase:
     enabled: true

@@ -11,10 +11,11 @@ import com.healthdata.authentication.domain.UserRole;
 import com.healthdata.authentication.dto.TenantRegistrationRequest;
 import com.healthdata.authentication.dto.TenantRegistrationResponse;
 import com.healthdata.authentication.exception.TenantAlreadyExistsException;
+import com.healthdata.authentication.exception.UserAlreadyExistsException;
 import com.healthdata.authentication.repository.TenantRepository;
 import com.healthdata.authentication.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,13 +29,23 @@ import java.util.Set;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class TenantService {
 
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuditService auditService;
+    private final AuditService auditService;  // Optional - may be null if audit module not available
+
+    public TenantService(
+            TenantRepository tenantRepository,
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            @Autowired(required = false) AuditService auditService) {
+        this.tenantRepository = tenantRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.auditService = auditService;
+    }
 
     /**
      * Register a new tenant with an admin user.
@@ -63,7 +74,20 @@ public class TenantService {
         tenant = tenantRepository.save(tenant);
         log.info("Tenant created: {} ({})", tenant.getId(), tenant.getName());
 
-        // 3. Create admin user with ADMIN role and access to this tenant
+        // 3. Check for duplicate username/email BEFORE attempting to save
+        if (userRepository.existsByUsername(request.getAdminUser().getUsername())) {
+            log.warn("Duplicate username during tenant registration: {}",
+                request.getAdminUser().getUsername());
+            throw UserAlreadyExistsException.forUsername(request.getAdminUser().getUsername());
+        }
+
+        if (userRepository.existsByEmail(request.getAdminUser().getEmail())) {
+            log.warn("Duplicate email during tenant registration: {}",
+                request.getAdminUser().getEmail());
+            throw UserAlreadyExistsException.forEmail(request.getAdminUser().getEmail());
+        }
+
+        // 4. Create admin user with ADMIN role and access to this tenant
         String passwordHash = passwordEncoder.encode(request.getAdminUser().getPassword());
 
         User adminUser = User.builder()
@@ -78,27 +102,32 @@ public class TenantService {
             .emailVerified(false)
             .failedLoginAttempts(0)
             .build();
+
         adminUser = userRepository.save(adminUser);
         log.info("Admin user created: {} (ID: {}) for tenant: {}",
             adminUser.getUsername(), adminUser.getId(), tenant.getId());
 
-        // 4. Audit tenant creation
-        auditService.logAuditEvent(AuditEvent.builder()
-            .tenantId(tenant.getId())
-            .userId(adminUser.getId().toString())
-            .username(adminUser.getUsername())
-            .action(AuditAction.CREATE)
-            .resourceType("Tenant")
-            .resourceId(tenant.getId())
-            .outcome(AuditOutcome.SUCCESS)
-            .serviceName("TenantService")
-            .methodName("registerTenant")
-            .build());
+        // 5. Audit tenant creation (if audit service is available)
+        if (auditService != null) {
+            auditService.logAuditEvent(AuditEvent.builder()
+                .tenantId(tenant.getId())
+                .userId(adminUser.getId().toString())
+                .username(adminUser.getUsername())
+                .action(AuditAction.CREATE)
+                .resourceType("Tenant")
+                .resourceId(tenant.getId())
+                .outcome(AuditOutcome.SUCCESS)
+                .serviceName("TenantService")
+                .methodName("registerTenant")
+                .build());
+        } else {
+            log.debug("Audit service not available - skipping audit log for tenant creation: {}", tenant.getId());
+        }
 
         log.info("Tenant registration successful: {} with admin user: {}",
             tenant.getId(), adminUser.getUsername());
 
-        // 5. Build and return response
+        // 6. Build and return response
         return TenantRegistrationResponse.builder()
             .tenantId(tenant.getId())
             .tenantName(tenant.getName())

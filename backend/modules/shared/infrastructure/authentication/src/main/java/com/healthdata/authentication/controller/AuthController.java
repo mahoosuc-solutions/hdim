@@ -25,8 +25,8 @@ import com.healthdata.audit.service.AuditService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -67,7 +67,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/auth")
 @Validated
-@RequiredArgsConstructor
 @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
     prefix = "authentication.controller",
     name = "enabled",
@@ -88,7 +87,36 @@ public class AuthController {
     private final MfaTokenService mfaTokenService;
     private final CookieService cookieService;
     private final com.healthdata.authentication.service.MfaPolicyService mfaPolicyService;
-    private final AuditService auditService;
+    private final AuditService auditService;  // Optional - may be null if audit module not available
+
+    public AuthController(
+            UserRepository userRepository,
+            TenantRepository tenantRepository,
+            PasswordEncoder passwordEncoder,
+            AuthenticationManager authenticationManager,
+            JwtTokenService jwtTokenService,
+            RefreshTokenService refreshTokenService,
+            LogoutService logoutService,
+            JwtConfig jwtConfig,
+            MfaService mfaService,
+            MfaTokenService mfaTokenService,
+            CookieService cookieService,
+            com.healthdata.authentication.service.MfaPolicyService mfaPolicyService,
+            @Autowired(required = false) AuditService auditService) {
+        this.userRepository = userRepository;
+        this.tenantRepository = tenantRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtTokenService = jwtTokenService;
+        this.refreshTokenService = refreshTokenService;
+        this.logoutService = logoutService;
+        this.jwtConfig = jwtConfig;
+        this.mfaService = mfaService;
+        this.mfaTokenService = mfaTokenService;
+        this.cookieService = cookieService;
+        this.mfaPolicyService = mfaPolicyService;
+        this.auditService = auditService;
+    }
 
     /**
      * Authenticate user with username/password.
@@ -353,17 +381,22 @@ public class AuthController {
             }
         }
 
-        auditService.logAuditEvent(AuditEvent.builder()
-            .tenantId(null)  // System-level event
-            .userId(adminUserId)
-            .username(adminUsername)
-            .action(AuditAction.CREATE)
-            .resourceType("User")
-            .resourceId(user.getId().toString())
-            .outcome(AuditOutcome.SUCCESS)
-            .serviceName("AuthController")
-            .methodName("register")
-            .build());
+        // Audit user registration (if audit service is available)
+        if (auditService != null) {
+            auditService.logAuditEvent(AuditEvent.builder()
+                .tenantId(null)  // System-level event
+                .userId(adminUserId)
+                .username(adminUsername)
+                .action(AuditAction.CREATE)
+                .resourceType("User")
+                .resourceId(user.getId().toString())
+                .outcome(AuditOutcome.SUCCESS)
+                .serviceName("AuthController")
+                .methodName("register")
+                .build());
+        } else {
+            log.debug("Audit service not available - skipping audit log for user registration: {}", user.getUsername());
+        }
 
         // Build response (never include password hash)
         UserInfoResponse response = UserInfoResponse.builder()

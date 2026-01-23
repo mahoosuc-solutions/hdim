@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0009-fix-audit-logs-user-id-type" author="development">
+        <comment>Change audit_logs.user_id from UUID to VARCHAR to match AuditLog entity</comment>
+
+        <!-- Drop foreign key constraint first -->
+        <dropForeignKeyConstraint
+            baseTableName="audit_logs"
+            constraintName="audit_logs_user_id_fkey"/>
+
+        <!-- Change column type from UUID to VARCHAR(255) -->
+        <modifyDataType
+            tableName="audit_logs"
+            columnName="user_id"
+            newDataType="VARCHAR(255)"/>
+
+        <rollback>
+            <!-- Rollback: change back to UUID and restore foreign key -->
+            <modifyDataType
+                tableName="audit_logs"
+                columnName="user_id"
+                newDataType="UUID"/>
+
+            <addForeignKeyConstraint
+                baseTableName="audit_logs"
+                baseColumnNames="user_id"
+                constraintName="audit_logs_user_id_fkey"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="SET NULL"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

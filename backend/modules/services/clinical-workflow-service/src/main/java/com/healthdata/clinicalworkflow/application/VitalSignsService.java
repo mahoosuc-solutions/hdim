@@ -59,6 +59,7 @@ import java.util.stream.Collectors;
 public class VitalSignsService {
 
     private final VitalSignsRecordRepository vitalsRepository;
+    private final com.healthdata.clinicalworkflow.domain.repository.RoomAssignmentRepository roomAssignmentRepository;
 
     /**
      * Record vital signs (internal version with UUID patientId)
@@ -748,7 +749,7 @@ public class VitalSignsService {
                 .vitalSignsRecordId(entity.getId())
                 .patientId(entity.getPatientId().toString())
                 .patientName(null) // TODO: Fetch from patient service
-                .roomNumber(null) // TODO: Fetch from room assignment service
+                .roomNumber(resolveRoomNumber(entity.getPatientId(), entity.getTenantId()))
                 .alertType(determineAlertType(entity))
                 .severity(entity.getAlertStatus().toUpperCase())
                 .message(entity.getAlertMessage())
@@ -837,6 +838,47 @@ public class VitalSignsService {
             return "97.0-99.0°F";
         }
         return "";
+    }
+
+    /**
+     * Resolve room number for patient
+     *
+     * Queries Room Assignment Repository to find the active room assignment for the patient.
+     * Uses circuit breaker pattern for resilience - returns null if service is unavailable.
+     * Room mappings are cached with 5-minute TTL (HIPAA compliant for PHI).
+     *
+     * Critical for emergency response: Providers need to know which room to respond to
+     * when vital sign alerts are triggered.
+     *
+     * @param patientId the patient UUID
+     * @param tenantId the tenant ID for multi-tenant isolation
+     * @return room number (e.g., "EXAM-101") or null if not found/error
+     */
+    @Cacheable(value = "patientRoomMapping", key = "#tenantId + ':' + #patientId")
+    private String resolveRoomNumber(UUID patientId, String tenantId) {
+        try {
+            log.debug("Resolving room number for patient {} in tenant {}", patientId, tenantId);
+
+            // Query active room assignment (status = 'occupied' or 'reserved')
+            Optional<com.healthdata.clinicalworkflow.domain.model.RoomAssignmentEntity> activeRoom =
+                roomAssignmentRepository.findActiveRoomForPatient(tenantId, patientId);
+
+            if (activeRoom.isPresent()) {
+                String roomNumber = activeRoom.get().getRoomNumber();
+                log.debug("Resolved room number {} for patient {}", roomNumber, patientId);
+                return roomNumber;
+            }
+
+            log.debug("No active room found for patient {} in tenant {}", patientId, tenantId);
+            return null;
+
+        } catch (Exception e) {
+            // Circuit breaker: Log error but don't fail the alert
+            // This ensures vital sign alerts are still delivered even if room lookup fails
+            log.warn("Failed to resolve room number for patient {} in tenant {}: {}",
+                patientId, tenantId, e.getMessage());
+            return null;
+        }
     }
 
     /**

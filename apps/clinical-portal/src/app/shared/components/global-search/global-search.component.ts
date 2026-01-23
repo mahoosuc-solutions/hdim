@@ -20,6 +20,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { PatientService } from '../../../services/patient.service';
 import { MeasureService } from '../../../services/measure.service';
+import { LoggerService } from '../../../services/logger.service';
 
 export interface SearchResult {
   id: string;
@@ -64,6 +65,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
 
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
+  private logger = this.loggerService.withContext('GlobalSearchComponent');
 
   // Quick access pages
   private readonly QUICK_PAGES: SearchResult[] = [
@@ -121,7 +123,8 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
     public dialogRef: MatDialogRef<GlobalSearchComponent>,
     private router: Router,
     private patientService: PatientService,
-    private measureService: MeasureService
+    private measureService: MeasureService,
+    private loggerService: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -217,7 +220,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
         this.updateResults(results);
       },
       error: (err) => {
-        console.error('Error searching patients:', err);
+        this.logger.error('Error searching patients', err);
         this.updateResults(results);
       },
     });
@@ -240,7 +243,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
         this.updateResults(results);
       },
       error: (err) => {
-        console.error('Error searching measures:', err);
+        this.logger.error('Error searching measures', err);
         this.updateResults(results);
       },
     });
@@ -365,7 +368,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
         this.recentSearches = JSON.parse(stored).slice(0, 5);
       }
     } catch (err) {
-      console.error('Error loading recent searches:', err);
+      this.logger.error('Error loading recent searches', err);
     }
   }
 
@@ -386,7 +389,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
       // Save to localStorage
       localStorage.setItem('recentSearches', JSON.stringify(this.recentSearches));
     } catch (err) {
-      console.error('Error saving recent search:', err);
+      this.logger.error('Error saving recent search', err);
     }
   }
 

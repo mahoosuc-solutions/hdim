@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.bundles.kafka)
 
     // Resilience4j for circuit breaker and rate limiting
+    implementation(libs.resilience4j.spring.boot3)
     implementation(libs.resilience4j.circuitbreaker)
     implementation(libs.resilience4j.ratelimiter)
 

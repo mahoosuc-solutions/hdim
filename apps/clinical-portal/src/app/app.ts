@@ -191,7 +191,7 @@ export class App implements OnInit, OnDestroy {
   private onSessionTimeout(): void {
     this.showSessionWarning = false;
     this.clearSessionTimeout();
-    console.warn('Session timeout - logging out user due to inactivity');
+    this.logger.warn('Session timeout - logging out user due to inactivity');
     this.authService.logout();
   }
 

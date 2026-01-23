@@ -1,6 +1,7 @@
 import { Injectable, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, Subject, Observable } from 'rxjs';
+import { LoggerService } from './logger.service';
 
 /**
  * Tour Step Definition
@@ -66,6 +67,7 @@ export class GuidedTourService implements OnDestroy {
   private readonly FIRST_VISIT_KEY = 'hdim_first_visit_complete';
   private readonly destroy$ = new Subject<void>();
   private readonly isBrowser: boolean;
+  private logger = this.loggerService.withContext('GuidedTourService');
 
   // Tour definitions registry
   private tours = new Map<string, TourDefinition>();
@@ -82,7 +84,10 @@ export class GuidedTourService implements OnDestroy {
   private overlayVisibleSubject = new BehaviorSubject<boolean>(false);
   readonly overlayVisible$ = this.overlayVisibleSubject.asObservable();
 
-  constructor(@Inject(PLATFORM_ID) platformId: object) {
+  constructor(
+    @Inject(PLATFORM_ID) platformId: object,
+    private loggerService: LoggerService
+  ) {
     this.isBrowser = isPlatformBrowser(platformId);
     this.initializeDefaultTours();
   }
@@ -309,7 +314,7 @@ export class GuidedTourService implements OnDestroy {
 
     const tour = this.tours.get(tourId);
     if (!tour || tour.steps.length === 0) {
-      console.warn(`Tour "${tourId}" not found or has no steps`);
+      this.logger.warn(`Tour "${tourId}" not found or has no steps`);
       return false;
     }
 
@@ -463,7 +468,7 @@ export class GuidedTourService implements OnDestroy {
     // Find target element
     const targetElement = document.querySelector(step.targetSelector) as HTMLElement;
     if (!targetElement) {
-      console.warn(`Tour step target not found: ${step.targetSelector}`);
+      this.logger.warn(`Tour step target not found: ${step.targetSelector}`);
       // Try next step
       if (stepIndex < tour.steps.length - 1) {
         await this.goToStep(stepIndex + 1);

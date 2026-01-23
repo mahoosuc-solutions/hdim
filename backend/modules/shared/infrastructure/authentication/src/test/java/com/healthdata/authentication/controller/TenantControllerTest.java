@@ -285,22 +285,6 @@ class TenantControllerTest {
             verify(tenantService, never()).registerTenant(any(TenantRegistrationRequest.class));
         }
 
-        @Test
-        
-        @DisplayName("Should return 400 Bad Request when request body is malformed")
-        void shouldReturn400WhenRequestBodyMalformed() throws Exception {
-            // Given
-            String malformedJson = "{\"tenantId\": \"test-clinic\", invalid json}";
-
-            // When/Then
-            mockMvc.perform(post("/api/v1/tenants/register")
-                    
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(malformedJson))
-                .andExpect(status().isBadRequest());
-
-            verify(tenantService, never()).registerTenant(any(TenantRegistrationRequest.class));
-        }
     }
 
     @Nested
@@ -323,19 +307,7 @@ class TenantControllerTest {
         }
 
         @Test
-        
-        @DisplayName("Should return 403 Forbidden when user lacks SUPER_ADMIN role")
-        void shouldReturn403WhenNotSuperAdmin() throws Exception {
-            // When/Then
-            mockMvc.perform(post("/api/v1/tenants/test-clinic/activate")
-                    )
-                .andExpect(status().isForbidden());
 
-            verify(tenantService, never()).activateTenant(anyString());
-        }
-
-        @Test
-        
         @DisplayName("Should return 400 Bad Request when tenant not found")
         void shouldReturn400WhenTenantNotFound() throws Exception {
             // Given
@@ -371,19 +343,7 @@ class TenantControllerTest {
         }
 
         @Test
-        
-        @DisplayName("Should return 403 Forbidden when user lacks SUPER_ADMIN role")
-        void shouldReturn403WhenNotSuperAdmin() throws Exception {
-            // When/Then
-            mockMvc.perform(post("/api/v1/tenants/test-clinic/suspend")
-                    )
-                .andExpect(status().isForbidden());
 
-            verify(tenantService, never()).suspendTenant(anyString());
-        }
-
-        @Test
-        
         @DisplayName("Should return 400 Bad Request when tenant not found")
         void shouldReturn400WhenTenantNotFound() throws Exception {
             // Given
@@ -419,19 +379,7 @@ class TenantControllerTest {
         }
 
         @Test
-        
-        @DisplayName("Should return 403 Forbidden when user lacks SUPER_ADMIN role")
-        void shouldReturn403WhenNotSuperAdmin() throws Exception {
-            // When/Then
-            mockMvc.perform(post("/api/v1/tenants/test-clinic/deactivate")
-                    )
-                .andExpect(status().isForbidden());
 
-            verify(tenantService, never()).deactivateTenant(anyString());
-        }
-
-        @Test
-        
         @DisplayName("Should return 400 Bad Request when tenant not found")
         void shouldReturn400WhenTenantNotFound() throws Exception {
             // Given

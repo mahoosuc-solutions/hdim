@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription, interval } from 'rxjs';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * Clinical Audit Dashboard
@@ -24,7 +25,10 @@ import { Subscription, interval } from 'rxjs';
   styleUrls: ['./clinical-audit-dashboard.component.scss']
 })
 export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
-  
+
+  // Contextual logger
+  private logger = this.loggerService.withContext('ClinicalAuditDashboardComponent');
+
   // User role (determines visible features)
   userRole: 'CLINICAL_PHYSICIAN' | 'CLINICAL_NURSE' | 'PROVIDER' = 'CLINICAL_PHYSICIAN';
   
@@ -71,7 +75,9 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
   // Auto-refresh
   private refreshSubscription?: Subscription;
   autoRefreshEnabled: boolean = true;
-  
+
+  constructor(private loggerService: LoggerService) {}
+
   ngOnInit(): void {
     this.loadClinicalDecisions();
     this.loadClinicalMetrics();
@@ -96,7 +102,7 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
    */
   loadClinicalDecisions(): void {
     // TODO: Call backend API /api/v1/audit/ai/decisions?agentType=CLINICAL_*
-    console.log('Loading clinical decisions...');
+    this.logger.info('Loading clinical decisions');
   }
   
   /**
@@ -104,7 +110,7 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
    */
   loadClinicalMetrics(): void {
     // TODO: Call backend API /api/v1/audit/clinical/metrics
-    console.log('Loading clinical metrics...');
+    this.logger.info('Loading clinical metrics');
   }
   
   /**
@@ -119,7 +125,7 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
    * Apply filters
    */
   applyFilters(): void {
-    console.log('Applying filters:', {
+    this.logger.info('Applying filters', {
       priority: this.filterPriority,
       status: this.filterStatus,
       patient: this.filterPatient,
@@ -142,10 +148,10 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
    */
   acceptRecommendation(): void {
     if (!this.selectedDecision) return;
-    
+
     // TODO: Call backend API POST /api/v1/clinical/decisions/{id}/accept
-    console.log('Accepting recommendation:', this.selectedDecision.eventId, 'Notes:', this.clinicalNotes);
-    
+    this.logger.info('Accepting recommendation', { eventId: this.selectedDecision.eventId, notes: this.clinicalNotes });
+
     this.clinicalMetrics.decisionsAccepted++;
     this.removeFromQueue(this.selectedDecision.eventId);
     this.selectedDecision = null;
@@ -156,10 +162,10 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
    */
   rejectRecommendation(): void {
     if (!this.selectedDecision) return;
-    
+
     // TODO: Call backend API POST /api/v1/clinical/decisions/{id}/reject
-    console.log('Rejecting recommendation:', this.selectedDecision.eventId, 'Clinical rationale:', this.clinicalNotes);
-    
+    this.logger.info('Rejecting recommendation', { eventId: this.selectedDecision.eventId, clinicalRationale: this.clinicalNotes });
+
     this.clinicalMetrics.decisionsRejected++;
     this.removeFromQueue(this.selectedDecision.eventId);
     this.selectedDecision = null;
@@ -170,10 +176,10 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
    */
   modifyRecommendation(): void {
     if (!this.selectedDecision) return;
-    
+
     // TODO: Call backend API POST /api/v1/clinical/decisions/{id}/modify
-    console.log('Modifying recommendation:', this.selectedDecision.eventId, 'Modifications:', this.clinicalNotes);
-    
+    this.logger.info('Modifying recommendation', { eventId: this.selectedDecision.eventId, modifications: this.clinicalNotes });
+
     this.clinicalMetrics.decisionsModified++;
     this.removeFromQueue(this.selectedDecision.eventId);
     this.selectedDecision = null;
@@ -199,7 +205,7 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
    */
   exportClinicalReport(): void {
     // TODO: Call backend API GET /api/v1/audit/clinical/report/export
-    console.log('Exporting clinical audit report...');
+    this.logger.info('Exporting clinical audit report');
   }
   
   /**

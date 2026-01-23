@@ -82,6 +82,7 @@ include(
     "modules:services:sales-automation-service",
     "modules:services:notification-service",
     "modules:services:demo-seeding-service",
+    "modules:services:data-ingestion-service",
     "modules:services:cms-connector-service",
     "modules:services:audit-query-service",
     "modules:services:patient-event-handler-service",

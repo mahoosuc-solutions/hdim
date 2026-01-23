@@ -1863,6 +1863,57 @@ services:
       start_period: 60s
 
   # ============================================
+  # DATA INGESTION SERVICE (LOAD TESTING)
+  # ============================================
+  # CRITICAL: This is a SEPARATE load testing container
+  # Purpose: Generate realistic patient data and push into platform
+  # Isolation: Does NOT share resources with core platform services
+  # Usage: docker compose --profile ingestion up -d data-ingestion-service
+
+  data-ingestion-service:
+    container_name: healthdata-data-ingestion-service
+    restart: "no"  # Manual start only - NOT auto-started
+    build:
+      context: ./backend
+      dockerfile: modules/services/data-ingestion-service/Dockerfile
+    profiles: ["ingestion"]  # ONLY in "ingestion" profile (separate from "full")
+    # NOTE: No depends_on because core services are in different profile
+    # Start core services first with: docker compose --profile core up -d
+    # Then start ingestion service with: docker compose --profile ingestion up -d
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/data_ingestion_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      FHIR_SERVICE_URL: http://fhir-service:8085/fhir
+      CARE_GAP_SERVICE_URL: http://care-gap-service:8086/care-gap
+      QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087/quality-measure
+      AUDIT_VERBOSE_LOGGING: "true"
+      ENABLE_DETAILED_METRICS: "true"
+      # OpenTelemetry tracing
+      OTEL_SERVICE_NAME: data-ingestion-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_TRACES_EXPORTER: otlp
+    ports:
+      - "8200:8080"  # External port 8200 (does not conflict with any core service)
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"        # Max 2 CPU cores for load testing
+          memory: "2G"       # Max 2GB RAM
+        reservations:
+          cpus: "1.0"        # Reserve 1 CPU core
+          memory: "1G"       # Reserve 1GB RAM
+    networks:
+      - healthdata-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/api/v1/ingestion/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ============================================
   # FRONTEND SERVICE
   # ============================================
 

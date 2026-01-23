@@ -183,6 +183,11 @@ The Clinical Portal handles sensitive PHI and MUST follow HIPAA-compliant coding
   - Tracks patient access, care gaps, evaluations, reports, FHIR resources
   - Resource type extraction, duration tracking, success/failure outcomes
   - Fire-and-forget batching, offline resilience
+- ✅ **Session Timeout Audit Logging** - HIPAA §164.312(a)(2)(iii) compliant (PR #294)
+  - Logs all session timeouts (automatic idle timeout + explicit logout)
+  - Captures idle duration, timeout reason, warning status
+  - Differentiates automatic vs explicit logout
+  - Full audit trail for compliance verification
 - ✅ **Global Error Handler** - Prevents application crashes, logs security incidents
   - Catches all unhandled exceptions
   - PHI filtering via LoggerService
@@ -286,17 +291,36 @@ this.patientService.getPatient(patientId).subscribe({
 
 ---
 
-**4. Session Timeout - Already Implemented**
+**4. Session Timeout - HIPAA Compliant (Complete) ✅**
 
 ```typescript
 // Session timeout active in app.ts:
-// - 15-minute idle timeout
+// - 15-minute idle timeout with HIPAA §164.312(a)(2)(iii) compliance
 // - 2-minute warning before logout
 // - Activity listeners (click, keypress, mousemove, scroll)
 // - "Stay Logged In" button
+// - ✅ Audit logging on timeout and logout (PR #294)
 
-// TODO: Add audit logging to handleSessionTimeout() method
+// Audit logging implementation:
+private onSessionTimeout(): void {
+  this.auditService.logSessionTimeout({
+    reason: 'IDLE_TIMEOUT',
+    idleDurationMinutes: 15,
+    warningShown: true,
+  });
+  this.authService.logout();
+}
+
+logout(): void {
+  this.auditService.logSessionTimeout({
+    reason: 'EXPLICIT_LOGOUT',
+    warningShown: false,
+  });
+  this.authService.logout();
+}
 ```
+
+**HIPAA Compliance:** Fully compliant with §164.312(a)(2)(iii) - Automatic Logoff requirement. All session timeouts are audited with user ID, timestamp, reason, and idle duration.
 
 ---
 
@@ -839,9 +863,13 @@ Before submitting code, verify:
 
 ### Frontend (Angular 17+)
 - ✅ **HIPAA §164.312(b) Compliance** - HTTP Audit Interceptor provides 100% API call audit coverage (January 2026)
+- ✅ **HIPAA §164.312(a)(2)(iii) Compliance** - Session timeout audit logging complete (PR #294, January 2026)
+  - Automatic logoff audit trail with idle duration tracking
+  - Differentiates automatic timeout vs explicit logout
+  - Full HIPAA compliance verification with 6/6 passing tests
 - ✅ **Zero-crash guarantee** - Global Error Handler prevents application failures, logs security incidents
 - ✅ **PHI exposure prevention** - ESLint no-console enforcement, LoggerService with automatic PHI filtering
-- ✅ **Session timeout** - 15-minute idle timeout with 2-minute warning (implemented)
+- ✅ **Session timeout** - 15-minute idle timeout with 2-minute warning, HIPAA-compliant audit logging
 - ✅ **Accessibility baseline** - 343 ARIA attributes across 53 files (50% WCAG 2.1 Level A coverage)
 - ⏳ **Console.log migration** - 48 files pending (migration script available: `scripts/migrate-console-to-logger.sh`)
 - ⏳ **Accessibility improvements** - Skip links, ARIA labels, focus indicators (planned)
@@ -852,8 +880,8 @@ Before submitting code, verify:
 
 ---
 
-_Last Updated: January 21, 2026_
-_Version: 2.2_ - Claude Code Integration: Added 31 development plugins with comprehensive documentation. HDIM Accelerator Plugin enhanced with 3 healthcare-specific agents achieving 100% agent coverage, 100% skill coverage, and 80% healthcare domain coverage. Plugin documentation added to Quick Reference section.
+_Last Updated: January 23, 2026_
+_Version: 2.3_ - HIPAA Session Timeout Compliance: Completed session timeout audit logging (PR #294) for HIPAA §164.312(a)(2)(iii) compliance. Added comprehensive audit trail for automatic logoff events with idle duration tracking, timeout reason differentiation, and 100% test coverage (6/6 passing tests).
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

@@ -27,6 +27,7 @@ import { EvaluationService } from '../../services/evaluation.service';
 import { CareGapService, CareGap } from '../../services/care-gap.service';
 import { ScheduledEvaluationService } from '../../services/scheduled-evaluation.service';
 import { ToastService } from '../../services/toast.service';
+import { LoggerService } from '../../services/logger.service';
 
 export interface BatchEvaluationResult {
   successCount: number;
@@ -405,6 +406,8 @@ export class BatchEvaluationDialogComponent implements OnInit, OnDestroy {
   results: QualityMeasureResult[] = [];
   errors: { patientId: string; measureId: string; error: string }[] = [];
 
+  private logger = this.loggerService.withContext('BatchEvaluationDialogComponent');
+
   constructor(
     private dialogRef: MatDialogRef<BatchEvaluationDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: BatchEvaluationDialogData | null,
@@ -414,7 +417,8 @@ export class BatchEvaluationDialogComponent implements OnInit, OnDestroy {
     private careGapService: CareGapService,
     private scheduledEvaluationService: ScheduledEvaluationService,
     private toastService: ToastService,
-    private router: Router
+    private router: Router,
+    private loggerService: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -442,7 +446,7 @@ export class BatchEvaluationDialogComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          console.error('Failed to load measures:', err);
+          this.logger.error('Failed to load measures', err);
           this.loadingMeasures = false;
         }
       });
@@ -466,7 +470,7 @@ export class BatchEvaluationDialogComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          console.error('Failed to load patients:', err);
+          this.logger.error('Failed to load patients', err);
           this.loadingPatients = false;
         }
       });
@@ -560,7 +564,7 @@ export class BatchEvaluationDialogComponent implements OnInit, OnDestroy {
           this.dialogRef.close({ scheduled: true, schedule });
         },
         error: (err) => {
-          console.error('Failed to create schedule:', err);
+          this.logger.error('Failed to create schedule', err);
           this.toastService.error('Failed to create schedule');
         },
       });
@@ -671,7 +675,7 @@ export class BatchEvaluationDialogComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((err) => {
-          console.error('Failed to detect care gaps:', err);
+          this.logger.error('Failed to detect care gaps', err);
           // On error, try fetching existing gaps instead
           return this.fetchExistingCareGaps(patientIds);
         })

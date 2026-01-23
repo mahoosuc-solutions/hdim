@@ -420,7 +420,15 @@ public class VitalSignsService {
             // Non-fatal - continue execution
         }
 
-        // TODO: Create FHIR Flag resource for abnormal vitals
+        // Create FHIR Flag resource for abnormal vitals
+        // Non-blocking - failures don't prevent vital signs recording
+        try {
+            createFlagForAbnormalVitals(vitals, tenantId);
+        } catch (Exception e) {
+            log.error("Failed to create FHIR Flag for abnormal vitals for patient {}: {}",
+                    vitals.getPatientId(), e.getMessage(), e);
+            // Non-fatal - continue execution
+        }
     }
 
     /**
@@ -715,6 +723,189 @@ public class VitalSignsService {
         quantity.setSystem("http://unitsofmeasure.org");
         quantity.setCode(unit);
         component.setValue(quantity);
+    }
+
+    /**
+     * Create FHIR Flag resource for abnormal vital signs
+     *
+     * Creates a FHIR R4 Flag resource to alert providers about abnormal vital signs.
+     * Flags provide clinical decision support by marking patient records with conditions
+     * requiring attention.
+     *
+     * Flag Details:
+     * - Status: "active" (flag is currently relevant)
+     * - Category: "clinical" (clinical alert)
+     * - Code: SNOMED CT codes for specific vital sign abnormalities
+     * - Subject: Patient reference
+     * - Period: Start time (when abnormal vitals recorded)
+     *
+     * SNOMED CT Codes Used:
+     * - 371861000: High blood pressure (hypertension)
+     * - 371862007: Low blood pressure (hypotension)
+     * - 80313002: Tachycardia (high heart rate)
+     * - 48867003: Bradycardia (low heart rate)
+     * - 386661006: Fever (high temperature)
+     * - 89176007: Hypothermia (low temperature)
+     * - 389086002: Low oxygen saturation (hypoxemia)
+     * - 271823003: Tachypnea (high respiratory rate)
+     * - 271825005: Bradypnea (low respiratory rate)
+     *
+     * Non-Blocking:
+     * - Failures logged but don't prevent vital signs recording
+     * - Circuit breaker protects against FHIR service outages
+     *
+     * @param vitals the vital signs record with abnormal values
+     * @param tenantId the tenant ID for multi-tenant isolation
+     */
+    private void createFlagForAbnormalVitals(VitalSignsRecordEntity vitals, String tenantId) {
+        log.debug("Creating FHIR Flag for abnormal vitals for patient {} in tenant {}",
+                vitals.getPatientId(), tenantId);
+
+        // Extract alert types from message to determine specific Flag codes
+        String alertMessage = vitals.getAlertMessage();
+        if (alertMessage == null || alertMessage.isEmpty()) {
+            log.warn("No alert message found for vitals {} - skipping Flag creation", vitals.getId());
+            return;
+        }
+
+        String upperMessage = alertMessage.toUpperCase();
+        List<org.hl7.fhir.r4.model.Flag> flags = new ArrayList<>();
+
+        // Create Flag for each abnormal vital sign type
+        // High Blood Pressure
+        if ((upperMessage.contains("SYSTOLIC BP") || upperMessage.contains("DIASTOLIC BP"))
+                && (upperMessage.contains(">") || upperMessage.contains("HIGH"))) {
+            flags.add(createFlag(vitals, "371861000", "High blood pressure",
+                    "Abnormal vital signs: " + alertMessage, tenantId));
+        }
+
+        // Low Blood Pressure
+        if ((upperMessage.contains("SYSTOLIC BP") || upperMessage.contains("DIASTOLIC BP"))
+                && (upperMessage.contains("<") || upperMessage.contains("LOW"))) {
+            flags.add(createFlag(vitals, "371862007", "Low blood pressure",
+                    "Abnormal vital signs: " + alertMessage, tenantId));
+        }
+
+        // Tachycardia (High Heart Rate)
+        if (upperMessage.contains("HEART RATE") && (upperMessage.contains(">") || upperMessage.contains("HIGH"))) {
+            flags.add(createFlag(vitals, "80313002", "Tachycardia",
+                    "Abnormal vital signs: " + alertMessage, tenantId));
+        }
+
+        // Bradycardia (Low Heart Rate)
+        if (upperMessage.contains("HEART RATE") && (upperMessage.contains("<") || upperMessage.contains("LOW"))) {
+            flags.add(createFlag(vitals, "48867003", "Bradycardia",
+                    "Abnormal vital signs: " + alertMessage, tenantId));
+        }
+
+        // Fever (High Temperature)
+        if (upperMessage.contains("TEMPERATURE") && upperMessage.contains(">")) {
+            flags.add(createFlag(vitals, "386661006", "Fever",
+                    "Abnormal vital signs: " + alertMessage, tenantId));
+        }
+
+        // Hypothermia (Low Temperature)
+        if (upperMessage.contains("TEMPERATURE") && upperMessage.contains("<")) {
+            flags.add(createFlag(vitals, "89176007", "Hypothermia",
+                    "Abnormal vital signs: " + alertMessage, tenantId));
+        }
+
+        // Hypoxemia (Low Oxygen Saturation)
+        if (upperMessage.contains("O2") || upperMessage.contains("OXYGEN")) {
+            flags.add(createFlag(vitals, "389086002", "Hypoxemia",
+                    "Abnormal vital signs: " + alertMessage, tenantId));
+        }
+
+        // Tachypnea (High Respiratory Rate)
+        if (upperMessage.contains("RESPIR") && (upperMessage.contains(">") || upperMessage.contains("HIGH"))) {
+            flags.add(createFlag(vitals, "271823003", "Tachypnea",
+                    "Abnormal vital signs: " + alertMessage, tenantId));
+        }
+
+        // Bradypnea (Low Respiratory Rate)
+        if (upperMessage.contains("RESPIR") && (upperMessage.contains("<") || upperMessage.contains("LOW"))) {
+            flags.add(createFlag(vitals, "271825005", "Bradypnea",
+                    "Abnormal vital signs: " + alertMessage, tenantId));
+        }
+
+        // Persist all flags to FHIR service
+        for (org.hl7.fhir.r4.model.Flag flag : flags) {
+            try {
+                org.hl7.fhir.r4.model.Flag created = fhirServiceClient.createFlag(
+                        flag, tenantId, vitals.getRecordedBy() != null ? vitals.getRecordedBy() : "system");
+
+                if (created != null) {
+                    log.info("Created FHIR Flag {} for patient {} in tenant {} (code: {})",
+                            created.getIdElement().getIdPart(),
+                            vitals.getPatientId(),
+                            tenantId,
+                            flag.getCode().getCodingFirstRep().getCode());
+                } else {
+                    log.warn("FHIR service returned null for Flag creation for patient {} in tenant {}",
+                            vitals.getPatientId(), tenantId);
+                }
+            } catch (Exception e) {
+                log.error("Failed to create FHIR Flag for patient {} in tenant {}: {}",
+                        vitals.getPatientId(), tenantId, e.getMessage(), e);
+                // Continue with next flag - don't fail the entire process
+            }
+        }
+    }
+
+    /**
+     * Create a FHIR Flag resource
+     *
+     * Helper method to build a FHIR R4 Flag resource with standard structure.
+     *
+     * @param vitals the vital signs record
+     * @param snomedCode the SNOMED CT code for the condition
+     * @param display the human-readable display name
+     * @param text the descriptive text for the flag
+     * @param tenantId the tenant ID
+     * @return FHIR Flag resource
+     */
+    private org.hl7.fhir.r4.model.Flag createFlag(
+            VitalSignsRecordEntity vitals,
+            String snomedCode,
+            String display,
+            String text,
+            String tenantId) {
+
+        org.hl7.fhir.r4.model.Flag flag = new org.hl7.fhir.r4.model.Flag();
+
+        // Set status: active (flag is currently relevant)
+        flag.setStatus(org.hl7.fhir.r4.model.Flag.FlagStatus.ACTIVE);
+
+        // Set category: clinical (this is a clinical alert)
+        org.hl7.fhir.r4.model.CodeableConcept category = new org.hl7.fhir.r4.model.CodeableConcept();
+        org.hl7.fhir.r4.model.Coding categoryCoding = category.addCoding();
+        categoryCoding.setSystem("http://terminology.hl7.org/CodeSystem/flag-category");
+        categoryCoding.setCode("clinical");
+        categoryCoding.setDisplay("Clinical");
+        flag.addCategory(category);
+
+        // Set code: SNOMED CT code for specific condition
+        org.hl7.fhir.r4.model.CodeableConcept code = new org.hl7.fhir.r4.model.CodeableConcept();
+        org.hl7.fhir.r4.model.Coding coding = code.addCoding();
+        coding.setSystem("http://snomed.info/sct");
+        coding.setCode(snomedCode);
+        coding.setDisplay(display);
+        flag.setCode(code);
+
+        // Set subject: Patient reference
+        flag.setSubject(new org.hl7.fhir.r4.model.Reference("Patient/" + vitals.getPatientId()));
+
+        // Set period: Start time when abnormal vitals recorded
+        org.hl7.fhir.r4.model.Period period = new org.hl7.fhir.r4.model.Period();
+        period.setStart(java.util.Date.from(vitals.getRecordedAt()));
+        flag.setPeriod(period);
+
+        // Set author: Who recorded the vitals
+        if (vitals.getRecordedBy() != null) {
+            flag.setAuthor(new org.hl7.fhir.r4.model.Reference("Practitioner/" + vitals.getRecordedBy()));
+        }
+
+        return flag;
     }
 
     /**

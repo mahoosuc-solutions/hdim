@@ -34,6 +34,7 @@ dependencies {
     testImplementation(libs.bundles.testing)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
 }

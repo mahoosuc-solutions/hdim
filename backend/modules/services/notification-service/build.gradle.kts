@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:persistence"))
     implementation(project(":modules:shared:infrastructure:database-config"))
     implementation(project(":modules:shared:infrastructure:tracing"))
+    implementation(project(":modules:shared:infrastructure:feature-flags"))
 
     // Spring Boot
     implementation(libs.bundles.spring.boot.web)
@@ -26,6 +27,14 @@ dependencies {
 
     // Thymeleaf for email templates
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+
+    // Twilio SDK for SMS (TODO: Add to version catalog)
+    implementation("com.twilio.sdk:twilio") {
+        version {
+            strictly("[10.0,11.0[")
+            prefer("10.1.5")
+        }
+    }
 
     // OpenAPI/Swagger documentation
     implementation(libs.springdoc.openapi.starter.webmvc.ui)

@@ -16,6 +16,7 @@ import { DemoModeService, DemoScenario } from '../../demo-mode/services/demo-mod
 import { TestingService } from '../../services/testing.service';
 import { ErrorValidationService, ErrorSummary } from '../../services/error-validation.service';
 import { COMPLIANCE_CONFIG } from '../../config/compliance.config';
+import { LoggerService } from '../../services/logger.service';
 
 export interface TestResult {
   success: boolean;
@@ -72,6 +73,7 @@ export class TestingDashboardComponent implements OnInit, OnDestroy {
   complianceConfig = COMPLIANCE_CONFIG;
 
   private destroy$ = new Subject<void>();
+  private logger = this.loggerService.withContext('TestingDashboardComponent');
 
   constructor(
     private demoModeService: DemoModeService,
@@ -79,7 +81,8 @@ export class TestingDashboardComponent implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef,
     private errorValidationService: ErrorValidationService,
-    private router: Router
+    private router: Router,
+    private loggerService: LoggerService
   ) {
     // Initialize service health map
     this.serviceHealth.set('patient-service', { status: 'unknown', lastChecked: null });
@@ -140,7 +143,7 @@ export class TestingDashboardComponent implements OnInit, OnDestroy {
     try {
       this.scenarios = await this.demoModeService.loadScenarios();
     } catch (error) {
-      console.error('Failed to load scenarios:', error);
+      this.logger.error('Failed to load scenarios', error);
       this.showMessage('Failed to load scenarios', 'error');
     } finally {
       this.loadingScenarios = false;
@@ -182,7 +185,7 @@ export class TestingDashboardComponent implements OnInit, OnDestroy {
         });
       });
     } catch (error) {
-      console.error('Failed to check service health:', error);
+      this.logger.error('Failed to check service health', error);
       this.showMessage('Failed to check service health', 'error');
     } finally {
       this.checkingHealth = false;
@@ -375,7 +378,7 @@ export class TestingDashboardComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       }
     } catch (error) {
-      console.warn('Failed to load test results from storage:', error);
+      this.logger.warn('Failed to load test results from storage', error);
     }
   }
 
@@ -387,7 +390,7 @@ export class TestingDashboardComponent implements OnInit, OnDestroy {
       const serializable = Object.fromEntries(this.testResults);
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(serializable));
     } catch (error) {
-      console.warn('Failed to save test results to storage:', error);
+      this.logger.warn('Failed to save test results to storage', error);
     }
   }
 
@@ -430,7 +433,7 @@ export class TestingDashboardComponent implements OnInit, OnDestroy {
 
       this.showMessage('Test results exported successfully', 'success');
     } catch (error) {
-      console.error('Failed to export test results:', error);
+      this.logger.error('Failed to export test results', error);
       this.showMessage('Failed to export test results', 'error');
     }
   }
@@ -469,7 +472,7 @@ export class TestingDashboardComponent implements OnInit, OnDestroy {
 
       this.showMessage('Test results exported as CSV successfully', 'success');
     } catch (error) {
-      console.error('Failed to export test results as CSV:', error);
+      this.logger.error('Failed to export test results as CSV', error);
       this.showMessage('Failed to export test results as CSV', 'error');
     }
   }

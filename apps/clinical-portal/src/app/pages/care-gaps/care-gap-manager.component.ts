@@ -35,6 +35,7 @@ import { LoadingButtonComponent } from '../../shared/components/loading-button/l
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { QuickActionDialogComponent, QuickActionType, QuickActionConfig, QuickActionResult } from './dialogs/quick-action-dialog.component';
 import { getQuickActionsForGap, getPrimaryQuickAction, getSecondaryQuickActions, getClosureMetrics, CLOSURE_METRICS } from './quick-actions.config';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * Intervention Recommendation with ROI metrics
@@ -286,6 +287,7 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
   // Search debounce
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
+  private logger = this.loggerService.withContext('CareGapManagerComponent');
 
   constructor(
     private patientService: PatientService,
@@ -295,7 +297,8 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
     private dialog: MatDialog,
     private router: Router,
     private fb: FormBuilder,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private loggerService: LoggerService
   ) {
     // Initialize filter form
     this.filterForm = this.fb.group({
@@ -759,10 +762,10 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
     };
 
     // In production, this would call the backend service
-    console.log('Submitting intervention:', intervention);
+    this.logger.info('Submitting intervention', intervention);
 
     // Show success message
-    console.log(`Intervention created for ${this.selectedGap.patientName}`);
+    this.logger.info('Intervention created for patient', this.selectedGap.patientName);
     this.closeInterventionForm();
   }
 
@@ -804,10 +807,10 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
     };
 
     // In production, this would call the backend service
-    console.log('Submitting closure:', closure);
+    this.logger.info('Submitting closure', closure);
 
     // Show success message
-    console.log(`Care gap closed for ${this.selectedGap.patientName}`);
+    this.logger.info('Care gap closed for patient', this.selectedGap.patientName);
 
     // Remove from local list
     this.careGaps = this.careGaps.filter((g) => g !== this.selectedGap);
@@ -857,7 +860,7 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
     const selectedGaps = [...this.selection.selected];
 
     // In production, this would call the backend service
-    console.log('Bulk closing gaps:', selectedGaps);
+    this.logger.info('Bulk closing gaps', selectedGaps);
 
     // Remove from local list
     this.careGaps = this.careGaps.filter((gap) => !selectedGaps.includes(gap));
@@ -866,7 +869,7 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
     this.selection.clear();
 
     // Show success message
-    console.log(`${selectedGaps.length} care gap(s) closed successfully`);
+    this.logger.info('Care gaps closed successfully', `${selectedGaps.length} gap(s)`);
   }
 
   // ============================================================================
@@ -1203,7 +1206,7 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
    */
   private trackClosureMetric(gap: CareGapAlert, result: QuickActionResult): void {
     // In production, this would send to analytics service
-    console.log('Closure metric tracked:', {
+    this.logger.info('Closure metric tracked', {
       gapType: gap.gapType,
       measureName: gap.measureName,
       actionType: result.actionType,

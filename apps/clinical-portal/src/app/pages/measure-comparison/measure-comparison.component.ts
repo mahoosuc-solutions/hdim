@@ -18,6 +18,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * Issue #153: Measure Performance Comparison Dashboard
@@ -1176,7 +1177,12 @@ export class MeasureComparisonComponent implements OnInit, OnDestroy {
     };
   });
 
-  constructor(private router: Router) {}
+  private logger = this.loggerService.withContext('MeasureComparisonComponent');
+
+  constructor(
+    private router: Router,
+    private loggerService: LoggerService
+  ) {}
 
   ngOnInit(): void {
     this.loadAvailableMeasures();
@@ -1420,14 +1426,14 @@ export class MeasureComparisonComponent implements OnInit, OnDestroy {
    */
   showOverlapPatients(): void {
     // Would open dialog or navigate with overlap patient IDs
-    console.log('Showing overlap patients');
+    this.logger.info('Showing overlap patients');
   }
 
   /**
    * Show pair overlap
    */
   showPairOverlap(measure1: MeasureData, measure2: MeasureData): void {
-    console.log(`Showing overlap between ${measure1.code} and ${measure2.code}`);
+    this.logger.info('Showing overlap between measures', `${measure1.code} and ${measure2.code}`);
   }
 
   /**
@@ -1441,7 +1447,7 @@ export class MeasureComparisonComponent implements OnInit, OnDestroy {
    * Export to PDF
    */
   exportToPdf(): void {
-    console.log('Exporting to PDF...');
+    this.logger.info('Exporting to PDF');
     // Would use a library like jsPDF or html2pdf
   }
 
@@ -1449,7 +1455,7 @@ export class MeasureComparisonComponent implements OnInit, OnDestroy {
    * Export to PNG
    */
   exportToPng(): void {
-    console.log('Exporting to PNG...');
+    this.logger.info('Exporting to PNG');
     // Would use html2canvas
   }
 

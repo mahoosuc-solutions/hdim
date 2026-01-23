@@ -30,6 +30,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 import { DialogService } from '../../../services/dialog.service';
 import { NotificationService } from '../../../services/notification.service';
 import { TrackInteraction } from '../../../utils/ai-tracking.decorator';
+import { LoggerService } from '../../../services/logger.service';
 
 export interface MATaskItem {
   id: string;
@@ -107,6 +108,7 @@ export class MADashboardComponent implements OnInit, OnDestroy {
   outreachItems: OutreachItem[] = [];
 
   private destroy$ = new Subject<void>();
+  private logger = this.loggerService.withContext('MADashboardComponent');
 
   constructor(
     private router: Router,
@@ -116,7 +118,8 @@ export class MADashboardComponent implements OnInit, OnDestroy {
     private schedulingService: SchedulingService,
     private dialogService: DialogService,
     private notificationService: NotificationService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private loggerService: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -426,7 +429,7 @@ export class MADashboardComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.error('Error rescheduling appointment:', error);
+          this.logger.error('Error rescheduling appointment', error);
           this.toastService.error('Failed to reschedule appointment');
         }
       });
@@ -614,7 +617,7 @@ export class MADashboardComponent implements OnInit, OnDestroy {
           this.careGaps = gaps;
         },
         error: (error) => {
-          console.error('Error loading care gaps:', error);
+          this.logger.error('Error loading care gaps', error);
           this.toastService.error('Failed to load care gaps');
         }
       });
@@ -653,7 +656,7 @@ export class MADashboardComponent implements OnInit, OnDestroy {
                   }
                 },
                 error: (error) => {
-                  console.error('Error closing care gap:', error);
+                  this.logger.error('Error closing care gap', error);
                   this.toastService.error('Failed to close care gap');
                 }
               });
@@ -698,7 +701,7 @@ export class MADashboardComponent implements OnInit, OnDestroy {
                   };
                 },
                 error: (error) => {
-                  console.error('Error assigning intervention:', error);
+                  this.logger.error('Error assigning intervention', error);
                   this.toastService.error('Failed to assign intervention');
                 }
               });

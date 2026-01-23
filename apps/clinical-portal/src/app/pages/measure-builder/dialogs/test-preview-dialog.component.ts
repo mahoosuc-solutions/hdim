@@ -10,6 +10,7 @@ import { Subscription } from 'rxjs';
 import { timeout, catchError } from 'rxjs/operators';
 import { LoadingButtonComponent } from '../../../shared/components/loading-button/loading-button.component';
 import { CustomMeasureService, TestPatientResult } from '../../../services/custom-measure.service';
+import { LoggerService } from '../../../services/logger.service';
 
 // Evaluation timeout in milliseconds (2 minutes)
 const EVALUATION_TIMEOUT_MS = 120000;
@@ -469,11 +470,13 @@ export class TestPreviewDialogComponent implements OnInit, OnDestroy {
   errorMessage: string | null = null;
   totalExecutionTimeMs = 0;
   private testSubscription?: Subscription;
+  private logger = this.loggerService.withContext('TestPreviewDialogComponent');
 
   constructor(
     private dialogRef: MatDialogRef<TestPreviewDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: TestPreviewDialogData,
-    private customMeasureService: CustomMeasureService
+    private customMeasureService: CustomMeasureService,
+    private loggerService: LoggerService
   ) {}
 
   ngOnDestroy(): void {
@@ -506,10 +509,10 @@ export class TestPreviewDialogComponent implements OnInit, OnDestroy {
       catchError((err) => {
         // Handle timeout specifically
         if (err.name === 'TimeoutError') {
-          console.warn('Test evaluation timed out after', EVALUATION_TIMEOUT_MS / 1000, 'seconds');
+          this.logger.warn('Test evaluation timed out after seconds', EVALUATION_TIMEOUT_MS / 1000);
           this.errorMessage = `Evaluation timed out after ${EVALUATION_TIMEOUT_MS / 1000} seconds. Using sample data.`;
         } else {
-          console.warn('Test API unavailable, using sample data:', err);
+          this.logger.warn('Test API unavailable, using sample data', err);
           this.errorMessage = 'Using sample data (backend test endpoint not available)';
         }
         this.testResults = this.generateSampleResults();

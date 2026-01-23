@@ -38,6 +38,7 @@ import { LoadingButtonComponent } from '../../shared/components/loading-button/l
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { CSVHelper } from '../../utils/csv-helper';
 import { TrackInteraction } from '../../utils/ai-tracking.decorator';
+import { LoggerService } from '../../services/logger.service';
 import { EvaluationDataFlowComponent, DataFlowStep } from '../../components/evaluation-data-flow/evaluation-data-flow.component';
 import { EvaluationDataFlowService } from '../../services/evaluation-data-flow.service';
 
@@ -71,6 +72,7 @@ import { EvaluationDataFlowService } from '../../services/evaluation-data-flow.s
 })
 export class EvaluationsComponent implements OnInit, AfterViewInit {
   private destroy$ = injectDestroy();
+  private logger = this.loggerService.withContext('EvaluationsComponent');
 
   private defaultPresetApplied = false;
 
@@ -158,7 +160,8 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     public aiAssistant: AIAssistantService,
     public measureFavorites: MeasureFavoritesService,
     private dataFlowService: EvaluationDataFlowService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private loggerService: LoggerService
   ) {
     this.evaluationForm = this.fb.group({
       measureId: ['', Validators.required],
@@ -194,13 +197,13 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     this.measureService.getLocalMeasuresAsInfo().pipe(
       takeUntil(this.destroy$),
       catchError((error) => {
-        console.warn('[WARN] Local measures unavailable, falling back to HEDIS registry:', error);
+        this.logger.warn('[WARN] Local measures unavailable, falling back to HEDIS registry', error);
         // Fallback to HEDIS registry measures
         return this.measureService.getAllAvailableMeasures().pipe(
           catchError((hedisError) => {
             this.measuresErrorDetails = ErrorFactory.createCqlEngineError('load measures', hedisError);
             this.measuresError = this.measuresErrorDetails.userMessage;
-            console.error('[ERR-5002] Error loading measures:', hedisError);
+            this.logger.error('[ERR-5002] Error loading measures', hedisError);
             return of([]);
           })
         );
@@ -209,7 +212,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
       this.allMeasures = measures;
       this.measures = measures;
       this.loadingMeasures = false;
-      console.log(`[INFO] Loaded ${measures.length} measures:`, measures.map(m => m.name).join(', '));
+      this.logger.info(`[INFO] Loaded ${measures.length} measures`, measures.map(m => m.name).join(', '));
       this.applyDefaultPresetIfReady();
     });
   }
@@ -316,7 +319,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
       catchError((error) => {
         this.patientsErrorDetails = ErrorFactory.createFhirServiceError('load patients', error);
         this.patientsError = this.patientsErrorDetails.userMessage;
-        console.error('[ERR-5001] Error loading patients:', error);
+        this.logger.error('[ERR-5001] Error loading patients', error);
         return of([]);
       })
     ).subscribe((patients) => {
@@ -405,7 +408,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     }).pipe(
       takeUntil(this.destroy$),
       catchError((error) => {
-        console.warn('[WARN] Unable to save default evaluation preset:', error);
+        this.logger.warn('[WARN] Unable to save default evaluation preset', error);
         return of(null);
       })
     ).subscribe((preset) => {
@@ -421,7 +424,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     this.evaluationService.clearDefaultEvaluationPreset().pipe(
       takeUntil(this.destroy$),
       catchError((error) => {
-        console.warn('[WARN] Unable to clear default evaluation preset:', error);
+        this.logger.warn('[WARN] Unable to clear default evaluation preset', error);
         return of(null);
       })
     ).subscribe(() => {
@@ -513,7 +516,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     this.evaluationService.getDefaultEvaluationPreset().pipe(
       takeUntil(this.destroy$),
       catchError((error) => {
-        console.warn('[WARN] Unable to load default evaluation preset:', error);
+        this.logger.warn('[WARN] Unable to load default evaluation preset', error);
         if (showToast) {
           this.toastService.error('Failed to reload default preset');
         }
@@ -591,7 +594,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
       catchError((error: any) => {
         this.evaluationErrorDetails = ErrorFactory.createEvaluationError(patientId, measureId, error);
         this.evaluationError = this.evaluationErrorDetails.userMessage;
-        console.error(`[${this.evaluationErrorDetails.code}] CQL evaluation error:`, error);
+        this.logger.error(`[${this.evaluationErrorDetails.code}] CQL evaluation error`, error);
         this.submitting = false;
         this.showDataFlow = false;
         return of(null);
@@ -600,15 +603,15 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
       if (evaluation) {
         this.currentEvaluationId = evaluation.id;
         this.evaluationResult = this.mapEvaluationToResult(evaluation);
-        
+
         // Connect WebSocket for this evaluation
         this.dataFlowService.connect(evaluation.id).pipe(
           takeUntil(this.destroy$)
         ).subscribe((step) => {
           this.dataFlowSteps.push(step);
         });
-        
-        console.log(`[INFO] CQL evaluation result:`, evaluation);
+
+        this.logger.info('[INFO] CQL evaluation result', evaluation);
       }
       this.submitting = false;
     });
@@ -625,14 +628,14 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
       catchError((error: any) => {
         this.evaluationErrorDetails = ErrorFactory.createEvaluationError(patientId, measureId, error);
         this.evaluationError = this.evaluationErrorDetails.userMessage;
-        console.error(`[${this.evaluationErrorDetails.code}] Local evaluation error:`, error);
+        this.logger.error(`[${this.evaluationErrorDetails.code}] Local evaluation error`, error);
         this.submitting = false;
         return of(null);
       })
     ).subscribe((result) => {
       if (result) {
         this.localEvaluationResult = result;
-        console.log(`[INFO] Local evaluation result:`, result);
+        this.logger.info('[INFO] Local evaluation result', result);
       }
       this.submitting = false;
     });
@@ -654,7 +657,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
         }
       }
     } catch (e) {
-      console.warn('Failed to parse evaluation result:', e);
+      this.logger.warn('Failed to parse evaluation result', e);
     }
 
     const libraryName = evaluation.library?.name || evaluation.library?.libraryName || '';
@@ -781,7 +784,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     this.evaluationService.getAllResults(0, 1000).pipe(
       takeUntil(this.destroy$),
       catchError((error) => {
-        console.error('Error loading evaluations:', error);
+        this.logger.error('Error loading evaluations', error);
         return of([]);
       })
     ).subscribe((results) => {

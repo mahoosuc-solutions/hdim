@@ -25,17 +25,131 @@ public class DataManagerService {
     @Value("${hdim.services.gateway.url:http://gateway-service:8001}")
     private String gatewayUrl;
 
+    @Value("${hdim.services.demo-seeding.url:http://demo-seeding-service:8098}")
+    private String demoSeedingServiceUrl;
+
     private final WebClient webClient = WebClient.builder()
         .defaultHeader("X-Tenant-ID", demoTenantId)
         .build();
-    
+
+    /**
+     * Seed base demo data for demo environments.
+     *
+     * Generates realistic patient data via demo-seeding-service:
+     * - 100 synthetic patients with demographics and clinical history
+     * - 40% care gap rate (realistic for HEDIS measures)
+     * - Full FHIR resource generation (medications, observations, encounters, procedures)
+     *
+     * This method delegates to demo-seeding-service's comprehensive seeding infrastructure
+     * which includes progress tracking, cancellation support, and configurable persistence.
+     */
     public void seedBaseData() {
         log.info("Seeding base demo data...");
         devopsAgent.publishLog("INFO", "Seeding base demo data...", "SEED");
-        // TODO: Implement actual data seeding logic
-        devopsAgent.publishLog("INFO", "Base data seeding completed", "SEED");
+
+        try {
+            // Step 1: Initialize scenarios and templates
+            devopsAgent.publishLog("INFO", "Initializing demo scenarios...", "SEED");
+            initializeScenarios();
+
+            // Step 2: Generate patient cohort
+            devopsAgent.publishLog("INFO", "Generating patient cohort...", "SEED");
+            GenerationResult result = generatePatientCohort(100, demoTenantId, 40);
+
+            if (result.isSuccess()) {
+                String summary = String.format(
+                    "Base data seeding completed: %d patients, %d care gaps, %d medications, %d observations, %d encounters, %d procedures (took %d ms)",
+                    result.getPatientCount(),
+                    result.getCareGapCount(),
+                    result.getMedicationCount(),
+                    result.getObservationCount(),
+                    result.getEncounterCount(),
+                    result.getProcedureCount(),
+                    result.getGenerationTimeMs()
+                );
+                log.info(summary);
+                devopsAgent.publishLog("INFO", summary, "SEED");
+            } else {
+                String errorMsg = "Base data seeding failed: " + result.getErrorMessage();
+                log.error(errorMsg);
+                devopsAgent.publishLog("ERROR", errorMsg, "SEED");
+            }
+
+        } catch (Exception e) {
+            String errorMsg = "Fatal error during base data seeding: " + e.getMessage();
+            log.error(errorMsg, e);
+            devopsAgent.publishLog("ERROR", errorMsg, "SEED");
+        }
     }
-    
+
+    /**
+     * Initialize demo scenarios and patient templates.
+     *
+     * Calls demo-seeding-service to set up:
+     * - HEDIS Evaluation scenario (500 patients)
+     * - Patient Journey scenario (250 patients)
+     * - Risk Stratification scenario (1000 patients)
+     * - Multi-Tenant scenario (1500 patients)
+     */
+    private void initializeScenarios() {
+        try {
+            WebClient seedingClient = WebClient.builder()
+                .baseUrl(demoSeedingServiceUrl)
+                .defaultHeader("X-Tenant-ID", demoTenantId)
+                .build();
+
+            String response = seedingClient.post()
+                .uri("/demo/api/v1/demo/initialize")
+                .retrieve()
+                .bodyToMono(String.class)
+                .timeout(Duration.ofSeconds(30))
+                .block();
+
+            log.debug("Initialize scenarios response: {}", response);
+
+        } catch (Exception e) {
+            log.warn("Failed to initialize scenarios: {}", e.getMessage());
+            // Non-fatal - continue with patient generation
+        }
+    }
+
+    /**
+     * Generate patient cohort via demo-seeding-service.
+     *
+     * @param count number of patients to generate
+     * @param tenantId tenant ID for multi-tenant isolation
+     * @param careGapPercentage percentage of patients with care gaps (0-100)
+     * @return generation result with counts and timing
+     */
+    private GenerationResult generatePatientCohort(int count, String tenantId, int careGapPercentage) {
+        try {
+            WebClient seedingClient = WebClient.builder()
+                .baseUrl(demoSeedingServiceUrl)
+                .defaultHeader("X-Tenant-ID", tenantId)
+                .build();
+
+            String requestBody = String.format(
+                "{\"count\": %d, \"tenantId\": \"%s\", \"careGapPercentage\": %d}",
+                count, tenantId, careGapPercentage
+            );
+
+            GenerationResult result = seedingClient.post()
+                .uri("/demo/api/v1/demo/patients/generate")
+                .header("Content-Type", "application/json")
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(GenerationResult.class)
+                .timeout(Duration.ofMinutes(5))
+                .block();
+
+            return result != null ? result : GenerationResult.failure("No response from demo-seeding-service");
+
+        } catch (Exception e) {
+            log.error("Failed to generate patient cohort: {}", e.getMessage(), e);
+            return GenerationResult.failure(e.getMessage());
+        }
+    }
+
     /**
      * Clear all demo tenant data
      *
@@ -213,6 +327,60 @@ public class DataManagerService {
     }
 
     /**
+     * DTO for patient generation results from demo-seeding-service.
+     */
+    private static class GenerationResult {
+        private String tenantId;
+        private int patientCount;
+        private int careGapCount;
+        private int medicationCount;
+        private int observationCount;
+        private int encounterCount;
+        private int procedureCount;
+        private long generationTimeMs;
+        private boolean success;
+        private String errorMessage;
+
+        // Getters and setters
+        public String getTenantId() { return tenantId; }
+        public void setTenantId(String tenantId) { this.tenantId = tenantId; }
+
+        public int getPatientCount() { return patientCount; }
+        public void setPatientCount(int patientCount) { this.patientCount = patientCount; }
+
+        public int getCareGapCount() { return careGapCount; }
+        public void setCareGapCount(int careGapCount) { this.careGapCount = careGapCount; }
+
+        public int getMedicationCount() { return medicationCount; }
+        public void setMedicationCount(int medicationCount) { this.medicationCount = medicationCount; }
+
+        public int getObservationCount() { return observationCount; }
+        public void setObservationCount(int observationCount) { this.observationCount = observationCount; }
+
+        public int getEncounterCount() { return encounterCount; }
+        public void setEncounterCount(int encounterCount) { this.encounterCount = encounterCount; }
+
+        public int getProcedureCount() { return procedureCount; }
+        public void setProcedureCount(int procedureCount) { this.procedureCount = procedureCount; }
+
+        public long getGenerationTimeMs() { return generationTimeMs; }
+        public void setGenerationTimeMs(long generationTimeMs) { this.generationTimeMs = generationTimeMs; }
+
+        public boolean isSuccess() { return success; }
+        public void setSuccess(boolean success) { this.success = success; }
+
+        public String getErrorMessage() { return errorMessage; }
+        public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
+
+        public static GenerationResult failure(String errorMessage) {
+            GenerationResult result = new GenerationResult();
+            result.setSuccess(false);
+            result.setErrorMessage(errorMessage);
+            return result;
+        }
+    }
+
+    /**
      * Result DTO for clear data operation
      */
     @lombok.Data
@@ -224,33 +392,32 @@ public class DataManagerService {
         private List<String> failedOperations;
         private String message;
     }
-}
-    
-    public FhirValidationResult validateFhirData() {
+
+    public FhirValidationResultDto validateFhirData() {
         log.info("Validating FHIR demo data authenticity...");
         devopsAgent.publishLog("INFO", "Validating FHIR demo data...", "VALIDATION");
-        
+
         FhirValidationResultDto result = devopsAgent.validateFhirDemoData();
-        
+
         if (result != null) {
             String status = result.getOverallStatus();
-            devopsAgent.updateStatus("FHIR_VALIDATION", status, 
+            devopsAgent.updateStatus("FHIR_VALIDATION", status,
                 java.util.Map.of(
                     "totalChecks", result.getTotalChecks(),
                     "passedChecks", result.getPassedChecks(),
                     "failedChecks", result.getFailedChecks(),
                     "warningChecks", result.getWarningChecks()
                 ));
-            
+
             devopsAgent.publishLog(status.equals("PASS") ? "INFO" : "WARN",
                 String.format("FHIR validation: %s (%d passed, %d failed, %d warnings)",
-                    status, result.getPassedChecks(), result.getFailedChecks(), 
+                    status, result.getPassedChecks(), result.getFailedChecks(),
                     result.getWarningChecks()),
                 "VALIDATION");
         } else {
             devopsAgent.publishLog("ERROR", "FHIR validation failed - could not retrieve results", "VALIDATION");
         }
-        
+
         return result;
     }
 }

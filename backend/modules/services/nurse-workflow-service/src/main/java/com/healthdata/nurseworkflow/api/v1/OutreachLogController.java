@@ -68,7 +68,8 @@ public class OutreachLogController {
      * @return created outreach log with 201 status
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_WRITE')") // Write operation
     @Operation(
         summary = "Create outreach log",
         description = "Records patient outreach attempt with outcome and follow-up information"
@@ -99,7 +100,8 @@ public class OutreachLogController {
      * @return outreach log if found, 404 otherwise
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'VIEWER')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation
     @Operation(
         summary = "Get outreach log",
         description = "Retrieves a specific outreach log by ID"
@@ -130,7 +132,8 @@ public class OutreachLogController {
      * @return paginated outreach logs
      */
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'VIEWER')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation
     @Operation(
         summary = "Get patient outreach history",
         description = "Retrieves all outreach attempts for a specific patient"
@@ -139,7 +142,7 @@ public class OutreachLogController {
     public ResponseEntity<Page<OutreachLogEntity>> getPatientOutreachHistory(
             @RequestHeader(value = "X-Tenant-ID", required = true) String tenantId,
             @PathVariable UUID patientId,
-            @ParameterObject Pageable pageable) {
+            Pageable pageable) {
         log.info("Retrieving outreach history for patient {} from tenant {}",
             patientId, tenantId);
 
@@ -161,7 +164,8 @@ public class OutreachLogController {
      * @return paginated outreach logs with specified outcome
      */
     @GetMapping("/outcome/{outcomeType}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'ANALYST')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation (analytics)
     @Operation(
         summary = "Get outreach logs by outcome type",
         description = "Retrieves outreach logs filtered by outcome (e.g., successful contact, no answer)"
@@ -169,7 +173,7 @@ public class OutreachLogController {
     public ResponseEntity<Page<OutreachLogEntity>> getOutreachByOutcome(
             @RequestHeader(value = "X-Tenant-ID", required = true) String tenantId,
             @PathVariable OutreachLogEntity.OutcomeType outcomeType,
-            @ParameterObject Pageable pageable) {
+            Pageable pageable) {
         log.info("Retrieving outreach logs by outcome type: {} from tenant {}",
             outcomeType, tenantId);
 
@@ -190,7 +194,8 @@ public class OutreachLogController {
      * @return updated outreach log
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_WRITE')") // Write operation
     @Operation(
         summary = "Update outreach log",
         description = "Updates an existing outreach log with new notes or follow-up information"
@@ -221,7 +226,8 @@ public class OutreachLogController {
      * @return 204 No Content on success
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_WRITE')") // Write operation (delete)
     @Operation(
         summary = "Delete outreach log",
         description = "Deletes an outreach log (soft delete)"
@@ -248,7 +254,8 @@ public class OutreachLogController {
      * @return outreach metrics summary
      */
     @GetMapping("/metrics/{patientId}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'ANALYST')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation (analytics)
     @Operation(
         summary = "Get outreach metrics",
         description = "Retrieves outreach metrics for a patient (total attempts, success rate, etc.)"

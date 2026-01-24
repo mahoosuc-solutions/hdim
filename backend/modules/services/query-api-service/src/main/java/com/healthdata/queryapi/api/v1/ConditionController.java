@@ -28,7 +28,7 @@ public class ConditionController {
      * List all conditions for patient
      */
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     public ResponseEntity<List<ConditionResponse>> getConditionsByPatient(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -49,7 +49,7 @@ public class ConditionController {
      * List conditions by ICD-10 code
      */
     @GetMapping("/icd/{icdCode}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_SEARCH')")
     public ResponseEntity<List<ConditionResponse>> getConditionsByIcdCode(
             @PathVariable String icdCode,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -70,7 +70,7 @@ public class ConditionController {
      * List active conditions for patient
      */
     @GetMapping("/patient/{patientId}/active")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     public ResponseEntity<List<ConditionResponse>> getActiveConditions(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -91,7 +91,7 @@ public class ConditionController {
      * List conditions by status (active, inactive, resolved)
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_SEARCH')")
     public ResponseEntity<List<ConditionResponse>> getConditionsByStatus(
             @RequestParam(required = false) String status,
             @RequestHeader("X-Tenant-ID") String tenantId) {

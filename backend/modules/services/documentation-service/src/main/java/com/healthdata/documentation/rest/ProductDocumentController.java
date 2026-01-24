@@ -26,14 +26,14 @@ public class ProductDocumentController {
     private final ProductDocumentService documentService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('USER', 'EDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<List<ProductDocumentDto>> getDocuments(
             @RequestHeader("X-Tenant-ID") String tenantId) {
         return ResponseEntity.ok(documentService.getDocuments(tenantId));
     }
 
     @GetMapping("/paginated")
-    @PreAuthorize("hasAnyRole('USER', 'EDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<Page<ProductDocumentDto>> getDocumentsPaginated(
             @RequestHeader("X-Tenant-ID") String tenantId,
             Pageable pageable) {
@@ -48,7 +48,7 @@ public class ProductDocumentController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'EDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<ProductDocumentDto> getDocument(
             @PathVariable String id,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -58,7 +58,7 @@ public class ProductDocumentController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('USER', 'EDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<Page<ProductDocumentDto>> searchDocuments(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam String query,
@@ -67,14 +67,14 @@ public class ProductDocumentController {
     }
 
     @GetMapping("/categories")
-    @PreAuthorize("hasAnyRole('USER', 'EDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<List<String>> getCategories(
             @RequestHeader("X-Tenant-ID") String tenantId) {
         return ResponseEntity.ok(documentService.getCategories(tenantId));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('EDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<ProductDocumentDto> createDocument(
             @Valid @RequestBody ProductDocumentDto dto,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -83,7 +83,7 @@ public class ProductDocumentController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('EDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<ProductDocumentDto> updateDocument(
             @PathVariable String id,
             @Valid @RequestBody ProductDocumentDto dto,
@@ -96,7 +96,7 @@ public class ProductDocumentController {
     }
 
     @PostMapping("/{id}/publish")
-    @PreAuthorize("hasAnyRole('EDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<ProductDocumentDto> publishDocument(
             @PathVariable String id,
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -108,7 +108,7 @@ public class ProductDocumentController {
     }
 
     @PostMapping("/{id}/archive")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<ProductDocumentDto> archiveDocument(
             @PathVariable String id,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -118,7 +118,7 @@ public class ProductDocumentController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<Void> deleteDocument(
             @PathVariable String id,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -129,7 +129,7 @@ public class ProductDocumentController {
     }
 
     @GetMapping("/{id}/versions")
-    @PreAuthorize("hasAnyRole('USER', 'EDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<List<DocumentVersionDto>> getVersions(
             @PathVariable String id,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -137,7 +137,7 @@ public class ProductDocumentController {
     }
 
     @PostMapping("/{id}/versions")
-    @PreAuthorize("hasAnyRole('EDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<DocumentVersionDto> createVersion(
             @PathVariable String id,
             @Valid @RequestBody DocumentVersionDto dto,
@@ -149,7 +149,7 @@ public class ProductDocumentController {
     }
 
     @PostMapping("/{id}/feedback")
-    @PreAuthorize("hasAnyRole('USER', 'EDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<DocumentFeedbackDto> submitFeedback(
             @PathVariable String id,
             @Valid @RequestBody DocumentFeedbackDto dto,
@@ -161,7 +161,7 @@ public class ProductDocumentController {
     }
 
     @GetMapping("/{id}/feedback")
-    @PreAuthorize("hasAnyRole('USER', 'EDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<Page<DocumentFeedbackDto>> getFeedback(
             @PathVariable String id,
             @RequestHeader("X-Tenant-ID") String tenantId,

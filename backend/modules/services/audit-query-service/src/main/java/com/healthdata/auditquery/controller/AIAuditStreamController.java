@@ -110,7 +110,7 @@ public class AIAuditStreamController {
      * @return SseEmitter for streaming events
      */
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @PreAuthorize("hasAnyRole('AUDITOR', 'ADMIN', 'QA_ANALYST', 'QUALITY_OFFICER')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Stream AI audit events in real-time",
         description = "Establishes SSE connection for streaming AI decision events with optional filtering",
@@ -274,7 +274,7 @@ public class AIAuditStreamController {
      * Get count of active SSE connections (for monitoring).
      */
     @GetMapping("/stream/stats")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(summary = "Get SSE connection statistics")
     public Map<String, Object> getStreamStats() {
         int totalConnections = activeEmitters.values().stream()

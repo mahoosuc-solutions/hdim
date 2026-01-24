@@ -67,7 +67,8 @@ public class PatientEducationController {
      * @return created education log with 201 status
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_WRITE')") // Write operation
     @Operation(
         summary = "Log patient education delivery",
         description = "Documents education session with teach-back assessment and barrier identification"
@@ -97,7 +98,8 @@ public class PatientEducationController {
      * @return education log if found, 404 otherwise
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'VIEWER')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation
     @Operation(
         summary = "Get patient education log",
         description = "Retrieves a specific patient education log by ID"
@@ -127,7 +129,8 @@ public class PatientEducationController {
      * @return paginated list of education logs for patient
      */
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'VIEWER')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation
     @Operation(
         summary = "Get patient education history",
         description = "Retrieves all education delivered to a specific patient"
@@ -157,7 +160,8 @@ public class PatientEducationController {
      * @return paginated education logs with specified material
      */
     @GetMapping("/material/{materialType}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'ANALYST')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation (analytics)
     @Operation(
         summary = "Get education logs by material type",
         description = "Retrieves education logs filtered by condition/disease type"
@@ -187,7 +191,8 @@ public class PatientEducationController {
      * @return paginated education logs with specified delivery method
      */
     @GetMapping("/delivery/{deliveryMethod}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'ANALYST')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation (analytics)
     @Operation(
         summary = "Get education logs by delivery method",
         description = "Retrieves education logs filtered by delivery method"
@@ -219,7 +224,8 @@ public class PatientEducationController {
      * @return paginated education logs in date range
      */
     @GetMapping("/patient/{patientId}/date-range")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'ANALYST')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation (analytics)
     @Operation(
         summary = "Get education logs within date range",
         description = "Retrieves education delivered within specified date range"
@@ -250,7 +256,8 @@ public class PatientEducationController {
      * @return list of education logs needing follow-up
      */
     @GetMapping("/poor-understanding")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_WRITE')") // Write operation
     @Operation(
         summary = "Get education sessions with poor understanding",
         description = "Retrieves education sessions needing follow-up due to poor patient understanding"
@@ -276,7 +283,8 @@ public class PatientEducationController {
      * @return paginated interpreted education sessions
      */
     @GetMapping("/interpreted-sessions")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'ANALYST')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation (analytics)
     @Operation(
         summary = "Get interpreted education sessions",
         description = "Retrieves education sessions where interpreter was used"
@@ -303,7 +311,8 @@ public class PatientEducationController {
      * @return updated education log
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_WRITE')") // Write operation
     @Operation(
         summary = "Update patient education log",
         description = "Updates education log with follow-up notes and status"
@@ -329,7 +338,8 @@ public class PatientEducationController {
      * @return 204 No Content
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_WRITE')") // Write operation
     @Operation(
         summary = "Delete patient education log",
         description = "Deletes a patient education log record"
@@ -359,7 +369,8 @@ public class PatientEducationController {
      * @return education metrics summary
      */
     @GetMapping("/metrics/{patientId}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'ANALYST')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation (analytics)
     @Operation(
         summary = "Get patient education metrics",
         description = "Retrieves education metrics for a specific patient"

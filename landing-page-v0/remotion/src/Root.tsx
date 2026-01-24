@@ -70,6 +70,17 @@ export const RemotionRoot: React.FC = () => {
         height={1080}
         defaultProps={{ variant: 'short' }}
       />
+
+      {/* Care Gap Closure Demo - Ultra-Short (30 seconds) */}
+      <Composition
+        id="CareGapClosure30"
+        component={CareGapClosureVideo}
+        durationInFrames={900} // 30 seconds at 30fps
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{ variant: 'ultra-short' }}
+      />
     </>
   );
 };

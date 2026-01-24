@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import PortalNav from '../../components/PortalNav'
+import VideoPlayer from '../../components/VideoPlayer'
 import {
   Play,
   Building2,
@@ -166,6 +167,32 @@ export default function DemoPage() {
               Experience HDIM with real synthetic data. Select your customer type and demo scenario
               to see care gap detection, quality measures, and ROI in action.
             </p>
+          </div>
+
+          {/* Quick Video Preview */}
+          <div className="mb-16 max-w-4xl mx-auto">
+            <div className="bg-gradient-to-r from-blue-50 to-teal-50 rounded-2xl p-8">
+              <div className="text-center mb-6">
+                <span className="text-primary font-semibold text-sm uppercase tracking-wider">
+                  See It In 30 Seconds
+                </span>
+                <h2 className="text-2xl font-bold text-gray-900 mt-2 mb-2">
+                  Care Gap Closure in Action
+                </h2>
+                <p className="text-gray-600">
+                  Watch how HDIM identifies and closes care gaps in real-time
+                </p>
+              </div>
+              <VideoPlayer
+                videoSrc="/videos/care-gap-closure-30s.mp4"
+                thumbnailSrc="/videos/care-gap-closure-30s-thumb.png"
+                title="Care Gap Closure Demo - 30 Second Preview"
+                description="Watch HDIM identify Eleanor Anderson's overdue mammogram screening and close the care gap with automated workflow"
+              />
+              <p className="text-center text-gray-500 mt-4 text-sm">
+                Click to watch the 30-second demo • No registration required
+              </p>
+            </div>
           </div>
 
           {demoState === 'select' && (

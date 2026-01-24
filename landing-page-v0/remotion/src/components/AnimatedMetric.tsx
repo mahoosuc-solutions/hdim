@@ -54,17 +54,29 @@ export const AnimatedMetric: React.FC<AnimatedMetricProps> = ({
   return (
     <div
       style={{
-        fontSize,
-        fontWeight: 700,
-        color: 'white',
-        textShadow: isComplete && glowOnComplete
-          ? '0 0 20px rgba(0, 204, 136, 0.8)'
-          : 'none',
-        transition: 'text-shadow 0.3s ease',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        padding: '1rem 2rem',
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: '12px',
+        border: '3px solid rgba(0, 204, 136, 0.7)',
+        boxShadow: isComplete && glowOnComplete
+          ? '0 0 30px rgba(0, 204, 136, 0.8)'
+          : '0 4px 12px rgba(0, 0, 0, 0.5)',
+        transition: 'box-shadow 0.3s ease',
+        display: 'inline-block',
       }}
     >
-      {prefix}{formattedValue}{suffix}
+      <div
+        style={{
+          fontSize,
+          fontWeight: 700,
+          color: 'white',
+          margin: 0,
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        }}
+      >
+        {prefix}{formattedValue}{suffix}
+      </div>
     </div>
   );
 };

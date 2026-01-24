@@ -6,30 +6,80 @@ jwt:
   issuer: healthdata-in-motion-test
   audience: healthdata-api-test
 
-
 spring:
   application:
     name: documentation-service-test
 
+  # Test database configuration (overridden by Testcontainers)
   datasource:
-    url: jdbc:postgresql://localhost:5435/docs_db
-    driver-class-name: org.postgresql.Driver
-    username: healthdata
-    password: healthdata_password
+    url: jdbc:tc:postgresql:16-alpine:///testdb
+    username: test
+    password: test
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
-        format_sql: false
-        jdbc:
-          batch_size: 20
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
 
   liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
     enabled: true
+
+  # Disable Redis for tests (use in-memory cache)
+  cache:
+    type: simple
+
+  # Disable Kafka for tests
+  kafka:
+    enabled: false
+
+# HealthData Configuration for Tests
+healthdata:
+  database:
+    hikari:
+      traffic-tier: LOW
+
+  # Test document storage configuration
+  document:
+    storage:
+      base-path: ${java.io.tmpdir}/test-documents
+      max-file-size: 10485760  # 10MB
+      allowed-content-types:
+        - application/pdf
+        - image/png
+        - image/jpeg
+        - image/jpg
+        - image/tiff
+
+    # OCR Configuration for Tests
+    ocr:
+      enabled: true
+      async: false  # Synchronous for easier testing
+      tesseract:
+        language: eng
+        oem: 1  # LSTM engine
+        psm: 3  # Automatic page segmentation
+        dpi: 300
+
+server:
+  port: 0  # Random port for tests
+
+# Logging
 logging:
   level:
     root: WARN
     com.healthdata: DEBUG
+    com.healthdata.documentation: DEBUG
+    org.springframework.security: WARN
     org.springframework.test: INFO
+    org.testcontainers: INFO
+
+# Disable Actuator for tests
+management:
+  endpoints:
+    enabled-by-default: false

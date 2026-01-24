@@ -35,6 +35,28 @@ healthdata:
     hikari:
       traffic-tier: LOW  # Documentation: <10 req/sec, simple queries
 
+  # Document Storage Configuration
+  document:
+    storage:
+      base-path: ${DOCUMENT_STORAGE_PATH:/var/lib/healthdata/documents}
+      max-file-size: ${DOCUMENT_MAX_FILE_SIZE:10485760}  # 10MB in bytes
+      allowed-content-types:
+        - application/pdf
+        - image/png
+        - image/jpeg
+        - image/jpg
+        - image/tiff
+
+    # OCR Configuration
+    ocr:
+      enabled: ${OCR_ENABLED:true}
+      async: ${OCR_ASYNC:true}  # Process OCR asynchronously
+      tesseract:
+        language: ${TESSERACT_LANGUAGE:eng}
+        oem: ${TESSERACT_OEM:1}  # LSTM engine
+        psm: ${TESSERACT_PSM:3}  # Automatic page segmentation
+        dpi: ${TESSERACT_DPI:300}  # DPI for PDF rendering
+
 server:
   port: ${SERVER_PORT:8091}
 

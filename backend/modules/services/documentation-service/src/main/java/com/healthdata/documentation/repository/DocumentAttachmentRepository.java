@@ -35,11 +35,23 @@ public interface DocumentAttachmentRepository extends JpaRepository<DocumentAtta
     boolean existsByIdAndTenantId(UUID id, String tenantId);
 
     /**
-     * Full-text search on OCR extracted text
-     * Searches for query string in ocrText field (case-insensitive)
+     * Full-text search on OCR extracted text using PostgreSQL's full-text search
+     * Uses to_tsvector and plainto_tsquery for efficient full-text search
+     * Searches for query string in ocrText field with stemming and ranking
+     *
+     * Note: Requires GIN index on to_tsvector(ocr_text) for optimal performance
+     * Created by migration: 0005-add-ocr-fields-to-document-attachments.xml
      */
-    @Query("SELECT a FROM DocumentAttachmentEntity a WHERE a.tenantId = :tenantId " +
-           "AND LOWER(a.ocrText) LIKE LOWER(CONCAT('%', :query, '%'))")
+    @Query(value = "SELECT a.* FROM document_attachments a " +
+           "WHERE a.tenant_id = :tenantId " +
+           "AND a.ocr_text IS NOT NULL " +
+           "AND to_tsvector('english', a.ocr_text) @@ plainto_tsquery('english', :query) " +
+           "ORDER BY ts_rank(to_tsvector('english', a.ocr_text), plainto_tsquery('english', :query)) DESC",
+           countQuery = "SELECT COUNT(*) FROM document_attachments a " +
+           "WHERE a.tenant_id = :tenantId " +
+           "AND a.ocr_text IS NOT NULL " +
+           "AND to_tsvector('english', a.ocr_text) @@ plainto_tsquery('english', :query)",
+           nativeQuery = true)
     Page<DocumentAttachmentEntity> searchOcrText(@Param("tenantId") String tenantId,
                                                    @Param("query") String query,
                                                    Pageable pageable);

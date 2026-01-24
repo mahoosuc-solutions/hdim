@@ -1,0 +1,129 @@
+{
+	"info": {
+		"_postman_id": "hdim-prior-auth-collection",
+		"name": "HDIM - 05 Prior Authorization",
+		"description": "Prior authorization request and approval workflows\n\n**Features:**\n- Submit prior auth requests\n- Check request status\n- Upload supporting documents\n- Track approval/denial",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create Prior Auth Request",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"patientId\": \"{{patient_id}}\",\n  \"procedureCode\": \"CPT-81001\",\n  \"procedureName\": \"Colonoscopy with biopsy\",\n  \"diagnosisCode\": \"ICD-10-K92.1\",\n  \"providerNPI\": \"1234567890\",\n  \"requestedDate\": \"2026-02-15\",\n  \"urgency\": \"ROUTINE\",\n  \"clinicalJustification\": \"Patient is due for colorectal cancer screening (HEDIS COL measure).\"\n}"
+				},
+				"url": {
+					"raw": "{{prior_auth_url}}/api/v1/requests",
+					"host": [
+						"{{prior_auth_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"requests"
+					]
+				},
+				"description": "**Submit a prior authorization request**\n\n**Response:**\n```json\n{\n  \"authorizationId\": \"AUTH-11111\",\n  \"status\": \"PENDING\",\n  \"submittedAt\": \"2026-01-24T10:30:00Z\",\n  \"expectedDecisionDate\": \"2026-01-27T00:00:00Z\",\n  \"referenceNumber\": \"REF-998877\"\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Prior Auth Status",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{prior_auth_url}}/api/v1/requests/AUTH-11111",
+					"host": [
+						"{{prior_auth_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"requests",
+						"AUTH-11111"
+					]
+				},
+				"description": "**Check prior authorization status**\n\n**Statuses:**\n- `PENDING` - Under review\n- `APPROVED` - Authorization approved\n- `DENIED` - Authorization denied\n- `APPEALED` - Denial appealed"
+			},
+			"response": []
+		},
+		{
+			"name": "List Patient Prior Auths",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{prior_auth_url}}/api/v1/patients/{{patient_id}}/requests",
+					"host": [
+						"{{prior_auth_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"patients",
+						"{{patient_id}}",
+						"requests"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

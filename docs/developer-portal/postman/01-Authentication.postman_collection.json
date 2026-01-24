@@ -1,0 +1,193 @@
+{
+	"info": {
+		"_postman_id": "hdim-auth-collection",
+		"name": "HDIM - 01 Authentication",
+		"description": "Authentication workflows for HDIM Platform APIs\n\n**Setup:**\n1. Import environment: HDIM-Environment.postman_environment.json\n2. Select environment from dropdown\n3. Run \"Login\" request to obtain JWT token\n4. Token is automatically saved to environment variable\n\n**Features:**\n- JWT token authentication\n- Token refresh workflow\n- Auto-save tokens to environment variables",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Save JWT token to environment",
+							"if (pm.response.code === 200) {",
+							"    const jsonData = pm.response.json();",
+							"    pm.environment.set(\"jwt_token\", jsonData.token);",
+							"    pm.environment.set(\"refresh_token\", jsonData.refreshToken);",
+							"    console.log(\"✅ JWT token saved to environment\");",
+							"    console.log(\"Token expires in:\", jsonData.expiresIn, \"seconds\");",
+							"} else {",
+							"    console.error(\"❌ Login failed\");",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+				},
+				"url": {
+					"raw": "{{gateway_url}}/auth/login",
+					"host": [
+						"{{gateway_url}}"
+					],
+					"path": [
+						"auth",
+						"login"
+					]
+				},
+				"description": "**Obtain JWT token for API authentication**\n\n**Request:**\n```json\n{\n  \"username\": \"test_evaluator\",\n  \"password\": \"password123\"\n}\n```\n\n**Response:**\n```json\n{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"expiresIn\": 3600,\n  \"refreshToken\": \"refresh_token_here\",\n  \"user\": {\n    \"username\": \"test_evaluator\",\n    \"roles\": [\"ROLE_EVALUATOR\"],\n    \"tenantId\": \"TENANT-001\"\n  }\n}\n```\n\n**Test Credentials:**\n- `test_evaluator` / `password123` - EVALUATOR role\n- `test_admin` / `password123` - ADMIN role\n- `test_analyst` / `password123` - ANALYST role"
+			},
+			"response": []
+		},
+		{
+			"name": "Refresh Token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Save new JWT token to environment",
+							"if (pm.response.code === 200) {",
+							"    const jsonData = pm.response.json();",
+							"    pm.environment.set(\"jwt_token\", jsonData.token);",
+							"    console.log(\"✅ JWT token refreshed\");",
+							"    console.log(\"Token expires in:\", jsonData.expiresIn, \"seconds\");",
+							"} else {",
+							"    console.error(\"❌ Token refresh failed - please re-login\");",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+				},
+				"url": {
+					"raw": "{{gateway_url}}/auth/refresh",
+					"host": [
+						"{{gateway_url}}"
+					],
+					"path": [
+						"auth",
+						"refresh"
+					]
+				},
+				"description": "**Refresh JWT token without re-authenticating**\n\n**When to use:**\n- JWT token has expired (60-minute validity)\n- Refresh token is still valid (7-day validity)\n\n**Request:**\n```json\n{\n  \"refreshToken\": \"refresh_token_from_login\"\n}\n```\n\n**Response:**\n```json\n{\n  \"token\": \"new_jwt_token_here\",\n  \"expiresIn\": 3600\n}\n```\n\n**Note:** If refresh token has expired, use the \"Login\" request to re-authenticate."
+			},
+			"response": []
+		},
+		{
+			"name": "Logout",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{gateway_url}}/auth/logout",
+					"host": [
+						"{{gateway_url}}"
+					],
+					"path": [
+						"auth",
+						"logout"
+					]
+				},
+				"description": "**Logout and invalidate JWT token**\n\n**Response:**\n```json\n{\n  \"message\": \"Successfully logged out\"\n}\n```\n\n**Note:** Token is invalidated server-side. Clear environment variables manually if needed."
+			},
+			"response": []
+		},
+		{
+			"name": "Validate Token",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{gateway_url}}/auth/validate",
+					"host": [
+						"{{gateway_url}}"
+					],
+					"path": [
+						"auth",
+						"validate"
+					]
+				},
+				"description": "**Validate JWT token and check user permissions**\n\n**Response:**\n```json\n{\n  \"valid\": true,\n  \"username\": \"test_evaluator\",\n  \"roles\": [\"ROLE_EVALUATOR\"],\n  \"tenantId\": \"TENANT-001\",\n  \"expiresAt\": \"2026-01-24T11:30:45Z\"\n}\n```"
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

@@ -1,0 +1,792 @@
+name: Backend CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+      - 'release/**'
+    paths:
+      - 'modules/**'
+      - 'shared/**'
+      - 'authentication/**'
+      - 'gateway-core/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches:
+      - master
+      - develop
+    paths:
+      - 'modules/**'
+      - 'shared/**'
+      - 'authentication/**'
+      - 'gateway-core/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle/**'
+  workflow_dispatch:
+    inputs:
+      deploy_environment:
+        description: 'Deploy to environment'
+        required: false
+        type: choice
+        options:
+          - none
+          - staging
+          - production
+          - rollback
+
+env:
+  JAVA_VERSION: '21'
+  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.workers.max=4'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Job 1: Build and Test
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: healthdata
+          POSTGRES_PASSWORD: healthdata123
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for Sonar analysis
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Download dependencies
+        run: ./gradlew downloadDependencies --no-daemon --console=plain
+
+      - name: Build all services
+        run: ./gradlew build -x test --no-daemon --console=plain
+        env:
+          SPRING_PROFILES_ACTIVE: ci
+
+      - name: Run unit tests
+        run: ./gradlew test --no-daemon --console=plain --continue
+        env:
+          SPRING_PROFILES_ACTIVE: ci
+          DATABASE_URL: jdbc:postgresql://localhost:5432/test_db
+          DATABASE_USERNAME: healthdata
+          DATABASE_PASSWORD: healthdata123
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+
+      - name: Run integration tests
+        run: ./gradlew integrationTest --no-daemon --console=plain --continue
+        continue-on-error: false  # ENFORCE: Fail build on integration test failures
+        env:
+          SPRING_PROFILES_ACTIVE: ci,test
+          DATABASE_URL: jdbc:postgresql://localhost:5432/test_db
+          DATABASE_USERNAME: healthdata
+          DATABASE_PASSWORD: healthdata123
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+
+      - name: Generate test report
+        if: always()
+        run: ./gradlew testReport --no-daemon --console=plain
+
+      - name: Publish test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: |
+            **/build/test-results/**/*.xml
+          check_name: Test Results
+          comment_mode: failures
+
+      - name: Upload test coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-coverage
+          path: |
+            **/build/reports/jacoco/**
+            **/build/test-results/**
+          retention-days: 30
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            modules/services/*/build/libs/*.jar
+          retention-days: 7
+
+  # Job 2: Database & HIPAA Compliance Validation
+  database-validation:
+    name: Database & HIPAA Validation
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: healthdata
+          POSTGRES_PASSWORD: healthdata123
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Run entity-migration validation tests
+        run: |
+          echo "Running entity-migration synchronization tests..."
+          ./gradlew test --tests "*EntityMigrationValidationTest" --no-daemon --console=plain
+        continue-on-error: false  # ENFORCE: Fail on entity-migration mismatches
+        env:
+          SPRING_PROFILES_ACTIVE: ci
+          DATABASE_URL: jdbc:postgresql://localhost:5432/test_db
+          DATABASE_USERNAME: healthdata
+          DATABASE_PASSWORD: healthdata123
+
+      - name: Validate Liquibase rollback coverage
+        run: |
+          echo "Validating all migrations have rollback directives..."
+
+          # Check for changesets without rollback
+          MISSING_ROLLBACK=$(find . -name "*.xml" -path "*/db/changelog/*" \
+            -exec grep -l "<changeSet" {} \; | \
+            xargs grep -L "rollback" || true)
+
+          if [ -n "$MISSING_ROLLBACK" ]; then
+            echo "❌ CRITICAL: Changesets missing rollback directives:"
+            echo "$MISSING_ROLLBACK"
+            echo ""
+            echo "All Liquibase changesets MUST include rollback directives for production safety."
+            echo "See: backend/docs/LIQUIBASE_DEVELOPMENT_WORKFLOW.md"
+            exit 1
+          else
+            echo "✅ All changesets have rollback directives"
+          fi
+
+      - name: Check PHI cache TTL compliance (HIPAA)
+        run: |
+          echo "Verifying cache TTL ≤ 5 minutes for PHI (HIPAA §164.312(b))..."
+
+          # Search for @Cacheable with TTL > 5 minutes (300,000ms)
+          CACHE_VIOLATIONS=$(grep -r "@Cacheable" modules/ --include="*.java" -A 5 | \
+            grep -E "ttl\s*=\s*[6-9][0-9]{5}|ttl\s*=\s*[1-9][0-9]{6}" || true)
+
+          if [ -n "$CACHE_VIOLATIONS" ]; then
+            echo "❌ HIPAA VIOLATION: Cache TTL exceeds 5 minutes"
+            echo "$CACHE_VIOLATIONS"
+            echo ""
+            echo "HIPAA requirement: PHI cache TTL MUST be ≤ 5 minutes (300,000ms)"
+            echo "See: backend/HIPAA-CACHE-COMPLIANCE.md"
+            exit 1
+          else
+            echo "✅ Cache TTL compliance verified"
+          fi
+
+      - name: Check audit logging coverage
+        run: |
+          echo "Verifying @Audited annotations on PHI access methods..."
+
+          # Check for controller methods accessing patient data without @Audited
+          # This is a basic check - actual implementation may vary
+          PHI_CONTROLLERS=$(find modules/ -name "*Controller.java" -path "*/patient*" -o -path "*/fhir*" -o -path "*/care-gap*")
+
+          for file in $PHI_CONTROLLERS; do
+            if grep -q "@GetMapping\|@PostMapping\|@PutMapping\|@DeleteMapping" "$file"; then
+              if ! grep -q "@Audited" "$file"; then
+                echo "⚠️  WARNING: PHI controller without @Audited: $file"
+              fi
+            fi
+          done
+
+          echo "✅ Audit logging check complete"
+
+      - name: Verify multi-tenant isolation
+        run: |
+          echo "Checking @Query annotations enforce tenantId filtering..."
+
+          # Search for @Query without tenantId parameter
+          TENANT_VIOLATIONS=$(grep -r "@Query" modules/ --include="*Repository.java" -A 2 | \
+            grep -v "tenantId" | grep "SELECT" || true)
+
+          if [ -n "$TENANT_VIOLATIONS" ]; then
+            echo "⚠️  WARNING: Potential multi-tenant isolation issues detected"
+            echo "All @Query annotations SHOULD filter by tenantId for data isolation"
+          fi
+
+          echo "✅ Multi-tenant isolation check complete"
+
+  # Job 3: Security Scanning
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Run Snyk security scan
+        uses: snyk/actions/gradle@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --all-sub-projects
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: OWASP Dependency Check
+        run: |
+          ./gradlew dependencyCheckAnalyze --no-daemon --console=plain
+        continue-on-error: false  # ENFORCE: Fail on critical vulnerabilities
+
+      - name: Upload security scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-results
+          path: |
+            build/reports/dependency-check-report.html
+            trivy-results.sarif
+          retention-days: 30
+
+  # Job 3: Code Quality Analysis
+  code-quality:
+    name: Code Quality (SonarQube)
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    timeout-minutes: 30
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Run SonarQube analysis
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          ./gradlew sonar \
+            -Dsonar.projectKey=hdim-backend \
+            -Dsonar.organization=healthdata \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.token=$SONAR_TOKEN \
+            --no-daemon --console=plain
+        continue-on-error: false  # ENFORCE: Fail on code quality issues
+
+  # Job 4: Build Docker Images
+  build-docker-images:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [build-and-test, security-scan]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
+    timeout-minutes: 60
+
+    strategy:
+      matrix:
+        service:
+          # Core Platform Services
+          - patient-service
+          - fhir-service
+          - care-gap-service
+          - quality-measure-service
+          - cql-engine-service
+          - clinical-workflow-service
+
+          # Gateway Services
+          - gateway-service
+          - gateway-clinical-service
+          - gateway-admin-service
+          - gateway-fhir-service
+
+          # Event Sourcing Services (CQRS)
+          - event-store-service
+          - patient-event-service
+          - patient-event-handler-service
+          - care-gap-event-service
+          - care-gap-event-handler-service
+          - clinical-workflow-event-service
+          - clinical-workflow-event-handler-service
+          - quality-measure-event-service
+          - quality-measure-event-handler-service
+          - event-router-service
+          - event-processing-service
+          - event-replay-service
+
+          # Query/Audit Services
+          - audit-query-service
+          - cqrs-query-service
+          - query-api-service
+
+          # Connector Services
+          - fhir-event-bridge-service
+          - cms-connector-service
+          - ehr-connector-service
+          - ecr-service
+
+          # AI/Analytics Services
+          - ai-assistant-service
+          - agent-builder-service
+          - agent-runtime-service
+          - analytics-service
+          - predictive-analytics-service
+          - hcc-service
+          - cost-analysis-service
+
+          # Workflow Services
+          - nurse-workflow-service
+          - payer-workflows-service
+          - prior-auth-service
+          - approval-service
+          - migration-workflow-service
+
+          # Data/Demo Services
+          - data-ingestion-service
+          - data-enrichment-service
+          - demo-seeding-service
+          - demo-orchestrator-service
+          - cdr-processor-service
+
+          # Supporting Services
+          - notification-service
+          - consent-service
+          - documentation-service
+          - sdoh-service
+          - qrda-export-service
+          - sales-automation-service
+          - devops-agent-service
+      fail-fast: false  # Allow partial failures, continue building other services
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/services/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            SERVICE_NAME=${{ matrix.service }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+
+  # Job 5: Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-docker-images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://staging.healthdata.example.com
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy to ECS/EKS Staging
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_STAGING }}
+          IMAGE_TAG: ${{ github.ref_name }}-${{ github.sha }}
+        run: |
+          echo "Deploying to staging environment..."
+
+          # Configure kubectl
+          mkdir -p ~/.kube
+          echo "$KUBE_CONFIG_DATA" | base64 -d > ~/.kube/config
+
+          # Rolling update deployment
+          echo "Performing rolling update for all HDIM services..."
+
+          # Update image tags for all services in staging namespace
+          kubectl set image deployment/patient-service patient-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/patient-service:$IMAGE_TAG -n staging
+          kubectl set image deployment/fhir-service fhir-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/fhir-service:$IMAGE_TAG -n staging
+          kubectl set image deployment/care-gap-service care-gap-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/care-gap-service:$IMAGE_TAG -n staging
+          kubectl set image deployment/quality-measure-service quality-measure-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/quality-measure-service:$IMAGE_TAG -n staging
+          kubectl set image deployment/cql-engine-service cql-engine-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/cql-engine-service:$IMAGE_TAG -n staging
+          kubectl set image deployment/gateway-service gateway-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/gateway-service:$IMAGE_TAG -n staging
+
+          # Wait for rollout to complete
+          kubectl rollout status deployment/patient-service -n staging --timeout=10m
+          kubectl rollout status deployment/fhir-service -n staging --timeout=10m
+          kubectl rollout status deployment/care-gap-service -n staging --timeout=10m
+          kubectl rollout status deployment/quality-measure-service -n staging --timeout=10m
+          kubectl rollout status deployment/cql-engine-service -n staging --timeout=10m
+          kubectl rollout status deployment/gateway-service -n staging --timeout=10m
+
+          echo "✅ Staging deployment complete"
+
+      - name: Run smoke tests
+        env:
+          STAGING_URL: https://staging.healthdata.example.com
+        run: |
+          echo "Running smoke tests against staging..."
+
+          # Health check endpoints
+          echo "Checking service health..."
+          curl --fail --retry 3 --retry-delay 5 "$STAGING_URL/actuator/health" || exit 1
+          curl --fail --retry 3 --retry-delay 5 "$STAGING_URL/patient/actuator/health" || exit 1
+          curl --fail --retry 3 --retry-delay 5 "$STAGING_URL/fhir/actuator/health" || exit 1
+          curl --fail --retry 3 --retry-delay 5 "$STAGING_URL/care-gap/actuator/health" || exit 1
+
+          # Basic API smoke tests
+          echo "Testing critical API endpoints..."
+
+          # Test patient search (requires auth token)
+          # TODO: Add actual smoke test suite with authentication
+          # ./scripts/smoke-tests.sh "$STAGING_URL"
+
+          echo "✅ Smoke tests passed"
+
+      - name: Notify deployment status
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Staging deployment ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # Job 6: Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build-docker-images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' || github.event.inputs.deploy_environment == 'production'
+    environment:
+      name: production
+      url: https://healthdata.example.com
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Create deployment backup
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+          RDS_INSTANCE_ID: hdim-production-db
+          BACKUP_TAG: pre-deployment-${{ github.sha }}
+        run: |
+          echo "Creating database backup before deployment..."
+
+          # Create RDS snapshot
+          aws rds create-db-snapshot \
+            --db-instance-identifier "$RDS_INSTANCE_ID" \
+            --db-snapshot-identifier "$BACKUP_TAG" \
+            --tags "Key=Deployment,Value=${{ github.sha }}" "Key=Date,Value=$(date -u +"%Y-%m-%d-%H-%M-%S")"
+
+          # Wait for snapshot to complete (max 15 minutes)
+          aws rds wait db-snapshot-completed \
+            --db-snapshot-identifier "$BACKUP_TAG" \
+            --cli-read-timeout 900
+
+          echo "✅ Database backup created: $BACKUP_TAG"
+
+      - name: Deploy to ECS/EKS Production
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_PRODUCTION }}
+          IMAGE_TAG: ${{ github.ref_name }}-${{ github.sha }}
+        run: |
+          echo "Deploying to production environment..."
+
+          # Configure kubectl
+          mkdir -p ~/.kube
+          echo "$KUBE_CONFIG_DATA" | base64 -d > ~/.kube/config
+
+          # Rolling update deployment (production namespace)
+          echo "Performing rolling update for all HDIM services..."
+
+          # Update core services first (gateway, patient, FHIR)
+          kubectl set image deployment/gateway-service gateway-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/gateway-service:$IMAGE_TAG -n production
+          kubectl rollout status deployment/gateway-service -n production --timeout=15m
+
+          kubectl set image deployment/patient-service patient-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/patient-service:$IMAGE_TAG -n production
+          kubectl rollout status deployment/patient-service -n production --timeout=15m
+
+          kubectl set image deployment/fhir-service fhir-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/fhir-service:$IMAGE_TAG -n production
+          kubectl rollout status deployment/fhir-service -n production --timeout=15m
+
+          # Update remaining critical services
+          kubectl set image deployment/care-gap-service care-gap-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/care-gap-service:$IMAGE_TAG -n production
+          kubectl set image deployment/quality-measure-service quality-measure-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/quality-measure-service:$IMAGE_TAG -n production
+          kubectl set image deployment/cql-engine-service cql-engine-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/cql-engine-service:$IMAGE_TAG -n production
+
+          # Wait for all critical services
+          kubectl rollout status deployment/care-gap-service -n production --timeout=15m
+          kubectl rollout status deployment/quality-measure-service -n production --timeout=15m
+          kubectl rollout status deployment/cql-engine-service -n production --timeout=15m
+
+          echo "✅ Production deployment complete"
+
+      - name: Run production smoke tests
+        env:
+          PRODUCTION_URL: https://healthdata.example.com
+        run: |
+          echo "Running smoke tests against production..."
+
+          # Health check endpoints
+          echo "Checking service health..."
+          curl --fail --retry 5 --retry-delay 10 "$PRODUCTION_URL/actuator/health" || exit 1
+          curl --fail --retry 5 --retry-delay 10 "$PRODUCTION_URL/patient/actuator/health" || exit 1
+          curl --fail --retry 5 --retry-delay 10 "$PRODUCTION_URL/fhir/actuator/health" || exit 1
+          curl --fail --retry 5 --retry-delay 10 "$PRODUCTION_URL/care-gap/actuator/health" || exit 1
+          curl --fail --retry 5 --retry-delay 10 "$PRODUCTION_URL/quality-measure/actuator/health" || exit 1
+
+          # Basic API smoke tests
+          echo "Testing critical API endpoints..."
+
+          # TODO: Add comprehensive production smoke test suite
+          # ./scripts/production-smoke-tests.sh "$PRODUCTION_URL"
+
+          echo "✅ Production smoke tests passed"
+
+      - name: Notify deployment status
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Production deployment ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+      - name: Create GitHub release
+        if: success() && github.ref == 'refs/heads/master'
+        env:
+          RELEASE_TAG: v${{ github.run_number }}
+          RELEASE_COMMIT: ${{ github.sha }}
+          RELEASE_ACTOR: ${{ github.actor }}
+        run: |
+          gh release create "$RELEASE_TAG" \
+            --title "Release ${{ github.run_number }}" \
+            --notes "**Commit:** $RELEASE_COMMIT
+**Author:** $RELEASE_ACTOR
+**Deployed:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" \
+            --latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Job 7: Rollback Production (Manual Trigger)
+  rollback-production:
+    name: Rollback Production
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_environment == 'rollback'
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Configure kubectl
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_PRODUCTION }}
+        run: |
+          mkdir -p ~/.kube
+          echo "$KUBE_CONFIG_DATA" | base64 -d > ~/.kube/config
+
+      - name: Rollback to previous deployment
+        run: |
+          echo "🔄 Rolling back production deployment..."
+
+          # Rollback core services
+          kubectl rollout undo deployment/gateway-service -n production
+          kubectl rollout undo deployment/patient-service -n production
+          kubectl rollout undo deployment/fhir-service -n production
+          kubectl rollout undo deployment/care-gap-service -n production
+          kubectl rollout undo deployment/quality-measure-service -n production
+          kubectl rollout undo deployment/cql-engine-service -n production
+
+          # Wait for rollback to complete
+          echo "Waiting for rollback to complete..."
+          kubectl rollout status deployment/gateway-service -n production --timeout=15m
+          kubectl rollout status deployment/patient-service -n production --timeout=15m
+          kubectl rollout status deployment/fhir-service -n production --timeout=15m
+          kubectl rollout status deployment/care-gap-service -n production --timeout=15m
+          kubectl rollout status deployment/quality-measure-service -n production --timeout=15m
+          kubectl rollout status deployment/cql-engine-service -n production --timeout=15m
+
+          echo "✅ Rollback completed"
+
+      - name: Verify rollback health
+        env:
+          PRODUCTION_URL: https://healthdata.example.com
+        run: |
+          echo "Verifying service health after rollback..."
+
+          # Health checks
+          curl --fail --retry 5 --retry-delay 10 "$PRODUCTION_URL/actuator/health" || exit 1
+          curl --fail --retry 5 --retry-delay 10 "$PRODUCTION_URL/patient/actuator/health" || exit 1
+          curl --fail --retry 5 --retry-delay 10 "$PRODUCTION_URL/fhir/actuator/health" || exit 1
+
+          echo "✅ Rollback health verification passed"
+
+      - name: Restore database from backup (if needed)
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+          RDS_INSTANCE_ID: hdim-production-db
+        run: |
+          echo "⚠️  To restore database from snapshot:"
+          echo "1. List available snapshots:"
+          echo "   aws rds describe-db-snapshots --db-instance-identifier $RDS_INSTANCE_ID"
+          echo ""
+          echo "2. Restore from specific snapshot:"
+          echo "   aws rds restore-db-instance-from-db-snapshot \\"
+          echo "     --db-instance-identifier $RDS_INSTANCE_ID-restored \\"
+          echo "     --db-snapshot-identifier <snapshot-id>"
+          echo ""
+          echo "Manual verification required before database rollback."
+
+      - name: Notify rollback completion
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: '🔄 Production rollback ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}

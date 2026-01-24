@@ -20,6 +20,7 @@ import {
 import { CyclingText } from './components/CyclingText'
 import { LandingPageClient } from './components/LandingPageClient'
 import { SegmentSelector } from './components/SegmentSelector'
+import VideoPlayer from '../components/VideoPlayer'
 
 export default function LandingPage() {
   const features = [
@@ -586,21 +587,12 @@ export default function LandingPage() {
               A short walkthrough of our care gap detection workflow
             </p>
           </div>
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl cursor-pointer group">
-            <Image
-              src="/images/video/eleanor-story-thumb-v2.png"
-              alt="Eleanor's Story - They Caught It Early"
-              width={1408}
-              height={768}
-              loading="lazy"
-              className="w-full"
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                <Play className="w-8 h-8 text-primary ml-1" />
-              </div>
-            </div>
-          </div>
+          <VideoPlayer
+            videoSrc="/videos/care-gap-closure.mp4"
+            thumbnailSrc="/videos/care-gap-closure-thumb.png"
+            title="Eleanor's Story - They Caught It Early"
+            description="Watch HDIM close a care gap in real-time"
+          />
           <p className="text-center text-gray-500 mt-4 text-sm">
             No registration required - click to watch
           </p>

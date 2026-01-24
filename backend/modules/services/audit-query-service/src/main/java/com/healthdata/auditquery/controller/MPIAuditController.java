@@ -54,7 +54,7 @@ public class MPIAuditController {
      * @return Page of MPI merge events
      */
     @GetMapping("/ai/user-actions")
-    @PreAuthorize("hasAnyRole('MPI_ANALYST', 'DATA_STEWARD', 'ADMIN', 'AUDITOR')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Get MPI merge events",
         description = "Fetch MPI patient merge operations with optional filtering by merge type, status, confidence, and data quality"
@@ -106,7 +106,7 @@ public class MPIAuditController {
      * @return MPI metrics
      */
     @GetMapping("/mpi/metrics")
-    @PreAuthorize("hasAnyRole('MPI_ANALYST', 'DATA_STEWARD', 'ADMIN', 'AUDITOR')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Get MPI audit metrics",
         description = "Retrieve aggregated metrics for MPI merge operations (merge types, validation rates, confidence scores, data quality)"
@@ -137,7 +137,7 @@ public class MPIAuditController {
      * @return Updated merge event
      */
     @PostMapping("/mpi/merges/{id}/validate")
-    @PreAuthorize("hasAnyRole('MPI_ANALYST', 'DATA_STEWARD', 'ADMIN')")
+    @PreAuthorize("hasPermission('AUDIT_REVIEW')")
     @Operation(
         summary = "Validate MPI merge",
         description = "Approve and validate MPI patient merge operation"
@@ -169,7 +169,7 @@ public class MPIAuditController {
      * @return Updated merge event
      */
     @PostMapping("/mpi/merges/{id}/rollback")
-    @PreAuthorize("hasAnyRole('MPI_ANALYST', 'DATA_STEWARD', 'ADMIN')")
+    @PreAuthorize("hasPermission('AUDIT_REVIEW')")
     @Operation(
         summary = "Rollback MPI merge",
         description = "Rollback MPI patient merge operation and restore original records"
@@ -201,7 +201,7 @@ public class MPIAuditController {
      * @return Updated merge event
      */
     @PostMapping("/mpi/data-quality/{id}/resolve")
-    @PreAuthorize("hasAnyRole('MPI_ANALYST', 'DATA_STEWARD', 'ADMIN')")
+    @PreAuthorize("hasPermission('AUDIT_REVIEW')")
     @Operation(
         summary = "Resolve data quality issue",
         description = "Mark data quality issue as resolved with resolution notes"
@@ -233,7 +233,7 @@ public class MPIAuditController {
      * @return Excel file as byte array
      */
     @GetMapping("/mpi/report/export")
-    @PreAuthorize("hasAnyRole('MPI_ANALYST', 'DATA_STEWARD', 'ADMIN', 'AUDITOR')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Export MPI audit report",
         description = "Generate Excel report of MPI merge operations for specified date range"

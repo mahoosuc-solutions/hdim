@@ -45,7 +45,7 @@ public class ValueSetController {
      * Create a new value set
      * POST /api/v1/cql/valuesets
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping
     public ResponseEntity<ValueSet> createValueSet(
@@ -74,7 +74,7 @@ public class ValueSetController {
      * Get a value set by ID
      * GET /api/v1/cql/valuesets/{id}
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/{id}")
     public ResponseEntity<ValueSet> getValueSet(
@@ -91,7 +91,7 @@ public class ValueSetController {
      * Get all value sets for a tenant
      * GET /api/v1/cql/valuesets
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping
     public ResponseEntity<Page<ValueSet>> getAllValueSets(
@@ -107,7 +107,7 @@ public class ValueSetController {
      * Get value set by OID
      * GET /api/v1/cql/valuesets/by-oid/{oid}
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-oid/{oid}")
     public ResponseEntity<ValueSet> getValueSetByOid(
@@ -124,7 +124,7 @@ public class ValueSetController {
      * Get value set by OID and version
      * GET /api/v1/cql/valuesets/by-oid/{oid}/version/{version}
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-oid/{oid}/version/{version}")
     public ResponseEntity<ValueSet> getValueSetByOidAndVersion(
@@ -142,7 +142,7 @@ public class ValueSetController {
      * Get the latest version of a value set by OID
      * GET /api/v1/cql/valuesets/by-oid/{oid}/latest
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-oid/{oid}/latest")
     public ResponseEntity<ValueSet> getLatestValueSetVersion(
@@ -159,7 +159,7 @@ public class ValueSetController {
      * Get all versions of a value set by OID
      * GET /api/v1/cql/valuesets/by-oid/{oid}/versions
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-oid/{oid}/versions")
     public ResponseEntity<List<ValueSet>> getAllValueSetVersions(
@@ -175,7 +175,7 @@ public class ValueSetController {
      * Get value set by name
      * GET /api/v1/cql/valuesets/by-name/{name}
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-name/{name}")
     public ResponseEntity<ValueSet> getValueSetByName(
@@ -192,7 +192,7 @@ public class ValueSetController {
      * Get value sets by code system
      * GET /api/v1/cql/valuesets/by-code-system/{codeSystem}
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-code-system/{codeSystem}")
     public ResponseEntity<Page<ValueSet>> getValueSetsByCodeSystem(
@@ -210,7 +210,7 @@ public class ValueSetController {
      * Get ACTIVE value sets (status = ACTIVE)
      * GET /api/v1/cql/valuesets/active
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/active")
     public ResponseEntity<List<ValueSet>> getActiveValueSets(
@@ -225,7 +225,7 @@ public class ValueSetController {
      * Get SNOMED value sets
      * GET /api/v1/cql/valuesets/snomed
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/snomed")
     public ResponseEntity<List<ValueSet>> getSnomedValueSets(
@@ -240,7 +240,7 @@ public class ValueSetController {
      * Get LOINC value sets
      * GET /api/v1/cql/valuesets/loinc
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/loinc")
     public ResponseEntity<List<ValueSet>> getLoincValueSets(
@@ -255,7 +255,7 @@ public class ValueSetController {
      * Get RxNorm value sets
      * GET /api/v1/cql/valuesets/rxnorm
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/rxnorm")
     public ResponseEntity<List<ValueSet>> getRxNormValueSets(
@@ -270,7 +270,7 @@ public class ValueSetController {
      * Get common code system value sets (SNOMED, LOINC, RxNorm)
      * GET /api/v1/cql/valuesets/common
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/common")
     public ResponseEntity<List<ValueSet>> getCommonCodeSystemValueSets(
@@ -285,7 +285,7 @@ public class ValueSetController {
      * Search value sets by name
      * GET /api/v1/cql/valuesets/search?q={searchTerm}
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/search")
     public ResponseEntity<List<ValueSet>> searchValueSets(
@@ -301,7 +301,7 @@ public class ValueSetController {
      * Get value sets by OID prefix
      * GET /api/v1/cql/valuesets/by-oid-prefix/{oidPrefix}
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-oid-prefix/{oidPrefix}")
     public ResponseEntity<List<ValueSet>> getValueSetsByOidPrefix(
@@ -317,7 +317,7 @@ public class ValueSetController {
      * Update a value set
      * PUT /api/v1/cql/valuesets/{id}
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping("/{id}")
     public ResponseEntity<ValueSet> updateValueSet(
@@ -349,7 +349,7 @@ public class ValueSetController {
      * Activate a value set
      * POST /api/v1/cql/valuesets/{id}/activate
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/activate")
     public ResponseEntity<ValueSet> activateValueSet(
@@ -365,7 +365,7 @@ public class ValueSetController {
      * Retire a value set
      * POST /api/v1/cql/valuesets/{id}/retire
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/retire")
     public ResponseEntity<ValueSet> retireValueSet(
@@ -381,7 +381,7 @@ public class ValueSetController {
      * Delete a value set (soft delete)
      * DELETE /api/v1/cql/valuesets/{id}
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_WRITE')")
     @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteValueSet(
@@ -397,7 +397,7 @@ public class ValueSetController {
      * Get value set count
      * GET /api/v1/cql/valuesets/count
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/count")
     public ResponseEntity<Long> countValueSets(
@@ -412,7 +412,7 @@ public class ValueSetController {
      * Get value set count by code system
      * GET /api/v1/cql/valuesets/count/by-code-system/{codeSystem}
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/count/by-code-system/{codeSystem}")
     public ResponseEntity<Long> countValueSetsByCodeSystem(
@@ -429,7 +429,7 @@ public class ValueSetController {
      * Check if value set exists by OID
      * GET /api/v1/cql/valuesets/exists/by-oid/{oid}
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/exists/by-oid/{oid}")
     public ResponseEntity<Boolean> valueSetExistsByOid(
@@ -445,7 +445,7 @@ public class ValueSetController {
      * Check if a code exists in a value set
      * GET /api/v1/cql/valuesets/{id}/contains-code/{code}
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/{id}/contains-code/{code}")
     public ResponseEntity<Boolean> codeExistsInValueSet(

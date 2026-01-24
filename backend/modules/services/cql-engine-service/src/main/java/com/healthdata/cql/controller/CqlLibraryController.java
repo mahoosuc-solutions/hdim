@@ -44,9 +44,9 @@ public class CqlLibraryController {
     /**
      * Create a new CQL library
      * POST /api/v1/cql/libraries
-     * Requires ADMIN or SUPER_ADMIN role
+     * Requires MEASURE_WRITE permission
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping
     public ResponseEntity<CqlLibrary> createLibrary(
@@ -73,9 +73,9 @@ public class CqlLibraryController {
     /**
      * Get a library by ID
      * GET /api/v1/cql/libraries/{id}
-     * Requires VIEWER, ANALYST, EVALUATOR, ADMIN, or SUPER_ADMIN role
+     * Requires MEASURE_READ permission
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/{id}")
     public ResponseEntity<CqlLibrary> getLibrary(
@@ -91,9 +91,9 @@ public class CqlLibraryController {
     /**
      * Get all libraries for a tenant
      * GET /api/v1/cql/libraries
-     * Requires VIEWER, ANALYST, EVALUATOR, ADMIN, or SUPER_ADMIN role
+     * Requires MEASURE_READ permission
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping
     public ResponseEntity<Page<CqlLibrary>> getAllLibraries(
@@ -109,7 +109,7 @@ public class CqlLibraryController {
      * Get a specific library by name and version
      * GET /api/v1/cql/libraries/by-name/{name}/version/{version}
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-name/{name}/version/{version}")
     public ResponseEntity<CqlLibrary> getLibraryByNameAndVersion(
@@ -127,7 +127,7 @@ public class CqlLibraryController {
      * Get the latest version of a library
      * GET /api/v1/cql/libraries/by-name/{name}/latest
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-name/{name}/latest")
     public ResponseEntity<CqlLibrary> getLatestLibraryVersion(
@@ -144,7 +144,7 @@ public class CqlLibraryController {
      * Get all versions of a library
      * GET /api/v1/cql/libraries/by-name/{name}/versions
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-name/{name}/versions")
     public ResponseEntity<List<CqlLibrary>> getAllLibraryVersions(
@@ -160,7 +160,7 @@ public class CqlLibraryController {
      * Get libraries by status
      * GET /api/v1/cql/libraries/by-status/{status}
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-status/{status}")
     public ResponseEntity<List<CqlLibrary>> getLibrariesByStatus(
@@ -176,7 +176,7 @@ public class CqlLibraryController {
      * Get all ACTIVE libraries
      * GET /api/v1/cql/libraries/active
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/active")
     public ResponseEntity<List<CqlLibrary>> getActiveLibraries(
@@ -191,7 +191,7 @@ public class CqlLibraryController {
      * Search libraries by name
      * GET /api/v1/cql/libraries/search?q={searchTerm}
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/search")
     public ResponseEntity<List<CqlLibrary>> searchLibraries(
@@ -207,7 +207,7 @@ public class CqlLibraryController {
      * Update a library
      * PUT /api/v1/cql/libraries/{id}
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping("/{id}")
     public ResponseEntity<CqlLibrary> updateLibrary(
@@ -238,7 +238,7 @@ public class CqlLibraryController {
      * Activate a library
      * POST /api/v1/cql/libraries/{id}/activate
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/activate")
     public ResponseEntity<CqlLibrary> activateLibrary(
@@ -254,7 +254,7 @@ public class CqlLibraryController {
      * Retire a library
      * POST /api/v1/cql/libraries/{id}/retire
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/retire")
     public ResponseEntity<CqlLibrary> retireLibrary(
@@ -270,7 +270,7 @@ public class CqlLibraryController {
      * Compile CQL to ELM
      * POST /api/v1/cql/libraries/{id}/compile
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/compile")
     public ResponseEntity<CqlLibrary> compileLibrary(
@@ -286,7 +286,7 @@ public class CqlLibraryController {
      * Validate CQL syntax
      * POST /api/v1/cql/libraries/{id}/validate
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_EXECUTE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/validate")
     public ResponseEntity<Boolean> validateLibrary(
@@ -302,7 +302,7 @@ public class CqlLibraryController {
      * Delete a library (soft delete)
      * DELETE /api/v1/cql/libraries/{id}
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_WRITE')")
     @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteLibrary(
@@ -318,7 +318,7 @@ public class CqlLibraryController {
      * Get library count
      * GET /api/v1/cql/libraries/count
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/count")
     public ResponseEntity<Long> countLibraries(
@@ -333,7 +333,7 @@ public class CqlLibraryController {
      * Get library count by status
      * GET /api/v1/cql/libraries/count/by-status/{status}
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/count/by-status/{status}")
     public ResponseEntity<Long> countLibrariesByStatus(
@@ -349,7 +349,7 @@ public class CqlLibraryController {
      * Check if library exists
      * GET /api/v1/cql/libraries/exists?name={name}&version={version}
      */
-    @PreAuthorize("hasAnyRole('VIEWER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/exists")
     public ResponseEntity<Boolean> libraryExists(

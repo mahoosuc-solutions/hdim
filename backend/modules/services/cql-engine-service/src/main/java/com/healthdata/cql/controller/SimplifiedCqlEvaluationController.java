@@ -73,7 +73,7 @@ public class SimplifiedCqlEvaluationController {
      * POST /evaluate?library=CDC&patient=test-patient-001
      * X-Tenant-ID: test-tenant
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_EXECUTE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> evaluateCql(

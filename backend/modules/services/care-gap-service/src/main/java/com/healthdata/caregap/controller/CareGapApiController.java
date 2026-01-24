@@ -35,7 +35,7 @@ public class CareGapApiController {
      * List care gaps with pagination and optional filters
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN', 'PROVIDER', 'NURSE')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     public ResponseEntity<Page<CareGapEntity>> listCareGaps(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(defaultValue = "0") int page,
@@ -81,7 +81,7 @@ public class CareGapApiController {
      * Get a single care gap by ID
      */
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     public ResponseEntity<CareGapEntity> getCareGap(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable UUID id) {
@@ -97,7 +97,7 @@ public class CareGapApiController {
      * Create a new care gap
      */
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
     public ResponseEntity<CareGapEntity> createCareGap(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody CareGapCreateRequest request) {

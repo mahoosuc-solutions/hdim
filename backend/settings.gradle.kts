@@ -89,6 +89,7 @@ include(
     "modules:services:data-ingestion-service",
     "modules:services:cms-connector-service",
     "modules:services:audit-query-service",
+    "modules:services:query-api-service",
     "modules:services:patient-event-handler-service",
     "modules:services:care-gap-event-handler-service",
     "modules:services:quality-measure-event-handler-service",

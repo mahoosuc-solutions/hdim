@@ -28,7 +28,7 @@ public class CarePlanController {
      * List all care plans for patient
      */
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     public ResponseEntity<List<CarePlanResponse>> getCarePlansByPatient(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -49,7 +49,7 @@ public class CarePlanController {
      * List all care plans assigned to coordinator
      */
     @GetMapping("/coordinator/{coordinatorId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_SEARCH')")
     public ResponseEntity<List<CarePlanResponse>> getCarePlansByCoordinator(
             @PathVariable String coordinatorId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -70,7 +70,7 @@ public class CarePlanController {
      * List active care plans for patient
      */
     @GetMapping("/patient/{patientId}/active")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     public ResponseEntity<List<CarePlanResponse>> getActiveCarePlans(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -91,7 +91,7 @@ public class CarePlanController {
      * List care plans by status (draft, active, completed)
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_SEARCH')")
     public ResponseEntity<List<CarePlanResponse>> getCarePlansByStatus(
             @RequestParam(required = false) String status,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -119,7 +119,7 @@ public class CarePlanController {
      * Find care plan by patient and title
      */
     @GetMapping("/patient/{patientId}/title/{title}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     public ResponseEntity<CarePlanResponse> getCarePlanByTitle(
             @PathVariable String patientId,
             @PathVariable String title,

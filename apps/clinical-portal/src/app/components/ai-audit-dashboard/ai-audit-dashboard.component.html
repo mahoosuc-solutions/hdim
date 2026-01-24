@@ -2,6 +2,27 @@
   <div class="dashboard-header">
     <h1>AI Audit Dashboard</h1>
     <p class="subtitle">Real-time monitoring of AI decisions, configuration changes, and user actions</p>
+
+    <!-- SSE Connection Status Indicator -->
+    <div class="connection-status" [ngClass]="{
+      'status-connected': connectionStatus === 'connected',
+      'status-connecting': connectionStatus === 'connecting',
+      'status-disconnected': connectionStatus === 'disconnected'
+    }" role="status" [attr.aria-label]="'Connection status: ' + connectionStatus">
+      <span class="status-icon"></span>
+      <span class="status-text">
+        {{ connectionStatus === 'connected' ? 'Live' :
+           connectionStatus === 'connecting' ? 'Connecting...' :
+           'Disconnected' }}
+      </span>
+      <button
+        *ngIf="connectionStatus === 'disconnected'"
+        (click)="reconnectStream()"
+        class="btn btn-sm btn-outline-primary reconnect-btn"
+        [attr.aria-label]="'Reconnect to live stream'">
+        Reconnect
+      </button>
+    </div>
   </div>
 
   <!-- Analytics Cards -->

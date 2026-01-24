@@ -68,14 +68,18 @@ export const OutcomeScene: React.FC<OutcomeSceneProps> = ({ variant = 'default' 
                 color: 'white',
                 marginBottom: '4rem',
                 opacity: headlineOpacity,
-                textShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                textShadow: '0 4px 20px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.9)',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                 lineHeight: 1.2,
               }}
             >
               Close Care Gaps in Seconds
               <br />
-              <span style={{ fontSize: '4rem', color: '#00CC88' }}>Not Weeks</span>
+              <span style={{
+                fontSize: '4rem',
+                color: '#10B981',
+                textShadow: '0 4px 20px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(16, 185, 129, 0.6)',
+              }}>Not Weeks</span>
             </div>
           )}
 
@@ -174,7 +178,7 @@ export const OutcomeScene: React.FC<OutcomeSceneProps> = ({ variant = 'default' 
                 color: 'white',
                 marginBottom: '2rem',
                 opacity: ctaOpacity,
-                textShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                textShadow: '0 4px 20px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.9)',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
               }}
             >
@@ -186,15 +190,25 @@ export const OutcomeScene: React.FC<OutcomeSceneProps> = ({ variant = 'default' 
           {urlOpacity > 0 && (
             <div
               style={{
-                fontSize: '2.5rem',
-                fontWeight: 600,
-                color: '#00CC88',
+                padding: '0.75rem 2rem',
+                backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '12px',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                display: 'inline-block',
                 opacity: urlOpacity,
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
               }}
             >
-              hdim-landing-page.vercel.app
+              <div
+                style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 600,
+                  color: 'white',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                }}
+              >
+                hdim-landing-page.vercel.app
+              </div>
             </div>
           )}
         </div>

@@ -78,8 +78,9 @@ public interface ClinicalDecisionRepository extends JpaRepository<ClinicalDecisi
     @Query("SELECT COUNT(d) FROM ClinicalDecisionEntity d WHERE d.tenantId = :tenantId")
     Long countByTenantId(@Param("tenantId") String tenantId);
 
-    @Query("SELECT AVG(EXTRACT(EPOCH FROM (d.reviewedAt - d.decisionTimestamp))/3600) " +
-           "FROM ClinicalDecisionEntity d WHERE d.tenantId = :tenantId AND d.reviewedAt IS NOT NULL")
+    @Query(value = "SELECT AVG(EXTRACT(EPOCH FROM (reviewed_at - decision_timestamp))/3600) " +
+           "FROM clinical_decision_events WHERE tenant_id = :tenantId AND reviewed_at IS NOT NULL",
+           nativeQuery = true)
     Double getAverageReviewTimeHours(@Param("tenantId") String tenantId);
 
     @Query("SELECT COUNT(d) FROM ClinicalDecisionEntity d WHERE d.tenantId = :tenantId " +

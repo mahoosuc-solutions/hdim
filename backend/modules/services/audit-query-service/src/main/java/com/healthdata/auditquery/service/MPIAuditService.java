@@ -20,7 +20,6 @@ import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Service for MPI Audit Dashboard operations.
@@ -58,42 +57,41 @@ public class MPIAuditService {
         }
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<MPIMergeEntity> mergesPage = mpiMergeRepository
-            .findByTenantIdAndMergeTimestampBetween(tenantId, startDate, endDate, pageable);
 
-        // Apply filters in memory (for complex filtering)
-        List<MPIMergeEntity> filteredMerges = mergesPage.getContent().stream()
-            .filter(merge -> {
-                if (mergeType != null && !mergeType.equals(merge.getMergeType())) {
-                    return false;
-                }
-                if (mergeStatus != null && !mergeStatus.equals(merge.getMergeStatus())) {
-                    return false;
-                }
-                if (validationStatus != null && !validationStatus.equals(merge.getValidationStatus())) {
-                    return false;
-                }
-                if (minConfidence != null && merge.getConfidenceScore() != null && merge.getConfidenceScore() < minConfidence) {
-                    return false;
-                }
-                if (maxConfidence != null && merge.getConfidenceScore() != null && merge.getConfidenceScore() > maxConfidence) {
-                    return false;
-                }
-                if (hasErrors != null && !hasErrors.equals(merge.getHasMergeErrors())) {
-                    return false;
-                }
-                if (hasDataQualityIssues != null && !hasDataQualityIssues.equals(merge.getHasDataQualityIssues())) {
-                    return false;
-                }
-                return true;
-            })
-            .collect(Collectors.toList());
+        Page<MPIMergeEntity> mergesPage = mpiMergeRepository.findMergeHistory(
+            tenantId,
+            mergeStatus,
+            validationStatus,
+            startDate,
+            endDate,
+            mergeType,
+            minConfidence,
+            maxConfidence,
+            pageable
+        );
 
-        List<MPIMergeEventResponse> responses = filteredMerges.stream()
-            .map(this::mapToResponse)
-            .collect(Collectors.toList());
+        // Apply additional filters not supported by repository (hasErrors, hasDataQualityIssues)
+        if (hasErrors != null || hasDataQualityIssues != null) {
+            List<MPIMergeEntity> filteredMerges = mergesPage.getContent().stream()
+                .filter(merge -> {
+                    if (hasErrors != null && !hasErrors.equals(merge.getHasMergeErrors())) {
+                        return false;
+                    }
+                    if (hasDataQualityIssues != null && !hasDataQualityIssues.equals(merge.getHasDataQualityIssues())) {
+                        return false;
+                    }
+                    return true;
+                })
+                .toList();
 
-        return new PageImpl<>(responses, pageable, mergesPage.getTotalElements());
+            List<MPIMergeEventResponse> responses = filteredMerges.stream()
+                .map(this::mapToResponse)
+                .toList();
+
+            return new PageImpl<>(responses, pageable, mergesPage.getTotalElements());
+        }
+
+        return mergesPage.map(this::mapToResponse);
     }
 
     /**
@@ -108,9 +106,9 @@ public class MPIAuditService {
             endDate = LocalDateTime.now();
         }
 
-        List<MPIMergeEntity> merges = mpiMergeRepository
-            .findByTenantIdAndMergeTimestampBetween(tenantId, startDate, endDate, Pageable.unpaged())
-            .getContent();
+        List<MPIMergeEntity> merges = mpiMergeRepository.findByTenantIdAndDateRange(
+            tenantId, startDate, endDate
+        );
 
         long totalMerges = merges.size();
 
@@ -225,9 +223,12 @@ public class MPIAuditService {
         MPIReviewRequest request,
         String validatorUsername
     ) {
-        MPIMergeEntity merge = mpiMergeRepository
-            .findByIdAndTenantId(mergeId, tenantId)
+        MPIMergeEntity merge = mpiMergeRepository.findById(mergeId)
             .orElseThrow(() -> new IllegalArgumentException("MPI merge not found: " + mergeId));
+
+        if (!tenantId.equals(merge.getTenantId())) {
+            throw new IllegalArgumentException("Merge not found in tenant: " + tenantId);
+        }
 
         merge.setMergeStatus("VALIDATED");
         merge.setValidationStatus("VALIDATED");
@@ -256,9 +257,12 @@ public class MPIAuditService {
         MPIReviewRequest request,
         String rollbackUsername
     ) {
-        MPIMergeEntity merge = mpiMergeRepository
-            .findByIdAndTenantId(mergeId, tenantId)
+        MPIMergeEntity merge = mpiMergeRepository.findById(mergeId)
             .orElseThrow(() -> new IllegalArgumentException("MPI merge not found: " + mergeId));
+
+        if (!tenantId.equals(merge.getTenantId())) {
+            throw new IllegalArgumentException("Merge not found in tenant: " + tenantId);
+        }
 
         merge.setMergeStatus("ROLLED_BACK");
         merge.setRollbackReason(request.getRollbackReason());
@@ -283,9 +287,12 @@ public class MPIAuditService {
         MPIReviewRequest request,
         String resolverUsername
     ) {
-        MPIMergeEntity merge = mpiMergeRepository
-            .findByIdAndTenantId(mergeId, tenantId)
+        MPIMergeEntity merge = mpiMergeRepository.findById(mergeId)
             .orElseThrow(() -> new IllegalArgumentException("MPI merge not found: " + mergeId));
+
+        if (!tenantId.equals(merge.getTenantId())) {
+            throw new IllegalArgumentException("Merge not found in tenant: " + tenantId);
+        }
 
         merge.setHasDataQualityIssues(false);
         merge.setDataQualityAssessment(request.getDataQualityAssessment());
@@ -313,9 +320,9 @@ public class MPIAuditService {
             endDate = LocalDateTime.now();
         }
 
-        List<MPIMergeEntity> merges = mpiMergeRepository
-            .findByTenantIdAndMergeTimestampBetween(tenantId, startDate, endDate, Pageable.unpaged())
-            .getContent();
+        List<MPIMergeEntity> merges = mpiMergeRepository.findByTenantIdAndDateRange(
+            tenantId, startDate, endDate
+        );
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("MPI Audit Report");

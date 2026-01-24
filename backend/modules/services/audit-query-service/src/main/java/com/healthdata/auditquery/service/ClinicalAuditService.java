@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,9 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -40,7 +41,7 @@ public class ClinicalAuditService {
     @Transactional(readOnly = true)
     public Page<ClinicalDecisionResponse> getClinicalDecisions(
         String tenantId,
-        String agentType,
+        String agentType,  // Note: agentType not stored in entity, parameter ignored
         String decisionType,
         String alertSeverity,
         String reviewStatus,
@@ -49,41 +50,30 @@ public class ClinicalAuditService {
         int page,
         int size
     ) {
-        if (startDate == null) {
-            startDate = Instant.now().minus(30, ChronoUnit.DAYS);
-        }
-        if (endDate == null) {
-            endDate = Instant.now();
-        }
+        LocalDateTime start = startDate != null
+            ? LocalDateTime.ofInstant(startDate, ZoneOffset.UTC)
+            : LocalDateTime.now().minusDays(30);
+
+        LocalDateTime end = endDate != null
+            ? LocalDateTime.ofInstant(endDate, ZoneOffset.UTC)
+            : LocalDateTime.now();
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<ClinicalDecisionEntity> decisionsPage = clinicalDecisionRepository
-            .findByTenantIdAndDecisionTimestampBetween(tenantId, startDate, endDate, pageable);
 
-        // Apply filters in memory (for complex filtering)
-        List<ClinicalDecisionEntity> filteredDecisions = decisionsPage.getContent().stream()
-            .filter(decision -> {
-                if (agentType != null && !agentType.equals(decision.getAgentType())) {
-                    return false;
-                }
-                if (decisionType != null && !decisionType.equals(decision.getDecisionType())) {
-                    return false;
-                }
-                if (alertSeverity != null && !alertSeverity.equals(decision.getAlertSeverity())) {
-                    return false;
-                }
-                if (reviewStatus != null && !reviewStatus.equals(decision.getReviewStatus())) {
-                    return false;
-                }
-                return true;
-            })
-            .collect(Collectors.toList());
+        Page<ClinicalDecisionEntity> decisionsPage = clinicalDecisionRepository.findDecisionHistory(
+            tenantId,
+            decisionType,
+            alertSeverity,
+            reviewStatus,
+            start,
+            end,
+            null,  // evidenceGrade
+            null,  // hasOverride
+            null,  // specialtyArea
+            pageable
+        );
 
-        List<ClinicalDecisionResponse> responses = filteredDecisions.stream()
-            .map(this::mapToResponse)
-            .collect(Collectors.toList());
-
-        return new PageImpl<>(responses, pageable, decisionsPage.getTotalElements());
+        return decisionsPage.map(this::mapToResponse);
     }
 
     /**
@@ -91,16 +81,18 @@ public class ClinicalAuditService {
      */
     @Transactional(readOnly = true)
     public ClinicalMetricsResponse getClinicalMetrics(String tenantId, Instant startDate, Instant endDate) {
-        if (startDate == null) {
-            startDate = Instant.now().minus(30, ChronoUnit.DAYS);
-        }
-        if (endDate == null) {
-            endDate = Instant.now();
-        }
+        LocalDateTime start = startDate != null
+            ? LocalDateTime.ofInstant(startDate, ZoneOffset.UTC)
+            : LocalDateTime.now().minusDays(30);
 
-        List<ClinicalDecisionEntity> decisions = clinicalDecisionRepository
-            .findByTenantIdAndDecisionTimestampBetween(tenantId, startDate, endDate, Pageable.unpaged())
-            .getContent();
+        LocalDateTime end = endDate != null
+            ? LocalDateTime.ofInstant(endDate, ZoneOffset.UTC)
+            : LocalDateTime.now();
+
+        Page<ClinicalDecisionEntity> decisionsPage = clinicalDecisionRepository.findByTenantIdAndDateRange(
+            tenantId, start, end, Pageable.unpaged()
+        );
+        List<ClinicalDecisionEntity> decisions = decisionsPage.getContent();
 
         long totalDecisions = decisions.size();
 
@@ -200,13 +192,16 @@ public class ClinicalAuditService {
         ClinicalReviewRequest request,
         String reviewerUsername
     ) {
-        ClinicalDecisionEntity decision = clinicalDecisionRepository
-            .findByIdAndTenantId(decisionId, tenantId)
+        ClinicalDecisionEntity decision = clinicalDecisionRepository.findById(decisionId)
             .orElseThrow(() -> new IllegalArgumentException("Clinical decision not found: " + decisionId));
+
+        if (!tenantId.equals(decision.getTenantId())) {
+            throw new IllegalArgumentException("Decision not found in tenant: " + tenantId);
+        }
 
         decision.setReviewStatus("APPROVED");
         decision.setReviewedBy(reviewerUsername);
-        decision.setReviewedAt(Instant.now());
+        decision.setReviewedAt(LocalDateTime.now());
         decision.setReviewNotes(request.getClinicalNotes());
 
         ClinicalDecisionEntity saved = clinicalDecisionRepository.save(decision);
@@ -226,13 +221,16 @@ public class ClinicalAuditService {
         ClinicalReviewRequest request,
         String reviewerUsername
     ) {
-        ClinicalDecisionEntity decision = clinicalDecisionRepository
-            .findByIdAndTenantId(decisionId, tenantId)
+        ClinicalDecisionEntity decision = clinicalDecisionRepository.findById(decisionId)
             .orElseThrow(() -> new IllegalArgumentException("Clinical decision not found: " + decisionId));
+
+        if (!tenantId.equals(decision.getTenantId())) {
+            throw new IllegalArgumentException("Decision not found in tenant: " + tenantId);
+        }
 
         decision.setReviewStatus("REJECTED");
         decision.setReviewedBy(reviewerUsername);
-        decision.setReviewedAt(Instant.now());
+        decision.setReviewedAt(LocalDateTime.now());
         decision.setReviewNotes(request.getClinicalRationale());
 
         ClinicalDecisionEntity saved = clinicalDecisionRepository.save(decision);
@@ -253,13 +251,16 @@ public class ClinicalAuditService {
         ClinicalReviewRequest request,
         String reviewerUsername
     ) {
-        ClinicalDecisionEntity decision = clinicalDecisionRepository
-            .findByIdAndTenantId(decisionId, tenantId)
+        ClinicalDecisionEntity decision = clinicalDecisionRepository.findById(decisionId)
             .orElseThrow(() -> new IllegalArgumentException("Clinical decision not found: " + decisionId));
+
+        if (!tenantId.equals(decision.getTenantId())) {
+            throw new IllegalArgumentException("Decision not found in tenant: " + tenantId);
+        }
 
         decision.setReviewStatus("NEEDS_REVISION");
         decision.setReviewedBy(reviewerUsername);
-        decision.setReviewedAt(Instant.now());
+        decision.setReviewedAt(LocalDateTime.now());
         decision.setReviewNotes(request.getModifications());
 
         // Apply override if alternative action provided
@@ -267,7 +268,7 @@ public class ClinicalAuditService {
             decision.setHasOverride(true);
             decision.setOverrideReason(request.getClinicalReasoning());
             decision.setOverrideAppliedBy(reviewerUsername);
-            decision.setOverrideAppliedAt(Instant.now());
+            decision.setOverrideAppliedAt(LocalDateTime.now());
         }
 
         ClinicalDecisionEntity saved = clinicalDecisionRepository.save(decision);
@@ -283,16 +284,18 @@ public class ClinicalAuditService {
      */
     @Transactional(readOnly = true)
     public byte[] exportClinicalReport(String tenantId, Instant startDate, Instant endDate) {
-        if (startDate == null) {
-            startDate = Instant.now().minus(30, ChronoUnit.DAYS);
-        }
-        if (endDate == null) {
-            endDate = Instant.now();
-        }
+        LocalDateTime start = startDate != null
+            ? LocalDateTime.ofInstant(startDate, ZoneOffset.UTC)
+            : LocalDateTime.now().minusDays(30);
 
-        List<ClinicalDecisionEntity> decisions = clinicalDecisionRepository
-            .findByTenantIdAndDecisionTimestampBetween(tenantId, startDate, endDate, Pageable.unpaged())
-            .getContent();
+        LocalDateTime end = endDate != null
+            ? LocalDateTime.ofInstant(endDate, ZoneOffset.UTC)
+            : LocalDateTime.now();
+
+        Page<ClinicalDecisionEntity> decisionsPage = clinicalDecisionRepository.findByTenantIdAndDateRange(
+            tenantId, start, end, Pageable.unpaged()
+        );
+        List<ClinicalDecisionEntity> decisions = decisionsPage.getContent();
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Clinical Audit Report");

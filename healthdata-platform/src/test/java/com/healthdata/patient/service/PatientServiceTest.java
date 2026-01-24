@@ -455,10 +455,14 @@ class PatientServiceTest {
         }
 
         @Test
-        @DisplayName("Should find patients by age range")
+        @DisplayName("Should find patients by age range using database-level filtering")
         void testFindByAgeRange() {
             // Arrange
-            when(patientRepository.findByAgeRange("tenant1", 40, 60))
+            LocalDate today = LocalDate.now();
+            LocalDate maxBirthDate = today.minusYears(40);
+            LocalDate minBirthDate = today.minusYears(61).plusDays(1);
+
+            when(patientRepository.findByTenantIdAndAgeRange("tenant1", minBirthDate, maxBirthDate))
                 .thenReturn(List.of(testPatient));
 
             // Act
@@ -466,14 +470,59 @@ class PatientServiceTest {
 
             // Assert
             assertEquals(1, result.size());
+            verify(patientRepository).findByTenantIdAndAgeRange("tenant1", minBirthDate, maxBirthDate);
         }
 
         @Test
-        @DisplayName("Should throw exception for invalid age range")
+        @DisplayName("Should throw exception for invalid age range (min > max)")
         void testFindByAgeRangeInvalid() {
             // Act & Assert
             assertThrows(IllegalArgumentException.class,
                 () -> patientService.findByAgeRange("tenant1", 60, 40));
+        }
+
+        @Test
+        @DisplayName("Should throw exception for negative age range")
+        void testFindByAgeRangeNegative() {
+            // Act & Assert
+            assertThrows(IllegalArgumentException.class,
+                () -> patientService.findByAgeRange("tenant1", -5, 30));
+        }
+
+        @Test
+        @DisplayName("Should handle age range with boundary values (0-120)")
+        void testFindByAgeRangeBoundary() {
+            // Arrange
+            LocalDate today = LocalDate.now();
+            LocalDate maxBirthDate = today.minusYears(0);
+            LocalDate minBirthDate = today.minusYears(121).plusDays(1);
+
+            when(patientRepository.findByTenantIdAndAgeRange("tenant1", minBirthDate, maxBirthDate))
+                .thenReturn(List.of(testPatient));
+
+            // Act
+            List<Patient> result = patientService.findByAgeRange("tenant1", 0, 120);
+
+            // Assert
+            assertEquals(1, result.size());
+        }
+
+        @Test
+        @DisplayName("Should handle exact age match (minAge = maxAge)")
+        void testFindByExactAge() {
+            // Arrange
+            LocalDate today = LocalDate.now();
+            LocalDate maxBirthDate = today.minusYears(30);
+            LocalDate minBirthDate = today.minusYears(31).plusDays(1);
+
+            when(patientRepository.findByTenantIdAndAgeRange("tenant1", minBirthDate, maxBirthDate))
+                .thenReturn(List.of(testPatient));
+
+            // Act
+            List<Patient> result = patientService.findByAgeRange("tenant1", 30, 30);
+
+            // Assert
+            assertEquals(1, result.size());
         }
 
         @Test

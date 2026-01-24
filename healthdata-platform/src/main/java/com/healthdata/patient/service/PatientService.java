@@ -319,14 +319,14 @@ public class PatientService {
             throw new IllegalArgumentException("Tenant ID is required");
         }
 
-        // TODO: Implement age range filtering - deferred to service layer
-        List<Patient> allPatients = patientRepository.findActivePatientsWithDob(tenantId);
-        return allPatients.stream()
-            .filter(p -> {
-                int age = p.getAge();
-                return age >= minAge && age <= maxAge;
-            })
-            .collect(Collectors.toList());
+        // Convert age range to birthdate range for database-level filtering
+        // minAge 18 means birthdate <= (today - 18 years)
+        // maxAge 65 means birthdate >= (today - 66 years + 1 day)
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDate maxBirthDate = today.minusYears(minAge);
+        java.time.LocalDate minBirthDate = today.minusYears(maxAge + 1).plusDays(1);
+
+        return patientRepository.findByTenantIdAndAgeRange(tenantId, minBirthDate, maxBirthDate);
     }
 
     /**

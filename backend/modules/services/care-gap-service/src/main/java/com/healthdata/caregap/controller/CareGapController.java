@@ -355,6 +355,87 @@ public class CareGapController {
         return ResponseEntity.ok(report);
     }
 
+    // ==================== Bulk Operations Endpoints (Issue #241) ====================
+
+    /**
+     * Bulk close multiple care gaps
+     *
+     * Issue #241: Care Gap Bulk Actions
+     * Closes multiple care gaps in a single operation with shared closure reason and notes.
+     * Returns detailed success/failure information for each gap.
+     *
+     * @param tenantId Tenant ID (from header)
+     * @param request Bulk closure request
+     * @return Bulk operation response with success/failure counts
+     */
+    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
+    @PostMapping(value = "/bulk-close", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<com.healthdata.caregap.dto.BulkOperationResponse> bulkCloseCareGaps(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestBody @jakarta.validation.Valid com.healthdata.caregap.dto.BulkClosureRequest request
+    ) {
+        log.info("POST /care-gap/bulk-close - tenant: {}, gaps: {}, closedBy: {}",
+                tenantId, request.getGapIds().size(), request.getClosedBy());
+
+        com.healthdata.caregap.dto.BulkOperationResponse response =
+                identificationService.bulkCloseCareGaps(tenantId, request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Bulk assign intervention to multiple care gaps
+     *
+     * Issue #241: Care Gap Bulk Actions
+     * Assigns the same intervention to multiple care gaps in a single operation.
+     *
+     * @param tenantId Tenant ID (from header)
+     * @param request Bulk intervention request
+     * @return Bulk operation response with success/failure counts
+     */
+    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
+    @PostMapping(value = "/bulk-assign-intervention", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<com.healthdata.caregap.dto.BulkOperationResponse> bulkAssignIntervention(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestBody @jakarta.validation.Valid com.healthdata.caregap.dto.BulkInterventionRequest request
+    ) {
+        log.info("POST /care-gap/bulk-assign-intervention - tenant: {}, gaps: {}, type: {}",
+                tenantId, request.getGapIds().size(), request.getInterventionType());
+
+        com.healthdata.caregap.dto.BulkOperationResponse response =
+                identificationService.bulkAssignIntervention(tenantId, request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Bulk update priority for multiple care gaps
+     *
+     * Issue #241: Care Gap Bulk Actions
+     * Updates priority level for multiple care gaps in a single operation.
+     *
+     * @param tenantId Tenant ID (from header)
+     * @param request Bulk priority update request
+     * @return Bulk operation response with success/failure counts
+     */
+    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
+    @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
+    @PutMapping(value = "/bulk-update-priority", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<com.healthdata.caregap.dto.BulkOperationResponse> bulkUpdatePriority(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestBody @jakarta.validation.Valid com.healthdata.caregap.dto.BulkPriorityUpdateRequest request
+    ) {
+        log.info("PUT /care-gap/bulk-update-priority - tenant: {}, gaps: {}, priority: {}",
+                tenantId, request.getGapIds().size(), request.getPriority());
+
+        com.healthdata.caregap.dto.BulkOperationResponse response =
+                identificationService.bulkUpdatePriority(tenantId, request);
+
+        return ResponseEntity.ok(response);
+    }
+
     // ==================== Provider-Specific Endpoints (Issue #138) ====================
 
     /**

@@ -84,9 +84,21 @@ notification:
       messaging-service-sid: ${TWILIO_MESSAGING_SERVICE_SID:}
       default-sender-id: HealthData
       max-message-length: 1600
+  reminders:
+    enabled: true
+    cron: "0 0 9 * * *"  # Daily at 9 AM
   retry:
     max-attempts: 3
     delay-ms: 60000
+
+# Service URLs
+fhir:
+  service:
+    url: http://localhost:8085
+
+patient:
+  service:
+    url: http://localhost:8084
 
 # Kafka topics
 kafka:

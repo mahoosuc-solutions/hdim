@@ -21,7 +21,7 @@ const values = [
     icon: Heart,
     title: 'Patient Safety Over Shortcuts',
     description: 'You can\'t "move fast and break things" when the things you break are people\'s lives.',
-    commitment: '5-minute PHI cache maximum - we chose compliance when no one was watching.'
+    commitment: 'Configurable PHI cache limits and audit-ready privacy controls.'
   },
   {
     icon: Shield,
@@ -33,7 +33,7 @@ const values = [
     icon: Code,
     title: 'Testing Over Speed',
     description: 'Untested code in healthcare is unethical.',
-    commitment: '100% test coverage on critical paths. Every measure validated against HEDIS specs.'
+    commitment: 'Extensive test coverage on critical paths with measure validation workflows.'
   },
   {
     icon: Users,
@@ -45,8 +45,8 @@ const values = [
 
 const story = {
   challenge: 'Healthcare organizations lose millions in quality bonuses every year. Not because they don\'t care - but because their tools weren\'t built for the humans who depend on them.',
-  decision: 'On December 27, 2025, at 10:31 PM, we made a choice. We could have kept the 24-hour cache. Faster performance. Smoother demos. Every competitor does it. Instead, we wrote 22 words that define who we are: "fix(hipaa): Reduce PHI cache TTL to ≤5min for HIPAA compliance"',
-  difference: 'We chose slower performance and better patient privacy. We chose harder engineering and audit-ready architecture. We chose the right thing. That\'s the difference. We chose compliance when no one was watching.'
+  decision: 'We made a choice. We could have optimized purely for speed. Instead, we prioritized privacy controls, auditability, and transparent data handling.',
+  difference: 'We chose harder engineering and patient-first defaults. That\'s the difference. We chose compliance when it mattered most.'
 }
 
 const team = [
@@ -60,7 +60,7 @@ const team = [
   },
   {
     role: 'Compliance & Security',
-    description: 'HIPAA, HITRUST, and SOC 2 experts who make security and compliance the foundation, not an afterthought.',
+    description: 'Compliance and security professionals who make privacy, auditability, and risk management the foundation, not an afterthought.',
   }
 ]
 
@@ -73,7 +73,7 @@ const milestones = [
   {
     year: '2025',
     title: 'Platform Launch',
-    description: 'Launched FHIR-native platform with real-time care gap detection and HEDIS 2025 support.',
+    description: 'Launched FHIR-native platform with real-time care gap detection and HEDIS 2026 support.',
   },
   {
     year: '2026',

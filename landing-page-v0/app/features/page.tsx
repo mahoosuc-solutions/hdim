@@ -35,9 +35,9 @@ const coreFeatures = [
   {
     icon: BarChart3,
     title: 'HEDIS Excellence',
-    description: 'Complete HEDIS 2025 measure library with automated calculation and reporting.',
+    description: 'Complete HEDIS 2026 measure library with automated calculation and reporting.',
     benefits: [
-      '50+ HEDIS measures supported',
+      'Broad HEDIS measure coverage',
       'Automated data collection',
       'Audit-ready documentation',
       'CMS Star Ratings optimization'
@@ -46,12 +46,12 @@ const coreFeatures = [
   {
     icon: Shield,
     title: 'HIPAA-First Architecture',
-    description: '5-minute PHI cache maximum - compliance built into every design decision.',
+    description: 'Configurable PHI caching and compliance-aligned design controls.',
     benefits: [
       'Full audit trail',
       'Role-based access control',
       'Encryption at rest and in transit',
-      'SOC 2 Type II ready'
+      'SOC 2-aligned controls'
     ]
   },
   {
@@ -106,7 +106,7 @@ const platformCapabilities = [
     category: 'Quality Measurement',
     icon: BarChart3,
     features: [
-      'HEDIS 2025 complete library',
+      'HEDIS 2026 complete library',
       'CMS quality measures',
       'Custom measure builder',
       'CQL engine support',
@@ -118,12 +118,12 @@ const platformCapabilities = [
     category: 'Security & Compliance',
     icon: Lock,
     features: [
-      'HIPAA compliance by design',
-      '5-minute PHI cache',
+      'HIPAA-aligned controls',
+      'Configurable PHI cache policies',
       'Full audit logging',
       'Role-based access (RBAC)',
       'OAuth 2.0 / SMART on FHIR',
-      'SOC 2 Type II certification'
+      'SOC 2-aligned controls'
     ]
   },
   {
@@ -263,7 +263,7 @@ export default function FeaturesPage() {
             Ready to Transform Your Quality Measurement?
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            See how HDIM can help you close care gaps 40% faster and improve Star Ratings.
+            See how HDIM can help you close care gaps faster and improve quality performance.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

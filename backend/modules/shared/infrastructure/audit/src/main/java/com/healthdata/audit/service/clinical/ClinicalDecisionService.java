@@ -293,7 +293,7 @@ public class ClinicalDecisionService {
             .priority(priority)
             .hasOverride(entity.getHasOverride())
             .overrideReason(entity.getOverrideReason())
-            .relatedAlertsCount(0) // TODO: Calculate related alerts
+            .relatedAlertsCount(calculateRelatedAlertsCount(entity))
             .build();
     }
     
@@ -312,7 +312,7 @@ public class ClinicalDecisionService {
                 buildCareGaps(entity.getClinicalDetails()) : new ArrayList<>())
             .riskAssessment("RISK_STRATIFICATION".equals(entity.getDecisionType()) ? 
                 buildRiskAssessment(entity.getClinicalDetails()) : null)
-            .reviewHistory(new ArrayList<>()) // TODO: Build from review tracking fields
+            .reviewHistory(buildReviewHistory(entity))
             .build();
     }
     
@@ -337,10 +337,10 @@ public class ClinicalDecisionService {
             .patientId(entity.getPatientId())
             .gapType(extractGapType(entity.getClinicalDetails()))
             .serviceDescription(extractRecommendation(entity.getRecommendation()))
-            .dueDate(LocalDate.now()) // TODO: Extract from clinical details
-            .daysPastDue(0) // TODO: Calculate
+            .dueDate(extractDueDate(entity.getClinicalDetails()))
+            .daysPastDue(calculateDaysPastDue(extractDueDate(entity.getClinicalDetails())))
             .priority(determinePriority(entity.getConfidenceScore(), entity.getAlertSeverity()))
-            .guidelineReference("") // TODO: Extract from evidence
+            .guidelineReference(extractGuidelineReference(entity.getEvidence()))
             .status(entity.getReviewStatus())
             .evidenceGrade(entity.getEvidenceGrade())
             .build();
@@ -353,10 +353,10 @@ public class ClinicalDecisionService {
             .riskCategory(extractRiskCategory(entity.getClinicalDetails()))
             .overallRiskLevel(entity.getAlertSeverity())
             .riskScore(entity.getConfidenceScore())
-            .contributingFactors(new ArrayList<>()) // TODO: Extract from clinical details
+            .contributingFactors(extractContributingFactors(entity.getClinicalDetails()))
             .assessmentModel("AI-BASED")
             .evidenceGrade(entity.getEvidenceGrade())
-            .recommendedInterventions(new ArrayList<>()) // TODO: Extract from recommendation
+            .recommendedInterventions(extractRecommendedInterventions(entity.getRecommendation()))
             .build();
     }
     
@@ -388,34 +388,160 @@ public class ClinicalDecisionService {
         return "";
     }
     
+    @SuppressWarnings("unchecked")
     private ClinicalDecisionDetail.PatientContext buildPatientContext(Map<String, Object> context) {
-        // TODO: Implement full patient context building from JSON
-        return ClinicalDecisionDetail.PatientContext.builder().build();
+        if (context == null || context.isEmpty()) {
+            return ClinicalDecisionDetail.PatientContext.builder().build();
+        }
+
+        return ClinicalDecisionDetail.PatientContext.builder()
+            .patientId(context.containsKey("patientId") ? context.get("patientId").toString() : null)
+            .patientName(context.containsKey("patientName") ? context.get("patientName").toString() : "Unknown")
+            .age(context.containsKey("age") ? ((Number) context.get("age")).intValue() : null)
+            .gender(context.containsKey("gender") ? context.get("gender").toString() : null)
+            .activeConditions(context.containsKey("activeConditions") ? (List<String>) context.get("activeConditions") : new ArrayList<>())
+            .currentMedications(context.containsKey("currentMedications") ? (List<String>) context.get("currentMedications") : new ArrayList<>())
+            .allergies(context.containsKey("allergies") ? (List<String>) context.get("allergies") : new ArrayList<>())
+            .riskLevel(context.containsKey("riskLevel") ? context.get("riskLevel").toString() : null)
+            .build();
     }
     
+    @SuppressWarnings("unchecked")
     private ClinicalDecisionDetail.ClinicalRecommendation buildRecommendation(Map<String, Object> recommendation) {
-        // TODO: Implement full recommendation building from JSON
-        return ClinicalDecisionDetail.ClinicalRecommendation.builder().build();
+        if (recommendation == null || recommendation.isEmpty()) {
+            return ClinicalDecisionDetail.ClinicalRecommendation.builder().build();
+        }
+
+        return ClinicalDecisionDetail.ClinicalRecommendation.builder()
+            .recommendationType(recommendation.containsKey("recommendationType") ?
+                recommendation.get("recommendationType").toString() : "CLINICAL")
+            .recommendationText(recommendation.containsKey("recommendationText") ?
+                recommendation.get("recommendationText").toString() : "")
+            .actionItems(recommendation.containsKey("actionItems") ?
+                (Map<String, Object>) recommendation.get("actionItems") : null)
+            .urgency(recommendation.containsKey("urgency") ?
+                recommendation.get("urgency").toString() : "ROUTINE")
+            .evidenceGrade(recommendation.containsKey("evidenceGrade") ?
+                recommendation.get("evidenceGrade").toString() : null)
+            .confidenceScore(recommendation.containsKey("confidenceScore") ?
+                ((Number) recommendation.get("confidenceScore")).doubleValue() : null)
+            .specialty(recommendation.containsKey("specialty") ?
+                recommendation.get("specialty").toString() : null)
+            .build();
     }
     
+    @SuppressWarnings("unchecked")
     private List<ClinicalDecisionDetail.ClinicalEvidence> buildEvidence(Map<String, Object> evidence) {
-        // TODO: Implement evidence building from JSON
-        return new ArrayList<>();
+        if (evidence == null || evidence.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<ClinicalDecisionDetail.ClinicalEvidence> evidenceList = new ArrayList<>();
+
+        if (evidence.containsKey("evidenceItems")) {
+            List<Map<String, Object>> items = (List<Map<String, Object>>) evidence.get("evidenceItems");
+            for (Map<String, Object> item : items) {
+                evidenceList.add(ClinicalDecisionDetail.ClinicalEvidence.builder()
+                    .evidenceId(item.containsKey("evidenceId") ? item.get("evidenceId").toString() : null)
+                    .evidenceType(item.containsKey("evidenceType") ? item.get("evidenceType").toString() : "GUIDELINE")
+                    .evidenceGrade(item.containsKey("evidenceGrade") ? item.get("evidenceGrade").toString() : null)
+                    .citation(item.containsKey("citation") ? item.get("citation").toString() : "")
+                    .summary(item.containsKey("summary") ? item.get("summary").toString() : "")
+                    .relevanceScore(item.containsKey("relevanceScore") ? item.get("relevanceScore").toString() : null)
+                    .publishedDate(item.containsKey("publishedDate") ?
+                        LocalDateTime.parse(item.get("publishedDate").toString()) : null)
+                    .build());
+            }
+        }
+
+        return evidenceList;
     }
     
+    @SuppressWarnings("unchecked")
     private List<ClinicalDecisionDetail.DrugInteraction> buildDrugInteractions(Map<String, Object> details) {
-        // TODO: Implement drug interaction building from JSON
-        return new ArrayList<>();
+        if (details == null || !details.containsKey("drugInteractions")) {
+            return new ArrayList<>();
+        }
+
+        List<ClinicalDecisionDetail.DrugInteraction> interactions = new ArrayList<>();
+        List<Map<String, Object>> items = (List<Map<String, Object>>) details.get("drugInteractions");
+
+        for (Map<String, Object> item : items) {
+            interactions.add(ClinicalDecisionDetail.DrugInteraction.builder()
+                .drugA(item.containsKey("drugA") ? item.get("drugA").toString() : "")
+                .drugB(item.containsKey("drugB") ? item.get("drugB").toString() : "")
+                .interactionSeverity(item.containsKey("interactionSeverity") ? item.get("interactionSeverity").toString() : "MODERATE")
+                .interactionType(item.containsKey("interactionType") ? item.get("interactionType").toString() : "DRUG-DRUG")
+                .clinicalEffect(item.containsKey("clinicalEffect") ? item.get("clinicalEffect").toString() : "")
+                .managementRecommendation(item.containsKey("managementRecommendation") ? item.get("managementRecommendation").toString() : "")
+                .build());
+        }
+
+        return interactions;
     }
     
+    @SuppressWarnings("unchecked")
     private List<ClinicalDecisionDetail.CareGap> buildCareGaps(Map<String, Object> details) {
-        // TODO: Implement care gap building from JSON
-        return new ArrayList<>();
+        if (details == null || !details.containsKey("careGaps")) {
+            return new ArrayList<>();
+        }
+
+        List<ClinicalDecisionDetail.CareGap> careGaps = new ArrayList<>();
+        List<Map<String, Object>> items = (List<Map<String, Object>>) details.get("careGaps");
+
+        for (Map<String, Object> item : items) {
+            LocalDateTime dueDate = null;
+            if (item.containsKey("dueDate")) {
+                try {
+                    dueDate = LocalDateTime.parse(item.get("dueDate").toString());
+                } catch (Exception e) {
+                    log.warn("Failed to parse due date: {}", e.getMessage());
+                }
+            }
+
+            careGaps.add(ClinicalDecisionDetail.CareGap.builder()
+                .gapType(item.containsKey("gapType") ? item.get("gapType").toString() : "PREVENTIVE_CARE")
+                .serviceDescription(item.containsKey("serviceDescription") ? item.get("serviceDescription").toString() : "")
+                .dueDate(dueDate)
+                .daysPastDue(item.containsKey("daysPastDue") ? ((Number) item.get("daysPastDue")).intValue() : null)
+                .guidelineReference(item.containsKey("guidelineReference") ? item.get("guidelineReference").toString() : "")
+                .priority(item.containsKey("priority") ? item.get("priority").toString() : "MEDIUM")
+                .build());
+        }
+
+        return careGaps;
     }
     
+    @SuppressWarnings("unchecked")
     private ClinicalDecisionDetail.RiskAssessment buildRiskAssessment(Map<String, Object> details) {
-        // TODO: Implement risk assessment building from JSON
-        return null;
+        if (details == null || !details.containsKey("riskAssessment")) {
+            return null;
+        }
+
+        Map<String, Object> assessment = (Map<String, Object>) details.get("riskAssessment");
+
+        // Build risk factors list
+        List<ClinicalDecisionDetail.RiskFactor> riskFactors = new ArrayList<>();
+        if (assessment.containsKey("riskFactors")) {
+            List<Map<String, Object>> factorMaps = (List<Map<String, Object>>) assessment.get("riskFactors");
+            for (Map<String, Object> factorMap : factorMaps) {
+                riskFactors.add(ClinicalDecisionDetail.RiskFactor.builder()
+                    .factorName(factorMap.containsKey("factorName") ? factorMap.get("factorName").toString() : "")
+                    .factorValue(factorMap.containsKey("factorValue") ? factorMap.get("factorValue").toString() : "")
+                    .contribution(factorMap.containsKey("contribution") ? factorMap.get("contribution").toString() : "MODERATE")
+                    .modifiable(factorMap.containsKey("modifiable") ? (Boolean) factorMap.get("modifiable") : false)
+                    .build());
+            }
+        }
+
+        return ClinicalDecisionDetail.RiskAssessment.builder()
+            .overallRiskLevel(assessment.containsKey("overallRiskLevel") ? assessment.get("overallRiskLevel").toString() : "MODERATE")
+            .riskScore(assessment.containsKey("riskScore") ? ((Number) assessment.get("riskScore")).doubleValue() : 0.0)
+            .riskFactors(riskFactors)
+            .mitigationStrategies(assessment.containsKey("mitigationStrategies") ?
+                (List<String>) assessment.get("mitigationStrategies") : new ArrayList<>())
+            .assessmentModel(assessment.containsKey("assessmentModel") ? assessment.get("assessmentModel").toString() : "AI-BASED")
+            .build();
     }
     
     private String extractAlertType(Map<String, Object> details) {
@@ -437,7 +563,138 @@ public class ClinicalDecisionService {
     }
     
     private String extractRiskCategory(Map<String, Object> details) {
-        return details != null && details.containsKey("riskCategory") ? 
+        return details != null && details.containsKey("riskCategory") ?
             details.get("riskCategory").toString() : "GENERAL";
+    }
+
+    /**
+     * Calculate count of related alerts for the same patient
+     */
+    private Integer calculateRelatedAlertsCount(ClinicalDecisionEntity entity) {
+        if (entity.getPatientId() == null || entity.getTenantId() == null) {
+            return 0;
+        }
+
+        try {
+            Long count = clinicalDecisionRepository.countByTenantIdAndPatientIdAndDecisionType(
+                entity.getTenantId(),
+                entity.getPatientId(),
+                entity.getDecisionType()
+            );
+            return count.intValue() - 1; // Exclude current decision
+        } catch (Exception e) {
+            log.warn("Failed to calculate related alerts count: {}", e.getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Build review history from entity tracking fields
+     */
+    private List<ClinicalDecisionDetail.ReviewAction> buildReviewHistory(ClinicalDecisionEntity entity) {
+        List<ClinicalDecisionDetail.ReviewAction> history = new ArrayList<>();
+
+        // Add review event if reviewed
+        if (entity.getReviewedAt() != null) {
+            history.add(ClinicalDecisionDetail.ReviewAction.builder()
+                .actionType(entity.getReviewStatus())
+                .reviewedBy(entity.getReviewedBy())
+                .reviewedAt(entity.getReviewedAt())
+                .notes(entity.getOverrideReason())
+                .actionDetails(null)
+                .build());
+        }
+
+        return history;
+    }
+
+    /**
+     * Extract due date from clinical details JSON
+     */
+    private LocalDate extractDueDate(Map<String, Object> details) {
+        if (details == null || !details.containsKey("dueDate")) {
+            return LocalDate.now().plusDays(30); // Default 30 days from now
+        }
+
+        try {
+            String dueDateStr = details.get("dueDate").toString();
+            return LocalDate.parse(dueDateStr);
+        } catch (Exception e) {
+            log.warn("Failed to parse due date: {}", e.getMessage());
+            return LocalDate.now().plusDays(30);
+        }
+    }
+
+    /**
+     * Calculate days past due from a due date
+     */
+    private Integer calculateDaysPastDue(LocalDate dueDate) {
+        if (dueDate == null) {
+            return 0;
+        }
+
+        LocalDate today = LocalDate.now();
+        if (today.isAfter(dueDate)) {
+            return Math.toIntExact(java.time.temporal.ChronoUnit.DAYS.between(dueDate, today));
+        }
+
+        return 0; // Not past due yet
+    }
+
+    /**
+     * Extract guideline reference from evidence JSON
+     */
+    private String extractGuidelineReference(Map<String, Object> evidence) {
+        if (evidence == null || !evidence.containsKey("guidelineReference")) {
+            return "";
+        }
+
+        return evidence.get("guidelineReference").toString();
+    }
+
+    /**
+     * Extract contributing factors from clinical details JSON
+     */
+    @SuppressWarnings("unchecked")
+    private List<RiskStratificationDTO.RiskFactorDTO> extractContributingFactors(Map<String, Object> details) {
+        if (details == null || !details.containsKey("contributingFactors")) {
+            return new ArrayList<>();
+        }
+
+        try {
+            List<RiskStratificationDTO.RiskFactorDTO> factors = new ArrayList<>();
+            List<Map<String, Object>> factorMaps = (List<Map<String, Object>>) details.get("contributingFactors");
+
+            for (Map<String, Object> factorMap : factorMaps) {
+                factors.add(RiskStratificationDTO.RiskFactorDTO.builder()
+                    .factorName(factorMap.containsKey("factorName") ? factorMap.get("factorName").toString() : "")
+                    .factorValue(factorMap.containsKey("factorValue") ? factorMap.get("factorValue").toString() : "")
+                    .contribution(factorMap.containsKey("contribution") ? factorMap.get("contribution").toString() : "MODERATE")
+                    .modifiable(factorMap.containsKey("modifiable") ? (Boolean) factorMap.get("modifiable") : false)
+                    .build());
+            }
+
+            return factors;
+        } catch (Exception e) {
+            log.warn("Failed to extract contributing factors: {}", e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Extract recommended interventions from recommendation JSON
+     */
+    @SuppressWarnings("unchecked")
+    private List<String> extractRecommendedInterventions(Map<String, Object> recommendation) {
+        if (recommendation == null || !recommendation.containsKey("recommendedInterventions")) {
+            return new ArrayList<>();
+        }
+
+        try {
+            return (List<String>) recommendation.get("recommendedInterventions");
+        } catch (Exception e) {
+            log.warn("Failed to extract recommended interventions: {}", e.getMessage());
+            return new ArrayList<>();
+        }
     }
 }

@@ -34,7 +34,7 @@ public class CareGapProjectionController {
      * Get care gap projection by ID
      */
     @GetMapping("/{careGapId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Operation(summary = "Get care gap projection", description = "Retrieve denormalized care gap view")
     public ResponseEntity<CareGapProjection> getCareGapProjection(
             @PathVariable UUID careGapId,
@@ -50,7 +50,7 @@ public class CareGapProjectionController {
      * Get all care gaps for a patient
      */
     @GetMapping("/by-patient/{patientId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Operation(summary = "Get care gaps for patient", description = "Retrieve all care gaps for a patient")
     public ResponseEntity<List<CareGapProjection>> getCareGapsForPatient(
             @PathVariable UUID patientId,
@@ -66,7 +66,7 @@ public class CareGapProjectionController {
      * Get open care gaps for a tenant (paginated)
      */
     @GetMapping("/open")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Operation(summary = "Get open care gaps", description = "Retrieve all open care gaps for tenant")
     public ResponseEntity<Page<CareGapProjection>> getOpenCareGaps(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -82,7 +82,7 @@ public class CareGapProjectionController {
      * Get urgent care gaps
      */
     @GetMapping("/urgent")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Operation(summary = "Get urgent care gaps", description = "Retrieve all urgent care gaps")
     public ResponseEntity<List<CareGapProjection>> getUrgentCareGaps(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -96,7 +96,7 @@ public class CareGapProjectionController {
      * Get care gaps by priority
      */
     @GetMapping("/by-priority/{priority}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Operation(summary = "Get care gaps by priority", description = "Retrieve care gaps for specific priority level")
     public ResponseEntity<List<CareGapProjection>> getCareGapsByPriority(
             @PathVariable String priority,
@@ -112,7 +112,7 @@ public class CareGapProjectionController {
      * Get overdue care gaps
      */
     @GetMapping("/overdue")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Operation(summary = "Get overdue care gaps", description = "Retrieve all overdue care gaps")
     public ResponseEntity<List<CareGapProjection>> getOverdueCareGaps(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -126,7 +126,7 @@ public class CareGapProjectionController {
      * Get care gaps due within N days
      */
     @GetMapping("/due-within-days")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Operation(summary = "Get care gaps due within days", description = "Retrieve care gaps due within specified days")
     public ResponseEntity<List<CareGapProjection>> getCareGapsDueWithinDays(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -142,7 +142,7 @@ public class CareGapProjectionController {
      * Get care gaps for a specific measure
      */
     @GetMapping("/by-measure/{measureId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Operation(summary = "Get care gaps by measure", description = "Retrieve care gaps for specific measure")
     public ResponseEntity<List<CareGapProjection>> getCareGapsByMeasure(
             @PathVariable String measureId,
@@ -158,7 +158,7 @@ public class CareGapProjectionController {
      * Get care gaps assigned to a user
      */
     @GetMapping("/assigned-to/{assignedTo}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Operation(summary = "Get assigned care gaps", description = "Retrieve care gaps assigned to user")
     public ResponseEntity<List<CareGapProjection>> getCareGapsAssignedTo(
             @PathVariable String assignedTo,
@@ -174,7 +174,7 @@ public class CareGapProjectionController {
      * Get statistics for tenant
      */
     @GetMapping("/stats")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Operation(summary = "Get care gap statistics", description = "Retrieve aggregated care gap statistics")
     public ResponseEntity<CareGapStatistics> getStatistics(
             @RequestHeader("X-Tenant-ID") String tenantId) {

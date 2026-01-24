@@ -34,7 +34,7 @@ public class WorkflowProjectionController {
      * Get workflow projection by ID
      */
     @GetMapping("/{workflowId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get workflow projection", description = "Retrieve workflow details")
     public ResponseEntity<WorkflowProjection> getWorkflowProjection(
             @PathVariable UUID workflowId,
@@ -50,7 +50,7 @@ public class WorkflowProjectionController {
      * Get all workflows for a patient
      */
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get patient workflows", description = "Retrieve all workflows for patient")
     public ResponseEntity<List<WorkflowProjection>> getPatientWorkflows(
             @PathVariable UUID patientId,
@@ -66,7 +66,7 @@ public class WorkflowProjectionController {
      * Get pending workflows for a patient
      */
     @GetMapping("/patient/{patientId}/pending")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get pending workflows", description = "Retrieve pending workflows for patient")
     public ResponseEntity<List<WorkflowProjection>> getPendingForPatient(
             @PathVariable UUID patientId,
@@ -82,7 +82,7 @@ public class WorkflowProjectionController {
      * Get workflows assigned to a user
      */
     @GetMapping("/assigned-to/{assignedTo}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get assigned workflows", description = "Retrieve workflows assigned to user")
     public ResponseEntity<List<WorkflowProjection>> getAssignedTo(
             @PathVariable String assignedTo,
@@ -98,7 +98,7 @@ public class WorkflowProjectionController {
      * Get pending workflows assigned to user (paginated)
      */
     @GetMapping("/assigned-to/{assignedTo}/pending")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get assigned pending workflows", description = "Retrieve pending workflows for user")
     public ResponseEntity<Page<WorkflowProjection>> getPendingAssignedTo(
             @PathVariable String assignedTo,
@@ -115,7 +115,7 @@ public class WorkflowProjectionController {
      * Get overdue workflows
      */
     @GetMapping("/overdue")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get overdue workflows", description = "Retrieve all overdue workflows")
     public ResponseEntity<List<WorkflowProjection>> getOverdue(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -129,7 +129,7 @@ public class WorkflowProjectionController {
      * Get workflows requiring review
      */
     @GetMapping("/requiring-review")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get workflows requiring review", description = "Retrieve workflows needing review")
     public ResponseEntity<List<WorkflowProjection>> getRequiringReview(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -143,7 +143,7 @@ public class WorkflowProjectionController {
      * Get workflows with blocking issues
      */
     @GetMapping("/blocking-issues")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get workflows with blocking issues", description = "Retrieve workflows with blocking issues")
     public ResponseEntity<List<WorkflowProjection>> getWithBlockingIssues(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -157,7 +157,7 @@ public class WorkflowProjectionController {
      * Get workflows by type
      */
     @GetMapping("/by-type/{workflowType}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get workflows by type", description = "Retrieve workflows of specific type")
     public ResponseEntity<List<WorkflowProjection>> getByWorkflowType(
             @PathVariable String workflowType,
@@ -173,7 +173,7 @@ public class WorkflowProjectionController {
      * Get workflows by status (paginated)
      */
     @GetMapping("/by-status/{status}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get workflows by status", description = "Retrieve workflows with specific status")
     public ResponseEntity<Page<WorkflowProjection>> getByStatus(
             @PathVariable String status,
@@ -190,7 +190,7 @@ public class WorkflowProjectionController {
      * Get workflow statistics for tenant
      */
     @GetMapping("/stats")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get workflow statistics", description = "Retrieve workflow statistics for tenant")
     public ResponseEntity<WorkflowStatistics> getStatistics(
             @RequestHeader("X-Tenant-ID") String tenantId) {

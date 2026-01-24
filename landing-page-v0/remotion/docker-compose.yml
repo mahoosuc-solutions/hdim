@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  remotion-renderer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hdim-remotion-renderer
+    volumes:
+      # Mount output directory to host for video retrieval
+      - ./out:/app/out
+      # Optional: Mount source for hot-reload during development
+      - ./src:/app/src:ro
+    environment:
+      NODE_ENV: production
+      # Remotion-specific settings
+      REMOTION_CONCURRENCY: 50%
+      REMOTION_TIMEOUT: 300000  # 5 minutes
+    command: npm run render:all  # Render all 3 versions
+    mem_limit: 4g  # Prevent OOM on large renders
+    cpus: 2.0      # Limit CPU usage

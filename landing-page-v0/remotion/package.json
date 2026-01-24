@@ -9,10 +9,22 @@
     "render:120s": "remotion render src/index.ts Long out/hdim-demo-120s.mp4",
     "render:all": "npm run render:60s && npm run render:90s && npm run render:120s",
     "copy:videos": "mkdir -p ../public/videos && cp out/*.mp4 ../public/videos/",
-    "build": "npm run render:all && npm run copy:videos"
+    "build": "npm run render:all && npm run copy:videos",
+    "docker:build": "docker build -t hdim-remotion .",
+    "docker:render": "docker compose up remotion-renderer",
+    "docker:render:90s": "docker compose run remotion-renderer npm run render:90s",
+    "docker:render:60s": "docker compose run remotion-renderer npm run render:60s",
+    "docker:render:120s": "docker compose run remotion-renderer npm run render:120s",
+    "docker:shell": "docker compose run remotion-renderer sh",
+    "ssr:render:60s": "node scripts/render-ssr.mjs 60s",
+    "ssr:render:90s": "node scripts/render-ssr.mjs 90s",
+    "ssr:render:120s": "node scripts/render-ssr.mjs 120s",
+    "ssr:render:all": "npm run ssr:render:60s && npm run ssr:render:90s && npm run ssr:render:120s"
   },
   "dependencies": {
+    "@remotion/bundler": "^4.0.409",
     "@remotion/cli": "^4.0.409",
+    "@remotion/renderer": "^4.0.409",
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",
     "react": "^19.2.3",

@@ -298,8 +298,9 @@
                     color="primary"
                     class="quick-action-btn primary-action"
                     [matTooltip]="getPrimaryAction(gap).description"
+                    [attr.aria-label]="getPrimaryAction(gap).label + ' for ' + gap.patientName + ' - ' + gap.measureName"
                     (click)="executePrimaryAction(gap); $event.stopPropagation()">
-                    <mat-icon>{{ getPrimaryAction(gap).icon }}</mat-icon>
+                    <mat-icon aria-hidden="true">{{ getPrimaryAction(gap).icon }}</mat-icon>
                     {{ getPrimaryAction(gap).label }}
                   </button>
 
@@ -309,8 +310,9 @@
                     color="accent"
                     class="close-gap-btn"
                     matTooltip="Close gap"
+                    [attr.aria-label]="'Close care gap for ' + gap.patientName + ' - ' + gap.measureName"
                     (click)="quickCloseGap(gap); $event.stopPropagation()">
-                    <mat-icon>check_circle</mat-icon>
+                    <mat-icon aria-hidden="true">check_circle</mat-icon>
                   </button>
 
                   <!-- More Actions Menu -->

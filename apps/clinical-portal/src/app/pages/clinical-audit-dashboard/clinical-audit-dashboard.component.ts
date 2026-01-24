@@ -62,11 +62,11 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
   };
   
   // Filters
-  filterPriority: string = 'all';
-  filterStatus: string = 'pending';
-  filterPatient: string = '';
-  filterDateRange: string = 'last-7-days';
-  filterDecisionType: string = 'all';
+  filterPriority = 'all';
+  filterStatus = 'pending';
+  filterPatient = '';
+  filterDateRange = 'last-7-days';
+  filterDecisionType = 'all';
   
   // Active tabs
   activeTab: 'decisions' | 'medications' | 'care-gaps' | 'risk' | 'metrics' = 'decisions';

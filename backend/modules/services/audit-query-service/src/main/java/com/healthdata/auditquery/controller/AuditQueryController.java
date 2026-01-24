@@ -69,7 +69,7 @@ public class AuditQueryController {
      * @return page of matching audit events
      */
     @PostMapping("/search")
-    @PreAuthorize("hasAnyRole('AUDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Search audit logs",
         description = "Multi-criteria search with pagination. Combines filters with AND logic.",
@@ -101,7 +101,7 @@ public class AuditQueryController {
      * @return audit event details
      */
     @GetMapping("/{eventId}")
-    @PreAuthorize("hasAnyRole('AUDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Get audit event by ID",
         description = "Retrieve detailed information for a specific audit event",
@@ -137,7 +137,7 @@ public class AuditQueryController {
      * @return aggregated statistics
      */
     @GetMapping("/statistics")
-    @PreAuthorize("hasAnyRole('AUDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Get audit log statistics",
         description = "Aggregated statistics for compliance reporting and security monitoring",
@@ -179,7 +179,7 @@ public class AuditQueryController {
      * @return file download response
      */
     @PostMapping("/export")
-    @PreAuthorize("hasAnyRole('AUDITOR', 'ADMIN')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Export audit logs",
         description = "Export search results to CSV, JSON, or PDF format (max 100,000 records)",

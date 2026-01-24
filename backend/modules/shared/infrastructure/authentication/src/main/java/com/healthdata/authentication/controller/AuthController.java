@@ -310,7 +310,7 @@ public class AuthController {
      * @throws ResponseStatusException 409 if username or email already exists
      * @throws ResponseStatusException 400 if validation fails
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('USER_WRITE')")
     @PostMapping("/register")
     public ResponseEntity<UserInfoResponse> register(
         @Valid @RequestBody RegisterRequest request,

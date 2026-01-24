@@ -133,6 +133,19 @@ public class AIAgentDecisionEventEntity {
     @Column(name = "user_feedback_timestamp")
     private Instant userFeedbackTimestamp;
 
+    // QA Review Tracking
+    @Column(name = "reviewed_at")
+    private Instant reviewedAt;
+
+    @Column(name = "reviewed_by", length = 255)
+    private String reviewedBy;
+
+    @Column(name = "review_status", length = 50)
+    private String reviewStatus; // PENDING, APPROVED, REJECTED, FLAGGED
+
+    @Column(name = "review_notes", columnDefinition = "TEXT")
+    private String reviewNotes;
+
     // Performance Metrics
     @Column(name = "inference_time_ms")
     private Long inferenceTimeMs;

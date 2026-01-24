@@ -20,6 +20,15 @@ import ca.uhn.fhir.parser.IParser;
 import com.healthdata.audit.annotations.Audited;
 import com.healthdata.audit.models.AuditAction;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "Encounter", description = "Healthcare encounter/visit information (HL7 FHIR R4)")
 @RestController
 @RequestMapping("/Encounter")
 public class EncounterController {
@@ -37,13 +46,15 @@ public class EncounterController {
      * Create a new Encounter resource
      * POST /fhir/Encounter
      */
+    @Operation(summary = "Create Encounter", description = "Creates a new FHIR R4 Encounter resource.\n\nUse for documenting patient visits, appointments, and healthcare interactions.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses({@ApiResponse(responseCode = "201", description = "Encounter created", content = @Content(mediaType = "application/fhir+json")), @ApiResponse(responseCode = "400", description = "Invalid FHIR resource")})
     @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> createEncounter(
-            @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestHeader(value = "X-User-ID", required = false, defaultValue = "system") String userId,
-            @RequestBody String encounterJson) {
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") String tenantId,
+            @Parameter(description = "User ID") @RequestHeader(value = "X-User-ID", required = false, defaultValue = "system") String userId,
+            @Parameter(description = "FHIR Encounter resource (JSON)") @RequestBody String encounterJson) {
         try {
             Encounter encounter = (Encounter) JSON_PARSER.parseResource(encounterJson);
             Encounter created = encounterService.createEncounter(tenantId, encounter, userId);
@@ -61,12 +72,14 @@ public class EncounterController {
      * Read an Encounter resource by ID
      * GET /fhir/Encounter/{id}
      */
+    @Operation(summary = "Read Encounter by ID", description = "Retrieves a specific Encounter resource.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses({@ApiResponse(responseCode = "200", description = "Encounter found", content = @Content(mediaType = "application/fhir+json")), @ApiResponse(responseCode = "404", description = "Encounter not found")})
     @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getEncounter(
-            @RequestHeader("X-Tenant-ID") String tenantId,
-            @PathVariable String id) {
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") String tenantId,
+            @Parameter(description = "Encounter ID", required = true, example = "123e4567") @PathVariable String id) {
         return encounterService.getEncounter(tenantId, id)
                 .map(encounter -> {
                     String responseJson = JSON_PARSER.encodeResourceToString(encounter);

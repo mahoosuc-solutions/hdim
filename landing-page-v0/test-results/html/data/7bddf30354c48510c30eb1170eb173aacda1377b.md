@@ -1,0 +1,235 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e5]:
+      - heading "Enterprise-Grade Platform Built for Quality Excellence" [level=1] [ref=e6]:
+        - text: Enterprise-Grade Platform
+        - text: Built for Quality Excellence
+      - paragraph [ref=e7]: HDIM combines real-time care gap detection, comprehensive HEDIS support, and FHIR-native architecture to help healthcare organizations achieve quality measurement excellence.
+      - generic [ref=e8]:
+        - link "See It In Action" [ref=e9] [cursor=pointer]:
+          - /url: /demo
+          - text: See It In Action
+          - img [ref=e10]
+        - link "Schedule Demo" [ref=e13] [cursor=pointer]:
+          - /url: /schedule
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - heading "Core Capabilities" [level=2] [ref=e17]
+        - paragraph [ref=e18]: Everything you need to close care gaps, optimize quality measures, and improve patient outcomes.
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - img [ref=e22]
+          - heading "Real-Time Care Gap Detection" [level=3] [ref=e24]
+          - paragraph [ref=e25]: Identify care gaps the moment they occur with continuous FHIR data monitoring.
+          - list [ref=e26]:
+            - listitem [ref=e27]:
+              - img [ref=e28]
+              - generic [ref=e31]: Sub-second measure evaluation
+            - listitem [ref=e32]:
+              - img [ref=e33]
+              - generic [ref=e36]: Automated gap closure workflows
+            - listitem [ref=e37]:
+              - img [ref=e38]
+              - generic [ref=e41]: Priority-based alerts
+            - listitem [ref=e42]:
+              - img [ref=e43]
+              - generic [ref=e46]: Integration with EHR systems
+        - generic [ref=e47]:
+          - img [ref=e49]
+          - heading "HEDIS Excellence" [level=3] [ref=e54]
+          - paragraph [ref=e55]: Complete HEDIS 2026 measure library with automated calculation and reporting.
+          - list [ref=e56]:
+            - listitem [ref=e57]:
+              - img [ref=e58]
+              - generic [ref=e61]: Broad HEDIS measure coverage
+            - listitem [ref=e62]:
+              - img [ref=e63]
+              - generic [ref=e66]: Automated data collection
+            - listitem [ref=e67]:
+              - img [ref=e68]
+              - generic [ref=e71]: Audit-ready documentation
+            - listitem [ref=e72]:
+              - img [ref=e73]
+              - generic [ref=e76]: CMS Star Ratings optimization
+        - generic [ref=e77]:
+          - img [ref=e79]
+          - heading "HIPAA-First Architecture" [level=3] [ref=e81]
+          - paragraph [ref=e82]: Configurable PHI caching and compliance-aligned design controls.
+          - list [ref=e83]:
+            - listitem [ref=e84]:
+              - img [ref=e85]
+              - generic [ref=e88]: Full audit trail
+            - listitem [ref=e89]:
+              - img [ref=e90]
+              - generic [ref=e93]: Role-based access control
+            - listitem [ref=e94]:
+              - img [ref=e95]
+              - generic [ref=e98]: Encryption at rest and in transit
+            - listitem [ref=e99]:
+              - img [ref=e100]
+              - generic [ref=e103]: SOC 2-aligned controls
+        - generic [ref=e104]:
+          - img [ref=e106]
+          - heading "FHIR-Native Platform" [level=3] [ref=e108]
+          - paragraph [ref=e109]: Built on HL7 FHIR R4 standards for seamless healthcare data interoperability.
+          - list [ref=e110]:
+            - listitem [ref=e111]:
+              - img [ref=e112]
+              - generic [ref=e115]: Bi-directional EHR sync
+            - listitem [ref=e116]:
+              - img [ref=e117]
+              - generic [ref=e120]: SMART on FHIR support
+            - listitem [ref=e121]:
+              - img [ref=e122]
+              - generic [ref=e125]: Bulk data API (FHIR R4)
+            - listitem [ref=e126]:
+              - img [ref=e127]
+              - generic [ref=e130]: Standard vocabularies (LOINC, SNOMED)
+        - generic [ref=e131]:
+          - img [ref=e133]
+          - heading "Population Health Management" [level=3] [ref=e138]
+          - paragraph [ref=e139]: Segment and manage patient cohorts with advanced analytics and predictive modeling.
+          - list [ref=e140]:
+            - listitem [ref=e141]:
+              - img [ref=e142]
+              - generic [ref=e145]: Risk stratification (HCC-RAF)
+            - listitem [ref=e146]:
+              - img [ref=e147]
+              - generic [ref=e150]: Predictive analytics
+            - listitem [ref=e151]:
+              - img [ref=e152]
+              - generic [ref=e155]: Custom cohort builder
+            - listitem [ref=e156]:
+              - img [ref=e157]
+              - generic [ref=e160]: Social determinants of health (SDOH)
+        - generic [ref=e161]:
+          - img [ref=e163]
+          - heading "AI-Powered Insights" [level=3] [ref=e172]
+          - paragraph [ref=e173]: Clinical decision support powered by evidence-based algorithms and machine learning.
+          - list [ref=e174]:
+            - listitem [ref=e175]:
+              - img [ref=e176]
+              - generic [ref=e179]: Automated measure evaluation
+            - listitem [ref=e180]:
+              - img [ref=e181]
+              - generic [ref=e184]: Predictive care gap analysis
+            - listitem [ref=e185]:
+              - img [ref=e186]
+              - generic [ref=e189]: Natural language processing
+            - listitem [ref=e190]:
+              - img [ref=e191]
+              - generic [ref=e194]: Clinical recommendation engine
+    - generic [ref=e196]:
+      - generic [ref=e197]:
+        - heading "Complete Platform Capabilities" [level=2] [ref=e198]
+        - paragraph [ref=e199]: Comprehensive features across data integration, quality measurement, security, and workflow automation.
+      - generic [ref=e200]:
+        - generic [ref=e201]:
+          - generic [ref=e202]:
+            - img [ref=e204]
+            - heading "Data Integration" [level=3] [ref=e208]
+          - list [ref=e209]:
+            - listitem [ref=e210]:
+              - img [ref=e211]
+              - generic [ref=e214]: HL7 FHIR R4 native
+            - listitem [ref=e215]:
+              - img [ref=e216]
+              - generic [ref=e219]: HL7 v2 message processing
+            - listitem [ref=e220]:
+              - img [ref=e221]
+              - generic [ref=e224]: C-CDA document parsing
+            - listitem [ref=e225]:
+              - img [ref=e226]
+              - generic [ref=e229]: Claims data (837/835)
+            - listitem [ref=e230]:
+              - img [ref=e231]
+              - generic [ref=e234]: Lab interfaces (HL7, LIS)
+            - listitem [ref=e235]:
+              - img [ref=e236]
+              - generic [ref=e239]: Pharmacy data (NCPDP)
+        - generic [ref=e240]:
+          - generic [ref=e241]:
+            - img [ref=e243]
+            - heading "Quality Measurement" [level=3] [ref=e248]
+          - list [ref=e249]:
+            - listitem [ref=e250]:
+              - img [ref=e251]
+              - generic [ref=e254]: HEDIS 2026 complete library
+            - listitem [ref=e255]:
+              - img [ref=e256]
+              - generic [ref=e259]: CMS quality measures
+            - listitem [ref=e260]:
+              - img [ref=e261]
+              - generic [ref=e264]: Custom measure builder
+            - listitem [ref=e265]:
+              - img [ref=e266]
+              - generic [ref=e269]: CQL engine support
+            - listitem [ref=e270]:
+              - img [ref=e271]
+              - generic [ref=e274]: Automated numerator/denominator
+            - listitem [ref=e275]:
+              - img [ref=e276]
+              - generic [ref=e279]: Gap closure tracking
+        - generic [ref=e280]:
+          - generic [ref=e281]:
+            - img [ref=e283]
+            - heading "Security & Compliance" [level=3] [ref=e286]
+          - list [ref=e287]:
+            - listitem [ref=e288]:
+              - img [ref=e289]
+              - generic [ref=e292]: HIPAA-aligned controls
+            - listitem [ref=e293]:
+              - img [ref=e294]
+              - generic [ref=e297]: Configurable PHI cache policies
+            - listitem [ref=e298]:
+              - img [ref=e299]
+              - generic [ref=e302]: Full audit logging
+            - listitem [ref=e303]:
+              - img [ref=e304]
+              - generic [ref=e307]: Role-based access (RBAC)
+            - listitem [ref=e308]:
+              - img [ref=e309]
+              - generic [ref=e312]: OAuth 2.0 / SMART on FHIR
+            - listitem [ref=e313]:
+              - img [ref=e314]
+              - generic [ref=e317]: SOC 2-aligned controls
+        - generic [ref=e318]:
+          - generic [ref=e319]:
+            - img [ref=e321]
+            - heading "Workflows & Automation" [level=3] [ref=e326]
+          - list [ref=e327]:
+            - listitem [ref=e328]:
+              - img [ref=e329]
+              - generic [ref=e332]: Care gap closure workflows
+            - listitem [ref=e333]:
+              - img [ref=e334]
+              - generic [ref=e337]: Provider notifications
+            - listitem [ref=e338]:
+              - img [ref=e339]
+              - generic [ref=e342]: Patient outreach automation
+            - listitem [ref=e343]:
+              - img [ref=e344]
+              - generic [ref=e347]: Task assignment
+            - listitem [ref=e348]:
+              - img [ref=e349]
+              - generic [ref=e352]: SLA tracking
+            - listitem [ref=e353]:
+              - img [ref=e354]
+              - generic [ref=e357]: Escalation rules
+    - generic [ref=e359]:
+      - heading "Ready to Transform Your Quality Measurement?" [level=2] [ref=e360]
+      - paragraph [ref=e361]: See how HDIM can help you close care gaps faster and improve quality performance.
+      - generic [ref=e362]:
+        - link "Request Demo" [ref=e363] [cursor=pointer]:
+          - /url: /demo
+          - text: Request Demo
+          - img [ref=e364]
+        - link "View Pricing" [ref=e367] [cursor=pointer]:
+          - /url: /pricing
+  - button "Open Next.js Dev Tools" [ref=e373] [cursor=pointer]:
+    - img [ref=e374]
+  - alert [ref=e378]
+```

@@ -115,7 +115,7 @@ export const AlertHandlers = {
    * Critical alert: Immediate action required
    */
   critical: (alert: MonitoringAlert) => {
-    console.error('🔴 CRITICAL ALERT:', alert.metric, alert.currentValue);
+    this.logger.error('🔴 CRITICAL ALERT:', alert.metric, alert.currentValue);
 
     // Send to monitoring service (Sentry, DataDog, etc.)
     if (window.location.hostname !== 'localhost') {
@@ -130,7 +130,7 @@ export const AlertHandlers = {
           currentValue: alert.currentValue,
           timestamp: alert.timestamp
         })
-      }).catch(err => console.error('Failed to send alert:', err));
+      }).catch(err => this.logger.error('Failed to send alert:', err));
     }
 
     // Trigger configured action (e.g., fallback to Canvas, disable features)
@@ -141,7 +141,7 @@ export const AlertHandlers = {
    * Warning alert: Monitoring for trends
    */
   warning: (alert: MonitoringAlert) => {
-    console.warn('🟡 WARNING:', alert.metric, alert.currentValue);
+    this.logger.warn('🟡 WARNING:', alert.metric, alert.currentValue);
 
     // Log to analytics for trend analysis
     if (window.gtag) {
@@ -157,7 +157,7 @@ export const AlertHandlers = {
    * Info alert: For awareness
    */
   info: (alert: MonitoringAlert) => {
-    console.log('ℹ️ INFO:', alert.metric, alert.currentValue);
+    this.logger.info('ℹ️ INFO:', alert.metric, alert.currentValue);
   }
 };
 

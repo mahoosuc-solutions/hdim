@@ -18,7 +18,7 @@ import { LoggerService } from './logger.service';
  * ngOnInit() {
  *   this.aiAuditStream.connect();
  *   this.aiAuditStream.events$.subscribe(event => {
- *     console.log('New AI decision:', event);
+ *     this.logger.info('New AI decision:', event);
  *   });
  * }
  * ```
@@ -27,6 +27,7 @@ import { LoggerService } from './logger.service';
   providedIn: 'root'
 })
 export class AiAuditStreamService {
+  private readonly logger = this.loggerService.withContext('AiAuditStreamService');
   private eventSource: EventSource | null = null;
   private eventsSubject = new Subject<any>();
   private connectionStatusSubject = new BehaviorSubject<'connected' | 'disconnected' | 'connecting'>('disconnected');

@@ -1,7 +1,11 @@
 import * as THREE from 'three';
+import { LoggerService } from './logger.service';
 import { DataTransformService, Position3D } from '../data/data-transform.service';
+import { LoggerService } from './logger.service';
 import { QualityMeasureResult, MeasureCategory } from '../../models/quality-result.model';
+import { LoggerService } from './logger.service';
 import { PatientSummary } from '../../models/patient.model';
+import { LoggerService } from './logger.service';
 
 /**
  * Patient Point Data with Quality Metrics
@@ -106,6 +110,7 @@ export class QualityConstellationScene {
   };
 
   constructor(
+    private loggerService: LoggerService,
     private scene: THREE.Scene,
     private transformService: DataTransformService
   ) {}
@@ -117,7 +122,7 @@ export class QualityConstellationScene {
     qualityResults: QualityMeasureResult[],
     patients: PatientSummary[]
   ): void {
-    console.log(`Initializing Quality Constellation with ${qualityResults.length} results`);
+    this.logger.info(`Initializing Quality Constellation with ${qualityResults.length} results`);
 
     // Transform data to patient points
     this.patientPoints = this.createPatientPoints(qualityResults, patients);
@@ -132,7 +137,7 @@ export class QualityConstellationScene {
     // Update instances
     this.updateInstances();
 
-    console.log(`Created ${this.patientPoints.length} patient points`);
+    this.logger.info(`Created ${this.patientPoints.length} patient points`);
   }
 
   /**

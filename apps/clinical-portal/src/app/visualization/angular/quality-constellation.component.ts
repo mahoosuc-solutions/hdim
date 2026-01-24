@@ -1,31 +1,58 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { CommonModule } from '@angular/common';
+import { LoggerService } from './logger.service';
 import { FormsModule } from '@angular/forms';
+import { LoggerService } from './logger.service';
 import { MatCardModule } from '@angular/material/card';
+import { LoggerService } from './logger.service';
 import { MatButtonModule } from '@angular/material/button';
+import { LoggerService } from './logger.service';
 import { MatIconModule } from '@angular/material/icon';
+import { LoggerService } from './logger.service';
 import { MatChipsModule } from '@angular/material/chips';
+import { LoggerService } from './logger.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { LoggerService } from './logger.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { LoggerService } from './logger.service';
 import { MatInputModule } from '@angular/material/input';
+import { LoggerService } from './logger.service';
 import { MatSelectModule } from '@angular/material/select';
+import { LoggerService } from './logger.service';
 import { MatSliderModule } from '@angular/material/slider';
+import { LoggerService } from './logger.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { LoggerService } from './logger.service';
 import * as THREE from 'three';
+import { LoggerService } from './logger.service';
 import { Subject, takeUntil, forkJoin, of, throwError } from 'rxjs';
+import { LoggerService } from './logger.service';
 import { catchError } from 'rxjs/operators';
+import { LoggerService } from './logger.service';
 
 import { ThreeSceneService } from '../core/three-scene.service';
+import { LoggerService } from './logger.service';
 import { DataTransformService } from '../data/data-transform.service';
+import { LoggerService } from './logger.service';
 import { PatientService } from '../../services/patient.service';
+import { LoggerService } from './logger.service';
 import { EvaluationService } from '../../services/evaluation.service';
+import { LoggerService } from './logger.service';
 import { MeasureService } from '../../services/measure.service';
+import { LoggerService } from './logger.service';
 import { QualityConstellationScene, ConstellationFilters, PatientPoint, ConstellationStats } from '../scenes/quality-constellation.scene';
+import { LoggerService } from './logger.service';
 import { QualityMeasureResult, MeasureCategory } from '../../models/quality-result.model';
+import { LoggerService } from './logger.service';
 import { PatientSummary } from '../../models/patient.model';
+import { LoggerService } from './logger.service';
 import { ErrorValidationService } from '../../services/error-validation.service';
+import { LoggerService } from './logger.service';
 import { COMPLIANCE_CONFIG } from '../../config/compliance.config';
+import { LoggerService } from './logger.service';
 import { ErrorCode, ErrorSeverity } from '../../models/error.model';
+import { LoggerService } from './logger.service';
 
 /**
  * Quality Constellation Component
@@ -106,6 +133,7 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
   private hoveredPatient?: PatientPoint;
 
   constructor(
+    private loggerService: LoggerService,
     private sceneService: ThreeSceneService,
     private transformService: DataTransformService,
     private patientService: PatientService,
@@ -146,7 +174,7 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
       patients: this.patientService.getPatientsSummary(),
       qualityResults: this.evaluationService.getAllResults(0, 10000).pipe(
         catchError((error) => {
-          console.warn('Quality results API unavailable:', error.message);
+          this.logger.warn('Quality results API unavailable:', error.message);
           
           // Check if fallbacks are disabled
           if (COMPLIANCE_CONFIG.disableFallbacks && 
@@ -176,7 +204,7 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
           // Use API results if available
           if (qualityResults && qualityResults.length > 0) {
             this.qualityResults = qualityResults;
-            console.log(`Loaded ${qualityResults.length} quality results from API for ${patients.length} patients`);
+            this.logger.info(`Loaded ${qualityResults.length} quality results from API for ${patients.length} patients`);
           } else {
             // Check if fallbacks are disabled
             if (COMPLIANCE_CONFIG.disableFallbacks && 
@@ -203,7 +231,7 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
           this.initScene();
         },
         error: (error) => {
-          console.error('Error loading data:', error);
+          this.logger.error('Error loading data:', { error });
           this.loadingMessage = 'Error loading data. Please try again.';
         }
       });
@@ -250,7 +278,7 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
       }
     });
 
-    console.log(`Generated ${this.qualityResults.length} mock quality results for ${patients.length} patients`);
+    this.logger.info(`Generated ${this.qualityResults.length} mock quality results for ${patients.length} patients`);
   }
 
   /**

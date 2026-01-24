@@ -1,11 +1,19 @@
 import { Injectable, OnDestroy } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { HttpClient } from '@angular/common/http';
+import { LoggerService } from './logger.service';
 import { BehaviorSubject, Observable, of, timer, Subscription } from 'rxjs';
+import { LoggerService } from './logger.service';
 import { map, catchError, tap, switchMap } from 'rxjs/operators';
+import { LoggerService } from './logger.service';
 import { AuthService } from './auth.service';
+import { LoggerService } from './logger.service';
 import { EvaluationService } from './evaluation.service';
+import { LoggerService } from './logger.service';
 import { AuditService, AuditAction } from './audit.service';
+import { LoggerService } from './logger.service';
 import { API_CONFIG } from '../config/api.config';
+import { LoggerService } from './logger.service';
 import {
   ScheduledEvaluation,
   ScheduleExecution,
@@ -32,6 +40,7 @@ import {
   providedIn: 'root',
 })
 export class ScheduledEvaluationService implements OnDestroy {
+  private readonly logger = this.loggerService.withContext('ScheduledEvaluationService');
   private readonly STORAGE_KEY = 'healthdata_scheduled_evaluations';
   private readonly HISTORY_KEY = 'healthdata_schedule_history';
   private readonly CHECK_INTERVAL_MS = 60000; // Check every minute
@@ -45,6 +54,7 @@ export class ScheduledEvaluationService implements OnDestroy {
   private checkSubscription?: Subscription;
 
   constructor(
+    private loggerService: LoggerService,
     private http: HttpClient,
     private authService: AuthService,
     private evaluationService: EvaluationService,
@@ -75,7 +85,7 @@ export class ScheduledEvaluationService implements OnDestroy {
         this.schedulesSubject.next(updated);
       }
     } catch (error) {
-      console.error('Failed to load scheduled evaluations:', error);
+      this.logger.error('Failed to load scheduled evaluations:', { error });
       this.schedulesSubject.next([]);
     }
   }
@@ -87,7 +97,7 @@ export class ScheduledEvaluationService implements OnDestroy {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.schedulesSubject.value));
     } catch (error) {
-      console.error('Failed to save scheduled evaluations:', error);
+      this.logger.error('Failed to save scheduled evaluations:', { error });
     }
   }
 
@@ -103,7 +113,7 @@ export class ScheduledEvaluationService implements OnDestroy {
         this.executionsSubject.next(executions.slice(-100));
       }
     } catch (error) {
-      console.error('Failed to load execution history:', error);
+      this.logger.error('Failed to load execution history:', { error });
       this.executionsSubject.next([]);
     }
   }
@@ -117,7 +127,7 @@ export class ScheduledEvaluationService implements OnDestroy {
       const executions = this.executionsSubject.value.slice(-100);
       localStorage.setItem(this.HISTORY_KEY, JSON.stringify(executions));
     } catch (error) {
-      console.error('Failed to save execution history:', error);
+      this.logger.error('Failed to save execution history:', { error });
     }
   }
 
@@ -147,7 +157,7 @@ export class ScheduledEvaluationService implements OnDestroy {
 
       // Execute if within 1 minute window
       if (timeDiff <= 0 && timeDiff > -60000) {
-        console.log(`[ScheduledEvaluationService] Executing schedule: ${schedule.name}`);
+        this.logger.info(`[ScheduledEvaluationService] Executing schedule: ${schedule.name}`);
         this.executeSchedule(schedule);
       }
     });
@@ -484,9 +494,10 @@ export class ScheduledEvaluationService implements OnDestroy {
     const MAX_CONSECUTIVE_FAILURES = 3;
 
     if (schedule.consecutiveFailures >= MAX_CONSECUTIVE_FAILURES - 1) {
-      console.warn(
-        `[ScheduledEvaluationService] Pausing schedule "${schedule.name}" after ${MAX_CONSECUTIVE_FAILURES} consecutive failures`
-      );
+      this.logger.warn('Pausing schedule after consecutive failures', {
+        scheduleName: schedule.name,
+        maxFailures: MAX_CONSECUTIVE_FAILURES
+      });
       this.updateSchedule(schedule.id, {
         status: 'paused',
       }).subscribe();

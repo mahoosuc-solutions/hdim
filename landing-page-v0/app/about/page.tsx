@@ -44,9 +44,9 @@ const values = [
 ]
 
 const story = {
-  challenge: 'Healthcare organizations lose millions in quality bonuses every year. Not because they don\'t care - but because their tools weren\'t built for the humans who depend on them.',
-  decision: 'We made a choice. We could have optimized purely for speed. Instead, we prioritized privacy controls, auditability, and transparent data handling.',
-  difference: 'We chose harder engineering and patient-first defaults. That\'s the difference. We chose compliance when it mattered most.'
+  challenge: 'Healthcare organizations lose momentum in quality programs when data arrives late and workflows aren\'t built for how care actually happens.',
+  decision: 'We chose to build a real-time execution layer that connects the clinical reality to the CMS ideals of better care, smarter spending, and healthier people.',
+  difference: 'We chose harder engineering, privacy-by-design, and patient-first defaults. That\'s the difference — execution with integrity.'
 }
 
 const team = [
@@ -64,21 +64,90 @@ const team = [
   }
 ]
 
-const milestones = [
+const roadmap = [
   {
-    year: '2024',
-    title: 'Foundation',
-    description: 'HDIM founded with mission to bring evidence-based quality measurement to healthcare.',
+    title: 'High-Priority TODO Remediation',
+    description: 'Implementation of 16 high-priority TODOs across CMS Connector, security tenant isolation, and feature completeness.',
+    dueOn: 'Feb 2, 2026',
+    openIssues: 0,
+    closedIssues: 0
   },
   {
-    year: '2025',
-    title: 'Platform Launch',
-    description: 'Launched FHIR-native platform with real-time care gap detection and HEDIS 2026 support.',
+    title: 'Q1-2026-Infrastructure',
+    description: 'CI/CD pipelines and monitoring setup.',
+    dueOn: 'Mar 4, 2026',
+    openIssues: 4,
+    closedIssues: 0
   },
   {
-    year: '2026',
-    title: 'Enterprise Growth',
-    description: 'Serving health plans, ACOs, and health systems across the United States.',
+    title: 'Q1-2026-Auth',
+    description: 'SSO, MFA, RBAC, and session management.',
+    dueOn: 'Mar 9, 2026',
+    openIssues: 6,
+    closedIssues: 0
+  },
+  {
+    title: 'Q1-2026-Clinical-Portal',
+    description: 'Complete Clinical User Portal with patient search, care gaps, quality measures, and AI assistant.',
+    dueOn: 'Mar 14, 2026',
+    openIssues: 9,
+    closedIssues: 0
+  },
+  {
+    title: 'Q1-2026-Admin-Portal',
+    description: 'Enhanced Admin Portal with service monitoring, audit logs, and user/tenant management.',
+    dueOn: 'Mar 19, 2026',
+    openIssues: 5,
+    closedIssues: 0
+  },
+  {
+    title: 'Q1-2026-Agent-Studio',
+    description: 'AI Agent Studio for no-code agent creation and testing.',
+    dueOn: 'Mar 24, 2026',
+    openIssues: 4,
+    closedIssues: 0
+  },
+  {
+    title: 'Q1-2026-Testing',
+    description: 'E2E and performance testing.',
+    dueOn: 'Mar 25, 2026',
+    openIssues: 3,
+    closedIssues: 0
+  },
+  {
+    title: 'Q1-2026-Documentation',
+    description: 'User guides and API documentation.',
+    dueOn: 'Mar 26, 2026',
+    openIssues: 2,
+    closedIssues: 0
+  },
+  {
+    title: 'Q1-2026-Developer-Portal',
+    description: 'Developer Portal with API docs, sandbox, and webhook configuration.',
+    dueOn: 'Mar 27, 2026',
+    openIssues: 4,
+    closedIssues: 0
+  },
+  {
+    title: 'Q1-2026-Backend-Endpoints',
+    description: 'Critical backend endpoint completions for Q1 2026.',
+    dueOn: 'Mar 31, 2026',
+    openIssues: 2,
+    closedIssues: 11
+  },
+  {
+    title: 'Q1-2026-HIPAA-Compliance',
+    description: 'HIPAA compliance issues for Q1 2026.',
+    dueOn: 'Mar 31, 2026',
+    openIssues: 0,
+    closedIssues: 1
+  },
+  {
+    title: 'Q2-2026-Strategic-Integrations',
+    description: 'Strategic EHR integrations, patient engagement, and SDOH tools.',
+    dueOn: 'Jun 30, 2026',
+    openIssues: 3,
+    closedIssues: 0
   }
 ]
 
@@ -97,8 +166,7 @@ export default function AboutPage() {
               Because they do.
             </p>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              A world where no patient falls through the cracks - where every diabetic gets their A1C checked, 
-              every cancer screening happens on time, and every person struggling with depression gets the follow-up they deserve.
+              HDIM aims to be the ultimate healthcare execution platform for the CMS ideals of better care, smarter spending, and healthier people.
             </p>
           </div>
         </div>
@@ -131,7 +199,7 @@ export default function AboutPage() {
               </p>
               <div className="bg-white border-l-4 border-blue-600 p-4 rounded">
                 <code className="text-sm text-gray-800 font-mono">
-                  commit fix(hipaa): Reduce PHI cache TTL to ≤5min for HIPAA compliance
+                  commit refactor(privacy): Reduce PHI cache TTL to limit exposure
                 </code>
               </div>
             </div>
@@ -154,7 +222,7 @@ export default function AboutPage() {
               Our Values
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              The Five Non-Negotiables
+              The Four Non-Negotiables
             </p>
           </div>
 
@@ -210,23 +278,21 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Timeline */}
+      {/* Roadmap */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Our Journey
+              Roadmap
             </h2>
+            <p className="text-lg text-gray-600">
+              Sourced from GitHub milestones, updated January 24, 2026.
+            </p>
           </div>
 
           <div className="space-y-8">
-            {milestones.map((milestone, idx) => (
+            {roadmap.map((milestone, idx) => (
               <div key={idx} className="flex items-start">
-                <div className="w-24 flex-shrink-0">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {milestone.year}
-                  </div>
-                </div>
                 <div className="flex-1 bg-white border border-gray-200 rounded-xl p-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
                     {milestone.title}
@@ -234,6 +300,17 @@ export default function AboutPage() {
                   <p className="text-gray-700">
                     {milestone.description}
                   </p>
+                  <div className="mt-4 flex flex-wrap gap-3 text-sm text-gray-600">
+                    <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
+                      Target: {milestone.dueOn}
+                    </span>
+                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">
+                      Open issues: {milestone.openIssues}
+                    </span>
+                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">
+                      Closed issues: {milestone.closedIssues}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}

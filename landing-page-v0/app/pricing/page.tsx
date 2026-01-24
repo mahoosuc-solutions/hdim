@@ -213,14 +213,6 @@ export default function PricingPage() {
                   tier.highlight ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'
                 }`}
               >
-                {tier.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full">
-                      {tier.badge}
-                    </span>
-                  </div>
-                )}
-
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-gray-900">{tier.name}</h3>
                   <div className="mt-4">

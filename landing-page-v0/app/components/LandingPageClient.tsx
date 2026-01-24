@@ -89,6 +89,14 @@ export function LandingPageClient({ children }: LandingPageClientProps) {
                 Research
               </a>
               <a
+                href="/about"
+                className={`text-sm font-medium transition-colors ${
+                  scrolled ? 'text-gray-600 hover:text-primary' : 'text-white/80 hover:text-white'
+                }`}
+              >
+                About
+              </a>
+              <a
                 href="/explorer"
                 className={`text-sm font-medium transition-colors ${
                   scrolled ? 'text-gray-600 hover:text-primary' : 'text-white/80 hover:text-white'
@@ -156,6 +164,7 @@ export function LandingPageClient({ children }: LandingPageClientProps) {
               <a href="#features" className="block text-gray-600 hover:text-primary">Features</a>
               <a href="#solutions" className="block text-gray-600 hover:text-primary">Solutions</a>
               <a href="/research" className="block text-gray-600 hover:text-primary">Research</a>
+              <a href="/about" className="block text-gray-600 hover:text-primary">About</a>
               <a href="/explorer" className="block text-gray-600 hover:text-primary">Data Explorer</a>
               <a href="/downloads" className="block text-gray-600 hover:text-primary">Sample Data</a>
               <a href="/pricing" className="block text-gray-600 hover:text-primary">Pricing</a>

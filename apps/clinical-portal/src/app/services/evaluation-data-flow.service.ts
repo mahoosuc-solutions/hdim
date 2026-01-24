@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { Observable, Subject } from 'rxjs';
+import { LoggerService } from './logger.service';
 import { DataFlowStep } from '../components/evaluation-data-flow/evaluation-data-flow.component';
+import { LoggerService } from './logger.service';
 
 /**
  * Service for receiving real-time data flow steps via WebSocket
@@ -9,6 +12,7 @@ import { DataFlowStep } from '../components/evaluation-data-flow/evaluation-data
   providedIn: 'root',
 })
 export class EvaluationDataFlowService {
+  private readonly logger = this.loggerService.withContext('EvaluationDataFlowService');
   private ws?: WebSocket;
   private dataFlowSubject = new Subject<DataFlowStep>();
   private connected = false;
@@ -26,7 +30,7 @@ export class EvaluationDataFlowService {
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
-        console.log('[DataFlow] WebSocket connected');
+        this.logger.info('[DataFlow] WebSocket connected');
         this.connected = true;
       };
 
@@ -51,21 +55,21 @@ export class EvaluationDataFlowService {
             this.dataFlowSubject.next(step);
           }
         } catch (error) {
-          console.error('[DataFlow] Error parsing WebSocket message:', error);
+          this.logger.error('[DataFlow] Error parsing WebSocket message:', { error });
         }
       };
 
       this.ws.onerror = (error) => {
-        console.error('[DataFlow] WebSocket error:', error);
+        this.logger.error('[DataFlow] WebSocket error:', { error });
         this.connected = false;
       };
 
       this.ws.onclose = () => {
-        console.log('[DataFlow] WebSocket closed');
+        this.logger.info('[DataFlow] WebSocket closed');
         this.connected = false;
       };
     } catch (error) {
-      console.error('[DataFlow] Failed to connect WebSocket:', error);
+      this.logger.error('[DataFlow] Failed to connect WebSocket:', { error });
     }
 
     return this.dataFlowSubject.asObservable();

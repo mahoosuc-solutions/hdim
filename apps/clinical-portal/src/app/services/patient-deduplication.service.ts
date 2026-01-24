@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { LoggerService } from './logger.service';
 import {
   PatientSummaryWithLinks,
   PatientLink,
@@ -28,8 +29,9 @@ export class PatientDeduplicationService {
   // In-memory storage for patient links (would be backend API in production)
   private patientLinks: Map<string, PatientLink[]> = new Map();
   private masterPatientIds: Set<string> = new Set();
+  private readonly logger = this.loggerService.withContext('PatientDeduplicationService');
 
-  constructor() {
+  constructor(private loggerService: LoggerService) {
     // Initialize with some sample duplicate relationships for demonstration
     this.initializeSampleDuplicates();
   }
@@ -411,7 +413,7 @@ export class PatientDeduplicationService {
           linkedPatients.add(duplicateId);
           duplicatesLinked++;
 
-          console.log(`Linked duplicate: ${duplicateId} -> master: ${masterId} (score: ${matchScore})`);
+          this.logger.info('Linked duplicate patient to master', { duplicateId, masterId, matchScore });
         }
       }
     }
@@ -419,7 +421,7 @@ export class PatientDeduplicationService {
     // Count unique masters created
     const mastersCreated = this.masterPatientIds.size;
 
-    console.log(`Detection complete: ${mastersCreated} masters, ${duplicatesLinked} duplicates linked`);
+    this.logger.info('Patient deduplication detection complete', { mastersCreated, duplicatesLinked });
 
     return of({
       mastersCreated,

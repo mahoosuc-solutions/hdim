@@ -67,7 +67,8 @@ public class MedicationReconciliationController {
      * @return created medication reconciliation with 201 status
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_WRITE')") // Write operation
     @Operation(
         summary = "Start medication reconciliation",
         description = "Initiates medication reconciliation process at transitions of care"
@@ -103,7 +104,8 @@ public class MedicationReconciliationController {
      * @return completed medication reconciliation with 200 status
      */
     @PutMapping("/complete")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_WRITE')") // Write operation
     @Operation(
         summary = "Complete medication reconciliation",
         description = "Finalizes medication reconciliation process after patient education"
@@ -128,7 +130,8 @@ public class MedicationReconciliationController {
      * @return medication reconciliation if found, 404 otherwise
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'VIEWER')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation
     @Operation(
         summary = "Get medication reconciliation",
         description = "Retrieves a specific medication reconciliation by ID"
@@ -158,14 +161,15 @@ public class MedicationReconciliationController {
      * @return paginated list of pending med recs
      */
     @GetMapping("/pending")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation
     @Operation(
         summary = "Get pending medication reconciliations",
         description = "Retrieves medication reconciliations requiring action"
     )
     public ResponseEntity<Page<MedicationReconciliationEntity>> getPendingReconciliations(
             @RequestHeader(value = "X-Tenant-ID", required = true) String tenantId,
-            @ParameterObject Pageable pageable) {
+            Pageable pageable) {
         log.info("Retrieving pending medication reconciliations from tenant {}", tenantId);
 
         Page<MedicationReconciliationEntity> pending =
@@ -185,7 +189,8 @@ public class MedicationReconciliationController {
      * @return paginated patient med rec history
      */
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'VIEWER')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation
     @Operation(
         summary = "Get patient medication reconciliation history",
         description = "Retrieves all medication reconciliations for a specific patient"
@@ -193,7 +198,7 @@ public class MedicationReconciliationController {
     public ResponseEntity<Page<MedicationReconciliationEntity>> getPatientMedicationReconciliationHistory(
             @RequestHeader(value = "X-Tenant-ID", required = true) String tenantId,
             @PathVariable UUID patientId,
-            @ParameterObject Pageable pageable) {
+            Pageable pageable) {
         log.info("Retrieving med rec history for patient {} from tenant {}",
             patientId, tenantId);
 
@@ -216,7 +221,8 @@ public class MedicationReconciliationController {
      * @return paginated med recs with specified trigger
      */
     @GetMapping("/trigger/{triggerType}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'ANALYST')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation (analytics)
     @Operation(
         summary = "Get medication reconciliations by trigger type",
         description = "Retrieves medication reconciliations filtered by what triggered them"
@@ -224,7 +230,7 @@ public class MedicationReconciliationController {
     public ResponseEntity<Page<MedicationReconciliationEntity>> getByTriggerType(
             @RequestHeader(value = "X-Tenant-ID", required = true) String tenantId,
             @PathVariable MedicationReconciliationEntity.TriggerType triggerType,
-            @ParameterObject Pageable pageable) {
+            Pageable pageable) {
         log.info("Retrieving med recs by trigger type: {} from tenant {}",
             triggerType, tenantId);
 
@@ -246,7 +252,8 @@ public class MedicationReconciliationController {
      * @return updated medication reconciliation
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_WRITE')") // Write operation
     @Operation(
         summary = "Update medication reconciliation",
         description = "Updates medication reconciliation with medication counts, discrepancies, and education status"
@@ -274,7 +281,8 @@ public class MedicationReconciliationController {
      * @return medication reconciliation metrics
      */
     @GetMapping("/metrics/summary")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'ANALYST')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation (analytics)
     @Operation(
         summary = "Get medication reconciliation metrics",
         description = "Retrieves metrics for medication reconciliation completion and quality"
@@ -299,7 +307,8 @@ public class MedicationReconciliationController {
      * @return list of med recs needing follow-up education
      */
     @GetMapping("/poor-understanding")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation
     @Operation(
         summary = "Get med recs with poor understanding",
         description = "Retrieves medication reconciliations where patient showed poor understanding"

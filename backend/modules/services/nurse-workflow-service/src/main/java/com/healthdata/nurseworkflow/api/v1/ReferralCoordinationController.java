@@ -64,7 +64,8 @@ public class ReferralCoordinationController {
      * @return created referral with 201 status
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'CARE_GAP_WRITE')") // Care coordination write
     @Operation(
         summary = "Create referral",
         description = "Initiates referral request to specialist"
@@ -94,7 +95,8 @@ public class ReferralCoordinationController {
      * @return referral if found, 404 otherwise
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'VIEWER')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation
     @Operation(
         summary = "Get referral",
         description = "Retrieves a specific referral by ID"
@@ -124,7 +126,8 @@ public class ReferralCoordinationController {
      * @return paginated list of pending referrals
      */
     @GetMapping("/pending")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation
     @Operation(
         summary = "Get pending referrals",
         description = "Retrieves referrals requiring action"
@@ -151,7 +154,8 @@ public class ReferralCoordinationController {
      * @return paginated patient referral history
      */
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'VIEWER')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation
     @Operation(
         summary = "Get patient referral history",
         description = "Retrieves all referrals for a specific patient"
@@ -181,7 +185,8 @@ public class ReferralCoordinationController {
      * @return paginated referrals with specified status
      */
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'ANALYST')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation (analytics)
     @Operation(
         summary = "Get referrals by status",
         description = "Retrieves referrals filtered by status"
@@ -210,7 +215,8 @@ public class ReferralCoordinationController {
      * @return paginated referrals to specified specialty
      */
     @GetMapping("/specialty/{specialtyType}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'ANALYST')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation (analytics)
     @Operation(
         summary = "Get referrals by specialty",
         description = "Retrieves referrals filtered by specialty type"
@@ -237,7 +243,8 @@ public class ReferralCoordinationController {
      * @return list of referrals needing appointment scheduling
      */
     @GetMapping("/awaiting-appointment-scheduling")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'CARE_GAP_WRITE')") // Care coordination write
     @Operation(
         summary = "Get referrals awaiting appointment scheduling",
         description = "Retrieves referrals that need appointment scheduling coordination"
@@ -262,7 +269,8 @@ public class ReferralCoordinationController {
      * @return list of referrals needing results follow-up
      */
     @GetMapping("/awaiting-results")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'CARE_GAP_WRITE')") // Care coordination write
     @Operation(
         summary = "Get referrals awaiting results follow-up",
         description = "Retrieves referrals where patient attended appointment but results pending"
@@ -287,7 +295,8 @@ public class ReferralCoordinationController {
      * @return list of urgent referrals needing scheduling
      */
     @GetMapping("/urgent-awaiting-scheduling")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'CARE_GAP_WRITE')") // Care coordination write
     @Operation(
         summary = "Get urgent referrals awaiting scheduling",
         description = "Retrieves URGENT priority referrals that need immediate scheduling coordination"
@@ -314,7 +323,8 @@ public class ReferralCoordinationController {
      * @return updated referral
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'CARE_GAP_WRITE')") // Care coordination write
     @Operation(
         summary = "Update referral",
         description = "Updates referral status, authorization, appointment, and results tracking"
@@ -342,7 +352,8 @@ public class ReferralCoordinationController {
      * @return referral metrics summary
      */
     @GetMapping("/metrics/summary")
-    @PreAuthorize("hasAnyRole('NURSE', 'ADMIN', 'ANALYST')")
+    
+    @PreAuthorize("hasPermission(#tenantId, 'PATIENT_READ')") // Read operation (analytics)
     @Operation(
         summary = "Get referral metrics",
         description = "Retrieves metrics for referral completion and quality"

@@ -25,14 +25,14 @@ public class ClinicalDocumentController {
     private final ClinicalDocumentService documentService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('USER', 'CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<List<ClinicalDocumentDto>> getDocuments(
             @RequestHeader("X-Tenant-ID") String tenantId) {
         return ResponseEntity.ok(documentService.getDocuments(tenantId));
     }
 
     @GetMapping("/paginated")
-    @PreAuthorize("hasAnyRole('USER', 'CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<Page<ClinicalDocumentDto>> getDocumentsPaginated(
             @RequestHeader("X-Tenant-ID") String tenantId,
             Pageable pageable) {
@@ -40,7 +40,7 @@ public class ClinicalDocumentController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<ClinicalDocumentDto> getDocument(
             @PathVariable UUID id,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -50,7 +50,7 @@ public class ClinicalDocumentController {
     }
 
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('USER', 'CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<List<ClinicalDocumentDto>> getPatientDocuments(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -58,7 +58,7 @@ public class ClinicalDocumentController {
     }
 
     @GetMapping("/patient/{patientId}/paginated")
-    @PreAuthorize("hasAnyRole('USER', 'CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<Page<ClinicalDocumentDto>> getPatientDocumentsPaginated(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -67,7 +67,7 @@ public class ClinicalDocumentController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('USER', 'CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<Page<ClinicalDocumentDto>> searchDocuments(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam String query,
@@ -76,7 +76,7 @@ public class ClinicalDocumentController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<ClinicalDocumentDto> createDocument(
             @Valid @RequestBody ClinicalDocumentDto dto,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -85,7 +85,7 @@ public class ClinicalDocumentController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<ClinicalDocumentDto> updateDocument(
             @PathVariable UUID id,
             @Valid @RequestBody ClinicalDocumentDto dto,
@@ -96,7 +96,7 @@ public class ClinicalDocumentController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<Void> deleteDocument(
             @PathVariable UUID id,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -107,7 +107,7 @@ public class ClinicalDocumentController {
     }
 
     @PostMapping("/{id}/attachments")
-    @PreAuthorize("hasAnyRole('CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<DocumentAttachmentDto> addAttachment(
             @PathVariable UUID id,
             @Valid @RequestBody DocumentAttachmentDto dto,
@@ -117,7 +117,7 @@ public class ClinicalDocumentController {
     }
 
     @GetMapping("/attachments/{attachmentId}")
-    @PreAuthorize("hasAnyRole('USER', 'CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<DocumentAttachmentDto> getAttachment(
             @PathVariable UUID attachmentId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -127,7 +127,7 @@ public class ClinicalDocumentController {
     }
 
     @DeleteMapping("/attachments/{attachmentId}")
-    @PreAuthorize("hasAnyRole('CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<Void> deleteAttachment(
             @PathVariable UUID attachmentId,
             @RequestHeader("X-Tenant-ID") String tenantId) {

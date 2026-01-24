@@ -34,7 +34,7 @@ public class VisualizationController {
     /**
      * Get WebSocket connection statistics
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/connections")
     @Operation(summary = "Get WebSocket connection statistics",
@@ -52,7 +52,7 @@ public class VisualizationController {
     /**
      * Get connection count for a specific tenant
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/connections/{tenantId}")
     @Operation(summary = "Get connection count for tenant",
@@ -69,7 +69,7 @@ public class VisualizationController {
     /**
      * Get visualization configuration
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/config")
     @Operation(summary = "Get visualization configuration",
@@ -104,7 +104,7 @@ public class VisualizationController {
     /**
      * Health check for visualization system
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/health")
     @Operation(summary = "Visualization system health check",
@@ -122,7 +122,7 @@ public class VisualizationController {
     /**
      * Get sample WebSocket message format for documentation
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/sample-message")
     @Operation(summary = "Get sample WebSocket message",

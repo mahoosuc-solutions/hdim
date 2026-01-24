@@ -27,10 +27,10 @@ public class PatientController {
      * GET /api/v1/patients/{patientId}
      * Find patient by ID
      *
-     * Authorization: ADMIN, EVALUATOR, ANALYST, VIEWER can read patient data
+     * Authorization: PATIENT_READ permission required
      */
     @GetMapping("/{patientId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     public ResponseEntity<PatientResponse> getPatientById(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -47,10 +47,10 @@ public class PatientController {
      * GET /api/v1/patients/mrn/{mrn}
      * Find patient by MRN
      *
-     * Authorization: ADMIN, EVALUATOR, ANALYST, VIEWER can lookup by MRN
+     * Authorization: PATIENT_SEARCH permission required
      */
     @GetMapping("/mrn/{mrn}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_SEARCH')")
     public ResponseEntity<PatientResponse> getPatientByMrn(
             @PathVariable String mrn,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -67,10 +67,10 @@ public class PatientController {
      * GET /api/v1/patients/insurance/{memberId}
      * Find patient by insurance member ID
      *
-     * Authorization: ADMIN, EVALUATOR, ANALYST, VIEWER can lookup by member ID
+     * Authorization: PATIENT_SEARCH permission required
      */
     @GetMapping("/insurance/{memberId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_SEARCH')")
     public ResponseEntity<PatientResponse> getPatientByInsuranceMemberId(
             @PathVariable String memberId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -87,10 +87,10 @@ public class PatientController {
      * GET /api/v1/patients
      * List all patients in tenant
      *
-     * Authorization: ADMIN, EVALUATOR, ANALYST, VIEWER can list patients
+     * Authorization: PATIENT_SEARCH permission required
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_SEARCH')")
     public ResponseEntity<List<PatientResponse>> getAllPatients(
             @RequestHeader("X-Tenant-ID") String tenantId) {
         log.debug("GET /api/v1/patients - tenant: {}", tenantId);
@@ -108,10 +108,10 @@ public class PatientController {
      * OPTIONS /api/v1/patients
      * CORS preflight support
      *
-     * Authorization: Permitted for all authenticated users (needed for CORS)
+     * Authorization: PATIENT_READ permission required (needed for CORS)
      */
     @RequestMapping(method = RequestMethod.OPTIONS)
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     public ResponseEntity<?> options() {
         return ResponseEntity.ok().build();
     }
@@ -120,10 +120,10 @@ public class PatientController {
      * HEAD /api/v1/patients/{patientId}
      * Check if patient exists
      *
-     * Authorization: ADMIN, EVALUATOR, ANALYST, VIEWER can check existence
+     * Authorization: PATIENT_READ permission required
      */
     @RequestMapping(value = "/{patientId}", method = RequestMethod.HEAD)
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     public ResponseEntity<?> headPatient(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId) {

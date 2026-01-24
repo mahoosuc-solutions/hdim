@@ -38,7 +38,7 @@ public class PredictiveAnalyticsController {
     private final PopulationRiskStratifier riskStratifier;
     private final PredictedCareGapService predictedCareGapService;
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('report:read')")
     @PostMapping(value = "/readmission-risk/{patientId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ReadmissionRiskScore> predictReadmissionRisk(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -63,7 +63,7 @@ public class PredictiveAnalyticsController {
         return ResponseEntity.ok(score);
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('report:read')")
     @PostMapping(value = "/cost-prediction/{patientId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CostBreakdown> predictCost(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -85,7 +85,7 @@ public class PredictiveAnalyticsController {
         return ResponseEntity.ok(cost);
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('report:read')")
     @PostMapping(value = "/disease-progression/{patientId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ProgressionRisk> predictDiseaseProgression(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -107,7 +107,7 @@ public class PredictiveAnalyticsController {
         return ResponseEntity.ok(risk);
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('report:read')")
     @GetMapping(value = "/population/risk-stratification", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<RiskCohort>> getPopulationRiskStratification(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -126,7 +126,7 @@ public class PredictiveAnalyticsController {
         return ResponseEntity.ok(cohorts);
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('report:read')")
     @GetMapping(value = "/population/high-risk", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<String>> getHighRiskPatients(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -161,7 +161,7 @@ public class PredictiveAnalyticsController {
      * @param providerData Provider data including patient panel information
      * @return List of predicted care gaps sorted by risk score
      */
-    @PreAuthorize("hasAnyRole('PROVIDER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('report:read')")
     @PostMapping(value = "/providers/{providerId}/predicted-gaps", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<PredictedCareGap>> getPredictedGapsForProvider(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -194,7 +194,7 @@ public class PredictiveAnalyticsController {
      * @param patientData Patient data including measures and adherence history
      * @return List of predicted care gaps for the patient
      */
-    @PreAuthorize("hasAnyRole('PROVIDER', 'ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('report:read')")
     @PostMapping(value = "/patients/{patientId}/predicted-gaps", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<PredictedCareGap>> getPredictedGapsForPatient(
             @RequestHeader("X-Tenant-ID") String tenantId,

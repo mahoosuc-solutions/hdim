@@ -52,7 +52,7 @@ public class CqlEvaluationController {
      * Create and execute a CQL evaluation
      * POST /api/v1/cql/evaluations
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_EXECUTE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping
     public ResponseEntity<CqlEvaluation> createAndExecuteEvaluation(
@@ -71,7 +71,7 @@ public class CqlEvaluationController {
      * Execute an existing evaluation
      * POST /api/v1/cql/evaluations/{id}/execute
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_EXECUTE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/execute")
     public ResponseEntity<CqlEvaluation> executeEvaluation(
@@ -87,7 +87,7 @@ public class CqlEvaluationController {
      * Get all evaluations for a tenant
      * GET /api/v1/cql/evaluations
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping
     public ResponseEntity<Page<CqlEvaluation>> getAllEvaluations(
@@ -103,7 +103,7 @@ public class CqlEvaluationController {
      * Get an evaluation by ID
      * GET /api/v1/cql/evaluations/{id}
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/{id}")
     public ResponseEntity<CqlEvaluation> getEvaluation(
@@ -120,7 +120,7 @@ public class CqlEvaluationController {
      * Get all evaluations for a patient
      * GET /api/v1/cql/evaluations/patient/{patientId}
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}")
     public ResponseEntity<Page<CqlEvaluation>> getEvaluationsForPatient(
@@ -138,7 +138,7 @@ public class CqlEvaluationController {
      * Get evaluations for a library
      * GET /api/v1/cql/evaluations/library/{libraryId}
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/library/{libraryId}")
     public ResponseEntity<Page<CqlEvaluation>> getEvaluationsForLibrary(
@@ -156,7 +156,7 @@ public class CqlEvaluationController {
      * Get the latest evaluation for a patient and library
      * GET /api/v1/cql/evaluations/patient/{patientId}/library/{libraryId}/latest
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/library/{libraryId}/latest")
     public ResponseEntity<CqlEvaluation> getLatestEvaluationForPatientAndLibrary(
@@ -175,7 +175,7 @@ public class CqlEvaluationController {
      * Get evaluations by status
      * GET /api/v1/cql/evaluations/by-status/{status}
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/by-status/{status}")
     public ResponseEntity<Page<CqlEvaluation>> getEvaluationsByStatus(
@@ -193,7 +193,7 @@ public class CqlEvaluationController {
      * Get evaluations within a date range
      * GET /api/v1/cql/evaluations/date-range?start={start}&end={end}
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/date-range")
     public ResponseEntity<List<CqlEvaluation>> getEvaluationsByDateRange(
@@ -211,7 +211,7 @@ public class CqlEvaluationController {
      * Get evaluations for a patient within a date range
      * GET /api/v1/cql/evaluations/patient/{patientId}/date-range?start={start}&end={end}
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/date-range")
     public ResponseEntity<List<CqlEvaluation>> getEvaluationsForPatientByDateRange(
@@ -231,7 +231,7 @@ public class CqlEvaluationController {
      * Get successful evaluations for a patient
      * GET /api/v1/cql/evaluations/patient/{patientId}/successful
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/successful")
     public ResponseEntity<List<CqlEvaluation>> getSuccessfulEvaluationsForPatient(
@@ -249,7 +249,7 @@ public class CqlEvaluationController {
      * Retry a failed evaluation
      * POST /api/v1/cql/evaluations/{id}/retry
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_EXECUTE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/retry")
     public ResponseEntity<CqlEvaluation> retryEvaluation(
@@ -265,7 +265,7 @@ public class CqlEvaluationController {
      * Batch evaluate multiple patients
      * POST /api/v1/cql/evaluations/batch
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_EXECUTE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/batch")
     public ResponseEntity<List<CqlEvaluation>> batchEvaluate(
@@ -285,7 +285,7 @@ public class CqlEvaluationController {
      * Get failed evaluations for retry
      * GET /api/v1/cql/evaluations/failed-for-retry?hoursBack={hours}
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/failed-for-retry")
     public ResponseEntity<List<CqlEvaluation>> getFailedEvaluationsForRetry(
@@ -303,7 +303,7 @@ public class CqlEvaluationController {
      * Count evaluations by status
      * GET /api/v1/cql/evaluations/count/by-status/{status}
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/count/by-status/{status}")
     public ResponseEntity<Long> countEvaluationsByStatus(
@@ -319,7 +319,7 @@ public class CqlEvaluationController {
      * Count evaluations for a library
      * GET /api/v1/cql/evaluations/count/library/{libraryId}
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/count/library/{libraryId}")
     public ResponseEntity<Long> countEvaluationsForLibrary(
@@ -335,7 +335,7 @@ public class CqlEvaluationController {
      * Count evaluations for a patient
      * GET /api/v1/cql/evaluations/count/patient/{patientId}
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/count/patient/{patientId}")
     public ResponseEntity<Long> countEvaluationsForPatient(
@@ -351,7 +351,7 @@ public class CqlEvaluationController {
      * Get average evaluation duration for a library
      * GET /api/v1/cql/evaluations/avg-duration/library/{libraryId}
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/avg-duration/library/{libraryId}")
     public ResponseEntity<Double> getAverageDurationForLibrary(
@@ -367,7 +367,7 @@ public class CqlEvaluationController {
      * Delete old evaluations (data retention)
      * DELETE /api/v1/cql/evaluations/old?daysToRetain={days}
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('MEASURE_WRITE')")
     @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/old")
     public ResponseEntity<Void> deleteOldEvaluations(

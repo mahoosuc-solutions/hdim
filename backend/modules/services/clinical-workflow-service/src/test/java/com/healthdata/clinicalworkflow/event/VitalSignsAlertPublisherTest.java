@@ -1,6 +1,7 @@
 package com.healthdata.clinicalworkflow.event;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.audit.service.AuditService;
 import com.healthdata.clinicalworkflow.domain.model.VitalSignsRecordEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -26,14 +28,26 @@ import static org.mockito.Mockito.*;
 /**
  * Unit tests for VitalSignsAlertPublisher
  *
- * Tests issue #291 implementation: Kafka event publishing for abnormal vitals
- * with proper topic routing, partition keys, and event structure.
+ * Tests Issue #291: Kafka event publishing for abnormal vitals
+ * Tests Issue #288: WebSocket real-time alerts to providers
+ *
+ * Coverage:
+ * - Kafka topic routing (critical vs warning)
+ * - WebSocket destination routing (provider-specific vs broadcast)
+ * - Audit logging for HIPAA compliance
+ * - Error handling (non-blocking behavior)
  */
 @ExtendWith(MockitoExtension.class)
 class VitalSignsAlertPublisherTest {
 
     @Mock
     private KafkaTemplate<String, String> kafkaTemplate;
+
+    @Mock
+    private SimpMessagingTemplate messagingTemplate;
+
+    @Mock
+    private AuditService auditService;
 
     @Mock
     private ObjectMapper objectMapper;
@@ -337,12 +351,179 @@ class VitalSignsAlertPublisherTest {
     @Test
     void shouldNotThrowExceptionOnAnyFailure() {
         // Given: ObjectMapper is null (simulates unexpected error)
-        publisher = new VitalSignsAlertPublisher(kafkaTemplate, null);
+        publisher = new VitalSignsAlertPublisher(kafkaTemplate, messagingTemplate, auditService, null);
 
         // When: Publish alert
         publisher.publishAlert(testVitals, null, null);
 
         // Then: No exception thrown (non-blocking behavior)
         // Test passes if no exception is thrown
+    }
+
+    // ========================================
+    // WebSocket Tests (Issue #288)
+    // ========================================
+
+    @Test
+    void shouldPublishToWebSocketProviderDestination() throws Exception {
+        // Given: Critical vital signs with recordedBy field
+        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(null);
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+
+        // When: Publish alert
+        publisher.publishAlert(testVitals, "Doe, John", "EXAM-101");
+
+        // Then: Published to provider-specific WebSocket destination
+        verify(messagingTemplate).convertAndSend(
+                eq("/topic/vitals-alerts/ma-smith"),
+                any(VitalSignsAlertEvent.class)
+        );
+    }
+
+    @Test
+    void shouldPublishToCriticalBroadcastDestination() throws Exception {
+        // Given: Critical vital signs alert
+        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(null);
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+
+        // When: Publish critical alert
+        publisher.publishAlert(testVitals, "Doe, John", "EXAM-101");
+
+        // Then: Published to critical broadcast destination
+        verify(messagingTemplate).convertAndSend(
+                eq("/topic/vitals-alerts/critical"),
+                any(VitalSignsAlertEvent.class)
+        );
+    }
+
+    @Test
+    void shouldNotPublishToCriticalBroadcastForWarningAlerts() throws Exception {
+        // Given: Warning vital signs alert (not critical)
+        testVitals.setAlertStatus("warning");
+        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(null);
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+
+        // When: Publish warning alert
+        publisher.publishAlert(testVitals, "Doe, John", "EXAM-101");
+
+        // Then: NOT published to critical broadcast (only warning topic)
+        verify(messagingTemplate, never()).convertAndSend(
+                eq("/topic/vitals-alerts/critical"),
+                any(VitalSignsAlertEvent.class)
+        );
+    }
+
+    @Test
+    void shouldNotPublishToProviderDestinationWhenRecordedByIsNull() throws Exception {
+        // Given: Vital signs without recordedBy field
+        testVitals.setRecordedBy(null);
+        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(null);
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+
+        // When: Publish alert
+        publisher.publishAlert(testVitals, "Doe, John", "EXAM-101");
+
+        // Then: Only published to critical broadcast (no provider-specific)
+        verify(messagingTemplate, times(1)).convertAndSend(anyString(), any(VitalSignsAlertEvent.class));
+        verify(messagingTemplate).convertAndSend(
+                eq("/topic/vitals-alerts/critical"),
+                any(VitalSignsAlertEvent.class)
+        );
+    }
+
+    @Test
+    void shouldNotPublishToProviderDestinationWhenRecordedByIsBlank() throws Exception {
+        // Given: Vital signs with blank recordedBy field
+        testVitals.setRecordedBy("   ");
+        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(null);
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+
+        // When: Publish alert
+        publisher.publishAlert(testVitals, "Doe, John", "EXAM-101");
+
+        // Then: Only published to critical broadcast (no provider-specific)
+        verify(messagingTemplate, times(1)).convertAndSend(anyString(), any(VitalSignsAlertEvent.class));
+    }
+
+    @Test
+    void shouldHandleWebSocketFailureGracefully() throws Exception {
+        // Given: WebSocket publish fails
+        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(null);
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+        doThrow(new RuntimeException("WebSocket connection lost"))
+                .when(messagingTemplate).convertAndSend(anyString(), any(VitalSignsAlertEvent.class));
+
+        // When: Publish alert
+        publisher.publishAlert(testVitals, "Doe, John", "EXAM-101");
+
+        // Then: Kafka publish still succeeds (WebSocket failure doesn't block)
+        verify(kafkaTemplate).send(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void shouldAuditProviderNotificationSuccess() throws Exception {
+        // Given: Critical vital signs with recordedBy field
+        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(null);
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+
+        // When: Publish alert
+        publisher.publishAlert(testVitals, "Doe, John", "EXAM-101");
+
+        // Then: Audit events logged for both provider-specific and critical broadcast
+        verify(auditService, atLeast(2)).logAuditEvent(any());
+    }
+
+    @Test
+    void shouldAuditWebSocketFailure() throws Exception {
+        // Given: WebSocket publish fails
+        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(null);
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+        doThrow(new RuntimeException("WebSocket connection lost"))
+                .when(messagingTemplate).convertAndSend(anyString(), any(VitalSignsAlertEvent.class));
+
+        // When: Publish alert
+        publisher.publishAlert(testVitals, "Doe, John", "EXAM-101");
+
+        // Then: Failure audited
+        verify(auditService, atLeastOnce()).logAuditEvent(any());
+    }
+
+    @Test
+    void shouldHandleAuditServiceFailureGracefully() throws Exception {
+        // Given: Audit service fails
+        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(null);
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+        doThrow(new RuntimeException("Audit service unavailable"))
+                .when(auditService).logAuditEvent(any());
+
+        // When: Publish alert
+        publisher.publishAlert(testVitals, "Doe, John", "EXAM-101");
+
+        // Then: WebSocket publish still succeeds (audit failure doesn't block)
+        verify(messagingTemplate, times(2)).convertAndSend(anyString(), any(VitalSignsAlertEvent.class));
+    }
+
+    @Test
+    void shouldPublishToKafkaAndWebSocketInParallel() throws Exception {
+        // Given: Critical vital signs
+        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(null);
+        when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+
+        // When: Publish alert
+        publisher.publishAlert(testVitals, "Doe, John", "EXAM-101");
+
+        // Then: Both Kafka and WebSocket publish called
+        verify(kafkaTemplate).send(eq("vitals.alert.critical"), anyString(), anyString());
+        verify(messagingTemplate, times(2)).convertAndSend(anyString(), any(VitalSignsAlertEvent.class));
     }
 }

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0005-add-ocr-fields-to-document-attachments" author="claude-sonnet-4.5">
+        <comment>Add OCR text extraction fields to document_attachments table for Issue #245</comment>
+
+        <addColumn tableName="document_attachments">
+            <column name="ocr_text" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="ocr_processed_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+            <column name="ocr_status" type="VARCHAR(50)" defaultValue="PENDING">
+                <constraints nullable="true"/>
+            </column>
+            <column name="ocr_error_message" type="VARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <createIndex tableName="document_attachments" indexName="idx_attachment_ocr_status">
+            <column name="ocr_status"/>
+        </createIndex>
+
+        <createIndex tableName="document_attachments" indexName="idx_attachment_ocr_text_fulltext">
+            <column name="ocr_text"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="document_attachments" indexName="idx_attachment_ocr_text_fulltext"/>
+            <dropIndex tableName="document_attachments" indexName="idx_attachment_ocr_status"/>
+            <dropColumn tableName="document_attachments">
+                <column name="ocr_text"/>
+                <column name="ocr_processed_at"/>
+                <column name="ocr_status"/>
+                <column name="ocr_error_message"/>
+            </dropColumn>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

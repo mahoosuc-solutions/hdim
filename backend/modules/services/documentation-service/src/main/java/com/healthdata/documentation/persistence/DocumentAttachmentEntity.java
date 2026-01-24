@@ -73,6 +73,19 @@ public class DocumentAttachmentEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "ocr_text", columnDefinition = "TEXT")
+    private String ocrText; // Extracted text from OCR processing
+
+    @Column(name = "ocr_processed_at")
+    private LocalDateTime ocrProcessedAt; // When OCR processing completed
+
+    @Column(name = "ocr_status", length = 50)
+    @Builder.Default
+    private String ocrStatus = "PENDING"; // PENDING, PROCESSING, COMPLETED, FAILED
+
+    @Column(name = "ocr_error_message", length = 500)
+    private String ocrErrorMessage; // Error message if OCR failed
+
     @PrePersist
     protected void onCreate() {
         if (id == null) {
@@ -87,5 +100,17 @@ public class DocumentAttachmentEntity {
 
     public boolean isImage() {
         return contentType != null && contentType.startsWith("image/");
+    }
+
+    public boolean isOcrSupported() {
+        return isPdf() || isImage();
+    }
+
+    public boolean isOcrCompleted() {
+        return "COMPLETED".equals(ocrStatus);
+    }
+
+    public boolean isOcrFailed() {
+        return "FAILED".equals(ocrStatus);
     }
 }

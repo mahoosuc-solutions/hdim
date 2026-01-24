@@ -31,6 +31,13 @@ public interface QAReviewRepository extends JpaRepository<QAReviewEntity, String
             @Param("start") Instant start,
             @Param("end") Instant end);
 
+    @Query("SELECT r FROM QAReviewEntity r WHERE r.tenantId = :tenantId " +
+           "AND r.reviewedAt BETWEEN :start AND :end")
+    List<QAReviewEntity> findByTenantIdAndReviewedAtBetween(
+            @Param("tenantId") String tenantId,
+            @Param("start") Instant start,
+            @Param("end") Instant end);
+
     // Simplified query - agentType filtering handled in service layer if needed
     // Note: agentType parameter is accepted but filtering is done in service layer
     // to avoid complex JPQL entity joins between qa_reviews and ai_agent_decision_events

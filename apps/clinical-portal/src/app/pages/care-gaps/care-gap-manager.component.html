@@ -368,10 +368,15 @@
             <tr
               mat-row
               *matRowDef="let row; columns: displayedColumns"
-              class="care-gap-row"
+              class="care-gap-row clickable-row"
               [class.high-urgency-row]="row.urgency === 'high'"
               [class.medium-urgency-row]="row.urgency === 'medium'"
               [class.low-urgency-row]="row.urgency === 'low'"
+              (click)="onRowClick(row, $event)"
+              [attr.aria-label]="'View patient ' + row.patientName + ' details'"
+              tabindex="0"
+              (keydown.enter)="onRowClick(row, $event)"
+              (keydown.space)="onRowClick(row, $event); $event.preventDefault()"
             ></tr>
           </table>
         </div>

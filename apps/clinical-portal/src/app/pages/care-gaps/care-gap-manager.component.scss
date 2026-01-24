@@ -284,7 +284,7 @@
     }
 
     .care-gap-row {
-      transition: background-color 0.2s;
+      transition: background-color 0.2s, box-shadow 0.2s;
 
       &:hover {
         background-color: #f9f9f9;
@@ -300,6 +300,40 @@
 
       &.low-urgency-row {
         border-left: 4px solid #388e3c;
+      }
+
+      // Clickable row styling (Issue #239)
+      &.clickable-row {
+        cursor: pointer;
+
+        &:hover {
+          background-color: #e3f2fd;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        &:focus {
+          outline: 2px solid #1976d2;
+          outline-offset: -2px;
+          background-color: #e3f2fd;
+        }
+
+        &:active {
+          background-color: #bbdefb;
+        }
+      }
+    }
+
+    // Accessibility: High contrast mode support
+    @media (prefers-contrast: high) {
+      .care-gap-row.clickable-row:focus {
+        outline-width: 3px;
+      }
+    }
+
+    // Accessibility: Reduced motion
+    @media (prefers-reduced-motion: reduce) {
+      .care-gap-row {
+        transition: none;
       }
     }
 

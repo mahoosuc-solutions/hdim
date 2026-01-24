@@ -1,60 +1,60 @@
 plugins {
-    alias(libs.plugins.spring.boot)
-    alias(libs.plugins.spring.dependency.management)
-    java
+    id("org.springframework.boot")
+    id("io.spring.dependency-management")
+    kotlin("jvm")
 }
 
 group = "com.healthdata"
 version = "1.0.0"
 
-// Spring Cloud BOM for OpenFeign version resolution
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+// Force correct snakeyaml version (fix for Android variant issue)
+configurations.all {
+    resolutionStrategy {
+        force("org.yaml:snakeyaml:2.2")
+        eachDependency {
+            if (requested.group == "org.yaml" && requested.name == "snakeyaml") {
+                useVersion("2.2")
+                because("Fix for Android variant resolution issue")
+            }
+        }
     }
 }
 
 dependencies {
-    // Shared modules (minimal - no database needed for stateless service)
-    implementation(project(":modules:shared:domain:common"))
+    // Spring Boot starters
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
 
-    // Spring Boot (stateless - NO JPA/database)
-    implementation(libs.bundles.spring.boot.web)
-    implementation(libs.spring.boot.starter.validation)
-    implementation(libs.spring.boot.starter.actuator)
+    // Database
+    implementation("org.postgresql:postgresql")
+    implementation("org.liquibase:liquibase-core")
 
-    // OpenTelemetry for distributed tracing (TODO: Add proper version from libs.versions.toml)
-    // implementation("io.opentelemetry:opentelemetry-api")
-    // implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter")
+    // FHIR (for patient bundle generation)
+    implementation(libs.hapi.fhir.base)
+    implementation(libs.hapi.fhir.structures.r4)
 
-    // HAPI FHIR
-    implementation(libs.bundles.hapi.fhir.client)
+    // HTTP Client (for calling FHIR/Care Gap/Quality Measure services)
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
 
-    // JSON Processing
-    implementation(libs.jackson.databind)
-    implementation(libs.jackson.datatype.jsr310)
+    // Observability (OpenTelemetry for distributed tracing)
+    implementation("io.micrometer:micrometer-registry-prometheus")
+    implementation("io.opentelemetry:opentelemetry-api")
+    implementation("io.opentelemetry:opentelemetry-sdk")
 
-    // Utilities
-    compileOnly(libs.lombok)
-    annotationProcessor(libs.lombok)
-    implementation(libs.commons.lang3)
+    // Faker for realistic data generation
+    implementation("com.github.javafaker:javafaker:1.0.2")
 
-    // Synthetic data generation - using Datafaker (modern successor to JavaFaker)
-    implementation(libs.datafaker)
-
-    // HTTP Client for service integration
-    implementation(libs.spring.cloud.starter.openfeign)
+    // Lombok
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
 
     // Testing
-    testImplementation(project(":platform:test-fixtures"))
-    testImplementation(libs.bundles.testing)
-    testImplementation(libs.testcontainers.postgresql)
-    testImplementation(libs.testcontainers.junit.jupiter)
-    testCompileOnly(libs.lombok)
-    testAnnotationProcessor(libs.lombok)
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.testcontainers:postgresql")
 }
 
-tasks.withType<Test> {
+tasks.test {
     useJUnitPlatform()
-    systemProperty("spring.profiles.active", "test")
 }

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -87,5 +88,18 @@ public interface ClinicalDecisionRepository extends JpaRepository<ClinicalDecisi
         @Param("tenantId") String tenantId,
         @Param("patientId") String patientId,
         @Param("decisionType") String decisionType
+    );
+
+    // Methods required by ClinicalAuditService
+    Optional<ClinicalDecisionEntity> findByIdAndTenantId(UUID id, String tenantId);
+
+    @Query("SELECT d FROM ClinicalDecisionEntity d WHERE d.tenantId = :tenantId " +
+           "AND d.decisionTimestamp BETWEEN :startDate AND :endDate " +
+           "ORDER BY d.decisionTimestamp DESC")
+    Page<ClinicalDecisionEntity> findByTenantIdAndDecisionTimestampBetween(
+        @Param("tenantId") String tenantId,
+        @Param("startDate") Instant startDate,
+        @Param("endDate") Instant endDate,
+        Pageable pageable
     );
 }

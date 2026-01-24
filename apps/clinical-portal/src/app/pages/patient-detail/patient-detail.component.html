@@ -244,6 +244,17 @@
             <app-patient-timeline [patientId]="patientId!"></app-patient-timeline>
           </div>
         </mat-tab>
+
+        <!-- AI Assistant Tab - Issue #243: AI Clinical Assistant Chat -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">smart_toy</mat-icon>
+            AI Assistant
+          </ng-template>
+          <div class="tab-content">
+            <app-ai-clinical-assistant [patientId]="patientId!"></app-ai-clinical-assistant>
+          </div>
+        </mat-tab>
       </mat-tab-group>
     </mat-card>
   </div>

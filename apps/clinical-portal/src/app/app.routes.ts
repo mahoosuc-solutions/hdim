@@ -323,6 +323,33 @@ export const appRoutes: Route[] = [
     canActivate: [AuthGuard],
     data: { permissions: ['VIEW_PATIENTS'] },
   },
+  {
+    path: 'qa-audit-dashboard',
+    loadComponent: () =>
+      import('./pages/qa-audit-dashboard/qa-audit-dashboard.component').then(
+        (m) => m.QaAuditDashboardComponent
+      ),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN', 'QA_ANALYST', 'QUALITY_OFFICER', 'AUDITOR'] },
+  },
+  {
+    path: 'clinical-audit-dashboard',
+    loadComponent: () =>
+      import('./pages/clinical-audit-dashboard/clinical-audit-dashboard.component').then(
+        (m) => m.ClinicalAuditDashboardComponent
+      ),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN', 'CLINICIAN', 'CLINICAL_ADMIN'] },
+  },
+  {
+    path: 'mpi-audit-dashboard',
+    loadComponent: () =>
+      import('./pages/mpi-audit-dashboard/mpi-audit-dashboard.component').then(
+        (m) => m.MpiAuditDashboardComponent
+      ),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN', 'MPI_ANALYST', 'DATA_STEWARD'] },
+  },
 
   // ==================== Fallback Route ====================
   {

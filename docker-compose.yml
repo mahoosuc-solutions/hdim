@@ -1762,7 +1762,7 @@ services:
       SERVER_PORT: 8091
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none  # Liquibase manages schema - no Hibernate validation
     ports:
       - "8091:8091"
     healthcheck:

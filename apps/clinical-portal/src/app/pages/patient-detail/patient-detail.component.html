@@ -255,6 +255,17 @@
             <app-ai-clinical-assistant [patientId]="patientId!"></app-ai-clinical-assistant>
           </div>
         </mat-tab>
+
+        <!-- Documents Tab - Issue #244: Document Upload Drag-Drop -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">folder</mat-icon>
+            Documents
+          </ng-template>
+          <div class="tab-content">
+            <app-document-upload [patientId]="patientId!"></app-document-upload>
+          </div>
+        </mat-tab>
       </mat-tab-group>
     </mat-card>
   </div>

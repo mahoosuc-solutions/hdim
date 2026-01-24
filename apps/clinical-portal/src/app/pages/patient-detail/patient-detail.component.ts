@@ -24,6 +24,7 @@ import { PatientHealthOverviewComponent } from '../patient-health-overview/patie
 import { PatientDemographicsCardComponent } from '../../components/patient-demographics-card/patient-demographics-card.component';
 import { PatientTimelineComponent } from '../../components/patient-timeline/patient-timeline.component';
 import { AiClinicalAssistantComponent } from '../../components/ai-clinical-assistant/ai-clinical-assistant.component';
+import { DocumentUploadComponent } from '../../components/document-upload/document-upload.component';
 import { LoggerService } from '../../services/logger.service';
 
 @Component({
@@ -46,6 +47,7 @@ import { LoggerService } from '../../services/logger.service';
     PatientDemographicsCardComponent,
     PatientTimelineComponent,
     AiClinicalAssistantComponent,
+    DocumentUploadComponent,
   ],
   templateUrl: './patient-detail.component.html',
   styleUrls: ['./patient-detail.component.scss'],
@@ -86,7 +88,8 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
     'care-gaps': 2,
     'results': 3,
     'timeline': 4,
-    'ai-assistant': 5
+    'ai-assistant': 5,
+    'documents': 6
   };
 
   private logger!: ReturnType<LoggerService['withContext']>;

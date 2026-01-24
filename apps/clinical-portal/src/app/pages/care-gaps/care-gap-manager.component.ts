@@ -734,10 +734,36 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
   }
 
   /**
-   * Navigate to patient detail
+   * Navigate to patient detail with care gap context (Issue #239)
+   * Implements context-aware navigation from care gap dashboard
    */
   viewPatientDetail(gap: CareGapAlert): void {
-    this.router.navigate(['/patients', gap.patientId]);
+    const gapId = gap.gapId || `gap-${gap.patientId}-${gap.measureName}`;
+
+    // Navigate with context parameters (Issue #155 pattern)
+    this.router.navigate(['/patients', gap.patientId], {
+      queryParams: {
+        tab: 'care-gaps',
+        careGapId: gapId,
+        highlight: 'true',
+        source: 'care-gap-manager'
+      }
+    });
+
+    this.logger.info('Navigating to patient detail with care gap context', {
+      patientId: gap.patientId,
+      careGapId: gapId,
+      measureName: gap.measureName
+    });
+  }
+
+  /**
+   * Handle row click - navigate to patient detail (Issue #239)
+   */
+  onRowClick(gap: CareGapAlert, event: MouseEvent): void {
+    // Don't navigate if user is clicking checkbox or action buttons
+    // (those have stopPropagation on their click handlers)
+    this.viewPatientDetail(gap);
   }
 
   /**

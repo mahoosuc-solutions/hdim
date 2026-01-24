@@ -1,6 +1,8 @@
 package com.healthdata.documentation.repository;
 
 import com.healthdata.documentation.persistence.DocumentAttachmentEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -31,4 +33,28 @@ public interface DocumentAttachmentRepository extends JpaRepository<DocumentAtta
     long countByClinicalDocumentId(@Param("clinicalDocumentId") UUID clinicalDocumentId);
 
     boolean existsByIdAndTenantId(UUID id, String tenantId);
+
+    /**
+     * Full-text search on OCR extracted text
+     * Searches for query string in ocrText field (case-insensitive)
+     */
+    @Query("SELECT a FROM DocumentAttachmentEntity a WHERE a.tenantId = :tenantId " +
+           "AND LOWER(a.ocrText) LIKE LOWER(CONCAT('%', :query, '%'))")
+    Page<DocumentAttachmentEntity> searchOcrText(@Param("tenantId") String tenantId,
+                                                   @Param("query") String query,
+                                                   Pageable pageable);
+
+    /**
+     * Find all attachments with completed OCR status
+     */
+    @Query("SELECT a FROM DocumentAttachmentEntity a WHERE a.tenantId = :tenantId " +
+           "AND a.ocrStatus = 'COMPLETED'")
+    List<DocumentAttachmentEntity> findByTenantIdAndOcrCompleted(@Param("tenantId") String tenantId);
+
+    /**
+     * Find attachments pending OCR processing
+     */
+    @Query("SELECT a FROM DocumentAttachmentEntity a WHERE a.tenantId = :tenantId " +
+           "AND a.ocrStatus = 'PENDING'")
+    List<DocumentAttachmentEntity> findByTenantIdAndOcrPending(@Param("tenantId") String tenantId);
 }

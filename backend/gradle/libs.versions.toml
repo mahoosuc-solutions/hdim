@@ -83,6 +83,10 @@ commons-fileupload = "1.6.0"
 lz4-java = "1.8.1"
 ucum = "1.0.9"
 
+# OCR and Document Processing
+tess4j = "5.11.0"
+pdfbox = "3.0.1"
+
 [libraries]
 # Spring Boot Starters
 spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "spring-boot" }
@@ -94,6 +98,7 @@ spring-boot-starter-validation = { module = "org.springframework.boot:spring-boo
 spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator", version.ref = "spring-boot" }
 spring-boot-starter-websocket = { module = "org.springframework.boot:spring-boot-starter-websocket", version.ref = "spring-boot" }
 spring-boot-starter-messaging = { module = "org.springframework.boot:spring-boot-starter-messaging", version.ref = "spring-boot" }
+spring-boot-starter-aop = { module = "org.springframework.boot:spring-boot-starter-aop", version.ref = "spring-boot" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot" }
 
 # Spring Cloud
@@ -136,6 +141,7 @@ swagger-annotations = { module = "io.swagger.core.v3:swagger-annotations", versi
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+jackson-dataformat-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml" }
 
 # Resilience4j
 resilience4j-spring-boot3 = { module = "io.github.resilience4j:resilience4j-spring-boot3", version.ref = "resilience4j" }
@@ -179,6 +185,11 @@ datafaker = { module = "net.datafaker:datafaker", version.ref = "datafaker" }
 twilio = { module = "com.twilio.sdk:twilio", version.ref = "twilio" }
 totp = { module = "dev.samstevens.totp:totp", version.ref = "totp" }
 poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poi-ooxml" }
+
+# OCR and Document Processing
+tess4j = { module = "net.sourceforge.tess4j:tess4j", version.ref = "tess4j" }
+pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
+pdfbox-tools = { module = "org.apache.pdfbox:pdfbox-tools", version.ref = "pdfbox" }
 
 # Export Libraries
 opencsv = { module = "com.opencsv:opencsv", version.ref = "opencsv" }

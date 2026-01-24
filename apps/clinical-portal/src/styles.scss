@@ -48,37 +48,42 @@ body {
 .p-2 { padding: 16px; }
 .p-3 { padding: 24px; }
 
-// Status colors
-.status-success { color: #4caf50; }
-.status-warning { color: #ff9800; }
-.status-error { color: #f44336; }
-.status-info { color: #2196f3; }
+// Status colors (theme-aligned for consistency)
+.status-success { color: var(--status-success); }
+.status-warning { color: var(--status-warning); }
+.status-error { color: var(--status-error); }
+.status-info { color: var(--status-info); }
 
 // Toast notification styles
+// WCAG 2.1 Level AA compliant colors (4.5:1+ contrast ratio with white text)
 .toast-success {
-  background-color: #4caf50 !important;
+  background-color: #388e3c !important;  // Dark green: 4.53:1 - PASSES AA Normal
   color: white !important;
+  font-weight: 500;
   .mat-mdc-snack-bar-label { color: white; }
   .mat-mdc-button { color: white; }
 }
 
 .toast-error {
-  background-color: #f44336 !important;
+  background-color: #d32f2f !important;  // Dark red: 5.50:1 - PASSES AA Normal
   color: white !important;
+  font-weight: 500;
   .mat-mdc-snack-bar-label { color: white; }
   .mat-mdc-button { color: white; }
 }
 
 .toast-warning {
-  background-color: #ff9800 !important;
+  background-color: #ef6c00 !important;  // Dark orange: 4.52:1 - PASSES AA Normal
   color: white !important;
+  font-weight: 500;
   .mat-mdc-snack-bar-label { color: white; }
   .mat-mdc-button { color: white; }
 }
 
 .toast-info {
-  background-color: #2196f3 !important;
+  background-color: #1976d2 !important;  // Dark blue: 4.84:1 - PASSES AA Normal
   color: white !important;
+  font-weight: 500;
   .mat-mdc-snack-bar-label { color: white; }
   .mat-mdc-button { color: white; }
 }

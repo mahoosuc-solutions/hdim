@@ -36,6 +36,7 @@ import { LoadingOverlayComponent } from '../../shared/components/loading-overlay
 import { QuickActionDialogComponent, QuickActionType, QuickActionConfig, QuickActionResult } from './dialogs/quick-action-dialog.component';
 import { getQuickActionsForGap, getPrimaryQuickAction, getSecondaryQuickActions, getClosureMetrics, CLOSURE_METRICS } from './quick-actions.config';
 import { LoggerService } from '../../services/logger.service';
+import { CareGapStatsDashboardComponent } from '../../components/care-gap-stats-dashboard/care-gap-stats-dashboard.component';
 
 /**
  * Intervention Recommendation with ROI metrics
@@ -117,6 +118,7 @@ interface CareGapFilter {
     MatSnackBarModule,
     LoadingButtonComponent,
     LoadingOverlayComponent,
+    CareGapStatsDashboardComponent,
   ],
   templateUrl: './care-gap-manager.component.html',
   styleUrl: './care-gap-manager.component.scss',

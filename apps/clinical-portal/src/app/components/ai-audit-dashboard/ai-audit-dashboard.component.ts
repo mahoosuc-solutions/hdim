@@ -24,7 +24,7 @@ import { LoggerService } from '../../services/logger.service';
 })
 export class AiAuditDashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('AiAuditDashboardComponent');
+  private logger!: ReturnType<LoggerService['withContext']>;
 
   // Natural language query
   naturalLanguageQuery = '';
@@ -60,7 +60,9 @@ export class AiAuditDashboardComponent implements OnInit, OnDestroy {
   constructor(
     private aiAuditStream: AiAuditStreamService,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('AiAuditDashboardComponent');
+  }
 
   ngOnInit(): void {
     this.loadRealtimeEvents();
@@ -137,14 +139,13 @@ export class AiAuditDashboardComponent implements OnInit, OnDestroy {
     const acceptedDecisions = this.aiDecisions.filter(d => d.outcome === 'ACCEPTED').length;
     this.analytics.acceptanceRate = (acceptedDecisions / this.aiDecisions.length) * 100;
   }
-  }
 
   /**
    * Load analytics data.
    */
   loadAnalytics(): void {
-    console.log('Loading analytics...');
-    
+    this.logger.info('Loading analytics');
+
     // Mock analytics data
     this.analytics = {
       totalAIDecisions: 127,
@@ -179,8 +180,8 @@ export class AiAuditDashboardComponent implements OnInit, OnDestroy {
 
     try {
       // TODO: Call NLQ API
-      console.log('Executing NLQ:', this.naturalLanguageQuery);
-      
+      this.logger.info('Executing NLQ', { query: this.naturalLanguageQuery });
+
       // Mock response
       await new Promise(resolve => setTimeout(resolve, 1000));
       
@@ -194,7 +195,7 @@ export class AiAuditDashboardComponent implements OnInit, OnDestroy {
       ];
 
     } catch (error) {
-      console.error('NLQ error:', error);
+      this.logger.error('NLQ error', error);
       this.queryError = 'Failed to execute query. Please try again.';
     } finally {
       this.queryLoading = false;
@@ -243,7 +244,7 @@ export class AiAuditDashboardComponent implements OnInit, OnDestroy {
    * View decision details.
    */
   viewDecisionDetails(decision: any): void {
-    console.log('View decision details:', decision);
+    this.logger.info('View decision details', { decisionId: decision?.id });
     // TODO: Open modal with full decision details and replay capability
   }
 
@@ -251,7 +252,7 @@ export class AiAuditDashboardComponent implements OnInit, OnDestroy {
    * View audit trail.
    */
   viewAuditTrail(correlationId: string): void {
-    console.log('View audit trail:', correlationId);
+    this.logger.info('View audit trail', { correlationId });
     // TODO: Load and display complete audit trail
   }
 
@@ -259,7 +260,7 @@ export class AiAuditDashboardComponent implements OnInit, OnDestroy {
    * Replay AI decision.
    */
   replayDecision(decision: any): void {
-    console.log('Replay decision:', decision);
+    this.logger.info('Replay decision', { decisionId: decision?.id });
     // TODO: Implement decision replay functionality
   }
 }

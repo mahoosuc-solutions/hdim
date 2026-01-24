@@ -35,7 +35,7 @@ export class AiAuditStreamService {
   private reconnectDelay = 5000; // 5 seconds
   private reconnectTimer: any = null;
 
-  private logger = this.loggerService.withContext('AiAuditStreamService');
+  private logger!: ReturnType<LoggerService['withContext']>;
 
   /**
    * Observable stream of AI audit events.
@@ -47,7 +47,9 @@ export class AiAuditStreamService {
    */
   public connectionStatus$ = this.connectionStatusSubject.asObservable();
 
-  constructor(private loggerService: LoggerService) {}
+  constructor(private loggerService: LoggerService) {
+    this.logger = this.loggerService.withContext('AiAuditStreamService');
+  }
 
   /**
    * Connect to the SSE stream.

@@ -102,6 +102,15 @@ export const appRoutes: Route[] = [
     data: { permissions: ['VIEW_EVALUATIONS'] },
   },
   {
+    path: 'quality-measures/:id',
+    loadComponent: () =>
+      import('./pages/quality-measure-detail/quality-measure-detail.component').then(
+        (m) => m.QualityMeasureDetailComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_EVALUATIONS'] },
+  },
+  {
     path: 'measure-comparison',
     loadComponent: () =>
       import('./pages/measure-comparison/measure-comparison.component').then(

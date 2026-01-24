@@ -299,6 +299,10 @@ export class QualityMeasuresComponent implements OnInit {
     this.evaluationResult.set(null);
   }
 
+  viewMeasureDetail(measure: QualityMeasure): void {
+    this.router.navigate(['/quality-measures', measure.code]);
+  }
+
   closeMeasureDetail(): void {
     this.selectedMeasure.set(null);
     this.evaluationResult.set(null);

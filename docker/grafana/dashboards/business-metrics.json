@@ -1,0 +1,183 @@
+{
+  "dashboard": {
+    "title": "HDIM Business Metrics",
+    "tags": ["hdim", "business", "metrics", "quality-measures"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Patient Records Accessed/Hour",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [{
+          "expr": "sum(rate(patient_access_total[1h]))",
+          "legendFormat": "Patient Access Rate",
+          "refId": "A"
+        }],
+        "yaxes": [
+          {"format": "short", "label": "Records/hour"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true}
+      },
+      {
+        "id": 2,
+        "title": "Care Gaps Closed/Hour",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [{
+          "expr": "sum(rate(care_gaps_closed_total[1h]))",
+          "legendFormat": "Care Gap Closures",
+          "refId": "A"
+        }],
+        "yaxes": [
+          {"format": "short", "label": "Closures/hour"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true}
+      },
+      {
+        "id": 3,
+        "title": "Quality Measure Evaluations/Hour",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [{
+          "expr": "sum(rate(cql_evaluations_total[1h]))",
+          "legendFormat": "Evaluation Rate",
+          "refId": "A"
+        }],
+        "yaxes": [
+          {"format": "short", "label": "Evaluations/hour"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true}
+      },
+      {
+        "id": 4,
+        "title": "FHIR Resource Creation Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [{
+          "expr": "sum(rate(fhir_resource_created_total[1h])) by (resource_type)",
+          "legendFormat": "{{resource_type}}",
+          "refId": "A"
+        }],
+        "yaxes": [
+          {"format": "short", "label": "Resources/hour"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true, "alignAsTable": true}
+      },
+      {
+        "id": 5,
+        "title": "CQL Evaluation Duration (avg, p95)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(cql_evaluation_duration_seconds_sum[5m]) / rate(cql_evaluation_duration_seconds_count[5m])",
+            "legendFormat": "Average",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(cql_evaluation_duration_seconds_bucket[5m]))",
+            "legendFormat": "p95",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Duration"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true}
+      },
+      {
+        "id": 6,
+        "title": "AI Assistant Queries/Hour",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [{
+          "expr": "sum(rate(ai_assistant_queries_total[1h]))",
+          "legendFormat": "AI Queries",
+          "refId": "A"
+        }],
+        "yaxes": [
+          {"format": "short", "label": "Queries/hour"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true}
+      },
+      {
+        "id": 7,
+        "title": "Top 10 Most Evaluated Measures",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "targets": [{
+          "expr": "topk(10, sum(rate(cql_evaluations_total[6h])) by (measure_id))",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        }],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"Time": true, "__name__": true},
+              "renameByName": {
+                "measure_id": "Measure ID",
+                "Value": "Evaluations (6h)"
+              }
+            }
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [{"displayName": "Evaluations (6h)", "desc": true}]
+        }
+      },
+      {
+        "id": 8,
+        "title": "Evaluation Success Rate",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "targets": [{
+          "expr": "(sum(rate(cql_evaluations_total[1h])) - sum(rate(cql_evaluations_failed_total[1h]))) / sum(rate(cql_evaluations_total[1h])) * 100",
+          "refId": "A"
+        }],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 2,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 90, "color": "yellow"},
+                {"value": 95, "color": "green"}
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

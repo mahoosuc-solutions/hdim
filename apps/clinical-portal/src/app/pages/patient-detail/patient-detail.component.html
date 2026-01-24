@@ -233,6 +233,17 @@
             </table>
           </div>
         </mat-tab>
+
+        <!-- Timeline Tab - Issue #238: Patient Timeline View -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">timeline</mat-icon>
+            Timeline
+          </ng-template>
+          <div class="tab-content">
+            <app-patient-timeline [patientId]="patientId!"></app-patient-timeline>
+          </div>
+        </mat-tab>
       </mat-tab-group>
     </mat-card>
   </div>

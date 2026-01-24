@@ -26,6 +26,10 @@ import {
   ConfigVersion,
   ConfigAuditEntry,
   ConfigApproval,
+  AuditEvent,
+  AuditSearchRequest,
+  AuditSearchResponse,
+  AuditStatistics,
 } from '../models/admin.model';
 
 @Injectable({
@@ -259,7 +263,7 @@ export class AdminService {
   }
 
   // =====================
-  // Audit Logs
+  // Audit Logs (Legacy)
   // =====================
 
   getAuditLogs(filter?: AuditLogFilter): Observable<PagedResponse<AuditLog>> {
@@ -285,6 +289,90 @@ export class AdminService {
         totalPages: response.totalPages || 0,
       })),
       catchError(() => of(this.getMockAuditLogs()))
+    );
+  }
+
+  // =====================
+  // Audit Query Service (Enhanced - Port 8093)
+  // =====================
+
+  /**
+   * Search audit logs with comprehensive filters
+   */
+  searchAuditLogs(request: AuditSearchRequest): Observable<AuditSearchResponse> {
+    return this.http.post<AuditSearchResponse>(
+      buildGatewayUrl(ADMIN_ENDPOINTS.AUDIT_SEARCH),
+      request,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(() => {
+        // Fallback to mock data for development
+        return of(this.getMockAuditSearchResponse());
+      })
+    );
+  }
+
+  /**
+   * Get specific audit event by ID
+   */
+  getAuditEvent(eventId: string): Observable<AuditEvent> {
+    return this.http.get<AuditEvent>(
+      buildGatewayUrl(ADMIN_ENDPOINTS.AUDIT_EVENT_BY_ID(eventId)),
+      { headers: this.getHeaders() }
+    );
+  }
+
+  /**
+   * Get audit statistics for dashboard
+   */
+  getAuditStatistics(
+    startTime?: string,
+    endTime?: string,
+    tenantId?: string
+  ): Observable<AuditStatistics> {
+    let params = new HttpParams();
+    if (startTime) params = params.set('startTime', startTime);
+    if (endTime) params = params.set('endTime', endTime);
+    if (tenantId) params = params.set('tenantId', tenantId);
+
+    return this.http.get<AuditStatistics>(
+      buildGatewayUrl(ADMIN_ENDPOINTS.AUDIT_STATISTICS),
+      { headers: this.getHeaders(), params }
+    ).pipe(
+      catchError(() => of(this.getMockAuditStatistics()))
+    );
+  }
+
+  /**
+   * Export audit logs to CSV
+   */
+  exportAuditLogsCsv(request: AuditSearchRequest): Observable<Blob> {
+    return this.http.post(
+      `${buildGatewayUrl(ADMIN_ENDPOINTS.AUDIT_EXPORT)}?format=CSV`,
+      request,
+      { headers: this.getHeaders(), responseType: 'blob' }
+    );
+  }
+
+  /**
+   * Export audit logs to JSON
+   */
+  exportAuditLogsJson(request: AuditSearchRequest): Observable<Blob> {
+    return this.http.post(
+      `${buildGatewayUrl(ADMIN_ENDPOINTS.AUDIT_EXPORT)}?format=JSON`,
+      request,
+      { headers: this.getHeaders(), responseType: 'blob' }
+    );
+  }
+
+  /**
+   * Export audit logs to PDF
+   */
+  exportAuditLogsPdf(request: AuditSearchRequest): Observable<Blob> {
+    return this.http.post(
+      `${buildGatewayUrl(ADMIN_ENDPOINTS.AUDIT_EXPORT)}?format=PDF`,
+      request,
+      { headers: this.getHeaders(), responseType: 'blob' }
     );
   }
 
@@ -820,6 +908,83 @@ export class AdminService {
       pageSize: 50,
       totalElements: 8,
       totalPages: 1,
+    };
+  }
+
+  private getMockAuditSearchResponse(): AuditSearchResponse {
+    const now = new Date().toISOString();
+    return {
+      content: [
+        {
+          id: 'evt-001',
+          timestamp: now,
+          tenantId: 'TENANT001',
+          userId: 'admin',
+          username: 'admin@hdim.ai',
+          role: 'ADMIN',
+          ipAddress: '192.168.1.100',
+          userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0',
+          action: 'CREATE' as any,
+          resourceType: 'PATIENT',
+          resourceId: 'patient-12345',
+          outcome: 'SUCCESS' as any,
+          serviceName: 'patient-service',
+          durationMs: 145,
+        },
+        {
+          id: 'evt-002',
+          timestamp: new Date(Date.now() - 3600000).toISOString(),
+          tenantId: 'TENANT001',
+          userId: 'analyst',
+          username: 'analyst@hdim.ai',
+          role: 'ANALYST',
+          ipAddress: '192.168.1.101',
+          userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1',
+          action: 'READ' as any,
+          resourceType: 'CARE_GAP',
+          resourceId: 'gap-789',
+          outcome: 'SUCCESS' as any,
+          serviceName: 'care-gap-service',
+          durationMs: 98,
+        },
+      ],
+      totalElements: 2,
+      totalPages: 1,
+      number: 0,
+      size: 20,
+    };
+  }
+
+  private getMockAuditStatistics(): AuditStatistics {
+    return {
+      totalEvents: 1247,
+      actionDistribution: {
+        CREATE: 234,
+        READ: 845,
+        UPDATE: 123,
+        DELETE: 12,
+        LOGIN: 25,
+        EXPORT: 8,
+      },
+      outcomeDistribution: {
+        SUCCESS: 1198,
+        FAILURE: 45,
+        PARTIAL: 4,
+      },
+      topUsers: [
+        { username: 'analyst@hdim.ai', count: 456 },
+        { username: 'admin@hdim.ai', count: 321 },
+        { username: 'evaluator@hdim.ai', count: 234 },
+      ],
+      topResources: [
+        { resourceType: 'PATIENT', count: 567 },
+        { resourceType: 'CARE_GAP', count: 345 },
+        { resourceType: 'EVALUATION', count: 234 },
+      ],
+      timeRange: {
+        startTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        endTime: new Date().toISOString(),
+      },
     };
   }
 }

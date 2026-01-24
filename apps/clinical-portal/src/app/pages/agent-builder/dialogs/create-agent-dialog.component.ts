@@ -7,7 +7,7 @@ import {
   ReactiveFormsModule,
   FormArray,
 } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -36,6 +36,7 @@ import {
 } from '../models/agent.model';
 import { LoadingButtonComponent } from '../../../shared/components/loading-button/loading-button.component';
 import { PromptEditorComponent } from '../components/prompt-editor/prompt-editor.component';
+import { TemplateLibraryDialogComponent } from './template-library-dialog.component';
 
 export interface CreateAgentDialogData {
   agent?: AgentConfiguration;
@@ -186,6 +187,18 @@ export interface CreateAgentDialogData {
         <!-- Step 3: System Prompt -->
         <mat-step [stepControl]="promptForm" label="Prompts">
           <form [formGroup]="promptForm" class="step-content">
+            <div class="prompt-header">
+              <button
+                mat-stroked-button
+                type="button"
+                (click)="browseTemplates()"
+                class="browse-templates-btn"
+                aria-label="Browse prompt templates">
+                <mat-icon>library_books</mat-icon>
+                Browse Templates
+              </button>
+            </div>
+
             <app-prompt-editor
               formControlName="systemPrompt"
               label="System Prompt"
@@ -366,6 +379,18 @@ export interface CreateAgentDialogData {
       margin-bottom: 16px;
     }
 
+    .prompt-header {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 16px;
+
+      .browse-templates-btn {
+        mat-icon {
+          margin-right: 8px;
+        }
+      }
+    }
+
     .full-width {
       width: 100%;
     }
@@ -520,6 +545,7 @@ export class CreateAgentDialogComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private agentService: AgentBuilderService,
+    private dialog: MatDialog,
     private dialogRef: MatDialogRef<CreateAgentDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: CreateAgentDialogData
   ) {}
@@ -714,5 +740,31 @@ export class CreateAgentDialogComponent implements OnInit, OnDestroy {
       this.promptForm.valid &&
       this.guardrailForm.valid
     );
+  }
+
+  /**
+   * Open template library dialog to browse and select a template
+   */
+  browseTemplates(): void {
+    const dialogRef = this.dialog.open(TemplateLibraryDialogComponent, {
+      width: '90vw',
+      maxWidth: '1200px',
+      height: '80vh',
+      data: { mode: 'select' },
+    });
+
+    dialogRef.afterClosed().subscribe((selectedTemplate) => {
+      if (selectedTemplate) {
+        // Populate system prompt with template content
+        const currentPrompt = this.promptForm.get('systemPrompt')?.value || '';
+        const newPrompt = currentPrompt
+          ? `${currentPrompt}\n\n${selectedTemplate.content}`
+          : selectedTemplate.content;
+
+        this.promptForm.patchValue({
+          systemPrompt: newPrompt,
+        });
+      }
+    });
   }
 }

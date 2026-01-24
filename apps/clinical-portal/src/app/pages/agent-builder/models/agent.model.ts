@@ -157,13 +157,26 @@ export interface ToolInvocation {
   durationMs: number;
 }
 
+// Guardrail trigger detail
+export interface GuardrailTrigger {
+  guardrailType: 'PHI_FILTERING' | 'CLINICAL_DISCLAIMER' | 'BLOCKED_PATTERN' | 'TOKEN_LIMIT' | 'RISK_THRESHOLD';
+  timestamp: string;
+  messageIndex: number;
+  triggeredBy: string; // What triggered it (e.g., "detected PHI", "exceeded 1000 tokens")
+  action: 'FILTERED' | 'BLOCKED' | 'WARNING' | 'REQUIRES_REVIEW';
+  details?: string;
+}
+
 // Test metrics
 export interface TestMetrics {
   totalMessages: number;
+  userMessages: number;
+  assistantMessages: number;
   toolInvocations: number;
   totalTokens: number;
-  avgLatencyMs: number;
-  guardrailTriggers: number;
+  averageLatency: number;
+  guardrailsTriggered: number;
+  guardrailTriggers?: GuardrailTrigger[]; // Optional detailed triggers
 }
 
 // Agent Test Session entity

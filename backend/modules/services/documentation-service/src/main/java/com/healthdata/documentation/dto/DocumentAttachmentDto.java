@@ -39,4 +39,12 @@ public class DocumentAttachmentDto {
     private LocalDateTime creationDate;
 
     private LocalDateTime createdAt;
+
+    private String ocrText; // Extracted text from OCR processing
+
+    private LocalDateTime ocrProcessedAt; // When OCR processing completed
+
+    private String ocrStatus; // PENDING, PROCESSING, COMPLETED, FAILED
+
+    private String ocrErrorMessage; // Error message if OCR failed
 }

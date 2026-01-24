@@ -226,6 +226,10 @@ public class ClinicalDocumentService {
                 .title(entity.getTitle())
                 .creationDate(entity.getCreationDate())
                 .createdAt(entity.getCreatedAt())
+                .ocrText(entity.getOcrText())
+                .ocrProcessedAt(entity.getOcrProcessedAt())
+                .ocrStatus(entity.getOcrStatus())
+                .ocrErrorMessage(entity.getOcrErrorMessage())
                 .build();
     }
 }

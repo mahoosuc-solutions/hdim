@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0006-add-sms-mfa-fields" author="claude-code">
+        <comment>Add SMS MFA fields to users table for SMS-based multi-factor authentication</comment>
+
+        <!-- MFA method type (TOTP, SMS, or BOTH) -->
+        <addColumn tableName="users">
+            <column name="mfa_method" type="VARCHAR(10)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Phone number for SMS MFA (E.164 format) -->
+        <addColumn tableName="users">
+            <column name="mfa_phone_number" type="VARCHAR(20)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Hashed SMS verification code -->
+        <addColumn tableName="users">
+            <column name="sms_code" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- SMS code expiration timestamp (5-minute TTL) -->
+        <addColumn tableName="users">
+            <column name="sms_code_expiry" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- SMS code send count (for rate limiting) -->
+        <addColumn tableName="users">
+            <column name="sms_code_sent_count" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Last reset timestamp for hourly rate limit counter -->
+        <addColumn tableName="users">
+            <column name="sms_code_last_reset" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Set default MFA method to TOTP for existing users with MFA enabled -->
+        <sql>
+            UPDATE users
+            SET mfa_method = 'TOTP'
+            WHERE mfa_enabled = TRUE AND mfa_secret IS NOT NULL;
+        </sql>
+
+        <rollback>
+            <dropColumn tableName="users" columnName="sms_code_last_reset"/>
+            <dropColumn tableName="users" columnName="sms_code_sent_count"/>
+            <dropColumn tableName="users" columnName="sms_code_expiry"/>
+            <dropColumn tableName="users" columnName="sms_code"/>
+            <dropColumn tableName="users" columnName="mfa_phone_number"/>
+            <dropColumn tableName="users" columnName="mfa_method"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

@@ -18,5 +18,6 @@
     <include file="db/changelog/0010-create-audit-events-table.xml"/>
     <include file="db/changelog/0011-add-user-soft-delete-column.xml"/>
     <include file="db/changelog/0012-add-missing-user-columns.xml"/>
+    <include file="db/changelog/0013-add-sms-mfa-fields.xml"/>
 
 </databaseChangeLog>

@@ -36,13 +36,16 @@ dependencies {
     implementation(libs.jjwt.jackson)
 
     // TOTP MFA (Time-based One-Time Password)
-    api("dev.samstevens.totp:totp:1.7.1")
+    api(libs.totp)
+
+    // Twilio SDK for SMS MFA
+    implementation(libs.twilio)
 
     // Spring Cloud OpenFeign for auth header forwarding interceptor
-    compileOnly("org.springframework.cloud:spring-cloud-starter-openfeign:4.3.1")
+    compileOnly(libs.spring.cloud.starter.openfeign)
 
     // OpenTelemetry for trace propagation (compileOnly - optional at runtime)
-    compileOnly("io.opentelemetry:opentelemetry-api:1.32.0")
+    compileOnly(libs.opentelemetry.api)
 
     // Lombok
     compileOnly(libs.lombok)
@@ -66,14 +69,11 @@ dependencies {
     implementation(libs.commons.lang3)
 
     // Rate limiting disabled - will be managed by Gateway
-    // implementation("com.bucket4j:bucket4j-core:8.7.0")
-    // implementation("com.bucket4j:bucket4j-redis:8.7.0")
-    // implementation("javax.cache:cache-api:1.1.1")
+    // Bucket4j and Redis rate limiting dependencies removed
 
     // Redis (for distributed rate limiting) - disabled for production, enabled for tests
     // Production Redis disabled - managed by Gateway
-    // api("org.springframework.boot:spring-boot-starter-data-redis")
-    // implementation("org.redisson:redisson-spring-boot-starter:3.25.0")
+    // Spring Boot Data Redis and Redisson dependencies removed
 
     // Redis for tests only (needed by EmbeddedRedisTestConfig)
     testImplementation("org.springframework.boot:spring-boot-starter-data-redis")

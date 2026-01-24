@@ -1,0 +1,229 @@
+<div class="document-upload-container">
+  <!-- Upload Zone -->
+  <mat-card class="upload-zone-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon aria-hidden="true">cloud_upload</mat-icon>
+        Upload Documents
+      </mat-card-title>
+      <mat-card-subtitle>Drag and drop files or click to browse</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Drag-Drop Zone -->
+      <div
+        class="drop-zone"
+        [class.drag-over]="isDragOver"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        (click)="fileInput.click()"
+        role="button"
+        tabindex="0"
+        aria-label="Drag and drop files or click to browse">
+        <mat-icon aria-hidden="true">upload_file</mat-icon>
+        <h3>Drop files here or click to browse</h3>
+        <p>Supported formats: PDF, PNG, JPG, JPEG, TIFF (max 10MB)</p>
+      </div>
+
+      <!-- Hidden File Input -->
+      <input
+        #fileInput
+        type="file"
+        multiple
+        accept=".pdf,.png,.jpg,.jpeg,.tiff"
+        (change)="onFileSelected($event)"
+        style="display: none"
+        aria-label="File input" />
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Upload Queue -->
+  @if (uploadQueue.length > 0) {
+    <mat-card class="upload-queue-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon aria-hidden="true">queue</mat-icon>
+          Upload Queue ({{ uploadQueue.length }})
+        </mat-card-title>
+        <div class="header-actions">
+          @if (getQueueCounts().completed > 0) {
+            <button
+              mat-stroked-button
+              color="primary"
+              (click)="clearCompleted()"
+              aria-label="Clear completed uploads">
+              <mat-icon>clear</mat-icon>
+              Clear Completed ({{ getQueueCounts().completed }})
+            </button>
+          }
+        </div>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="queue-list">
+          @for (item of uploadQueue; track item.file.name) {
+            <div class="queue-item" [class.failed]="item.progress.status === 'failed'">
+              <div class="item-header">
+                <mat-icon
+                  class="file-icon"
+                  aria-hidden="true"
+                  [style.color]="item.progress.status === 'failed' ? '#f44336' : item.progress.status === 'completed' ? '#4caf50' : '#1976d2'">
+                  {{ item.progress.status === 'failed' ? 'error' : item.progress.status === 'completed' ? 'check_circle' : 'description' }}
+                </mat-icon>
+
+                <div class="item-details">
+                  <span class="file-name">{{ item.file.name }}</span>
+                  <span class="file-size">{{ formatFileSize(item.file.size) }}</span>
+                </div>
+
+                <div class="item-actions">
+                  @if (item.progress.status === 'failed') {
+                    <button
+                      mat-icon-button
+                      (click)="retryUpload(item)"
+                      matTooltip="Retry upload"
+                      aria-label="Retry upload">
+                      <mat-icon>refresh</mat-icon>
+                    </button>
+                  }
+
+                  @if (item.progress.status !== 'uploading' && item.progress.status !== 'completed') {
+                    <button
+                      mat-icon-button
+                      (click)="cancelUpload(item)"
+                      matTooltip="Cancel upload"
+                      aria-label="Cancel upload">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Progress Bar -->
+              @if (item.progress.status === 'uploading' || item.progress.status === 'pending') {
+                <mat-progress-bar
+                  mode="determinate"
+                  [value]="item.progress.progress"
+                  aria-label="Upload progress">
+                </mat-progress-bar>
+                <span class="progress-text">{{ item.progress.progress }}%</span>
+              }
+
+              <!-- Error Message -->
+              @if (item.progress.error) {
+                <div class="error-message">
+                  <mat-icon aria-hidden="true">error</mat-icon>
+                  {{ item.progress.error }}
+                </div>
+              }
+
+              <!-- Success Message -->
+              @if (item.progress.status === 'completed') {
+                <div class="success-message">
+                  <mat-icon aria-hidden="true">check_circle</mat-icon>
+                  Upload completed successfully
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Documents List -->
+  <mat-card class="documents-list-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon aria-hidden="true">folder</mat-icon>
+        Uploaded Documents ({{ documents.length }})
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (documents.length === 0) {
+        <!-- Empty State -->
+        <div class="empty-state">
+          <mat-icon aria-hidden="true">description</mat-icon>
+          <p>No documents uploaded yet</p>
+          <p class="hint">Upload patient documents using the drop zone above</p>
+        </div>
+      } @else {
+        <!-- Documents Table -->
+        <table mat-table [dataSource]="documents" class="documents-table">
+          <!-- File Name Column -->
+          <ng-container matColumnDef="fileName">
+            <th mat-header-cell *matHeaderCellDef>File Name</th>
+            <td mat-cell *matCellDef="let doc">
+              <div class="file-name-cell">
+                <mat-icon class="file-type-icon" aria-hidden="true">
+                  {{ doc.fileType.includes('pdf') ? 'picture_as_pdf' : 'image' }}
+                </mat-icon>
+                {{ doc.fileName }}
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- File Type Column -->
+          <ng-container matColumnDef="fileType">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let doc">{{ doc.fileType }}</td>
+          </ng-container>
+
+          <!-- File Size Column -->
+          <ng-container matColumnDef="fileSize">
+            <th mat-header-cell *matHeaderCellDef>Size</th>
+            <td mat-cell *matCellDef="let doc">{{ formatFileSize(doc.fileSize) }}</td>
+          </ng-container>
+
+          <!-- Upload Date Column -->
+          <ng-container matColumnDef="uploadDate">
+            <th mat-header-cell *matHeaderCellDef>Upload Date</th>
+            <td mat-cell *matCellDef="let doc">{{ doc.uploadDate | date: 'short' }}</td>
+          </ng-container>
+
+          <!-- OCR Status Column -->
+          <ng-container matColumnDef="ocrStatus">
+            <th mat-header-cell *matHeaderCellDef>OCR Status</th>
+            <td mat-cell *matCellDef="let doc">
+              @if (doc.ocrStatus) {
+                <mat-chip [color]="getOcrStatusColor(doc.ocrStatus)">
+                  {{ doc.ocrStatus }}
+                </mat-chip>
+              } @else {
+                <span class="not-applicable">N/A</span>
+              }
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let doc">
+              <button
+                mat-icon-button
+                (click)="downloadDocument(doc)"
+                matTooltip="Download document"
+                [attr.aria-label]="'Download ' + doc.fileName">
+                <mat-icon>download</mat-icon>
+              </button>
+
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="deleteDocument(doc)"
+                matTooltip="Delete document"
+                [attr.aria-label]="'Delete ' + doc.fileName">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

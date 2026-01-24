@@ -132,8 +132,11 @@
               <span class="code-badge">{{ selectedMeasure()!.code }}</span>
               <h2>{{ selectedMeasure()!.name }}</h2>
             </div>
-            <button mat-icon-button (click)="closeMeasureDetail()">
-              <mat-icon>close</mat-icon>
+            <button
+              mat-icon-button
+              (click)="closeMeasureDetail()"
+              aria-label="Close measure details">
+              <mat-icon aria-hidden="true">close</mat-icon>
             </button>
           </div>
 

@@ -1,3 +1,9 @@
+<!-- WCAG 2.1 Level A: Skip Navigation Links (2.4.1 Bypass Blocks) -->
+<div class="skip-links">
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <a href="#nav-menu" class="skip-link">Skip to navigation</a>
+</div>
+
 <mat-sidenav-container class="sidenav-container">
   <!-- Side Navigation -->
   <mat-sidenav
@@ -10,7 +16,7 @@
       <p class="subtitle">Quality Measure Management</p>
     </div>
 
-    <mat-nav-list class="nav-list">
+    <mat-nav-list class="nav-list" id="nav-menu">
       @for (item of navigationItems; track item.route) {
         <a
           mat-list-item
@@ -66,9 +72,9 @@
     <app-whats-new-banner></app-whats-new-banner>
 
     <!-- Page Content -->
-    <div class="content-wrapper">
+    <main id="main-content" class="content-wrapper" role="main">
       <ng-content></ng-content>
-    </div>
+    </main>
   </mat-sidenav-content>
 </mat-sidenav-container>
 

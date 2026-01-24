@@ -2,6 +2,9 @@ package com.healthdata.notification.application;
 
 import com.healthdata.audit.annotations.Audited;
 import com.healthdata.audit.models.AuditAction;
+import com.healthdata.audit.models.AuditEvent;
+import com.healthdata.audit.models.AuditOutcome;
+import com.healthdata.audit.service.AuditService;
 import com.healthdata.featureflags.TenantFeatureFlagService;
 import com.healthdata.notification.domain.model.AppointmentReminderSent;
 import com.healthdata.notification.domain.repository.AppointmentReminderSentRepository;
@@ -13,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -48,6 +52,7 @@ public class AppointmentReminderService {
     private final PatientServiceClient patientServiceClient;
     private final SmsProvider smsProvider;
     private final AppointmentReminderSentRepository reminderSentRepository;
+    private final AuditService auditService;
 
     private static final String FEATURE_KEY = "twilio-sms-reminders";
     private static final String REMINDER_TYPE = "APPOINTMENT_REMINDER";
@@ -135,11 +140,6 @@ public class AppointmentReminderService {
      * @param daysBefore  Days before appointment
      * @return true if sent, false if skipped
      */
-    @Audited(
-        action = AuditAction.CREATE,
-        resourceType = "Notification",
-        description = "Send appointment reminder SMS"
-    )
     private boolean sendReminder(String tenantId, FhirServiceClient.AppointmentDto appointment, int daysBefore) {
         UUID appointmentId = appointment.getId();
         UUID patientId = appointment.getPatientId();
@@ -184,6 +184,17 @@ public class AppointmentReminderService {
             messageSid = smsProvider.send(patient.getPhoneNumber(), message);
             log.info("Sent appointment reminder SMS for appointment {} to patient {} in tenant {} (SID: {})",
                     appointmentId, patientId, tenantId, messageSid);
+
+            // Programmatic audit logging (private method, cannot use @Audited AOP)
+            auditService.logAuditEvent(AuditEvent.builder()
+                    .tenantId(tenantId)
+                    .action(AuditAction.CREATE)
+                    .resourceType("Notification")
+                    .resourceId(appointmentId.toString())
+                    .serviceName("notification-service")
+                    .methodName("sendReminder")
+                    .outcome(AuditOutcome.SUCCESS)
+                    .build());
         } catch (Exception e) {
             log.error("Failed to send SMS reminder for appointment {} to patient {}: {}",
                     appointmentId, patientId, e.getMessage());
@@ -289,5 +300,17 @@ public class AppointmentReminderService {
         }
 
         return List.of(1);
+    }
+
+    /**
+     * Mask phone number for PHI compliance in audit logs
+     * Format: +1***-***-1234 (shows only country code and last 4 digits)
+     */
+    private String maskPhoneNumber(String phoneNumber) {
+        if (phoneNumber == null || phoneNumber.length() < 4) {
+            return "***";
+        }
+        String last4 = phoneNumber.substring(phoneNumber.length() - 4);
+        return "+1***-***-" + last4;
     }
 }

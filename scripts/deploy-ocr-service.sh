@@ -134,11 +134,18 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Verify JAR exists
-JAR_FILE="modules/services/documentation-service/build/libs/documentation-service-1.0.0-SNAPSHOT.jar"
+# Verify JAR exists (try both naming conventions)
+JAR_FILE="modules/services/documentation-service/build/libs/documentation-service.jar"
 if [ ! -f "$JAR_FILE" ]; then
-    echo -e "${RED}ERROR: JAR file not found: $JAR_FILE${NC}"
-    exit 1
+    # Try versioned name
+    JAR_FILE="modules/services/documentation-service/build/libs/documentation-service-1.0.0-SNAPSHOT.jar"
+    if [ ! -f "$JAR_FILE" ]; then
+        echo -e "${RED}ERROR: JAR file not found${NC}"
+        echo "Checked:"
+        echo "  - modules/services/documentation-service/build/libs/documentation-service.jar"
+        echo "  - modules/services/documentation-service/build/libs/documentation-service-1.0.0-SNAPSHOT.jar"
+        exit 1
+    fi
 fi
 
 JAR_SIZE=$(du -h "$JAR_FILE" | cut -f1)

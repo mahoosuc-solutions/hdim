@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchange"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchange
+    http://www.liquibase.org/xml/ns/dbchange/dbchangelog-4.20.xsd">
+
+    <!-- Alert Configurations -->
+    <include file="db/changelog/0014-create-alert-configs-table.xml"/>
+
+</databaseChangeLog>

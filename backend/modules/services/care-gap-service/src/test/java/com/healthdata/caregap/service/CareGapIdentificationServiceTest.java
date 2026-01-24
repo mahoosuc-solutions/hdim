@@ -660,8 +660,20 @@ class CareGapIdentificationServiceTest {
             UUID gap2 = UUID.randomUUID(); // This one will fail (not found)
             UUID gap3 = UUID.randomUUID();
 
-            CareGapEntity entity1 = CareGapEntity.builder().id(gap1).tenantId(TENANT_ID).gapStatus("open").build();
-            CareGapEntity entity3 = CareGapEntity.builder().id(gap3).tenantId(TENANT_ID).gapStatus("open").build();
+            CareGapEntity entity1 = CareGapEntity.builder()
+                    .id(gap1)
+                    .tenantId(TENANT_ID)
+                    .patientId(PATIENT_UUID)
+                    .measureId("MEASURE1")
+                    .gapStatus("open")
+                    .build();
+            CareGapEntity entity3 = CareGapEntity.builder()
+                    .id(gap3)
+                    .tenantId(TENANT_ID)
+                    .patientId(PATIENT_UUID)
+                    .measureId("MEASURE3")
+                    .gapStatus("open")
+                    .build();
 
             when(careGapRepository.findByIdAndTenantId(gap1, TENANT_ID)).thenReturn(Optional.of(entity1));
             when(careGapRepository.findByIdAndTenantId(gap2, TENANT_ID)).thenReturn(Optional.empty()); // Not found
@@ -695,7 +707,12 @@ class CareGapIdentificationServiceTest {
             // Given
             String invalidId = "not-a-uuid";
             UUID validGap = UUID.randomUUID();
-            CareGapEntity validEntity = CareGapEntity.builder().id(validGap).tenantId(TENANT_ID).gapStatus("open").build();
+            CareGapEntity validEntity = CareGapEntity.builder()
+                    .id(validGap)
+                    .tenantId(TENANT_ID)
+                    .patientId(PATIENT_UUID)
+                    .gapStatus("open")
+                    .build();
 
             when(careGapRepository.findByIdAndTenantId(validGap, TENANT_ID)).thenReturn(Optional.of(validEntity));
             when(careGapRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -713,6 +730,7 @@ class CareGapIdentificationServiceTest {
             // Then
             assertThat(response.getSuccessCount()).isEqualTo(1);
             assertThat(response.getFailureCount()).isEqualTo(1);
+            assertThat(response.getErrors()).hasSize(1);
             assertThat(response.getErrors().get(0).getErrorCode()).isEqualTo("INVALID_GAP_ID");
         }
     }

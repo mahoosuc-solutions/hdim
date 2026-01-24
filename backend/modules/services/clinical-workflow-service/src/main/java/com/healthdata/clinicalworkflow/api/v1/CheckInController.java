@@ -98,7 +98,7 @@ public class CheckInController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'RECEPTIONIST')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<CheckInResponse> checkInPatient(
             @Parameter(description = "Tenant identifier", required = true, example = "TENANT001")
@@ -133,7 +133,7 @@ public class CheckInController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'RECEPTIONIST', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<CheckInResponse> getCheckIn(
             @Parameter(description = "Tenant identifier", required = true)
@@ -166,7 +166,7 @@ public class CheckInController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'RECEPTIONIST', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<CheckInResponse> getTodaysCheckIn(
             @Parameter(description = "Tenant identifier", required = true)
@@ -194,7 +194,7 @@ public class CheckInController {
             content = @Content(schema = @Schema(implementation = CheckInHistoryResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'RECEPTIONIST')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<CheckInHistoryResponse> getCheckInHistory(
             @Parameter(description = "Tenant identifier", required = true)
@@ -239,7 +239,7 @@ public class CheckInController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<CheckInResponse> verifyInsurance(
             @Parameter(description = "Tenant identifier", required = true)
@@ -276,7 +276,7 @@ public class CheckInController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'RECEPTIONIST')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<CheckInResponse> recordConsent(
             @Parameter(description = "Tenant identifier", required = true)
@@ -313,7 +313,7 @@ public class CheckInController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<CheckInResponse> updateDemographics(
             @Parameter(description = "Tenant identifier", required = true)

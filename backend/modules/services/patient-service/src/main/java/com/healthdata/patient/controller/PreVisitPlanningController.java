@@ -56,7 +56,7 @@ public class PreVisitPlanningController {
      */
     @GetMapping(value = "/{providerId}/patients/{patientId}/pre-visit-summary",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, resourceType = "PreVisitSummary", description = "Pre-visit summary access")
     @Operation(
             summary = "Get pre-visit summary for a patient",
@@ -125,7 +125,7 @@ public class PreVisitPlanningController {
      */
     @GetMapping(value = "/{providerId}/pre-visit-summaries",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, resourceType = "PreVisitSummary", description = "Batch pre-visit summaries access")
     @Operation(
             summary = "Get pre-visit summaries for scheduled patients",

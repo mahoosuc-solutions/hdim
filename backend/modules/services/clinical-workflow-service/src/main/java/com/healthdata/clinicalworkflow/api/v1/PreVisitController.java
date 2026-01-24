@@ -75,7 +75,7 @@ public class PreVisitController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'PROVIDER', 'RECEPTIONIST')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<ChecklistResponse> getPatientChecklist(
             @Parameter(description = "Tenant identifier", required = true)
@@ -108,7 +108,7 @@ public class PreVisitController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<ChecklistResponse> getChecklistTemplate(
             @Parameter(description = "Tenant identifier", required = true)
@@ -159,7 +159,7 @@ public class PreVisitController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'RECEPTIONIST')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<ChecklistResponse> createChecklist(
             @Parameter(description = "Tenant identifier", required = true)
@@ -194,7 +194,7 @@ public class PreVisitController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'RECEPTIONIST')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<ChecklistResponse> completeChecklistItem(
             @Parameter(description = "Tenant identifier", required = true)
@@ -231,7 +231,7 @@ public class PreVisitController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<ChecklistResponse> addCustomItem(
             @Parameter(description = "Tenant identifier", required = true)
@@ -268,7 +268,7 @@ public class PreVisitController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'PROVIDER', 'RECEPTIONIST')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<ChecklistProgressResponse> getChecklistProgress(
             @Parameter(description = "Tenant identifier", required = true)
@@ -301,7 +301,7 @@ public class PreVisitController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<List<ChecklistItemResponse>> getIncompleteCriticalItems(
             @Parameter(description = "Tenant identifier", required = true)

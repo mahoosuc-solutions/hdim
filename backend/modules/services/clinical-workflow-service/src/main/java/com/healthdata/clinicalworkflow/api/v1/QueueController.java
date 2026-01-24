@@ -65,7 +65,7 @@ public class QueueController {
             content = @Content(schema = @Schema(implementation = QueueStatusResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'PROVIDER', 'RECEPTIONIST')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<QueueStatusResponse> getQueueStatus(
             @Parameter(description = "Tenant identifier", required = true)
@@ -115,7 +115,7 @@ public class QueueController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'RECEPTIONIST')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<QueuePositionResponse> addToQueue(
             @Parameter(description = "Tenant identifier", required = true)
@@ -149,7 +149,7 @@ public class QueueController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'PROVIDER', 'RECEPTIONIST')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<QueuePositionResponse> getPatientQueueInfo(
             @Parameter(description = "Tenant identifier", required = true)
@@ -181,7 +181,7 @@ public class QueueController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<QueuePositionResponse> callPatient(
             @Parameter(description = "Tenant identifier", required = true)
@@ -214,7 +214,7 @@ public class QueueController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<Void> removeFromQueue(
             @Parameter(description = "Tenant identifier", required = true)
@@ -243,7 +243,7 @@ public class QueueController {
             content = @Content(schema = @Schema(implementation = QueueWaitTimeResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'RECEPTIONIST')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<QueueWaitTimeResponse> getWaitTimes(
             @Parameter(description = "Tenant identifier", required = true)
@@ -267,7 +267,7 @@ public class QueueController {
             description = "Queue entries grouped by priority"
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<Map<String, List<QueuePositionResponse>>> getQueueByPriority(
             @Parameter(description = "Tenant identifier", required = true)

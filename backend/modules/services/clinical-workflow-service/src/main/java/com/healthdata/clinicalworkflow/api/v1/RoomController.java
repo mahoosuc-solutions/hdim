@@ -61,7 +61,7 @@ public class RoomController {
             content = @Content(schema = @Schema(implementation = RoomBoardResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<RoomBoardResponse> getRoomBoard(
             @Parameter(description = "Tenant identifier", required = true)
@@ -92,7 +92,7 @@ public class RoomController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<RoomStatusResponse> getRoomDetails(
             @Parameter(description = "Tenant identifier", required = true)
@@ -120,7 +120,7 @@ public class RoomController {
             content = @Content(schema = @Schema(implementation = RoomStatusResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<List<RoomStatusResponse>> getAvailableRooms(
             @Parameter(description = "Tenant identifier", required = true)
@@ -169,7 +169,7 @@ public class RoomController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<RoomStatusResponse> assignPatientToRoom(
             @Parameter(description = "Tenant identifier", required = true)
@@ -206,7 +206,7 @@ public class RoomController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<RoomStatusResponse> updateRoomStatus(
             @Parameter(description = "Tenant identifier", required = true)
@@ -243,7 +243,7 @@ public class RoomController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<RoomStatusResponse> markRoomReady(
             @Parameter(description = "Tenant identifier", required = true)
@@ -278,7 +278,7 @@ public class RoomController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<RoomStatusResponse> dischargePatient(
             @Parameter(description = "Tenant identifier", required = true)
@@ -313,7 +313,7 @@ public class RoomController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<RoomStatusResponse> scheduleCleaning(
             @Parameter(description = "Tenant identifier", required = true)

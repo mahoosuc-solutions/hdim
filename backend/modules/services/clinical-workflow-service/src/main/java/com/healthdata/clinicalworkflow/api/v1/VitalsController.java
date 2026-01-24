@@ -92,7 +92,7 @@ public class VitalsController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<VitalSignsResponse> recordVitalSigns(
             @Parameter(description = "Tenant identifier", required = true)
@@ -126,7 +126,7 @@ public class VitalsController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<VitalSignsResponse> getVitalSigns(
             @Parameter(description = "Tenant identifier", required = true)
@@ -153,7 +153,7 @@ public class VitalsController {
             content = @Content(schema = @Schema(implementation = VitalsHistoryResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<VitalsHistoryResponse> getVitalsHistory(
             @Parameter(description = "Tenant identifier", required = true)
@@ -182,7 +182,7 @@ public class VitalsController {
             content = @Content(schema = @Schema(implementation = VitalAlertResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<List<VitalAlertResponse>> getVitalAlerts(
             @Parameter(description = "Tenant identifier", required = true)
@@ -214,7 +214,7 @@ public class VitalsController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<VitalSignsResponse> getLatestVitals(
             @Parameter(description = "Tenant identifier", required = true)
@@ -241,7 +241,7 @@ public class VitalsController {
             content = @Content(schema = @Schema(implementation = VitalAlertResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<List<VitalAlertResponse>> getCriticalAlerts(
             @Parameter(description = "Tenant identifier", required = true)
@@ -271,7 +271,7 @@ public class VitalsController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'MEDICAL_ASSISTANT', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     public ResponseEntity<VitalAlertResponse> acknowledgeAlert(
             @Parameter(description = "Tenant identifier", required = true)

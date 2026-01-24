@@ -9,6 +9,7 @@
     <include file="db/changelog/0002-create-document-ratings-table.xml"/>
     <include file="db/changelog/0003-create-document-views-table.xml"/>
     <include file="db/changelog/0004-create-search-queries-table.xml"/>
+    <include file="db/changelog/0005-add-ocr-fields-to-document-attachments.xml"/>
     <include file="db/changelog/changes/001-initial-schema.sql"/>
 
 </databaseChangeLog>

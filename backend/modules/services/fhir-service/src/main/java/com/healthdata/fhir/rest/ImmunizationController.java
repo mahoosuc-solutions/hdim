@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.Map;
 import com.healthdata.audit.annotations.Audited;
@@ -28,6 +29,7 @@ public class ImmunizationController {
     private final IParser jsonParser = fhirContext.newJsonParser().setPrettyPrint(true);
 
     // Create Immunization
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> createImmunization(
@@ -47,6 +49,7 @@ public class ImmunizationController {
     }
 
     // Get Immunization by ID
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getImmunization(
@@ -63,6 +66,7 @@ public class ImmunizationController {
     }
 
     // Update Immunization
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> updateImmunization(
@@ -83,6 +87,7 @@ public class ImmunizationController {
     }
 
     // Delete Immunization
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteImmunization(
@@ -97,6 +102,7 @@ public class ImmunizationController {
     }
 
     // Search by patient
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> searchByPatient(
@@ -127,6 +133,7 @@ public class ImmunizationController {
     }
 
     // Get completed immunizations
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/completed", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getCompletedImmunizations(
@@ -145,6 +152,7 @@ public class ImmunizationController {
     }
 
     // Check if patient has immunization
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/has-immunization", produces = "application/json")
     public ResponseEntity<Map<String, Boolean>> hasImmunization(
@@ -161,6 +169,7 @@ public class ImmunizationController {
     }
 
     // Get vaccine series
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/series", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getVaccineSeries(
@@ -180,6 +189,7 @@ public class ImmunizationController {
     }
 
     // Check series completion
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/series-complete", produces = "application/json")
     public ResponseEntity<Map<String, Boolean>> isSeriesComplete(
@@ -197,6 +207,7 @@ public class ImmunizationController {
     }
 
     // Get immunizations with reactions
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/with-reactions", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getImmunizationsWithReactions(
@@ -215,6 +226,7 @@ public class ImmunizationController {
     }
 
     // Count immunizations
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/count", produces = "application/json")
     public ResponseEntity<Map<String, Long>> countImmunizations(
@@ -237,6 +249,7 @@ public class ImmunizationController {
     }
 
     // Compliance report endpoint
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/compliance", produces = "application/json")
     public ResponseEntity<Map<String, Object>> getComplianceReport(
@@ -256,6 +269,7 @@ public class ImmunizationController {
     }
 
     // Health check
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/_health")
     public ResponseEntity<Map<String, String>> health() {

@@ -19,6 +19,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.healthdata.fhir.service.ObservationService;
 
@@ -64,6 +65,7 @@ public class ObservationController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> createObservation(
@@ -101,6 +103,7 @@ public class ObservationController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getObservation(
@@ -128,6 +131,7 @@ public class ObservationController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> updateObservation(
@@ -167,6 +171,7 @@ public class ObservationController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteObservation(
@@ -195,6 +200,7 @@ public class ObservationController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> searchObservations(
@@ -262,6 +268,7 @@ public class ObservationController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/lab-results", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getLabResults(
@@ -290,6 +297,7 @@ public class ObservationController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/vital-signs", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getVitalSigns(
@@ -318,6 +326,7 @@ public class ObservationController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/latest", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getLatestObservation(
@@ -339,6 +348,7 @@ public class ObservationController {
      * Health check endpoint
      * GET /fhir/Observation/_health
      */
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/_health")
     public ResponseEntity<String> healthCheck() {

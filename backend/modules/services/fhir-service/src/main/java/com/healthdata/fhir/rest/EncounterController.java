@@ -10,6 +10,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.healthdata.fhir.service.EncounterService;
 import com.healthdata.fhir.util.FhirDateRangeParser;
@@ -36,6 +37,7 @@ public class EncounterController {
      * Create a new Encounter resource
      * POST /fhir/Encounter
      */
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> createEncounter(
@@ -59,6 +61,7 @@ public class EncounterController {
      * Read an Encounter resource by ID
      * GET /fhir/Encounter/{id}
      */
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getEncounter(
@@ -76,6 +79,7 @@ public class EncounterController {
      * Update an Encounter resource
      * PUT /fhir/Encounter/{id}
      */
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> updateEncounter(
@@ -100,6 +104,7 @@ public class EncounterController {
      * Delete an Encounter resource
      * DELETE /fhir/Encounter/{id}
      */
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEncounter(
@@ -118,6 +123,7 @@ public class EncounterController {
      * Search Encounters by patient
      * GET /fhir/Encounter?patient={patientId}
      */
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> searchEncounters(
@@ -171,6 +177,7 @@ public class EncounterController {
      * Get finished encounters for a patient
      * GET /fhir/Encounter/finished?patient={patientId}
      */
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/finished", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getFinishedEncounters(
@@ -190,6 +197,7 @@ public class EncounterController {
      * Get active encounters for a patient
      * GET /fhir/Encounter/active?patient={patientId}
      */
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/active", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getActiveEncounters(
@@ -209,6 +217,7 @@ public class EncounterController {
      * Get inpatient encounters for a patient
      * GET /fhir/Encounter/inpatient?patient={patientId}
      */
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/inpatient", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getInpatientEncounters(
@@ -228,6 +237,7 @@ public class EncounterController {
      * Get ambulatory encounters for a patient
      * GET /fhir/Encounter/ambulatory?patient={patientId}
      */
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/ambulatory", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getAmbulatoryEncounters(
@@ -247,6 +257,7 @@ public class EncounterController {
      * Get emergency encounters for a patient
      * GET /fhir/Encounter/emergency?patient={patientId}
      */
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/emergency", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getEmergencyEncounters(
@@ -266,6 +277,7 @@ public class EncounterController {
      * Check if patient has encounter in date range
      * GET /fhir/Encounter/has-encounter?patient={patientId}&date-start={start}&date-end={end}
      */
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/has-encounter", produces = "application/json")
     public ResponseEntity<String> hasEncounterInDateRange(
@@ -287,6 +299,7 @@ public class EncounterController {
      * Count inpatient encounters in date range (for utilization measures)
      * GET /fhir/Encounter/count-inpatient?patient={patientId}&date-start={start}&date-end={end}
      */
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/count-inpatient", produces = "application/json")
     public ResponseEntity<String> countInpatientEncounters(
@@ -308,6 +321,7 @@ public class EncounterController {
      * Count emergency encounters in date range
      * GET /fhir/Encounter/count-emergency?patient={patientId}&date-start={start}&date-end={end}
      */
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/count-emergency", produces = "application/json")
     public ResponseEntity<String> countEmergencyEncounters(
@@ -329,6 +343,7 @@ public class EncounterController {
      * Health check endpoint
      * GET /fhir/Encounter/_health
      */
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/_health")
     public ResponseEntity<String> healthCheck() {

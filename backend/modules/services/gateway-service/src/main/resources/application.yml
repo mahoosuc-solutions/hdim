@@ -37,6 +37,19 @@ spring:
       port: 6380
       timeout: 2000ms
 
+  # Spring Session Configuration - Redis-backed distributed sessions
+  session:
+    store-type: redis
+    timeout: 4h  # 4-hour idle timeout (configurable)
+    redis:
+      namespace: spring:session  # Redis key prefix
+      flush-mode: on-save  # Write to Redis on save (immediate)
+      cleanup-cron: "0 */5 * * * *"  # Cleanup expired sessions every 5 minutes
+    # Session cookie configuration
+    cookie-name: HDIM_SESSION
+    cookie-secure: ${SESSION_COOKIE_SECURE:true}  # HTTPS-only in production
+    timeout-seconds: 14400  # 4 hours = 14400 seconds
+
 # Enable authentication controller in Gateway
 authentication:
   controller:

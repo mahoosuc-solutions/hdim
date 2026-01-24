@@ -9,15 +9,25 @@ interface VideoPlayerProps {
   thumbnailSrc: string;
   title: string;
   description: string;
+  youtubeId?: string; // Optional YouTube video ID
+  preferYouTube?: boolean; // If true, use YouTube by default
 }
 
 export default function VideoPlayer({
   videoSrc,
   thumbnailSrc,
   title,
-  description
+  description,
+  youtubeId,
+  preferYouTube = false
 }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [useYouTube, setUseYouTube] = useState(preferYouTube && !!youtubeId);
+
+  // Determine which video source to use
+  const effectiveVideoSrc = useYouTube && youtubeId
+    ? `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`
+    : videoSrc;
 
   // Modal overlay when video is playing
   if (isPlaying) {
@@ -39,17 +49,27 @@ export default function VideoPlayer({
             <X className="w-8 h-8" />
           </button>
 
-          {/* Video element */}
-          <video
-            src={videoSrc}
-            controls
-            autoPlay
-            className="w-full rounded-lg shadow-2xl"
-            aria-label={`${title} - ${description}`}
-          >
-            <track kind="captions" />
-            Your browser doesn't support video playback.
-          </video>
+          {/* Video element - Self-hosted or YouTube */}
+          {useYouTube && youtubeId ? (
+            <iframe
+              src={effectiveVideoSrc}
+              className="w-full aspect-video rounded-lg shadow-2xl"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              title={title}
+            />
+          ) : (
+            <video
+              src={videoSrc}
+              controls
+              autoPlay
+              className="w-full rounded-lg shadow-2xl"
+              aria-label={`${title} - ${description}`}
+            >
+              <track kind="captions" />
+              Your browser doesn't support video playback.
+            </video>
+          )}
         </div>
       </div>
     );
@@ -89,6 +109,13 @@ export default function VideoPlayer({
           <Play className="w-8 h-8 text-primary ml-1" fill="currentColor" />
         </div>
       </div>
+
+      {/* Video source indicator (optional) */}
+      {youtubeId && (
+        <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-white">
+          {useYouTube ? 'YouTube' : 'Direct'}
+        </div>
+      )}
 
       {/* Accessibility: Screen reader description */}
       <span className="sr-only">{description}</span>

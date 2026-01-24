@@ -99,6 +99,129 @@ body {
   }
 }
 
+// =============================================================================
+// Accessibility: Keyboard Focus Indicators
+// WCAG 2.1 Level AA Success Criterion 2.4.7 Focus Visible
+// WCAG 2.1 Level AAA Success Criterion 2.4.11 Focus Appearance (Enhanced)
+// =============================================================================
+
+// Global focus styles with 3:1 contrast ratio
+*:focus {
+  outline: 2px solid var(--accent-color, #2196f3);
+  outline-offset: 2px;
+}
+
+// High-contrast focus for interactive elements
+button:focus,
+a:focus,
+input:focus,
+textarea:focus,
+select:focus,
+[tabindex]:focus {
+  outline: 3px solid var(--accent-color, #2196f3);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.2);
+}
+
+// Material Design button focus styles
+.mat-mdc-button:focus,
+.mat-mdc-raised-button:focus,
+.mat-mdc-flat-button:focus,
+.mat-mdc-stroked-button:focus,
+.mat-mdc-icon-button:focus,
+.mat-mdc-fab:focus,
+.mat-mdc-mini-fab:focus {
+  outline: 3px solid var(--accent-color, #2196f3) !important;
+  outline-offset: 2px !important;
+}
+
+// Material Design form field focus
+.mat-mdc-form-field:focus-within {
+  .mdc-text-field--focused {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-width: 3px !important;
+    }
+  }
+}
+
+// Material table row focus
+.mat-mdc-row:focus {
+  outline: 3px solid var(--accent-color, #2196f3) !important;
+  outline-offset: -3px !important;
+  background-color: rgba(33, 150, 243, 0.05) !important;
+}
+
+// Material checkbox and radio button focus
+.mat-mdc-checkbox:focus-within,
+.mat-mdc-radio-button:focus-within {
+  .mdc-checkbox__ripple,
+  .mdc-radio__ripple {
+    outline: 3px solid var(--accent-color, #2196f3);
+    outline-offset: 2px;
+  }
+}
+
+// Material select focus
+.mat-mdc-select:focus {
+  .mat-mdc-select-trigger {
+    outline: 3px solid var(--accent-color, #2196f3);
+    outline-offset: 2px;
+  }
+}
+
+// Navigation links focus
+.mat-mdc-list-item:focus,
+.mat-mdc-nav-list .mat-mdc-list-item:focus {
+  outline: 3px solid var(--accent-color, #2196f3) !important;
+  outline-offset: -3px !important;
+  background-color: rgba(33, 150, 243, 0.1) !important;
+}
+
+// Card actions focus
+.mat-mdc-card-actions button:focus {
+  outline: 3px solid var(--accent-color, #2196f3);
+  outline-offset: 2px;
+}
+
+// Skip links (already defined in navigation component, but ensure global visibility)
+.skip-link:focus {
+  outline: 3px solid var(--accent-color, #2196f3);
+  outline-offset: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+// Remove focus indicator when using mouse (only show for keyboard)
+// This uses :focus-visible which is supported in modern browsers
+*:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+// Ensure focus-visible works for keyboard navigation
+*:focus-visible {
+  outline: 3px solid var(--accent-color, #2196f3);
+  outline-offset: 2px;
+}
+
+// High-contrast mode support (Windows High Contrast Mode)
+@media (prefers-contrast: high) {
+  *:focus,
+  *:focus-visible {
+    outline: 4px solid currentColor;
+    outline-offset: 2px;
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  *:focus,
+  *:focus-visible {
+    transition: none;
+  }
+}
+
 // Ensure icon buttons in toolbars and dense contexts maintain touch target
 .mat-toolbar .mat-mdc-icon-button,
 .mat-card-header .mat-mdc-icon-button,

@@ -1,6 +1,7 @@
 package com.healthdata.notification.application;
 
 import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.models.AuditAction;
 import com.healthdata.featureflags.TenantFeatureFlagService;
 import com.healthdata.notification.domain.model.AppointmentReminderSent;
 import com.healthdata.notification.domain.repository.AppointmentReminderSentRepository;
@@ -63,7 +64,11 @@ public class AppointmentReminderService {
      * @param daysBefore Days before appointment to send reminder (1, 3, or 7)
      */
     @Transactional
-    @Audited(eventType = "APPOINTMENT_REMINDER_BATCH")
+    @Audited(
+        action = AuditAction.EXECUTE,
+        resourceType = "Appointment",
+        description = "Process appointment reminder batch"
+    )
     public void processReminders(String tenantId, int daysBefore) {
         log.info("Processing appointment reminders for tenant {} ({} days before)", tenantId, daysBefore);
 
@@ -130,7 +135,11 @@ public class AppointmentReminderService {
      * @param daysBefore  Days before appointment
      * @return true if sent, false if skipped
      */
-    @Audited(eventType = "APPOINTMENT_REMINDER_SENT")
+    @Audited(
+        action = AuditAction.CREATE,
+        resourceType = "Notification",
+        description = "Send appointment reminder SMS"
+    )
     private boolean sendReminder(String tenantId, FhirServiceClient.AppointmentDto appointment, int daysBefore) {
         UUID appointmentId = appointment.getId();
         UUID patientId = appointment.getPatientId();

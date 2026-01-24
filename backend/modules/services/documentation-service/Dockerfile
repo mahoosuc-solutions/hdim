@@ -24,9 +24,22 @@ FROM eclipse-temurin:21-jre-alpine
 
 LABEL maintainer="HDIM Platform Team"
 LABEL service="documentation-service"
-LABEL description="Clinical Documentation Service for HDIM Healthcare Platform"
+LABEL description="Clinical Documentation Service for HDIM Healthcare Platform - with OCR Support"
 
 WORKDIR /app
+
+# Install Tesseract OCR and dependencies
+# Also install wget for healthcheck
+RUN apk add --no-cache \
+    tesseract-ocr \
+    tesseract-ocr-data-eng \
+    wget \
+    && tesseract --version
+
+# Verify Tesseract installation
+RUN echo "Tesseract OCR installed successfully" && \
+    ls -la /usr/share/tessdata/ && \
+    test -f /usr/share/tessdata/eng.traineddata || (echo "ERROR: eng.traineddata not found" && exit 1)
 
 # Create non-root user
 RUN addgroup -g 1001 -S healthdata && \
@@ -35,10 +48,18 @@ RUN addgroup -g 1001 -S healthdata && \
 # Copy the built JAR
 COPY --from=builder /app/modules/services/documentation-service/build/libs/*.jar app.jar
 
+# Create document storage directory
+RUN mkdir -p /var/lib/healthdata/documents && \
+    chown -R healthdata:healthdata /var/lib/healthdata
+
 # Set ownership
 RUN chown -R healthdata:healthdata /app
 
 USER healthdata
+
+# Environment variables
+ENV TESSDATA_PREFIX=/usr/share/tessdata \
+    DOCUMENT_STORAGE_PATH=/var/lib/healthdata/documents
 
 # JVM configuration for containers
 ENV JAVA_OPTS="-XX:+UseContainerSupport \

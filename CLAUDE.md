@@ -885,7 +885,7 @@ Before submitting code, verify:
 ---
 
 _Last Updated: January 24, 2026_
-_Version: 2.4_ - **Clinical Portal HIPAA Compliance COMPLETE**: Migrated 30+ files from console logging to LoggerService with PHI filtering. Achieved 98.2% console violation reduction (109/111 eliminated). All services, components, and visualization files now use HIPAA-compliant logging. ESLint enforcement active. Platform now 100% HIPAA-compliant for PHI logging (Admin Portal + Clinical Portal). See [Migration Summary](./docs/CLINICAL_PORTAL_HIPAA_MIGRATION_SUMMARY.md) for details.
+_Version: 2.5_ - **OCR Document Processing PRODUCTION-READY** (Issue #245): Completed comprehensive integration tests, enhanced PostgreSQL full-text search with ts_vector/ts_rank, Docker configuration with Tesseract OCR, application configuration for document storage and OCR settings. 8 integration test scenarios covering PDF/image upload, OCR status polling, reprocessing, full-text search, error handling, and multi-tenant isolation. Test suite: 60-90s duration with Testcontainers. See [OCR Completion Summary](./docs/OPTION_3_OCR_COMPLETION_SUMMARY.md) and [Integration Test Guide](./docs/OCR_INTEGRATION_TEST_GUIDE.md) for details. Platform achievements: ✅ HIPAA Compliance (Option 1), ✅ OCR Document Processing (Option 3) - both production-ready.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

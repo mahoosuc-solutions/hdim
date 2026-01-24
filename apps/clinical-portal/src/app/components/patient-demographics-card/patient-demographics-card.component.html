@@ -1,0 +1,187 @@
+<mat-card class="demographics-card" role="region" aria-labelledby="demographics-heading">
+  <mat-card-header>
+    <div class="header-content">
+      <mat-icon class="header-icon" aria-hidden="true">person</mat-icon>
+      <mat-card-title id="demographics-heading">Patient Demographics</mat-card-title>
+    </div>
+    @if (patient) {
+      <mat-chip [color]="getStatusColor()" aria-label="Patient status">
+        {{ getStatusDisplay() }}
+      </mat-chip>
+    }
+  </mat-card-header>
+
+  <mat-card-content>
+    @if (!patient) {
+      <div class="no-data" role="status">
+        <mat-icon aria-hidden="true">info</mat-icon>
+        <p>No patient data available</p>
+      </div>
+    } @else {
+      <!-- Basic Demographics Section -->
+      <div class="demographics-section" role="group" aria-labelledby="basic-info-heading">
+        <div class="section-header">
+          <mat-icon aria-hidden="true">badge</mat-icon>
+          <h3 id="basic-info-heading">Basic Information</h3>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <label class="info-label">Full Name</label>
+            <span class="info-value">{{ fullName }}</span>
+          </div>
+
+          <div class="info-item">
+            <label class="info-label">Medical Record Number</label>
+            <span class="info-value" [matTooltip]="mrnSystem">
+              {{ mrn || 'Not assigned' }}
+            </span>
+          </div>
+
+          <div class="info-item">
+            <label class="info-label">Date of Birth</label>
+            <span class="info-value">
+              {{ patient.birthDate || 'Not specified' }}
+              @if (age !== null) {
+                <span class="age-badge">({{ age }} years)</span>
+              }
+            </span>
+          </div>
+
+          <div class="info-item">
+            <label class="info-label">Gender</label>
+            <span class="info-value">{{ getGenderDisplay() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Contact Information Section -->
+      <div class="demographics-section" role="group" aria-labelledby="contact-info-heading">
+        <div class="section-header">
+          <mat-icon aria-hidden="true">contact_phone</mat-icon>
+          <h3 id="contact-info-heading">Contact Information</h3>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <label class="info-label">
+              <mat-icon class="inline-icon" aria-hidden="true">phone</mat-icon>
+              Phone
+            </label>
+            <span class="info-value">
+              @if (primaryPhone) {
+                <a [href]="'tel:' + primaryPhone" [attr.aria-label]="'Call ' + primaryPhone">
+                  {{ primaryPhone }}
+                </a>
+              } @else {
+                <span class="no-data-inline">Not provided</span>
+              }
+            </span>
+          </div>
+
+          <div class="info-item">
+            <label class="info-label">
+              <mat-icon class="inline-icon" aria-hidden="true">email</mat-icon>
+              Email
+            </label>
+            <span class="info-value">
+              @if (primaryEmail) {
+                <a [href]="'mailto:' + primaryEmail" [attr.aria-label]="'Email ' + primaryEmail">
+                  {{ primaryEmail }}
+                </a>
+              } @else {
+                <span class="no-data-inline">Not provided</span>
+              }
+            </span>
+          </div>
+
+          <div class="info-item full-width">
+            <label class="info-label">
+              <mat-icon class="inline-icon" aria-hidden="true">home</mat-icon>
+              Address
+            </label>
+            <span class="info-value address-value">
+              @if (primaryAddress) {
+                {{ getFormattedAddress(primaryAddress) }}
+              } @else {
+                <span class="no-data-inline">No address on file</span>
+              }
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Emergency Contacts Section (if enabled and data available) -->
+      @if (showEmergencyContacts && (emergencyContactName || emergencyContactPhone)) {
+        <mat-divider></mat-divider>
+
+        <div class="demographics-section" role="group" aria-labelledby="emergency-contact-heading">
+          <div class="section-header">
+            <mat-icon aria-hidden="true">emergency</mat-icon>
+            <h3 id="emergency-contact-heading">Emergency Contact</h3>
+          </div>
+
+          <div class="info-grid">
+            @if (emergencyContactName) {
+              <div class="info-item">
+                <label class="info-label">Name</label>
+                <span class="info-value">{{ emergencyContactName }}</span>
+              </div>
+            }
+
+            @if (emergencyContactRelationship) {
+              <div class="info-item">
+                <label class="info-label">Relationship</label>
+                <span class="info-value">{{ emergencyContactRelationship }}</span>
+              </div>
+            }
+
+            @if (emergencyContactPhone) {
+              <div class="info-item">
+                <label class="info-label">Phone</label>
+                <span class="info-value">
+                  <a [href]="'tel:' + emergencyContactPhone" [attr.aria-label]="'Call emergency contact ' + emergencyContactPhone">
+                    {{ emergencyContactPhone }}
+                  </a>
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Insurance Information Section (if enabled and data available) -->
+      @if (showInsurance && insuranceMemberId) {
+        <mat-divider></mat-divider>
+
+        <div class="demographics-section" role="group" aria-labelledby="insurance-info-heading">
+          <div class="section-header">
+            <mat-icon aria-hidden="true">health_and_safety</mat-icon>
+            <h3 id="insurance-info-heading">Insurance Information</h3>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-item">
+              <label class="info-label">Member ID</label>
+              <span class="info-value">{{ insuranceMemberId }}</span>
+            </div>
+
+            @if (insurancePlanName) {
+              <div class="info-item">
+                <label class="info-label">Plan Name</label>
+                <span class="info-value">{{ insurancePlanName }}</span>
+              </div>
+            }
+          </div>
+
+          <div class="info-note">
+            <mat-icon class="note-icon" aria-hidden="true">info</mat-icon>
+            <span>For complete coverage details, please refer to the Coverage resource.</span>
+          </div>
+        </div>
+      }
+    }
+  </mat-card-content>
+</mat-card>

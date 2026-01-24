@@ -37,58 +37,12 @@
 
   <!-- Main Content -->
   <div *ngIf="!loading && !error && patient" class="content">
-    <!-- Patient Demographics Card -->
-    <mat-card class="demographics-card">
-      <mat-card-header>
-        <mat-icon mat-card-avatar>person</mat-icon>
-        <mat-card-title>{{ getPatientName() }}</mat-card-title>
-        <mat-card-subtitle>Patient ID: {{ patient.id }}</mat-card-subtitle>
-      </mat-card-header>
-
-      <mat-card-content>
-        <div class="demographics-grid">
-          <div class="demo-item">
-            <span class="label">MRN:</span>
-            <span class="value">
-              {{ getPatientMRN() || 'N/A' }}
-              <span *ngIf="getPatientMRN() && getPatientMRNAuthority()" class="mrn-authority">
-                ({{ formatMRNAuthority(getPatientMRNAuthority()) }})
-              </span>
-            </span>
-          </div>
-          <div class="demo-item">
-            <span class="label">Date of Birth:</span>
-            <span class="value">{{ formatDate(patient.birthDate) }}</span>
-          </div>
-          <div class="demo-item">
-            <span class="label">Age:</span>
-            <span class="value">{{ getPatientAge() || 'N/A' }} years</span>
-          </div>
-          <div class="demo-item">
-            <span class="label">Gender:</span>
-            <span class="value">{{ patient.gender || 'N/A' }}</span>
-          </div>
-          <div class="demo-item">
-            <span class="label">Status:</span>
-            <mat-chip [color]="patient.active !== false ? 'primary' : 'warn'" selected>
-              {{ patient.active !== false ? 'Active' : 'Inactive' }}
-            </mat-chip>
-          </div>
-        </div>
-      </mat-card-content>
-
-      <mat-card-actions>
-        <app-loading-button
-          text="View Quality Results"
-          icon="assessment"
-          color="primary"
-          variant="raised"
-          [loading]="viewResultsLoading"
-          ariaLabel="View quality measure results for this patient"
-          (buttonClick)="navigateToResults()">
-        </app-loading-button>
-      </mat-card-actions>
-    </mat-card>
+    <!-- Patient Demographics Card - Issue #237: Comprehensive 360° View -->
+    <app-patient-demographics-card
+      [patient]="patient"
+      [showEmergencyContacts]="true"
+      [showInsurance]="true">
+    </app-patient-demographics-card>
 
     <!-- Care Gaps Alert (if any) -->
     <mat-card *ngIf="hasCareGaps()" class="care-gaps-alert">

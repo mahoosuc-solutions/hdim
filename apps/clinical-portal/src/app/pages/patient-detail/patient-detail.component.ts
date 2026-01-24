@@ -21,6 +21,7 @@ import { QualityMeasureResult } from '../../models/quality-result.model';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { PatientHealthOverviewComponent } from '../patient-health-overview/patient-health-overview.component';
+import { PatientDemographicsCardComponent } from '../../components/patient-demographics-card/patient-demographics-card.component';
 import { LoggerService } from '../../services/logger.service';
 
 @Component({
@@ -40,6 +41,7 @@ import { LoggerService } from '../../services/logger.service';
     LoadingButtonComponent,
     LoadingOverlayComponent,
     PatientHealthOverviewComponent,
+    PatientDemographicsCardComponent,
   ],
   templateUrl: './patient-detail.component.html',
   styleUrls: ['./patient-detail.component.scss'],

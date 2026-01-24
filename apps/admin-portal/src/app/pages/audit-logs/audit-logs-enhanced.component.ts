@@ -16,6 +16,7 @@ import {
   AuditStatistics,
 } from '../../models/admin.model';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
+import { LoggerService } from '../../services/logger.service';
 
 @Component({
   selector: 'app-audit-logs-enhanced',
@@ -68,6 +69,8 @@ export class AuditLogsEnhancedComponent implements OnInit, OnDestroy {
   // Use inject() instead of constructor injection
   private adminService = inject(AdminService);
   private fb = inject(FormBuilder);
+  private loggerService = inject(LoggerService);
+  private logger = this.loggerService.withContext('AuditLogsEnhancedComponent');
 
   constructor() {
     this.searchForm = this.fb.group({
@@ -122,7 +125,10 @@ export class AuditLogsEnhancedComponent implements OnInit, OnDestroy {
           this.loading = false;
         },
         error: (error) => {
-          console.error('Failed to load audit logs:', error);
+          this.logger.error('Failed to load audit logs', {
+            error: error.message,
+            status: error.status
+          });
           this.loading = false;
         },
       });
@@ -148,7 +154,9 @@ export class AuditLogsEnhancedComponent implements OnInit, OnDestroy {
           this.statistics = stats;
         },
         error: (error) => {
-          console.error('Failed to load statistics:', error);
+          this.logger.error('Failed to load statistics', {
+            error: error.message
+          });
         },
       });
   }
@@ -260,7 +268,10 @@ export class AuditLogsEnhancedComponent implements OnInit, OnDestroy {
           this.exportLoading = false;
         },
         error: (error) => {
-          console.error('Failed to export CSV:', error);
+          this.logger.error('CSV export failed', {
+            error: error.message,
+            recordCount: this.events.length
+          });
           this.exportLoading = false;
           alert('Export failed. Using fallback method.');
           this.exportCsvFallback();
@@ -284,7 +295,10 @@ export class AuditLogsEnhancedComponent implements OnInit, OnDestroy {
           this.exportLoading = false;
         },
         error: (error) => {
-          console.error('Failed to export JSON:', error);
+          this.logger.error('JSON export failed', {
+            error: error.message,
+            recordCount: this.events.length
+          });
           this.exportLoading = false;
           alert('Export failed. Using fallback method.');
           this.exportJsonFallback();
@@ -308,7 +322,9 @@ export class AuditLogsEnhancedComponent implements OnInit, OnDestroy {
           this.exportLoading = false;
         },
         error: (error) => {
-          console.error('Failed to export PDF:', error);
+          this.logger.error('PDF export failed', {
+            error: error.message
+          });
           this.exportLoading = false;
           alert('PDF export not available. Please use CSV or JSON export.');
         },

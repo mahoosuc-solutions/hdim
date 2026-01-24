@@ -46,7 +46,7 @@ public class ProviderPanelController {
      * Get provider's patient panel with pagination.
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'PROVIDER') or @providerSecurity.isProvider(#providerId)")
+    @PreAuthorize("hasPermission('PATIENT_READ') or @providerSecurity.isProvider(#providerId)")
     @Operation(summary = "Get provider panel",
                description = "Returns paginated list of patients assigned to the provider")
     @Audited(action = AuditAction.READ, resourceType = "ProviderPanel", description = "View provider panel")
@@ -81,7 +81,7 @@ public class ProviderPanelController {
      * Get count of patients in provider's panel.
      */
     @GetMapping("/count")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'PROVIDER') or @providerSecurity.isProvider(#providerId)")
+    @PreAuthorize("hasPermission('PATIENT_READ') or @providerSecurity.isProvider(#providerId)")
     @Operation(summary = "Get panel count",
                description = "Returns count of patients in the provider's panel")
     public ResponseEntity<Map<String, Long>> getPanelCount(
@@ -99,7 +99,7 @@ public class ProviderPanelController {
      * Get patient IDs in provider's panel.
      */
     @GetMapping("/patient-ids")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'PROVIDER') or @providerSecurity.isProvider(#providerId)")
+    @PreAuthorize("hasPermission('PATIENT_READ') or @providerSecurity.isProvider(#providerId)")
     @Operation(summary = "Get panel patient IDs",
                description = "Returns list of patient IDs in the provider's panel")
     @Audited(action = AuditAction.READ, resourceType = "ProviderPanel", description = "Get panel patient IDs")
@@ -118,7 +118,7 @@ public class ProviderPanelController {
      * Check if a patient is in the provider's panel.
      */
     @GetMapping("/patients/{patientId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'PROVIDER') or @providerSecurity.isProvider(#providerId)")
+    @PreAuthorize("hasPermission('PATIENT_READ') or @providerSecurity.isProvider(#providerId)")
     @Operation(summary = "Check patient in panel",
                description = "Check if a specific patient is assigned to the provider")
     public ResponseEntity<Map<String, Boolean>> isPatientInPanel(
@@ -137,7 +137,7 @@ public class ProviderPanelController {
      * Assign a patient to the provider's panel.
      */
     @PostMapping("/patients")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROVIDER') or @providerSecurity.isProvider(#providerId)")
+    @PreAuthorize("hasPermission('PATIENT_WRITE') or @providerSecurity.isProvider(#providerId)")
     @Operation(summary = "Assign patient to panel",
                description = "Assign a patient to the provider's panel")
     @Audited(action = AuditAction.CREATE, resourceType = "ProviderPanel", description = "Assign patient to panel")
@@ -196,7 +196,7 @@ public class ProviderPanelController {
      * Remove a patient from the provider's panel.
      */
     @DeleteMapping("/patients/{patientId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROVIDER') or @providerSecurity.isProvider(#providerId)")
+    @PreAuthorize("hasPermission('PATIENT_WRITE') or @providerSecurity.isProvider(#providerId)")
     @Operation(summary = "Remove patient from panel",
                description = "Remove a patient from the provider's panel")
     @Audited(action = AuditAction.DELETE, resourceType = "ProviderPanel", description = "Remove patient from panel")

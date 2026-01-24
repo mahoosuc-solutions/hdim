@@ -15,67 +15,66 @@ import Link from 'next/link'
 
 export const metadata = {
   title: 'Pricing - HDIM | Healthcare Quality Platform',
-  description: 'Transparent pricing for healthcare quality automation. From $80/month for developers to enterprise deployments. 60-95% lower than competitors.',
+  description: 'Flexible pricing for healthcare quality automation. Request a tailored quote based on your measure mix and deployment needs.',
 }
 
 const tiers = [
   {
     id: 'developer',
     name: 'Developer',
-    price: '$80',
-    period: '/month',
-    description: 'Perfect for proof of concept and technical evaluation',
+    price: 'Contact us',
+    period: '',
+    description: 'For sandbox evaluation and technical validation',
     highlight: false,
     features: [
-      { text: 'Full platform (all 28 services)', included: true },
-      { text: 'Up to 1,000 patients', included: true },
+      { text: 'Core platform access', included: true },
+      { text: 'Limited patient volume', included: true },
       { text: 'Docker deployment', included: true },
       { text: 'Community support', included: true },
       { text: 'Documentation access', included: true },
-      { text: 'Single tenant', included: true },
+      { text: 'Single-tenant sandbox', included: true },
       { text: 'Priority support', included: false },
       { text: 'Custom measures', included: false },
     ],
-    cta: 'Start Free Trial',
-    ctaLink: '/demo',
+    cta: 'Request Access',
+    ctaLink: '/schedule',
     idealFor: ['Developers', 'Proof of concept', 'Small clinics', 'Technical evaluation'],
   },
   {
     id: 'professional',
     name: 'Professional',
-    price: '$500',
-    period: '/month',
-    description: 'For FQHCs, small ACOs, and independent practices',
+    price: 'Contact us',
+    period: '',
+    description: 'For smaller organizations and pilot deployments',
     highlight: true,
-    badge: 'Most Popular for FQHCs',
     features: [
-      { text: 'Up to 10,000 patients', included: true },
-      { text: '5 admin users', included: true },
-      { text: 'Email support (48hr)', included: true },
-      { text: 'Monthly platform updates', included: true },
+      { text: 'Scaled patient volume', included: true },
+      { text: 'Admin user access', included: true },
+      { text: 'Email support', included: true },
+      { text: 'Platform updates', included: true },
       { text: 'Basic analytics dashboards', included: true },
       { text: 'UDS/HEDIS automation', included: true },
       { text: 'Priority support', included: false },
       { text: 'Custom measures', included: false },
     ],
-    cta: 'Get Started',
+    cta: 'Talk to Sales',
     ctaLink: '/schedule',
     idealFor: ['FQHCs', 'Small ACOs', 'Independent practices', 'Rural health networks'],
   },
   {
     id: 'business',
     name: 'Business',
-    price: '$2,500',
-    period: '/month',
+    price: 'Contact us',
+    period: '',
     description: 'For mid-size organizations with advanced needs',
     highlight: false,
     features: [
-      { text: 'Up to 50,000 patients', included: true },
-      { text: '25 admin users', included: true },
-      { text: 'Priority support (24hr)', included: true },
-      { text: 'Weekly platform updates', included: true },
+      { text: 'Scaled patient volume', included: true },
+      { text: 'Admin user access', included: true },
+      { text: 'Priority support', included: true },
+      { text: 'Platform updates', included: true },
       { text: 'Advanced analytics', included: true },
-      { text: '5 custom measures/year', included: true },
+      { text: 'Custom measures', included: true },
       { text: 'Multi-tenant option', included: true },
       { text: 'Quarterly business reviews', included: true },
     ],
@@ -86,14 +85,14 @@ const tiers = [
   {
     id: 'enterprise',
     name: 'Enterprise',
-    price: 'Custom',
-    period: 'starting at $75K/year',
+    price: 'Contact us',
+    period: '',
     description: 'For large organizations with complex requirements',
     highlight: false,
     features: [
-      { text: 'Unlimited patients', included: true },
+      { text: 'Scaled patient volume', included: true },
       { text: 'Unlimited users', included: true },
-      { text: 'Dedicated support (4hr SLA)', included: true },
+      { text: 'Dedicated support', included: true },
       { text: 'On-premise or private cloud', included: true },
       { text: 'Custom integrations', included: true },
       { text: 'Unlimited custom measures', included: true },
@@ -107,46 +106,46 @@ const tiers = [
 ]
 
 const addOns = [
-  { name: 'Mental Health Screening', price: '+$200/mo', description: 'PHQ-9, GAD-7, PHQ-2 with auto-gap creation' },
-  { name: 'Risk Stratification', price: '+$300/mo', description: 'ML-powered predictive models, readmission risk' },
-  { name: 'Prior Authorization', price: '+$400/mo', description: 'CMS-0057-F compliant workflow automation' },
-  { name: 'SDOH Integration', price: '+$250/mo', description: 'Gravity Project, community resource directory' },
-  { name: 'AI Assistant', price: '+$500/mo', description: 'Natural language queries, automated insights' },
-  { name: 'White Label', price: '+$1,000/mo', description: 'Custom branding, subdomain' },
+  { name: 'Mental Health Screening', price: 'Custom', description: 'PHQ-9, GAD-7, PHQ-2 with auto-gap creation' },
+  { name: 'Risk Stratification', price: 'Custom', description: 'Predictive models and readmission risk' },
+  { name: 'Prior Authorization', price: 'Custom', description: 'CMS-0057-F aligned workflow automation' },
+  { name: 'SDOH Integration', price: 'Custom', description: 'Gravity Project and community resource directory' },
+  { name: 'AI Assistant', price: 'Custom', description: 'Natural language queries and automated insights' },
+  { name: 'White Label', price: 'Custom', description: 'Custom branding and subdomain' },
 ]
 
 const competitors = [
-  { name: 'HDIM Business', price: '$45K', threeYear: '$108K', highlight: true },
-  { name: 'Salesforce Health Cloud', price: '$195K+', threeYear: '$585K+', highlight: false },
-  { name: 'Optum Analytics', price: '$500K+', threeYear: '$1.5M+', highlight: false },
-  { name: 'Epic Healthy Planet', price: '$750K+', threeYear: '$2.25M+', highlight: false },
-  { name: 'Innovaccer', price: '$400K+', threeYear: '$1.2M+', highlight: false },
+  { name: 'HDIM', price: 'Custom', threeYear: 'Scope-based', highlight: true },
+  { name: 'Salesforce Health Cloud', price: 'Varies', threeYear: 'Varies', highlight: false },
+  { name: 'Optum Analytics', price: 'Varies', threeYear: 'Varies', highlight: false },
+  { name: 'Epic Healthy Planet', price: 'Varies', threeYear: 'Varies', highlight: false },
+  { name: 'Innovaccer', price: 'Varies', threeYear: 'Varies', highlight: false },
 ]
 
 const faqs = [
   {
-    question: 'That seems too cheap. What\'s the catch?',
-    answer: 'No catch. We built HDIM on modern cloud-native architecture - 28 microservices that scale independently. We don\'t have legacy technical debt or enterprise sales teams to fund. Lower infrastructure costs = pricing that reflects actual value.',
+    question: 'How is pricing determined?',
+    answer: 'Pricing is based on deployment scope, measure mix, data sources, and support requirements. We map these inputs to a clear implementation plan and an agreed delivery timeline.',
   },
   {
-    question: 'Do you offer a free trial?',
-    answer: 'Yes! Our Developer tier at $80/month is designed for evaluation. You get full platform access for 1,000 patients. If it doesn\'t work for you, you\'ve invested less than a dinner with your EHR vendor.',
+    question: 'Do you offer a trial or sandbox?',
+    answer: 'We offer guided demos and sandbox environments for qualified evaluations. Contact our team and we\'ll set up access based on your use case.',
   },
   {
-    question: 'What if we need more than 50,000 patients?',
-    answer: 'Enterprise tier supports unlimited patients with custom pricing based on your needs. Contact our sales team for a custom quote.',
+    question: 'How do you handle large populations?',
+    answer: 'We scale deployments based on patient volume and concurrency. Enterprise plans are sized to your population and performance targets.',
   },
   {
     question: 'Can we start small and scale up?',
-    answer: 'Absolutely. Many customers start with Professional tier to validate the platform, then upgrade as their population grows. Upgrades are seamless with no data migration required.',
+    answer: 'Absolutely. Many customers start with a focused scope, then expand coverage as they prove value and operational readiness.',
   },
   {
     question: 'Do you sign BAAs?',
-    answer: 'Yes. Business Associate Agreements are included with all tiers. We take HIPAA compliance seriously - our 5-minute PHI cache TTL is proof of that commitment.',
+    answer: 'Yes. Business Associate Agreements are available for all customer engagements.',
   },
   {
     question: 'What\'s included in implementation?',
-    answer: 'Quick Start ($5K) includes 30-day guided deployment. Standard Implementation ($15K) includes EHR integration and 60-day support. Enterprise implementations are custom-scoped.',
+    answer: 'Implementation includes onboarding, integration planning, measure configuration, and training. The scope is tailored to your data sources and deployment model.',
   },
 ]
 
@@ -175,28 +174,28 @@ export default function PricingPage() {
       <section className="py-16 bg-gradient-to-br from-primary via-primary-600 to-primary-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Transparent Pricing for Healthcare Quality
+            Flexible Pricing for Healthcare Quality
           </h1>
           <p className="text-xl text-white/80 max-w-2xl mx-auto mb-6">
-            Enterprise-grade quality automation at 60-95% lower cost than competitors.
-            No hidden fees. No long-term contracts required.
+            Enterprise-grade quality automation with pricing tailored to your deployment and program goals.
+            Clear scope, clear deliverables, and a rollout plan that fits your organization.
           </p>
           <div className="flex flex-wrap justify-center gap-6 text-sm">
             <div className="flex items-center gap-2">
               <Check className="w-5 h-5 text-accent" />
-              <span>BAA Included</span>
+              <span>BAA Available</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="w-5 h-5 text-accent" />
-              <span>HIPAA Compliant</span>
+              <span>HIPAA-aligned controls</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="w-5 h-5 text-accent" />
-              <span>90-Day Implementation</span>
+              <span>Guided implementation</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="w-5 h-5 text-accent" />
-              <span>Cancel Anytime</span>
+              <span>Flexible terms</span>
             </div>
           </div>
         </div>
@@ -349,7 +348,7 @@ export default function PricingPage() {
           </div>
 
           <p className="text-center text-gray-500 text-sm mt-4">
-            <strong>HDIM Savings: 70-95% lower TCO</strong> vs. enterprise competitors
+            Total cost of ownership varies by scope. Request a tailored comparison based on your requirements.
           </p>
         </div>
       </section>
@@ -365,9 +364,9 @@ export default function PricingPage() {
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6">
               <Building2 className="w-8 h-8 text-blue-600 mb-4" />
               <h3 className="font-bold text-gray-900 mb-2">Health Plans</h3>
-              <p className="text-gray-600 text-sm mb-4">175K+ members with Star Rating focus</p>
+              <p className="text-gray-600 text-sm mb-4">Large populations with Stars and quality incentives</p>
               <div className="text-2xl font-bold text-blue-600">Enterprise</div>
-              <p className="text-gray-500 text-sm">Custom pricing based on member count</p>
+              <p className="text-gray-500 text-sm">Custom pricing based on scope</p>
               <Link href="/schedule" className="mt-4 inline-flex items-center text-blue-600 text-sm font-medium">
                 Get Quote <ArrowRight className="w-4 h-4 ml-1" />
               </Link>
@@ -377,8 +376,8 @@ export default function PricingPage() {
               <Users className="w-8 h-8 text-green-600 mb-4" />
               <h3 className="font-bold text-gray-900 mb-2">ACOs</h3>
               <p className="text-gray-600 text-sm mb-4">MSSP, ACO REACH, shared savings</p>
-              <div className="text-2xl font-bold text-green-600">$2,500/mo</div>
-              <p className="text-gray-500 text-sm">Business tier for 50K patients</p>
+              <div className="text-2xl font-bold text-green-600">Business</div>
+              <p className="text-gray-500 text-sm">Scope-based pricing</p>
               <Link href="/schedule" className="mt-4 inline-flex items-center text-green-600 text-sm font-medium">
                 Get Started <ArrowRight className="w-4 h-4 ml-1" />
               </Link>
@@ -388,8 +387,8 @@ export default function PricingPage() {
               <Heart className="w-8 h-8 text-red-600 mb-4" />
               <h3 className="font-bold text-gray-900 mb-2">FQHCs</h3>
               <p className="text-gray-600 text-sm mb-4">UDS reporting, 330 grant protection</p>
-              <div className="text-2xl font-bold text-red-600">$500/mo</div>
-              <p className="text-gray-500 text-sm">Professional tier for 10K patients</p>
+              <div className="text-2xl font-bold text-red-600">Professional</div>
+              <p className="text-gray-500 text-sm">Scope-based pricing</p>
               <Link href="/schedule" className="mt-4 inline-flex items-center text-red-600 text-sm font-medium">
                 Get Started <ArrowRight className="w-4 h-4 ml-1" />
               </Link>
@@ -400,7 +399,7 @@ export default function PricingPage() {
               <h3 className="font-bold text-gray-900 mb-2">Health Systems</h3>
               <p className="text-gray-600 text-sm mb-4">Multi-EHR, enterprise scale</p>
               <div className="text-2xl font-bold text-purple-600">Enterprise</div>
-              <p className="text-gray-500 text-sm">Custom for 500K+ patients</p>
+              <p className="text-gray-500 text-sm">Custom pricing based on scope</p>
               <Link href="/schedule" className="mt-4 inline-flex items-center text-purple-600 text-sm font-medium">
                 Get Quote <ArrowRight className="w-4 h-4 ml-1" />
               </Link>
@@ -435,7 +434,7 @@ export default function PricingPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Transform Your Quality Program?</h2>
           <p className="text-white/80 mb-8 max-w-2xl mx-auto">
-            See how HDIM delivers 2,964% ROI with 24-day payback. Schedule a demo to get started.
+            Build a scoped plan for measure coverage, gap closure, and reporting outcomes.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -468,11 +467,11 @@ export default function PricingPage() {
             </div>
             <div className="flex items-center space-x-4 text-gray-400 text-sm">
               <Shield className="w-4 h-4" />
-              <span>HIPAA Compliant</span>
+              <span>HIPAA-aligned</span>
               <span>|</span>
               <span>BAA Available</span>
               <span>|</span>
-              <span>SOC 2 Type II</span>
+              <span>SOC 2-aligned controls</span>
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400 text-sm">

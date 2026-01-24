@@ -123,7 +123,7 @@ export default function TermsPage() {
               HDIM commits to the following service levels:
             </p>
             <ul className="list-disc pl-6 text-gray-700 space-y-2">
-              <li><strong>Uptime:</strong> 99.9% availability (excluding scheduled maintenance)</li>
+              <li><strong>Uptime:</strong> Availability targets are defined in the applicable service level agreement</li>
               <li><strong>Support:</strong> 24/7 critical incident support</li>
               <li><strong>Response Time:</strong> Critical issues acknowledged within 1 hour</li>
               <li><strong>Data Backup:</strong> Daily backups with 30-day retention</li>

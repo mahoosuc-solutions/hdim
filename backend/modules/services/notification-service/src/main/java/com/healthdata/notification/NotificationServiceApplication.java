@@ -4,6 +4,7 @@ import com.healthdata.featureflags.EnableFeatureFlags;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -46,6 +47,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableAsync
 @EnableScheduling
 @EnableFeatureFlags
+@EnableFeignClients(basePackages = "com.healthdata.notification.infrastructure.client")
 public class NotificationServiceApplication {
 
     public static void main(String[] args) {

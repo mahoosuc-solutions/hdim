@@ -94,7 +94,7 @@ export default function PrivacyPage() {
               We implement comprehensive security measures including:
             </p>
             <ul className="list-disc pl-6 text-gray-700 space-y-2">
-              <li>SOC 2 Type II certified infrastructure</li>
+              <li>SOC 2-aligned infrastructure</li>
               <li>End-to-end encryption (TLS 1.3 in transit, AES-256 at rest)</li>
               <li>Multi-factor authentication</li>
               <li>Regular security assessments and penetration testing</li>

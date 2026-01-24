@@ -1,0 +1,1 @@
+Appointment Reminder: ${patientName}, you have an appointment with ${providerName} on ${appointmentDate} at ${appointmentTime} at ${location}. Reply STOP to opt out.

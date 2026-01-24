@@ -1,13 +1,23 @@
 import { Component, Inject, OnInit } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { CommonModule } from '@angular/common';
+import { LoggerService } from './logger.service';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { LoggerService } from './logger.service';
 import { MatButtonModule } from '@angular/material/button';
+import { LoggerService } from './logger.service';
 import { MatIconModule } from '@angular/material/icon';
+import { LoggerService } from './logger.service';
 import { MatTabsModule } from '@angular/material/tabs';
+import { LoggerService } from './logger.service';
 import { MatCardModule } from '@angular/material/card';
+import { LoggerService } from './logger.service';
 import { MatDividerModule } from '@angular/material/divider';
+import { LoggerService } from './logger.service';
 import { SavedReport } from '../../models/quality-result.model';
+import { LoggerService } from './logger.service';
 import { EvaluationService } from '../../services/evaluation.service';
+import { LoggerService } from './logger.service';
 
 /**
  * Report Detail Dialog Component
@@ -790,6 +800,7 @@ export class ReportDetailDialogComponent implements OnInit {
   parsedData: any = null;
 
   constructor(
+    private loggerService: LoggerService,
     @Inject(MAT_DIALOG_DATA) public report: SavedReport,
     private dialogRef: MatDialogRef<ReportDetailDialogComponent>,
     private evaluationService: EvaluationService
@@ -808,7 +819,7 @@ export class ReportDetailDialogComponent implements OnInit {
         this.parsedData = JSON.parse(this.report.reportData);
       }
     } catch (error) {
-      console.error('Error parsing report data:', error);
+      this.logger.error('Error parsing report data:', { error });
       this.parsedData = null;
     }
   }
@@ -835,10 +846,10 @@ export class ReportDetailDialogComponent implements OnInit {
       .exportAndDownloadReport(this.report.id, this.report.reportName, 'csv')
       .subscribe({
         next: () => {
-          console.log('CSV export successful');
+          this.logger.info('CSV export successful');
         },
         error: (error) => {
-          console.error('Error exporting to CSV:', error);
+          this.logger.error('Error exporting to CSV:', { error });
         },
       });
   }
@@ -851,10 +862,10 @@ export class ReportDetailDialogComponent implements OnInit {
       .exportAndDownloadReport(this.report.id, this.report.reportName, 'excel')
       .subscribe({
         next: () => {
-          console.log('Excel export successful');
+          this.logger.info('Excel export successful');
         },
         error: (error) => {
-          console.error('Error exporting to Excel:', error);
+          this.logger.error('Error exporting to Excel:', { error });
         },
       });
   }

@@ -3,6 +3,7 @@ import { Composition } from 'remotion';
 import { Video } from './Video';
 import { VideoShort } from './VideoShort';
 import { VideoLong } from './VideoLong';
+import { TestSimple } from './TestSimple';
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -32,6 +33,16 @@ export const RemotionRoot: React.FC = () => {
         id="Long"
         component={VideoLong}
         durationInFrames={3600} // 120 seconds at 30fps
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* Test composition */}
+      <Composition
+        id="Test"
+        component={TestSimple}
+        durationInFrames={150} // 5 seconds
         fps={30}
         width={1920}
         height={1080}

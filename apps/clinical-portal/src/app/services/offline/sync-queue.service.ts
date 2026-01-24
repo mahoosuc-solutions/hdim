@@ -6,8 +6,11 @@
  * Handles conflict resolution and retry logic.
  */
 import { Injectable, OnDestroy } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { LoggerService } from './logger.service';
 import { BehaviorSubject, Observable, Subject, from, of, forkJoin, timer } from 'rxjs';
+import { LoggerService } from './logger.service';
 import {
   catchError,
   concatMap,
@@ -34,6 +37,7 @@ import {
   SyncQueueItem,
 } from './offline-storage.service';
 import { NetworkStatusService } from './network-status.service';
+import { LoggerService } from './logger.service';
 
 export interface SyncResult {
   success: boolean;
@@ -62,6 +66,7 @@ const RETRY_DELAY_MS = 5000;
   providedIn: 'root',
 })
 export class SyncQueueService implements OnDestroy {
+  private readonly logger = this.loggerService.withContext('SyncQueueService');
   private readonly destroy$ = new Subject<void>();
   private readonly syncInProgress = new BehaviorSubject<boolean>(false);
   private readonly syncProgress = new BehaviorSubject<SyncProgress>({
@@ -92,6 +97,7 @@ export class SyncQueueService implements OnDestroy {
   readonly hasPendingChanges$ = this.pendingCount$.pipe(map((count) => count > 0));
 
   constructor(
+    private loggerService: LoggerService,
     private http: HttpClient,
     private storage: OfflineStorageService,
     private networkStatus: NetworkStatusService
@@ -344,7 +350,7 @@ export class SyncQueueService implements OnDestroy {
 
     // 400/422 - validation error, remove from queue (won't succeed on retry)
     if (error.status === 400 || error.status === 422) {
-      console.warn(`Validation error for sync item ${item.id}, removing from queue`);
+      this.logger.warn(`Validation error for sync item ${item.id}, removing from queue`);
       return of(true); // Return true to remove from queue
     }
 
@@ -402,7 +408,7 @@ export class SyncQueueService implements OnDestroy {
     item.lastError = error instanceof Error ? error.message : String(error);
 
     if (item.retryCount >= MAX_RETRY_COUNT) {
-      console.error(`Max retries reached for sync item ${item.id}`, item);
+      this.logger.error(`Max retries reached for sync item ${item.id}`, item);
       // Move to failed items or notify user
     } else {
       // Update item in queue with new retry count
@@ -423,9 +429,9 @@ export class SyncQueueService implements OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe(() => {
-        console.log('Network restored - starting auto-sync');
+        this.logger.info('Network restored - starting auto-sync');
         this.sync().pipe(take(1)).subscribe((result) => {
-          console.log('Auto-sync completed:', result);
+          this.logger.info('Auto-sync completed:', result);
         });
       });
   }

@@ -35,4 +35,18 @@ export default [
     // Override or add rules here
     rules: {},
   },
+  {
+    // Allow console in main.ts (bootstrap error handler before LoggerService initialization)
+    files: ['**/main.ts'],
+    rules: {
+      'no-console': ['error', { allow: ['error'] }],
+    },
+  },
+  {
+    // Allow console in test files
+    files: ['**/*.spec.ts', '**/*.test.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
 ];

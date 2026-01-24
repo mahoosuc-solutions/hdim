@@ -1,15 +1,27 @@
 import { Component, OnInit, signal } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { CommonModule } from '@angular/common';
+import { LoggerService } from './logger.service';
 import { FormsModule } from '@angular/forms';
+import { LoggerService } from './logger.service';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { LoggerService } from './logger.service';
 import { MatButtonModule } from '@angular/material/button';
+import { LoggerService } from './logger.service';
 import { MatIconModule } from '@angular/material/icon';
+import { LoggerService } from './logger.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { LoggerService } from './logger.service';
 import { MatInputModule } from '@angular/material/input';
+import { LoggerService } from './logger.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { LoggerService } from './logger.service';
 import { MatTableModule } from '@angular/material/table';
+import { LoggerService } from './logger.service';
 import { PatientService } from '../../services/patient.service';
+import { LoggerService } from './logger.service';
 import { Patient, PatientSummary } from '../../models/patient.model';
+import { LoggerService } from './logger.service';
 
 /**
  * Patient Selection Dialog Component
@@ -406,6 +418,7 @@ export class PatientSelectionDialogComponent implements OnInit {
   isLoading = signal(false);
 
   constructor(
+    private loggerService: LoggerService,
     private dialogRef: MatDialogRef<PatientSelectionDialogComponent>,
     private patientService: PatientService
   ) {}
@@ -427,7 +440,7 @@ export class PatientSelectionDialogComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: (error) => {
-        console.error('Error loading patients:', error);
+        this.logger.error('Error loading patients:', { error });
         this.isLoading.set(false);
       },
     });

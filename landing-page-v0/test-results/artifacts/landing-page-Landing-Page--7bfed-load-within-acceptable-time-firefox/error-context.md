@@ -1,0 +1,472 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to main content" [ref=e3] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic [ref=e4]:
+      - text: "HEDIS 2026 Season: Measurement year is underway — align your quality program now."
+      - link "Get started →" [ref=e5] [cursor=pointer]:
+        - /url: "#demo"
+    - navigation [ref=e6]:
+      - generic [ref=e8]:
+        - link "HDIM" [ref=e10] [cursor=pointer]:
+          - /url: /
+          - img [ref=e12]
+          - generic [ref=e15]: HDIM
+        - generic [ref=e16]:
+          - link "Features" [ref=e17] [cursor=pointer]:
+            - /url: "#features"
+          - link "Solutions" [ref=e18] [cursor=pointer]:
+            - /url: "#solutions"
+          - link "Research" [ref=e19] [cursor=pointer]:
+            - /url: /research
+          - link "About" [ref=e20] [cursor=pointer]:
+            - /url: /about
+          - link "Data Explorer" [ref=e21] [cursor=pointer]:
+            - /url: /explorer
+          - link "Sample Data" [ref=e22] [cursor=pointer]:
+            - /url: /downloads
+          - link "Pricing" [ref=e23] [cursor=pointer]:
+            - /url: /pricing
+        - generic [ref=e24]:
+          - link "Login" [ref=e25] [cursor=pointer]:
+            - /url: "#demo"
+          - link "Request Demo" [ref=e26] [cursor=pointer]:
+            - /url: "#demo"
+    - generic [ref=e27]:
+      - img "Healthcare data visualization" [ref=e29]
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - img [ref=e37]
+            - text: Built for quality leaders across plans, ACOs, and health systems
+          - heading "Close care gaps with confidence" [level=1] [ref=e39]:
+            - text: Close
+            - generic [ref=e40]: care gaps
+            - text: with confidence
+          - paragraph [ref=e41]: The FHIR-native platform for HEDIS and quality programs. Automate measure evaluation, detect care gaps quickly, and improve performance with audit-ready results.
+          - generic [ref=e42]:
+            - link "Try Interactive Demo" [ref=e43] [cursor=pointer]:
+              - /url: /demo
+              - img [ref=e44]
+              - text: Try Interactive Demo
+            - link "Calculate Your ROI" [ref=e46] [cursor=pointer]:
+              - /url: /research#calculator
+              - text: Calculate Your ROI
+              - img [ref=e47]
+          - generic [ref=e50]:
+            - generic [ref=e51]:
+              - img [ref=e52]
+              - generic [ref=e54]: HIPAA-aligned security
+            - generic [ref=e55]:
+              - img [ref=e56]
+              - generic [ref=e59]: SOC 2-aligned controls
+            - generic [ref=e60]:
+              - img [ref=e61]
+              - generic [ref=e64]: HITRUST-aligned program
+          - generic [ref=e65]:
+            - button "I work at a health plan" [ref=e67] [cursor=pointer]:
+              - generic [ref=e68]:
+                - img [ref=e69]
+                - generic [ref=e75]: I work at a health plan
+              - img [ref=e76]
+            - generic [ref=e78]:
+              - generic [ref=e79]:
+                - img [ref=e80]
+                - heading "Improve Star Ratings" [level=3] [ref=e86]
+              - paragraph [ref=e87]: Turn Star Ratings from a compliance headache into a competitive advantage. A 1-star improvement for 175K members means $192M in annual CMS bonus payments.
+              - generic [ref=e88]:
+                - generic [ref=e89]:
+                  - generic [ref=e90]: $192M
+                  - generic [ref=e91]: Potential Star Rating Revenue
+                - link "Calculate Your Star Rating Impact" [ref=e92] [cursor=pointer]:
+                  - /url: /research#calculator
+            - generic [ref=e93]:
+              - button "For ACOs" [ref=e94] [cursor=pointer]
+              - button "For FQHCs" [ref=e95] [cursor=pointer]
+              - button "For Health Systems" [ref=e96] [cursor=pointer]
+        - generic [ref=e98]:
+          - generic [ref=e99]:
+            - generic [ref=e100]:
+              - heading "Care Gap Dashboard" [level=3] [ref=e101]
+              - generic [ref=e102]: Live
+            - generic [ref=e103]:
+              - generic [ref=e104]:
+                - generic [ref=e105]: Open Gaps
+                - generic [ref=e106]: Active
+              - generic [ref=e107]:
+                - generic [ref=e108]: Closed This Month
+                - generic [ref=e109]: Trending
+              - generic [ref=e110]:
+                - generic [ref=e111]: HEDIS Score
+                - generic [ref=e112]: Tracking
+          - generic [ref=e126]:
+            - img [ref=e128]
+            - generic [ref=e131]:
+              - paragraph [ref=e132]: Quality Lift
+              - paragraph [ref=e133]: Measure performance
+    - generic [ref=e138]:
+      - paragraph [ref=e139]: Enterprise-ready platform for quality, interoperability, and reporting
+      - generic [ref=e140]:
+        - generic [ref=e141]:
+          - paragraph [ref=e142]: FHIR-Native Interoperability
+          - paragraph [ref=e143]: Connects to EHR, claims, and lab sources using FHIR R4 resources.
+        - generic [ref=e144]:
+          - paragraph [ref=e145]: CQL-First Measure Logic
+          - paragraph [ref=e146]: Executes quality measures natively with transparent, auditable logic.
+        - generic [ref=e147]:
+          - paragraph [ref=e148]: Care Gap Workflows
+          - paragraph [ref=e149]: Turns measure results into actionable, role-based interventions.
+        - generic [ref=e150]:
+          - paragraph [ref=e151]: Reporting-Ready Outputs
+          - paragraph [ref=e152]: Supports QRDA exports and compliance-aligned documentation.
+    - generic [ref=e155]:
+      - generic [ref=e156]:
+        - paragraph [ref=e157]: Quality Acceleration
+        - paragraph [ref=e158]: Shorten the time from data ingestion to gap closure.
+      - generic [ref=e159]:
+        - paragraph [ref=e160]: Program Readiness
+        - paragraph [ref=e161]: Stay current with evolving HEDIS and CMS requirements.
+      - generic [ref=e162]:
+        - paragraph [ref=e163]: Operational Efficiency
+        - paragraph [ref=e164]: Reduce manual reconciliations and repetitive measure work.
+      - generic [ref=e165]:
+        - paragraph [ref=e166]: Financial Impact
+        - paragraph [ref=e167]: Protect quality incentives with defensible, auditable results.
+    - generic [ref=e169]:
+      - generic [ref=e170]:
+        - heading "Sound Familiar?" [level=2] [ref=e171]
+        - paragraph [ref=e172]: Healthcare organizations lose millions in quality bonuses every year. Not because they don't care - but because their tools weren't built for modern value-based care.
+      - generic [ref=e173]:
+        - generic [ref=e174]:
+          - img [ref=e176]
+          - heading "Data Scattered Across Systems" [level=3] [ref=e180]
+          - paragraph [ref=e181]: Your patient data lives in silos — EHRs, claims, labs, and more. Integration takes time.
+        - generic [ref=e182]:
+          - img [ref=e184]
+          - heading "Manual Measure Calculations" [level=3] [ref=e186]
+          - paragraph [ref=e187]: Your team spends weeks on HEDIS calculations. When specs change, you start over.
+        - generic [ref=e188]:
+          - img [ref=e190]
+          - heading "Missed Quality Bonuses" [level=3] [ref=e193]
+          - paragraph [ref=e194]: Health plans leave millions on the table each year from preventable care gaps.
+    - generic [ref=e196]:
+      - generic [ref=e197]:
+        - text: The Patients Behind the Numbers
+        - heading "Every Spreadsheet Row Is Someone's Life" [level=2] [ref=e198]
+        - paragraph [ref=e199]: These are the moments that justify every line of code we write.
+      - generic [ref=e201]:
+        - generic [ref=e202]:
+          - heading "Maria, 67 - Type 2 Diabetes" [level=3] [ref=e203]
+          - generic [ref=e204]:
+            - paragraph [ref=e205]: "Without Real-Time Gap Detection:"
+            - paragraph [ref=e207]: Maria's last A1C was 14 months ago. Her endocrinologist retired. Her new PCP's system doesn't flag the gap. Diabetic ketoacidosis. A high-cost hospitalization. Permanent kidney damage.
+          - generic [ref=e208]:
+            - paragraph [ref=e209]: "With HDIM:"
+            - paragraph [ref=e211]: "At 9 months overdue, HDIM flags Maria's care gap. Her care manager calls. A low-cost lab visit. A1C: 7.8% - elevated but manageable. Medication adjusted. Crisis prevented."
+            - paragraph [ref=e212]: Maria is still making tamales for her grandchildren.
+        - generic [ref=e213]:
+          - img "Maria - Patient story" [ref=e215]
+          - paragraph [ref=e216]: "\"The gap between a routine lab test and a high-cost hospitalization is months of silence.\""
+      - generic [ref=e218]:
+        - generic [ref=e219]:
+          - img "Eleanor - Cancer Survivor" [ref=e221]
+          - paragraph [ref=e222]: "\"They caught it early. That's why I'm still here.\""
+        - generic [ref=e223]:
+          - heading "Eleanor, 63 - Breast Cancer Survivor" [level=3] [ref=e224]
+          - generic [ref=e225]:
+            - paragraph [ref=e226]: "Without Proactive Screening Gaps:"
+            - paragraph [ref=e228]: Eleanor was 18 months overdue for her mammogram. No one noticed across three different health systems. When she finally scheduled it herself, Stage III. Aggressive treatment. Uncertain prognosis.
+          - generic [ref=e229]:
+            - paragraph [ref=e230]: "With HDIM:"
+            - paragraph [ref=e232]: At 10 months overdue, HDIM identified Eleanor's BCS-E measure gap. Care coordinator scheduled her mammogram within a week. Stage I detected. Lumpectomy. Five years cancer-free.
+            - paragraph [ref=e233]: Eleanor just celebrated her granddaughter's graduation.
+    - generic [ref=e235]:
+      - generic [ref=e236]:
+        - text: The Transformation
+        - heading "From Fragmented to Connected in Seconds" [level=2] [ref=e237]
+        - paragraph [ref=e238]: See how HDIM transforms reactive, months-long processes into real-time, actionable insights.
+      - 'img "HDIM architecture: real-time execution layer connects fragmented systems to actionable insights" [ref=e240]'
+      - generic [ref=e241]:
+        - generic [ref=e242]:
+          - generic [ref=e243]: Months
+          - paragraph [ref=e244]: Traditional reactive approach — gaps surface after they've already impacted quality.
+        - generic [ref=e245]:
+          - generic [ref=e246]: Near Real-Time
+          - paragraph [ref=e247]: With HDIM detection, act as soon as data arrives and workflows are ready.
+    - generic [ref=e250]:
+      - generic [ref=e251]:
+        - text: The HDIM Difference
+        - heading "Built for the Future of Quality Measurement" [level=2] [ref=e252]
+        - paragraph [ref=e253]: HDIM is a FHIR-native, CQL-powered platform that executes measure logic instead of relying on black-box reporting. When specifications change, your measure logic can be updated without rewriting your entire workflow.
+        - generic [ref=e254]:
+          - generic [ref=e255]:
+            - img [ref=e256]
+            - generic [ref=e259]: Modular services for flexible deployment and scaling
+          - generic [ref=e260]:
+            - img [ref=e261]
+            - generic [ref=e264]: FHIR R4-native ingestion with standards-aligned APIs
+          - generic [ref=e265]:
+            - img [ref=e266]
+            - generic [ref=e269]: CQL-native execution using open specifications
+          - generic [ref=e270]:
+            - img [ref=e271]
+            - generic [ref=e274]: Tenant isolation with configurable PHI cache controls
+        - link "See HDIM in Action" [ref=e276] [cursor=pointer]:
+          - /url: "#demo"
+          - text: See HDIM in Action
+          - img [ref=e277]
+      - generic [ref=e279]:
+        - img "HDIM Real-Time Architecture - Connect Anything, Understand Everything, Act Immediately" [ref=e287]
+        - generic [ref=e289]:
+          - img [ref=e290]
+          - generic [ref=e292]: High-throughput processing
+    - generic [ref=e294]:
+      - text: Why We're Different
+      - heading "Privacy Controls That Respect Patients" [level=2] [ref=e295]
+      - generic [ref=e296]:
+        - paragraph [ref=e297]: Most platforms optimize for speed first. We start with patient privacy.
+        - paragraph [ref=e298]: HDIM lets you control PHI caching and data retention policies by tenant.
+        - paragraph [ref=e299]: Because when a patient revokes consent to share sensitive history, your system should honor that change quickly and transparently.
+        - paragraph [ref=e300]: Our privacy-first defaults and audit trails make it clear how data is used, when it's refreshed, and who has access.
+        - paragraph [ref=e301]: That's not a feature. That's respect.
+    - generic [ref=e303]:
+      - generic [ref=e304]:
+        - text: Platform Capabilities
+        - heading "Everything You Need for Quality Excellence" [level=2] [ref=e305]
+        - paragraph [ref=e306]: From care gap detection to regulatory reporting, HDIM provides the complete toolkit for value-based success.
+      - generic [ref=e307]:
+        - generic [ref=e308]:
+          - img [ref=e310]
+          - heading "Care Gap Detection" [level=3] [ref=e313]
+          - paragraph [ref=e314]: CQL execution identifies care gaps using HEDIS specifications and surfaces actionable outreach opportunities.
+          - link "Learn more" [ref=e315] [cursor=pointer]:
+            - /url: /demo
+            - text: Learn more
+            - img [ref=e316]
+        - generic [ref=e318]:
+          - img [ref=e320]
+          - heading "HEDIS Evaluation" [level=3] [ref=e325]
+          - paragraph [ref=e326]: CQL-native measure calculation with transparent, auditable logic and consistent results.
+          - link "Learn more" [ref=e327] [cursor=pointer]:
+            - /url: /demo
+            - text: Learn more
+            - img [ref=e328]
+        - generic [ref=e330]:
+          - img [ref=e332]
+          - heading "Risk Stratification" [level=3] [ref=e335]
+          - paragraph [ref=e336]: Configurable risk stratification to support value-based care contracts and care management.
+          - link "Learn more" [ref=e337] [cursor=pointer]:
+            - /url: /demo
+            - text: Learn more
+            - img [ref=e338]
+        - generic [ref=e340]:
+          - img [ref=e342]
+          - heading "FHIR R4 Integration" [level=3] [ref=e346]
+          - paragraph [ref=e347]: FHIR R4-native data ingestion and query patterns designed for interoperability.
+          - link "Learn more" [ref=e348] [cursor=pointer]:
+            - /url: /demo
+            - text: Learn more
+            - img [ref=e349]
+        - generic [ref=e351]:
+          - img [ref=e353]
+          - heading "CQL Engine" [level=3] [ref=e355]
+          - paragraph [ref=e356]: Direct CQL execution using open standards and open-source libraries.
+          - link "Learn more" [ref=e357] [cursor=pointer]:
+            - /url: /demo
+            - text: Learn more
+            - img [ref=e358]
+        - generic [ref=e360]:
+          - img [ref=e362]
+          - heading "QRDA Export" [level=3] [ref=e366]
+          - paragraph [ref=e367]: QRDA I/III export for quality reporting with full measure traceability.
+          - link "Learn more" [ref=e368] [cursor=pointer]:
+            - /url: /demo
+            - text: Learn more
+            - img [ref=e369]
+    - generic [ref=e372]:
+      - generic [ref=e373]:
+        - text: See It In Action
+        - heading "Watch HDIM Close Care Gaps in Real-Time" [level=2] [ref=e374]
+        - paragraph [ref=e375]: A short walkthrough of our care gap detection workflow
+      - generic [ref=e376] [cursor=pointer]:
+        - img "Eleanor's Story - They Caught It Early" [ref=e377]
+        - img [ref=e380]
+      - paragraph [ref=e382]: No registration required - click to watch
+    - generic [ref=e384]:
+      - generic [ref=e385]:
+        - text: Real-Time Command Center
+        - heading "See Your Quality Data Come Alive" [level=2] [ref=e386]
+        - paragraph [ref=e387]: Monitor connected systems, longitudinal patients, and live care gap alerts in one unified dashboard.
+      - generic [ref=e388]:
+        - generic [ref=e389]:
+          - img "HDIM Real-Time Care Gap Command Center Dashboard" [ref=e390]
+          - generic [ref=e391]: LIVE
+        - generic [ref=e393]:
+          - img "HDIM Mobile Dashboard" [ref=e395]
+          - paragraph [ref=e396]:
+            - strong [ref=e397]: Access anywhere.
+            - text: Full functionality on mobile devices for care teams in the field.
+    - generic [ref=e399]:
+      - generic [ref=e400]:
+        - text: Customer Success
+        - heading "Proven Results Across Healthcare" [level=2] [ref=e401]
+      - generic [ref=e402]:
+        - generic [ref=e403]:
+          - generic [ref=e404]: “
+          - generic [ref=e405]:
+            - paragraph [ref=e406]: “HDIM transformed our quality program. We moved from reactive reporting to continuous, auditable measurement, and our teams finally had a single place to work the gaps.”
+            - generic [ref=e407]:
+              - img "Quality leader portrait" [ref=e409]
+              - generic [ref=e410]:
+                - paragraph [ref=e411]: Chief Medical Officer
+                - paragraph [ref=e412]: Regional Health Network
+          - generic [ref=e413]:
+            - generic [ref=e414]:
+              - generic [ref=e415]: Faster
+              - generic [ref=e416]: Gap Identification
+            - generic [ref=e417]:
+              - generic [ref=e418]: Clearer
+              - generic [ref=e419]: Audit Trail
+            - generic [ref=e420]:
+              - generic [ref=e421]: Unified
+              - generic [ref=e422]: Operations
+        - generic [ref=e424]:
+          - img "Operations leader portrait" [ref=e426]
+          - generic [ref=e427]:
+            - paragraph [ref=e428]: “We finally unified data across multiple EHRs and turned that into daily, actionable care gap work. The visibility and prioritization changed how we run quality operations.”
+            - paragraph [ref=e429]: Chief Information Officer
+            - paragraph [ref=e430]: Mountain West ACO
+      - link "Read more customer stories" [ref=e432] [cursor=pointer]:
+        - /url: /research
+        - text: Read more customer stories
+        - img [ref=e433]
+    - generic [ref=e436]:
+      - generic [ref=e437]:
+        - heading "Enterprise-Grade Security & Compliance" [level=2] [ref=e438]
+        - paragraph [ref=e439]: Built with security-first architecture and proven at scale
+      - generic [ref=e440]:
+        - generic [ref=e441]:
+          - img "HIPAA-aligned security" [ref=e443]
+          - paragraph [ref=e444]: HIPAA
+          - paragraph [ref=e445]: Aligned controls
+        - generic [ref=e446]:
+          - img "FHIR R4 Native" [ref=e448]
+          - paragraph [ref=e449]: FHIR R4
+          - paragraph [ref=e450]: Native
+        - generic [ref=e451]:
+          - img "CQL Engine" [ref=e453]
+          - paragraph [ref=e454]: CQL
+          - paragraph [ref=e455]: Execution
+        - generic [ref=e456]:
+          - img "Quality assurance coverage" [ref=e458]
+          - paragraph [ref=e459]: QA & Validation
+          - paragraph [ref=e460]: Automated coverage
+        - generic [ref=e461]:
+          - img "Reliability and observability" [ref=e463]
+          - paragraph [ref=e464]: Reliability
+          - paragraph [ref=e465]: Observable SLOs
+        - generic [ref=e466]:
+          - img "Modular architecture" [ref=e468]
+          - paragraph [ref=e469]: Modular
+          - paragraph [ref=e470]: Service-based
+      - paragraph [ref=e471]:
+        - img [ref=e472]
+        - text: Business Associate Agreements (BAA) available for all customers
+    - generic [ref=e475]:
+      - heading "How Many Patients Are Waiting for a Call That Won't Come?" [level=2] [ref=e476]
+      - paragraph [ref=e477]: HEDIS measurement year ends December 31, 2026. Every day without real-time gap detection is a day of missed interventions.
+      - paragraph [ref=e478]: See how HDIM catches patients falling through the cracks -- before they become your highest-cost cases.
+      - generic [ref=e479]:
+        - link "Try Interactive Demo" [ref=e480] [cursor=pointer]:
+          - /url: /demo
+          - img [ref=e481]
+          - text: Try Interactive Demo
+        - link "Schedule a Consultation" [ref=e483] [cursor=pointer]:
+          - /url: /schedule
+          - text: Schedule a Consultation
+          - img [ref=e484]
+      - paragraph [ref=e487]: No commitment required. See HDIM in action with your own use case.
+    - contentinfo [ref=e488]:
+      - generic [ref=e489]:
+        - generic [ref=e490]:
+          - generic [ref=e491]:
+            - generic [ref=e492]:
+              - img [ref=e494]
+              - generic [ref=e497]: HDIM
+            - paragraph [ref=e498]: The FHIR-native platform for healthcare quality excellence.
+            - generic [ref=e499]:
+              - link "LinkedIn" [ref=e500] [cursor=pointer]:
+                - /url: https://linkedin.com/company/hdim
+                - generic [ref=e501]: LinkedIn
+                - img [ref=e502]
+              - link "GitHub" [ref=e504] [cursor=pointer]:
+                - /url: https://github.com/hdim
+                - generic [ref=e505]: GitHub
+                - img [ref=e506]
+          - generic [ref=e508]:
+            - heading "Platform" [level=3] [ref=e509]
+            - list [ref=e510]:
+              - listitem [ref=e511]:
+                - link "Care Gap Detection" [ref=e512] [cursor=pointer]:
+                  - /url: "#features"
+              - listitem [ref=e513]:
+                - link "HEDIS Evaluation" [ref=e514] [cursor=pointer]:
+                  - /url: "#features"
+              - listitem [ref=e515]:
+                - link "Risk Stratification" [ref=e516] [cursor=pointer]:
+                  - /url: "#features"
+              - listitem [ref=e517]:
+                - link "FHIR Integration" [ref=e518] [cursor=pointer]:
+                  - /url: "#features"
+              - listitem [ref=e519]:
+                - link "Analytics" [ref=e520] [cursor=pointer]:
+                  - /url: /explorer
+          - generic [ref=e521]:
+            - heading "Solutions" [level=3] [ref=e522]
+            - list [ref=e523]:
+              - listitem [ref=e524]:
+                - link "For Health Plans" [ref=e525] [cursor=pointer]:
+                  - /url: /research
+              - listitem [ref=e526]:
+                - link "For ACOs" [ref=e527] [cursor=pointer]:
+                  - /url: /research
+              - listitem [ref=e528]:
+                - link "For Health Systems" [ref=e529] [cursor=pointer]:
+                  - /url: /research
+              - listitem [ref=e530]:
+                - link "For Medicaid MCOs" [ref=e531] [cursor=pointer]:
+                  - /url: /research
+          - generic [ref=e532]:
+            - heading "Company" [level=3] [ref=e533]
+            - list [ref=e534]:
+              - listitem [ref=e535]:
+                - link "About" [ref=e536] [cursor=pointer]:
+                  - /url: /research
+              - listitem [ref=e537]:
+                - link "Careers" [ref=e538] [cursor=pointer]:
+                  - /url: mailto:careers@hdim.io
+              - listitem [ref=e539]:
+                - link "Blog" [ref=e540] [cursor=pointer]:
+                  - /url: /research
+              - listitem [ref=e541]:
+                - link "Contact" [ref=e542] [cursor=pointer]:
+                  - /url: /schedule
+              - listitem [ref=e543]:
+                - link "Security" [ref=e544] [cursor=pointer]:
+                  - /url: "#compliance"
+        - generic [ref=e545]:
+          - paragraph [ref=e546]: © 2026 HealthData-in-Motion. All rights reserved.
+          - generic [ref=e547]:
+            - link "Privacy Policy" [ref=e548] [cursor=pointer]:
+              - /url: /privacy
+            - link "Terms of Service" [ref=e549] [cursor=pointer]:
+              - /url: /terms
+            - link "Cookie Policy" [ref=e550] [cursor=pointer]:
+              - /url: /privacy#cookies
+  - button "Open Next.js Dev Tools" [ref=e556] [cursor=pointer]:
+    - img [ref=e557]
+  - alert [ref=e561]
+```

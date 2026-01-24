@@ -10,28 +10,46 @@
  * - Export functionality
  */
 import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { CommonModule } from '@angular/common';
+import { LoggerService } from './logger.service';
 import { FormsModule } from '@angular/forms';
+import { LoggerService } from './logger.service';
 import {
   MatDialogModule,
   MatDialogRef,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { LoggerService } from './logger.service';
 import { MatIconModule } from '@angular/material/icon';
+import { LoggerService } from './logger.service';
 import { MatTabsModule } from '@angular/material/tabs';
+import { LoggerService } from './logger.service';
 import { MatTableModule } from '@angular/material/table';
+import { LoggerService } from './logger.service';
 import { MatSortModule, Sort } from '@angular/material/sort';
+import { LoggerService } from './logger.service';
 import { MatChipsModule } from '@angular/material/chips';
+import { LoggerService } from './logger.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { LoggerService } from './logger.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { LoggerService } from './logger.service';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { LoggerService } from './logger.service';
 import { MatSelectModule } from '@angular/material/select';
+import { LoggerService } from './logger.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { LoggerService } from './logger.service';
 import { MatMenuModule } from '@angular/material/menu';
+import { LoggerService } from './logger.service';
 import { MatDividerModule } from '@angular/material/divider';
+import { LoggerService } from './logger.service';
 import { Subject } from 'rxjs';
+import { LoggerService } from './logger.service';
 import { takeUntil, finalize } from 'rxjs/operators';
+import { LoggerService } from './logger.service';
 
 // Provider Performance Interface
 export interface ProviderPerformance {
@@ -787,6 +805,7 @@ export class ProviderLeaderboardDialogComponent implements OnInit, OnDestroy {
   currentProviderId = 'provider-current'; // Would come from auth service
 
   constructor(
+    private loggerService: LoggerService,
     private dialogRef: MatDialogRef<ProviderLeaderboardDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ProviderLeaderboardDialogData
   ) {}
@@ -1191,7 +1210,7 @@ export class ProviderLeaderboardDialogComponent implements OnInit, OnDestroy {
    * View provider details
    */
   viewProviderDetails(provider: ProviderPerformance): void {
-    console.log('View provider details:', provider);
+    this.logger.info('View provider details:', provider);
     // Would open a detailed provider performance dialog
   }
 
@@ -1199,21 +1218,21 @@ export class ProviderLeaderboardDialogComponent implements OnInit, OnDestroy {
    * Compare provider with org average
    */
   compareWithOrg(provider: ProviderPerformance): void {
-    console.log('Compare with org:', provider);
+    this.logger.info('Compare with org:', provider);
   }
 
   /**
    * View provider's patient panel
    */
   viewPatientPanel(provider: ProviderPerformance): void {
-    console.log('View patient panel:', provider);
+    this.logger.info('View patient panel:', provider);
   }
 
   /**
    * View provider's care gaps
    */
   viewCareGaps(provider: ProviderPerformance): void {
-    console.log('View care gaps:', provider);
+    this.logger.info('View care gaps:', provider);
   }
 
   /**

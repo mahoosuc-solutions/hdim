@@ -18,9 +18,13 @@
  */
 
 import { Injectable } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { LoggerService } from './logger.service';
 import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
+import { LoggerService } from './logger.service';
 import { tap, map, switchMap, catchError } from 'rxjs/operators';
+import { LoggerService } from './logger.service';
 import {
   Medication,
   MedicationOrder,
@@ -54,12 +58,14 @@ interface CacheEntry<T> {
   providedIn: 'root',
 })
 export class MedicationService {
+  private readonly logger = this.loggerService.withContext('MedicationService');
   private tenantContext$ = new BehaviorSubject<string | null>(null);
   private cache = new Map<string, CacheEntry<any>>();
   private readonly DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   private readonly METRICS_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private loggerService: LoggerService,private http: HttpClient) {}
 
   // ==================== Context Management ====================
 
@@ -1147,7 +1153,7 @@ export class MedicationService {
    * @private
    */
   private handleError(error: any, context: string): Observable<never> {
-    console.error(`[MedicationService] Error in ${context}:`, error);
+    this.logger.error(`[MedicationService] Error in ${context}:`, { error });
 
     return throwError(() => ({
       status: error.status || 0,

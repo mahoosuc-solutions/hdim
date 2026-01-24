@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
+import { LoggerService } from './logger.service';
 import {
   API_CONFIG,
   FHIR_ENDPOINTS,
@@ -24,10 +25,12 @@ import {
 })
 export class FhirService {
   private readonly baseUrl = API_CONFIG.FHIR_SERVER_URL;
+  private readonly logger = this.loggerService.withContext('FhirService');
 
   constructor(
     private http: HttpClient,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private loggerService: LoggerService
   ) {}
 
   // ==================== Observation Operations ====================
@@ -56,7 +59,7 @@ export class FhirService {
     return this.apiService.get<FhirBundle<Observation>>(url, httpParams).pipe(
       map((bundle) => this.extractResources(bundle)),
       catchError((error) => {
-        console.error(`Error fetching observations for patient ${patientId}:`, error);
+        this.logger.error('Error fetching observations for patient', { patientId, error });
         return throwError(() => error);
       })
     );
@@ -93,7 +96,7 @@ export class FhirService {
     return this.apiService.get<FhirBundle<Condition>>(url, httpParams).pipe(
       map((bundle) => this.extractResources(bundle)),
       catchError((error) => {
-        console.error(`Error fetching conditions for patient ${patientId}:`, error);
+        this.logger.error('Error fetching conditions for patient', { patientId, error });
         return throwError(() => error);
       })
     );
@@ -130,7 +133,7 @@ export class FhirService {
     return this.apiService.get<FhirBundle<MedicationRequest>>(url, httpParams).pipe(
       map((bundle) => this.extractResources(bundle)),
       catchError((error) => {
-        console.error(`Error fetching medication requests for patient ${patientId}:`, error);
+        this.logger.error('Error fetching medication requests for patient', { patientId, error });
         return throwError(() => error);
       })
     );
@@ -167,7 +170,7 @@ export class FhirService {
     return this.apiService.get<FhirBundle<Procedure>>(url, httpParams).pipe(
       map((bundle) => this.extractResources(bundle)),
       catchError((error) => {
-        console.error(`Error fetching procedures for patient ${patientId}:`, error);
+        this.logger.error('Error fetching procedures for patient', { patientId, error });
         return throwError(() => error);
       })
     );
@@ -182,7 +185,7 @@ export class FhirService {
     const url = buildFhirUrl('');
     return this.apiService.post<ImportResult>(url, bundle).pipe(
       catchError((error) => {
-        console.error('Error importing FHIR resources:', error);
+        this.logger.error('Error importing FHIR resources', { error });
         return throwError(() => error);
       })
     );
@@ -205,7 +208,7 @@ export class FhirService {
         ...data.procedures,
       ])),
       catchError((error) => {
-        console.error(`Error exporting patient ${patientId} as bundle:`, error);
+        this.logger.error('Error exporting patient as bundle', { patientId, error });
         return throwError(() => error);
       })
     );

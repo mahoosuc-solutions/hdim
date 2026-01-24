@@ -1,9 +1,15 @@
 import { Injectable } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { HttpClient } from '@angular/common/http';
+import { LoggerService } from './logger.service';
 import { Observable, of, Subject } from 'rxjs';
+import { LoggerService } from './logger.service';
 import { catchError, debounceTime, bufferTime, filter, tap } from 'rxjs/operators';
+import { LoggerService } from './logger.service';
 import { AuthService } from './auth.service';
+import { LoggerService } from './logger.service';
 import { API_CONFIG } from '../config/api.config';
+import { LoggerService } from './logger.service';
 
 /**
  * HIPAA-compliant Audit Logging Service
@@ -22,6 +28,7 @@ import { API_CONFIG } from '../config/api.config';
   providedIn: 'root',
 })
 export class AuditService {
+  private readonly logger = this.loggerService.withContext('AuditService');
   private readonly AUDIT_ENDPOINT = '/audit/events';
   private readonly BATCH_INTERVAL_MS = 5000; // Batch events every 5 seconds
   private readonly MAX_BUFFER_SIZE = 50; // Maximum events to buffer before force flush
@@ -31,6 +38,7 @@ export class AuditService {
   private pendingEvents: AuditEvent[] = [];
 
   constructor(
+    private loggerService: LoggerService,
     private http: HttpClient,
     private authService: AuthService
   ) {
@@ -80,7 +88,7 @@ export class AuditService {
 
     this.http.post<void>(url, { events }).pipe(
       catchError((error) => {
-        console.warn('[AuditService] Failed to send audit batch, storing locally:', error);
+        this.logger.warn('[AuditService] Failed to send audit batch, storing locally:', error);
         this.storeEventsLocally(events);
         return of(null);
       })
@@ -170,7 +178,7 @@ export class AuditService {
     const url = this.getAuditUrl();
     return this.http.post<void>(url, { events: [fullEvent] }).pipe(
       catchError((error) => {
-        console.warn('[AuditService] Failed to log immediate event:', error);
+        this.logger.warn('[AuditService] Failed to log immediate event:', error);
         this.storeEventsLocally([fullEvent]);
         return of(undefined);
       })

@@ -4,9 +4,9 @@
   "description": "HDIM Product Demo Video - Remotion Project",
   "scripts": {
     "dev": "remotion studio",
-    "render:60s": "remotion render src/Root.tsx Short out/hdim-demo-60s.mp4",
-    "render:90s": "remotion render src/Root.tsx Main out/hdim-demo-90s.mp4",
-    "render:120s": "remotion render src/Root.tsx Long out/hdim-demo-120s.mp4",
+    "render:60s": "remotion render src/index.ts Short out/hdim-demo-60s.mp4",
+    "render:90s": "remotion render src/index.ts Main out/hdim-demo-90s.mp4",
+    "render:120s": "remotion render src/index.ts Long out/hdim-demo-120s.mp4",
     "render:all": "npm run render:60s && npm run render:90s && npm run render:120s",
     "copy:videos": "mkdir -p ../public/videos && cp out/*.mp4 ../public/videos/",
     "build": "npm run render:all && npm run copy:videos"

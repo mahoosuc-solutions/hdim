@@ -6,13 +6,20 @@
  * Automatically serves cached data when offline and queues updates for sync.
  */
 import { Injectable, inject } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { LoggerService } from './logger.service';
 import { Observable, of, throwError, from } from 'rxjs';
+import { LoggerService } from './logger.service';
 import { catchError, map, switchMap, tap, take } from 'rxjs/operators';
+import { LoggerService } from './logger.service';
 
 import { OfflineStorageService, STORES, StoreName } from './offline-storage.service';
+import { LoggerService } from './logger.service';
 import { NetworkStatusService } from './network-status.service';
+import { LoggerService } from './logger.service';
 import { SyncQueueService } from './sync-queue.service';
+import { LoggerService } from './logger.service';
 
 export interface CachedItem<T> {
   id: string;
@@ -38,6 +45,7 @@ const DEFAULT_TTL = 5 * 60 * 1000;
   providedIn: 'root',
 })
 export class OfflineDataCacheService {
+  private readonly logger = this.loggerService.withContext('OfflineDataCacheService');
   private readonly http = inject(HttpClient);
   private readonly storage = inject(OfflineStorageService);
   private readonly networkStatus = inject(NetworkStatusService);
@@ -77,7 +85,7 @@ export class OfflineDataCacheService {
         // If offline, return stale cache or error
         if (!this.networkStatus.isOnline) {
           if (cached) {
-            console.log(`Serving stale cache for ${id} (offline)`);
+            this.logger.info(`Serving stale cache for ${id} (offline)`);
             return of({ ...cached, source: 'cache' as const });
           }
           return throwError(() => new Error('No cached data available offline'));
@@ -156,7 +164,7 @@ export class OfflineDataCacheService {
       catchError((error: HttpErrorResponse) => {
         // If server error, save locally and queue
         if (error.status === 0 || error.status >= 500) {
-          console.log('Server unavailable, saving locally');
+          this.logger.info('Server unavailable, saving locally');
           return this.saveLocallyAndQueue<T & { id: string }>('create', itemWithId, storeName);
         }
         return throwError(() => error);

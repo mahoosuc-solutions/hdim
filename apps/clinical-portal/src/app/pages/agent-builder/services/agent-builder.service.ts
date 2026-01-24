@@ -1,6 +1,9 @@
 import { Injectable, inject } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { LoggerService } from './logger.service';
 import { Observable, catchError, throwError } from 'rxjs';
+import { LoggerService } from './logger.service';
 import {
   AgentConfiguration,
   AgentVersion,
@@ -25,6 +28,7 @@ import {
   providedIn: 'root',
 })
 export class AgentBuilderService {
+  private readonly logger = this.loggerService.withContext('AgentBuilderService');
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/v1/agent-builder';
 
@@ -372,7 +376,7 @@ export class AgentBuilderService {
   // ============================================================================
 
   private handleError(error: unknown): Observable<never> {
-    console.error('AgentBuilderService error:', error);
+    this.logger.error('AgentBuilderService error:', { error });
     return throwError(() => error);
   }
 }

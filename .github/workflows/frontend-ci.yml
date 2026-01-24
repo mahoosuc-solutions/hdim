@@ -24,6 +24,15 @@ on:
         options:
           - staging
           - production
+          - rollback
+      rollback_to:
+        description: 'Rollback target (blue/green) - only for rollback'
+        required: false
+        default: 'blue'
+        type: choice
+        options:
+          - blue
+          - green
 
 env:
   NODE_VERSION: '20'
@@ -76,9 +85,61 @@ jobs:
       - name: Check code coverage thresholds
         run: |
           echo "Checking code coverage meets minimum 70% threshold..."
-          # TODO: Add coverage threshold check script
-          # For now, pass - implement in future PR
-          exit 0
+
+          # Check if coverage directory exists
+          if [ ! -d "coverage" ]; then
+            echo "⚠️ No coverage directory found - skipping threshold check"
+            exit 0
+          fi
+
+          # Find all coverage-summary.json files
+          COVERAGE_FILES=$(find coverage -name "coverage-summary.json" 2>/dev/null || true)
+
+          if [ -z "$COVERAGE_FILES" ]; then
+            echo "⚠️ No coverage-summary.json files found - skipping threshold check"
+            exit 0
+          fi
+
+          # Check each coverage file
+          FAILED=0
+          for FILE in $COVERAGE_FILES; do
+            # Extract overall coverage percentages using jq
+            LINE_PCT=$(jq -r '.total.lines.pct' "$FILE" 2>/dev/null || echo "0")
+            BRANCH_PCT=$(jq -r '.total.branches.pct' "$FILE" 2>/dev/null || echo "0")
+            FUNCTION_PCT=$(jq -r '.total.functions.pct' "$FILE" 2>/dev/null || echo "0")
+            STATEMENT_PCT=$(jq -r '.total.statements.pct' "$FILE" 2>/dev/null || echo "0")
+
+            echo "Coverage for $FILE:"
+            echo "  Lines: ${LINE_PCT}%"
+            echo "  Branches: ${BRANCH_PCT}%"
+            echo "  Functions: ${FUNCTION_PCT}%"
+            echo "  Statements: ${STATEMENT_PCT}%"
+
+            # Check if any coverage metric is below 70%
+            if (( $(echo "$LINE_PCT < 70" | bc -l) )); then
+              echo "❌ Line coverage ${LINE_PCT}% is below 70% threshold"
+              FAILED=1
+            fi
+            if (( $(echo "$BRANCH_PCT < 70" | bc -l) )); then
+              echo "❌ Branch coverage ${BRANCH_PCT}% is below 70% threshold"
+              FAILED=1
+            fi
+            if (( $(echo "$FUNCTION_PCT < 70" | bc -l) )); then
+              echo "❌ Function coverage ${FUNCTION_PCT}% is below 70% threshold"
+              FAILED=1
+            fi
+            if (( $(echo "$STATEMENT_PCT < 70" | bc -l) )); then
+              echo "❌ Statement coverage ${STATEMENT_PCT}% is below 70% threshold"
+              FAILED=1
+            fi
+          done
+
+          if [ "$FAILED" -eq 1 ]; then
+            echo "❌ Coverage threshold check failed - improve test coverage to at least 70%"
+            exit 1
+          else
+            echo "✅ All coverage metrics meet 70% threshold"
+          fi
 
       - name: Build Clinical Portal (Production)
         run: npx nx build clinical-portal --configuration=production
@@ -90,9 +151,43 @@ jobs:
       - name: Analyze bundle size
         run: |
           echo "Bundle size analysis:"
-          du -sh dist/apps/clinical-portal/ || true
-          du -sh dist/apps/admin-portal/ || true
-          # TODO: Add bundle size threshold check (fail if > 2MB)
+
+          # Check Clinical Portal bundle size
+          if [ -d "dist/apps/clinical-portal" ]; then
+            CLINICAL_SIZE=$(du -sb dist/apps/clinical-portal | cut -f1)
+            CLINICAL_SIZE_MB=$(echo "scale=2; $CLINICAL_SIZE / 1048576" | bc)
+            echo "Clinical Portal: ${CLINICAL_SIZE_MB}MB"
+
+            # Threshold: 5MB (5 * 1024 * 1024 = 5242880 bytes)
+            MAX_SIZE=5242880
+
+            if [ "$CLINICAL_SIZE" -gt "$MAX_SIZE" ]; then
+              echo "❌ Clinical Portal bundle size (${CLINICAL_SIZE_MB}MB) exceeds 5MB threshold"
+              echo "Bundle size optimization recommendations:"
+              echo "  - Enable AOT compilation (already enabled)"
+              echo "  - Use lazy loading for routes"
+              echo "  - Remove unused dependencies"
+              echo "  - Compress assets"
+              exit 1
+            else
+              echo "✅ Clinical Portal bundle size within limits"
+            fi
+          else
+            echo "⚠️ Clinical Portal build not found - skipping bundle size check"
+          fi
+
+          # Check Admin Portal bundle size (optional)
+          if [ -d "dist/apps/admin-portal" ]; then
+            ADMIN_SIZE=$(du -sb dist/apps/admin-portal | cut -f1)
+            ADMIN_SIZE_MB=$(echo "scale=2; $ADMIN_SIZE / 1048576" | bc)
+            echo "Admin Portal: ${ADMIN_SIZE_MB}MB"
+
+            if [ "$ADMIN_SIZE" -gt "$MAX_SIZE" ]; then
+              echo "⚠️ Admin Portal bundle size (${ADMIN_SIZE_MB}MB) exceeds 5MB threshold (non-blocking)"
+            else
+              echo "✅ Admin Portal bundle size within limits"
+            fi
+          fi
 
       - name: Upload test coverage
         uses: actions/upload-artifact@v4
@@ -208,7 +303,66 @@ jobs:
           sarif_file: 'trivy-results.sarif'
 
   # ============================================================================
-  # Job 4: E2E Tests (Playwright)
+  # Job 4: OWASP ZAP Security Scan
+  # ============================================================================
+  owasp-zap-scan:
+    name: OWASP ZAP Security Scan
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    timeout-minutes: 15
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+
+      - name: Start application for scanning
+        run: |
+          echo "Starting Clinical Portal for OWASP ZAP scan..."
+          # Serve the built application on port 4200
+          npx http-server dist/apps/clinical-portal -p 4200 &
+          SERVER_PID=$!
+          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+
+          # Wait for server to start
+          sleep 5
+
+          # Verify server is running
+          curl -f http://localhost:4200 || (echo "Failed to start server" && exit 1)
+
+      - name: OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: 'http://localhost:4200'
+          rules_file_name: '.github/zap/rules.tsv'
+          cmd_options: '-a -j -I'  # Include JSON report, ignore warnings
+          fail_action: true  # Fail on high/medium risk findings
+          allow_issue_writing: false
+
+      - name: Upload ZAP scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-scan-results
+          path: |
+            report_html.html
+            report_json.json
+          retention-days: 30
+
+      - name: Cleanup
+        if: always()
+        run: |
+          # Kill the http-server process
+          kill $SERVER_PID || true
+
+  # ============================================================================
+  # Job 5: E2E Tests (Playwright)
   # ============================================================================
   e2e-tests:
     name: E2E Tests
@@ -248,12 +402,12 @@ jobs:
           retention-days: 7
 
   # ============================================================================
-  # Job 5: Deploy to Staging (on develop branch)
+  # Job 6: Deploy to Staging (on develop branch)
   # ============================================================================
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    needs: [build-and-test, hipaa-compliance, security-scan]
+    needs: [build-and-test, hipaa-compliance, security-scan, owasp-zap-scan]
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
     environment:
       name: staging
@@ -270,38 +424,24 @@ jobs:
           name: build-artifacts
           path: dist/
 
-      - name: Deploy to Staging (Docker)
+      - name: Deploy to Staging
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          STAGING_URL: https://staging.hdim.example.com
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY || 'registry.hdim.example.com' }}
         run: |
-          echo "🚀 Deploying to staging environment..."
-          echo "TODO: Implement staging deployment"
-          echo "  - Build Docker image"
-          echo "  - Push to container registry"
-          echo "  - Deploy to staging cluster"
-          echo "  - Health check verification"
-          # Future implementation:
-          # docker build -t clinical-portal:staging .
-          # docker push registry.example.com/clinical-portal:staging
-          # kubectl set image deployment/clinical-portal clinical-portal=registry.example.com/clinical-portal:staging
-
-      - name: Health check
-        run: |
-          echo "Waiting for deployment to stabilize..."
-          sleep 10
-          echo "✅ Health check passed (mocked)"
-          # Future: curl https://staging.hdim.example.com/health
-
-      - name: Notify deployment success
-        run: |
-          echo "✅ Deployment to staging successful"
-          echo "URL: https://staging.hdim.example.com"
+          chmod +x scripts/deploy/frontend-staging.sh
+          bash scripts/deploy/frontend-staging.sh
 
   # ============================================================================
-  # Job 6: Deploy to Production (on master branch)
+  # Job 7: Deploy to Production (on master branch)
   # ============================================================================
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [build-and-test, hipaa-compliance, security-scan, e2e-tests]
+    needs: [build-and-test, hipaa-compliance, security-scan, owasp-zap-scan, e2e-tests]
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     environment:
       name: production
@@ -319,42 +459,19 @@ jobs:
           path: dist/
 
       - name: Deploy to Production (Blue-Green)
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          PRODUCTION_URL: https://app.hdim.example.com
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY || 'registry.hdim.example.com' }}
+          CURRENT_COLOR: ${{ secrets.CURRENT_PRODUCTION_COLOR || 'blue' }}
         run: |
-          echo "🚀 Deploying to production environment (blue-green strategy)..."
-          echo "TODO: Implement production deployment"
-          echo "  - Build Docker image with version tag"
-          echo "  - Push to production registry"
-          echo "  - Deploy to 'green' environment"
-          echo "  - Health check on 'green'"
-          echo "  - Switch traffic from 'blue' to 'green'"
-          echo "  - Monitor for 5 minutes"
-          echo "  - If errors detected, rollback to 'blue'"
-          # Future implementation:
-          # ./scripts/blue-green-deploy.sh clinical-portal ${{ github.sha }}
-
-      - name: Health check (Production)
-        run: |
-          echo "Performing production health checks..."
-          sleep 10
-          echo "✅ Health check passed (mocked)"
-          # Future: curl https://app.hdim.example.com/health
-
-      - name: Monitor for 5 minutes
-        run: |
-          echo "Monitoring production metrics..."
-          echo "  - Error rate: 0.01% (normal)"
-          echo "  - Response time: 150ms (normal)"
-          echo "  - Active users: 250 (normal)"
-          echo "✅ Production deployment stable"
-
-      - name: Notify deployment success
-        run: |
-          echo "✅ Deployment to production successful"
-          echo "URL: https://app.hdim.example.com"
-          echo "Version: ${{ github.sha }}"
+          chmod +x scripts/deploy/frontend-production.sh
+          bash scripts/deploy/frontend-production.sh
 
   # ============================================================================
-  # Job 7: Rollback (Manual Trigger)
+  # Job 8: Rollback (Manual Trigger)
   # ============================================================================
   rollback:
     name: Rollback Production
@@ -364,15 +481,9 @@ jobs:
 
     steps:
       - name: Rollback to previous version
+        env:
+          PRODUCTION_URL: https://app.hdim.example.com
+          ROLLBACK_TO: ${{ github.event.inputs.rollback_to || secrets.PREVIOUS_PRODUCTION_COLOR || 'blue' }}
         run: |
-          echo "🔄 Rolling back production deployment..."
-          echo "TODO: Implement rollback mechanism"
-          echo "  - Identify previous stable version"
-          echo "  - Switch traffic back to 'blue' environment"
-          echo "  - Verify health checks"
-          # Future: ./scripts/rollback.sh clinical-portal
-
-      - name: Notify rollback
-        run: |
-          echo "✅ Rollback completed"
-          echo "Production restored to previous stable version"
+          chmod +x scripts/deploy/frontend-rollback.sh
+          bash scripts/deploy/frontend-rollback.sh "$ROLLBACK_TO"

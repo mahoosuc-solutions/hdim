@@ -101,16 +101,20 @@ echo ""
 if [ "$SKIP_DEPS" = false ]; then
     echo -e "${YELLOW}Step 2/5: Pre-caching dependencies...${NC}"
     echo "This may take 5-10 minutes on first run..."
+    echo "Using Gradle build to download and cache dependencies..."
 
     cd backend
-    ./gradlew downloadDependencies --no-daemon
+    # Use 'dependencies' task to resolve and download all dependencies
+    # This caches them for subsequent builds
+    ./gradlew :modules:services:documentation-service:dependencies --no-daemon --quiet
 
     if [ $? -ne 0 ]; then
-        echo -e "${RED}ERROR: Failed to download dependencies${NC}"
-        exit 1
+        echo -e "${YELLOW}WARNING: Dependency resolution had issues, but continuing...${NC}"
+        echo "Dependencies will be downloaded during JAR build"
+    else
+        echo -e "${GREEN}✓${NC} Dependencies cached successfully"
     fi
 
-    echo -e "${GREEN}✓${NC} Dependencies cached successfully"
     cd ..
 else
     echo -e "${YELLOW}Step 2/5: Skipping dependency cache (--skip-deps)${NC}"

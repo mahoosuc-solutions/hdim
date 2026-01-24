@@ -60,7 +60,7 @@ public class CareGapController {
      * @param createdBy User performing identification
      * @return List of identified care gaps
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/identify", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> identifyAllCareGaps(
@@ -85,7 +85,7 @@ public class CareGapController {
      * @param createdBy User performing identification
      * @return List of identified care gaps
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/identify/{library}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> identifyCareGapsForLibrary(
@@ -110,7 +110,7 @@ public class CareGapController {
      * @param createdBy User performing refresh
      * @return List of active care gaps
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/refresh", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> refreshCareGaps(
@@ -136,7 +136,7 @@ public class CareGapController {
      * @param closureAction Action taken to close gap
      * @return Updated care gap
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/close", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CareGapEntity> closeCareGap(
@@ -168,7 +168,7 @@ public class CareGapController {
      * @param patientId Patient ID
      * @return List of open care gaps
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/open", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> getOpenCareGaps(
@@ -189,7 +189,7 @@ public class CareGapController {
      * @param patientId Patient ID
      * @return List of high priority care gaps
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/high-priority", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> getHighPriorityCareGaps(
@@ -210,7 +210,7 @@ public class CareGapController {
      * @param patientId Patient ID
      * @return List of overdue care gaps
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/overdue", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> getOverdueGaps(
@@ -232,7 +232,7 @@ public class CareGapController {
      * @param days Number of days to look ahead (default: 30)
      * @return List of upcoming care gaps
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/upcoming", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> getUpcomingGaps(
@@ -256,7 +256,7 @@ public class CareGapController {
      * @param patientId Patient ID
      * @return Care gap statistics
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/stats", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CareGapIdentificationService.CareGapStats> getCareGapStats(
@@ -278,7 +278,7 @@ public class CareGapController {
      * @param patientId Patient ID
      * @return Care gap summary
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/summary", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CareGapReportService.CareGapSummary> getCareGapSummary(
@@ -300,7 +300,7 @@ public class CareGapController {
      * @param patientId Patient ID
      * @return Map of measure category -> gap count
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/by-category", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Long>> getGapsByCategory(
@@ -321,7 +321,7 @@ public class CareGapController {
      * @param patientId Patient ID
      * @return Map of priority -> gap count
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/by-priority", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Long>> getGapsByPriority(
@@ -341,7 +341,7 @@ public class CareGapController {
      * @param tenantId Tenant ID
      * @return Population gap report
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/population-report", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CareGapReportService.PopulationGapReport> getPopulationGapReport(
@@ -369,7 +369,7 @@ public class CareGapController {
      * @param limit Maximum number of gaps to return (default: 50)
      * @return List of prioritized care gaps with scores and recommendations
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
     @Audited(action = AuditAction.READ, resourceType = "CareGap", purposeOfUse = "TREATMENT",
             description = "Provider care gap prioritization lookup")
     @GetMapping(value = "/providers/{providerId}/prioritized", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -393,7 +393,7 @@ public class CareGapController {
      * @param providerId Provider ID
      * @return Summary statistics for provider's care gaps
      */
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
     @Audited(action = AuditAction.READ, resourceType = "CareGap", purposeOfUse = "TREATMENT",
             description = "Provider care gap summary lookup")
     @GetMapping(value = "/providers/{providerId}/summary", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -416,7 +416,7 @@ public class CareGapController {
      *
      * @return Health status
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/_health", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> healthCheck() {

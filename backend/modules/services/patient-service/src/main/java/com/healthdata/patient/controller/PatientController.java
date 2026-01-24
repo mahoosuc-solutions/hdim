@@ -67,7 +67,7 @@ public class PatientController {
      * @param patientId Patient ID (query parameter)
      * @return FHIR Bundle with all patient resources
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/health-record", produces = "application/fhir+json")
     public ResponseEntity<String> getComprehensiveHealthRecord(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -91,7 +91,7 @@ public class PatientController {
      * @param onlyCritical Return only critical allergies
      * @return FHIR Bundle with allergies
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/allergies", produces = "application/fhir+json")
     public ResponseEntity<String> getAllergies(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -116,7 +116,7 @@ public class PatientController {
      * @param onlyCompleted Return only completed immunizations
      * @return FHIR Bundle with immunizations
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/immunizations", produces = "application/fhir+json")
     public ResponseEntity<String> getImmunizations(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -141,7 +141,7 @@ public class PatientController {
      * @param onlyActive Return only active medications
      * @return FHIR Bundle with medications
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/medications", produces = "application/fhir+json")
     public ResponseEntity<String> getMedications(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -166,7 +166,7 @@ public class PatientController {
      * @param onlyActive Return only active conditions
      * @return FHIR Bundle with conditions
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/conditions", produces = "application/fhir+json")
     public ResponseEntity<String> getConditions(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -190,7 +190,7 @@ public class PatientController {
      * @param patientId Patient ID
      * @return FHIR Bundle with procedures
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/procedures", produces = "application/fhir+json")
     public ResponseEntity<String> getProcedures(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -213,7 +213,7 @@ public class PatientController {
      * @param patientId Patient ID
      * @return FHIR Bundle with vital signs
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/vitals", produces = "application/fhir+json")
     public ResponseEntity<String> getVitalSigns(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -236,7 +236,7 @@ public class PatientController {
      * @param patientId Patient ID
      * @return FHIR Bundle with lab results
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/labs", produces = "application/fhir+json")
     public ResponseEntity<String> getLabResults(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -260,7 +260,7 @@ public class PatientController {
      * @param onlyActive Return only active encounters
      * @return FHIR Bundle with encounters
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/encounters", produces = "application/fhir+json")
     public ResponseEntity<String> getEncounters(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -285,7 +285,7 @@ public class PatientController {
      * @param onlyActive Return only active care plans
      * @return FHIR Bundle with care plans
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/care-plans", produces = "application/fhir+json")
     public ResponseEntity<String> getCarePlans(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -311,7 +311,7 @@ public class PatientController {
      * @param patientId Patient ID
      * @return List of timeline events
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/timeline", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<PatientTimelineService.TimelineEvent>> getPatientTimeline(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -334,7 +334,7 @@ public class PatientController {
      * @param endDate End date (ISO format: YYYY-MM-DD)
      * @return List of timeline events
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/timeline/by-date", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<PatientTimelineService.TimelineEvent>> getPatientTimelineByDateRange(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -358,7 +358,7 @@ public class PatientController {
      * @param resourceType FHIR resource type
      * @return List of timeline events
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/timeline/by-type", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<PatientTimelineService.TimelineEvent>> getPatientTimelineByResourceType(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -381,7 +381,7 @@ public class PatientController {
      * @param year Year to summarize
      * @return Map of month -> event count
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/timeline/summary", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Integer>> getTimelineSummaryByMonth(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -405,7 +405,7 @@ public class PatientController {
      * @param patientId Patient ID
      * @return Health status summary
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/health-status", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PatientHealthStatusService.HealthStatusSummary> getHealthStatusSummary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -426,7 +426,7 @@ public class PatientController {
      * @param patientId Patient ID
      * @return Medication summary
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/medication-summary", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PatientHealthStatusService.MedicationSummary> getMedicationSummary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -447,7 +447,7 @@ public class PatientController {
      * @param patientId Patient ID
      * @return Allergy summary
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/allergy-summary", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PatientHealthStatusService.AllergySummary> getAllergySummary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -468,7 +468,7 @@ public class PatientController {
      * @param patientId Patient ID
      * @return Condition summary
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/condition-summary", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PatientHealthStatusService.ConditionSummary> getConditionSummary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -489,7 +489,7 @@ public class PatientController {
      * @param patientId Patient ID
      * @return Immunization summary
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/immunization-summary", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PatientHealthStatusService.ImmunizationSummary> getImmunizationSummary(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -510,7 +510,7 @@ public class PatientController {
      *
      * @return Health status
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @GetMapping(value = "/_health", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> healthCheck() {
         return ResponseEntity.ok(Map.of(

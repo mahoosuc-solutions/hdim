@@ -26,8 +26,12 @@ RUN npm ci --only=production
 # Copy source code
 COPY . .
 
-# Create output directory
-RUN mkdir -p out
+# Create output directory and resolve symlinks
+RUN mkdir -p out && \
+    if [ -L public/screenshots ]; then \
+      rm -f public/screenshots && \
+      mkdir -p public/screenshots; \
+    fi
 
 # Default command: render 90s version
 CMD ["npm", "run", "render:90s"]

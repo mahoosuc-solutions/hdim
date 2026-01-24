@@ -90,7 +90,8 @@ Volume: document-storage (persistent)
 ### Deployment Phases
 
 **Phase 1: Pre-cache Dependencies** (5-10 minutes)
-- Download Gradle dependencies locally
+- Resolve and download Gradle dependencies locally
+- Uses `./gradlew dependencies` task (not `downloadDependencies`)
 - Prevents Docker TLS timeout issues
 - Reduces build time
 

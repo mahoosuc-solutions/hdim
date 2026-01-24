@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -190,5 +191,19 @@ public class ClinicalDocumentController {
 
         documentService.triggerOcrReprocessing(attachmentId, tenantId);
         return ResponseEntity.accepted().build();
+    }
+
+    /**
+     * Search documents by OCR extracted text
+     * Full-text search across all document attachments with OCR'd text
+     */
+    @GetMapping("/search-ocr")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
+    public ResponseEntity<Page<DocumentAttachmentDto>> searchOcrText(
+            @RequestParam String query,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PageableDefault(size = 20) Pageable pageable) {
+
+        return ResponseEntity.ok(documentService.searchOcrText(tenantId, query, pageable));
     }
 }

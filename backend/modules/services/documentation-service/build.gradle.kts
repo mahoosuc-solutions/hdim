@@ -34,11 +34,11 @@ dependencies {
     // Jackson for JSON/YAML processing
     implementation(libs.jackson.databind)
     implementation(libs.jackson.datatype.jsr310)
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
+    implementation(libs.jackson.dataformat.yaml)
 
     // Hypersistence for PostgreSQL JSONB and array support
     // Version 3.9.0+ required for Hibernate 6.5+ compatibility
-    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.0")
+    implementation(libs.hypersistence.utils.hibernate.63)
 
     // Spring Cache with Redis
     implementation(libs.spring.boot.starter.data.redis)
@@ -50,7 +50,7 @@ dependencies {
     implementation(libs.resilience4j.spring.boot3)
     implementation(libs.resilience4j.circuitbreaker)
     implementation(libs.resilience4j.retry)
-    implementation("org.springframework.boot:spring-boot-starter-aop")
+    implementation(libs.spring.boot.starter.aop)
 
     // Lombok
     compileOnly(libs.lombok)
@@ -59,6 +59,11 @@ dependencies {
     // Utilities
     implementation(libs.commons.lang3)
     implementation(libs.guava)
+
+    // OCR and Document Processing (Issue #245)
+    implementation(libs.tess4j) // Tesseract OCR wrapper
+    implementation(libs.pdfbox) // PDF text extraction and rendering
+    implementation(libs.pdfbox.tools) // PDF to image conversion
 
     // Testing
     testImplementation(project(":platform:test-fixtures"))

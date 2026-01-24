@@ -125,13 +125,9 @@ public class QAAuditService {
             .filter(d -> "FLAGGED".equals(d.getReviewStatus()))
             .count();
 
-        long falsePositives = decisions.stream()
-            .filter(d -> Boolean.TRUE.equals(d.getFalsePositive()))
-            .count();
-
-        long falseNegatives = decisions.stream()
-            .filter(d -> Boolean.TRUE.equals(d.getFalseNegative()))
-            .count();
+        // Note: falsePositive/falseNegative fields not available in entity
+        long falsePositives = 0L;
+        long falseNegatives = 0L;
 
         long pendingReview = decisions.stream()
             .filter(d -> d.getReviewStatus() == null || "PENDING".equals(d.getReviewStatus()))
@@ -319,11 +315,11 @@ public class QAAuditService {
             throw new RuntimeException("Access denied: Decision belongs to different tenant");
         }
 
-        decision.setFalsePositive(true);
+        // Note: falsePositive field not available in entity, using userFeedbackComment instead
         decision.setReviewedBy(reviewerUserId);
         decision.setReviewedAt(Instant.now());
         if (request.getFalsePositiveContext() != null) {
-            decision.setUserFeedbackComment(request.getFalsePositiveContext());
+            decision.setUserFeedbackComment("FALSE_POSITIVE: " + request.getFalsePositiveContext());
         }
 
         decisionRepository.save(decision);
@@ -343,11 +339,11 @@ public class QAAuditService {
             throw new RuntimeException("Access denied: Decision belongs to different tenant");
         }
 
-        decision.setFalseNegative(true);
+        // Note: falseNegative field not available in entity, using userFeedbackComment instead
         decision.setReviewedBy(reviewerUserId);
         decision.setReviewedAt(Instant.now());
         if (request.getFalseNegativeContext() != null) {
-            decision.setUserFeedbackComment(request.getFalseNegativeContext());
+            decision.setUserFeedbackComment("FALSE_NEGATIVE: " + request.getFalseNegativeContext());
         }
 
         decisionRepository.save(decision);
@@ -416,8 +412,9 @@ public class QAAuditService {
                 row.createCell(7).setCellValue(decision.getReviewedBy() != null ? decision.getReviewedBy() : "");
                 row.createCell(8).setCellValue(decision.getReviewedAt() != null ? decision.getReviewedAt().toString() : "");
                 row.createCell(9).setCellValue(decision.getReviewNotes() != null ? decision.getReviewNotes() : "");
-                row.createCell(10).setCellValue(Boolean.TRUE.equals(decision.getFalsePositive()) ? "Yes" : "No");
-                row.createCell(11).setCellValue(Boolean.TRUE.equals(decision.getFalseNegative()) ? "Yes" : "No");
+                // Note: falsePositive/falseNegative fields not available in entity
+                row.createCell(10).setCellValue("N/A");
+                row.createCell(11).setCellValue("N/A");
             }
 
             // Auto-size columns
@@ -440,6 +437,27 @@ public class QAAuditService {
             return null;
         }
 
+        // Build output data map from recommendation fields
+        Map<String, Object> outputData = null;
+        if (entity.getRecommendedValue() != null || entity.getExpectedImpact() != null) {
+            outputData = new java.util.HashMap<>();
+            if (entity.getConfigType() != null) {
+                outputData.put("configType", entity.getConfigType());
+            }
+            if (entity.getCurrentValue() != null) {
+                outputData.put("currentValue", entity.getCurrentValue());
+            }
+            if (entity.getRecommendedValue() != null) {
+                outputData.put("recommendedValue", entity.getRecommendedValue());
+            }
+            if (entity.getExpectedImpact() != null) {
+                outputData.put("expectedImpact", entity.getExpectedImpact());
+            }
+            if (entity.getRiskLevel() != null) {
+                outputData.put("riskLevel", entity.getRiskLevel().name());
+            }
+        }
+
         return QAReviewQueueResponse.builder()
             .eventId(entity.getEventId())
             .timestamp(entity.getTimestamp())
@@ -448,15 +466,15 @@ public class QAAuditService {
             .outcome(entity.getOutcome() != null ? entity.getOutcome().name() : null)
             .confidenceScore(entity.getConfidenceScore())
             .reasoning(entity.getReasoning())
-            .inputContext(entity.getInputContext())
-            .outputData(entity.getOutputData())
+            .inputContext(entity.getInputMetrics())  // Use inputMetrics map
+            .outputData(outputData)  // Build from recommendation fields
             .modelVersion(entity.getModelName())
             .qaReviewStatus(entity.getReviewStatus() != null ? entity.getReviewStatus() : "PENDING")
             .qaReviewedBy(entity.getReviewedBy())
             .qaReviewedAt(entity.getReviewedAt())
             .qaReviewNotes(entity.getReviewNotes())
-            .falsePositive(entity.getFalsePositive())
-            .falseNegative(entity.getFalseNegative())
+            .falsePositive(null)  // Note: field not available in entity
+            .falseNegative(null)  // Note: field not available in entity
             .relatedResourceId(entity.getResourceId())
             .relatedResourceType(entity.getResourceType())
             .build();

@@ -40,6 +40,7 @@ import {
 // Dialog imports (to be created)
 import { CreateAgentDialogComponent } from './dialogs/create-agent-dialog.component';
 import { TestAgentDialogComponent } from './dialogs/test-agent-dialog.component';
+import { AgentVersionsDialogComponent } from './dialogs/agent-versions-dialog.component';
 
 @Component({
   selector: 'app-agent-builder',
@@ -437,9 +438,18 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   viewVersions(agent: AgentConfiguration): void {
-    // Navigate to versions view or open dialog
-    this.router.navigate(['/agent-builder', agent.id], {
-      queryParams: { tab: 'versions' },
+    const dialogRef = this.dialog.open(AgentVersionsDialogComponent, {
+      width: '95vw',
+      maxWidth: '1200px',
+      height: '85vh',
+      data: { agent },
+    });
+
+    dialogRef.afterClosed().subscribe((shouldRefresh) => {
+      if (shouldRefresh) {
+        // Refresh agent list if rollback occurred
+        this.loadAgents();
+      }
     });
   }
 

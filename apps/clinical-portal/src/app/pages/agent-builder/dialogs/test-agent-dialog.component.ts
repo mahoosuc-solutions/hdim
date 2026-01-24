@@ -12,6 +12,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatMenuModule } from '@angular/material/menu';
 import { Subject, takeUntil } from 'rxjs';
 
 import { AgentBuilderService } from '../services/agent-builder.service';
@@ -45,6 +46,7 @@ export interface TestAgentDialogData {
     MatDividerModule,
     MatTooltipModule,
     MatTabsModule,
+    MatMenuModule,
   ],
   template: `
     <div class="test-dialog">
@@ -161,14 +163,59 @@ export interface TestAgentDialogData {
                       <span class="metric-label">Tool Calls</span>
                     </div>
                     <div class="metric">
-                      <span class="metric-value">{{ metrics.avgLatencyMs }}ms</span>
+                      <span class="metric-value">{{ metrics.averageLatency }}ms</span>
                       <span class="metric-label">Avg Latency</span>
                     </div>
                     <div class="metric">
-                      <span class="metric-value">{{ metrics.guardrailTriggers }}</span>
+                      <span class="metric-value">{{ metrics.guardrailsTriggered }}</span>
                       <span class="metric-label">Guardrails</span>
                     </div>
                   </div>
+
+                  <!-- Guardrail Triggers Detail -->
+                  @if (metrics.guardrailTriggers && metrics.guardrailTriggers.length > 0) {
+                    <mat-divider style="margin: 16px 0;"></mat-divider>
+                    <h4 class="section-header">Guardrail Activity</h4>
+                    <div class="guardrail-triggers">
+                      @for (trigger of metrics.guardrailTriggers; track $index) {
+                        <mat-card class="trigger-card" [class]="'trigger-action-' + trigger.action.toLowerCase()">
+                          <mat-card-header>
+                            <mat-icon [color]="getGuardrailActionColor(trigger.action)">
+                              {{ getGuardrailActionIcon(trigger.action) }}
+                            </mat-icon>
+                            <mat-card-title>{{ formatGuardrailType(trigger.guardrailType) }}</mat-card-title>
+                            <span class="trigger-time">
+                              {{ formatTimestamp(trigger.timestamp) }}
+                            </span>
+                          </mat-card-header>
+                          <mat-card-content>
+                            <div class="trigger-detail">
+                              <strong>Action:</strong>
+                              <mat-chip
+                                size="small"
+                                [class]="'action-chip-' + trigger.action.toLowerCase()">
+                                {{ trigger.action }}
+                              </mat-chip>
+                            </div>
+                            <div class="trigger-detail">
+                              <strong>Triggered By:</strong>
+                              <span>{{ trigger.triggeredBy }}</span>
+                            </div>
+                            <div class="trigger-detail">
+                              <strong>Message Index:</strong>
+                              <span>#{{ trigger.messageIndex }}</span>
+                            </div>
+                            @if (trigger.details) {
+                              <div class="trigger-detail">
+                                <strong>Details:</strong>
+                                <span class="trigger-details-text">{{ trigger.details }}</span>
+                              </div>
+                            }
+                          </mat-card-content>
+                        </mat-card>
+                      }
+                    </div>
+                  }
                 } @else {
                   <p class="empty-state">Metrics will appear once testing begins</p>
                 }
@@ -239,39 +286,67 @@ export interface TestAgentDialogData {
       <mat-divider></mat-divider>
 
       <div class="dialog-footer">
-        @if (session?.status === 'IN_PROGRESS') {
-          <div class="rating-section">
-            <span>Rate this session:</span>
-            <div class="rating-stars">
-              @for (star of [1, 2, 3, 4, 5]; track star) {
-                <button
-                  mat-icon-button
-                  (click)="rating = star"
-                  [color]="rating >= star ? 'primary' : ''"
-                  [attr.aria-label]="'Rate ' + star + ' out of 5 stars'">
-                  <mat-icon>{{ rating >= star ? 'star' : 'star_border' }}</mat-icon>
-                </button>
-              }
+        <div class="footer-left">
+          @if (messages.length > 0) {
+            <button
+              mat-button
+              [matMenuTriggerFor]="exportMenu"
+              aria-label="Export conversation">
+              <mat-icon>download</mat-icon>
+              Export
+            </button>
+            <mat-menu #exportMenu="matMenu">
+              <button mat-menu-item (click)="exportConversation('json')">
+                <mat-icon>code</mat-icon>
+                <span>Export as JSON</span>
+              </button>
+              <button mat-menu-item (click)="exportConversation('markdown')">
+                <mat-icon>description</mat-icon>
+                <span>Export as Markdown</span>
+              </button>
+              <button mat-menu-item (click)="exportConversation('csv')">
+                <mat-icon>table_chart</mat-icon>
+                <span>Export as CSV</span>
+              </button>
+            </mat-menu>
+          }
+        </div>
+
+        <div class="footer-right">
+          @if (session?.status === 'IN_PROGRESS') {
+            <div class="rating-section">
+              <span>Rate this session:</span>
+              <div class="rating-stars">
+                @for (star of [1, 2, 3, 4, 5]; track star) {
+                  <button
+                    mat-icon-button
+                    (click)="rating = star"
+                    [color]="rating >= star ? 'primary' : ''"
+                    [attr.aria-label]="'Rate ' + star + ' out of 5 stars'">
+                    <mat-icon>{{ rating >= star ? 'star' : 'star_border' }}</mat-icon>
+                  </button>
+                }
+              </div>
             </div>
-          </div>
-          <mat-form-field appearance="outline" class="feedback-field">
-            <mat-label>Feedback (optional)</mat-label>
-            <input matInput [(ngModel)]="feedback" placeholder="Any issues or suggestions?" aria-label="Provide feedback" />
-          </mat-form-field>
-          <button
-            mat-flat-button
-            color="primary"
-            (click)="completeSession()"
-            [disabled]="completing">
-            @if (completing) {
-              <mat-spinner diameter="20"></mat-spinner>
-            } @else {
-              Complete Session
-            }
-          </button>
-        } @else {
-          <button mat-button (click)="onClose()">Close</button>
-        }
+            <mat-form-field appearance="outline" class="feedback-field">
+              <mat-label>Feedback (optional)</mat-label>
+              <input matInput [(ngModel)]="feedback" placeholder="Any issues or suggestions?" aria-label="Provide feedback" />
+            </mat-form-field>
+            <button
+              mat-flat-button
+              color="primary"
+              (click)="completeSession()"
+              [disabled]="completing">
+              @if (completing) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                Complete Session
+              }
+            </button>
+          } @else {
+            <button mat-button (click)="onClose()">Close</button>
+          }
+        </div>
       </div>
     </div>
   `,
@@ -502,6 +577,95 @@ export interface TestAgentDialogData {
       }
     }
 
+    .section-header {
+      margin: 0 0 12px;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--mat-sys-on-surface);
+    }
+
+    .guardrail-triggers {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .trigger-card {
+      margin-bottom: 0;
+
+      mat-card-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        mat-icon {
+          margin-right: 8px;
+        }
+
+        .trigger-time {
+          margin-left: auto;
+          font-size: 0.75rem;
+          color: var(--mat-sys-outline);
+        }
+      }
+
+      .trigger-detail {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 6px 0;
+        font-size: 0.875rem;
+
+        strong {
+          min-width: 120px;
+          color: var(--mat-sys-on-surface-variant);
+        }
+
+        .trigger-details-text {
+          color: var(--mat-sys-on-surface);
+          font-style: italic;
+        }
+      }
+
+      .action-chip-filtered {
+        background: var(--mat-sys-primary-container);
+        color: var(--mat-sys-on-primary-container);
+      }
+
+      .action-chip-blocked {
+        background: var(--mat-sys-error-container);
+        color: var(--mat-sys-on-error-container);
+      }
+
+      .action-chip-warning {
+        background: var(--mat-sys-tertiary-container);
+        color: var(--mat-sys-on-tertiary-container);
+      }
+
+      .action-chip-requires_review {
+        background: var(--mat-sys-secondary-container);
+        color: var(--mat-sys-on-secondary-container);
+      }
+
+      &.trigger-action-filtered {
+        border-left: 4px solid var(--mat-sys-primary);
+      }
+
+      &.trigger-action-blocked {
+        border-left: 4px solid var(--mat-sys-error);
+      }
+
+      &.trigger-action-warning {
+        border-left: 4px solid var(--mat-sys-tertiary);
+      }
+
+      &.trigger-action-requires_review {
+        border-left: 4px solid var(--mat-sys-secondary);
+      }
+    }
+
     .tool-card {
       margin-bottom: 12px;
 
@@ -561,9 +725,23 @@ export interface TestAgentDialogData {
 
     .dialog-footer {
       display: flex;
+      justify-content: space-between;
       align-items: center;
       gap: 16px;
       padding: 16px 24px;
+
+      .footer-left {
+        display: flex;
+        gap: 8px;
+      }
+
+      .footer-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex: 1;
+        justify-content: flex-end;
+      }
 
       .rating-section {
         display: flex;
@@ -576,7 +754,7 @@ export interface TestAgentDialogData {
       }
 
       .feedback-field {
-        flex: 1;
+        width: 250px;
 
         ::ng-deep .mat-mdc-form-field-subscript-wrapper {
           display: none;
@@ -745,6 +923,179 @@ export class TestAgentDialogComponent implements OnInit, OnDestroy, AfterViewChe
       const element = this.messagesContainer.nativeElement;
       element.scrollTop = element.scrollHeight;
     }
+  }
+
+  exportConversation(format: 'json' | 'markdown' | 'csv'): void {
+    if (!this.messages.length) {
+      this.toast.info('No conversation to export');
+      return;
+    }
+
+    let content: string;
+    let mimeType: string;
+    let fileExtension: string;
+
+    switch (format) {
+      case 'json':
+        content = this.exportAsJson();
+        mimeType = 'application/json';
+        fileExtension = 'json';
+        break;
+      case 'markdown':
+        content = this.exportAsMarkdown();
+        mimeType = 'text/markdown';
+        fileExtension = 'md';
+        break;
+      case 'csv':
+        content = this.exportAsCsv();
+        mimeType = 'text/csv';
+        fileExtension = 'csv';
+        break;
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const agentName = this.data.agent.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
+    link.href = url;
+    link.download = `agent-test_${agentName}_${timestamp}.${fileExtension}`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+
+    this.toast.success(`Conversation exported as ${format.toUpperCase()}`);
+  }
+
+  private exportAsJson(): string {
+    const exportData = {
+      agent: {
+        id: this.data.agent.id,
+        name: this.data.agent.name,
+        version: this.data.agent.version,
+      },
+      session: {
+        id: this.session?.id,
+        status: this.session?.status,
+        startedAt: this.session?.startedAt,
+        completedAt: this.session?.completedAt,
+      },
+      messages: this.messages,
+      toolInvocations: this.toolInvocations,
+      metrics: this.metrics,
+      rating: this.rating || null,
+      feedback: this.feedback || null,
+      exportedAt: new Date().toISOString(),
+    };
+    return JSON.stringify(exportData, null, 2);
+  }
+
+  private exportAsMarkdown(): string {
+    let markdown = `# Agent Test Conversation\n\n`;
+    markdown += `**Agent:** ${this.data.agent.name}\n`;
+    markdown += `**Version:** ${this.data.agent.version}\n`;
+    markdown += `**Session ID:** ${this.session?.id || 'N/A'}\n`;
+    markdown += `**Exported:** ${new Date().toLocaleString()}\n\n`;
+    markdown += `---\n\n`;
+
+    // Messages
+    markdown += `## Conversation\n\n`;
+    this.messages.forEach((msg) => {
+      const role = msg.role.charAt(0).toUpperCase() + msg.role.slice(1);
+      const time = new Date(msg.timestamp).toLocaleTimeString();
+      markdown += `### ${role} (${time})\n\n`;
+      markdown += `${msg.content}\n\n`;
+      if (msg.latencyMs) {
+        markdown += `*Response time: ${msg.latencyMs}ms*\n\n`;
+      }
+    });
+
+    // Tool Invocations
+    if (this.toolInvocations.length > 0) {
+      markdown += `---\n\n## Tool Invocations\n\n`;
+      this.toolInvocations.forEach((tool, idx) => {
+        markdown += `### ${idx + 1}. ${tool.toolName}\n\n`;
+        markdown += `**Status:** ${tool.status}\n`;
+        markdown += `**Timestamp:** ${new Date(tool.timestamp).toLocaleString()}\n`;
+        if (tool.input) {
+          markdown += `**Input:**\n\`\`\`json\n${JSON.stringify(tool.input, null, 2)}\n\`\`\`\n\n`;
+        }
+        if (tool.output) {
+          markdown += `**Output:**\n\`\`\`json\n${JSON.stringify(tool.output, null, 2)}\n\`\`\`\n\n`;
+        }
+        if (tool.error) {
+          markdown += `**Error:** ${tool.error}\n\n`;
+        }
+      });
+    }
+
+    // Metrics
+    if (this.metrics) {
+      markdown += `---\n\n## Session Metrics\n\n`;
+      markdown += `- **Total Messages:** ${this.metrics.totalMessages}\n`;
+      markdown += `- **User Messages:** ${this.metrics.userMessages}\n`;
+      markdown += `- **Assistant Messages:** ${this.metrics.assistantMessages}\n`;
+      markdown += `- **Tool Invocations:** ${this.metrics.toolInvocations}\n`;
+      markdown += `- **Average Latency:** ${this.metrics.averageLatency}ms\n`;
+      markdown += `- **Total Tokens:** ${this.metrics.totalTokens}\n`;
+      markdown += `- **Guardrails Triggered:** ${this.metrics.guardrailsTriggered}\n`;
+    }
+
+    if (this.rating > 0) {
+      markdown += `\n---\n\n## Feedback\n\n`;
+      markdown += `**Rating:** ${'⭐'.repeat(this.rating)}\n`;
+      if (this.feedback) {
+        markdown += `**Comments:** ${this.feedback}\n`;
+      }
+    }
+
+    return markdown;
+  }
+
+  private exportAsCsv(): string {
+    let csv = 'Timestamp,Role,Content,Latency (ms)\n';
+
+    this.messages.forEach((msg) => {
+      const timestamp = new Date(msg.timestamp).toISOString();
+      const role = msg.role;
+      const content = msg.content.replace(/"/g, '""'); // Escape quotes
+      const latency = msg.latencyMs || '';
+
+      csv += `"${timestamp}","${role}","${content}","${latency}"\n`;
+    });
+
+    return csv;
+  }
+
+  getGuardrailActionColor(action: string): string {
+    const colorMap: Record<string, string> = {
+      FILTERED: 'primary',
+      BLOCKED: 'warn',
+      WARNING: 'accent',
+      REQUIRES_REVIEW: 'warn',
+    };
+    return colorMap[action] || 'primary';
+  }
+
+  getGuardrailActionIcon(action: string): string {
+    const iconMap: Record<string, string> = {
+      FILTERED: 'filter_alt',
+      BLOCKED: 'block',
+      WARNING: 'warning',
+      REQUIRES_REVIEW: 'visibility',
+    };
+    return iconMap[action] || 'info';
+  }
+
+  formatGuardrailType(type: string): string {
+    return type
+      .split('_')
+      .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  formatTimestamp(timestamp: string): string {
+    return new Date(timestamp).toLocaleTimeString();
   }
 
   onClose(): void {

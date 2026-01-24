@@ -283,23 +283,44 @@ public class AppointmentReminderService {
     }
 
     /**
-     * Extract reminder days from tenant configuration
+     * Extract reminder days from tenant configuration with type safety
      *
      * Default: [1] (1 day before only)
      * Can be configured to [1, 3, 7] for multiple reminders
+     *
+     * @param config Tenant feature flag configuration
+     * @return List of reminder days (positive integers), or default [1]
      */
-    @SuppressWarnings("unchecked")
     private List<Integer> getReminderDays(Map<String, Object> config) {
         if (config == null || config.isEmpty()) {
             return List.of(1); // Default: 1 day before only
         }
 
-        Object reminderDays = config.get("reminder_days");
-        if (reminderDays instanceof List) {
-            return (List<Integer>) reminderDays;
+        Object reminderDaysObj = config.get("reminder_days");
+        if (!(reminderDaysObj instanceof List<?>)) {
+            return List.of(1);
         }
 
-        return List.of(1);
+        List<?> rawList = (List<?>) reminderDaysObj;
+        List<Integer> reminderDays = new java.util.ArrayList<>();
+
+        for (Object item : rawList) {
+            if (item instanceof Number) {
+                int day = ((Number) item).intValue();
+                if (day > 0) {
+                    reminderDays.add(day);
+                } else {
+                    log.warn("Invalid reminder day configuration: {} (must be > 0), using default", day);
+                    return List.of(1);
+                }
+            } else {
+                log.warn("Invalid reminder day type: {} (expected Number), using default",
+                        item != null ? item.getClass().getSimpleName() : "null");
+                return List.of(1);
+            }
+        }
+
+        return reminderDays.isEmpty() ? List.of(1) : reminderDays;
     }
 
     /**

@@ -1,0 +1,153 @@
+{
+  "dashboard": {
+    "title": "JVM Metrics (Per Service)",
+    "tags": ["hdim", "jvm", "performance", "java"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "service",
+          "type": "query",
+          "label": "Service",
+          "query": "label_values(jvm_memory_used_bytes, job)",
+          "current": {"text": "All", "value": "$__all"},
+          "includeAll": true,
+          "multi": true,
+          "refresh": 2
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Heap Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{job=~\"$service\",area=\"heap\"}",
+            "legendFormat": "{{job}} - Used",
+            "refId": "A"
+          },
+          {
+            "expr": "jvm_memory_max_bytes{job=~\"$service\",area=\"heap\"}",
+            "legendFormat": "{{job}} - Max",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "bytes", "label": "Memory"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true, "alignAsTable": true}
+      },
+      {
+        "id": 2,
+        "title": "Non-Heap Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{job=~\"$service\",area=\"nonheap\"}",
+            "legendFormat": "{{job}} - Used",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "bytes", "label": "Memory"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true}
+      },
+      {
+        "id": 3,
+        "title": "GC Pause Duration (p99)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [{
+          "expr": "histogram_quantile(0.99, sum(rate(jvm_gc_pause_seconds_bucket{job=~\"$service\"}[5m])) by (le, job, action))",
+          "legendFormat": "{{job}} - {{action}}",
+          "refId": "A"
+        }],
+        "yaxes": [
+          {"format": "s", "label": "Pause Duration"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true, "alignAsTable": true}
+      },
+      {
+        "id": 4,
+        "title": "Thread Count",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "jvm_threads_live_threads{job=~\"$service\"}",
+            "legendFormat": "{{job}} - Live",
+            "refId": "A"
+          },
+          {
+            "expr": "jvm_threads_daemon_threads{job=~\"$service\"}",
+            "legendFormat": "{{job}} - Daemon",
+            "refId": "B"
+          },
+          {
+            "expr": "jvm_threads_peak_threads{job=~\"$service\"}",
+            "legendFormat": "{{job}} - Peak",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Threads"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true, "alignAsTable": true}
+      },
+      {
+        "id": 5,
+        "title": "CPU Usage (%)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [{
+          "expr": "system_cpu_usage{job=~\"$service\"} * 100",
+          "legendFormat": "{{job}}",
+          "refId": "A"
+        }],
+        "yaxes": [
+          {"format": "percent", "label": "CPU %", "max": 100, "min": 0},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true, "alignAsTable": true}
+      },
+      {
+        "id": 6,
+        "title": "Loaded Classes",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [{
+          "expr": "jvm_classes_loaded_classes{job=~\"$service\"}",
+          "legendFormat": "{{job}}",
+          "refId": "A"
+        }],
+        "yaxes": [
+          {"format": "short", "label": "Classes"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true}
+      }
+    ]
+  }
+}

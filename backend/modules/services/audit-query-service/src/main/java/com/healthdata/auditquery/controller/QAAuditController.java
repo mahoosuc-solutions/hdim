@@ -61,7 +61,7 @@ public class QAAuditController {
      * @return paginated review queue
      */
     @GetMapping("/review-queue")
-    @PreAuthorize("hasAnyRole('QA_ANALYST', 'QUALITY_OFFICER', 'ADMIN', 'AUDITOR')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Get QA review queue",
         description = "Fetch AI decisions pending QA review with optional filtering",
@@ -124,7 +124,7 @@ public class QAAuditController {
      * @return QA metrics
      */
     @GetMapping("/metrics")
-    @PreAuthorize("hasAnyRole('QA_ANALYST', 'QUALITY_OFFICER', 'ADMIN', 'AUDITOR')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Get QA audit metrics",
         description = "Aggregated statistics for QA dashboard",
@@ -163,7 +163,7 @@ public class QAAuditController {
      * @return trend data (daily/weekly aggregations)
      */
     @GetMapping("/trends")
-    @PreAuthorize("hasAnyRole('QA_ANALYST', 'QUALITY_OFFICER', 'ADMIN', 'AUDITOR')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Get QA trend data",
         description = "Historical trend analysis for QA metrics",
@@ -203,7 +203,7 @@ public class QAAuditController {
      * @return success response
      */
     @PostMapping("/review/{id}/approve")
-    @PreAuthorize("hasAnyRole('QA_ANALYST', 'QUALITY_OFFICER', 'ADMIN')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Approve AI decision",
         description = "Mark AI decision as approved after QA review",
@@ -243,7 +243,7 @@ public class QAAuditController {
      * @return success response
      */
     @PostMapping("/review/{id}/reject")
-    @PreAuthorize("hasAnyRole('QA_ANALYST', 'QUALITY_OFFICER', 'ADMIN')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Reject AI decision",
         description = "Mark AI decision as rejected after QA review",
@@ -283,7 +283,7 @@ public class QAAuditController {
      * @return success response
      */
     @PostMapping("/review/{id}/flag")
-    @PreAuthorize("hasAnyRole('QA_ANALYST', 'QUALITY_OFFICER', 'ADMIN')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Flag AI decision for manual review",
         description = "Mark AI decision as requiring additional manual review",
@@ -323,7 +323,7 @@ public class QAAuditController {
      * @return success response
      */
     @PostMapping("/review/{id}/false-positive")
-    @PreAuthorize("hasAnyRole('QA_ANALYST', 'QUALITY_OFFICER', 'ADMIN')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Mark as false positive",
         description = "Mark AI decision as false positive for model improvement",
@@ -363,7 +363,7 @@ public class QAAuditController {
      * @return success response
      */
     @PostMapping("/review/{id}/false-negative")
-    @PreAuthorize("hasAnyRole('QA_ANALYST', 'QUALITY_OFFICER', 'ADMIN')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Mark as false negative",
         description = "Mark AI decision as false negative for model improvement",
@@ -401,7 +401,7 @@ public class QAAuditController {
      * @return review details
      */
     @GetMapping("/review/{id}")
-    @PreAuthorize("hasAnyRole('QA_ANALYST', 'QUALITY_OFFICER', 'ADMIN', 'AUDITOR')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Get review details",
         description = "Fetch detailed information for a specific AI decision review",
@@ -434,7 +434,7 @@ public class QAAuditController {
      * @return Excel file download
      */
     @GetMapping("/report/export")
-    @PreAuthorize("hasAnyRole('QA_ANALYST', 'QUALITY_OFFICER', 'ADMIN', 'AUDITOR')")
+    @PreAuthorize("hasPermission('AUDIT_READ')")
     @Operation(
         summary = "Export QA audit report",
         description = "Export QA audit data to Excel format",

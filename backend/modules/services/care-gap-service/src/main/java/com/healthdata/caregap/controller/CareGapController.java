@@ -29,6 +29,9 @@ import com.healthdata.audit.models.AuditAction;
  * - POST /care-gap/identify/{library} - Identify gaps for specific measure
  * - POST /care-gap/refresh - Refresh care gaps (re-evaluate)
  * - POST /care-gap/close - Close a care gap
+ * - POST /care-gap/bulk-close - Bulk close multiple care gaps (Issue #241)
+ * - POST /care-gap/bulk-assign-intervention - Bulk assign intervention (Issue #241)
+ * - PUT /care-gap/bulk-update-priority - Bulk update priority (Issue #241)
  * - GET /care-gap/open - Get open care gaps
  * - GET /care-gap/high-priority - Get high priority gaps
  * - GET /care-gap/overdue - Get overdue gaps

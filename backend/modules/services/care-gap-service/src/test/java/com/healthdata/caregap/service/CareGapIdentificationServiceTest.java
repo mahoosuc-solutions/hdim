@@ -605,4 +605,222 @@ class CareGapIdentificationServiceTest {
             assertThat(stats.hasHighPriorityGaps()).isFalse();
         }
     }
+
+    @Nested
+    @DisplayName("Bulk Close Care Gaps Tests (Issue #241)")
+    class BulkCloseCareGapsTests {
+
+        @Test
+        @DisplayName("Should successfully close all gaps in bulk")
+        void shouldCloseAllGapsSuccessfully() {
+            // Given
+            UUID gap1 = UUID.randomUUID();
+            UUID gap2 = UUID.randomUUID();
+            UUID gap3 = UUID.randomUUID();
+
+            CareGapEntity entity1 = CareGapEntity.builder().id(gap1).tenantId(TENANT_ID).patientId(PATIENT_UUID).gapStatus("open").build();
+            CareGapEntity entity2 = CareGapEntity.builder().id(gap2).tenantId(TENANT_ID).patientId(PATIENT_UUID).gapStatus("open").build();
+            CareGapEntity entity3 = CareGapEntity.builder().id(gap3).tenantId(TENANT_ID).patientId(PATIENT_UUID).gapStatus("open").build();
+
+            when(careGapRepository.findByIdAndTenantId(gap1, TENANT_ID)).thenReturn(Optional.of(entity1));
+            when(careGapRepository.findByIdAndTenantId(gap2, TENANT_ID)).thenReturn(Optional.of(entity2));
+            when(careGapRepository.findByIdAndTenantId(gap3, TENANT_ID)).thenReturn(Optional.of(entity3));
+            when(careGapRepository.save(any(CareGapEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(kafkaTemplate.send(anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+
+            com.healthdata.caregap.dto.BulkClosureRequest request = com.healthdata.caregap.dto.BulkClosureRequest.builder()
+                    .gapIds(List.of(gap1.toString(), gap2.toString(), gap3.toString()))
+                    .closureReason("completed")
+                    .notes("All vaccinations administered")
+                    .closedBy("doctor@example.com")
+                    .closureAction("Bulk closure via UI")
+                    .build();
+
+            // When
+            com.healthdata.caregap.dto.BulkOperationResponse response = service.bulkCloseCareGaps(TENANT_ID, request);
+
+            // Then
+            assertThat(response.getTotalRequested()).isEqualTo(3);
+            assertThat(response.getSuccessCount()).isEqualTo(3);
+            assertThat(response.getFailureCount()).isEqualTo(0);
+            assertThat(response.getSuccessfulGapIds()).containsExactlyInAnyOrder(
+                    gap1.toString(), gap2.toString(), gap3.toString());
+            assertThat(response.getErrors()).isEmpty();
+            assertThat(response.getProcessingTimeMs()).isGreaterThanOrEqualTo(0);
+
+            verify(careGapRepository, times(3)).save(any(CareGapEntity.class));
+            verify(kafkaTemplate, times(4)).send(anyString(), anyString()); // 3 individual + 1 bulk event
+        }
+
+        @Test
+        @DisplayName("Should handle partial failure in bulk close")
+        void shouldHandlePartialFailure() {
+            // Given
+            UUID gap1 = UUID.randomUUID();
+            UUID gap2 = UUID.randomUUID(); // This one will fail (not found)
+            UUID gap3 = UUID.randomUUID();
+
+            CareGapEntity entity1 = CareGapEntity.builder().id(gap1).tenantId(TENANT_ID).gapStatus("open").build();
+            CareGapEntity entity3 = CareGapEntity.builder().id(gap3).tenantId(TENANT_ID).gapStatus("open").build();
+
+            when(careGapRepository.findByIdAndTenantId(gap1, TENANT_ID)).thenReturn(Optional.of(entity1));
+            when(careGapRepository.findByIdAndTenantId(gap2, TENANT_ID)).thenReturn(Optional.empty()); // Not found
+            when(careGapRepository.findByIdAndTenantId(gap3, TENANT_ID)).thenReturn(Optional.of(entity3));
+            when(careGapRepository.save(any(CareGapEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(kafkaTemplate.send(anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+
+            com.healthdata.caregap.dto.BulkClosureRequest request = com.healthdata.caregap.dto.BulkClosureRequest.builder()
+                    .gapIds(List.of(gap1.toString(), gap2.toString(), gap3.toString()))
+                    .closureReason("completed")
+                    .closedBy("doctor@example.com")
+                    .build();
+
+            // When
+            com.healthdata.caregap.dto.BulkOperationResponse response = service.bulkCloseCareGaps(TENANT_ID, request);
+
+            // Then
+            assertThat(response.getTotalRequested()).isEqualTo(3);
+            assertThat(response.getSuccessCount()).isEqualTo(2);
+            assertThat(response.getFailureCount()).isEqualTo(1);
+            assertThat(response.getSuccessfulGapIds()).containsExactlyInAnyOrder(gap1.toString(), gap3.toString());
+            assertThat(response.getErrors()).hasSize(1);
+            assertThat(response.getErrors().get(0).getGapId()).isEqualTo(gap2.toString());
+            assertThat(response.getErrors().get(0).getErrorCode()).isEqualTo("CLOSURE_FAILED");
+            assertThat(response.getMessage()).contains("Closed 2 of 3");
+        }
+
+        @Test
+        @DisplayName("Should handle invalid gap ID format")
+        void shouldHandleInvalidGapIdFormat() {
+            // Given
+            String invalidId = "not-a-uuid";
+            UUID validGap = UUID.randomUUID();
+            CareGapEntity validEntity = CareGapEntity.builder().id(validGap).tenantId(TENANT_ID).gapStatus("open").build();
+
+            when(careGapRepository.findByIdAndTenantId(validGap, TENANT_ID)).thenReturn(Optional.of(validEntity));
+            when(careGapRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(kafkaTemplate.send(anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
+
+            com.healthdata.caregap.dto.BulkClosureRequest request = com.healthdata.caregap.dto.BulkClosureRequest.builder()
+                    .gapIds(List.of(invalidId, validGap.toString()))
+                    .closureReason("completed")
+                    .closedBy("user@example.com")
+                    .build();
+
+            // When
+            com.healthdata.caregap.dto.BulkOperationResponse response = service.bulkCloseCareGaps(TENANT_ID, request);
+
+            // Then
+            assertThat(response.getSuccessCount()).isEqualTo(1);
+            assertThat(response.getFailureCount()).isEqualTo(1);
+            assertThat(response.getErrors().get(0).getErrorCode()).isEqualTo("INVALID_GAP_ID");
+        }
+    }
+
+    @Nested
+    @DisplayName("Bulk Assign Intervention Tests (Issue #241)")
+    class BulkAssignInterventionTests {
+
+        @Test
+        @DisplayName("Should assign intervention to all gaps successfully")
+        void shouldAssignInterventionSuccessfully() {
+            // Given
+            UUID gap1 = UUID.randomUUID();
+            UUID gap2 = UUID.randomUUID();
+
+            CareGapEntity entity1 = CareGapEntity.builder().id(gap1).tenantId(TENANT_ID).build();
+            CareGapEntity entity2 = CareGapEntity.builder().id(gap2).tenantId(TENANT_ID).build();
+
+            when(careGapRepository.findByIdAndTenantId(gap1, TENANT_ID)).thenReturn(Optional.of(entity1));
+            when(careGapRepository.findByIdAndTenantId(gap2, TENANT_ID)).thenReturn(Optional.of(entity2));
+            when(careGapRepository.save(any(CareGapEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            com.healthdata.caregap.dto.BulkInterventionRequest request = com.healthdata.caregap.dto.BulkInterventionRequest.builder()
+                    .gapIds(List.of(gap1.toString(), gap2.toString()))
+                    .interventionType("OUTREACH")
+                    .description("Member outreach letter with provider list")
+                    .scheduledDate("2026-02-15")
+                    .assignedTo("care-coordinator@example.com")
+                    .build();
+
+            // When
+            com.healthdata.caregap.dto.BulkOperationResponse response = service.bulkAssignIntervention(TENANT_ID, request);
+
+            // Then
+            assertThat(response.getSuccessCount()).isEqualTo(2);
+            assertThat(response.getFailureCount()).isEqualTo(0);
+            verify(careGapRepository, times(2)).save(gapCaptor.capture());
+
+            List<CareGapEntity> savedGaps = gapCaptor.getAllValues();
+            assertThat(savedGaps.get(0).getRecommendationType()).isEqualTo("OUTREACH");
+            assertThat(savedGaps.get(1).getRecommendationType()).isEqualTo("OUTREACH");
+        }
+    }
+
+    @Nested
+    @DisplayName("Bulk Update Priority Tests (Issue #241)")
+    class BulkUpdatePriorityTests {
+
+        @Test
+        @DisplayName("Should update priority for all gaps successfully")
+        void shouldUpdatePrioritySuccessfully() {
+            // Given
+            UUID gap1 = UUID.randomUUID();
+            UUID gap2 = UUID.randomUUID();
+            UUID gap3 = UUID.randomUUID();
+
+            CareGapEntity entity1 = CareGapEntity.builder().id(gap1).tenantId(TENANT_ID).priority("MEDIUM").build();
+            CareGapEntity entity2 = CareGapEntity.builder().id(gap2).tenantId(TENANT_ID).priority("LOW").build();
+            CareGapEntity entity3 = CareGapEntity.builder().id(gap3).tenantId(TENANT_ID).priority("MEDIUM").build();
+
+            when(careGapRepository.findByIdAndTenantId(gap1, TENANT_ID)).thenReturn(Optional.of(entity1));
+            when(careGapRepository.findByIdAndTenantId(gap2, TENANT_ID)).thenReturn(Optional.of(entity2));
+            when(careGapRepository.findByIdAndTenantId(gap3, TENANT_ID)).thenReturn(Optional.of(entity3));
+            when(careGapRepository.save(any(CareGapEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            com.healthdata.caregap.dto.BulkPriorityUpdateRequest request = com.healthdata.caregap.dto.BulkPriorityUpdateRequest.builder()
+                    .gapIds(List.of(gap1.toString(), gap2.toString(), gap3.toString()))
+                    .priority("HIGH")
+                    .build();
+
+            // When
+            com.healthdata.caregap.dto.BulkOperationResponse response = service.bulkUpdatePriority(TENANT_ID, request);
+
+            // Then
+            assertThat(response.getSuccessCount()).isEqualTo(3);
+            assertThat(response.getFailureCount()).isEqualTo(0);
+            verify(careGapRepository, times(3)).save(gapCaptor.capture());
+
+            List<CareGapEntity> savedGaps = gapCaptor.getAllValues();
+            assertThat(savedGaps).allMatch(gap -> gap.getPriority().equals("HIGH"));
+        }
+
+        @Test
+        @DisplayName("Should handle errors gracefully during priority update")
+        void shouldHandleErrorsGracefully() {
+            // Given
+            UUID gap1 = UUID.randomUUID();
+            UUID gap2 = UUID.randomUUID();
+
+            when(careGapRepository.findByIdAndTenantId(gap1, TENANT_ID))
+                    .thenThrow(new RuntimeException("Database error"));
+            when(careGapRepository.findByIdAndTenantId(gap2, TENANT_ID))
+                    .thenReturn(Optional.of(CareGapEntity.builder().id(gap2).tenantId(TENANT_ID).build()));
+            when(careGapRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            com.healthdata.caregap.dto.BulkPriorityUpdateRequest request = com.healthdata.caregap.dto.BulkPriorityUpdateRequest.builder()
+                    .gapIds(List.of(gap1.toString(), gap2.toString()))
+                    .priority("CRITICAL")
+                    .build();
+
+            // When
+            com.healthdata.caregap.dto.BulkOperationResponse response = service.bulkUpdatePriority(TENANT_ID, request);
+
+            // Then
+            assertThat(response.getSuccessCount()).isEqualTo(1);
+            assertThat(response.getFailureCount()).isEqualTo(1);
+            assertThat(response.getErrors()).hasSize(1);
+            assertThat(response.getErrors().get(0).getErrorCode()).isEqualTo("PRIORITY_UPDATE_FAILED");
+        }
+    }
 }

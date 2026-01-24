@@ -33,33 +33,39 @@ export interface UploadProgress {
 /**
  * Document Service
  *
- * Handles patient document upload, download, and management.
+ * Handles patient document upload, download, and management with OCR processing.
  *
  * Features:
  * - Multi-file upload with progress tracking
- * - File validation (type, size)
- * - Document list retrieval
+ * - File validation (type, size - max 10MB)
+ * - Document list retrieval with OCR status
  * - Download/view functionality
- * - OCR processing status tracking
+ * - Async OCR processing (Tesseract LSTM)
+ * - Full-text search on OCR extracted text
+ * - OCR reprocessing capability
  *
  * HIPAA Compliance:
  * - Uses LoggerService for audit logging
  * - All uploads logged with user context
  * - PHI filtering in logs
  *
- * Sprint 3 - Issue #244: Document Upload Drag-Drop
+ * Backend API Endpoints (documentation-service):
+ * - POST /api/documents/clinical/{id}/upload - Upload file with OCR
+ * - GET /api/documents/clinical/patient/{patientId} - List documents
+ * - GET /api/documents/clinical/attachments/{id} - Download attachment
+ * - DELETE /api/documents/clinical/{id} - Delete document
+ * - GET /api/documents/clinical/search-ocr - Search OCR text
+ * - GET /api/documents/clinical/attachments/{id}/ocr-status - OCR status
+ * - POST /api/documents/clinical/attachments/{id}/reprocess-ocr - Retry OCR
  *
- * TODO: Replace mock implementation with actual backend API when available
- * Backend endpoint: POST /api/v1/documents/upload
- * Backend endpoint: GET /api/v1/documents/patient/{patientId}
- * Backend endpoint: GET /api/v1/documents/{documentId}/download
- * Backend endpoint: DELETE /api/v1/documents/{documentId}
+ * Sprint 3 - Issue #244: Document Upload Drag-Drop
+ * Issue #245 - Part 3: OCR Integration with Frontend
  */
 @Injectable({
   providedIn: 'root',
 })
 export class DocumentService {
-  private readonly baseUrl = '/documents'; // TODO: Replace with actual API endpoint
+  private readonly baseUrl = '/api/documents/clinical'; // Clinical Document Service API
   private readonly maxFileSize = 10 * 1024 * 1024; // 10MB
   private readonly allowedTypes = [
     'application/pdf',
@@ -71,9 +77,6 @@ export class DocumentService {
 
   private logger!: ReturnType<LoggerService['withContext']>;
 
-  // Mock storage (remove when backend available)
-  private mockDocuments: Map<string, PatientDocument> = new Map();
-
   constructor(
     private http: HttpClient,
     private loggerService: LoggerService
@@ -84,6 +87,11 @@ export class DocumentService {
   /**
    * Upload document for patient
    * Returns Observable of upload progress
+   *
+   * Backend: POST /api/documents/clinical/{id}/upload
+   * - Uploads file with multipart/form-data
+   * - Triggers async OCR processing
+   * - Returns document attachment with PENDING status
    */
   uploadDocument(
     patientId: string,
@@ -104,67 +112,95 @@ export class DocumentService {
       fileType: file.type,
     });
 
-    // TODO: Replace with actual backend API call
-    // const formData = new FormData();
-    // formData.append('file', file);
-    // formData.append('patientId', patientId);
-    // if (description) formData.append('description', description);
-    //
-    // return this.http.post<any>(`${this.baseUrl}/upload`, formData, {
-    //   reportProgress: true,
-    //   observe: 'events'
-    // }).pipe(
-    //   map(event => this.mapProgressEvent(event, file.name)),
-    //   catchError(error => this.handleError(error, file.name))
-    // );
+    // Create document for patient first
+    // TODO: Get clinical document ID from patient context
+    // For now, use placeholder - this needs to be retrieved from patient detail component
+    const documentId = 'placeholder-doc-id';
 
-    // Mock implementation - simulate upload progress
-    return this.mockUpload(patientId, file, description);
+    const formData = new FormData();
+    formData.append('file', file);
+    if (description) formData.append('title', description);
+
+    return this.http.post<any>(`${this.baseUrl}/${documentId}/upload`, formData, {
+      reportProgress: true,
+      observe: 'events'
+    }).pipe(
+      map(event => this.mapProgressEvent(event, file.name)),
+      catchError(error => this.handleError(error, file.name))
+    );
   }
 
   /**
    * Get all documents for patient
+   *
+   * Backend: GET /api/documents/clinical/patient/{patientId}
+   * - Returns list of clinical documents with attachments
+   * - Includes OCR status for each attachment
    */
   getPatientDocuments(patientId: string): Observable<PatientDocument[]> {
     this.logger.info('Fetching patient documents', { patientId });
 
-    // TODO: Replace with actual backend API call
-    // return this.http.get<PatientDocument[]>(`${this.baseUrl}/patient/${patientId}`);
-
-    // Mock implementation
-    const docs = Array.from(this.mockDocuments.values()).filter(
-      (doc) => doc.patientId === patientId
+    return this.http.get<any[]>(`${this.baseUrl}/patient/${patientId}`).pipe(
+      map(docs => docs.map(doc => this.mapDocumentResponse(doc))),
+      catchError(error => {
+        this.logger.error('Failed to fetch patient documents', error);
+        return throwError(() => error);
+      })
     );
-    return of(docs).pipe(delay(300)); // Simulate network delay
+  }
+
+  /**
+   * Map backend document response to PatientDocument interface
+   */
+  private mapDocumentResponse(doc: any): PatientDocument {
+    return {
+      id: doc.id,
+      patientId: doc.patientId,
+      fileName: doc.attachments?.[0]?.fileName || 'Unnamed Document',
+      fileType: doc.attachments?.[0]?.contentType || 'unknown',
+      fileSize: doc.attachments?.[0]?.fileSize || 0,
+      uploadDate: new Date(doc.createdAt || doc.documentDate),
+      uploadedBy: doc.authorName || 'Unknown',
+      description: doc.description || doc.title,
+      ocrStatus: doc.attachments?.[0]?.ocrStatus?.toLowerCase() as any,
+      ocrText: doc.attachments?.[0]?.ocrText,
+    };
   }
 
   /**
    * Download document by ID
+   *
+   * Backend: GET /api/documents/clinical/attachments/{attachmentId}
+   * - Returns file blob for download
    */
   downloadDocument(documentId: string): Observable<Blob> {
     this.logger.info('Downloading document', { documentId });
 
-    // TODO: Replace with actual backend API call
-    // return this.http.get(`${this.baseUrl}/${documentId}/download`, {
-    //   responseType: 'blob'
-    // });
-
-    // Mock implementation
-    return throwError(() => new Error('Download not implemented in mock mode'));
+    return this.http.get(`${this.baseUrl}/attachments/${documentId}`, {
+      responseType: 'blob'
+    }).pipe(
+      catchError(error => {
+        this.logger.error('Download failed', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
    * Delete document by ID
+   *
+   * Backend: DELETE /api/documents/clinical/{id}
+   * - Deletes clinical document and all attachments
    */
   deleteDocument(documentId: string): Observable<void> {
     this.logger.info('Deleting document', { documentId });
 
-    // TODO: Replace with actual backend API call
-    // return this.http.delete<void>(`${this.baseUrl}/${documentId}`);
-
-    // Mock implementation
-    this.mockDocuments.delete(documentId);
-    return of(void 0).pipe(delay(200));
+    return this.http.delete<void>(`${this.baseUrl}/${documentId}`).pipe(
+      catchError(error => {
+        this.logger.error('Delete failed', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
@@ -247,55 +283,69 @@ export class DocumentService {
   }
 
   /**
-   * Mock upload implementation
-   * Simulates upload progress over 2 seconds
+   * Search OCR text across all documents
+   *
+   * Backend: GET /api/documents/clinical/search-ocr?query={query}
+   * - Full-text search on OCR extracted text
+   * - Returns paginated list of attachments
    */
-  private mockUpload(
-    patientId: string,
-    file: File,
-    description?: string
-  ): Observable<UploadProgress> {
-    return new Observable((observer) => {
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 10;
+  searchOcrText(query: string, page: number = 0, size: number = 20): Observable<PatientDocument[]> {
+    this.logger.info('Searching OCR text', { query, page, size });
 
-        observer.next({
-          fileName: file.name,
-          progress,
-          status: progress < 100 ? 'uploading' : 'completed',
-        });
-
-        if (progress >= 100) {
-          clearInterval(interval);
-
-          // Add to mock storage
-          const document: PatientDocument = {
-            id: this.generateId(),
-            patientId,
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size,
-            uploadDate: new Date(),
-            uploadedBy: 'current-user', // TODO: Get from auth context
-            description,
-            ocrStatus: 'pending',
-          };
-          this.mockDocuments.set(document.id, document);
-
-          observer.complete();
-        }
-      }, 200); // Update every 200ms (10 updates over 2 seconds)
-
-      // Cleanup on unsubscribe
-      return () => clearInterval(interval);
-    });
+    return this.http.get<any>(`${this.baseUrl}/search-ocr`, {
+      params: { query, page: page.toString(), size: size.toString() }
+    }).pipe(
+      map(response => response.content.map((attachment: any) => ({
+        id: attachment.id,
+        patientId: attachment.clinicalDocumentId, // Use document ID as patient context
+        fileName: attachment.fileName,
+        fileType: attachment.contentType,
+        fileSize: attachment.fileSize,
+        uploadDate: new Date(attachment.createdAt),
+        uploadedBy: 'Unknown', // Not available in attachment response
+        description: attachment.title,
+        ocrStatus: attachment.ocrStatus?.toLowerCase() as any,
+        ocrText: attachment.ocrText,
+      }))),
+      catchError(error => {
+        this.logger.error('OCR text search failed', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
-   * Generate unique ID for mock documents
+   * Get OCR processing status for attachment
+   *
+   * Backend: GET /api/documents/clinical/attachments/{attachmentId}/ocr-status
+   * - Returns OCR processing status and metadata
    */
-  private generateId(): string {
-    return `doc-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  getOcrStatus(attachmentId: string): Observable<any> {
+    this.logger.info('Fetching OCR status', { attachmentId });
+
+    return this.http.get<any>(`${this.baseUrl}/attachments/${attachmentId}/ocr-status`).pipe(
+      catchError(error => {
+        this.logger.error('Failed to fetch OCR status', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Trigger OCR reprocessing for attachment
+   *
+   * Backend: POST /api/documents/clinical/attachments/{attachmentId}/reprocess-ocr
+   * - Resets OCR status to PENDING
+   * - Triggers async OCR processing
+   */
+  reprocessOcr(attachmentId: string): Observable<void> {
+    this.logger.info('Triggering OCR reprocessing', { attachmentId });
+
+    return this.http.post<void>(`${this.baseUrl}/attachments/${attachmentId}/reprocess-ocr`, {}).pipe(
+      catchError(error => {
+        this.logger.error('OCR reprocessing failed', error);
+        return throwError(() => error);
+      })
+    );
   }
 }

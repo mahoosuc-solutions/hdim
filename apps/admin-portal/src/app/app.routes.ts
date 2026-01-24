@@ -40,8 +40,8 @@ export const appRoutes: Route[] = [
       {
         path: 'audit-logs',
         loadComponent: () =>
-          import('./pages/audit-logs/audit-logs.component').then(
-            (m) => m.AuditLogsComponent
+          import('./pages/audit-logs/audit-logs-enhanced.component').then(
+            (m) => m.AuditLogsEnhancedComponent
           ),
       },
       {

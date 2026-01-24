@@ -198,15 +198,62 @@ public class QAReviewController {
 
     @PostMapping("/batch/reject")
     @PreAuthorize("hasAnyRole('ADMIN', 'QUALITY_OFFICER')")
-    @Operation(summary = "Batch reject decisions", 
+    @Operation(summary = "Batch reject decisions",
                description = "Reject multiple AI decisions in a single operation")
     public ResponseEntity<BatchReviewResult> batchReject(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @Valid @RequestBody BatchReviewRequest request
     ) {
-        log.info("Batch rejecting {} decisions by: {} in tenant: {}", 
+        log.info("Batch rejecting {} decisions by: {} in tenant: {}",
                 request.getDecisionIds().size(), request.getReviewedBy(), tenantId);
         BatchReviewResult result = qaReviewService.batchReject(tenantId, request);
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/{decisionId}/false-positive")
+    @PreAuthorize("hasAnyRole('ADMIN', 'QUALITY_OFFICER', 'QA_ANALYST')")
+    @Operation(summary = "Mark decision as false positive",
+               description = "Mark an AI decision as a false positive (incorrectly flagged as positive when it should be negative)")
+    public ResponseEntity<QAReviewResult> markFalsePositive(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String decisionId,
+            @Valid @RequestBody QAReviewRequest request
+    ) {
+        log.info("Marking decision {} as false positive by: {} in tenant: {}",
+                decisionId, request.getReviewedBy(), tenantId);
+        QAReviewResult result = qaReviewService.markFalsePositive(tenantId, decisionId, request);
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/{decisionId}/false-negative")
+    @PreAuthorize("hasAnyRole('ADMIN', 'QUALITY_OFFICER', 'QA_ANALYST')")
+    @Operation(summary = "Mark decision as false negative",
+               description = "Mark an AI decision as a false negative (missed detection - should have been flagged but wasn't)")
+    public ResponseEntity<QAReviewResult> markFalseNegative(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String decisionId,
+            @Valid @RequestBody QAReviewRequest request
+    ) {
+        log.info("Marking decision {} as false negative by: {} in tenant: {}",
+                decisionId, request.getReviewedBy(), tenantId);
+        QAReviewResult result = qaReviewService.markFalseNegative(tenantId, decisionId, request);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/report/export")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AUDITOR', 'QUALITY_OFFICER')")
+    @Operation(summary = "Export QA report",
+               description = "Export comprehensive QA review report with metrics, trends, and decision history")
+    public ResponseEntity<QAReportExport> exportReport(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam(required = false) String agentType,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false, defaultValue = "JSON") String format
+    ) {
+        log.info("Exporting QA report for tenant: {} from {} to {} in format: {}",
+                tenantId, startDate, endDate, format);
+        QAReportExport report = qaReviewService.exportReport(tenantId, agentType, startDate, endDate, format);
+        return ResponseEntity.ok(report);
     }
 }

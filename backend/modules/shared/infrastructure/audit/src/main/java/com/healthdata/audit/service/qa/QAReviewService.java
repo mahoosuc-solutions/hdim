@@ -707,4 +707,140 @@ public class QAReviewService {
         if (confidenceScore < 0.85) return "MEDIUM";
         return "LOW";
     }
+
+    /**
+     * Mark decision as false positive
+     *
+     * A false positive is when the AI incorrectly flagged something as positive
+     * when it should have been negative (e.g., flagged a care gap that doesn't exist)
+     */
+    public QAReviewResult markFalsePositive(String tenantId, String decisionId, QAReviewRequest request) {
+        log.info("Marking decision {} as false positive by: {}", decisionId, request.getReviewedBy());
+
+        AIAgentDecisionEventEntity event = auditEventRepository.findByDecisionIdAndTenantId(decisionId, tenantId)
+                .orElseThrow(() -> new RuntimeException("Decision not found: " + decisionId));
+
+        // Create or update review
+        QAReviewEntity review = qaReviewRepository.findByDecisionId(decisionId)
+                .orElse(new QAReviewEntity());
+
+        review.setDecisionId(decisionId);
+        review.setTenantId(tenantId);
+        review.setReviewedBy(request.getReviewedBy());
+        review.setReviewedAt(Instant.now());
+        review.setReviewStatus("REJECTED");  // False positives are rejected
+        review.setIsFalsePositive(true);
+        review.setIsFalseNegative(false);
+        review.setReviewNotes(request.getReviewNotes());
+
+        QAReviewEntity saved = qaReviewRepository.save(review);
+
+        log.info("Decision {} marked as false positive successfully", decisionId);
+
+        return QAReviewResult.builder()
+                .success(true)
+                .decisionId(decisionId)
+                .reviewStatus(saved.getReviewStatus())
+                .reviewedAt(saved.getReviewedAt())
+                .reviewedBy(saved.getReviewedBy())
+                .build();
+    }
+
+    /**
+     * Mark decision as false negative
+     *
+     * A false negative is when the AI missed a detection - it should have flagged
+     * something but didn't (e.g., missed a care gap that actually exists)
+     */
+    public QAReviewResult markFalseNegative(String tenantId, String decisionId, QAReviewRequest request) {
+        log.info("Marking decision {} as false negative by: {}", decisionId, request.getReviewedBy());
+
+        AIAgentDecisionEventEntity event = auditEventRepository.findByDecisionIdAndTenantId(decisionId, tenantId)
+                .orElseThrow(() -> new RuntimeException("Decision not found: " + decisionId));
+
+        // Create or update review
+        QAReviewEntity review = qaReviewRepository.findByDecisionId(decisionId)
+                .orElse(new QAReviewEntity());
+
+        review.setDecisionId(decisionId);
+        review.setTenantId(tenantId);
+        review.setReviewedBy(request.getReviewedBy());
+        review.setReviewedAt(Instant.now());
+        review.setReviewStatus("FLAGGED");  // False negatives are flagged for correction
+        review.setIsFalsePositive(false);
+        review.setIsFalseNegative(true);
+        review.setReviewNotes(request.getReviewNotes());
+
+        QAReviewEntity saved = qaReviewRepository.save(review);
+
+        log.info("Decision {} marked as false negative successfully", decisionId);
+
+        return QAReviewResult.builder()
+                .success(true)
+                .decisionId(decisionId)
+                .reviewStatus(saved.getReviewStatus())
+                .reviewedAt(saved.getReviewedAt())
+                .reviewedBy(saved.getReviewedBy())
+                .build();
+    }
+
+    /**
+     * Export comprehensive QA report
+     *
+     * Generates a comprehensive report including metrics, trends, and detailed
+     * decision history for the specified time period.
+     */
+    public QAReportExport exportReport(String tenantId, String agentType, LocalDate startDate, LocalDate endDate, String format) {
+        log.info("Exporting QA report for tenant: {} from {} to {}", tenantId, startDate, endDate);
+
+        // Get metrics
+        QAMetrics metrics = getMetrics(tenantId, agentType, startDate, endDate);
+
+        // Get trends
+        int days = startDate != null && endDate != null
+                ? (int) ChronoUnit.DAYS.between(startDate, endDate)
+                : 30;
+        QATrendData trends = getAccuracyTrends(tenantId, agentType, days);
+
+        // Get all reviewed decisions in date range
+        Instant start = startDate != null
+                ? startDate.atStartOfDay(ZoneId.systemDefault()).toInstant()
+                : Instant.now().minus(30, ChronoUnit.DAYS);
+        Instant end = endDate != null
+                ? endDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant()
+                : Instant.now();
+
+        List<QAReviewEntity> reviews = qaReviewRepository.findByTenantIdAndReviewedAtBetween(
+                tenantId, start, end);
+
+        // Filter by agent type if specified
+        if (agentType != null && !agentType.isBlank()) {
+            reviews = reviews.stream()
+                    .filter(review -> {
+                        AIAgentDecisionEventEntity event = auditEventRepository
+                                .findByDecisionIdAndTenantId(review.getDecisionId(), tenantId)
+                                .orElse(null);
+                        return event != null && agentType.equals(event.getAgentType());
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        // Build export
+        return QAReportExport.builder()
+                .generatedAt(Instant.now())
+                .tenantId(tenantId)
+                .agentType(agentType)
+                .startDate(startDate)
+                .endDate(endDate)
+                .format(format)
+                .metrics(metrics)
+                .trends(trends)
+                .totalReviews(reviews.size())
+                .approvedCount(reviews.stream().filter(r -> "APPROVED".equals(r.getReviewStatus())).count())
+                .rejectedCount(reviews.stream().filter(r -> "REJECTED".equals(r.getReviewStatus())).count())
+                .flaggedCount(reviews.stream().filter(r -> "FLAGGED".equals(r.getReviewStatus())).count())
+                .falsePositiveCount(reviews.stream().filter(QAReviewEntity::getIsFalsePositive).count())
+                .falseNegativeCount(reviews.stream().filter(QAReviewEntity::getIsFalseNegative).count())
+                .build();
+    }
 }

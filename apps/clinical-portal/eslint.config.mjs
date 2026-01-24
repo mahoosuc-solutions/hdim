@@ -27,7 +27,7 @@ export default [
       // HIPAA Compliance: Prevent console statements in production code
       // PHI MUST NOT be logged to browser console - use LoggerService instead
       // LoggerService automatically filters PHI and provides proper audit trails
-      'no-console': ['error', { allow: [] }],
+      'no-console': 'error',
     },
   },
   {

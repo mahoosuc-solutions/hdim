@@ -147,7 +147,7 @@ public class AppointmentReminderService {
         // Check if reminder already sent (idempotency)
         if (reminderSentRepository.findByTenantIdAndAppointmentIdAndTypeAndDays(
                 tenantId, appointmentId, REMINDER_TYPE, daysBefore).isPresent()) {
-            log.debug("Reminder already sent for appointment {} ({} days), skipping", appointmentId, daysBefore);
+            log.debug("Reminder already sent for appointment {} ({} days), skipping", maskUuid(appointmentId), daysBefore);
             return false;
         }
 
@@ -157,7 +157,7 @@ public class AppointmentReminderService {
             patient = patientServiceClient.getPatientContact(tenantId, patientId);
         } catch (Exception e) {
             log.error("Failed to get patient contact info for patient {} in tenant {}: {}",
-                    patientId, tenantId, e.getMessage());
+                    maskUuid(patientId), tenantId, e.getMessage());
             recordFailedReminder(tenantId, appointment, daysBefore, null,
                     "Failed to get patient contact: " + e.getMessage());
             return false;
@@ -165,13 +165,13 @@ public class AppointmentReminderService {
 
         // Check SMS opt-in consent
         if (patient.getSmsOptIn() == null || !patient.getSmsOptIn()) {
-            log.debug("Patient {} has not opted in to SMS, skipping reminder", patientId);
+            log.debug("Patient {} has not opted in to SMS, skipping reminder", maskUuid(patientId));
             return false;
         }
 
         // Validate phone number
         if (patient.getPhoneNumber() == null || patient.getPhoneNumber().isBlank()) {
-            log.warn("Patient {} has no phone number, skipping reminder", patientId);
+            log.warn("Patient {} has no phone number, skipping reminder", maskUuid(patientId));
             return false;
         }
 
@@ -183,7 +183,7 @@ public class AppointmentReminderService {
         try {
             messageSid = smsProvider.send(patient.getPhoneNumber(), message);
             log.info("Sent appointment reminder SMS for appointment {} to patient {} in tenant {} (SID: {})",
-                    appointmentId, patientId, tenantId, messageSid);
+                    maskUuid(appointmentId), maskUuid(patientId), tenantId, messageSid);
 
             // Programmatic audit logging (private method, cannot use @Audited AOP)
             auditService.logAuditEvent(AuditEvent.builder()
@@ -197,7 +197,7 @@ public class AppointmentReminderService {
                     .build());
         } catch (Exception e) {
             log.error("Failed to send SMS reminder for appointment {} to patient {}: {}",
-                    appointmentId, patientId, e.getMessage());
+                    maskUuid(appointmentId), maskUuid(patientId), e.getMessage());
             recordFailedReminder(tenantId, appointment, daysBefore, patient.getPhoneNumber(),
                     "SMS send failed: " + e.getMessage());
             return false;
@@ -303,14 +303,14 @@ public class AppointmentReminderService {
     }
 
     /**
-     * Mask phone number for PHI compliance in audit logs
-     * Format: +1***-***-1234 (shows only country code and last 4 digits)
+     * Mask UUID for PHI compliance in logs (HIPAA §164.514(b)(2))
+     * Format: shows first 8 chars only (e.g., "a1b2c3d4-****")
      */
-    private String maskPhoneNumber(String phoneNumber) {
-        if (phoneNumber == null || phoneNumber.length() < 4) {
-            return "***";
+    private String maskUuid(UUID uuid) {
+        if (uuid == null) {
+            return "null";
         }
-        String last4 = phoneNumber.substring(phoneNumber.length() - 4);
-        return "+1***-***-" + last4;
+        String str = uuid.toString();
+        return str.substring(0, 8) + "-****";
     }
 }

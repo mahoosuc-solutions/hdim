@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription, interval } from 'rxjs';
 import { LoggerService } from '../../services/logger.service';
+import { AuditService } from '../../services/audit.service';
 
 /**
  * QA Audit Dashboard
@@ -67,7 +68,10 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
   confidenceTrends: ConfidenceTrendData[] = [];
   accuracyTrends: AccuracyTrendData[] = [];
 
-  constructor(private loggerService: LoggerService) {}
+  constructor(
+    private loggerService: LoggerService,
+    private auditService: AuditService
+  ) {}
 
   ngOnInit(): void {
     this.loadQAReviewQueue();
@@ -93,24 +97,64 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
    * Load decisions pending QA review
    */
   loadQAReviewQueue(): void {
-    // TODO: Call backend API /api/v1/audit/ai/qa/review-queue
     this.logger.info('Loading QA review queue');
+
+    const filters = {
+      agentType: this.filterAgentType !== 'all' ? this.filterAgentType : undefined,
+      minConfidence: this.getMinConfidenceFromFilter(),
+      maxConfidence: this.getMaxConfidenceFromFilter(),
+      startDate: this.getStartDateFromFilter(),
+      endDate: this.getEndDateFromFilter(),
+      includeReviewed: this.filterReviewStatus !== 'pending',
+      page: 0,
+      size: 50
+    };
+
+    this.auditService.getReviewQueue(filters).subscribe({
+      next: (response) => {
+        this.pendingReviewDecisions = response.content || [];
+        this.logger.info('Loaded QA review queue', { count: this.pendingReviewDecisions.length });
+      },
+      error: (error) => {
+        this.logger.error('Failed to load QA review queue', error);
+      }
+    });
   }
   
   /**
    * Load QA quality metrics
    */
   loadQAMetrics(): void {
-    // TODO: Call backend API /api/v1/audit/ai/qa/metrics
     this.logger.info('Loading QA metrics');
+
+    const dateRange = this.getDateRangeForMetrics();
+    this.auditService.getQAMetrics(dateRange).subscribe({
+      next: (metrics) => {
+        this.qaMetrics = { ...this.qaMetrics, ...metrics };
+        this.logger.info('Loaded QA metrics', metrics);
+      },
+      error: (error) => {
+        this.logger.error('Failed to load QA metrics', error);
+      }
+    });
   }
   
   /**
    * Load trend analysis data
    */
   loadTrendData(): void {
-    // TODO: Call backend API /api/v1/audit/ai/qa/trends
     this.logger.info('Loading trend data');
+
+    this.auditService.getTrendData().subscribe({
+      next: (trends) => {
+        this.confidenceTrends = trends.confidenceTrends || [];
+        this.accuracyTrends = trends.accuracyTrends || [];
+        this.logger.info('Loaded trend data', trends);
+      },
+      error: (error) => {
+        this.logger.error('Failed to load trend data', error);
+      }
+    });
   }
   
   /**
@@ -136,15 +180,23 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
   approveDecision(): void {
     if (!this.currentReviewDecision) return;
 
-    // TODO: Call backend API POST /api/v1/audit/ai/qa/review/{id}/approve
     this.logger.info('Approving decision', { eventId: this.currentReviewDecision.eventId, notes: this.reviewNotes });
 
-    this.qaMetrics.approvedDecisions++;
-    this.qaMetrics.totalReviewed++;
-
-    this.removeFromQueue(this.currentReviewDecision.eventId);
-    this.currentReviewDecision = null;
-    this.reviewNotes = '';
+    this.auditService.approveReview(this.currentReviewDecision.eventId, {
+      reviewNotes: this.reviewNotes
+    }).subscribe({
+      next: () => {
+        this.qaMetrics.approvedDecisions++;
+        this.qaMetrics.totalReviewed++;
+        this.removeFromQueue(this.currentReviewDecision!.eventId);
+        this.currentReviewDecision = null;
+        this.reviewNotes = '';
+        this.logger.info('Decision approved successfully');
+      },
+      error: (error) => {
+        this.logger.error('Failed to approve decision', error);
+      }
+    });
   }
   
   /**
@@ -153,15 +205,24 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
   rejectDecision(): void {
     if (!this.currentReviewDecision) return;
 
-    // TODO: Call backend API POST /api/v1/audit/ai/qa/review/{id}/reject
     this.logger.info('Rejecting decision', { eventId: this.currentReviewDecision.eventId, notes: this.reviewNotes });
 
-    this.qaMetrics.rejectedDecisions++;
-    this.qaMetrics.totalReviewed++;
-
-    this.removeFromQueue(this.currentReviewDecision.eventId);
-    this.currentReviewDecision = null;
-    this.reviewNotes = '';
+    this.auditService.rejectReview(this.currentReviewDecision.eventId, {
+      rejectionReason: this.reviewNotes || 'QA review failed',
+      reviewNotes: this.reviewNotes
+    }).subscribe({
+      next: () => {
+        this.qaMetrics.rejectedDecisions++;
+        this.qaMetrics.totalReviewed++;
+        this.removeFromQueue(this.currentReviewDecision!.eventId);
+        this.currentReviewDecision = null;
+        this.reviewNotes = '';
+        this.logger.info('Decision rejected successfully');
+      },
+      error: (error) => {
+        this.logger.error('Failed to reject decision', error);
+      }
+    });
   }
   
   /**
@@ -170,37 +231,60 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
   flagForEscalation(): void {
     if (!this.currentReviewDecision) return;
 
-    // TODO: Call backend API POST /api/v1/audit/ai/qa/review/{id}/flag
     this.logger.info('Flagging decision for escalation', { eventId: this.currentReviewDecision.eventId, notes: this.reviewNotes });
 
-    this.qaMetrics.flaggedForEscalation++;
-    this.flaggedDecisions.push(this.currentReviewDecision);
-
-    this.removeFromQueue(this.currentReviewDecision.eventId);
-    this.currentReviewDecision = null;
-    this.reviewNotes = '';
+    this.auditService.flagReview(this.currentReviewDecision.eventId, {
+      escalationReason: this.reviewNotes || 'Requires clinical review',
+      severity: 'HIGH'
+    }).subscribe({
+      next: () => {
+        this.qaMetrics.flaggedForEscalation++;
+        this.flaggedDecisions.push(this.currentReviewDecision!);
+        this.removeFromQueue(this.currentReviewDecision!.eventId);
+        this.currentReviewDecision = null;
+        this.reviewNotes = '';
+        this.logger.info('Decision flagged for escalation successfully');
+      },
+      error: (error) => {
+        this.logger.error('Failed to flag decision', error);
+      }
+    });
   }
   
   /**
    * Mark decision as false positive
    */
   markFalsePositive(decision: AIDecisionForReview): void {
-    // TODO: Call backend API POST /api/v1/audit/ai/qa/review/{id}/false-positive
     this.logger.info('Marking as false positive', decision.eventId);
 
-    decision.qaReviewStatus = 'false-positive';
-    this.removeFromQueue(decision.eventId);
+    this.auditService.markFalsePositive(decision.eventId).subscribe({
+      next: () => {
+        decision.qaReviewStatus = 'false-positive';
+        this.removeFromQueue(decision.eventId);
+        this.logger.info('Marked as false positive successfully');
+      },
+      error: (error) => {
+        this.logger.error('Failed to mark as false positive', error);
+      }
+    });
   }
   
   /**
    * Mark decision as false negative
    */
   markFalseNegative(decision: AIDecisionForReview): void {
-    // TODO: Call backend API POST /api/v1/audit/ai/qa/review/{id}/false-negative
     this.logger.info('Marking as false negative', decision.eventId);
 
-    decision.qaReviewStatus = 'false-negative';
-    this.removeFromQueue(decision.eventId);
+    this.auditService.markFalseNegative(decision.eventId).subscribe({
+      next: () => {
+        decision.qaReviewStatus = 'false-negative';
+        this.removeFromQueue(decision.eventId);
+        this.logger.info('Marked as false negative successfully');
+      },
+      error: (error) => {
+        this.logger.error('Failed to mark as false negative', error);
+      }
+    });
   }
   
   /**
@@ -236,8 +320,22 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
    * Export QA report
    */
   exportQAReport(): void {
-    // TODO: Call backend API GET /api/v1/audit/ai/qa/report/export
     this.logger.info('Exporting QA report');
+
+    this.auditService.exportQAReport().subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `qa-audit-report-${new Date().toISOString().split('T')[0]}.xlsx`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        this.logger.info('QA report exported successfully');
+      },
+      error: (error) => {
+        this.logger.error('Failed to export QA report', error);
+      }
+    });
   }
   
   /**
@@ -262,6 +360,69 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
     return labels[priority] || priority;
   }
   
+  /**
+   * Get min confidence score based on filter selection
+   */
+  private getMinConfidenceFromFilter(): number | undefined {
+    switch (this.filterConfidenceRange) {
+      case 'high': return 0.8;
+      case 'medium': return 0.5;
+      case 'low': return 0;
+      default: return undefined;
+    }
+  }
+
+  /**
+   * Get max confidence score based on filter selection
+   */
+  private getMaxConfidenceFromFilter(): number | undefined {
+    switch (this.filterConfidenceRange) {
+      case 'high': return 1.0;
+      case 'medium': return 0.8;
+      case 'low': return 0.5;
+      default: return undefined;
+    }
+  }
+
+  /**
+   * Get start date based on date range filter
+   */
+  private getStartDateFromFilter(): string | undefined {
+    const now = new Date();
+    switch (this.filterDateRange) {
+      case 'today':
+        now.setHours(0, 0, 0, 0);
+        return now.toISOString();
+      case 'week':
+        now.setDate(now.getDate() - 7);
+        return now.toISOString();
+      case 'month':
+        now.setMonth(now.getMonth() - 1);
+        return now.toISOString();
+      default:
+        return undefined;
+    }
+  }
+
+  /**
+   * Get end date (always now)
+   */
+  private getEndDateFromFilter(): string | undefined {
+    return new Date().toISOString();
+  }
+
+  /**
+   * Get date range for metrics API call
+   */
+  private getDateRangeForMetrics(): { startDate: string; endDate: string } | undefined {
+    const startDate = this.getStartDateFromFilter();
+    const endDate = this.getEndDateFromFilter();
+    if (startDate && endDate) {
+      return { startDate, endDate };
+    }
+    return undefined;
+  }
+
   /**
    * Load mock data for demonstration
    */

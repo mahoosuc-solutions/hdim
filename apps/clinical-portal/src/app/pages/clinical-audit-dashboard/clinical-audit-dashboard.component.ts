@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription, interval } from 'rxjs';
 import { LoggerService } from '../../services/logger.service';
+import { AuditService } from '../../services/audit.service';
 
 /**
  * Clinical Audit Dashboard
@@ -78,7 +79,10 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
   private refreshSubscription?: Subscription;
   autoRefreshEnabled: boolean = true;
 
-  constructor(private loggerService: LoggerService) {}
+  constructor(
+    private loggerService: LoggerService,
+    private auditService: AuditService
+  ) {}
 
   ngOnInit(): void {
     this.loadClinicalDecisions();
@@ -103,16 +107,47 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
    * Load clinical AI decisions
    */
   loadClinicalDecisions(): void {
-    // TODO: Call backend API /api/v1/audit/ai/decisions?agentType=CLINICAL_*
     this.logger.info('Loading clinical decisions');
+
+    const filters = {
+      agentType: this.filterDecisionType !== 'all' ? this.filterDecisionType : 'CLINICAL_',
+      priority: this.filterPriority !== 'all' ? this.filterPriority : undefined,
+      status: this.filterStatus !== 'all' ? this.filterStatus : undefined,
+      patientId: this.filterPatient || undefined,
+      startDate: this.getStartDateFromFilter(),
+      endDate: this.getEndDateFromFilter(),
+      page: 0,
+      size: 50
+    };
+
+    this.auditService.getClinicalDecisions(filters).subscribe({
+      next: (response) => {
+        this.clinicalDecisions = response.content || [];
+        this.logger.info('Loaded clinical decisions', { count: this.clinicalDecisions.length });
+      },
+      error: (error) => {
+        this.logger.error('Failed to load clinical decisions', error);
+      }
+    });
   }
   
   /**
    * Load clinical metrics
    */
   loadClinicalMetrics(): void {
-    // TODO: Call backend API /api/v1/audit/clinical/metrics
     this.logger.info('Loading clinical metrics');
+
+    const dateRange = this.getDateRangeForMetrics();
+    this.auditService.getClinicalMetrics(dateRange).subscribe({
+      next: (metrics) => {
+        this.clinicalMetrics = { ...this.clinicalMetrics, ...metrics.clinicalMetrics };
+        this.careQualityMetrics = { ...this.careQualityMetrics, ...metrics.careQualityMetrics };
+        this.logger.info('Loaded clinical metrics', metrics);
+      },
+      error: (error) => {
+        this.logger.error('Failed to load clinical metrics', error);
+      }
+    });
   }
   
   /**
@@ -151,12 +186,22 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
   acceptRecommendation(): void {
     if (!this.selectedDecision) return;
 
-    // TODO: Call backend API POST /api/v1/clinical/decisions/{id}/accept
     this.logger.info('Accepting recommendation', { eventId: this.selectedDecision.eventId, notes: this.clinicalNotes });
 
-    this.clinicalMetrics.decisionsAccepted++;
-    this.removeFromQueue(this.selectedDecision.eventId);
-    this.selectedDecision = null;
+    this.auditService.acceptClinicalRecommendation(this.selectedDecision.eventId, {
+      clinicalNotes: this.clinicalNotes
+    }).subscribe({
+      next: () => {
+        this.clinicalMetrics.decisionsAccepted++;
+        this.removeFromQueue(this.selectedDecision!.eventId);
+        this.selectedDecision = null;
+        this.clinicalNotes = '';
+        this.logger.info('Recommendation accepted successfully');
+      },
+      error: (error) => {
+        this.logger.error('Failed to accept recommendation', error);
+      }
+    });
   }
   
   /**
@@ -165,12 +210,23 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
   rejectRecommendation(): void {
     if (!this.selectedDecision) return;
 
-    // TODO: Call backend API POST /api/v1/clinical/decisions/{id}/reject
     this.logger.info('Rejecting recommendation', { eventId: this.selectedDecision.eventId, clinicalRationale: this.clinicalNotes });
 
-    this.clinicalMetrics.decisionsRejected++;
-    this.removeFromQueue(this.selectedDecision.eventId);
-    this.selectedDecision = null;
+    this.auditService.rejectClinicalRecommendation(this.selectedDecision.eventId, {
+      clinicalRationale: this.clinicalNotes || 'Clinical decision overridden',
+      clinicalNotes: this.clinicalNotes
+    }).subscribe({
+      next: () => {
+        this.clinicalMetrics.decisionsRejected++;
+        this.removeFromQueue(this.selectedDecision!.eventId);
+        this.selectedDecision = null;
+        this.clinicalNotes = '';
+        this.logger.info('Recommendation rejected successfully');
+      },
+      error: (error) => {
+        this.logger.error('Failed to reject recommendation', error);
+      }
+    });
   }
   
   /**
@@ -179,12 +235,23 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
   modifyRecommendation(): void {
     if (!this.selectedDecision) return;
 
-    // TODO: Call backend API POST /api/v1/clinical/decisions/{id}/modify
     this.logger.info('Modifying recommendation', { eventId: this.selectedDecision.eventId, modifications: this.clinicalNotes });
 
-    this.clinicalMetrics.decisionsModified++;
-    this.removeFromQueue(this.selectedDecision.eventId);
-    this.selectedDecision = null;
+    this.auditService.modifyClinicalRecommendation(this.selectedDecision.eventId, {
+      modifications: this.clinicalNotes || 'Modified by clinician',
+      clinicalNotes: this.clinicalNotes
+    }).subscribe({
+      next: () => {
+        this.clinicalMetrics.decisionsModified++;
+        this.removeFromQueue(this.selectedDecision!.eventId);
+        this.selectedDecision = null;
+        this.clinicalNotes = '';
+        this.logger.info('Recommendation modified successfully');
+      },
+      error: (error) => {
+        this.logger.error('Failed to modify recommendation', error);
+      }
+    });
   }
   
   /**
@@ -206,8 +273,22 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
    * Export clinical audit report
    */
   exportClinicalReport(): void {
-    // TODO: Call backend API GET /api/v1/audit/clinical/report/export
     this.logger.info('Exporting clinical audit report');
+
+    this.auditService.exportClinicalReport().subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `clinical-audit-report-${new Date().toISOString().split('T')[0]}.xlsx`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        this.logger.info('Clinical report exported successfully');
+      },
+      error: (error) => {
+        this.logger.error('Failed to export clinical report', error);
+      }
+    });
   }
   
   /**
@@ -248,6 +329,48 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
     return labels[strength] || strength;
   }
   
+  /**
+   * Get start date based on date range filter
+   */
+  private getStartDateFromFilter(): string | undefined {
+    const now = new Date();
+    switch (this.filterDateRange) {
+      case 'today':
+        now.setHours(0, 0, 0, 0);
+        return now.toISOString();
+      case 'last-7-days':
+        now.setDate(now.getDate() - 7);
+        return now.toISOString();
+      case 'last-30-days':
+        now.setDate(now.getDate() - 30);
+        return now.toISOString();
+      case 'last-90-days':
+        now.setDate(now.getDate() - 90);
+        return now.toISOString();
+      default:
+        return undefined;
+    }
+  }
+
+  /**
+   * Get end date (always now)
+   */
+  private getEndDateFromFilter(): string | undefined {
+    return new Date().toISOString();
+  }
+
+  /**
+   * Get date range for metrics API call
+   */
+  private getDateRangeForMetrics(): { startDate: string; endDate: string } | undefined {
+    const startDate = this.getStartDateFromFilter();
+    const endDate = this.getEndDateFromFilter();
+    if (startDate && endDate) {
+      return { startDate, endDate };
+    }
+    return undefined;
+  }
+
   /**
    * Load mock data for demonstration
    */

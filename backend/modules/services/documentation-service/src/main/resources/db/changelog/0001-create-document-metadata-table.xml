@@ -33,7 +33,7 @@
             <column name="tags" type="TEXT[]">
                 <constraints nullable="false"/>
             </column>
-            <column name="related_documents" type="TEXT[]" defaultValue="'{}'::text[]">
+            <column name="related_documents" type="TEXT[]" defaultValueComputed="ARRAY[]::text[]">
                 <constraints nullable="false"/>
             </column>
 

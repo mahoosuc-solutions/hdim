@@ -592,18 +592,4 @@ public class SyntheticPatientGenerator {
         public static final ConditionTemplate CKD_STAGE_3 =
             new ConditionTemplate("N18.3", "Chronic Kidney Disease, Stage 3");
     }
-
-    /**
-     * @deprecated Use SyntheticPatientTemplate from domain model instead
-     */
-    @Deprecated
-    public static class PatientTemplate {
-        private String personaName;
-        private Map<String, Object> attributes;
-
-        public String getPersonaName() { return personaName; }
-        public void setPersonaName(String personaName) { this.personaName = personaName; }
-        public Map<String, Object> getAttributes() { return attributes; }
-        public void setAttributes(Map<String, Object> attributes) { this.attributes = attributes; }
-    }
 }

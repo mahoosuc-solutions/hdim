@@ -5,7 +5,7 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
-    <include file="classpath:db/changelog/changes/001-initial-schema.sql"/>
+    <include file="db/changelog/0000-create-base-tables.xml"/>
     <include file="db/changelog/0001-create-document-metadata-table.xml"/>
     <include file="db/changelog/0002-create-document-ratings-table.xml"/>
     <include file="db/changelog/0003-create-document-views-table.xml"/>

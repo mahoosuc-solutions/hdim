@@ -11,11 +11,12 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none  # Liquibase manages schema - Hibernate won't generate/update schema
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        hbm2ddl.auto: none  # Explicitly disable Hibernate's schema management
     show-sql: false
 
   liquibase:
@@ -59,6 +60,10 @@ healthdata:
 
 server:
   port: ${SERVER_PORT:8091}
+
+# Disable audit for documentation service (non-clinical, read-only documentation)
+audit:
+  enabled: false
 
 # Resilience4j Configuration
 resilience4j:

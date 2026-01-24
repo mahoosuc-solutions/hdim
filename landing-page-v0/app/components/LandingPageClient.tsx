@@ -36,9 +36,9 @@ export function LandingPageClient({ children }: LandingPageClientProps) {
         Skip to main content
       </a>
 
-      {/* Urgency Banner */}
+      {/* Season Banner */}
       <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-2 px-4 text-center text-sm fixed top-0 left-0 right-0 z-50">
-        <span className="font-semibold">HEDIS 2025 Season:</span> Measurement year ends soon - schedule your demo today.
+        <span className="font-semibold">HEDIS 2026 Season:</span> Measurement year is underway — align your quality program now.
         <a href="#demo" className="underline ml-2 hover:text-white/90">Get started &rarr;</a>
       </div>
 

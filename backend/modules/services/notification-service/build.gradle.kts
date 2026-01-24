@@ -49,6 +49,9 @@ dependencies {
     // Kafka for notification events
     implementation(libs.bundles.kafka)
 
+    // Spring Cloud OpenFeign for service-to-service communication
+    implementation(libs.spring.cloud.starter.openfeign)
+
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)
 

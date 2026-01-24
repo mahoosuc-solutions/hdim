@@ -30,7 +30,7 @@ public class PatientApiController {
     private final PatientDemographicsRepository patientDemographicsRepository;
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     public ResponseEntity<Page<PatientDemographicsEntity>> listPatients(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(defaultValue = "0") int page,

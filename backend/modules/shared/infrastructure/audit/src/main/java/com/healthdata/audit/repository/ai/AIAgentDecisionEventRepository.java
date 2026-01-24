@@ -176,7 +176,16 @@ public interface AIAgentDecisionEventRepository extends JpaRepository<AIAgentDec
         Instant startTime,
         Instant endTime
     );
-    
+
+    /**
+     * Find events by tenant since a specific timestamp (for SSE streaming).
+     */
+    Page<AIAgentDecisionEventEntity> findByTenantIdAndTimestampAfter(
+        String tenantId,
+        Instant timestamp,
+        Pageable pageable
+    );
+
     /**
      * Find events by tenant, decision type, and time range.
      */

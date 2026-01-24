@@ -1,11 +1,17 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import localFont from 'next/font/local'
 import { Analytics } from '@vercel/analytics/react'
 import './globals.css'
 
-const inter = Inter({
-  subsets: ['latin'],
+const inter = localFont({
   variable: '--font-inter',
+  display: 'swap',
+  src: [
+    { path: './fonts/inter/Inter-400.ttf', weight: '400', style: 'normal' },
+    { path: './fonts/inter/Inter-500.ttf', weight: '500', style: 'normal' },
+    { path: './fonts/inter/Inter-600.ttf', weight: '600', style: 'normal' },
+    { path: './fonts/inter/Inter-700.ttf', weight: '700', style: 'normal' },
+  ],
 })
 
 export const metadata: Metadata = {

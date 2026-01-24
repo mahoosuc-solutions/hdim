@@ -413,8 +413,8 @@ export default function LandingPage() {
 
           <div className="relative rounded-2xl overflow-hidden shadow-2xl">
             <Image
-              src="/images/comparison/before-after.png"
-              alt="Before and After: reactive reporting vs real-time gap detection with HDIM"
+              src="/images/technical/architecture.png"
+              alt="HDIM architecture: real-time execution layer connects fragmented systems to actionable insights"
               width={1920}
               height={1080}
               className="w-full h-auto"

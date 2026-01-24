@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, interpolate, Sequence, useCurrentFrame, useVideoConfig } from 'remotion';
+import { AbsoluteFill, interpolate, Sequence, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import { ScreenshotWithOverlay, Overlay } from '../components/ScreenshotWithOverlay';
 import { BrandedContainer } from '../components/BrandedContainer';
 
@@ -286,7 +286,7 @@ export const DemoScene: React.FC<DemoSceneProps> = ({ variant = 'default' }) => 
       {/* Frame 1: Provider Dashboard (0-8s) */}
       <Sequence from={0} durationInFrames={240}>
         <ScreenshotWithOverlay
-          screenshot="/assets/screenshots/main.png"
+          screenshot={staticFile("screenshots/main.png")}
           overlays={mainDashboardOverlays}
           zoomLevel={1.05}
           panDirection="none"
@@ -296,7 +296,7 @@ export const DemoScene: React.FC<DemoSceneProps> = ({ variant = 'default' }) => 
       {/* Frame 2: Care Gap Management (8-18s) */}
       <Sequence from={240} durationInFrames={300}>
         <ScreenshotWithOverlay
-          screenshot="/assets/screenshots/care-gaps.png"
+          screenshot={staticFile("screenshots/care-gaps.png")}
           overlays={careGapsOverlays}
           zoomLevel={1.08}
           panDirection="left"
@@ -306,7 +306,7 @@ export const DemoScene: React.FC<DemoSceneProps> = ({ variant = 'default' }) => 
       {/* Frame 3: HEDIS Measures (18-28s) */}
       <Sequence from={540} durationInFrames={300}>
         <ScreenshotWithOverlay
-          screenshot="/assets/screenshots/measures.png"
+          screenshot={staticFile("screenshots/measures.png")}
           overlays={hedisOverlays}
           zoomLevel={1.06}
           panDirection="none"
@@ -316,7 +316,7 @@ export const DemoScene: React.FC<DemoSceneProps> = ({ variant = 'default' }) => 
       {/* Frame 4: Mobile Care Gaps (28-35s) */}
       <Sequence from={840} durationInFrames={210}>
         <ScreenshotWithOverlay
-          screenshot="/assets/screenshots/mobile.png"
+          screenshot={staticFile("screenshots/mobile.png")}
           overlays={mobileOverlays}
           zoomLevel={1.1}
           panDirection="none"

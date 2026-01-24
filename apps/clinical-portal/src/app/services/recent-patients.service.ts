@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { LoggerService } from './logger.service';
 
 /**
  * Recent patient entry with access metadata
@@ -28,13 +30,15 @@ export interface RecentPatientEntry {
   providedIn: 'root',
 })
 export class RecentPatientsService {
+  private readonly logger = this.loggerService.withContext('RecentPatientsService');
   private readonly STORAGE_KEY = 'hdim_recent_patients';
   private readonly MAX_RECENT_PATIENTS = 20;
 
   private recentPatientsSubject = new BehaviorSubject<RecentPatientEntry[]>([]);
   readonly recentPatients$ = this.recentPatientsSubject.asObservable();
 
-  constructor() {
+  constructor(
+    private loggerService: LoggerService,) {
     this.loadFromStorage();
   }
 
@@ -162,7 +166,7 @@ export class RecentPatientsService {
         this.recentPatientsSubject.next(withDates);
       }
     } catch (error) {
-      console.error('[RecentPatientsService] Error loading from storage:', error);
+      this.logger.error('[RecentPatientsService] Error loading from storage:', { error });
       // Clear corrupted data
       localStorage.removeItem(this.STORAGE_KEY);
     }
@@ -175,7 +179,7 @@ export class RecentPatientsService {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(patients));
     } catch (error) {
-      console.error('[RecentPatientsService] Error saving to storage:', error);
+      this.logger.error('[RecentPatientsService] Error saving to storage:', { error });
     }
   }
 }

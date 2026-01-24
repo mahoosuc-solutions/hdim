@@ -34,7 +34,7 @@ public class MeasureEvaluationController {
      * Get measure evaluation by measure and patient
      */
     @GetMapping("/measure/{measureId}/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Operation(summary = "Get measure evaluation", description = "Retrieve evaluation for specific measure and patient")
     public ResponseEntity<MeasureEvaluationProjection> getMeasureEvaluation(
             @PathVariable String measureId,
@@ -51,7 +51,7 @@ public class MeasureEvaluationController {
      * Get all evaluations for a patient
      */
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Operation(summary = "Get patient evaluations", description = "Retrieve all measure evaluations for patient")
     public ResponseEntity<List<MeasureEvaluationProjection>> getPatientEvaluations(
             @PathVariable UUID patientId,
@@ -67,7 +67,7 @@ public class MeasureEvaluationController {
      * Get all evaluations for a measure (paginated)
      */
     @GetMapping("/measure/{measureId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Operation(summary = "Get measure evaluations", description = "Retrieve all evaluations for measure")
     public ResponseEntity<Page<MeasureEvaluationProjection>> getMeasureEvaluations(
             @PathVariable String measureId,
@@ -84,7 +84,7 @@ public class MeasureEvaluationController {
      * Get non-compliant patients for a measure
      */
     @GetMapping("/measure/{measureId}/non-compliant")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Operation(summary = "Get non-compliant patients", description = "Retrieve non-compliant patients for measure")
     public ResponseEntity<List<MeasureEvaluationProjection>> getNonCompliantForMeasure(
             @PathVariable String measureId,
@@ -100,7 +100,7 @@ public class MeasureEvaluationController {
      * Get compliant patients for a measure
      */
     @GetMapping("/measure/{measureId}/compliant")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Operation(summary = "Get compliant patients", description = "Retrieve compliant patients for measure")
     public ResponseEntity<List<MeasureEvaluationProjection>> getCompliantForMeasure(
             @PathVariable String measureId,
@@ -116,7 +116,7 @@ public class MeasureEvaluationController {
      * Get compliance statistics for a measure
      */
     @GetMapping("/measure/{measureId}/compliance-stats")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Operation(summary = "Get measure compliance stats", description = "Retrieve compliance statistics for measure")
     public ResponseEntity<MeasureComplianceStats> getComplianceStats(
             @PathVariable String measureId,
@@ -143,7 +143,7 @@ public class MeasureEvaluationController {
      * Get all available measures
      */
     @GetMapping("/measures")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Operation(summary = "Get all measures", description = "Retrieve all measures evaluated for tenant")
     public ResponseEntity<List<String>> getAllMeasures(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -157,7 +157,7 @@ public class MeasureEvaluationController {
      * Get measures not meeting threshold
      */
     @GetMapping("/measures/below-threshold")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Operation(summary = "Get below-threshold measures", description = "Retrieve measures not meeting compliance threshold")
     public ResponseEntity<List<String>> getMeasuresBelowThreshold(
             @RequestHeader("X-Tenant-ID") String tenantId) {

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription, interval } from 'rxjs';
 import { LoggerService } from '../../services/logger.service';
+import { AuditService } from '../../services/audit.service';
 
 /**
  * MPI Audit Dashboard
@@ -72,7 +73,10 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
   private refreshSubscription?: Subscription;
   autoRefreshEnabled: boolean = true;
 
-  constructor(private loggerService: LoggerService) {}
+  constructor(
+    private loggerService: LoggerService,
+    private auditService: AuditService
+  ) {}
 
   ngOnInit(): void {
     this.loadMPIEvents();
@@ -97,16 +101,50 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
    * Load MPI audit events
    */
   loadMPIEvents(): void {
-    // TODO: Call backend API /api/v1/audit/ai/user-actions?actionType=MPI_*
     this.logger.info('Loading MPI audit events');
+
+    const filters = {
+      actionType: 'MPI_',
+      eventType: this.filterEventType !== 'all' ? this.filterEventType : undefined,
+      tenantId: this.filterTenantId !== 'all' ? this.filterTenantId : undefined,
+      userId: this.filterUserId || undefined,
+      startDate: this.getStartDateFromFilter(),
+      endDate: this.getEndDateFromFilter(),
+      page: 0,
+      size: 50
+    };
+
+    this.auditService.getMPIEvents(filters).subscribe({
+      next: (response) => {
+        this.mpiEvents = response.content || [];
+        this.mergeEvents = this.mpiEvents.filter((e: MPIAuditEvent) =>
+          e.eventType === 'PATIENT_MERGE' || e.eventType === 'PATIENT_UNMERGE'
+        ) as MergeEvent[];
+        this.logger.info('Loaded MPI audit events', { count: this.mpiEvents.length });
+      },
+      error: (error) => {
+        this.logger.error('Failed to load MPI audit events', error);
+      }
+    });
   }
   
   /**
    * Load MPI metrics
    */
   loadMPIMetrics(): void {
-    // TODO: Call backend API /api/v1/audit/mpi/metrics
     this.logger.info('Loading MPI metrics');
+
+    const dateRange = this.getDateRangeForMetrics();
+    this.auditService.getMPIMetrics(dateRange).subscribe({
+      next: (metrics) => {
+        this.mpiMetrics = { ...this.mpiMetrics, ...metrics.mpiMetrics };
+        this.matchQualityMetrics = { ...this.matchQualityMetrics, ...metrics.matchQualityMetrics };
+        this.logger.info('Loaded MPI metrics', metrics);
+      },
+      error: (error) => {
+        this.logger.error('Failed to load MPI metrics', error);
+      }
+    });
   }
   
   /**
@@ -148,8 +186,17 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
    * Validate merge operation
    */
   validateMerge(mergeEvent: MergeEvent): void {
-    // TODO: Call backend API POST /api/v1/mpi/merges/{id}/validate
     this.logger.info('Validating merge', mergeEvent.eventId);
+
+    this.auditService.validateMerge(mergeEvent.eventId).subscribe({
+      next: () => {
+        mergeEvent.status = 'COMPLETED';
+        this.logger.info('Merge validated successfully');
+      },
+      error: (error) => {
+        this.logger.error('Failed to validate merge', error);
+      }
+    });
   }
   
   /**
@@ -157,8 +204,17 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
    */
   rollbackMerge(mergeEvent: MergeEvent): void {
     if (confirm('Are you sure you want to rollback this merge operation?')) {
-      // TODO: Call backend API POST /api/v1/mpi/merges/{id}/rollback
       this.logger.info('Rolling back merge', mergeEvent.eventId);
+
+      this.auditService.rollbackMerge(mergeEvent.eventId).subscribe({
+        next: () => {
+          mergeEvent.status = 'ROLLED_BACK';
+          this.logger.info('Merge rolled back successfully');
+        },
+        error: (error) => {
+          this.logger.error('Failed to rollback merge', error);
+        }
+      });
     }
   }
   
@@ -166,16 +222,42 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
    * Resolve data quality issue
    */
   resolveDataQualityIssue(issue: DataQualityIssue): void {
-    // TODO: Call backend API POST /api/v1/mpi/data-quality/{id}/resolve
     this.logger.info('Resolving data quality issue', issue.issueId);
+
+    this.auditService.resolveDataQualityIssue(issue.issueId, {
+      notes: 'Data quality issue resolved'
+    }).subscribe({
+      next: () => {
+        issue.status = 'RESOLVED';
+        this.dataQualityIssues = this.dataQualityIssues.filter(i => i.issueId !== issue.issueId);
+        this.logger.info('Data quality issue resolved successfully');
+      },
+      error: (error) => {
+        this.logger.error('Failed to resolve data quality issue', error);
+      }
+    });
   }
   
   /**
    * Export MPI audit report
    */
   exportMPIReport(): void {
-    // TODO: Call backend API GET /api/v1/audit/mpi/report/export
     this.logger.info('Exporting MPI audit report');
+
+    this.auditService.exportMPIReport().subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `mpi-audit-report-${new Date().toISOString().split('T')[0]}.xlsx`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        this.logger.info('MPI report exported successfully');
+      },
+      error: (error) => {
+        this.logger.error('Failed to export MPI report', error);
+      }
+    });
   }
   
   /**
@@ -215,6 +297,48 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
     return statusClasses[status] || 'default';
   }
   
+  /**
+   * Get start date based on date range filter
+   */
+  private getStartDateFromFilter(): string | undefined {
+    const now = new Date();
+    switch (this.filterDateRange) {
+      case 'today':
+        now.setHours(0, 0, 0, 0);
+        return now.toISOString();
+      case 'last-7-days':
+        now.setDate(now.getDate() - 7);
+        return now.toISOString();
+      case 'last-30-days':
+        now.setDate(now.getDate() - 30);
+        return now.toISOString();
+      case 'last-90-days':
+        now.setDate(now.getDate() - 90);
+        return now.toISOString();
+      default:
+        return undefined;
+    }
+  }
+
+  /**
+   * Get end date (always now)
+   */
+  private getEndDateFromFilter(): string | undefined {
+    return new Date().toISOString();
+  }
+
+  /**
+   * Get date range for metrics API call
+   */
+  private getDateRangeForMetrics(): { startDate: string; endDate: string } | undefined {
+    const startDate = this.getStartDateFromFilter();
+    const endDate = this.getEndDateFromFilter();
+    if (startDate && endDate) {
+      return { startDate, endDate };
+    }
+    return undefined;
+  }
+
   /**
    * Load mock data for demonstration
    */

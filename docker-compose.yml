@@ -86,6 +86,35 @@ services:
     networks:
       - healthdata-network
 
+  # Prometheus - Metrics Collection & Monitoring
+  # Access UI at http://localhost:9090
+  prometheus:
+    container_name: healthdata-prometheus
+    restart: unless-stopped
+    image: prom/prometheus:v2.48.1
+    profiles: ["core", "ai", "analytics", "full"]
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docker/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ./docker/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - healthdata-network
+
   zookeeper:
     container_name: healthdata-zookeeper
     restart: unless-stopped
@@ -1953,3 +1982,4 @@ volumes:
   postgres_data:
   postgres_backups:
   demo-snapshots:
+  prometheus_data:

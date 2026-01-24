@@ -20,45 +20,8 @@
     </div>
   </div>
 
-  <!-- Summary Cards -->
-  <div class="summary-row">
-    <mat-card class="summary-card total-card">
-      <mat-card-content>
-        <div class="summary-value">{{ summary.totalGaps || 0 }}</div>
-        <div class="summary-label">Total Care Gaps</div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="summary-card high-urgency-card">
-      <mat-card-content>
-        <div class="summary-value">{{ summary.highUrgencyCount || 0 }}</div>
-        <div class="summary-label">
-          <mat-icon class="urgency-icon-high">error</mat-icon>
-          High Urgency
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="summary-card medium-urgency-card">
-      <mat-card-content>
-        <div class="summary-value">{{ summary.mediumUrgencyCount || 0 }}</div>
-        <div class="summary-label">
-          <mat-icon class="urgency-icon-medium">warning</mat-icon>
-          Medium Urgency
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="summary-card low-urgency-card">
-      <mat-card-content>
-        <div class="summary-value">{{ summary.lowUrgencyCount || 0 }}</div>
-        <div class="summary-label">
-          <mat-icon class="urgency-icon-low">info</mat-icon>
-          Low Urgency
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
+  <!-- Care Gap Statistics Dashboard -->
+  <app-care-gap-stats-dashboard></app-care-gap-stats-dashboard>
 
   <!-- Intervention Recommendations Section -->
   <mat-card class="interventions-card">

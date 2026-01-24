@@ -22,6 +22,7 @@ import { LoadingButtonComponent } from '../../shared/components/loading-button/l
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { PatientHealthOverviewComponent } from '../patient-health-overview/patient-health-overview.component';
 import { PatientDemographicsCardComponent } from '../../components/patient-demographics-card/patient-demographics-card.component';
+import { PatientTimelineComponent } from '../../components/patient-timeline/patient-timeline.component';
 import { LoggerService } from '../../services/logger.service';
 
 @Component({
@@ -42,6 +43,7 @@ import { LoggerService } from '../../services/logger.service';
     LoadingOverlayComponent,
     PatientHealthOverviewComponent,
     PatientDemographicsCardComponent,
+    PatientTimelineComponent,
   ],
   templateUrl: './patient-detail.component.html',
   styleUrls: ['./patient-detail.component.scss'],
@@ -80,7 +82,8 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
     'overview': 0,
     'clinical': 1,
     'care-gaps': 2,
-    'results': 3
+    'results': 3,
+    'timeline': 4
   };
 
   private logger!: ReturnType<LoggerService['withContext']>;

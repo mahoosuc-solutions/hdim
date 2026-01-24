@@ -33,9 +33,15 @@ export const ADMIN_ENDPOINTS = {
   TENANT_BY_ID: (id: string) => `/tenants/${id}`,
   TENANT_CONFIG: (id: string) => `/tenants/${id}/config`,
 
-  // Audit Logs
+  // Audit Logs (Legacy)
   AUDIT_LOGS: '/audit-logs',
   AUDIT_LOG_BY_ID: (id: string) => `/audit-logs/${id}`,
+
+  // Audit Query Service (New - Port 8093)
+  AUDIT_SEARCH: '/v1/audit/logs/search',
+  AUDIT_EVENT_BY_ID: (id: string) => `/v1/audit/logs/${id}`,
+  AUDIT_STATISTICS: '/v1/audit/logs/statistics',
+  AUDIT_EXPORT: '/v1/audit/logs/export',
 
   // System Configuration
   CONFIG: '/config',

@@ -7,15 +7,23 @@ import { ImpactScene } from './compositions/care-gap-closure/ImpactScene';
 import { OutcomeScene } from './compositions/care-gap-closure/OutcomeScene';
 
 interface CareGapClosureVideoProps {
-  variant?: 'short' | 'default';
+  variant?: 'ultra-short' | 'short' | 'default';
 }
 
 export const CareGapClosureVideo: React.FC<CareGapClosureVideoProps> = ({ variant = 'default' }) => {
-  // Timing for 60s (short) or 80s (default) video
+  // Timing for 30s (ultra-short), 60s (short), or 80s (default) video
   // All times in frames at 30fps
 
-  // Default variant timing (80s = 2400 frames)
-  const timings = variant === 'short'
+  const timings = variant === 'ultra-short'
+    ? {
+        // Ultra-short variant (30s = 900 frames)
+        setup: { from: 0, duration: 120 },           // 0-4s
+        identification: { from: 120, duration: 180 }, // 4-10s
+        action: { from: 300, duration: 210 },        // 10-17s
+        impact: { from: 510, duration: 180 },        // 17-23s
+        outcome: { from: 690, duration: 210 },       // 23-30s
+      }
+    : variant === 'short'
     ? {
         // Short variant (60s = 1800 frames)
         setup: { from: 0, duration: 240 },           // 0-8s

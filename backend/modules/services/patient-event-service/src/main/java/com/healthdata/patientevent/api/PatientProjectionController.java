@@ -34,7 +34,7 @@ public class PatientProjectionController {
      * Get patient projection by ID
      */
     @GetMapping("/{patientId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get patient projection", description = "Retrieve denormalized patient view")
     public ResponseEntity<PatientProjection> getPatientProjection(
             @PathVariable UUID patientId,
@@ -50,7 +50,7 @@ public class PatientProjectionController {
      * List all patient projections for tenant
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "List patient projections", description = "Retrieve all patient projections for tenant")
     public ResponseEntity<Page<PatientProjection>> listPatients(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -66,7 +66,7 @@ public class PatientProjectionController {
      * Search patients by last name
      */
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Search patients", description = "Search patients by last name")
     public ResponseEntity<Page<PatientProjection>> searchPatients(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -83,7 +83,7 @@ public class PatientProjectionController {
      * Get high-risk patients
      */
     @GetMapping("/high-risk")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get high-risk patients", description = "Retrieve all high-risk patients for tenant")
     public ResponseEntity<List<PatientProjection>> getHighRiskPatients(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -97,7 +97,7 @@ public class PatientProjectionController {
      * Get patients with urgent care gaps
      */
     @GetMapping("/urgent-gaps")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get patients with urgent gaps", description = "Retrieve patients with urgent care gaps")
     public ResponseEntity<List<PatientProjection>> getPatientsWithUrgentGaps(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -111,7 +111,7 @@ public class PatientProjectionController {
      * Get patients with critical alerts
      */
     @GetMapping("/critical-alerts")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get patients with critical alerts", description = "Retrieve patients with critical alerts")
     public ResponseEntity<List<PatientProjection>> getPatientsWithCriticalAlerts(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -125,7 +125,7 @@ public class PatientProjectionController {
      * Get patients with mental health flags
      */
     @GetMapping("/mental-health")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get patients with mental health flags", description = "Retrieve patients with mental health assessments")
     public ResponseEntity<List<PatientProjection>> getPatientsWithMentalHealthFlags(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -139,7 +139,7 @@ public class PatientProjectionController {
      * Get statistics for tenant
      */
     @GetMapping("/stats")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'VIEWER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Operation(summary = "Get patient statistics", description = "Retrieve aggregated statistics for tenant")
     public ResponseEntity<PatientStatistics> getStatistics(
             @RequestHeader("X-Tenant-ID") String tenantId) {

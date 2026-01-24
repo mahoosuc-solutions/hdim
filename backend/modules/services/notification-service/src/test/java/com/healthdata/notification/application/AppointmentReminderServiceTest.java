@@ -286,7 +286,7 @@ class AppointmentReminderServiceTest {
 
         String message = messageCaptor.getValue();
         assertThat(message).contains("John Doe");
-        assertThat(message).contains("Saturday, February 15, 2026");
+        assertThat(message).contains("Sunday, February 15, 2026");
         assertThat(message).contains("2:30 PM");
         assertThat(message).contains("Reply STOP to opt out");
     }

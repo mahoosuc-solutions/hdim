@@ -211,10 +211,28 @@ public class AuthController {
                 // Clear security context (user not fully authenticated yet)
                 SecurityContextHolder.clearContext();
 
+                // Determine available MFA methods
+                List<String> availableMethods = new java.util.ArrayList<>();
+                String smsPhoneNumber = null;
+
+                if (user.getMfaMethod() == User.MfaMethod.TOTP || user.getMfaMethod() == User.MfaMethod.BOTH) {
+                    availableMethods.add("TOTP");
+                }
+                if (user.getMfaMethod() == User.MfaMethod.SMS || user.getMfaMethod() == User.MfaMethod.BOTH) {
+                    availableMethods.add("SMS");
+                    // Mask phone number
+                    String phone = user.getMfaPhoneNumber();
+                    if (phone != null && phone.length() >= 4) {
+                        smsPhoneNumber = "****" + phone.substring(phone.length() - 4);
+                    }
+                }
+
                 MfaRequiredResponse mfaResponse = MfaRequiredResponse.builder()
                     .mfaRequired(true)
                     .mfaToken(mfaToken)
-                    .message("MFA verification required. Please provide your authenticator code.")
+                    .availableMethods(availableMethods)
+                    .smsPhoneNumber(smsPhoneNumber)
+                    .message("MFA verification required. Choose your preferred method.")
                     .build();
 
                 return ResponseEntity.ok(mfaResponse);

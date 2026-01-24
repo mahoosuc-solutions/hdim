@@ -52,6 +52,7 @@ guava = "33.3.1-jre"
 hypersistence-utils = "3.9.0"
 datafaker = "2.4.2"
 twilio = "9.14.0"
+totp = "1.7.1"
 poi-ooxml = "5.2.5"
 
 # Export Libraries
@@ -176,6 +177,7 @@ guava = { module = "com.google.guava:guava", version.ref = "guava" }
 hypersistence-utils-hibernate-63 = { module = "io.hypersistence:hypersistence-utils-hibernate-63", version.ref = "hypersistence-utils" }
 datafaker = { module = "net.datafaker:datafaker", version.ref = "datafaker" }
 twilio = { module = "com.twilio.sdk:twilio", version.ref = "twilio" }
+totp = { module = "dev.samstevens.totp:totp", version.ref = "totp" }
 poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poi-ooxml" }
 
 # Export Libraries
@@ -197,6 +199,7 @@ reactor-netty-http = { module = "io.projectreactor.netty:reactor-netty-http", ve
 # Distributed Tracing
 micrometer-tracing = { module = "io.micrometer:micrometer-tracing", version.ref = "micrometer-tracing" }
 micrometer-tracing-bridge-otel = { module = "io.micrometer:micrometer-tracing-bridge-otel", version.ref = "micrometer-tracing" }
+opentelemetry-api = { module = "io.opentelemetry:opentelemetry-api", version.ref = "opentelemetry" }
 opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp", version.ref = "opentelemetry" }
 opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk", version.ref = "opentelemetry" }
 

@@ -210,7 +210,7 @@ public class SessionController {
      * @return Number of sessions revoked
      */
     @PostMapping("/admin/{username}/revoke-all")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasPermission('USER_MANAGE_ROLES')")
     @Operation(
         summary = "Admin: Revoke all user sessions",
         description = "Admin endpoint to revoke all sessions for a specific user (security response)"

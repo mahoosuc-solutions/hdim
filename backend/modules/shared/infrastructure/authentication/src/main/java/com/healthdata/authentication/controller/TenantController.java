@@ -84,7 +84,7 @@ public class TenantController {
      * @return 204 No Content on success
      */
     @PostMapping("/{tenantId}/activate")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('TENANT_MANAGE')")
     public ResponseEntity<Void> activateTenant(@PathVariable String tenantId) {
         log.info("Tenant activation request: {}", tenantId);
         tenantService.activateTenant(tenantId);
@@ -100,7 +100,7 @@ public class TenantController {
      * @return 204 No Content on success
      */
     @PostMapping("/{tenantId}/suspend")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('TENANT_MANAGE')")
     public ResponseEntity<Void> suspendTenant(@PathVariable String tenantId) {
         log.info("Tenant suspension request: {}", tenantId);
         tenantService.suspendTenant(tenantId);
@@ -116,7 +116,7 @@ public class TenantController {
      * @return 204 No Content on success
      */
     @PostMapping("/{tenantId}/deactivate")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('TENANT_MANAGE')")
     public ResponseEntity<Void> deactivateTenant(@PathVariable String tenantId) {
         log.info("Tenant deactivation request: {}", tenantId);
         tenantService.deactivateTenant(tenantId);

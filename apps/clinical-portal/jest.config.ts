@@ -1,7 +1,10 @@
 export default {
   displayName: 'clinical-portal',
   preset: '../../jest.preset.js',
-  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+  setupFilesAfterEnv: [
+    '<rootDir>/src/test-setup.ts',
+    '<rootDir>/src/testing/setup-accessibility-tests.ts',
+  ],
   coverageDirectory: '../../coverage/apps/clinical-portal',
   transform: {
     '^.+\\.(ts|mjs|js|html)$': [

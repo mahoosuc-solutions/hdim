@@ -12,18 +12,50 @@ Professional product demo video showcasing HDIM's FHIR-native healthcare quality
 
 ## Quick Start
 
+### Render Videos (Docker - Recommended for WSL2)
+
 ```bash
-# Install dependencies (if not already done)
+# Install dependencies
 npm install
 
+# Render all 3 versions via Docker
+npm run docker:render
+
+# Render specific version
+npm run docker:render:90s  # 90-second version
+npm run docker:render:60s  # 60-second version
+npm run docker:render:120s # 120-second version
+
+# Copy to landing page
+npm run copy:videos
+```
+
+### Alternative: Node.js SSR Rendering
+
+```bash
+# Bypasses Docker, uses Remotion Node.js API directly
+npm run ssr:render:90s  # 90-second version
+npm run ssr:render:60s  # 60-second version
+npm run ssr:render:120s # 120-second version
+npm run ssr:render:all  # All 3 versions
+```
+
+### Alternative: CLI Rendering (May fail on WSL2)
+
+```bash
+# Direct CLI rendering (works on macOS/native Linux, may hang on WSL2)
+npm run render:90s
+npm run render:60s
+npm run render:120s
+npm run render:all
+```
+
+### Preview in Remotion Studio
+
+```bash
 # Start Remotion Studio (live preview with timeline scrubbing)
 npm run dev
-
-# Render all 3 versions
-npm run render:all
-
-# Copy rendered videos to landing page public folder
-npm run copy:videos
+# Opens http://localhost:3002
 ```
 
 ## Project Structure
@@ -81,20 +113,81 @@ src/
 
 **Visuals:** Real screenshots with animated overlays, zoom/pan effects
 
-## Rendering
+## Rendering Options
 
-### Individual Renders
+### 1. Docker Rendering (Recommended for WSL2)
+
+**Why:** Isolates rendering from WSL2 Chrome Headless Shell issues
 
 ```bash
-# 60 second social media version
-npm run render:60s
+# Build Docker image (first time only)
+npm run docker:build
 
-# 90 second landing page version (default)
-npm run render:90s
+# Render specific version
+npm run docker:render:90s  # 90-second version
+npm run docker:render:60s  # 60-second version
+npm run docker:render:120s # 120-second version
 
-# 120 second YouTube version (extended)
-npm run render:120s
+# Render all versions
+npm run docker:render
+
+# Debug inside container
+npm run docker:shell
 ```
+
+**Outputs:** Videos appear in `out/` directory on host machine via volume mount.
+
+**Performance:** ~8-12 minutes per 90s video on WSL2 (4 CPU cores, 8GB RAM)
+
+### 2. Node.js SSR API (Programmatic)
+
+**Why:** Bypasses CLI entirely, uses Remotion's Node.js API directly
+
+```bash
+npm run ssr:render:90s  # 90-second version
+npm run ssr:render:60s  # 60-second version
+npm run ssr:render:120s # 120-second version
+npm run ssr:render:all  # All 3 versions
+```
+
+**Outputs:** Videos saved to `out/` directory
+
+**Features:**
+- Real-time progress tracking
+- WSL2-friendly Chromium flags (`--no-sandbox`, `--disable-dev-shm-usage`)
+- 50% CPU concurrency (prevents system overload)
+
+### 3. GitHub Actions (Automated CI/CD)
+
+**Why:** Zero local setup, free for public repos, automated on changes
+
+**Manual Trigger:**
+1. Go to GitHub → Actions → "Render Remotion Videos"
+2. Click "Run workflow"
+3. Select composition (60s/90s/120s/all)
+4. Download artifacts when complete
+
+**Auto Trigger:**
+- **On push to main:** Renders when `remotion/**` files change
+- **Scheduled:** Weekly on Sundays at 2 AM UTC
+- **Auto-commit:** Videos automatically committed to `public/videos/` on main branch
+
+**Outputs:**
+- Artifacts downloadable for 30 days
+- Videos auto-committed to repo (with `[skip ci]` to prevent loops)
+
+### 4. CLI Rendering (May Fail on WSL2)
+
+**Why:** Direct Remotion CLI (works on macOS/native Linux, may hang on WSL2)
+
+```bash
+npm run render:60s
+npm run render:90s
+npm run render:120s
+npm run render:all
+```
+
+**Known Issue:** Hangs at "Getting composition" on WSL2 due to Chrome Headless Shell process forking limitations. Use Docker or SSR instead.
 
 ### Render Output
 
@@ -248,6 +341,32 @@ Export SRT file from video or create manually for accessibility.
 
 ## Troubleshooting
 
+### Render hangs on WSL2 ("Getting composition...")
+
+**Symptom:** CLI rendering hangs indefinitely at "Getting composition" stage
+
+**Cause:** WSL2 Chrome Headless Shell process forking limitations
+
+**Solutions:**
+1. **Use Docker rendering** (recommended):
+   ```bash
+   npm run docker:render:90s
+   ```
+
+2. **Use SSR rendering**:
+   ```bash
+   npm run ssr:render:90s
+   ```
+
+3. **Use GitHub Actions** (zero local setup):
+   - Go to GitHub → Actions → "Render Remotion Videos" → Run workflow
+
+4. **Use Remotion Studio** (manual):
+   ```bash
+   npm run dev
+   # Render via UI at http://localhost:3002
+   ```
+
 ### Screenshots not loading
 
 Verify symlink:
@@ -256,16 +375,25 @@ ls -la src/assets/screenshots/
 # Should show: screenshots -> ../../../public/images/dashboard
 ```
 
-### Render fails
+### Render fails in Docker
 
-Check Node.js version (requires 18+):
+Check Docker resources:
 ```bash
-node --version
+docker stats hdim-remotion-renderer
+# Should show: 4GB mem_limit, 2.0 CPUs
 ```
 
-Increase memory if needed:
+Increase if needed in `docker-compose.yml`:
+```yaml
+mem_limit: 8g  # Increase to 8GB
+cpus: 4.0      # Increase to 4 CPUs
+```
+
+### SSR render fails with "Cannot find module"
+
+Install SSR dependencies:
 ```bash
-NODE_OPTIONS="--max-old-space-size=8192" npm run render:90s
+npm install @remotion/bundler @remotion/renderer
 ```
 
 ### Preview not updating
@@ -275,6 +403,13 @@ Clear Remotion cache:
 rm -rf node_modules/.remotion
 npm run dev
 ```
+
+### GitHub Actions workflow fails
+
+Check logs in Actions tab. Common issues:
+- Missing `package-lock.json` (commit it to repo)
+- Insufficient GitHub Actions minutes (check quota)
+- Invalid composition name (must be 60s/90s/120s/all)
 
 ## Performance
 

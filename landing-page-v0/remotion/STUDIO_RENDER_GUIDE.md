@@ -1,12 +1,202 @@
-# Remotion Studio Rendering Guide
+# Remotion Rendering Guide
 
-**Status:** Remotion Studio is running at http://localhost:3002
+**Last Updated:** January 24, 2026
 
-## Why Use Studio Instead of CLI?
+## Rendering Options (in order of preference)
 
-The CLI render is stuck at "Getting composition" due to WSL2/Linux browser integration issues. Remotion Studio uses a different rendering path that works on WSL2.
+### 1. Docker-Based Rendering (Recommended for WSL2)
 
-## Step-by-Step Rendering Instructions
+```bash
+npm run docker:render:90s
+```
+
+**Pros:**
+- ✅ Works reliably on WSL2
+- ✅ Automated, reproducible
+- ✅ No manual steps required
+- ✅ Isolated from host system issues
+
+**Outputs:** `out/hdim-demo-90s.mp4`
+
+**Performance:** ~8-12 minutes for 90s video
+
+---
+
+### 2. GitHub Actions (Recommended for CI/CD)
+
+**Trigger:** GitHub → Actions → "Render Remotion Videos" → Run workflow
+
+**Pros:**
+- ✅ Zero local setup
+- ✅ Free for public repos (2,000 minutes/month)
+- ✅ Automated on code changes
+- ✅ Videos uploaded as artifacts
+- ✅ Auto-commits to `public/videos/` on main branch
+
+**Performance:** ~15-20 minutes for 90s video
+
+**Outputs:**
+- Downloadable artifacts (30-day retention)
+- Auto-committed to repo
+
+---
+
+### 3. Node.js SSR API (Programmatic)
+
+```bash
+npm run ssr:render:90s
+```
+
+**Pros:**
+- ✅ Direct rendering via Remotion Node.js API
+- ✅ No CLI, no browser issues
+- ✅ Real-time progress tracking
+- ✅ Fastest local option
+
+**Outputs:** `out/hdim-demo-90s.mp4`
+
+**Performance:** ~8-10 minutes for 90s video
+
+---
+
+### 4. Remotion Studio (Manual, Development Only)
+
+**Status:** Remotion Studio runs at http://localhost:3002
+
+```bash
+npm run dev  # Opens http://localhost:3002
+```
+
+**Pros:**
+- ✅ Visual preview with timeline scrubbing
+- ✅ Works on WSL2 (different rendering path than CLI)
+- ✅ Good for testing and iteration
+
+**Cons:**
+- ❌ Manual, not automatable
+- ❌ Requires browser interaction
+- ❌ Not suitable for production workflows
+
+**Use for:** Previewing animations, testing timing, visual debugging
+
+---
+
+## Why Not CLI Rendering?
+
+**Issue:** `npm run render:90s` hangs at "Getting composition" on WSL2
+
+**Cause:** WSL2 Chrome Headless Shell process forking limitations
+
+**Solution:** Use Docker, SSR, GitHub Actions, or Studio instead (see above)
+
+---
+
+## Docker Rendering (Recommended)
+
+### Quick Start
+
+```bash
+# Render 90-second version
+npm run docker:render:90s
+
+# Render all 3 versions
+npm run docker:render
+
+# Copy to landing page
+npm run copy:videos
+```
+
+### How It Works
+
+1. Docker builds image with Chromium + FFmpeg
+2. Mounts `out/` directory to host
+3. Runs `npm run render:90s` inside container
+4. Videos appear in host `out/` directory
+
+### Customization
+
+Edit `docker-compose.yml` to adjust resources:
+
+```yaml
+mem_limit: 8g  # Increase to 8GB if needed
+cpus: 4.0      # Increase to 4 CPUs if available
+```
+
+---
+
+## GitHub Actions Rendering
+
+### Manual Trigger
+
+1. Go to GitHub repository
+2. Click **Actions** tab
+3. Select **"Render Remotion Videos"** workflow
+4. Click **"Run workflow"**
+5. Choose composition: `60s`, `90s`, `120s`, or `all`
+6. Click **"Run workflow"** button
+7. Wait 15-20 minutes
+8. Download artifacts from workflow run
+
+### Auto Trigger
+
+**On push to main:**
+- Automatically renders when `remotion/**` files change
+- Commits videos to `public/videos/`
+
+**Scheduled:**
+- Runs every Sunday at 2 AM UTC
+- Keeps videos fresh
+
+### Artifacts
+
+- Available for 30 days after workflow run
+- Download from Actions tab → Workflow run → Artifacts section
+- Videos auto-committed to repo on main branch
+
+---
+
+## Node.js SSR Rendering
+
+### Quick Start
+
+```bash
+# Install dependencies (first time only)
+npm install @remotion/bundler @remotion/renderer
+
+# Render 90-second version
+npm run ssr:render:90s
+
+# Render all 3 versions
+npm run ssr:render:all
+```
+
+### Progress Tracking
+
+SSR rendering shows real-time progress:
+
+```
+🎬 Rendering 90s composition...
+📦 Bundling project...
+🎥 Rendering 2700 frames at 30 fps...
+Progress: 10% (270/2700 frames)
+Progress: 20% (540/2700 frames)
+...
+Progress: 100% (2700/2700 frames)
+✅ Video saved: out/hdim-demo-90s.mp4
+```
+
+### WSL2 Optimizations
+
+SSR script uses WSL2-friendly Chromium flags:
+- `--no-sandbox` (bypasses sandboxing on WSL2)
+- `--disable-setuid-sandbox` (no SUID required)
+- `--disable-dev-shm-usage` (uses /tmp instead of /dev/shm)
+
+---
+
+## Remotion Studio Rendering (Manual)
+
+### Step-by-Step Instructions
 
 ### 1. Open Remotion Studio
 

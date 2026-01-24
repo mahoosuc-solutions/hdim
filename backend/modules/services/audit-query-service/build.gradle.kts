@@ -41,6 +41,9 @@ dependencies {
     // CSV export support
     implementation(libs.opencsv)
 
+    // Excel export support (Apache POI)
+    implementation(libs.poi.ooxml)
+
     // PDF export support (using iText)
     implementation(libs.itext7.core)
 

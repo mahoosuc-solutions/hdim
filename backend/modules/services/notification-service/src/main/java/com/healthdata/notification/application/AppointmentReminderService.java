@@ -203,8 +203,16 @@ public class AppointmentReminderService {
             return false;
         }
 
-        // Record successful send
-        recordSuccessfulReminder(tenantId, appointment, daysBefore, patient.getPhoneNumber(), messageSid);
+        // Record successful send (throws on database failure)
+        try {
+            recordSuccessfulReminder(tenantId, appointment, daysBefore, patient.getPhoneNumber(), messageSid);
+        } catch (RuntimeException e) {
+            // SMS was sent but audit record failed - this is a critical audit gap
+            log.error("CRITICAL: SMS sent successfully but failed to persist audit record for appointment {} in tenant {}",
+                    maskUuid(appointmentId), tenantId);
+            // Re-throw to ensure batch processing knows about the audit failure
+            throw e;
+        }
 
         return true;
     }
@@ -233,7 +241,9 @@ public class AppointmentReminderService {
     }
 
     /**
-     * Record successful reminder send
+     * Record successful reminder send with error handling
+     *
+     * @throws RuntimeException if database save fails (propagated to caller)
      */
     private void recordSuccessfulReminder(
             String tenantId,
@@ -254,11 +264,21 @@ public class AppointmentReminderService {
                 .messageSid(messageSid)
                 .build();
 
-        reminderSentRepository.save(record);
+        try {
+            reminderSentRepository.save(record);
+        } catch (Exception e) {
+            log.error("CRITICAL: Failed to record successful reminder for appointment {} in tenant {}: {}",
+                    maskUuid(appointment.getId()), tenantId, e.getMessage());
+            throw new RuntimeException("Failed to persist reminder audit record", e);
+        }
     }
 
     /**
-     * Record failed reminder send
+     * Record failed reminder send with error handling
+     *
+     * Note: This method logs database errors but does NOT propagate them,
+     * as we're already handling a failure scenario. Double-failure should
+     * not prevent batch processing from continuing.
      */
     private void recordFailedReminder(
             String tenantId,
@@ -279,7 +299,14 @@ public class AppointmentReminderService {
                 .errorMessage(errorMessage)
                 .build();
 
-        reminderSentRepository.save(record);
+        try {
+            reminderSentRepository.save(record);
+        } catch (Exception e) {
+            // Double-failure: SMS send failed AND audit record failed
+            // Log but don't propagate - batch should continue
+            log.error("CRITICAL: Failed to record failed reminder for appointment {} in tenant {}: {}",
+                    maskUuid(appointment.getId()), tenantId, e.getMessage());
+        }
     }
 
     /**

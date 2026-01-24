@@ -117,9 +117,22 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
     this.auditService.getMPIEvents(filters).subscribe({
       next: (response) => {
         this.mpiEvents = response.content || [];
-        this.mergeEvents = this.mpiEvents.filter((e: MPIAuditEvent) =>
-          e.eventType === 'PATIENT_MERGE' || e.eventType === 'PATIENT_UNMERGE'
-        ) as MergeEvent[];
+        this.mergeEvents = this.mpiEvents
+          .filter((e: MPIAuditEvent) => e.eventType === 'PATIENT_MERGE' || e.eventType === 'PATIENT_UNMERGE')
+          .map((e: MPIAuditEvent): MergeEvent => ({
+            eventId: e.eventId,
+            timestamp: e.timestamp,
+            eventType: e.eventType as 'PATIENT_MERGE' | 'PATIENT_UNMERGE',
+            mergedPatientId: e.sourcePatientId,
+            survivingRecordId: e.targetPatientId || '',
+            mergedBy: e.userId,
+            matchScore: e.matchScore,
+            fieldsConflicted: [],
+            resolutionStrategy: e.automatedMerge ? 'AUTOMATED_RULE' : 'MANUAL',
+            canRollback: e.status === 'COMPLETED',
+            rolledBack: e.status === 'ROLLED_BACK',
+            status: e.status
+          }));
         this.logger.info('Loaded MPI audit events', { count: this.mpiEvents.length });
       },
       error: (error) => {
@@ -480,6 +493,7 @@ interface MPIAuditEvent {
 interface MergeEvent {
   eventId: string;
   timestamp: Date;
+  eventType?: 'PATIENT_MERGE' | 'PATIENT_UNMERGE';
   mergedPatientId: string;
   survivingRecordId: string;
   mergedBy: string;
@@ -488,6 +502,7 @@ interface MergeEvent {
   resolutionStrategy: string;
   canRollback: boolean;
   rolledBack: boolean;
+  status?: 'COMPLETED' | 'PENDING' | 'FAILED' | 'ROLLED_BACK';
 }
 
 interface DataQualityIssue {
@@ -500,4 +515,5 @@ interface DataQualityIssue {
   resolved: boolean;
   resolvedBy: string | null;
   resolutionDate: Date | null;
+  status?: 'RESOLVED' | 'PENDING' | 'ACKNOWLEDGED';
 }

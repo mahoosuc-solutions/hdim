@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, interval } from 'rxjs';
 import { takeUntil, switchMap } from 'rxjs/operators';
+import { AiAuditStreamService } from '../../services/ai-audit-stream.service';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * Real-time AI audit dashboard component.
- * 
+ *
  * Displays:
  * - Live stream of AI decisions, config changes, and user actions
  * - Real-time metrics and analytics
@@ -22,6 +24,7 @@ import { takeUntil, switchMap } from 'rxjs/operators';
 })
 export class AiAuditDashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  private logger = this.loggerService.withContext('AiAuditDashboardComponent');
 
   // Natural language query
   naturalLanguageQuery = '';
@@ -33,6 +36,9 @@ export class AiAuditDashboardComponent implements OnInit, OnDestroy {
   aiDecisions: any[] = [];
   configChanges: any[] = [];
   userActions: any[] = [];
+
+  // SSE connection status
+  connectionStatus: 'connected' | 'disconnected' | 'connecting' = 'disconnected';
 
   // Analytics
   analytics = {
@@ -51,73 +57,86 @@ export class AiAuditDashboardComponent implements OnInit, OnDestroy {
   // View mode
   activeTab: 'stream' | 'query' | 'analytics' | 'trail' = 'stream';
 
-  constructor() {}
+  constructor(
+    private aiAuditStream: AiAuditStreamService,
+    private loggerService: LoggerService
+  ) {}
 
   ngOnInit(): void {
     this.loadRealtimeEvents();
     this.loadAnalytics();
-    this.startAutoRefresh();
+    this.subscribeToConnectionStatus();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.aiAuditStream.disconnect();
   }
 
   /**
-   * Load real-time event streams.
+   * Load real-time event streams using SSE.
    */
   loadRealtimeEvents(): void {
-    // TODO: Implement WebSocket or SSE connection for real-time events
-    // For now, using polling
-    console.log('Loading real-time audit events...');
-    
-    // Mock data for demonstration
-    this.aiDecisions = [
-      {
-        eventId: '123e4567-e89b-12d3-a456-426614174000',
-        timestamp: new Date(),
-        agentType: 'POOL_OPTIMIZER',
-        decisionType: 'POOL_SIZE_RECOMMENDATION',
-        resourceType: 'HikariCP Pool',
-        recommendation: {
-          configType: 'spring.datasource.hikari.maximum-pool-size',
-          currentValue: 20,
-          recommendedValue: 35,
-          expectedImpact: 'Improve throughput by 40%'
+    this.logger.info('Starting SSE connection for real-time AI audit events');
+
+    // Subscribe to SSE events
+    this.aiAuditStream.events$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (event) => {
+          this.logger.debug('Received AI decision event', event.eventId);
+          this.addDecisionToTimeline(event);
+          this.updateAnalytics(event);
         },
-        confidenceScore: 0.92,
-        outcome: 'PENDING'
-      }
-    ];
+        error: (error) => {
+          this.logger.error('Error receiving SSE event', error);
+        }
+      });
 
-    this.configChanges = [
-      {
-        eventId: '223e4567-e89b-12d3-a456-426614174000',
-        timestamp: new Date(Date.now() - 300000),
-        changeType: 'POOL_SIZE_CHANGE',
-        serviceName: 'quality-measure-service',
-        configKey: 'spring.datasource.hikari.maximum-pool-size',
-        previousValue: '20',
-        newValue: '35',
-        triggeredBy: 'config-advisor-gpt4',
-        executionStatus: 'APPLIED',
-        impactSeverity: 'POSITIVE_MINOR'
-      }
-    ];
+    // Connect to the stream
+    this.aiAuditStream.connect();
+  }
 
-    this.userActions = [
-      {
-        eventId: '323e4567-e89b-12d3-a456-426614174000',
-        timestamp: new Date(Date.now() - 600000),
-        actionType: 'ACCEPT_AI_RECOMMENDATION',
-        username: 'john.doe@example.com',
-        serviceName: 'quality-measure-service',
-        aiRecommendationAction: 'ACCEPTED',
-        userFeedbackRating: 5,
-        actionStatus: 'COMPLETED'
-      }
-    ];
+  /**
+   * Subscribe to connection status updates.
+   */
+  private subscribeToConnectionStatus(): void {
+    this.aiAuditStream.connectionStatus$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((status) => {
+        this.connectionStatus = status;
+        this.logger.info('SSE connection status changed', status);
+      });
+  }
+
+  /**
+   * Add AI decision to the timeline (prepend to show latest first).
+   */
+  private addDecisionToTimeline(event: any): void {
+    // Prepend to array to show latest events first
+    this.aiDecisions.unshift(event);
+
+    // Keep only last 100 events to avoid memory issues
+    if (this.aiDecisions.length > 100) {
+      this.aiDecisions = this.aiDecisions.slice(0, 100);
+    }
+  }
+
+  /**
+   * Update analytics based on new event.
+   */
+  private updateAnalytics(event: any): void {
+    this.analytics.totalAIDecisions++;
+
+    // Update average confidence score
+    const totalConfidence = this.aiDecisions.reduce((sum, d) => sum + (d.confidenceScore || 0), 0);
+    this.analytics.averageConfidence = totalConfidence / this.aiDecisions.length;
+
+    // Update acceptance rate
+    const acceptedDecisions = this.aiDecisions.filter(d => d.outcome === 'ACCEPTED').length;
+    this.analytics.acceptanceRate = (acceptedDecisions / this.aiDecisions.length) * 100;
+  }
   }
 
   /**
@@ -137,19 +156,14 @@ export class AiAuditDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Start auto-refresh for real-time updates.
+   * Manually reconnect to SSE stream (if connection is lost).
    */
-  startAutoRefresh(): void {
-    interval(30000) // Refresh every 30 seconds
-      .pipe(
-        takeUntil(this.destroy$),
-        switchMap(() => {
-          this.loadRealtimeEvents();
-          this.loadAnalytics();
-          return [];
-        })
-      )
-      .subscribe();
+  reconnectStream(): void {
+    this.logger.info('Manual reconnect requested');
+    this.aiAuditStream.disconnect();
+    setTimeout(() => {
+      this.aiAuditStream.connect();
+    }, 1000);
   }
 
   /**

@@ -1,424 +1,85 @@
-// ============================================================================
-// Document Upload Component Styles
-// ============================================================================
-
-.document-upload-container {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 0;
+.upload-container {
+  padding: 16px;
 }
 
-// ============================================================================
-// Upload Zone Card
-// ============================================================================
-
-.upload-zone-card {
-  mat-card-header {
-    mat-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      mat-icon {
-        color: #1976d2;
-      }
-    }
-  }
-
-  mat-card-content {
-    padding: 16px;
-  }
-}
-
-.drop-zone {
-  border: 2px dashed rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
-  padding: 48px 24px;
+.upload-section {
   text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: rgba(0, 0, 0, 0.02);
-
-  mat-icon {
-    font-size: 4rem;
-    width: 4rem;
-    height: 4rem;
-    color: rgba(0, 0, 0, 0.4);
-    margin-bottom: 16px;
-  }
-
-  h3 {
-    font-size: 1.25rem;
-    font-weight: 500;
-    margin: 0 0 8px 0;
-    color: rgba(0, 0, 0, 0.87);
-  }
-
-  p {
-    font-size: 0.875rem;
-    color: rgba(0, 0, 0, 0.6);
-    margin: 0;
-  }
+  padding: 24px;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  margin-bottom: 16px;
 
   &:hover {
-    border-color: #1976d2;
-    background: rgba(25, 118, 210, 0.05);
-
-    mat-icon {
-      color: #1976d2;
-    }
-
-    h3 {
-      color: #1976d2;
-    }
-  }
-
-  &.drag-over {
-    border-color: #1976d2;
-    border-width: 3px;
-    background: rgba(25, 118, 210, 0.1);
-
-    mat-icon {
-      color: #1976d2;
-      animation: bounce 0.6s ease-in-out;
-    }
-  }
-
-  &:focus {
-    outline: 2px solid #1976d2;
-    outline-offset: 2px;
+    border-color: #999;
   }
 }
 
-@keyframes bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-12px);
-  }
+.upload-hint {
+  margin-top: 8px;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 14px;
 }
 
-// ============================================================================
-// Upload Queue Card
-// ============================================================================
-
-.upload-queue-card {
-  mat-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    mat-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      mat-icon {
-        color: #1976d2;
-      }
-    }
-
-    .header-actions {
-      margin-left: auto;
-    }
-  }
-
-  mat-card-content {
-    padding: 16px;
-  }
+.upload-progress {
+  margin: 16px 0;
 }
 
-.queue-list {
+.error-message {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.queue-item {
-  padding: 16px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.12);
-
-  &.failed {
-    background: rgba(244, 67, 54, 0.05);
-    border-color: rgba(244, 67, 54, 0.3);
-  }
-
-  .item-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-
-    .file-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
-    }
-
-    .item-details {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-
-      .file-name {
-        font-weight: 500;
-        font-size: 0.875rem;
-        color: rgba(0, 0, 0, 0.87);
-      }
-
-      .file-size {
-        font-size: 0.75rem;
-        color: rgba(0, 0, 0, 0.6);
-      }
-    }
-
-    .item-actions {
-      display: flex;
-      gap: 4px;
-    }
-  }
-
-  mat-progress-bar {
-    margin-bottom: 4px;
-  }
-
-  .progress-text {
-    font-size: 0.75rem;
-    color: rgba(0, 0, 0, 0.6);
-  }
-
-  .error-message,
-  .success-message {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    margin-top: 8px;
-
-    mat-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-    }
-  }
-
-  .error-message {
-    background: rgba(244, 67, 54, 0.1);
-    color: #d32f2f;
-
-    mat-icon {
-      color: #d32f2f;
-    }
-  }
-
-  .success-message {
-    background: rgba(76, 175, 80, 0.1);
-    color: #388e3c;
-
-    mat-icon {
-      color: #388e3c;
-    }
-  }
-}
-
-// ============================================================================
-// Documents List Card
-// ============================================================================
-
-.documents-list-card {
-  mat-card-header {
-    mat-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      mat-icon {
-        color: #1976d2;
-      }
-    }
-  }
-
-  mat-card-content {
-    padding: 16px;
-  }
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 3rem 1rem;
+  gap: 8px;
+  padding: 12px;
+  background-color: #ffebee;
+  border-radius: 4px;
+  margin: 16px 0;
+  color: #c62828;
+}
+
+.ocr-status {
+  margin: 16px 0;
   text-align: center;
-  color: rgba(0, 0, 0, 0.38);
+}
 
-  mat-icon {
-    font-size: 4rem;
-    width: 4rem;
-    height: 4rem;
-    margin-bottom: 1rem;
+.uploaded-files {
+  margin-top: 24px;
+}
+
+.ocr-status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  margin-left: 8px;
+
+  &.PENDING {
+    background-color: #fff3e0;
+    color: #e65100;
   }
 
-  p {
-    margin: 0.5rem 0;
-    font-size: 1rem;
+  &.PROCESSING {
+    background-color: #e3f2fd;
+    color: #1565c0;
   }
 
-  .hint {
-    font-size: 0.875rem;
-    color: rgba(0, 0, 0, 0.26);
+  &.COMPLETED {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.FAILED {
+    background-color: #ffebee;
+    color: #c62828;
   }
 }
 
-.documents-table {
-  width: 100%;
-
-  .file-name-cell {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    .file-type-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      color: rgba(0, 0, 0, 0.6);
-    }
-  }
-
-  .not-applicable {
-    color: rgba(0, 0, 0, 0.38);
-    font-style: italic;
-  }
-
-  mat-chip {
-    text-transform: capitalize;
-  }
-
-  button[mat-icon-button] {
-    &:not([color="warn"]):hover {
-      color: #1976d2;
-    }
-  }
-}
-
-// ============================================================================
-// Responsive Design
-// ============================================================================
-
-@media (max-width: 1200px) {
-  .upload-queue-card {
-    mat-card-header {
-      flex-direction: column;
-      align-items: stretch;
-
-      .header-actions {
-        margin-left: 0;
-        margin-top: 12px;
-
-        button {
-          width: 100%;
-        }
-      }
-    }
-  }
-}
-
-@media (max-width: 768px) {
-  .drop-zone {
-    padding: 32px 16px;
-
-    mat-icon {
-      font-size: 3rem;
-      width: 3rem;
-      height: 3rem;
-    }
-
-    h3 {
-      font-size: 1rem;
-    }
-
-    p {
-      font-size: 0.75rem;
-    }
-  }
-
-  .queue-item {
-    .item-header {
-      flex-wrap: wrap;
-
-      .file-icon {
-        font-size: 24px;
-        width: 24px;
-        height: 24px;
-      }
-
-      .item-details {
-        flex: 1 1 100%;
-        order: 1;
-      }
-
-      .item-actions {
-        order: 2;
-      }
-    }
-  }
-
-  .documents-table {
-    // Simplify table for mobile
-    .mat-column-fileType,
-    .mat-column-ocrStatus {
-      display: none;
-    }
-  }
-}
-
-// ============================================================================
-// Accessibility
-// ============================================================================
-
-@media (prefers-reduced-motion: reduce) {
-  .drop-zone {
-    transition: none;
-
-    &.drag-over mat-icon {
-      animation: none;
-    }
-  }
-
-  @keyframes bounce {
-    0%,
-    100% {
-      transform: none;
-    }
-  }
-}
-
-@media (prefers-contrast: high) {
-  .drop-zone {
-    border-width: 3px;
-    border-color: #000;
-
-    &:hover,
-    &.drag-over {
-      border-color: #1976d2;
-      background: rgba(25, 118, 210, 0.2);
-    }
-  }
-
-  .queue-item {
-    border-width: 2px;
-
-    &.failed {
-      border-color: #d32f2f;
-    }
-  }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

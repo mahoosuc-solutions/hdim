@@ -12,5 +12,6 @@
     <include file="db/changelog/0004-update-care-gaps-table.xml"/>
     <include file="db/changelog/0005-add-care-gaps-extended-fields.xml"/>
     <include file="db/changelog/0009-create-audit-events-table.xml"/>
+    <include file="db/changelog/0010-create-users-table.xml"/>
 
 </databaseChangeLog>

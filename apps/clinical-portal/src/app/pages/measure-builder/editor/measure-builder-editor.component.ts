@@ -71,7 +71,7 @@ export class MeasureBuilderEditorComponent implements OnInit, OnDestroy {
   state: MeasureBuilderState | null = null;
   algorithm: MeasureAlgorithm | null = null;
   sliderConfigurations: SliderConfig[] = [];
-  currentCql: string = '';
+  currentCql = '';
 
   // UI State
   loading = false;

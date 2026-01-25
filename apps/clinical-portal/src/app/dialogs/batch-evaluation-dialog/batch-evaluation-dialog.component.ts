@@ -533,7 +533,7 @@ export class BatchEvaluationDialogComponent implements OnInit, OnDestroy {
     const patients = this.selection.selected;
     const measures = this.selectedMeasures;
     const totalEvals = patients.length * measures.length;
-    let completed = 0;
+    const completed = 0;
 
     // Process evaluations sequentially to avoid overwhelming the backend
     this.processNextEvaluation(patients, measures, 0, 0, totalEvals);

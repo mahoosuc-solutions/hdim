@@ -87,5 +87,5 @@ import { CommonModule } from '@angular/common';
 })
 export class GridComponent {
   @Input() columns: 1 | 2 | 3 | 4 = 3;
-  @Input() gap: number = 16;
+  @Input() gap = 16;
 }

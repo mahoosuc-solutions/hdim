@@ -352,31 +352,31 @@ export class DataTableComponent<T extends Record<string, unknown> = Record<strin
   @Input() actions: TableAction<T>[] = [];
 
   /** Is table loading */
-  @Input() loading: boolean = false;
+  @Input() loading = false;
 
   /** Enable row selection */
-  @Input() selectable: boolean = false;
+  @Input() selectable = false;
 
   /** Enable striped rows */
-  @Input() striped: boolean = true;
+  @Input() striped = true;
 
   /** Enable row hover effect */
-  @Input() hoverable: boolean = true;
+  @Input() hoverable = true;
 
   /** Show paginator */
-  @Input() showPaginator: boolean = true;
+  @Input() showPaginator = true;
 
   /** Sticky header */
-  @Input() stickyHeader: boolean = false;
+  @Input() stickyHeader = false;
 
   /** Page size */
-  @Input() pageSize: number = 25;
+  @Input() pageSize = 25;
 
   /** Page size options */
   @Input() pageSizeOptions: number[] = [10, 25, 50, 100];
 
   /** Empty state message */
-  @Input() emptyMessage: string = 'No data available';
+  @Input() emptyMessage = 'No data available';
 
   /** Row selected event */
   @Output() rowSelected = new EventEmitter<T>();

@@ -170,10 +170,10 @@ export class SidebarComponent {
   @Input() menuItems: MenuItem[] = [];
 
   /** Sidebar title */
-  @Input() title: string = 'Menu';
+  @Input() title = 'Menu';
 
   /** Is sidebar opened */
-  @Input() opened: boolean = true;
+  @Input() opened = true;
 
   /** Sidenav mode */
   @Input() mode: 'over' | 'push' | 'side' = 'side';

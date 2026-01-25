@@ -164,7 +164,7 @@ export class EvaluationService {
    * Get all evaluations (paginated)
    * Endpoint: GET /api/v1/cql/evaluations
    */
-  getAllEvaluations(page: number = 0, size: number = 1000): Observable<CqlEvaluation[]> {
+  getAllEvaluations(page = 0, size = 1000): Observable<CqlEvaluation[]> {
     const url = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS, {
       page: page.toString(),
       size: size.toString(),
@@ -188,7 +188,7 @@ export class EvaluationService {
    * Get all evaluations with caching (3-minute TTL)
    * Use this for dashboard and lists that don't need real-time data
    */
-  getAllEvaluationsCached(page: number = 0, size: number = 1000): Observable<CqlEvaluation[]> {
+  getAllEvaluationsCached(page = 0, size = 1000): Observable<CqlEvaluation[]> {
     const now = Date.now();
     if (this.evaluationsCache$ && (now - this.evalCacheTimestamp) < this.EVAL_CACHE_TTL) {
       return this.evaluationsCache$;
@@ -201,7 +201,7 @@ export class EvaluationService {
   /**
    * Get recent evaluations (last N days) - lightweight method for dashboard
    */
-  getRecentEvaluations(days: number = 30, limit: number = 10): Observable<CqlEvaluation[]> {
+  getRecentEvaluations(days = 30, limit = 10): Observable<CqlEvaluation[]> {
     return this.getAllEvaluationsCached(0, 100).pipe(
       map((evaluations) => {
         const cutoffDate = new Date();
@@ -327,7 +327,7 @@ export class EvaluationService {
   calculateQualityMeasure(
     patientId: string,
     measureId: string,
-    createdBy: string = 'system'
+    createdBy = 'system'
   ): Observable<QualityMeasureResult> {
     const url = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.CALCULATE, {
       patient: patientId,
@@ -429,7 +429,7 @@ export class EvaluationService {
    * Get all quality measure results (all patients)
    * Endpoint: GET /quality-measure/results
    */
-  getAllResults(page: number = 0, size: number = 20): Observable<QualityMeasureResult[]> {
+  getAllResults(page = 0, size = 20): Observable<QualityMeasureResult[]> {
     return this.getPatientResults(null, page, size);
   }
 
@@ -484,7 +484,7 @@ export class EvaluationService {
   savePatientReport(
     patientId: string,
     reportName: string,
-    createdBy: string = 'system'
+    createdBy = 'system'
   ): Observable<SavedReport> {
     const url = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.SAVE_PATIENT_REPORT, {
       patient: patientId,
@@ -501,7 +501,7 @@ export class EvaluationService {
   savePopulationReport(
     year: number,
     reportName: string,
-    createdBy: string = 'system'
+    createdBy = 'system'
   ): Observable<SavedReport> {
     const url = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.SAVE_POPULATION_REPORT, {
       year: year.toString(),

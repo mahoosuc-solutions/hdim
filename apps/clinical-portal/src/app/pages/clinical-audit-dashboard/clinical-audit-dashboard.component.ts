@@ -73,11 +73,11 @@ export class ClinicalAuditDashboardComponent implements OnInit, OnDestroy {
   
   // Selected decision for review
   selectedDecision: ClinicalAIDecision | null = null;
-  clinicalNotes: string = '';
+  clinicalNotes = '';
   
   // Auto-refresh
   private refreshSubscription?: Subscription;
-  autoRefreshEnabled: boolean = true;
+  autoRefreshEnabled = true;
 
   constructor(
     private loggerService: LoggerService,

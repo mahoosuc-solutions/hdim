@@ -83,7 +83,7 @@ describe('WebSocketVisualizationService', () => {
     it('should set status to CONNECTING when connect is called', fakeAsync(() => {
       jest.spyOn(window as any, 'WebSocket').mockReturnValue(mockWebSocket);
 
-      let statusUpdates: WebSocketStatus[] = [];
+      const statusUpdates: WebSocketStatus[] = [];
       service.status$.subscribe((status) => statusUpdates.push(status));
 
       service.connect();
@@ -168,7 +168,7 @@ describe('WebSocketVisualizationService', () => {
         return mockWebSocket;
       };
 
-      let statusUpdates: WebSocketStatus[] = [];
+      const statusUpdates: WebSocketStatus[] = [];
       service.status$.subscribe((status) => statusUpdates.push(status));
 
       service.connect();
@@ -205,7 +205,7 @@ describe('WebSocketVisualizationService', () => {
     }));
 
     it('should set status to DISCONNECTED on disconnect', fakeAsync(() => {
-      let statusUpdates: WebSocketStatus[] = [];
+      const statusUpdates: WebSocketStatus[] = [];
       service.status$.subscribe((status) => statusUpdates.push(status));
 
       service.disconnect();
@@ -498,7 +498,7 @@ describe('WebSocketVisualizationService', () => {
         return mockWebSocket;
       };
 
-      let statusUpdates: WebSocketStatus[] = [];
+      const statusUpdates: WebSocketStatus[] = [];
       service.status$.subscribe((status) => statusUpdates.push(status));
 
       service.connect();
@@ -540,7 +540,7 @@ describe('WebSocketVisualizationService', () => {
         throw new Error('Connection failed');
       };
 
-      let statusUpdates: WebSocketStatus[] = [];
+      const statusUpdates: WebSocketStatus[] = [];
       service.status$.subscribe((status) => statusUpdates.push(status));
 
       let receivedError: Error | null = null;
@@ -644,7 +644,7 @@ describe('WebSocketVisualizationService', () => {
 
     it('should set status to RECONNECTING during reconnection', fakeAsync(() => {
       const originalWebSocket = window.WebSocket;
-      let statusUpdates: WebSocketStatus[] = [];
+      const statusUpdates: WebSocketStatus[] = [];
 
       (window as any).WebSocket = function (url: string) {
         setTimeout(() => {
@@ -963,7 +963,7 @@ describe('WebSocketVisualizationService', () => {
     }));
 
     it('should filter distinct status changes', fakeAsync(() => {
-      let statusUpdates: WebSocketStatus[] = [];
+      const statusUpdates: WebSocketStatus[] = [];
 
       service.status$.subscribe((status) => statusUpdates.push(status));
 

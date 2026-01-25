@@ -198,7 +198,7 @@ export class FhirObservationService extends CacheableService {
   getVitalSignHistory(
     patientId: string,
     loincCode?: string,
-    limit: number = 30
+    limit = 30
   ): Observable<VitalSign<number | string>[]> {
     const cacheKey = `vital-history:${patientId}:${loincCode || 'all'}:${limit}`;
     const cached = this.getCached<VitalSign<number | string>[]>(cacheKey);
@@ -242,7 +242,7 @@ export class FhirObservationService extends CacheableService {
   getLabHistory(
     patientId: string,
     loincCode: string,
-    limit: number = 10
+    limit = 10
   ): Observable<LabResult[]> {
     const cacheKey = `lab-history:${patientId}:${loincCode}:${limit}`;
     const cached = this.getCached<LabResult[]>(cacheKey);

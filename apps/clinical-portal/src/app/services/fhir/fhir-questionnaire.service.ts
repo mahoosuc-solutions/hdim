@@ -94,7 +94,7 @@ export class FhirQuestionnaireService extends CacheableService {
    */
   getQuestionnaireResponses(
     patientId: string,
-    limit: number = 50
+    limit = 50
   ): Observable<FhirQuestionnaireResponse[]> {
     const cacheKey = `questionnaire:all:${patientId}:${limit}`;
     const cached = this.getCached<FhirQuestionnaireResponse[]>(cacheKey);

@@ -384,7 +384,7 @@ export class CareGapService {
    * Get care gap trend data for a time period
    * Returns historical data points for trend analysis
    */
-  getCareGapTrends(days: number = 30): Observable<CareGapTrendPoint[]> {
+  getCareGapTrends(days = 30): Observable<CareGapTrendPoint[]> {
     const url = buildQualityMeasureUrl('/patient-health/care-gaps/trends');
     const params = new HttpParams().set('days', days.toString());
 

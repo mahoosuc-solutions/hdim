@@ -95,8 +95,8 @@ export interface BarChartData {
 export class ChartBarComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input() data!: BarChartData;
   @Input() mode: 'grouped' | 'stacked' = 'grouped';
-  @Input() height: number = 300;
-  @Input() horizontal: boolean = false;
+  @Input() height = 300;
+  @Input() horizontal = false;
 
   @ViewChild('chartCanvas', { static: false }) canvasRef!: ElementRef<HTMLCanvasElement>;
 

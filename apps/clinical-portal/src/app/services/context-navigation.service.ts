@@ -189,7 +189,7 @@ export class ContextNavigationService {
   /**
    * Navigate back using stored return URL or fallback
    */
-  navigateBack(fallbackUrl: string = '/dashboard'): void {
+  navigateBack(fallbackUrl = '/dashboard'): void {
     const returnUrl = this.popReturnUrl();
     if (returnUrl) {
       this.router.navigateByUrl(returnUrl);

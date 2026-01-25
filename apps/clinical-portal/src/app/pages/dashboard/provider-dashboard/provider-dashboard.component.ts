@@ -1910,7 +1910,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
   }
 
   /** Issue #10: Get trend color - context-dependent for clinical values */
-  getResultTrendColor(trend: string, isHigherBad: boolean = true): string {
+  getResultTrendColor(trend: string, isHigherBad = true): string {
     if (trend === 'stable' || trend === 'new') return '#757575';
     if (trend === 'up') return isHigherBad ? '#f44336' : '#4caf50';
     if (trend === 'down') return isHigherBad ? '#4caf50' : '#f44336';

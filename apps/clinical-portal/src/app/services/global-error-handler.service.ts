@@ -51,7 +51,7 @@ export class GlobalErrorHandler implements ErrorHandler {
 
     // Log to console in development (for debugging)
     if (!environment.production) {
-      // eslint-disable-next-line no-console
+       
       console.error('[Global Error Handler] Uncaught exception:', error);
     }
 

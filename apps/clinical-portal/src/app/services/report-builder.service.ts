@@ -307,7 +307,7 @@ export class ReportBuilderService {
   /**
    * Create a new custom report with default sections
    */
-  createReport(name: string, description: string = ''): CustomReport {
+  createReport(name: string, description = ''): CustomReport {
     const defaultSections = SECTION_TEMPLATES.filter(s =>
       ['executive-summary', 'quality-measures', 'care-gaps'].includes(s.type)
     ).map((section, index) => ({

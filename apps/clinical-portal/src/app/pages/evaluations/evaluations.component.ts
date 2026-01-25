@@ -90,8 +90,8 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
   measuresErrorDetails: AppError | null = null;
 
   // Category filtering
-  selectedCategory: string = '';
-  measureSearchTerm: string = '';
+  selectedCategory = '';
+  measureSearchTerm = '';
   measureCategories: { value: string; label: string }[] = [
     { value: '', label: 'All Categories' },
     { value: 'PREVENTIVE', label: 'Preventive Care' },
@@ -544,7 +544,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
    * Option 2: Use local calculation endpoint (faster, no data flow)
    */
   @TrackInteraction('evaluations', 'submit-evaluation')
-  submitEvaluation(useCqlEngine: boolean = false): void {
+  submitEvaluation(useCqlEngine = false): void {
     if (this.evaluationForm.invalid || !this.selectedPatient) {
       return;
     }

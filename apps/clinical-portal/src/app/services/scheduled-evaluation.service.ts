@@ -348,7 +348,7 @@ export class ScheduledEvaluationService implements OnDestroy {
   /**
    * Get recent executions (all schedules)
    */
-  getRecentExecutions(limit: number = 10): Observable<ScheduleExecution[]> {
+  getRecentExecutions(limit = 10): Observable<ScheduleExecution[]> {
     return this.executions$.pipe(
       map((executions) =>
         executions

@@ -192,26 +192,26 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 })
 export class SuccessBannerComponent implements OnInit, OnDestroy {
   /** Success message to display */
-  @Input() message: string = 'Operation completed successfully';
+  @Input() message = 'Operation completed successfully';
 
   /** Allow user to dismiss banner */
-  @Input() dismissible: boolean = true;
+  @Input() dismissible = true;
 
   /** Auto-dismiss after timeout */
-  @Input() autoDismiss: boolean = true;
+  @Input() autoDismiss = true;
 
   /** Auto-dismiss timeout in milliseconds */
-  @Input() autoDismissTime: number = 5000;
+  @Input() autoDismissTime = 5000;
 
   /** Show progress bar for auto-dismiss */
-  @Input() showProgress: boolean = true;
+  @Input() showProgress = true;
 
   /** Event emitted when banner is dismissed */
   @Output() dismissed = new EventEmitter<void>();
 
-  visible: boolean = true;
-  animationState: string = 'visible';
-  iconAnimationState: string = 'visible';
+  visible = true;
+  animationState = 'visible';
+  iconAnimationState = 'visible';
   private dismissTimer?: ReturnType<typeof setTimeout>;
 
   ngOnInit(): void {

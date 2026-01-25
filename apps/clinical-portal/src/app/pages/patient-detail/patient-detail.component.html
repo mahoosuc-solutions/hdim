@@ -256,14 +256,20 @@
           </div>
         </mat-tab>
 
-        <!-- Documents Tab - Issue #244: Document Upload Drag-Drop -->
+        <!-- Documents Tab - Issue #244: Document Upload Drag-Drop, Issue #249: OCR Phase 1 -->
         <mat-tab>
           <ng-template mat-tab-label>
             <mat-icon class="tab-icon">folder</mat-icon>
             Documents
           </ng-template>
           <div class="tab-content">
-            <app-document-upload [patientId]="patientId!"></app-document-upload>
+            <app-document-upload
+              [documentId]="getCurrentDocumentId()"
+              [patientId]="patientId!"
+              (uploadSuccess)="onDocumentUploadSuccess($event)"
+              (uploadError)="onDocumentUploadError($event)"
+              (ocrComplete)="onOcrComplete($event)">
+            </app-document-upload>
           </div>
         </mat-tab>
       </mat-tab-group>

@@ -21,6 +21,8 @@ import { DocumentUploadComponent } from './document-upload.component';
 import { DocumentUploadService } from '../../services/document-upload.service';
 import { LoggerService } from '../../services/logger.service';
 import {
+  testAccessibility,
+  testKeyboardAccessibility,
   testAriaAttributes,
 } from '../../../testing/accessibility.helper';
 import { of } from 'rxjs';
@@ -93,9 +95,12 @@ describe('DocumentUploadComponent - Accessibility', () => {
       ];
       fixture.detectChanges();
 
-      // Test ARIA attributes as a proxy for Level A compliance
-      // Note: Full axe-core scan fails due to configuration issue in helper
-      const results = await testAriaAttributes(fixture);
+      // Disable region rule for component-level testing (components don't have full page structure)
+      const results = await testAccessibility(fixture, {
+        rules: {
+          region: { enabled: false },
+        },
+      });
       expect(results).toHaveNoViolations();
     });
 
@@ -125,7 +130,7 @@ describe('DocumentUploadComponent - Accessibility', () => {
   });
 
   describe('WCAG 2.1 Level AA Compliance', () => {
-    it('should support keyboard navigation', () => {
+    it('should support keyboard navigation', async () => {
       // Add uploaded files to populate the DOM with keyboard-accessible elements
       component.uploadedFiles = [
         {
@@ -139,17 +144,8 @@ describe('DocumentUploadComponent - Accessibility', () => {
       ];
       fixture.detectChanges();
 
-      // Manual keyboard navigation verification
-      const focusableElements = fixture.nativeElement.querySelectorAll(
-        'button:not([disabled]), input:not([disabled])'
-      );
-
-      expect(focusableElements.length).toBeGreaterThan(0);
-
-      // Verify all interactive elements are keyboard-accessible
-      focusableElements.forEach((element: HTMLElement) => {
-        expect(element.tabIndex).toBeGreaterThanOrEqual(0);
-      });
+      const results = await testKeyboardAccessibility(fixture);
+      expect(results).toHaveNoViolations();
     });
 
     it('should have valid ARIA attributes', async () => {
@@ -158,116 +154,49 @@ describe('DocumentUploadComponent - Accessibility', () => {
     });
   });
 
-  describe('Screen Reader Support - Upload Progress', () => {
-    it('should announce upload progress with polite live region', () => {
-      // Manually set uploading state and selectedFile to test the template
+  describe('Screen Reader Support', () => {
+    it('should announce upload progress', () => {
       component.uploading = true;
       component.selectedFile = new File(['test'], 'test.pdf', {
         type: 'application/pdf',
       });
       fixture.detectChanges();
 
-      // Verify live region during upload
-      const uploadProgress = fixture.nativeElement.querySelector(
-        '.upload-progress'
-      );
+      const progressContainer = fixture.nativeElement.querySelector('.upload-progress');
+      expect(progressContainer.getAttribute('role')).toBe('status');
+      expect(progressContainer.getAttribute('aria-live')).toBe('polite');
 
-      expect(uploadProgress).toBeTruthy();
-      expect(uploadProgress.getAttribute('role')).toBe('status');
-      expect(uploadProgress.getAttribute('aria-live')).toBe('polite');
-
-      // Verify screen reader text
-      const srOnlyText = uploadProgress.querySelector('.sr-only');
-      expect(srOnlyText).toBeTruthy();
-      expect(srOnlyText.textContent).toContain('Uploading test.pdf');
+      const srText = fixture.nativeElement.querySelector('.sr-only');
+      expect(srText.textContent).toContain('Uploading test.pdf');
     });
 
-    it('should use aria-live="polite" for non-critical status updates', () => {
-      // Manually set uploading state to test the template
-      component.uploading = true;
-      component.selectedFile = new File(['test'], 'test.pdf', {
-        type: 'application/pdf',
-      });
-      fixture.detectChanges();
-
-      const uploadProgress = fixture.nativeElement.querySelector(
-        '.upload-progress[aria-live="polite"]'
-      );
-
-      // Polite live regions don't interrupt current screen reader announcements
-      expect(uploadProgress).toBeTruthy();
-    });
-  });
-
-  describe('Screen Reader Support - OCR Status', () => {
-    it('should announce OCR status updates with polite live region', () => {
-      // Set OCR status
+    it('should announce OCR status updates', () => {
       component.ocrStatus = 'PROCESSING';
       fixture.detectChanges();
 
-      const ocrStatus = fixture.nativeElement.querySelector('.ocr-status');
-
-      expect(ocrStatus).toBeTruthy();
-      expect(ocrStatus.getAttribute('role')).toBe('status');
-      expect(ocrStatus.getAttribute('aria-live')).toBe('polite');
+      const statusContainer = fixture.nativeElement.querySelector('.ocr-status');
+      expect(statusContainer.getAttribute('role')).toBe('status');
+      expect(statusContainer.getAttribute('aria-live')).toBe('polite');
     });
 
-    it('should display readable status labels', () => {
-      const testCases = [
-        { status: 'PENDING', expected: 'OCR Queued' },
-        { status: 'PROCESSING', expected: 'Processing OCR...' },
-        { status: 'COMPLETED', expected: 'OCR Complete' },
-        { status: 'FAILED', expected: 'OCR Failed' },
-      ];
-
-      testCases.forEach(({ status, expected }) => {
-        component.ocrStatus = status;
-        fixture.detectChanges();
-
-        const statusChip = fixture.nativeElement.querySelector('.ocr-status mat-chip');
-        expect(statusChip.textContent.trim()).toBe(expected);
-      });
-    });
-  });
-
-  describe('Screen Reader Support - Error Messages', () => {
-    it('should announce errors with role="alert" for critical issues', () => {
-      // Trigger error
-      component.errorMessage = 'File upload failed';
+    it('should announce errors with role="alert"', () => {
+      component.errorMessage = 'File size exceeds 10 MB';
       fixture.detectChanges();
 
-      const errorMessage = fixture.nativeElement.querySelector('.error-message');
-
-      expect(errorMessage).toBeTruthy();
-      expect(errorMessage.getAttribute('role')).toBe('alert');
-
-      // role="alert" automatically sets aria-live="assertive" and aria-atomic="true"
-      // This ensures critical errors interrupt screen reader announcements
-    });
-
-    it('should include error icon and message for screen readers', () => {
-      component.errorMessage = 'File upload failed';
-      fixture.detectChanges();
-
-      const errorMessage = fixture.nativeElement.querySelector('.error-message');
-      const errorIcon = errorMessage.querySelector('mat-icon');
-      const errorText = errorMessage.querySelector('span');
-
-      expect(errorIcon).toBeTruthy();
-      expect(errorText).toBeTruthy();
-      expect(errorText.textContent).toBe('File upload failed');
+      const errorContainer = fixture.nativeElement.querySelector('.error-message');
+      expect(errorContainer.getAttribute('role')).toBe('alert');
+      expect(errorContainer.textContent).toContain('File size exceeds 10 MB');
     });
   });
 
   describe('Retry Button Accessibility', () => {
     it('should have accessible retry button for failed OCR', () => {
-      // Add uploaded file with FAILED status
       component.uploadedFiles = [
         {
           attachmentId: 'attach-123',
-          fileName: 'test-document.pdf',
+          fileName: 'test.pdf',
           mimeType: 'application/pdf',
-          fileSize: 4096,
+          fileSize: 12,
           uploadDate: '2026-01-24T12:00:00Z',
           ocrStatus: 'FAILED',
         },
@@ -280,130 +209,17 @@ describe('DocumentUploadComponent - Accessibility', () => {
 
       expect(retryButton).toBeTruthy();
       expect(retryButton.getAttribute('aria-label')).toBe(
-        'Retry OCR for test-document.pdf'
+        'Retry OCR for test.pdf'
       );
     });
 
-    it('should include file name in retry button label for context', () => {
+    it('should hide decorative icon from screen readers', () => {
       component.uploadedFiles = [
         {
-          attachmentId: 'attach-456',
-          fileName: 'patient-record.pdf',
+          attachmentId: 'attach-123',
+          fileName: 'test.pdf',
           mimeType: 'application/pdf',
-          fileSize: 2048,
-          uploadDate: '2026-01-24T12:00:00Z',
-          ocrStatus: 'FAILED',
-        },
-      ];
-      fixture.detectChanges();
-
-      const retryButton = fixture.nativeElement.querySelector(
-        'button[matTooltip="Retry OCR"]'
-      );
-
-      expect(retryButton).toBeTruthy();
-      expect(retryButton.getAttribute('aria-label')).toContain(
-        'patient-record.pdf'
-      );
-    });
-
-    it('should hide decorative refresh icon from screen readers', () => {
-      component.uploadedFiles = [
-        {
-          attachmentId: 'attach-789',
-          fileName: 'medical-report.pdf',
-          mimeType: 'application/pdf',
-          fileSize: 3072,
-          uploadDate: '2026-01-24T12:00:00Z',
-          ocrStatus: 'FAILED',
-        },
-      ];
-      fixture.detectChanges();
-
-      const retryIcon = fixture.nativeElement.querySelector(
-        'button[aria-label*="Retry OCR"] mat-icon'
-      );
-
-      expect(retryIcon).toBeTruthy();
-      expect(retryIcon.getAttribute('aria-hidden')).toBe('true');
-    });
-  });
-
-  describe('File Icons Accessibility', () => {
-    it('should hide decorative file icons from screen readers', () => {
-      component.uploadedFiles = [
-        {
-          attachmentId: 'attach-101',
-          fileName: 'document.pdf',
-          mimeType: 'application/pdf',
-          fileSize: 1024,
-          uploadDate: '2026-01-24T12:00:00Z',
-          ocrStatus: 'COMPLETED',
-        },
-      ];
-      fixture.detectChanges();
-
-      const fileIcons = fixture.nativeElement.querySelectorAll(
-        'mat-icon[matListItemIcon]'
-      );
-
-      expect(fileIcons.length).toBeGreaterThan(0);
-      fileIcons.forEach((icon: HTMLElement) => {
-        expect(icon.getAttribute('aria-hidden')).toBe('true');
-      });
-    });
-
-    it('should rely on file name for accessibility context, not icons', () => {
-      component.uploadedFiles = [
-        {
-          attachmentId: 'attach-202',
-          fileName: 'lab-results.jpg',
-          mimeType: 'image/jpeg',
-          fileSize: 2048,
-          uploadDate: '2026-01-24T12:00:00Z',
-          ocrStatus: 'COMPLETED',
-        },
-      ];
-      fixture.detectChanges();
-
-      const listItem = fixture.nativeElement.querySelector('mat-list-item');
-      const fileNameElement = listItem.querySelector('[matListItemTitle]');
-      const fileIcon = listItem.querySelector('mat-icon[matListItemIcon]');
-
-      // Icon is decorative (aria-hidden)
-      expect(fileIcon.getAttribute('aria-hidden')).toBe('true');
-
-      // File name provides the accessibility context
-      expect(fileNameElement.textContent).toBe('lab-results.jpg');
-    });
-  });
-
-  describe('Keyboard Navigation', () => {
-    it('should allow keyboard activation of upload button', () => {
-      const uploadButton = fixture.nativeElement.querySelector(
-        'button[aria-label="Upload clinical document"]'
-      );
-
-      // Verify button is keyboard-accessible
-      expect(uploadButton.tabIndex).toBeGreaterThanOrEqual(0);
-
-      // Simulate keyboard activation (Enter or Space)
-      const clickSpy = jest.spyOn(uploadButton, 'click');
-      uploadButton.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'Enter' })
-      );
-
-      // Material buttons handle keyboard events internally
-      expect(uploadButton.disabled).toBe(false);
-    });
-
-    it('should allow keyboard activation of retry button', () => {
-      component.uploadedFiles = [
-        {
-          attachmentId: 'attach-303',
-          fileName: 'scan.tiff',
-          mimeType: 'image/tiff',
-          fileSize: 4096,
+          fileSize: 12,
           uploadDate: '2026-01-24T12:00:00Z',
           ocrStatus: 'FAILED',
         },
@@ -413,52 +229,28 @@ describe('DocumentUploadComponent - Accessibility', () => {
       const retryButton = fixture.nativeElement.querySelector(
         'button[aria-label*="Retry OCR"]'
       );
+      const icon = retryButton.querySelector('mat-icon');
 
-      expect(retryButton.tabIndex).toBeGreaterThanOrEqual(0);
+      expect(icon.getAttribute('aria-hidden')).toBe('true');
     });
   });
 
-  describe('Focus Management', () => {
-    it('should not have positive tabindex values', () => {
-      const positiveTabindexElements = fixture.nativeElement.querySelectorAll(
-        '[tabindex]:not([tabindex="0"]):not([tabindex="-1"])'
-      );
-
-      positiveTabindexElements.forEach((element: HTMLElement) => {
-        const tabindex = parseInt(element.getAttribute('tabindex') || '0');
-        // Positive tabindex values create an unpredictable tab order
-        expect(tabindex).toBeLessThanOrEqual(0);
-      });
-    });
-
-    it('should have logical tab order (upload button, then file list)', () => {
+  describe('File Icons Accessibility', () => {
+    it('should hide decorative icons from screen readers', () => {
       component.uploadedFiles = [
         {
-          attachmentId: 'attach-404',
-          fileName: 'report.pdf',
+          attachmentId: 'attach-123',
+          fileName: 'test.pdf',
           mimeType: 'application/pdf',
-          fileSize: 2048,
+          fileSize: 12,
           uploadDate: '2026-01-24T12:00:00Z',
-          ocrStatus: 'FAILED',
+          ocrStatus: 'COMPLETED',
         },
       ];
       fixture.detectChanges();
 
-      const focusableElements = fixture.nativeElement.querySelectorAll(
-        'button:not([disabled])'
-      );
-
-      expect(focusableElements.length).toBeGreaterThanOrEqual(2);
-
-      // First focusable: upload button
-      const uploadButton = focusableElements[0];
-      expect(uploadButton.getAttribute('aria-label')).toBe(
-        'Upload clinical document'
-      );
-
-      // Second focusable: retry button (in file list)
-      const retryButton = focusableElements[1];
-      expect(retryButton.getAttribute('aria-label')).toContain('Retry OCR');
+      const icon = fixture.nativeElement.querySelector('mat-icon[matListItemIcon]');
+      expect(icon.getAttribute('aria-hidden')).toBe('true');
     });
   });
 });

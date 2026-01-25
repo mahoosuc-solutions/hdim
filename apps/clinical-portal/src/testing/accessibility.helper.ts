@@ -135,7 +135,7 @@ export async function testKeyboardAccessibility<T>(
     rules: {
       'focus-order-semantics': { enabled: true },
       'tabindex': { enabled: true },
-      'interactive-element-without-expected-role': { enabled: true },
+      region: { enabled: false }, // Disable for component-level testing
     },
   };
 

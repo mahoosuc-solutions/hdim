@@ -592,6 +592,8 @@ export default function LandingPage() {
             thumbnailSrc="/videos/care-gap-closure-thumb.png"
             title="Eleanor's Story - They Caught It Early"
             description="Watch HDIM close a care gap in real-time"
+            youtubeId="cMu61ZzOjMA"
+            preferYouTube={false}
           />
           <p className="text-center text-gray-500 mt-4 text-sm">
             No registration required - click to watch

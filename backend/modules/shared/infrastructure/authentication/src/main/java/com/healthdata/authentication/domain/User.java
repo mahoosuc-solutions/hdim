@@ -28,8 +28,7 @@ import java.util.UUID;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID id;  // ID provided by authentication service/gateway, not auto-generated
 
     @Column(nullable = false, unique = true, length = 50)
     private String username;

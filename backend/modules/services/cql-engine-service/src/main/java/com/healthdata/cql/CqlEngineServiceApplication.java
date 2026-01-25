@@ -50,8 +50,9 @@ import com.healthdata.audit.service.ai.AIAuditEventPublisher;
     // NOTE: Authentication repositories removed - managed by Gateway service
 })
 @EntityScan(basePackages = {
-    "com.healthdata.cql.entity"
-    // NOTE: Authentication entities removed - managed by Gateway service
+    "com.healthdata.cql.entity",
+    // Enable User/Tenant persistence for UserAutoRegistrationFilter
+    "com.healthdata.authentication.domain"
 })
 public class CqlEngineServiceApplication {
 

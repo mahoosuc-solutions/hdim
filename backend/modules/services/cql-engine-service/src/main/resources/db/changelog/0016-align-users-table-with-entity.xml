@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0016-align-users-table-with-entity" author="cql-engine-service">
+        <comment>
+            Align users table schema with User entity definition:
+            - Remove tenant_ids and roles VARCHAR columns (entity uses separate tables)
+            - Add missing MFA and SMS columns from User entity
+        </comment>
+
+        <!-- Remove incorrect VARCHAR columns (entity uses @ElementCollection tables) -->
+        <dropColumn tableName="users">
+            <column name="tenant_ids"/>
+        </dropColumn>
+
+        <dropColumn tableName="users">
+            <column name="roles"/>
+        </dropColumn>
+
+        <!-- Add missing MFA method column -->
+        <addColumn tableName="users">
+            <column name="mfa_method" type="varchar(10)" defaultValue="TOTP">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add missing SMS MFA columns -->
+        <addColumn tableName="users">
+            <column name="mfa_phone_number" type="varchar(20)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="users">
+            <column name="sms_code" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="users">
+            <column name="sms_code_expiry" type="timestamp with time zone">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="users">
+            <column name="sms_code_sent_count" type="integer" defaultValueNumeric="0">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="users">
+            <column name="sms_code_last_reset" type="timestamp with time zone">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <!-- Restore removed columns -->
+            <addColumn tableName="users">
+                <column name="tenant_ids" type="varchar(500)"/>
+            </addColumn>
+            <addColumn tableName="users">
+                <column name="roles" type="varchar(500)"/>
+            </addColumn>
+
+            <!-- Remove added columns -->
+            <dropColumn tableName="users" columnName="sms_code_last_reset"/>
+            <dropColumn tableName="users" columnName="sms_code_sent_count"/>
+            <dropColumn tableName="users" columnName="sms_code_expiry"/>
+            <dropColumn tableName="users" columnName="sms_code"/>
+            <dropColumn tableName="users" columnName="mfa_phone_number"/>
+            <dropColumn tableName="users" columnName="mfa_method"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

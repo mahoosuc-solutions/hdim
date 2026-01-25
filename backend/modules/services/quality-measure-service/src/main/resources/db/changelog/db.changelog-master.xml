@@ -8,6 +8,9 @@
     <!-- PostgreSQL extensions must come FIRST -->
     <include file="db/changelog/0000-enable-extensions.xml"/>
 
+    <!-- Tenants table (required by shared authentication module dependency) -->
+    <include file="db/changelog/0000-create-tenants-table.xml"/>
+
     <!-- Authentication tables (required by shared authentication module dependency) -->
     <include file="db/changelog/0000-create-authentication-tables.xml"/>
 

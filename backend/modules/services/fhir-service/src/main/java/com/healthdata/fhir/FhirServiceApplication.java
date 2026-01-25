@@ -20,14 +20,22 @@ import com.healthdata.audit.service.ai.AIAuditEventPublisher;
  * - Kafka event publishing
  * - PostgreSQL persistence
  * - Authentication-based tenant isolation
+ *
+ * Configuration:
+ * - JSON-only responses (application/fhir+json)
+ * - XML message converter explicitly disabled to prevent Jackson XML dependency conflicts
+ * - FHIR service exclusively uses JSON format for all API responses
  */
-@SpringBootApplication(scanBasePackages = {
-    "com.healthdata.fhir",
-    "com.healthdata.common",
-    "com.healthdata.fhir.models",
-    "com.healthdata.authentication",  // Include for JWT filter and config
-    "com.healthdata.cache"  // Include for CacheEvictionService (lazy init to avoid circular dependency)
-})
+@SpringBootApplication(
+    scanBasePackages = {
+        "com.healthdata.fhir",
+        "com.healthdata.common",
+        "com.healthdata.fhir.models",
+        "com.healthdata.authentication",  // Include for JWT filter and config
+        "com.healthdata.cache"  // Include for CacheEvictionService (lazy init to avoid circular dependency)
+    },
+    exclude = org.springframework.boot.autoconfigure.http.JacksonHttpMessageConvertersConfiguration.MappingJackson2XmlHttpMessageConverterConfiguration.class
+)
 @Import(AIAuditEventPublisher.class)
 @EnableJpaRepositories(basePackages = {
     "com.healthdata.fhir.persistence",

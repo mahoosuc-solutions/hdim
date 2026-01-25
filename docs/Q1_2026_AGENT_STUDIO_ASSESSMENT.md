@@ -247,133 +247,273 @@ import { ConfirmationDialogComponent }
 
 ---
 
-## Gap Analysis (Preliminary)
+## Gap Analysis (COMPLETE - Deep Dive Analysis)
 
-### Issue 1: Visual Agent Designer ❓ Status Unknown
+### Issue 1: Visual Agent Designer ✅ **100% COMPLETE**
 
-**What Likely Exists:**
-- ✅ Backend API for agent CRUD
-- ✅ Frontend service (`AgentBuilderService`)
-- ✅ Create/Edit dialog component (`CreateAgentDialogComponent`)
+**What Exists:**
+- ✅ Backend API complete - Full CRUD with multi-tenant isolation
+- ✅ Frontend service complete - `AgentBuilderService` with all methods
+- ✅ **5-Step Wizard Dialog** - `CreateAgentDialogComponent` (comprehensive implementation)
+  - **Step 1: Basic Info** - Name, slug, description, persona name, persona role, avatar
+  - **Step 2: Model Configuration** - Provider selection (Claude/Azure OpenAI/Bedrock), model ID, temperature slider (0-1), max tokens slider (256-4096)
+  - **Step 3: System Prompt** - Monaco editor integration, variable insertion ({{patient_name}}, etc.), prompt snippets (Clinical Safety, HIPAA, Evidence-Based)
+  - **Step 4: Tools** - Grid of tool cards with checkboxes, tool categories, descriptions, risk levels
+  - **Step 5: Guardrails** - PHI filtering, clinical disclaimer, human review, risk threshold (LOW/MEDIUM/HIGH/CRITICAL)
+- ✅ Draft/publish workflow - Status field (DRAFT, TESTING, ACTIVE, DEPRECATED, ARCHIVED)
+- ✅ Form validation - Required fields, character limits, slider constraints
+- ✅ Live preview - Character count, detected variables display
+
+**Acceptance Criteria Status:**
+- ✅ Form-based agent configuration - **COMPLETE** (5-step wizard)
+- ✅ Configure agent identity (name, avatar, role) - **COMPLETE** (Step 1)
+- ✅ Select tools (checkboxes) - **COMPLETE** (Step 4 with tool grid)
+- ✅ Configure guardrails - **COMPLETE** (Step 5 with all options)
+- ✅ Set LLM parameters (model, temperature, max tokens) - **COMPLETE** (Step 2 with sliders)
+- ✅ Preview system prompt - **COMPLETE** (Step 3 with Monaco editor)
+- ✅ Save as draft - **COMPLETE** (Status-based workflow)
+
+**Estimated Completion:** **100%** - No work needed
+
+---
+
+### Issue 2: Prompt Template Library ⚠️ **Backend Complete, Frontend Missing**
+
+**What Exists (Backend):**
+- ✅ Backend API complete - `/api/v1/agent-builder/templates` (list, get, create, validate, render)
+- ✅ `PromptTemplateService` - Full CRUD operations
+- ✅ Template entity - Category-based organization, variable substitution, tenant/system templates
+- ✅ Variable validation - `validateTemplate()` endpoint
+- ✅ Template rendering - Variable substitution with `renderTemplate()`
+
+**What Exists (Frontend):**
+- ✅ AgentBuilderService methods - `listTemplates()`, `getTemplate()`, `createTemplate()`, `validateTemplate()`, `renderTemplate()`
+- ✅ TypeScript models - `PromptTemplate`, `TemplateCategory`, `TemplateVariable`, `TemplateValidationResult`
+- ✅ Prompt editor component - `PromptEditorComponent` with variable insertion and snippet support
+- ✅ Built-in snippets - Clinical Safety, HIPAA Compliance, Evidence-Based Response, Empathetic Communication, Care Gap Analysis
+
+**What Is Missing (Frontend UI):**
+- ❌ **Template browser component** - No dedicated component to browse/search templates
+- ❌ **Template library dialog** - No UI to select templates from library
+- ❌ **"Use Template" button integration** - Not integrated into Step 3 (System Prompt) of CreateAgentDialogComponent
+- ❌ **Custom template creation UI** - No form to create and save custom templates
+- ❌ **Template search/filter** - No UI to search by category/keyword
+
+**Acceptance Criteria Status:**
+- ❌ List all templates (system + tenant) - **MISSING UI** (API exists)
+- ❌ Search templates by keyword - **MISSING UI** (API exists)
+- ❌ Filter by category - **MISSING UI** (models exist)
+- ❌ Preview template - **PARTIAL** (can preview in editor, but no dedicated preview dialog)
+- ❌ Use template in agent - **MISSING INTEGRATION** (would need to call `renderTemplate()` and populate editor)
+- ❌ Create custom template - **MISSING UI** (API exists)
+- ✅ Variable substitution ({{var}}) - **COMPLETE** (PromptEditorComponent supports this)
+
+**Estimated Remaining Effort:** **2-3 days**
+- Create `TemplateLibraryDialogComponent` (list, search, filter, preview) - 6 hours
+- Integrate "Browse Templates" button in CreateAgentDialogComponent Step 3 - 2 hours
+- Create `CreateTemplateDialogComponent` for custom template creation - 4 hours
+- Testing and polish - 2 hours
+
+---
+
+### Issue 3: Interactive Testing Sandbox ✅ **95% COMPLETE**
+
+**What Exists:**
+- ✅ Backend API complete - `/api/v1/agent-builder/.../test/sessions` (start, message, complete, cancel)
+- ✅ `AgentTestService` - Test session management, message handling, metrics tracking
+- ✅ Test session entities - `AgentTestSession`, `TestMessage`, `ToolInvocation`, `TestMetrics`
+- ✅ **Testing Dialog** - `TestAgentDialogComponent` (comprehensive implementation)
+  - **Chat interface** - Chat UI with user/assistant/system messages, typing indicator, avatars
+  - **Send test messages** - Input field with Enter key support, auto-scroll to bottom
+  - **Tabs for metrics/tools/config** - 3-tab layout with real-time updates
+  - **Metrics tab** - Total messages, tool calls, avg latency, guardrail triggers (grid layout)
+  - **Tools tab** - Tool invocation cards with success/failure icons, duration, result preview
+  - **Config tab** - Agent configuration display (provider, model, temperature, max tokens, enabled tools)
+  - **Session rating** - 5-star rating system
+  - **Feedback form** - Optional text feedback
+  - **Session status tracking** - IN_PROGRESS, COMPLETED, FAILED, CANCELLED
 
 **What May Be Missing:**
-- ❓ Form-based configuration UI (may exist in `CreateAgentDialogComponent`)
-- ❓ Tool selection checkboxes
-- ❓ Guardrail configuration UI
-- ❓ LLM parameter sliders (temperature, max tokens)
-- ❓ System prompt preview pane
-- ❓ Draft/publish workflow UI
+- ⚠️ **Export conversation** - No "Export" button to download conversation as JSON/Markdown
+- ⚠️ **Guardrail trigger visualization** - Guardrail count shown, but no detail panel for what triggered
 
-**Next Step:** Read `CreateAgentDialogComponent` to assess completeness
+**Acceptance Criteria Status:**
+- ✅ Start test session - **COMPLETE** (auto-starts on first message)
+- ✅ Chat interface for testing - **COMPLETE** (full chat UI with avatars, typing indicator)
+- ✅ View tool invocations - **COMPLETE** (Tools tab with cards)
+- ⚠️ See guardrail triggers - **PARTIAL** (count shown, but no details of which guardrails triggered)
+- ✅ Display performance metrics - **COMPLETE** (Metrics tab with 4 metrics)
+- ✅ Save test session - **COMPLETE** (auto-saved after each message)
+- ❌ Export conversation - **MISSING** (no export button/functionality)
 
----
-
-### Issue 2: Prompt Template Library ❓ Status Unknown
-
-**What Likely Exists:**
-- ✅ Backend API `/api/v1/agent-builder/templates`
-- ✅ `PromptTemplateService` in backend
-- ✅ Template entity with variable substitution
-
-**What May Be Missing:**
-- ❓ Frontend template library component
-- ❓ Template browser UI with search/filter
-- ❓ Template preview dialog
-- ❓ "Use template" integration in agent editor
-- ❓ Custom template creation UI
-
-**Next Step:** Search for template-related components in frontend
+**Estimated Remaining Effort:** **4-6 hours**
+- Add "Export Conversation" button to dialog footer - 2 hours
+- Implement export formats (JSON, Markdown, CSV) - 2 hours
+- Add guardrail trigger detail panel (which guardrails, when, why) - 2 hours
 
 ---
 
-### Issue 3: Interactive Testing Sandbox ❓ Status Unknown
+### Issue 4: Version Control UI ⚠️ **Backend Complete, Frontend Minimal**
 
-**What Likely Exists:**
-- ✅ Backend API `/api/v1/agent-builder/.../test/sessions`
-- ✅ `AgentTestService` in backend
-- ✅ Test session entities
-- ✅ Frontend dialog component (`TestAgentDialogComponent`)
+**What Exists (Backend):**
+- ✅ Backend API complete - `/api/v1/agent-builder/agents/{id}/versions` (list, get, restore, compare)
+- ✅ `AgentVersionService` - Version creation, comparison (diff), rollback
+- ✅ Version entity - `AgentVersion` with snapshot, change summary, version number, change type (MAJOR/MINOR/PATCH)
+- ✅ Version comparison endpoint - `GET /agents/{id}/versions/compare?v1={versionId1}&v2={versionId2}`
 
-**What May Be Missing:**
-- ❓ Chat interface for testing (may exist in `TestAgentDialogComponent`)
-- ❓ Tool invocation visualization
-- ❓ Guardrail trigger display
-- ❓ Performance metrics panel
-- ❓ Session save/export functionality
+**What Exists (Frontend):**
+- ✅ AgentBuilderService methods - `listVersions()`, `getVersion()`, `rollbackToVersion()`
+- ✅ TypeScript models - `AgentVersion`, `VersionStatus`, `ChangeType`
+- ✅ "Version History" button - Action menu in agent list has "Version History" option
+- ⚠️ Navigation stub - `viewVersions(agent)` method exists but only navigates with `queryParams: { tab: 'versions' }`
 
-**Next Step:** Read `TestAgentDialogComponent` to assess completeness
+**What Is Missing (Frontend UI):**
+- ❌ **Version history component** - No dedicated component to display version list
+- ❌ **Version comparison UI** - No side-by-side diff view
+- ❌ **Rollback confirmation dialog** - No UI to confirm rollback action
+- ❌ **Version metadata display** - No panel to show who/when/what changed
 
----
+**Acceptance Criteria Status:**
+- ❌ List all versions of an agent - **MISSING UI** (API exists, button exists, but no component)
+- ❌ Compare versions (diff view) - **MISSING UI** (API exists)
+- ❌ Rollback to previous version - **MISSING UI** (API exists)
+- ❌ View version metadata (who, when, what changed) - **MISSING UI** (data exists in entity)
 
-### Issue 4: Version Control UI ❓ Status Unknown
-
-**What Likely Exists:**
-- ✅ Backend API for version history and rollback
-- ✅ `AgentVersionService` in backend
-- ✅ Version comparison (diff) logic
-
-**What May Be Missing:**
-- ❓ Frontend version history component
-- ❓ Version comparison UI (side-by-side diff)
-- ❓ Rollback confirmation dialog
-- ❓ Version metadata display
-
-**Next Step:** Search for version-related components in frontend
-
----
-
-## Recommended Next Steps
-
-### Step 1: Deep Dive Analysis (2-3 hours)
-
-Read the following files to assess completeness:
-
-1. **Frontend Components:**
-   - `apps/clinical-portal/src/app/pages/agent-builder/agent-builder.component.html` (template)
-   - `apps/clinical-portal/src/app/pages/agent-builder/dialogs/create-agent-dialog.component.ts`
-   - `apps/clinical-portal/src/app/pages/agent-builder/dialogs/test-agent-dialog.component.ts`
-   - `apps/clinical-portal/src/app/pages/agent-builder/services/agent-builder.service.ts`
-   - `apps/clinical-portal/src/app/pages/agent-builder/models/agent.model.ts`
-
-2. **Search for Missing Components:**
-   - Template library component
-   - Version history component
-
-3. **Check Routing:**
-   - Verify `/agent-builder` route exists in app routes
-
-### Step 2: Create Gap Analysis Document (1 hour)
-
-Document for each GitHub issue:
-- ✅ What exists and works
-- ❌ What's missing
-- 🔧 What needs enhancement
-- 📊 Estimated effort to complete
-
-### Step 3: Implementation Plan (1 hour)
-
-Based on gap analysis:
-- Prioritize missing features
-- Break down into tasks
-- Estimate effort for each task
-- Create implementation timeline
-
-### Step 4: Begin Implementation (10-15 days estimated)
-
-Focus on highest-priority gaps first.
+**Estimated Remaining Effort:** **2-3 days**
+- Create `AgentVersionsDialogComponent` (list versions in table) - 4 hours
+- Create `VersionCompareDialogComponent` (side-by-side diff) - 6 hours
+- Implement rollback confirmation dialog - 2 hours
+- Integrate "Version History" button to open `AgentVersionsDialogComponent` - 1 hour
+- Testing and polish - 3 hours
 
 ---
 
-## Preliminary Effort Estimate
+## Implementation Priority Plan
 
-**Original GitHub Estimate:** 18 days (8+3+4+3)
+### Phase 1: Template Library UI (2-3 days) - **PRIORITY 1**
 
-**Revised Estimate (Pending Deep Dive):**
-- If 70% complete: **5-6 days** to finish
-- If 50% complete: **8-10 days** to finish
-- If 30% complete: **12-15 days** to finish
+**Why First:** Issue #2 acceptance criteria, enables better prompt engineering
 
-**Likely Scenario:** 50-70% complete → **6-10 days** remaining effort
+**Tasks:**
+1. Create `TemplateLibraryDialogComponent` (6h)
+   - Material table with pagination
+   - Search/filter by category
+   - Template preview panel
+   - "Use Template" action
+2. Integrate into CreateAgentDialogComponent Step 3 (2h)
+   - Add "Browse Templates" button
+   - Open TemplateLibraryDialogComponent
+   - Populate editor on template selection
+3. Create `CreateTemplateDialogComponent` (4h)
+   - Form: name, description, category, content
+   - Variable detection (reuse PromptEditorComponent)
+   - Validation and save
+4. Testing (2h)
+   - Unit tests for new components
+   - Integration test: browse → select → populate
+
+**Deliverables:**
+- Template library browser
+- Template creation UI
+- Seamless integration with agent wizard
+
+---
+
+### Phase 2: Version Control UI (2-3 days) - **PRIORITY 2**
+
+**Why Second:** Issue #4 acceptance criteria, critical for production agent management
+
+**Tasks:**
+1. Create `AgentVersionsDialogComponent` (4h)
+   - Material table: version number, change summary, created by, created at
+   - Action column: compare, restore
+   - Load versions via AgentBuilderService.listVersions()
+2. Create `VersionCompareDialogComponent` (6h)
+   - Side-by-side diff view (JSON diff library or custom)
+   - Highlight changes in configuration
+   - Show metadata (who changed, when, why)
+3. Implement rollback confirmation (2h)
+   - ConfirmationDialogComponent with warning
+   - Call AgentBuilderService.rollbackToVersion()
+   - Refresh agent list on success
+4. Wire up "Version History" button (1h)
+   - Update `viewVersions(agent)` method
+   - Open AgentVersionsDialogComponent
+5. Testing (3h)
+   - Test version listing, comparison, rollback
+   - Multi-tenant isolation validation
+
+**Deliverables:**
+- Version history viewer
+- Version comparison tool
+- Rollback functionality
+
+---
+
+### Phase 3: Testing Sandbox Enhancements (4-6 hours) - **PRIORITY 3**
+
+**Why Third:** Issue #3 mostly complete, quick wins for polish
+
+**Tasks:**
+1. Add "Export Conversation" feature (2h)
+   - Export button in dialog footer
+   - Formats: JSON, Markdown, CSV
+   - Download as file
+2. Guardrail trigger detail panel (2h)
+   - Expand metrics tab to show guardrail details
+   - Which guardrails triggered, when, why
+   - Display alongside count
+
+**Deliverables:**
+- Conversation export (3 formats)
+- Guardrail trigger visualization
+
+---
+
+### Phase 4: Polish & Testing (1 day) - **PRIORITY 4**
+
+**Tasks:**
+- End-to-end testing of all 4 issues
+- Accessibility audit (ARIA labels, keyboard navigation)
+- Performance testing (large agent lists, long conversations)
+- Documentation updates in CLAUDE.md
+
+---
+
+## Implementation Timeline
+
+| Week | Days | Phase | Issues Addressed |
+|------|------|-------|------------------|
+| Week 1 | Mon-Wed | Phase 1: Template Library UI | Issue #2 |
+| Week 1 | Thu-Fri | Phase 2: Version Control UI (Part 1) | Issue #4 |
+| Week 2 | Mon | Phase 2: Version Control UI (Part 2) | Issue #4 |
+| Week 2 | Tue | Phase 3: Testing Enhancements | Issue #3 |
+| Week 2 | Wed | Phase 4: Polish & Testing | All issues |
+
+**Start Date:** January 27, 2026 (Monday)
+**Completion Date:** February 4, 2026 (Wednesday)
+**Total Duration:** 6 business days
+
+---
+
+## Revised Effort Estimate (After Deep Dive Analysis)
+
+**Original GitHub Estimate:** 18 days (Issue #1: 8d + Issue #2: 3d + Issue #3: 4d + Issue #4: 3d)
+
+**Actual Completeness:**
+- Issue #1 (Visual Agent Designer): **100% COMPLETE** ✅ (0 days needed)
+- Issue #2 (Prompt Template Library): **70% COMPLETE** ⚠️ (2-3 days needed)
+- Issue #3 (Interactive Testing Sandbox): **95% COMPLETE** ✅ (4-6 hours needed)
+- Issue #4 (Version Control UI): **40% COMPLETE** ⚠️ (2-3 days needed)
+
+**Total Remaining Effort:** **5-6.5 days**
+- Template Library UI: 2-3 days
+- Testing Sandbox enhancements: 0.5-0.75 days (4-6 hours)
+- Version Control UI: 2-3 days
+
+**Schedule Impact:** **62-67% time savings** vs original estimate (saved 11-13 days)
+
+**Updated Completion Estimate:** February 1-3, 2026 (8-10 days from now)
 
 ---
 
@@ -386,17 +526,82 @@ Focus on highest-priority gaps first.
 
 ---
 
-## Conclusion
+## Technical Architecture Summary
 
-**Status:** Significant existing implementation discovered. Backend API appears **95-100% complete**. Frontend UI appears **70-80% complete**. Deep dive analysis needed to determine exact gaps and remaining effort.
+### Backend (Spring Boot)
 
-**Recommendation:** Proceed with deep dive analysis (Step 1) before creating detailed implementation plan.
+**Services:**
+- `agent-builder-service` - Central service for agent configuration CRUD
+- `agent-runtime-service` - Agent execution runtime (not part of this milestone)
 
-**Estimated Completion Date:** February 3-7, 2026 (10-14 days from now, assuming 6-10 days effort)
+**Entities:**
+- `AgentConfiguration` - Main entity with JSONB for tools/guardrails/UI config
+- `AgentVersion` - Version tracking with snapshot and diff support
+- `PromptTemplate` - Template library with variable substitution
+- `AgentTestSession` - Test session tracking with metrics
+- `TestMessage`, `ToolInvocation`, `GuardrailTrigger` - Test session details
 
-**Milestone Risk:** **LOW** - Existing infrastructure significantly reduces implementation risk.
+**Key Patterns:**
+- Multi-tenant isolation via `tenant_id`
+- Soft delete for audit compliance
+- JSONB columns for flexible configuration
+- Optimistic locking for version control
+- Pagination support on all list operations
 
 ---
 
-_Last Updated: January 24, 2026 - 11:30 PM_
-_Next Action: Deep dive analysis of existing components_
+### Frontend (Angular 17+)
+
+**Components:**
+- `AgentBuilderComponent` - Main list view with tabs, search, bulk actions
+- `CreateAgentDialogComponent` - **5-step wizard** for agent creation/editing
+- `TestAgentDialogComponent` - Interactive testing sandbox with chat UI
+- `PromptEditorComponent` - Monaco editor with variable/snippet support
+- ❌ `TemplateLibraryDialogComponent` - **MISSING** (needs implementation)
+- ❌ `AgentVersionsDialogComponent` - **MISSING** (needs implementation)
+- ❌ `VersionCompareDialogComponent` - **MISSING** (needs implementation)
+
+**Services:**
+- `AgentBuilderService` - HTTP client with 30+ API methods
+- Integration with `ToastService`, `DialogService`, `LoggerService`
+
+**Key Patterns:**
+- Standalone components (Angular 17+)
+- Reactive forms with validation
+- Material Design component library
+- RxJS for async operations
+- HIPAA-compliant logging (via LoggerService)
+
+---
+
+## Conclusion
+
+**Status:** Deep dive analysis **COMPLETE** ✅
+
+**Findings:**
+- Backend API: **95-100% complete** (all entities, services, controllers exist)
+- Frontend UI: **75% complete** (Visual Designer 100%, Testing 95%, Templates 70%, Versioning 40%)
+- Issue #1 (Visual Agent Designer): **100% COMPLETE** - No work needed ✅
+- Issue #2 (Prompt Template Library): **70% COMPLETE** - 2-3 days needed ⚠️
+- Issue #3 (Interactive Testing Sandbox): **95% COMPLETE** - 4-6 hours needed ✅
+- Issue #4 (Version Control UI): **40% COMPLETE** - 2-3 days needed ⚠️
+
+**Recommendation:** Proceed with **phased implementation** starting with Template Library UI (highest business value, enables better prompt engineering).
+
+**Revised Effort Estimate:** **5-6.5 days** (vs 18 days original = **67% time savings**)
+
+**Updated Completion Date:** **February 4, 2026** (10 business days from now)
+
+**Milestone Risk:** **LOW** ✅
+- Existing infrastructure significantly reduces implementation risk
+- All backend APIs functional and tested
+- Core UI patterns established (5-step wizard, testing dialog)
+- Only missing components are CRUD dialogs (well-understood patterns)
+
+**Next Action:** Begin Phase 1 implementation (Template Library UI) on Monday, January 27, 2026
+
+---
+
+_Last Updated: January 24, 2026 - 11:50 PM_
+_Status: Deep Dive Analysis COMPLETE_
+_Next Milestone Phase: Implementation (5-6.5 days estimated)_

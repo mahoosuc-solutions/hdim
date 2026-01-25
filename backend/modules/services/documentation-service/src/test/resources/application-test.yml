@@ -10,25 +10,34 @@ spring:
   application:
     name: documentation-service-test
 
-  # Test database configuration (overridden by Testcontainers)
+  # Test database configuration - uses external PostgreSQL (not Testcontainers)
+  # Matches CQL Engine Service pattern for test database
   datasource:
-    url: jdbc:tc:postgresql:16-alpine:///testdb
-    username: test
-    password: test
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:postgresql://localhost:5435/healthdata_docs
+    username: healthdata
+    password: healthdata_password
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none  # Liquibase manages schema
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+        format_sql: false
     show-sql: false
 
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
+    change-log: classpath:db/changelog/db.changelog-master.xml  # Fixed: .xml not .yaml
     enabled: true
+
+  # Exclude custom database config, security, and Kafka/Redis for tests
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 
   # Disable Redis for tests (use in-memory cache)
   cache:

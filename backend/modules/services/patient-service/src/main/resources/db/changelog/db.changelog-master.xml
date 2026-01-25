@@ -19,10 +19,10 @@
     <include file="db/changelog/0007-create-qa-reviews-table.xml"/>
     <include file="db/changelog/0008-create-ai-agent-decision-events-table.xml"/>
     <include file="db/changelog/0009-add-qa-review-fields-to-ai-agent-decisions.xml"/>
-    <include file="db/changelog/0010-create-configuration-engine-events-table.xml"/>
-    <include file="db/changelog/0011-create-user-configuration-action-events-table.xml"/>
-    <include file="db/changelog/0012-create-data-quality-issues-table.xml"/>
-    <include file="db/changelog/0013-create-clinical-decisions-table.xml"/>
-    <include file="db/changelog/0014-create-mpi-merges-table.xml"/>
+    <include file="db/changelog/0009-create-configuration-engine-events-table.xml"/>
+    <include file="db/changelog/0010-create-user-configuration-action-events-table.xml"/>
+    <include file="db/changelog/0011-create-data-quality-issues-table.xml"/>
+    <include file="db/changelog/0012-create-clinical-decisions-table.xml"/>
+    <include file="db/changelog/0013-create-mpi-merges-table.xml"/>
 
 </databaseChangeLog>

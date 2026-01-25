@@ -29,18 +29,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Entity-migration validation for documentation-service.
  *
- * Uses @DataJpaTest with minimal configuration - only JPA entities and repositories.
- * No service or controller beans are loaded to avoid dependency issues.
+ * Uses @DataJpaTest with Liquibase migrations enabled (Hibernate DDL disabled).
+ * This ensures entities are validated against actual Liquibase-managed schema.
  *
  * This test is in a separate package (com.healthdata.documentationvalidation) to
  * avoid Spring Boot auto-scanning for @SpringBootConfiguration in com.healthdata.documentation.
  */
 @DataJpaTest(
     properties = {
-        "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.liquibase.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=validate",  // Changed from create-drop - validate against Liquibase schema
+        "spring.liquibase.enabled=true",            // Changed from false - enable Liquibase migrations
         "spring.flyway.enabled=false",
-        "spring.data.jpa.repositories.enabled=false"
+        "spring.data.jpa.repositories.enabled=false",
+        "spring.autoconfigure.exclude=com.healthdata.database.config.DatabaseAutoConfiguration"
     }
 )
 @ContextConfiguration(classes = EntityMigrationValidationTest.TestConfig.class)
@@ -61,7 +62,7 @@ class EntityMigrationValidationTest {
             .withDatabaseName("documentation_test")
             .withUsername("testuser")
             .withPassword("testpass")
-            .withReuse(true);
+            .withReuse(false);  // Changed from true - don't reuse to avoid state pollution
 
     @Autowired
     private EntityManagerFactory entityManagerFactory;

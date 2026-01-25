@@ -9,8 +9,12 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 /**
  * Entity-migration validation for documentation-service.
  * Part of Phase 2 entity-migration validation framework.
+ *
+ * NOTE: Excludes DatabaseAutoConfiguration to avoid conflicts with test-specific configs.
  */
-@SpringBootTest
+@SpringBootTest(properties = {
+    "spring.autoconfigure.exclude=com.healthdata.database.config.DatabaseAutoConfiguration"
+})
 @Testcontainers
 @ActiveProfiles("test")
 @Tag("entity-migration-validation")

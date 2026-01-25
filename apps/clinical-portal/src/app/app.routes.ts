@@ -59,6 +59,14 @@ export const appRoutes: Route[] = [
       ),
     // Public route - demo startup monitoring
   },
+  {
+    path: 'event-processing',
+    loadComponent: () =>
+      import('./components/event-processing-explainer/event-processing-explainer.component').then(
+        (m) => m.EventProcessingExplainerComponent
+      ),
+    // Public route - educational content about event-driven architecture
+  },
 
   // ==================== Protected Routes ====================
   {

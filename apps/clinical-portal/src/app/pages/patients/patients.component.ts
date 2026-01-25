@@ -106,7 +106,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
   totalPatients = 0;
   pageSize = 10;
   currentPage = 0;
-  sortColumn: string = 'fullName';
+  sortColumn = 'fullName';
   sortDirection: 'asc' | 'desc' = 'asc';
 
   // Bulk operation progress

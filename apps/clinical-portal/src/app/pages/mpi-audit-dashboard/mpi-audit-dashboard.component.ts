@@ -58,10 +58,10 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
   };
   
   // Filters
-  filterEventType: string = 'all';
-  filterDateRange: string = 'last-7-days';
-  filterTenantId: string = 'all';
-  filterUserId: string = '';
+  filterEventType = 'all';
+  filterDateRange = 'last-7-days';
+  filterTenantId = 'all';
+  filterUserId = '';
   
   // Active tabs
   activeTab: 'events' | 'merges' | 'data-quality' | 'metrics' = 'events';
@@ -71,7 +71,7 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
   
   // Auto-refresh
   private refreshSubscription?: Subscription;
-  autoRefreshEnabled: boolean = true;
+  autoRefreshEnabled = true;
 
   constructor(
     private loggerService: LoggerService,

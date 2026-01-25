@@ -13,7 +13,7 @@ import { Pipe, PipeTransform } from '@angular/core';
   standalone: true
 })
 export class MrnPipe implements PipeTransform {
-  transform(value: string | number | null | undefined, prefix: string = 'MRN'): string {
+  transform(value: string | number | null | undefined, prefix = 'MRN'): string {
     if (!value) {
       return '';
     }

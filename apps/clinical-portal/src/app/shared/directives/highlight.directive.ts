@@ -19,12 +19,12 @@ export class HighlightDirective implements OnInit, OnChanges {
   @Input() searchTerm?: string;
 
   /** Highlight color */
-  @Input() highlightColor: string = '#ffeb3b';
+  @Input() highlightColor = '#ffeb3b';
 
   /** Text color */
-  @Input() textColor: string = '#000000';
+  @Input() textColor = '#000000';
 
-  private originalContent: string = '';
+  private originalContent = '';
 
   constructor(private el: ElementRef) {}
 

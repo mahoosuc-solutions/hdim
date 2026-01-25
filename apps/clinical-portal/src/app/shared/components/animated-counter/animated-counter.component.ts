@@ -75,39 +75,39 @@ import { CommonModule } from '@angular/common';
 })
 export class AnimatedCounterComponent implements OnChanges, OnDestroy {
   /** The target value to display */
-  @Input() value: number = 0;
+  @Input() value = 0;
 
   /** Animation duration in milliseconds */
-  @Input() duration: number = 500;
+  @Input() duration = 500;
 
   /** Prefix to display before the number */
-  @Input() prefix: string = '';
+  @Input() prefix = '';
 
   /** Suffix to display after the number */
-  @Input() suffix: string = '';
+  @Input() suffix = '';
 
   /** Number of decimal places */
-  @Input() decimals: number = 0;
+  @Input() decimals = 0;
 
   /** Whether to use thousands separators */
-  @Input() useGrouping: boolean = true;
+  @Input() useGrouping = true;
 
   /** Show change indicator (+X or -X) */
-  @Input() showChange: boolean = false;
+  @Input() showChange = false;
 
   /** The change amount to display */
-  @Input() changeValue: number = 0;
+  @Input() changeValue = 0;
 
   /** Current display value (animated) */
-  displayValue: string = '0';
+  displayValue = '0';
 
   /** Whether animation is in progress */
-  isAnimating: boolean = false;
+  isAnimating = false;
 
   private animationFrameId: number | null = null;
-  private currentValue: number = 0;
-  private startValue: number = 0;
-  private startTime: number = 0;
+  private currentValue = 0;
+  private startValue = 0;
+  private startTime = 0;
 
   constructor(private cdr: ChangeDetectorRef) {}
 

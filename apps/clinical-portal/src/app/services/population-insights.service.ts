@@ -177,7 +177,7 @@ export class PopulationInsightsService {
    */
   getPredictedCareGaps(
     tenantId: string = API_CONFIG.DEFAULT_TENANT_ID,
-    limit: number = 20
+    limit = 20
   ): Observable<PredictedCareGap[]> {
     const url = `${API_CONFIG.QUALITY_MEASURE_URL}/insights/predicted-gaps`;
     const headers = new HttpHeaders({ 'X-Tenant-ID': tenantId });

@@ -48,21 +48,21 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
   };
   
   // Filters
-  filterAgentType: string = 'all';
-  filterConfidenceRange: string = 'all'; // all, high (>80%), medium (50-80%), low (<50%)
-  filterDateRange: string = 'today';
-  filterReviewStatus: string = 'pending'; // pending, reviewed, flagged
+  filterAgentType = 'all';
+  filterConfidenceRange = 'all'; // all, high (>80%), medium (50-80%), low (<50%)
+  filterDateRange = 'today';
+  filterReviewStatus = 'pending'; // pending, reviewed, flagged
   
   // Active tabs
   activeTab: 'review-queue' | 'flagged' | 'metrics' | 'trends' = 'review-queue';
   
   // Current review
   currentReviewDecision: AIDecisionForReview | null = null;
-  reviewNotes: string = '';
+  reviewNotes = '';
   
   // Auto-refresh
   private refreshSubscription?: Subscription;
-  autoRefreshEnabled: boolean = true;
+  autoRefreshEnabled = true;
   
   // Trend data for charts
   confidenceTrends: ConfidenceTrendData[] = [];

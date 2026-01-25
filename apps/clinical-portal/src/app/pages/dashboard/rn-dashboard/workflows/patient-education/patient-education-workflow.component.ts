@@ -123,7 +123,7 @@ export class PatientEducationWorkflowComponent implements OnInit, OnDestroy {
   // Tracking state
   materialCompleted = false;
   understandingScore = 0;
-  understandingLevel: string = '';
+  understandingLevel = '';
   educationSummary: any = null;
 
   private destroy$ = new Subject<void>();

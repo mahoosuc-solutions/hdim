@@ -140,7 +140,7 @@ export class FhirClinicalService {
    * Get observations for a patient
    * Endpoint: GET /Observation?patient={id}
    */
-  getObservations(patientId: string, count: number = 100): Observable<Observation[]> {
+  getObservations(patientId: string, count = 100): Observable<Observation[]> {
     const url = buildFhirUrl(FHIR_ENDPOINTS.OBSERVATION, {
       patient: patientId,
       _count: count.toString(),
@@ -156,7 +156,7 @@ export class FhirClinicalService {
    * Get conditions for a patient
    * Endpoint: GET /Condition?patient={id}
    */
-  getConditions(patientId: string, count: number = 100): Observable<Condition[]> {
+  getConditions(patientId: string, count = 100): Observable<Condition[]> {
     const url = buildFhirUrl(FHIR_ENDPOINTS.CONDITION, {
       patient: patientId,
       _count: count.toString(),
@@ -172,7 +172,7 @@ export class FhirClinicalService {
    * Get procedures for a patient
    * Endpoint: GET /Procedure?patient={id}
    */
-  getProcedures(patientId: string, count: number = 100): Observable<Procedure[]> {
+  getProcedures(patientId: string, count = 100): Observable<Procedure[]> {
     const url = buildFhirUrl(FHIR_ENDPOINTS.PROCEDURE, {
       patient: patientId,
       _count: count.toString(),

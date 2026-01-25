@@ -132,26 +132,26 @@ import { CommonModule } from '@angular/common';
 })
 export class ChartGaugeComponent implements OnInit, OnChanges, AfterViewInit {
   /** Value to display (0-100) */
-  @Input() value: number = 0;
+  @Input() value = 0;
 
   /** Label text */
-  @Input() label: string = 'Score';
+  @Input() label = 'Score';
 
   /** Color mode: 'auto', 'primary', 'accent', 'warn', or custom hex */
-  @Input() color: string = 'auto';
+  @Input() color = 'auto';
 
   /** Minimum value */
-  @Input() min: number = 0;
+  @Input() min = 0;
 
   /** Maximum value */
-  @Input() max: number = 100;
+  @Input() max = 100;
 
   @ViewChild('gaugeSvg', { static: false }) svgRef!: ElementRef<SVGElement>;
 
-  displayValue: number = 0;
-  backgroundArc: string = '';
-  valueArc: string = '';
-  gaugeColor: string = '#4caf50';
+  displayValue = 0;
+  backgroundArc = '';
+  valueArc = '';
+  gaugeColor = '#4caf50';
 
   ngOnInit(): void {
     this.validateValue();

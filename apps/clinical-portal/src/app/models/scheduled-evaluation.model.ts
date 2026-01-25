@@ -179,7 +179,7 @@ export function calculateNextRun(schedule: ScheduledEvaluation): Date {
   const now = new Date();
   const [hours, minutes] = schedule.timeOfDay.split(':').map(Number);
 
-  let nextRun = new Date();
+  const nextRun = new Date();
   nextRun.setHours(hours, minutes, 0, 0);
 
   // If the time has already passed today, start from tomorrow
@@ -219,7 +219,7 @@ export function calculateNextRun(schedule: ScheduledEvaluation): Date {
     case 'quarterly':
       const quarterMonths = [0, 3, 6, 9]; // Jan, Apr, Jul, Oct
       const currentMonth = now.getMonth();
-      let nextQuarterMonth = quarterMonths.find((m) => m > currentMonth) ?? quarterMonths[0];
+      const nextQuarterMonth = quarterMonths.find((m) => m > currentMonth) ?? quarterMonths[0];
       if (nextQuarterMonth <= currentMonth) {
         nextRun.setFullYear(nextRun.getFullYear() + 1);
       }

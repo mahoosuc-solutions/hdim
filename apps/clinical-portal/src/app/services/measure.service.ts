@@ -134,7 +134,7 @@ export class MeasureService {
    * @param evaluableOnly - If true, only return measures with CQL libraries (default: true)
    * Returns measures with their metadata and hasCqlLibrary flag
    */
-  getHedisMeasures(evaluableOnly: boolean = true): Observable<HedisMeasureInfo[]> {
+  getHedisMeasures(evaluableOnly = true): Observable<HedisMeasureInfo[]> {
     const url = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.HEDIS_MEASURES);
     const params = { evaluableOnly: evaluableOnly.toString() };
     return this.http.get<HedisMeasuresResponse>(url, { params }).pipe(
@@ -319,7 +319,7 @@ export class MeasureService {
    * Get all libraries (paginated)
    * Endpoint: GET /api/v1/cql/libraries
    */
-  getAllLibraries(page: number = 0, size: number = 20): Observable<CqlLibrary[]> {
+  getAllLibraries(page = 0, size = 20): Observable<CqlLibrary[]> {
     const url = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.LIBRARIES, {
       page: page.toString(),
       size: size.toString(),

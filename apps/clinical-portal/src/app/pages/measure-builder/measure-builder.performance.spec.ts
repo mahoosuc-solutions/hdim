@@ -30,7 +30,7 @@ interface BenchmarkResult {
 
 class PerformanceBenchmarkSuite {
   private results: BenchmarkResult[] = [];
-  private startMark: number = 0;
+  private startMark = 0;
 
   /**
    * Run benchmark with multiple iterations and statistical analysis
@@ -38,8 +38,8 @@ class PerformanceBenchmarkSuite {
   benchmark(
     name: string,
     fn: () => void,
-    iterations: number = 10,
-    threshold: number = 100
+    iterations = 10,
+    threshold = 100
   ): BenchmarkResult {
     const times: number[] = [];
 

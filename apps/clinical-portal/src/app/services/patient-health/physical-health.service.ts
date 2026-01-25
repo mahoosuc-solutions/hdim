@@ -149,7 +149,7 @@ export class PhysicalHealthService extends CacheableService {
   getLabHistory(
     patientId: string,
     loincCode: string,
-    limit: number = 10
+    limit = 10
   ): Observable<LabResult[]> {
     return this.fhirObservation.getLabHistory(patientId, loincCode, limit);
   }
@@ -262,7 +262,7 @@ export class PhysicalHealthService extends CacheableService {
    */
   subscribeToVitalSigns(
     patientId: string,
-    intervalMs: number = 30000
+    intervalMs = 30000
   ): Observable<PhysicalHealthSummary['vitals']> {
     // Delegate to FhirObservationService's polling mechanism
     return this.fhirObservation.getVitalSigns(patientId);
@@ -274,7 +274,7 @@ export class PhysicalHealthService extends CacheableService {
   getVitalSignHistory(
     patientId: string,
     loincCode?: string,
-    limit: number = 30
+    limit = 30
   ): Observable<VitalSign<number | string>[]> {
     return this.fhirObservation.getVitalSignHistory(patientId, loincCode, limit);
   }

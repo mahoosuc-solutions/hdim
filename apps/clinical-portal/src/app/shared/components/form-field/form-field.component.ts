@@ -114,13 +114,13 @@ export class FormFieldComponent implements OnInit {
   @Input() control!: FormControl;
 
   /** Field label */
-  @Input() label: string = '';
+  @Input() label = '';
 
   /** Input type */
   @Input() type: 'text' | 'email' | 'password' | 'number' | 'tel' | 'date' = 'text';
 
   /** Placeholder text */
-  @Input() placeholder: string = '';
+  @Input() placeholder = '';
 
   /** Hint text */
   @Input() hint?: string;
@@ -129,13 +129,13 @@ export class FormFieldComponent implements OnInit {
   @Input() icon?: string;
 
   /** Is field required */
-  @Input() required: boolean = false;
+  @Input() required = false;
 
   /** Is field readonly */
-  @Input() readonly: boolean = false;
+  @Input() readonly = false;
 
   /** Autocomplete attribute */
-  @Input() autocomplete: string = 'off';
+  @Input() autocomplete = 'off';
 
   /** Material appearance */
   @Input() appearance: 'fill' | 'outline' = 'outline';

@@ -7,9 +7,11 @@ plugins {
 description = "FHIR R4 Service - FHIR Resource Management"
 
 // Exclude Flyway - this service uses Liquibase for migrations
+// Exclude Jackson XML - FHIR Service uses JSON-only format (application/fhir+json)
 configurations.all {
     exclude(group = "org.flywaydb", module = "flyway-core")
     exclude(group = "org.flywaydb", module = "flyway-database-postgresql")
+    exclude(group = "com.fasterxml.jackson.dataformat", module = "jackson-dataformat-xml")
 }
 
 dependencies {

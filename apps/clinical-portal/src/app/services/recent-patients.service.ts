@@ -52,7 +52,7 @@ export class RecentPatientsService {
   /**
    * Get top N frequently accessed patients
    */
-  getFrequentPatients(limit: number = 5): RecentPatientEntry[] {
+  getFrequentPatients(limit = 5): RecentPatientEntry[] {
     return [...this.getRecentPatients()]
       .sort((a, b) => b.accessCount - a.accessCount)
       .slice(0, limit);
@@ -61,7 +61,7 @@ export class RecentPatientsService {
   /**
    * Get most recently accessed patients
    */
-  getMostRecentPatients(limit: number = 5): RecentPatientEntry[] {
+  getMostRecentPatients(limit = 5): RecentPatientEntry[] {
     return [...this.getRecentPatients()]
       .sort((a, b) => new Date(b.accessedAt).getTime() - new Date(a.accessedAt).getTime())
       .slice(0, limit);

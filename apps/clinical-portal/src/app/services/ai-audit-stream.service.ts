@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { LoggerService } from './logger.service';
 
@@ -26,7 +26,7 @@ import { LoggerService } from './logger.service';
 @Injectable({
   providedIn: 'root'
 })
-export class AiAuditStreamService {
+export class AiAuditStreamService implements OnDestroy {
   private readonly logger = this.loggerService.withContext('AiAuditStreamService');
   private eventSource: EventSource | null = null;
   private eventsSubject = new Subject<any>();

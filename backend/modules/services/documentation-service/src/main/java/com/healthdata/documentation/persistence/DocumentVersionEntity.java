@@ -50,11 +50,11 @@ public class DocumentVersionEntity {
     @Column(name = "changed_by", length = 100)
     private String changedBy;
 
-    @Column(name = "is_major_version", nullable = false)
+    @Column(name = "is_major_version")  // Removed nullable=false to match Liquibase schema
     @Builder.Default
     private Boolean isMajorVersion = false;
 
-    @Column(name = "is_published", nullable = false)
+    @Column(name = "is_published")  // Removed nullable=false to match Liquibase schema
     @Builder.Default
     private Boolean isPublished = false;
 

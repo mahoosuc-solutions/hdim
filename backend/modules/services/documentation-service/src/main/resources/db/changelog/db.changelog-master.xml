@@ -5,8 +5,13 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
-    <include file="db/changelog/0000-create-base-tables.xml"/>
+    <!-- Create document_metadata first - other tables reference it -->
     <include file="db/changelog/0001-create-document-metadata-table.xml"/>
+
+    <!-- Base tables (includes document_versions which references document_metadata) -->
+    <include file="db/changelog/0000-create-base-tables.xml"/>
+
+    <!-- Additional tables -->
     <include file="db/changelog/0002-create-document-ratings-table.xml"/>
     <include file="db/changelog/0003-create-document-views-table.xml"/>
     <include file="db/changelog/0004-create-search-queries-table.xml"/>
